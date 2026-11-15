@@ -19,18 +19,21 @@ const fallback = attempt("T-014-A2")
 const longModel = "openai-codex/gpt-6.1-terra-preview-2026-11"
 const badge = () => document.querySelector<HTMLElement>("[data-slot=agent-badge]")!
 
-test("compact badge truncates a long model id in the middle and keeps it whole in title", () => {
+test("compact badge shows the last segment of a long model id and keeps it whole in title", () => {
   render(<AgentBadge agent={effectiveAgent(fallback)} />)
   const model = badge().querySelector<HTMLElement>("[data-slot=agent-badge-model]")!
-  const [head, tail] = Array.from(model.children) as HTMLElement[]
-  expect(model.textContent).toBe(longModel)
-  expect(head!.className).toContain("truncate")
-  expect(tail!.className).toContain("shrink-0")
-  expect(tail!.textContent).toBe("view-2026-11")
+  expect(model.textContent).toBe(longModel.slice(longModel.lastIndexOf("/") + 1))
+  expect(model.className).toContain("truncate")
+  expect(badge().querySelector("[data-slot=agent-badge-provider]")).toBeNull()
   expect(badge().className).toContain("whitespace-nowrap")
   expect(badge().title).toBe(`codex · ${longModel} · reasoningEffort: high`)
   expect(badge().querySelector("[data-slot=agent-badge-effort]")?.textContent).toBe("high")
   expect(badge().getAttribute("tabindex")).toBeNull()
+})
+
+test("compact badge prefers the agent's label", () => {
+  render(<AgentBadge agent={{ ...effectiveAgent(fallback), label: "Terra" }} />)
+  expect(badge().querySelector("[data-slot=agent-badge-model]")?.textContent).toBe("Terra")
 })
 
 test("detail badge shows the whole model id and the effort with its provider's name", () => {

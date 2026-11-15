@@ -49,14 +49,23 @@ function requestedDifference(agent: AgentRef, requested: AgentRef) {
   return requested.effort?.value ?? "—"
 }
 
-// Two spans so CSS can cut the start and keep the tail: model ids differ most at their ends.
-function MiddleTruncate({ text, tail = 12 }: { text: string; tail?: number }) {
-  const split = Math.max(0, text.length - Math.min(tail, Math.floor(text.length / 2)))
+/** What a card has room for: the agent's label, or the last segment of its model id. */
+function shortModel(agent: AgentRef) {
+  return agent.label ?? agent.model.slice(agent.model.lastIndexOf("/") + 1)
+}
+
+function SwapIcon() {
   return (
-    <span data-slot="agent-badge-model" className="flex min-w-0 font-medium">
-      <span className="truncate">{text.slice(0, split)}</span>
-      <span className="shrink-0">{text.slice(split)}</span>
-    </span>
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      aria-hidden="true"
+      className="size-3 shrink-0 self-center"
+    >
+      <path d="M7 4 3 8l4 4M3 8h13M17 20l4-4-4-4M21 16H8" />
+    </svg>
   )
 }
 
@@ -105,15 +114,19 @@ function AgentBadge({
       children: (
         <>
           {differs && <span className="sr-only">{labels.differs}</span>}
-          <span data-slot="agent-badge-provider" className="shrink-0 text-muted-foreground">
-            {agent.provider}
-          </span>
+          {detail && (
+            <span data-slot="agent-badge-provider" className="shrink-0 text-muted-foreground">
+              {agent.provider}
+            </span>
+          )}
           {detail ? (
             <span data-slot="agent-badge-model" className="font-medium break-all">
               {agent.model}
             </span>
           ) : (
-            <MiddleTruncate text={agent.model} />
+            <span data-slot="agent-badge-model" className="min-w-0 truncate font-medium">
+              {shortModel(agent)}
+            </span>
           )}
           {effort && (
             <span data-slot="agent-badge-effort" className="shrink-0 text-muted-foreground">
@@ -125,14 +138,17 @@ function AgentBadge({
               @{agent.environment}
             </span>
           )}
-          {marker && (
-            <span
-              data-slot="agent-badge-requested"
-              className={cn("text-warning", detail ? "break-all" : "min-w-0 truncate")}
-            >
-              {marker}
-            </span>
-          )}
+          {marker &&
+            (detail ? (
+              <span data-slot="agent-badge-requested" className="break-all text-warning">
+                {marker}
+              </span>
+            ) : (
+              <span data-slot="agent-badge-requested" className="inline-flex shrink-0 text-warning">
+                <SwapIcon />
+                <span className="sr-only">{marker}</span>
+              </span>
+            ))}
         </>
       ),
     },

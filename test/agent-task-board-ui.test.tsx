@@ -90,7 +90,7 @@ describe("TaskCard", () => {
     const focusable = [...cardOf("T-013")!.querySelectorAll<HTMLElement>("button, [tabindex]")]
     expect(
       focusable.map((element) => (element.hasAttribute("data-task-select") ? "select" : element.textContent)),
-    ).toEqual(["select", "Write the migration for the attempts table"])
+    ).toEqual(["select", "T-012 Write the migration for the attempts table"])
   })
 })
 

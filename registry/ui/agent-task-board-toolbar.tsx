@@ -37,7 +37,7 @@ function FilterSelect({ name, options, filters, labels, controller }: FilterSele
     ...options[choiceSources[name]].map((value) => ({ value, label: value })),
   ]
   return (
-    <Field className="w-full min-w-0 @xl/agent-task-board-toolbar:w-48">
+    <Field className="min-w-40 flex-1">
       <FieldLabel>{labels.filters[name]}</FieldLabel>
       <Select
         items={items}
@@ -86,23 +86,35 @@ function AgentTaskBoardToolbar({
   const choices = (["project", "profile", "model"] as const).filter((name) => options[choiceSources[name]].length > 0)
   return (
     <div data-slot="agent-task-board-toolbar" className="@container/agent-task-board-toolbar flex flex-col gap-3">
-      {generatedAt && (
-        <p data-slot="agent-task-board-snapshot" className="flex items-center gap-2 text-sm text-muted-foreground">
-          <svg
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            aria-hidden="true"
-            className="size-4"
-          >
-            <circle cx="12" cy="12" r="9" />
-            <path d="M12 7v5l3 2" />
-          </svg>
-          <time dateTime={generatedAt}>{labels.snapshot(formatInstant(generatedAt, { locale, timeZone }))}</time>
-        </p>
-      )}
-      <div className="flex flex-wrap items-end gap-3">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        {generatedAt && (
+          <p data-slot="agent-task-board-snapshot" className="flex items-center gap-2 text-sm text-muted-foreground">
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              aria-hidden="true"
+              className="size-4"
+            >
+              <circle cx="12" cy="12" r="9" />
+              <path d="M12 7v5l3 2" />
+            </svg>
+            <time dateTime={generatedAt}>{labels.snapshot(formatInstant(generatedAt, { locale, timeZone }))}</time>
+          </p>
+        )}
+        <SegmentedControl<BoardView>
+          aria-label={labels.views.group}
+          className="ml-auto"
+          value={view}
+          onValueChange={(next) => next && controller.setView(next, { reason: "item-press" })}
+        >
+          <SegmentedControlIndicator />
+          <SegmentedControlItem value="board">{labels.views.board}</SegmentedControlItem>
+          <SegmentedControlItem value="table">{labels.views.table}</SegmentedControlItem>
+        </SegmentedControl>
+      </div>
+      <div className="flex">
         <fieldset aria-label={labels.filters.group} className="flex min-w-0 flex-1 flex-wrap items-end gap-3">
           <SearchField
             label={labels.filters.search}
@@ -110,7 +122,7 @@ function AgentTaskBoardToolbar({
             placeholder={labels.filters.searchPlaceholder}
             value={filters.query ?? ""}
             onValueChange={(value) => controller.filter({ query: value || null }, { reason: "input-change" })}
-            className="w-full min-w-0 @xl/agent-task-board-toolbar:w-64"
+            className="min-w-56 flex-2"
           />
           {choices.map((name) => (
             <FilterSelect
@@ -133,15 +145,6 @@ function AgentTaskBoardToolbar({
             </Button>
           )}
         </fieldset>
-        <SegmentedControl<BoardView>
-          aria-label={labels.views.group}
-          value={view}
-          onValueChange={(next) => next && controller.setView(next, { reason: "item-press" })}
-        >
-          <SegmentedControlIndicator />
-          <SegmentedControlItem value="board">{labels.views.board}</SegmentedControlItem>
-          <SegmentedControlItem value="table">{labels.views.table}</SegmentedControlItem>
-        </SegmentedControl>
       </div>
     </div>
   )

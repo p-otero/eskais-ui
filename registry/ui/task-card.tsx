@@ -49,7 +49,7 @@ function proposalError(error: unknown, labels: AgentTaskBoardLabels) {
 function dependencyChips(task: TaskView) {
   return task.dependsOn.map((dependency) => ({
     id: dependency.id,
-    label: dependency.title ?? dependency.id,
+    label: `${dependency.id} ${dependency.title ?? ""}`.trim(),
     tone: taskStatusTones[dependency.status],
   }))
 }
