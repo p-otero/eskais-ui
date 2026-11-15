@@ -92,6 +92,10 @@ async function bundle(css, data, file) {
   for (const [text, external] of checks) {
     if (external.test(text)) throw new Error(`${file} still loads something from outside the file: ${external}`)
   }
+  // Hosts that size a frame to its content (T3's preview) reject any viewport-height unit anywhere in the page,
+  // class strings in the bundle included: the page must take its height from its content or its parent.
+  const viewportUnit = page.match(/\b\d+(\.\d+)?[dls]?vh\b|\b(min-|max-)?h-(screen|[dls]?vh)\b/)
+  if (viewportUnit) throw new Error(`${file} uses a viewport height unit: ${viewportUnit[0]}`)
   return statSync(file).size
 }
 

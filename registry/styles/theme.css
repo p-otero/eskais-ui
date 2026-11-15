@@ -19,7 +19,7 @@
   --board-column-max-width: 22rem;
   --board-column-max-height: 40rem;
   --task-panel-width: 26rem;
-  --task-panel-max-height: 70dvh;
+  --task-panel-max-height: 32rem;
 }
 
 :root {

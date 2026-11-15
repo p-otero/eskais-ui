@@ -51,7 +51,7 @@
     "shadcn/no-arbitrary-values": [
       "error",
       {
-        "allow": ["max-h-[calc(100dvh-2rem)]", "w-[calc(100%-2rem)]"]
+        "allow": ["max-h-[calc(100%-2rem)]", "w-[calc(100%-2rem)]"]
       }
     ],
     "shadcn/no-unknown-classes": "error",

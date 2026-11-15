@@ -25,8 +25,8 @@ const drawerBackdropClassName = "fixed inset-0 z-50 bg-overlay"
 
 const drawerContentClassName = [
   "flex flex-col gap-4 overflow-y-auto overscroll-contain border bg-popover/(--glass-opacity) p-surface text-popover-foreground shadow-surface backdrop-surface outline-none",
-  "data-[side=bottom]:mx-auto data-[side=bottom]:max-h-[calc(100dvh-2rem)] data-[side=bottom]:w-full data-[side=bottom]:max-w-2xl data-[side=bottom]:rounded-t-surface data-[side=bottom]:border-b-0",
-  "data-[side=top]:mx-auto data-[side=top]:max-h-[calc(100dvh-2rem)] data-[side=top]:w-full data-[side=top]:max-w-2xl data-[side=top]:rounded-b-surface data-[side=top]:border-t-0",
+  "data-[side=bottom]:mx-auto data-[side=bottom]:max-h-[calc(100%-2rem)] data-[side=bottom]:w-full data-[side=bottom]:max-w-2xl data-[side=bottom]:rounded-t-surface data-[side=bottom]:border-b-0",
+  "data-[side=top]:mx-auto data-[side=top]:max-h-[calc(100%-2rem)] data-[side=top]:w-full data-[side=top]:max-w-2xl data-[side=top]:rounded-b-surface data-[side=top]:border-t-0",
   "data-[side=right]:h-full data-[side=right]:w-[calc(100%-2rem)] data-[side=right]:max-w-sm data-[side=right]:rounded-l-surface data-[side=right]:border-r-0",
   "data-[side=left]:h-full data-[side=left]:w-[calc(100%-2rem)] data-[side=left]:max-w-sm data-[side=left]:rounded-r-surface data-[side=left]:border-l-0",
 ].join(" ")
