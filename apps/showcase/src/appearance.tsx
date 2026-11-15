@@ -1,11 +1,11 @@
 import { createLocalStorage, createPreference } from "@ui-sdk/core"
-import { Field, FieldLabel } from "@ui-sdk/react/field"
 import { usePreference } from "@ui-sdk/react/preferences"
-import { Slider, SliderControl, SliderIndicator, SliderThumb, SliderTrack, SliderValue } from "@ui-sdk/react/slider"
 import { useEffect, useState } from "react"
 
 import { Button } from "@/components/ui/button"
+import { Field, FieldLabel } from "@/components/ui/field"
 import { SegmentedControl, SegmentedControlIndicator, SegmentedControlItem } from "@/components/ui/segmented-control"
+import { Slider, SliderControl, SliderIndicator, SliderThumb, SliderTrack, SliderValue } from "@/components/ui/slider"
 
 const themes = ["default", "compact", "glass"] as const
 type Theme = (typeof themes)[number]
@@ -21,8 +21,8 @@ const theme = createPreference({
 function ThemePicker() {
   const { value } = usePreference(theme)
   return (
-    <Field className="flex flex-col gap-1.5">
-      <FieldLabel className="text-sm font-medium">Theme</FieldLabel>
+    <Field>
+      <FieldLabel>Theme</FieldLabel>
       <SegmentedControl<Theme> value={value} onValueChange={(next) => next && theme.set(next)}>
         <SegmentedControlIndicator />
         {themes.map((name) => (
@@ -54,7 +54,7 @@ function GlassOpacity() {
 
   if (value !== "glass") return null
   return (
-    <Field className="flex w-48 flex-col gap-1.5">
+    <Field className="w-48">
       <Slider
         value={opacity}
         onValueChange={(next) => setOpacity(next)}
@@ -62,16 +62,15 @@ function GlassOpacity() {
         max={100}
         step={5}
         format={(percent) => `${percent}%`}
-        className="flex flex-col gap-1.5"
       >
         <div className="flex justify-between text-sm">
-          <FieldLabel className="font-medium">Glass opacity</FieldLabel>
-          <SliderValue className="text-muted-foreground tabular-nums" />
+          <FieldLabel>Glass opacity</FieldLabel>
+          <SliderValue />
         </div>
-        <SliderControl className="flex h-control-sm cursor-pointer items-center">
-          <SliderTrack className="relative h-1.5 w-full rounded-full bg-input/40">
-            <SliderIndicator className="absolute h-full w-(--slider-indicator-size) rounded-full bg-primary" />
-            <SliderThumb className="absolute top-1/2 left-(--slider-thumb-position) size-4 -translate-1/2 rounded-full border border-input bg-background shadow-sm has-focus-visible:ring-2 has-focus-visible:ring-ring" />
+        <SliderControl>
+          <SliderTrack>
+            <SliderIndicator />
+            <SliderThumb />
           </SliderTrack>
         </SliderControl>
       </Slider>

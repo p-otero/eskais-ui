@@ -1,0 +1,22 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "label",
+  "title": "Label",
+  "description": "UI SDK Label: names any control by htmlFor, including a radio group, slider or switch.",
+  "dependencies": [
+    "@ui-sdk/core@0.1.0-beta.5",
+    "@ui-sdk/react@0.1.0-beta.5"
+  ],
+  "registryDependencies": [
+    "@eskais/utils",
+    "@eskais/theme"
+  ],
+  "files": [
+    {
+      "path": "registry/ui/label.tsx",
+      "content": "\"use client\"\n\nimport { Label as LabelPrimitive } from \"@ui-sdk/react/label\"\nimport type { ComponentProps } from \"react\"\n\nimport { cnState } from \"@/lib/utils\"\n\nfunction Label({ className, ...props }: ComponentProps<typeof LabelPrimitive>) {\n  return (\n    <LabelPrimitive\n      className={cnState(\n        \"inline-flex items-center gap-2 text-sm font-medium select-none has-data-disabled:cursor-not-allowed has-data-disabled:opacity-50\",\n        className,\n      )}\n      {...props}\n    />\n  )\n}\n\nexport { Label }\n",
+      "type": "registry:ui"
+    }
+  ],
+  "type": "registry:ui"
+}

@@ -20,6 +20,8 @@ UI SDK-first, agent-native React components, distributed as a shadcn-style regis
 | `card`, `badge`  | `renderElement`, presentational                                                                                             |
 | Overlays         | `tooltip`, `popover`, `drawer`, `dropdown-menu`, `toast`                                                                    |
 | Selection        | `select`, `combobox`, `segmented-control`, `checkbox`, `textarea`                                                           |
+| Form controls    | `radio-group`, `switch`, `slider`, `toggle`, `toggle-group`, `label`                                                        |
+| Inputs, feedback | `otp-input`, `number-input`, `progress`, `meter`, `alert`                                                                   |
 | Structure        | `tabs`, `collapsible`, `scroll-area`, `separator`, `avatar`                                                                 |
 | Display          | `skeleton`, `empty`, `kbd`, `table` (sortable headers)                                                                      |
 | Status           | `status-pill`, `dependency-chips`, `acceptance-list`, `stat`                                                                |

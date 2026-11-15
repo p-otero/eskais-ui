@@ -1,0 +1,22 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "progress",
+  "title": "Progress",
+  "description": "UI SDK Progress: a task's progress, determinate or indeterminate, with label and value.",
+  "dependencies": [
+    "@ui-sdk/core@0.1.0-beta.5",
+    "@ui-sdk/react@0.1.0-beta.5"
+  ],
+  "registryDependencies": [
+    "@eskais/utils",
+    "@eskais/theme"
+  ],
+  "files": [
+    {
+      "path": "registry/ui/progress.tsx",
+      "content": "\"use client\"\n\nimport {\n  Progress as ProgressPrimitive,\n  ProgressIndicator as ProgressIndicatorPrimitive,\n  ProgressLabel as ProgressLabelPrimitive,\n  ProgressTrack as ProgressTrackPrimitive,\n  ProgressValue as ProgressValuePrimitive,\n} from \"@ui-sdk/react/progress\"\nimport type { ComponentProps } from \"react\"\n\nimport { cnState } from \"@/lib/utils\"\n\nconst gaugeClassNames = {\n  root: \"flex w-full flex-wrap items-baseline justify-between gap-x-3 gap-y-1.5\",\n  label: \"text-sm font-medium\",\n  value: \"text-sm text-muted-foreground tabular-nums\",\n  track: \"relative h-2 w-full basis-full overflow-hidden rounded-full bg-input/40\",\n  indicator: \"absolute inset-y-0 rounded-full bg-primary transition-all motion-reduce:transition-none\",\n}\n\nfunction Progress({ className, ...props }: ComponentProps<typeof ProgressPrimitive>) {\n  return <ProgressPrimitive className={cnState(gaugeClassNames.root, className)} {...props} />\n}\n\nfunction ProgressLabel({ className, ...props }: ComponentProps<typeof ProgressLabelPrimitive>) {\n  return <ProgressLabelPrimitive className={cnState(gaugeClassNames.label, className)} {...props} />\n}\n\nfunction ProgressValue({ className, ...props }: ComponentProps<typeof ProgressValuePrimitive>) {\n  return <ProgressValuePrimitive className={cnState(gaugeClassNames.value, className)} {...props} />\n}\n\nfunction ProgressTrack({ className, children, ...props }: ComponentProps<typeof ProgressTrackPrimitive>) {\n  return (\n    <ProgressTrackPrimitive className={cnState(gaugeClassNames.track, className)} {...props}>\n      {children ?? <ProgressIndicator />}\n    </ProgressTrackPrimitive>\n  )\n}\n\n// Indeterminate has no width to show, so the whole track pulses; reduced motion keeps it still.\nfunction ProgressIndicator({ className, ...props }: ComponentProps<typeof ProgressIndicatorPrimitive>) {\n  return (\n    <ProgressIndicatorPrimitive\n      className={cnState(\n        `${gaugeClassNames.indicator} data-indeterminate:inset-x-0 data-indeterminate:motion-safe:animate-pulse`,\n        className,\n      )}\n      {...props}\n    />\n  )\n}\n\nexport { gaugeClassNames, Progress, ProgressIndicator, ProgressLabel, ProgressTrack, ProgressValue }\nexport type { ProgressState } from \"@ui-sdk/react/progress\"\n",
+      "type": "registry:ui"
+    }
+  ],
+  "type": "registry:ui"
+}

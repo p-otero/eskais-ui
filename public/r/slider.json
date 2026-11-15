@@ -1,0 +1,23 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "slider",
+  "title": "Slider",
+  "description": "UI SDK Slider: one value or a range, with a formatted value part, named by Field.",
+  "dependencies": [
+    "@ui-sdk/core@0.1.0-beta.5",
+    "@ui-sdk/react@0.1.0-beta.5"
+  ],
+  "registryDependencies": [
+    "@eskais/utils",
+    "@eskais/theme",
+    "@eskais/field"
+  ],
+  "files": [
+    {
+      "path": "registry/ui/slider.tsx",
+      "content": "\"use client\"\n\nimport {\n  Slider as SliderPrimitive,\n  SliderControl as SliderControlPrimitive,\n  SliderIndicator as SliderIndicatorPrimitive,\n  SliderThumb as SliderThumbPrimitive,\n  SliderTrack as SliderTrackPrimitive,\n  SliderValue as SliderValuePrimitive,\n  createSliderController,\n} from \"@ui-sdk/react/slider\"\nimport type { ComponentProps } from \"react\"\n\nimport { cnState } from \"@/lib/utils\"\n\nfunction Slider<Value extends number | number[] = number | number[]>({\n  className,\n  ...props\n}: ComponentProps<typeof SliderPrimitive<Value>>) {\n  return (\n    <SliderPrimitive<Value>\n      className={cnState(\n        \"flex flex-col gap-1.5 data-disabled:opacity-50 data-[orientation=vertical]:h-40 data-[orientation=vertical]:w-fit\",\n        className,\n      )}\n      {...props}\n    />\n  )\n}\n\nfunction SliderValue({ className, ...props }: ComponentProps<typeof SliderValuePrimitive>) {\n  return (\n    <SliderValuePrimitive className={cnState(\"text-sm text-muted-foreground tabular-nums\", className)} {...props} />\n  )\n}\n\nfunction SliderControl({ className, ...props }: ComponentProps<typeof SliderControlPrimitive>) {\n  return (\n    <SliderControlPrimitive\n      className={cnState(\n        \"flex cursor-pointer touch-none items-center select-none data-disabled:cursor-not-allowed data-[orientation=horizontal]:h-control-sm data-[orientation=horizontal]:w-full data-[orientation=vertical]:h-full data-[orientation=vertical]:w-control-sm data-[orientation=vertical]:justify-center\",\n        className,\n      )}\n      {...props}\n    />\n  )\n}\n\nfunction SliderTrack({ className, ...props }: ComponentProps<typeof SliderTrackPrimitive>) {\n  return (\n    <SliderTrackPrimitive\n      className={cnState(\n        \"rounded-full bg-input/40 data-[orientation=horizontal]:h-1.5 data-[orientation=horizontal]:w-full data-[orientation=vertical]:h-full data-[orientation=vertical]:w-1.5\",\n        className,\n      )}\n      {...props}\n    />\n  )\n}\n\nfunction SliderIndicator({ className, ...props }: ComponentProps<typeof SliderIndicatorPrimitive>) {\n  return <SliderIndicatorPrimitive className={cnState(\"rounded-full bg-primary\", className)} {...props} />\n}\n\n// UI SDK positions thumbs and the indicator with inline styles; the thumb's border carries the 3:1 edge.\nfunction SliderThumb({ className, ...props }: ComponentProps<typeof SliderThumbPrimitive>) {\n  return (\n    <SliderThumbPrimitive\n      className={cnState(\n        \"size-4 rounded-full border border-input bg-background shadow-sm transition-shadow has-focus-visible:ring-2 has-focus-visible:ring-ring data-dragging:ring-2 data-dragging:ring-ring\",\n        className,\n      )}\n      {...props}\n    />\n  )\n}\n\nexport { createSliderController, Slider, SliderControl, SliderIndicator, SliderThumb, SliderTrack, SliderValue }\nexport type { SliderController, SliderState, SliderValueChangeDetails } from \"@ui-sdk/react/slider\"\n",
+      "type": "registry:ui"
+    }
+  ],
+  "type": "registry:ui"
+}

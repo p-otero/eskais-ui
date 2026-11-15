@@ -1,0 +1,22 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "alert",
+  "title": "Alert",
+  "description": "Presentational alert with tones (info, success, warning, destructive); role=alert only when asked.",
+  "dependencies": [
+    "@ui-sdk/react@0.1.0-beta.5",
+    "class-variance-authority@0.7.1"
+  ],
+  "registryDependencies": [
+    "@eskais/utils",
+    "@eskais/theme"
+  ],
+  "files": [
+    {
+      "path": "registry/ui/alert.tsx",
+      "content": "import { renderElement, type PartProps } from \"@ui-sdk/react/primitive\"\nimport { cva } from \"class-variance-authority\"\n\nimport { cn } from \"@/lib/utils\"\n\ntype AlertTone = \"info\" | \"success\" | \"warning\" | \"destructive\"\n\nconst alertVariants = cva(\n  \"relative flex w-full flex-col gap-1 rounded-surface border bg-background/(--glass-opacity) p-surface text-sm text-foreground [&>svg]:absolute [&>svg]:start-surface [&>svg]:top-surface [&>svg]:size-4 [&>svg]:translate-y-0.5 [&>svg~*]:ps-7\",\n  {\n    variants: {\n      tone: {\n        info: \"border-info/50 [&>svg]:text-info [&>[data-slot=alert-title]]:text-info\",\n        success: \"border-success/50 [&>svg]:text-success [&>[data-slot=alert-title]]:text-success\",\n        warning: \"border-warning/50 [&>svg]:text-warning [&>[data-slot=alert-title]]:text-warning\",\n        destructive: \"border-destructive/50 [&>svg]:text-destructive [&>[data-slot=alert-title]]:text-destructive\",\n      },\n    },\n    defaultVariants: { tone: \"info\" },\n  },\n)\n\n// role=\"alert\" interrupts a screen reader, so it's opt-in for messages that appear after the page loads.\ntype AlertProps = PartProps<\"div\"> & { tone?: AlertTone; announce?: boolean }\n\nfunction Alert({ className, tone, announce, render, ...props }: AlertProps) {\n  return renderElement(\n    \"div\",\n    {\n      \"data-slot\": \"alert\",\n      \"data-tone\": tone ?? \"info\",\n      role: announce ? \"alert\" : undefined,\n      className: cn(alertVariants({ tone }), className),\n      ...props,\n    },\n    render,\n  )\n}\n\nfunction AlertTitle({ className, render, ...props }: PartProps<\"div\">) {\n  return renderElement(\n    \"div\",\n    { \"data-slot\": \"alert-title\", className: cn(\"leading-snug font-medium\", className), ...props },\n    render,\n  )\n}\n\nfunction AlertDescription({ className, render, ...props }: PartProps<\"div\">) {\n  return renderElement(\n    \"div\",\n    {\n      \"data-slot\": \"alert-description\",\n      className: cn(\"text-muted-foreground [&_p]:leading-relaxed\", className),\n      ...props,\n    },\n    render,\n  )\n}\n\nexport { Alert, AlertDescription, AlertTitle, alertVariants }\nexport type { AlertProps, AlertTone }\n",
+      "type": "registry:ui"
+    }
+  ],
+  "type": "registry:ui"
+}
