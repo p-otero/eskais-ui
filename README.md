@@ -10,29 +10,30 @@ UI SDK-first, agent-native React components, distributed as a shadcn-style regis
 
 ## Catalog
 
-| Item             | Built on                                                                   |
-| ---------------- | -------------------------------------------------------------------------- |
-| `button`         | UI SDK `Button`: variants, async pending, focusable when disabled          |
-| `field`, `input` | UI SDK `Field`, `Input`, `InputGroup`, `InputClear`                        |
-| `search-field`   | Own primitive (`definePrimitive`) with a `submit` agent action             |
-| `dialog`         | UI SDK `Dialog`                                                            |
-| `confirm-dialog` | UI SDK `AlertDialog` with an async `action` and `data-agent-confirm`       |
-| `card`, `badge`  | `renderElement`, presentational                                            |
-| Overlays         | `tooltip`, `popover`, `drawer`, `dropdown-menu`, `toast`                   |
-| Selection        | `select`, `combobox`, `segmented-control`, `checkbox`, `textarea`          |
-| Structure        | `tabs`, `collapsible`, `scroll-area`, `separator`, `avatar`                |
-| Display          | `skeleton`, `empty`, `kbd`, `table` (sortable headers)                     |
-| Status           | `status-pill`, `dependency-chips`, `acceptance-list`, `stat`               |
-| Values and time  | `quantity` (honest values), `relative-time` (`useNow`)                     |
-| Layout           | `board` (columns, collapsible, groups)                                     |
-| Agent tasks      | `agent-task-types`, `agent-badge`, `liveness-indicator`, `task-status`     |
-| Agent history    | `usage`, `attempt-timeline`                                                |
-| Agent board core | `agent-task-board-core` (logic, labels, agent actions), `proposal-actions` |
-| Agent task board | `task-card`, `task-detail-panel`, `agent-task-board` (the full board)      |
-| `theme`          | Color, shape, density and surface tokens; the default rounded look         |
-| `theme-compact`  | Denser controls and tighter radii inside `data-theme="compact"`            |
-| `theme-glass`    | Translucent, blurred surfaces inside `data-theme="glass"`                  |
-| `lint-rules`     | Optional `@shadcn/lint` config for consumers                               |
+| Item             | Built on                                                                                                                    |
+| ---------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| `button`         | UI SDK `Button`: variants, async pending, focusable when disabled                                                           |
+| `field`, `input` | UI SDK `Field`, `Input`, `InputGroup`, `InputClear`                                                                         |
+| `search-field`   | Own primitive (`definePrimitive`) with a `submit` agent action                                                              |
+| `dialog`         | UI SDK `Dialog`                                                                                                             |
+| `confirm-dialog` | UI SDK `AlertDialog` with an async `action` and `data-agent-confirm`                                                        |
+| `card`, `badge`  | `renderElement`, presentational                                                                                             |
+| Overlays         | `tooltip`, `popover`, `drawer`, `dropdown-menu`, `toast`                                                                    |
+| Selection        | `select`, `combobox`, `segmented-control`, `checkbox`, `textarea`                                                           |
+| Structure        | `tabs`, `collapsible`, `scroll-area`, `separator`, `avatar`                                                                 |
+| Display          | `skeleton`, `empty`, `kbd`, `table` (sortable headers)                                                                      |
+| Status           | `status-pill`, `dependency-chips`, `acceptance-list`, `stat`                                                                |
+| Values and time  | `quantity` (honest values), `relative-time` (`useNow`)                                                                      |
+| Layout           | `board` (columns, collapsible, groups)                                                                                      |
+| Agent tasks      | `agent-task-types`, `agent-badge`, `liveness-indicator`, `task-status`                                                      |
+| Agent history    | `usage`, `attempt-timeline`                                                                                                 |
+| Agent board core | `agent-task-board-core` (logic, labels, agent actions), `proposal-actions`                                                  |
+| Agent task board | `task-card`, `task-detail-panel`, `agent-task-board` (the full board)                                                       |
+| Navigation       | `accordion`, `hover-card`, `context-menu`, `menubar`, `navigation-menu`, `breadcrumb`, `pagination`, `command` (⌘K palette) |
+| `theme`          | Color, shape, density and surface tokens; the default rounded look                                                          |
+| `theme-compact`  | Denser controls and tighter radii inside `data-theme="compact"`                                                             |
+| `theme-glass`    | Translucent, blurred surfaces inside `data-theme="glass"`                                                                   |
+| `lint-rules`     | Optional `@shadcn/lint` config for consumers                                                                                |
 
 ## Use it
 

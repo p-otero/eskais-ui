@@ -1271,6 +1271,178 @@
       ]
     },
     {
+      "name": "accordion",
+      "type": "registry:ui",
+      "title": "Accordion",
+      "description": "UI SDK Accordion parts: triggers in headings, Enter and Space toggle, animated panels on the density tokens.",
+      "dependencies": [
+        "@ui-sdk/core@0.1.0-beta.5",
+        "@ui-sdk/react@0.1.0-beta.5"
+      ],
+      "registryDependencies": [
+        "@eskais/utils",
+        "@eskais/theme"
+      ],
+      "files": [
+        {
+          "path": "registry/ui/accordion.tsx",
+          "type": "registry:ui"
+        }
+      ]
+    },
+    {
+      "name": "hover-card",
+      "type": "registry:ui",
+      "title": "Hover Card",
+      "description": "UI SDK Hover Card on the popover surface: a link that previews where it goes on hover or keyboard focus.",
+      "dependencies": [
+        "@ui-sdk/core@0.1.0-beta.5",
+        "@ui-sdk/react@0.1.0-beta.5"
+      ],
+      "registryDependencies": [
+        "@eskais/utils",
+        "@eskais/theme",
+        "@eskais/popover"
+      ],
+      "files": [
+        {
+          "path": "registry/ui/hover-card.tsx",
+          "type": "registry:ui"
+        }
+      ]
+    },
+    {
+      "name": "context-menu",
+      "type": "registry:ui",
+      "title": "Context Menu",
+      "description": "UI SDK Menu opened by right-click, long press or Shift+F10 on a focusable area, with the dropdown menu's items.",
+      "dependencies": [
+        "@ui-sdk/core@0.1.0-beta.5",
+        "@ui-sdk/react@0.1.0-beta.5",
+        "class-variance-authority@0.7.1"
+      ],
+      "registryDependencies": [
+        "@eskais/utils",
+        "@eskais/theme",
+        "@eskais/dropdown-menu"
+      ],
+      "files": [
+        {
+          "path": "registry/ui/context-menu.tsx",
+          "type": "registry:ui"
+        }
+      ]
+    },
+    {
+      "name": "menubar",
+      "type": "registry:ui",
+      "title": "Menubar",
+      "description": "UI SDK Menubar: one tab stop, arrow keys between menus, with the dropdown menu's surface and items.",
+      "dependencies": [
+        "@ui-sdk/core@0.1.0-beta.5",
+        "@ui-sdk/react@0.1.0-beta.5"
+      ],
+      "registryDependencies": [
+        "@eskais/utils",
+        "@eskais/theme",
+        "@eskais/dropdown-menu"
+      ],
+      "files": [
+        {
+          "path": "registry/ui/menubar.tsx",
+          "type": "registry:ui"
+        }
+      ]
+    },
+    {
+      "name": "navigation-menu",
+      "type": "registry:ui",
+      "title": "Navigation Menu",
+      "description": "UI SDK Navigation Menu: a named landmark of triggers that disclose panels of links, each panel on the popover surface.",
+      "dependencies": [
+        "@ui-sdk/core@0.1.0-beta.5",
+        "@ui-sdk/react@0.1.0-beta.5",
+        "class-variance-authority@0.7.1"
+      ],
+      "registryDependencies": [
+        "@eskais/utils",
+        "@eskais/theme",
+        "@eskais/popover"
+      ],
+      "files": [
+        {
+          "path": "registry/ui/navigation-menu.tsx",
+          "type": "registry:ui"
+        }
+      ]
+    },
+    {
+      "name": "breadcrumb",
+      "type": "registry:ui",
+      "title": "Breadcrumb",
+      "description": "Presentational breadcrumb trail: a navigation named Breadcrumb, an ordered list and aria-current on the current page.",
+      "dependencies": [
+        "@ui-sdk/react@0.1.0-beta.5"
+      ],
+      "registryDependencies": [
+        "@eskais/utils",
+        "@eskais/theme"
+      ],
+      "files": [
+        {
+          "path": "registry/ui/breadcrumb.tsx",
+          "type": "registry:ui"
+        }
+      ]
+    },
+    {
+      "name": "pagination",
+      "type": "registry:ui",
+      "title": "Pagination",
+      "description": "UI SDK Pagination that works standalone: page, pageCount or total and pageSize, onPageChange with details, overridable labels.",
+      "dependencies": [
+        "@ui-sdk/core@0.1.0-beta.5",
+        "@ui-sdk/react@0.1.0-beta.5"
+      ],
+      "registryDependencies": [
+        "@eskais/utils",
+        "@eskais/theme",
+        "@eskais/button"
+      ],
+      "files": [
+        {
+          "path": "registry/ui/pagination.tsx",
+          "type": "registry:ui"
+        }
+      ]
+    },
+    {
+      "name": "command",
+      "type": "registry:ui",
+      "title": "Command",
+      "description": "UI SDK Command list with search, groups, empty state and Kbd shortcuts, plus a CommandDialog palette with an opt-in mod+K trigger.",
+      "dependencies": [
+        "@ui-sdk/core@0.1.0-beta.5",
+        "@ui-sdk/react@0.1.0-beta.5"
+      ],
+      "registryDependencies": [
+        "@eskais/utils",
+        "@eskais/theme",
+        "@eskais/dialog",
+        "@eskais/kbd"
+      ],
+      "files": [
+        {
+          "path": "registry/ui/command.tsx",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/command-dialog.tsx",
+          "type": "registry:ui"
+        }
+      ]
+    },
+    {
       "name": "lint-rules",
       "type": "registry:file",
       "title": "Lint Rules (optional)",

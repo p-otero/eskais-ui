@@ -34,6 +34,7 @@ import { agent, approval, type ApprovalRequest } from "./agent"
 import { AppearanceControls, theme } from "./appearance"
 import { Section } from "./section"
 import { BoardSection } from "./sections/board"
+import { NavigationSection } from "./sections/navigation"
 import { OverlaysSection } from "./sections/overlays"
 import { ProposalsSection } from "./sections/proposals"
 import { StructureSection } from "./sections/structure"
@@ -278,6 +279,8 @@ function App() {
           <StructureSection />
 
           <OverlaysSection />
+
+          <NavigationSection />
 
           <ValuesSection />
 

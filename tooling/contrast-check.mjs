@@ -130,6 +130,16 @@ const popups = [
     selector: '[role="menu"]',
   },
   {
+    name: "command palette",
+    open: (page) => page.getByRole("button", { name: "Search commands" }),
+    selector: '[data-slot="dialog-content"]:has([data-slot="command"])',
+  },
+  {
+    name: "menubar menu",
+    open: (page) => page.getByRole("menuitem", { name: "File", exact: true }),
+    selector: '[role="menu"]',
+  },
+  {
     name: "task detail panel",
     open: (page) => page.getByRole("button", { name: "Open T-014 Index the docs for search" }),
     selector: '[data-slot="task-detail-panel"]',

@@ -61,6 +61,14 @@ const items = [
   "task-card",
   "task-detail-panel",
   "agent-task-board",
+  "accordion",
+  "hover-card",
+  "context-menu",
+  "menubar",
+  "navigation-menu",
+  "breadcrumb",
+  "pagination",
+  "command",
 ]
 const versions = {
   react: "19.3.1",

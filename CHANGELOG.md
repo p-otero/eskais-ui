@@ -25,6 +25,7 @@ Versions follow [semver](https://semver.org). Before 1.0, a minor version can br
 - The board primitive takes a `controller` (`createAgentTaskBoardController`), so a person's controls go through the same actions as an agent's.
 - Theme: `--task-panel-width` and `--task-panel-max-height`.
 - CI builds the board as one self-contained HTML file with Bun and opens it from `file://` with the network blocked.
+- Navigation and overlays: `accordion`, `hover-card`, `context-menu`, `menubar`, `navigation-menu`, `breadcrumb`, `pagination` (standalone, with overridable labels) and `command` with a `CommandDialog` palette whose ⌘K shortcut is opt-in.
 
 ### Changed
 
