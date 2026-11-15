@@ -760,6 +760,91 @@
       ]
     },
     {
+      "name": "quantity",
+      "type": "registry:ui",
+      "title": "Quantity",
+      "description": "Honest values: formatQuantity() and QuantityValue show unknown as a dash, estimated with ~ and screen reader text, and the source in the title.",
+      "dependencies": [
+        "@ui-sdk/react@0.1.0-beta.5"
+      ],
+      "registryDependencies": [
+        "@eskais/utils",
+        "@eskais/theme"
+      ],
+      "files": [
+        {
+          "path": "registry/lib/quantity.ts",
+          "type": "registry:lib"
+        },
+        {
+          "path": "registry/ui/quantity-value.tsx",
+          "type": "registry:ui"
+        }
+      ]
+    },
+    {
+      "name": "relative-time",
+      "type": "registry:ui",
+      "title": "Relative Time",
+      "description": "formatRelative() and formatInstant() on Date + Intl, a RelativeTime <time> with the absolute instant in its title, and a useNow hook that pauses while the page is hidden.",
+      "dependencies": [
+        "@ui-sdk/react@0.1.0-beta.5"
+      ],
+      "registryDependencies": [
+        "@eskais/utils"
+      ],
+      "files": [
+        {
+          "path": "registry/lib/time.ts",
+          "type": "registry:lib"
+        },
+        {
+          "path": "registry/ui/relative-time.tsx",
+          "type": "registry:ui"
+        }
+      ]
+    },
+    {
+      "name": "acceptance-list",
+      "type": "registry:ui",
+      "title": "Acceptance List",
+      "description": "A list of pass, fail and unverified criteria with evidence, and a segmented AcceptanceBar on the UI SDK Meter with an accessible summary.",
+      "dependencies": [
+        "@ui-sdk/core@0.1.0-beta.5",
+        "@ui-sdk/react@0.1.0-beta.5"
+      ],
+      "registryDependencies": [
+        "@eskais/utils",
+        "@eskais/theme"
+      ],
+      "files": [
+        {
+          "path": "registry/ui/acceptance-list.tsx",
+          "type": "registry:ui"
+        }
+      ]
+    },
+    {
+      "name": "stat",
+      "type": "registry:ui",
+      "title": "Stat",
+      "description": "Summary figures: Stat, StatLabel, StatValue (a number, a Quantity or a node) and StatHint, in a responsive StatGroup list.",
+      "dependencies": [
+        "@ui-sdk/react@0.1.0-beta.5"
+      ],
+      "registryDependencies": [
+        "@eskais/utils",
+        "@eskais/theme",
+        "@eskais/quantity"
+      ],
+      "files": [
+        {
+          "path": "registry/ui/stat.tsx",
+          "type": "registry:ui"
+        }
+      ]
+    },
+    {
       "name": "lint-rules",
       "type": "registry:file",
       "title": "Lint Rules (optional)",

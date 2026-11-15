@@ -54,10 +54,11 @@ Eskais UI components are UI SDK parts styled with Tailwind v4 and semantic token
 
 1. Read the UI SDK page for the component. If UI SDK ships it, style its parts; don't reimplement.
 2. If it doesn't, write a primitive with `definePrimitive` (`agent.actions` last) next to the component, as `search-field-primitive.ts` does, and render it with `createParts`.
-3. Use `cnState` from `@/lib/utils` so a consumer's `className` can still be a function of state.
-4. Size and shape it with the tokens above so every theme applies.
-5. Add tests in `test/`: behavior with Testing Library, `mount`/`checkServer` for primitives, the agent test, and `allow` refused/approved for anything with `data-agent-confirm`.
-6. Add the item to `registry.json`, run `bun run verify` and commit `public/r`.
+3. Never give a `registry/lib` file and a `registry/ui` file the same basename: `shadcn add` rewrites imports by basename and points one at the other in the consumer.
+4. Use `cnState` from `@/lib/utils` so a consumer's `className` can still be a function of state.
+5. Size and shape it with the tokens above so every theme applies.
+6. Add tests in `test/`: behavior with Testing Library, `mount`/`checkServer` for primitives, the agent test, and `allow` refused/approved for anything with `data-agent-confirm`.
+7. Add the item to `registry.json`, run `bun run verify` and commit `public/r`.
 
 ## Keep it small
 

@@ -36,6 +36,7 @@ import { Section } from "./section"
 import { OverlaysSection } from "./sections/overlays"
 import { StructureSection } from "./sections/structure"
 import { SelectionSection } from "./sections/selection"
+import { ValuesSection } from "./sections/values"
 
 const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
 
@@ -271,6 +272,8 @@ function App() {
           <StructureSection />
 
           <OverlaysSection />
+
+          <ValuesSection />
 
           <AgentPanel />
         </main>

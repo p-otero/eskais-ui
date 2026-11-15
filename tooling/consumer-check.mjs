@@ -43,6 +43,10 @@ const items = [
   "segmented-control",
   "checkbox",
   "textarea",
+  "quantity",
+  "relative-time",
+  "acceptance-list",
+  "stat",
 ]
 const versions = {
   react: "19.3.1",

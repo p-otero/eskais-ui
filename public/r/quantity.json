@@ -1,0 +1,26 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "quantity",
+  "title": "Quantity",
+  "description": "Honest values: formatQuantity() and QuantityValue show unknown as a dash, estimated with ~ and screen reader text, and the source in the title.",
+  "dependencies": [
+    "@ui-sdk/react@0.1.0-beta.5"
+  ],
+  "registryDependencies": [
+    "@eskais/utils",
+    "@eskais/theme"
+  ],
+  "files": [
+    {
+      "path": "registry/lib/quantity.ts",
+      "content": "type Quality = \"measured\" | \"estimated\" | \"derived\" | \"unknown\"\n\ninterface Quantity {\n  value: number | null\n  quality: Quality\n  source?: string\n}\n\ntype QuantityLabels = Record<Quality, string>\n\ninterface FormatQuantityOptions {\n  format?: (value: number) => string\n  locale?: string\n  labels?: Partial<QuantityLabels>\n}\n\ninterface FormattedQuantity {\n  text: string\n  srText: string\n  title: string | undefined\n  quality: Quality\n}\n\nconst defaultQuantityLabels: QuantityLabels = {\n  measured: \"measured\",\n  estimated: \"estimated\",\n  derived: \"derived\",\n  unknown: \"unknown\",\n}\n\nconst UNKNOWN_TEXT = \"—\"\n\nfunction isQuantity(value: unknown): value is Quantity {\n  return typeof value === \"object\" && value !== null && \"quality\" in value && \"value\" in value\n}\n\nfunction formatQuantity(quantity: Quantity, options: FormatQuantityOptions = {}): FormattedQuantity {\n  const labels = { ...defaultQuantityLabels, ...options.labels }\n  const { value, source } = quantity\n  const known = quantity.quality !== \"unknown\" && value !== null && Number.isFinite(value)\n  const quality: Quality = known ? quantity.quality : \"unknown\"\n  const title = quality === \"measured\" && !source ? undefined : [labels[quality], source].filter(Boolean).join(\": \")\n\n  if (!known) return { text: UNKNOWN_TEXT, srText: labels.unknown, title, quality }\n\n  const format = options.format ?? new Intl.NumberFormat(options.locale).format\n  const number = format(value)\n  if (quality === \"estimated\") return { text: `~${number}`, srText: `${number} (${labels.estimated})`, title, quality }\n  return { text: number, srText: number, title, quality }\n}\n\nexport { defaultQuantityLabels, formatQuantity, isQuantity }\nexport type { FormatQuantityOptions, FormattedQuantity, Quality, Quantity, QuantityLabels }\n",
+      "type": "registry:lib"
+    },
+    {
+      "path": "registry/ui/quantity-value.tsx",
+      "content": "import { renderElement, type PartProps } from \"@ui-sdk/react/primitive\"\n\nimport { cn } from \"@/lib/utils\"\nimport { formatQuantity, type FormatQuantityOptions, type Quantity } from \"@/lib/quantity\"\n\ntype QuantityValueProps = Omit<PartProps<\"span\">, \"children\"> & FormatQuantityOptions & { value: Quantity }\n\nfunction QuantityValue({ value, format, locale, labels, className, render, ...props }: QuantityValueProps) {\n  const { text, srText, title, quality } = formatQuantity(value, { format, locale, labels })\n  return renderElement(\n    \"span\",\n    {\n      \"data-slot\": \"quantity\",\n      \"data-quality\": quality,\n      title,\n      className: cn(\"tabular-nums data-[quality=unknown]:text-muted-foreground\", className),\n      ...props,\n      children: (\n        <>\n          <span aria-hidden=\"true\">{text}</span>\n          <span className=\"sr-only\">{srText}</span>\n        </>\n      ),\n    },\n    render,\n  )\n}\n\nexport { QuantityValue }\nexport type { QuantityValueProps }\n",
+      "type": "registry:ui"
+    }
+  ],
+  "type": "registry:ui"
+}
