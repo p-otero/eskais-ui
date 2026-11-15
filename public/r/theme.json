@@ -115,11 +115,21 @@
       "--surface-backdrop": "none",
       "--glass-opacity": "100%",
       "--glass-blur": "0px",
-      "--glass-saturation": "1"
+      "--glass-saturation": "1",
+      "--board-column-min-width": "16rem",
+      "--board-column-max-width": "22rem",
+      "--board-column-max-height": "40rem"
     },
     "@utility backdrop-surface": {
       "-webkit-backdrop-filter": "var(--surface-backdrop)",
       "backdrop-filter": "var(--surface-backdrop)"
+    },
+    "@utility content-auto": {
+      "content-visibility": "auto",
+      "contain-intrinsic-height": "auto var(--intrinsic-height, 24rem)"
+    },
+    "@utility text-vertical": {
+      "writing-mode": "vertical-rl"
     },
     "@layer base": {
       "[data-slot=\"button\"]:not([data-pending]) [data-show=\"pending\"], [data-slot=\"button\"][data-pending] [data-show=\"idle\"], [data-slot=\"alert-dialog-close\"]:not([data-pending]) [data-show=\"pending\"], [data-slot=\"alert-dialog-close\"][data-pending] [data-show=\"idle\"]": {

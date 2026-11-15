@@ -63,7 +63,7 @@ const shape = tree(themeCss.slice(shapeStart, themeCss.indexOf("}", shapeStart) 
 const { "@layer base": base } = item("theme").css ?? {}
 item("theme").css = {
   ...shape,
-  "@utility backdrop-surface": tree(themeCss)["@utility backdrop-surface"] ?? {},
+  ...Object.fromEntries(Object.entries(tree(themeCss)).filter(([selector]) => selector.startsWith("@utility "))),
   ...(base ? { "@layer base": base } : {}),
 }
 item("theme-compact").css = tree(read("theme-compact.css"))

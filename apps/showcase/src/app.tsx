@@ -33,6 +33,7 @@ import { SearchField } from "@/components/ui/search-field"
 import { agent, approval, type ApprovalRequest } from "./agent"
 import { AppearanceControls, theme } from "./appearance"
 import { Section } from "./section"
+import { BoardSection } from "./sections/board"
 import { OverlaysSection } from "./sections/overlays"
 import { StructureSection } from "./sections/structure"
 import { SelectionSection } from "./sections/selection"
@@ -274,6 +275,8 @@ function App() {
           <OverlaysSection />
 
           <ValuesSection />
+
+          <BoardSection />
 
           <AgentPanel />
         </main>

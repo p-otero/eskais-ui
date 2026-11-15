@@ -47,6 +47,7 @@ const items = [
   "relative-time",
   "acceptance-list",
   "stat",
+  "board",
 ]
 const versions = {
   react: "19.3.1",

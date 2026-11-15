@@ -14,6 +14,9 @@
   --glass-opacity: 100%;
   --glass-blur: 0px;
   --glass-saturation: 1;
+  --board-column-min-width: 16rem;
+  --board-column-max-width: 22rem;
+  --board-column-max-height: 40rem;
 }
 
 :root {
@@ -119,6 +122,16 @@
 @utility backdrop-surface {
   -webkit-backdrop-filter: var(--surface-backdrop);
   backdrop-filter: var(--surface-backdrop);
+}
+
+/* Skips rendering off-screen content; the intrinsic height keeps the scrollbar stable meanwhile. */
+@utility content-auto {
+  content-visibility: auto;
+  contain-intrinsic-height: auto var(--intrinsic-height, 24rem);
+}
+
+@utility text-vertical {
+  writing-mode: vertical-rl;
 }
 
 @layer base {
