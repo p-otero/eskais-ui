@@ -1,0 +1,24 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "liveness-indicator",
+  "title": "Liveness Indicator",
+  "description": "A toned dot and label for an agent's computed liveness (running pulses, suspect_dead is destructive) and the time since its last activity, with now, locale and timeZone passed through.",
+  "dependencies": [
+    "@ui-sdk/react@0.1.0-beta.5"
+  ],
+  "registryDependencies": [
+    "@eskais/utils",
+    "@eskais/theme",
+    "@eskais/agent-task-types",
+    "@eskais/status-pill",
+    "@eskais/relative-time"
+  ],
+  "files": [
+    {
+      "path": "registry/ui/liveness-indicator.tsx",
+      "content": "\"use client\"\n\nimport { renderElement, type PartProps } from \"@ui-sdk/react/primitive\"\n\nimport type { Liveness } from \"@/lib/agent-task-types\"\nimport type { Instant } from \"@/lib/time\"\nimport { cn } from \"@/lib/utils\"\nimport { RelativeTime } from \"@/components/ui/relative-time\"\nimport { StatusPill, type StatusTone } from \"@/components/ui/status-pill\"\n\ntype LivenessLabels = Record<Liveness, string> & {\n  /** Precedes the time since the last activity, as in \"last activity 47 minutes ago\". */\n  lastActivity: string\n}\n\nconst livenessLabels: LivenessLabels = {\n  running: \"Running\",\n  idle: \"Idle\",\n  waiting_input: \"Waiting for input\",\n  suspect_dead: \"Possibly stuck\",\n  finished: \"Finished\",\n  lastActivity: \"last activity\",\n}\n\nconst livenessLabelsEs: LivenessLabels = {\n  running: \"En marcha\",\n  idle: \"Inactivo\",\n  waiting_input: \"Esperando respuesta\",\n  suspect_dead: \"Posiblemente colgado\",\n  finished: \"Terminado\",\n  lastActivity: \"última actividad\",\n}\n\nconst livenessTones: Record<Liveness, StatusTone> = {\n  running: \"info\",\n  idle: \"muted\",\n  waiting_input: \"warning\",\n  suspect_dead: \"destructive\",\n  finished: \"neutral\",\n}\n\ntype LivenessIndicatorProps = Omit<PartProps<\"span\">, \"children\"> & {\n  /** Computed by the data source; never derived here from times. */\n  liveness: Liveness\n  lastActivityAt?: Instant\n  /** One `useNow()` per screen, passed down. */\n  now?: Instant\n  locale?: string\n  timeZone?: string\n  labels?: Partial<LivenessLabels>\n}\n\nfunction LivenessIndicator({\n  liveness,\n  lastActivityAt,\n  now,\n  locale,\n  timeZone,\n  labels: labelOverrides,\n  className,\n  render,\n  ...props\n}: LivenessIndicatorProps) {\n  const labels = { ...livenessLabels, ...labelOverrides }\n  return renderElement(\n    \"span\",\n    {\n      \"data-slot\": \"liveness\",\n      \"data-liveness\": liveness,\n      className: cn(\"inline-flex max-w-full flex-wrap items-center gap-x-2 gap-y-1 text-xs\", className),\n      ...props,\n      children: (\n        <>\n          <StatusPill tone={livenessTones[liveness]} dot pulse={liveness === \"running\"}>\n            {labels[liveness]}\n          </StatusPill>\n          {lastActivityAt !== undefined && (\n            <span data-slot=\"liveness-activity\" className=\"whitespace-nowrap text-muted-foreground\">\n              {labels.lastActivity}{\" \"}\n              <RelativeTime value={lastActivityAt} now={now} locale={locale} timeZone={timeZone} />\n            </span>\n          )}\n        </>\n      ),\n    },\n    render,\n  )\n}\n\nexport { LivenessIndicator, livenessLabels, livenessLabelsEs, livenessTones }\nexport type { LivenessIndicatorProps, LivenessLabels }\n",
+      "type": "registry:ui"
+    }
+  ],
+  "type": "registry:ui"
+}

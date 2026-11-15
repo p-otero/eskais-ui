@@ -35,10 +35,13 @@ import { AppearanceControls, theme } from "./appearance"
 import { Section } from "./section"
 import { BoardSection } from "./sections/board"
 import { OverlaysSection } from "./sections/overlays"
+import { ProposalsSection } from "./sections/proposals"
 import { StructureSection } from "./sections/structure"
 import { SelectionSection } from "./sections/selection"
 import { ValuesSection } from "./sections/values"
 import { StatusSection } from "./sections/status"
+import { AgentsSection } from "./sections/agents"
+import { AttemptsSection } from "./sections/attempts"
 
 const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
 
@@ -279,7 +282,13 @@ function App() {
 
           <BoardSection />
 
+          <AttemptsSection />
+
           <StatusSection />
+
+          <AgentsSection />
+
+          <ProposalsSection />
 
           <AgentPanel />
         </main>

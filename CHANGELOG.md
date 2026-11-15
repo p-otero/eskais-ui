@@ -20,6 +20,7 @@ Versions follow [semver](https://semver.org). Before 1.0, a minor version can br
 
 - Board pieces: `board`, `status-pill`, `dependency-chips`, `acceptance-list`, `stat`, `quantity`, `relative-time`.
 - Theme: `rounded-choice` radius, board column size tokens, and the `content-auto` and `text-vertical` utilities.
+- Agent task pieces: `agent-task-types`, `agent-badge`, `liveness-indicator`, `task-status`, `usage`, `attempt-timeline`, `agent-task-board-core` and `proposal-actions`, with English labels and Spanish presets.
 
 ### Changed
 

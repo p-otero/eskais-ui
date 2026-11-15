@@ -51,6 +51,13 @@ const items = [
   "status-pill",
   "agent-task-types",
   "dependency-chips",
+  "agent-badge",
+  "liveness-indicator",
+  "task-status",
+  "usage",
+  "attempt-timeline",
+  "agent-task-board-core",
+  "proposal-actions",
 ]
 const versions = {
   react: "19.3.1",

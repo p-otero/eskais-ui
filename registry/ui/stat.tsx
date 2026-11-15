@@ -22,6 +22,7 @@ type StatValueProps = PartProps<"div"> & FormatQuantityOptions & { value?: numbe
 
 function StatValue({ value, format, locale, labels, className, render, children, ...props }: StatValueProps) {
   const options = { format, locale, labels }
+  const numeric = isQuantity(value) || typeof value === "number"
   let content = children
   if (isQuantity(value)) content = <QuantityValue value={value} {...options} />
   else if (typeof value === "number") content = formatQuantity({ value, quality: "measured" }, options).text
@@ -29,7 +30,14 @@ function StatValue({ value, format, locale, labels, className, render, children,
     "div",
     {
       "data-slot": "stat-value",
-      className: cn("text-2xl leading-none font-semibold tabular-nums", className),
+      "data-kind": numeric ? "number" : "text",
+      title: !numeric && typeof children === "string" ? children : undefined,
+      // Text such as "2 minutes ago" would wrap at display size, so it stays on one line, smaller.
+      className: cn(
+        "font-semibold tabular-nums",
+        numeric ? "text-2xl leading-none" : "truncate text-lg leading-snug",
+        className,
+      ),
       ...props,
       children: content,
     },

@@ -1,0 +1,139 @@
+import { createChange, definePrimitive, dispatch, type ChangeDetails, type ChangeOptions } from "@ui-sdk/core"
+
+import { filterOptions, type TaskFilters } from "@/lib/agent-task-board"
+import type { AttemptView, TaskView, ThreadRef } from "@/lib/agent-task-types"
+
+type BoardView = "board" | "table"
+type BoardMode = "snapshot" | "live"
+type AgentApproval = "confirm" | "allow" | "deny"
+
+type ViewChangeReason = "item-press" | "imperative"
+type FiltersChangeReason = "item-press" | "input-change" | "clear-press" | "imperative"
+type SelectReason = "item-press" | "close-press" | "escape-key" | "imperative"
+type OpenThreadReason = "item-press" | "link-press" | "imperative"
+
+type AgentTaskBoardOptions = {
+  tasks?: TaskView[]
+  view?: BoardView
+  defaultView?: BoardView
+  onViewChange?: (view: BoardView, details: ChangeDetails<ViewChangeReason>) => void
+  filters?: TaskFilters
+  defaultFilters?: TaskFilters
+  onFiltersChange?: (filters: TaskFilters, details: ChangeDetails<FiltersChangeReason>) => void
+  selectedTaskId?: string | null
+  defaultSelectedTaskId?: string | null
+  /** The contract's `onSelectTask`; the root component maps one onto the other. */
+  onSelectedTaskIdChange?: (id: string | null, details: ChangeDetails<SelectReason>) => void
+  onOpenThread?: (thread: ThreadRef, details: ChangeDetails<OpenThreadReason> & { attemptId: string }) => void
+}
+
+const FILTER_KEYS = ["project", "profile", "model", "query"] as const
+const CHOICE_KEYS = { project: "projects", profile: "profiles", model: "models" } as const
+
+function reasonOf<Reason extends string>(options: unknown): { reason: Reason | "imperative"; event?: Event } {
+  if (typeof options !== "object" || options === null) return { reason: "imperative" }
+  const { reason = "imperative", event } = options as ChangeOptions<Reason>
+  return { reason, event: event instanceof Event ? event : undefined }
+}
+
+// The agent bridge passes action arguments unchecked, so every action validates its own.
+function checkFilters(partial: unknown, current: TaskFilters, tasks: readonly TaskView[]): TaskFilters {
+  if (typeof partial !== "object" || partial === null || Array.isArray(partial)) {
+    throw new TypeError(`filter takes an object with any of: ${FILTER_KEYS.join(", ")}.`)
+  }
+  const choices = filterOptions(tasks)
+  const next: TaskFilters = { ...current }
+  for (const [key, value] of Object.entries(partial)) {
+    if (!(FILTER_KEYS as readonly string[]).includes(key)) {
+      throw new TypeError(`Unknown filter "${key}". Filters: ${FILTER_KEYS.join(", ")}.`)
+    }
+    const filterKey = key as keyof TaskFilters
+    if (value === null || value === undefined || value === "") {
+      delete next[filterKey]
+      continue
+    }
+    if (typeof value !== "string") throw new TypeError(`Filter "${key}" takes text, or null to clear it.`)
+    if (filterKey !== "query") {
+      const allowed = choices[CHOICE_KEYS[filterKey]]
+      if (!allowed.includes(value)) throw new RangeError(`No ${key} "${value}". Choices: ${allowed.join(", ")}.`)
+    }
+    next[filterKey] = value
+  }
+  return next
+}
+
+function findAttempt(tasks: readonly TaskView[], attemptId: string): AttemptView | undefined {
+  for (const task of tasks) {
+    const attempt = task.attempts.find((candidate) => candidate.id === attemptId)
+    if (attempt) return attempt
+  }
+  return undefined
+}
+
+const agentTaskBoard = definePrimitive({
+  name: "agent-task-board",
+  options: {
+    tasks: "list",
+    view: "string",
+    defaultView: "string",
+    onViewChange: "callback",
+    filters: "value",
+    defaultFilters: "value",
+    onFiltersChange: "callback",
+    selectedTaskId: "value",
+    defaultSelectedTaskId: "value",
+    onSelectedTaskIdChange: "callback",
+    onOpenThread: "callback",
+  },
+  state: (options: AgentTaskBoardOptions) => ({
+    view: options.view ?? options.defaultView ?? ("board" as BoardView),
+    filters: options.filters ?? options.defaultFilters ?? {},
+    selectedTaskId:
+      options.selectedTaskId !== undefined ? options.selectedTaskId : (options.defaultSelectedTaskId ?? null),
+  }),
+  sync: (options) => ({
+    ...(options.view === undefined ? {} : { view: options.view }),
+    ...(options.filters === undefined ? {} : { filters: options.filters }),
+    ...(options.selectedTaskId === undefined ? {} : { selectedTaskId: options.selectedTaskId }),
+  }),
+  controlled: ["view", "filters", "selectedTaskId"],
+  api: (context) => {
+    const change = createChange(context)
+    const tasks = () => context.options().tasks ?? []
+    return {
+      setView(view: unknown, options?: ChangeOptions<ViewChangeReason>) {
+        if (view !== "board" && view !== "table") throw new TypeError(`setView takes "board" or "table".`)
+        return change("view", view, reasonOf(options))
+      },
+      filter(partial: unknown, options?: ChangeOptions<FiltersChangeReason>) {
+        const next = checkFilters(partial, context.store.get().filters, tasks())
+        return change("filters", next, reasonOf(options))
+      },
+      selectTask(id: unknown, options?: ChangeOptions<SelectReason>) {
+        if (id !== null && !tasks().some((task) => task.id === id)) {
+          throw new RangeError(`No task "${String(id)}". Pass a task id from the board, or null to close it.`)
+        }
+        return change("selectedTaskId", id as string | null, reasonOf(options))
+      },
+      openThread(attemptId: unknown, options?: ChangeOptions<OpenThreadReason>) {
+        const attempt = typeof attemptId === "string" ? findAttempt(tasks(), attemptId) : undefined
+        if (!attempt) throw new RangeError(`No attempt "${String(attemptId)}" on the board.`)
+        if (!attempt.thread) throw new RangeError(`Attempt "${attempt.id}" has no thread.`)
+        if (!context.options().onOpenThread) throw new Error("This board doesn't open threads.")
+        const details = { ...reasonOf(options), attemptId: attempt.id }
+        return !dispatch(context, "onOpenThread", attempt.thread, details)
+      },
+      tasks: () => tasks().map((task) => ({ value: task.id, label: `${task.id} ${task.title}` })),
+    }
+  },
+  slots: (slot) => ({
+    root: slot({
+      role: "region",
+      attrs: (state) => ({ "data-view": state.view, "data-selected": state.selectedTaskId === null ? undefined : "" }),
+    }),
+  }),
+  agent: { actions: ["selectTask", "openThread", "setView", "filter"], items: (api) => api.tasks() },
+})
+
+export { agentTaskBoard }
+export type { AgentApproval, AgentTaskBoardOptions, BoardMode, BoardView }

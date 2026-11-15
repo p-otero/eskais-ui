@@ -32,6 +32,12 @@ Eskais UI components are UI SDK parts styled with Tailwind v4 and semantic token
 | Pass/fail criteria           | `AcceptanceList`, and `AcceptanceBar` with `countAcceptance` for a compact summary                                                                                                                                |
 | Summary figures              | `StatGroup` of `Stat` parts                                                                                                                                                                                       |
 | Columns of items             | `Board` with `BoardColumn` (collapsible, groups, `empty`); no drag and drop                                                                                                                                       |
+| Which agent ran              | `AgentBadge agent requested?`: long model ids truncate in the middle; a marker shows when what ran differs from what was asked                                                                                    |
+| Is an agent alive            | `LivenessIndicator` with `liveness` from your data; it never infers it from times                                                                                                                                 |
+| Task or attempt status       | `TaskStatusPill`, `AttemptStatusPill`, `ContextModePill`                                                                                                                                                          |
+| Tokens and cost              | `UsageTable` / `UsageStat`; unknown stays `—`                                                                                                                                                                     |
+| An agent task's attempts     | `AttemptTimeline`; older attempts collapse past five                                                                                                                                                              |
+| Approve or reject a proposal | `ProposalActions` with `agentApproval` (`"confirm"` by default, `"allow"`, `"deny"`)                                                                                                                              |
 
 ## Separate the layers
 

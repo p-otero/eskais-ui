@@ -163,6 +163,31 @@ test("stat group renders a list of figures from numbers, quantities and nodes", 
   expect(screen.getByText("Live").tagName).toBe("STRONG")
 })
 
+test("text stat values stay on one smaller line with the full text in title; numbers stay large", () => {
+  render(
+    <>
+      <StatValue value={12} />
+      <StatValue>Waiting for a reviewer to pick it up</StatValue>
+      <StatValue>
+        <RelativeTime value="2026-11-15T11:58:00Z" now={now} locale="en-US" />
+      </StatValue>
+    </>,
+  )
+  const number = screen.getByText("12")
+  expect(number.dataset.kind).toBe("number")
+  expect(number.className).toContain("text-2xl")
+  expect(number.className).not.toContain("truncate")
+  const text = screen.getByText("Waiting for a reviewer to pick it up")
+  expect(text.dataset.kind).toBe("text")
+  expect(text.className).toContain("truncate")
+  expect(text.className).not.toContain("text-2xl")
+  expect(text.title).toBe("Waiting for a reviewer to pick it up")
+  const time = screen.getByText("2 minutes ago").parentElement!
+  expect(time.dataset.kind).toBe("text")
+  expect(time.className).toContain("truncate")
+  expect(time.hasAttribute("title")).toBe(false)
+})
+
 test("a page of values has no axe violations and offers agents nothing to operate", async () => {
   const { container } = render(
     <main>
