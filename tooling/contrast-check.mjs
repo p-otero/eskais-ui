@@ -45,7 +45,17 @@ async function measure(page, selector) {
     element.scrollIntoView({ block: "center" })
     const range = document.createRange()
     range.selectNodeContents(element)
-    const box = range.getBoundingClientRect()
+    // Truncated text reports its full range width; clip to the element so a neighbor's pixels don't count.
+    const textBox = range.getBoundingClientRect()
+    const own = element.getBoundingClientRect()
+    const left = Math.max(textBox.left, own.left)
+    const top = Math.max(textBox.top, own.top)
+    const box = new DOMRect(
+      left,
+      top,
+      Math.min(textBox.right, own.right) - left,
+      Math.min(textBox.bottom, own.bottom) - top,
+    )
     const style = getComputedStyle(element)
     const canvas = new OffscreenCanvas(1, 1).getContext("2d")
     canvas.fillStyle = style.color

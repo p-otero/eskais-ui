@@ -22,6 +22,9 @@ UI SDK-first, agent-native React components, distributed as a shadcn-style regis
 | Selection        | `select`, `combobox`, `segmented-control`, `checkbox`, `textarea`    |
 | Structure        | `tabs`, `collapsible`, `scroll-area`, `separator`, `avatar`          |
 | Display          | `skeleton`, `empty`, `kbd`, `table` (sortable headers)               |
+| Status           | `status-pill`, `dependency-chips`, `acceptance-list`, `stat`         |
+| Values and time  | `quantity` (honest values), `relative-time` (`useNow`)               |
+| Layout           | `board` (columns, collapsible, groups)                               |
 | `theme`          | Color, shape, density and surface tokens; the default rounded look   |
 | `theme-compact`  | Denser controls and tighter radii inside `data-theme="compact"`      |
 | `theme-glass`    | Translucent, blurred surfaces inside `data-theme="glass"`            |

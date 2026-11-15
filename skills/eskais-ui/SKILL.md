@@ -16,15 +16,22 @@ Eskais UI components are UI SDK parts styled with Tailwind v4 and semantic token
 
 ## Choose
 
-| Need                       | Use                                                                                                                                                                                                               |
-| -------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| An action, possibly async  | `Button`: return a Promise from `onClick` for pending, no double press                                                                                                                                            |
-| A labeled text input       | `Field` + `FieldLabel` + `Input`; `InputGroup` + `InputClear` for a clear button                                                                                                                                  |
-| A search box               | `SearchField label onSearch`: Enter runs `onSearch`, Escape clears only when there is text                                                                                                                        |
-| A modal                    | `Dialog` parts; `dismissible={false}` + `onDismissAttempt` for unsaved changes                                                                                                                                    |
-| "Are you sure?"            | `ConfirmDialog onConfirm`: a returned Promise shows pending, closes on success, shows the error on failure                                                                                                        |
-| Static grouping and labels | `Card` parts, `Badge`                                                                                                                                                                                             |
-| Pick one of many, typed    | `Combobox` with `items` on the root, rendering options from `<ComboboxList>{(state) => state.items.map(…)}</ComboboxList>`. Static children aren't filtered, and agents then store the label instead of the value |
+| Need                         | Use                                                                                                                                                                                                               |
+| ---------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| An action, possibly async    | `Button`: return a Promise from `onClick` for pending, no double press                                                                                                                                            |
+| A labeled text input         | `Field` + `FieldLabel` + `Input`; `InputGroup` + `InputClear` for a clear button                                                                                                                                  |
+| A search box                 | `SearchField label onSearch`: Enter runs `onSearch`, Escape clears only when there is text                                                                                                                        |
+| A modal                      | `Dialog` parts; `dismissible={false}` + `onDismissAttempt` for unsaved changes                                                                                                                                    |
+| "Are you sure?"              | `ConfirmDialog onConfirm`: a returned Promise shows pending, closes on success, shows the error on failure                                                                                                        |
+| Static grouping and labels   | `Card` parts, `Badge`                                                                                                                                                                                             |
+| Pick one of many, typed      | `Combobox` with `items` on the root, rendering options from `<ComboboxList>{(state) => state.items.map(…)}</ComboboxList>`. Static children aren't filtered, and agents then store the label instead of the value |
+| A status label               | `StatusPill tone` (`neutral`, `info`, `success`, `warning`, `destructive`, `muted`), with an optional `dot`/`pulse`                                                                                               |
+| Related items as chips       | `DependencyChips` with an `aria-label`; pass `onSelect` to make each chip a button agents can press                                                                                                               |
+| A number that may be guessed | `QuantityValue` with `{ value, quality, source }`: unknown shows `—`, never 0; estimated shows `~`                                                                                                                |
+| A time                       | `RelativeTime` with one `useNow()` per screen passed down as `now`, not one timer per time                                                                                                                        |
+| Pass/fail criteria           | `AcceptanceList`, and `AcceptanceBar` with `countAcceptance` for a compact summary                                                                                                                                |
+| Summary figures              | `StatGroup` of `Stat` parts                                                                                                                                                                                       |
+| Columns of items             | `Board` with `BoardColumn` (collapsible, groups, `empty`); no drag and drop                                                                                                                                       |
 
 ## Separate the layers
 
@@ -45,7 +52,7 @@ Eskais UI components are UI SDK parts styled with Tailwind v4 and semantic token
 
 - Use the variants (`variant`, `size`) and the semantic tokens: `background`, `foreground`, `primary`, `secondary`, `muted`, `accent`, `destructive`, `success`, `warning`, `info`, `border`, `input`, `ring`, `overlay`.
 - Style state with UI SDK attributes: `data-pending`, `data-disabled`, `data-open`, `data-starting-style`, `data-ending-style`.
-- Use the shape and density tokens instead of fixed sizes: `rounded-control`, `rounded-surface`, `h-control` (`-sm`, `-lg`), `px-control-x`, `p-surface`, `gap-surface`, `shadow-surface`. Surfaces that may turn glassy use `bg-<color>/(--glass-opacity)` and `backdrop-surface`.
+- Use the shape and density tokens instead of fixed sizes: `rounded-control`, `rounded-choice` (checkbox, textarea), `rounded-surface`, `h-control` (`-sm`, `-lg`), `px-control-x`, `p-surface`, `gap-surface`, `shadow-surface`. Surfaces that may turn glassy use `bg-<color>/(--glass-opacity)` and `backdrop-surface`.
 - Themes are attribute scopes, not separate components: `data-theme="compact"` or `data-theme="glass"` on any element, nested freely. A theme only sets tokens; never branch on the theme in a component.
 - Pass layout classes (margin, width, grid placement) through `className`. To change how a component looks, edit its file in `components/ui/`, which you own.
 - Optional: `npx shadcn add @eskais/lint-rules` adds an oxlint config with `@shadcn/lint` rules (`no-restyle`, `no-raw-colors`…). Extend it from `.oxlintrc.json`.

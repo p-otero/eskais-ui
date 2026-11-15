@@ -129,7 +129,7 @@ function SelectionSection() {
           </Combobox>
         </Field>
 
-        <Field className="flex-row items-start self-end">
+        <Field className="self-end">
           <Checkbox checked={archived} onCheckedChange={(next) => setArchived(next === true)}>
             <CheckboxIndicator />
           </Checkbox>

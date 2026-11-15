@@ -16,7 +16,7 @@ function Checkbox({ className, ...props }: ComponentProps<typeof CheckboxPrimiti
   return (
     <CheckboxPrimitive
       className={cnState(
-        "inline-flex size-4 shrink-0 cursor-pointer items-center justify-center rounded border border-input bg-background/(--glass-opacity) text-primary-foreground shadow-xs transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background aria-invalid:border-destructive data-checked:border-primary data-checked:bg-primary data-disabled:cursor-not-allowed data-disabled:opacity-50 data-indeterminate:border-primary data-indeterminate:bg-primary",
+        "inline-flex size-4 shrink-0 cursor-pointer items-center justify-center rounded-choice border border-input bg-background/(--glass-opacity) text-primary-foreground shadow-xs transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background aria-invalid:border-destructive data-checked:border-primary data-checked:bg-primary data-disabled:cursor-not-allowed data-disabled:opacity-50 data-indeterminate:border-primary data-indeterminate:bg-primary in-data-[slot=field]:mt-0.5",
         className,
       )}
       {...props}

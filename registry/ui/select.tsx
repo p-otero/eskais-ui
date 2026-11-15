@@ -16,10 +16,10 @@ import {
 } from "@ui-sdk/react/select"
 import type { ComponentProps } from "react"
 
+import { fieldSurfaceClassName } from "@/components/ui/input"
 import { cnState } from "@/lib/utils"
 
-const triggerClassName =
-  "flex h-control w-full min-w-0 cursor-pointer items-center justify-between gap-2 rounded-control border border-input bg-background/(--glass-opacity) px-control-x text-start text-sm shadow-xs transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring aria-invalid:border-destructive data-disabled:cursor-not-allowed data-disabled:opacity-50 [&>svg]:size-4 [&>svg]:shrink-0 [&>svg]:text-muted-foreground"
+const triggerClassName = `${fieldSurfaceClassName} flex h-control w-full min-w-0 cursor-pointer items-center justify-between gap-2 rounded-control px-control-x text-start text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring [&>svg]:size-4 [&>svg]:shrink-0 [&>svg]:text-muted-foreground`
 
 const listPopupClassName =
   "m-0 max-h-(--available-height) min-w-(--anchor-width) overflow-y-auto overscroll-contain rounded-surface border bg-popover/(--glass-opacity) p-1 text-popover-foreground shadow-surface backdrop-surface outline-none transition-opacity duration-100 data-ending-style:opacity-0 data-starting-style:opacity-0"

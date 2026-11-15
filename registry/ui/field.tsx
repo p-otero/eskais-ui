@@ -10,8 +10,11 @@ import type { ComponentProps } from "react"
 
 import { cnState } from "@/lib/utils"
 
+const checkboxRowClassName =
+  "has-[>[data-slot=checkbox]]:flex-row has-[>[data-slot=checkbox]]:items-start has-[>[data-slot=checkbox]]:gap-2"
+
 function Field({ className, ...props }: ComponentProps<typeof FieldPrimitive>) {
-  return <FieldPrimitive className={cnState("flex flex-col gap-1.5", className)} {...props} />
+  return <FieldPrimitive className={cnState(`flex flex-col gap-1.5 ${checkboxRowClassName}`, className)} {...props} />
 }
 
 function FieldLabel({ className, ...props }: ComponentProps<typeof FieldLabelPrimitive>) {

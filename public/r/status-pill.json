@@ -1,0 +1,22 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "status-pill",
+  "title": "Status Pill",
+  "description": "Presentational status pill with semantic tones and an optional dot that can pulse; the pulse stops under reduced motion.",
+  "dependencies": [
+    "@ui-sdk/react@0.1.0-beta.5",
+    "class-variance-authority@0.7.1"
+  ],
+  "registryDependencies": [
+    "@eskais/utils",
+    "@eskais/theme"
+  ],
+  "files": [
+    {
+      "path": "registry/ui/status-pill.tsx",
+      "content": "import { renderElement, type PartProps } from \"@ui-sdk/react/primitive\"\nimport { cva } from \"class-variance-authority\"\nimport type { ReactNode } from \"react\"\n\nimport { cn } from \"@/lib/utils\"\n\ntype StatusTone = \"neutral\" | \"info\" | \"success\" | \"warning\" | \"destructive\" | \"muted\"\n\nconst statusPillVariants = cva(\n  \"inline-flex w-fit max-w-full shrink-0 items-center gap-1.5 rounded-control border px-2 py-0.5 text-xs font-medium whitespace-nowrap [&_svg]:size-3 [&_svg]:shrink-0\",\n  {\n    variants: {\n      tone: {\n        neutral: \"border-border bg-secondary text-secondary-foreground\",\n        info: \"border-info/30 bg-info/10 text-info\",\n        success: \"border-success/30 bg-success/10 text-success\",\n        warning: \"border-warning/30 bg-warning/10 text-warning\",\n        destructive: \"border-destructive/30 bg-destructive/10 text-destructive\",\n        muted: \"border-border bg-transparent text-muted-foreground\",\n      },\n    },\n    defaultVariants: { tone: \"neutral\" },\n  },\n)\n\nfunction StatusDot({ pulse }: { pulse?: boolean }) {\n  return (\n    <span aria-hidden=\"true\" data-slot=\"status-pill-dot\" className=\"relative inline-flex size-1.5 shrink-0\">\n      {pulse && (\n        <span className=\"absolute inset-0 rounded-full bg-current opacity-60 motion-safe:animate-ping motion-reduce:hidden\" />\n      )}\n      <span className=\"relative size-full rounded-full bg-current\" />\n    </span>\n  )\n}\n\ntype StatusPillProps = Omit<PartProps<\"span\">, \"children\"> & {\n  children?: ReactNode\n  tone?: StatusTone\n  dot?: boolean\n  pulse?: boolean\n}\n\n// The label gets its own element so contrast is measured on the text alone, not on the dot beside it.\nfunction StatusPill({ className, tone, dot, pulse, render, children, ...props }: StatusPillProps) {\n  return renderElement(\n    \"span\",\n    {\n      \"data-slot\": \"status-pill\",\n      \"data-tone\": tone ?? \"neutral\",\n      \"data-pulse\": dot && pulse ? \"\" : undefined,\n      className: cn(statusPillVariants({ tone }), className),\n      children: (\n        <>\n          {dot && <StatusDot pulse={pulse} />}\n          <span data-slot=\"status-pill-label\" className=\"inline-flex min-w-0 items-center gap-1\">\n            {children}\n          </span>\n        </>\n      ),\n      ...props,\n    },\n    render,\n  )\n}\n\nexport { StatusPill, statusPillVariants }\nexport type { StatusPillProps, StatusTone }\n",
+      "type": "registry:ui"
+    }
+  ],
+  "type": "registry:ui"
+}

@@ -32,6 +32,7 @@
           "--control-height-sm": "2rem",
           "--control-height-lg": "2.5rem",
           "--control-padding": "0.875rem",
+          "--choice-radius": "0.5rem",
           "--surface-radius": "2rem",
           "--surface-padding": "1.5rem",
           "--surface-shadow": "0 4px 12px -2px oklch(0 0 0 / 0.08), 0 2px 4px -2px oklch(0 0 0 / 0.04)",
@@ -93,6 +94,7 @@
           "radius-lg": "var(--radius)",
           "radius-xl": "calc(var(--radius) + 4px)",
           "radius-control": "var(--control-radius)",
+          "radius-choice": "min(var(--choice-radius), 30%)",
           "radius-surface": "var(--surface-radius)",
           "spacing-control": "var(--control-height)",
           "spacing-control-sm": "var(--control-height-sm)",
@@ -176,6 +178,7 @@
           "--control-height-sm": "1.75rem",
           "--control-height-lg": "2.25rem",
           "--control-padding": "0.625rem",
+          "--choice-radius": "0.25rem",
           "--surface-radius": "0.75rem",
           "--surface-padding": "1rem",
           "--surface-shadow": "0 1px 2px oklch(0 0 0 / 0.05)",
@@ -677,7 +680,8 @@
       "registryDependencies": [
         "@eskais/utils",
         "@eskais/theme",
-        "@eskais/field"
+        "@eskais/field",
+        "@eskais/input"
       ],
       "files": [
         {
@@ -699,7 +703,8 @@
         "@eskais/utils",
         "@eskais/theme",
         "@eskais/field",
-        "@eskais/select"
+        "@eskais/select",
+        "@eskais/input"
       ],
       "files": [
         {
@@ -762,7 +767,8 @@
       "registryDependencies": [
         "@eskais/utils",
         "@eskais/theme",
-        "@eskais/field"
+        "@eskais/field",
+        "@eskais/input"
       ],
       "files": [
         {
@@ -880,6 +886,47 @@
         },
         {
           "path": "registry/ui/board-column.tsx",
+          "type": "registry:ui"
+        }
+      ]
+    },
+    {
+      "name": "status-pill",
+      "type": "registry:ui",
+      "title": "Status Pill",
+      "description": "Presentational status pill with semantic tones and an optional dot that can pulse; the pulse stops under reduced motion.",
+      "dependencies": [
+        "@ui-sdk/react@0.1.0-beta.5",
+        "class-variance-authority@0.7.1"
+      ],
+      "registryDependencies": [
+        "@eskais/utils",
+        "@eskais/theme"
+      ],
+      "files": [
+        {
+          "path": "registry/ui/status-pill.tsx",
+          "type": "registry:ui"
+        }
+      ]
+    },
+    {
+      "name": "dependency-chips",
+      "type": "registry:ui",
+      "title": "Dependency Chips",
+      "description": "A named list of toned chips that truncate long labels, collapse past max into a +N chip, and become UI SDK Buttons agents can press when onSelect is set.",
+      "dependencies": [
+        "@ui-sdk/core@0.1.0-beta.5",
+        "@ui-sdk/react@0.1.0-beta.5"
+      ],
+      "registryDependencies": [
+        "@eskais/utils",
+        "@eskais/theme",
+        "@eskais/status-pill"
+      ],
+      "files": [
+        {
+          "path": "registry/ui/dependency-chips.tsx",
           "type": "registry:ui"
         }
       ]

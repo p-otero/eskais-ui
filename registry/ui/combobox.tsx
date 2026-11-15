@@ -18,6 +18,7 @@ import {
 import { renderElement, type PartProps } from "@ui-sdk/react/primitive"
 import type { ComponentProps } from "react"
 
+import { fieldSurfaceClassName } from "@/components/ui/input"
 import {
   CheckIcon,
   ChevronIcon,
@@ -38,7 +39,8 @@ function ComboboxControl({ className, render, ...props }: PartProps<"div">) {
     {
       "data-slot": "combobox-control",
       className: cn(
-        "flex h-control w-full min-w-0 items-center gap-1 rounded-control border border-input bg-background/(--glass-opacity) ps-control-x pe-1.5 text-sm shadow-xs transition-colors has-aria-invalid:border-destructive has-data-disabled:cursor-not-allowed has-data-disabled:opacity-50 has-[input:focus-visible]:ring-2 has-[input:focus-visible]:ring-ring",
+        fieldSurfaceClassName,
+        "flex h-control w-full min-w-0 items-center gap-1 rounded-control ps-control-x pe-1.5 text-sm has-aria-invalid:border-destructive has-data-disabled:cursor-not-allowed has-data-disabled:opacity-50 has-[input:focus-visible]:ring-2 has-[input:focus-visible]:ring-ring",
         className,
       ),
       ...props,

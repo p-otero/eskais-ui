@@ -18,6 +18,11 @@ Versions follow [semver](https://semver.org). Before 1.0, a minor version can br
 - Structure and display: `tabs`, `collapsible`, `scroll-area`, `separator`, `avatar`, `skeleton`, `empty`, `kbd`, `table`.
 - Browser check in CI: axe and pixel contrast in Chrome for the default and compact themes, with the dialog, a listbox and a menu open. Glass is checked by hand.
 
+- Board pieces: `board`, `status-pill`, `dependency-chips`, `acceptance-list`, `stat`, `quantity`, `relative-time`.
+- Theme: `rounded-choice` radius, board column size tokens, and the `content-auto` and `text-vertical` utilities.
+
 ### Changed
+
+- Fields share one surface style (`fieldSurfaceClassName`), and a `Field` holding a checkbox lays out as a row.
 
 - Reduced motion stops infinite animations instead of making them flicker.

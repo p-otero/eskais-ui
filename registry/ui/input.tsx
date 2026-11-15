@@ -9,14 +9,14 @@ import type { ComponentProps } from "react"
 
 import { cnState } from "@/lib/utils"
 
-const fieldSurface =
-  "rounded-control border border-input bg-background/(--glass-opacity) shadow-xs transition-colors aria-invalid:border-destructive data-disabled:cursor-not-allowed data-disabled:opacity-50"
+const fieldSurfaceClassName =
+  "border border-input bg-background/(--glass-opacity) shadow-xs transition-colors aria-invalid:border-destructive data-disabled:cursor-not-allowed data-disabled:opacity-50"
 
 function Input({ className, ...props }: ComponentProps<typeof InputPrimitive>) {
   return (
     <InputPrimitive
       className={cnState(
-        `${fieldSurface} h-control w-full min-w-0 px-control-x text-sm outline-none placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring in-data-[slot=input-group]:h-auto in-data-[slot=input-group]:border-0 in-data-[slot=input-group]:bg-transparent in-data-[slot=input-group]:px-0 in-data-[slot=input-group]:shadow-none in-data-[slot=input-group]:focus-visible:ring-0`,
+        `${fieldSurfaceClassName} h-control w-full rounded-control min-w-0 px-control-x text-sm outline-none placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring in-data-[slot=input-group]:h-auto in-data-[slot=input-group]:border-0 in-data-[slot=input-group]:bg-transparent in-data-[slot=input-group]:px-0 in-data-[slot=input-group]:shadow-none in-data-[slot=input-group]:focus-visible:ring-0`,
         className,
       )}
       {...props}
@@ -28,7 +28,7 @@ function InputGroup({ className, ...props }: ComponentProps<typeof InputGroupPri
   return (
     <InputGroupPrimitive
       className={cnState(
-        `${fieldSurface} flex h-control w-full items-center gap-2 px-control-x text-sm has-[input:focus-visible]:ring-2 has-[input:focus-visible]:ring-ring has-aria-invalid:border-destructive [&>svg]:size-4 [&>svg]:shrink-0 [&>svg]:text-muted-foreground`,
+        `${fieldSurfaceClassName} flex h-control rounded-control w-full items-center gap-2 px-control-x text-sm has-[input:focus-visible]:ring-2 has-[input:focus-visible]:ring-ring has-aria-invalid:border-destructive [&>svg]:size-4 [&>svg]:shrink-0 [&>svg]:text-muted-foreground`,
         className,
       )}
       {...props}
@@ -62,4 +62,4 @@ function InputClear({ className, children, ...props }: ComponentProps<typeof Inp
   )
 }
 
-export { Input, InputClear, InputGroup }
+export { fieldSurfaceClassName, Input, InputClear, InputGroup }

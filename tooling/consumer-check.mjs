@@ -48,6 +48,8 @@ const items = [
   "acceptance-list",
   "stat",
   "board",
+  "status-pill",
+  "dependency-chips",
 ]
 const versions = {
   react: "19.3.1",

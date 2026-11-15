@@ -12,7 +12,7 @@ const agent = createAgent()
 
 function ArchivedCheckbox({ onCheckedChange }: { onCheckedChange?: (checked: CheckedState) => void }) {
   return (
-    <Field className="flex-row items-start">
+    <Field>
       <Checkbox onCheckedChange={onCheckedChange}>
         <CheckboxIndicator />
       </Checkbox>
@@ -33,6 +33,23 @@ test("the field label names the checkbox and the description describes it", () =
   expect(document.getElementById(checkbox.getAttribute("aria-describedby") ?? "")?.textContent).toBe(
     "Includes tasks closed more than 30 days ago.",
   )
+})
+
+test("a Field holding a checkbox lays out as a row without extra classes", () => {
+  render(
+    <>
+      <ArchivedCheckbox />
+      <Field>
+        <FieldLabel>Owner</FieldLabel>
+      </Field>
+    </>,
+  )
+  const checkbox = screen.getByRole("checkbox", { name: "Show archived tasks" })
+  const row = checkbox.parentElement!
+  expect(row.dataset.slot).toBe("field")
+  expect(row.matches(":has(> [data-slot=checkbox])")).toBe(true)
+  expect(row.className).toContain("has-[>[data-slot=checkbox]]:flex-row")
+  expect(screen.getByText("Owner").parentElement!.matches(":has(> [data-slot=checkbox])")).toBe(false)
 })
 
 test("Space toggles it, the label toggles it, and each change reports why", async () => {
