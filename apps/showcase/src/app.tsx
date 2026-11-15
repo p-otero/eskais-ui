@@ -7,7 +7,7 @@ import {
   AlertDialogTitle,
 } from "@ui-sdk/react/alert-dialog"
 import { Preferences } from "@ui-sdk/react/preferences"
-import { useId, useRef, useState, type ReactNode } from "react"
+import { useRef, useState } from "react"
 
 import { Badge } from "@/components/ui/badge"
 import { Button, buttonVariants } from "@/components/ui/button"
@@ -32,23 +32,10 @@ import { SearchField } from "@/components/ui/search-field"
 
 import { agent, approval, type ApprovalRequest } from "./agent"
 import { AppearanceControls, theme } from "./appearance"
+import { Section } from "./section"
+import { StructureSection } from "./sections/structure"
 
 const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
-
-function Section({ title, description, children }: { title: string; description: string; children: ReactNode }) {
-  const titleId = useId()
-  return (
-    <Card render={<section aria-labelledby={titleId} />}>
-      <CardHeader>
-        <CardTitle render={<h2 id={titleId}>{title}</h2>} />
-        <CardDescription>{description}</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <div className="flex flex-wrap items-center gap-3">{children}</div>
-      </CardContent>
-    </Card>
-  )
-}
 
 function SearchDemo() {
   const [searches, setSearches] = useState<string[]>([])
@@ -276,6 +263,8 @@ function App() {
               </CardFooter>
             </Card>
           </Section>
+
+          <StructureSection />
 
           <AgentPanel />
         </main>

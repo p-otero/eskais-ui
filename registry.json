@@ -367,6 +367,185 @@
       ]
     },
     {
+      "name": "tabs",
+      "type": "registry:ui",
+      "title": "Tabs",
+      "description": "UI SDK Tabs: arrow-key navigation, automatic or manual activation, controller support, and a selected state that reads at 3:1.",
+      "dependencies": [
+        "@ui-sdk/core@0.1.0-beta.5",
+        "@ui-sdk/react@0.1.0-beta.5"
+      ],
+      "registryDependencies": [
+        "@eskais/utils",
+        "@eskais/theme"
+      ],
+      "files": [
+        {
+          "path": "registry/ui/tabs.tsx",
+          "type": "registry:ui"
+        }
+      ]
+    },
+    {
+      "name": "collapsible",
+      "type": "registry:ui",
+      "title": "Collapsible",
+      "description": "UI SDK Collapsible: disclosure with aria-expanded, animated height, controller support and a rotating chevron icon.",
+      "dependencies": [
+        "@ui-sdk/core@0.1.0-beta.5",
+        "@ui-sdk/react@0.1.0-beta.5"
+      ],
+      "registryDependencies": [
+        "@eskais/utils",
+        "@eskais/theme"
+      ],
+      "files": [
+        {
+          "path": "registry/ui/collapsible.tsx",
+          "type": "registry:ui"
+        }
+      ]
+    },
+    {
+      "name": "scroll-area",
+      "type": "registry:ui",
+      "title": "Scroll Area",
+      "description": "UI SDK ScrollArea: native scrolling with styled scrollbars, edge state and follow-to-end, keyboard-reachable when it overflows.",
+      "dependencies": [
+        "@ui-sdk/core@0.1.0-beta.5",
+        "@ui-sdk/react@0.1.0-beta.5"
+      ],
+      "registryDependencies": [
+        "@eskais/utils",
+        "@eskais/theme"
+      ],
+      "files": [
+        {
+          "path": "registry/ui/scroll-area.tsx",
+          "type": "registry:ui"
+        }
+      ]
+    },
+    {
+      "name": "separator",
+      "type": "registry:ui",
+      "title": "Separator",
+      "description": "UI SDK Separator: horizontal or vertical, announced or decorative.",
+      "dependencies": [
+        "@ui-sdk/core@0.1.0-beta.5",
+        "@ui-sdk/react@0.1.0-beta.5"
+      ],
+      "registryDependencies": [
+        "@eskais/utils",
+        "@eskais/theme"
+      ],
+      "files": [
+        {
+          "path": "registry/ui/separator.tsx",
+          "type": "registry:ui"
+        }
+      ]
+    },
+    {
+      "name": "avatar",
+      "type": "registry:ui",
+      "title": "Avatar",
+      "description": "UI SDK Avatar with sizes: a real img that falls back to initials while loading or on error.",
+      "dependencies": [
+        "@ui-sdk/core@0.1.0-beta.5",
+        "@ui-sdk/react@0.1.0-beta.5",
+        "class-variance-authority@0.7.1"
+      ],
+      "registryDependencies": [
+        "@eskais/utils",
+        "@eskais/theme"
+      ],
+      "files": [
+        {
+          "path": "registry/ui/avatar.tsx",
+          "type": "registry:ui"
+        }
+      ]
+    },
+    {
+      "name": "skeleton",
+      "type": "registry:ui",
+      "title": "Skeleton",
+      "description": "Presentational loading placeholder, hidden from assistive technology, that stops pulsing under reduced motion.",
+      "dependencies": [
+        "@ui-sdk/react@0.1.0-beta.5"
+      ],
+      "registryDependencies": [
+        "@eskais/utils",
+        "@eskais/theme"
+      ],
+      "files": [
+        {
+          "path": "registry/ui/skeleton.tsx",
+          "type": "registry:ui"
+        }
+      ]
+    },
+    {
+      "name": "empty",
+      "type": "registry:ui",
+      "title": "Empty",
+      "description": "Presentational empty-state parts: media, title, description and actions.",
+      "dependencies": [
+        "@ui-sdk/react@0.1.0-beta.5",
+        "class-variance-authority@0.7.1"
+      ],
+      "registryDependencies": [
+        "@eskais/utils",
+        "@eskais/theme"
+      ],
+      "files": [
+        {
+          "path": "registry/ui/empty.tsx",
+          "type": "registry:ui"
+        }
+      ]
+    },
+    {
+      "name": "kbd",
+      "type": "registry:ui",
+      "title": "Kbd",
+      "description": "Presentational keyboard key and key group rendered as kbd.",
+      "dependencies": [
+        "@ui-sdk/react@0.1.0-beta.5"
+      ],
+      "registryDependencies": [
+        "@eskais/utils",
+        "@eskais/theme"
+      ],
+      "files": [
+        {
+          "path": "registry/ui/kbd.tsx",
+          "type": "registry:ui"
+        }
+      ]
+    },
+    {
+      "name": "table",
+      "type": "registry:ui",
+      "title": "Table",
+      "description": "Semantic table parts with truncating cells, aria-sort-ready headers and a horizontal scroll area on narrow screens.",
+      "dependencies": [
+        "@ui-sdk/core@0.1.0-beta.5",
+        "@ui-sdk/react@0.1.0-beta.5"
+      ],
+      "registryDependencies": [
+        "@eskais/utils",
+        "@eskais/scroll-area"
+      ],
+      "files": [
+        {
+          "path": "registry/ui/table.tsx",
+          "type": "registry:ui"
+        }
+      ]
+    },
+    {
       "name": "lint-rules",
       "type": "registry:file",
       "title": "Lint Rules (optional)",

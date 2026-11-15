@@ -1,0 +1,21 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "kbd",
+  "title": "Kbd",
+  "description": "Presentational keyboard key and key group rendered as kbd.",
+  "dependencies": [
+    "@ui-sdk/react@0.1.0-beta.5"
+  ],
+  "registryDependencies": [
+    "@eskais/utils",
+    "@eskais/theme"
+  ],
+  "files": [
+    {
+      "path": "registry/ui/kbd.tsx",
+      "content": "import { renderElement, type PartProps } from \"@ui-sdk/react/primitive\"\n\nimport { cn } from \"@/lib/utils\"\n\nfunction Kbd({ className, render, ...props }: PartProps<\"kbd\">) {\n  return renderElement(\n    \"kbd\",\n    {\n      \"data-slot\": \"kbd\",\n      className: cn(\n        \"inline-flex h-5 min-w-5 items-center justify-center gap-1 rounded-sm border bg-muted px-1 font-sans text-xs font-medium text-muted-foreground select-none [&_svg]:size-3 [&_svg]:shrink-0\",\n        className,\n      ),\n      ...props,\n    },\n    render,\n  )\n}\n\nfunction KbdGroup({ className, render, ...props }: PartProps<\"kbd\">) {\n  return renderElement(\n    \"kbd\",\n    { \"data-slot\": \"kbd-group\", className: cn(\"inline-flex items-center gap-1\", className), ...props },\n    render,\n  )\n}\n\nexport { Kbd, KbdGroup }\n",
+      "type": "registry:ui"
+    }
+  ],
+  "type": "registry:ui"
+}

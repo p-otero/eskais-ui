@@ -24,6 +24,15 @@ const items = [
   "confirm-dialog",
   "card",
   "badge",
+  "tabs",
+  "collapsible",
+  "scroll-area",
+  "separator",
+  "avatar",
+  "skeleton",
+  "empty",
+  "kbd",
+  "table",
 ]
 const versions = {
   react: "19.3.1",

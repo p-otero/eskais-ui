@@ -1,0 +1,22 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "separator",
+  "title": "Separator",
+  "description": "UI SDK Separator: horizontal or vertical, announced or decorative.",
+  "dependencies": [
+    "@ui-sdk/core@0.1.0-beta.5",
+    "@ui-sdk/react@0.1.0-beta.5"
+  ],
+  "registryDependencies": [
+    "@eskais/utils",
+    "@eskais/theme"
+  ],
+  "files": [
+    {
+      "path": "registry/ui/separator.tsx",
+      "content": "\"use client\"\n\nimport { Separator as SeparatorPrimitive } from \"@ui-sdk/react/separator\"\nimport type { ComponentProps } from \"react\"\n\nimport { cnState } from \"@/lib/utils\"\n\nfunction Separator({ className, ...props }: ComponentProps<typeof SeparatorPrimitive>) {\n  return (\n    <SeparatorPrimitive\n      className={cnState(\n        \"shrink-0 bg-border data-[orientation=horizontal]:h-px data-[orientation=horizontal]:w-full data-[orientation=vertical]:w-px data-[orientation=vertical]:self-stretch\",\n        className,\n      )}\n      {...props}\n    />\n  )\n}\n\nexport { Separator }\n",
+      "type": "registry:ui"
+    }
+  ],
+  "type": "registry:ui"
+}

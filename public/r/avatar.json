@@ -1,0 +1,23 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "avatar",
+  "title": "Avatar",
+  "description": "UI SDK Avatar with sizes: a real img that falls back to initials while loading or on error.",
+  "dependencies": [
+    "@ui-sdk/core@0.1.0-beta.5",
+    "@ui-sdk/react@0.1.0-beta.5",
+    "class-variance-authority@0.7.1"
+  ],
+  "registryDependencies": [
+    "@eskais/utils",
+    "@eskais/theme"
+  ],
+  "files": [
+    {
+      "path": "registry/ui/avatar.tsx",
+      "content": "\"use client\"\n\nimport {\n  Avatar as AvatarPrimitive,\n  AvatarFallback as AvatarFallbackPrimitive,\n  AvatarImage as AvatarImagePrimitive,\n} from \"@ui-sdk/react/avatar\"\nimport { cva, type VariantProps } from \"class-variance-authority\"\nimport type { ComponentProps } from \"react\"\n\nimport { cnState } from \"@/lib/utils\"\n\nconst avatarVariants = cva(\"relative flex shrink-0 overflow-hidden rounded-full select-none\", {\n  variants: {\n    size: {\n      sm: \"size-6 text-xs\",\n      default: \"size-8 text-sm\",\n      lg: \"size-10 text-base\",\n    },\n  },\n  defaultVariants: { size: \"default\" },\n})\n\ntype AvatarProps = ComponentProps<typeof AvatarPrimitive> & VariantProps<typeof avatarVariants>\n\nfunction Avatar({ className, size, ...props }: AvatarProps) {\n  return (\n    <AvatarPrimitive\n      data-size={size ?? \"default\"}\n      className={cnState(avatarVariants({ size }), className)}\n      {...props}\n    />\n  )\n}\n\nfunction AvatarImage({ className, ...props }: ComponentProps<typeof AvatarImagePrimitive>) {\n  return <AvatarImagePrimitive className={cnState(\"aspect-square size-full object-cover\", className)} {...props} />\n}\n\nfunction AvatarFallback({ className, ...props }: ComponentProps<typeof AvatarFallbackPrimitive>) {\n  return (\n    <AvatarFallbackPrimitive\n      className={cnState(\n        \"flex size-full items-center justify-center rounded-full bg-muted font-medium text-muted-foreground\",\n        className,\n      )}\n      {...props}\n    />\n  )\n}\n\nexport { Avatar, AvatarFallback, AvatarImage, avatarVariants }\nexport type { AvatarProps }\n",
+      "type": "registry:ui"
+    }
+  ],
+  "type": "registry:ui"
+}

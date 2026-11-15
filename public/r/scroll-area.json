@@ -1,0 +1,22 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "scroll-area",
+  "title": "Scroll Area",
+  "description": "UI SDK ScrollArea: native scrolling with styled scrollbars, edge state and follow-to-end, keyboard-reachable when it overflows.",
+  "dependencies": [
+    "@ui-sdk/core@0.1.0-beta.5",
+    "@ui-sdk/react@0.1.0-beta.5"
+  ],
+  "registryDependencies": [
+    "@eskais/utils",
+    "@eskais/theme"
+  ],
+  "files": [
+    {
+      "path": "registry/ui/scroll-area.tsx",
+      "content": "\"use client\"\n\nimport {\n  ScrollArea as ScrollAreaPrimitive,\n  ScrollAreaContent,\n  ScrollAreaCorner,\n  ScrollAreaScrollbar as ScrollAreaScrollbarPrimitive,\n  ScrollAreaScrollToEnd,\n  ScrollAreaThumb as ScrollAreaThumbPrimitive,\n  ScrollAreaViewport as ScrollAreaViewportPrimitive,\n  createScrollAreaController,\n} from \"@ui-sdk/react/scroll-area\"\nimport type { ComponentProps } from \"react\"\n\nimport { cnState } from \"@/lib/utils\"\n\nfunction ScrollArea({ className, ...props }: ComponentProps<typeof ScrollAreaPrimitive>) {\n  return <ScrollAreaPrimitive className={cnState(\"relative overflow-hidden\", className)} {...props} />\n}\n\nfunction ScrollAreaViewport({ className, ...props }: ComponentProps<typeof ScrollAreaViewportPrimitive>) {\n  return (\n    <ScrollAreaViewportPrimitive\n      className={cnState(\n        \"size-full outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset\",\n        className,\n      )}\n      {...props}\n    />\n  )\n}\n\nfunction ScrollAreaScrollbar({ className, ...props }: ComponentProps<typeof ScrollAreaScrollbarPrimitive>) {\n  return (\n    <ScrollAreaScrollbarPrimitive\n      className={cnState(\n        \"flex touch-none p-0.5 opacity-0 transition-opacity select-none data-visible:opacity-100 data-[orientation=horizontal]:h-2.5 data-[orientation=horizontal]:flex-col data-[orientation=vertical]:w-2.5\",\n        className,\n      )}\n      {...props}\n    />\n  )\n}\n\nfunction ScrollAreaThumb({ className, ...props }: ComponentProps<typeof ScrollAreaThumbPrimitive>) {\n  return (\n    <ScrollAreaThumbPrimitive\n      className={cnState(\"relative flex-1 rounded-full bg-input data-dragging:bg-muted-foreground\", className)}\n      {...props}\n    />\n  )\n}\n\nexport {\n  createScrollAreaController,\n  ScrollArea,\n  ScrollAreaContent,\n  ScrollAreaCorner,\n  ScrollAreaScrollbar,\n  ScrollAreaScrollToEnd,\n  ScrollAreaThumb,\n  ScrollAreaViewport,\n}\n",
+      "type": "registry:ui"
+    }
+  ],
+  "type": "registry:ui"
+}
