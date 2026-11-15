@@ -1,0 +1,19 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "lint-rules",
+  "title": "Lint Rules (optional)",
+  "description": "Optional oxlint config with @shadcn/lint design-system rules for Eskais UI consumers. Extend it from your .oxlintrc.json.",
+  "devDependencies": [
+    "oxlint@1.93.0",
+    "@shadcn/lint@0.2.5"
+  ],
+  "files": [
+    {
+      "path": "registry/rules/eskais-ui.oxlintrc.json",
+      "content": "{\n  \"$schema\": \"./node_modules/oxlint/configuration_schema.json\",\n  \"plugins\": [\"react\", \"jsx-a11y\"],\n  \"jsPlugins\": [\"@shadcn/lint\"],\n  \"rules\": {\n    \"shadcn/no-raw-colors\": \"error\",\n    \"shadcn/no-arbitrary-values\": \"warn\",\n    \"shadcn/require-static-classes\": \"error\",\n    \"shadcn/no-restyle\": [\"error\", { \"allow\": [\"layout\"] }],\n    \"no-restricted-imports\": [\n      \"error\",\n      {\n        \"patterns\": [\n          {\n            \"group\": [\"@ui-sdk/*/internal/*\", \"@ui-sdk/core/internal\"],\n            \"message\": \"Import UI SDK from its public entries.\"\n          }\n        ]\n      }\n    ]\n  },\n  \"overrides\": [\n    {\n      \"files\": [\"components/ui/**\", \"src/components/ui/**\"],\n      \"rules\": { \"shadcn/no-restyle\": \"off\" }\n    }\n  ]\n}\n",
+      "type": "registry:file",
+      "target": "~/eskais-ui.oxlintrc.json"
+    }
+  ],
+  "type": "registry:file"
+}

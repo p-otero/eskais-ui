@@ -1,0 +1,387 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry.json",
+  "name": "eskais",
+  "homepage": "https://github.com/p-otero/eskais-ui",
+  "items": [
+    {
+      "name": "utils",
+      "type": "registry:lib",
+      "title": "Utils",
+      "description": "cn() and cnState(), which merges classes into a UI SDK className that may be a function of state.",
+      "dependencies": [
+        "clsx@2.1.1",
+        "tailwind-merge@3.7.0"
+      ],
+      "files": [
+        {
+          "path": "registry/lib/utils.ts",
+          "type": "registry:lib"
+        }
+      ]
+    },
+    {
+      "name": "theme",
+      "type": "registry:theme",
+      "title": "Theme",
+      "description": "Semantic color tokens plus shape, density and surface tokens. The default look: rounded, roomy, soft shadows.",
+      "docs": "Add `@layer ui-sdk;` as the first line of your global stylesheet, above `@import \"tailwindcss\"`, so your styles win over UI SDK's behavior CSS.",
+      "css": {
+        ":where(:root)": {
+          "--control-radius": "2rem",
+          "--control-height": "2.25rem",
+          "--control-height-sm": "2rem",
+          "--control-height-lg": "2.5rem",
+          "--control-padding": "0.875rem",
+          "--surface-radius": "2rem",
+          "--surface-padding": "1.5rem",
+          "--surface-shadow": "0 4px 12px -2px oklch(0 0 0 / 0.08), 0 2px 4px -2px oklch(0 0 0 / 0.04)",
+          "--surface-backdrop": "none",
+          "--glass-opacity": "100%",
+          "--glass-blur": "0px",
+          "--glass-saturation": "1"
+        },
+        "@utility backdrop-surface": {
+          "-webkit-backdrop-filter": "var(--surface-backdrop)",
+          "backdrop-filter": "var(--surface-backdrop)"
+        },
+        "@layer base": {
+          "[data-slot=\"button\"]:not([data-pending]) [data-show=\"pending\"], [data-slot=\"button\"][data-pending] [data-show=\"idle\"], [data-slot=\"alert-dialog-close\"]:not([data-pending]) [data-show=\"pending\"], [data-slot=\"alert-dialog-close\"][data-pending] [data-show=\"idle\"]": {
+            "display": "none"
+          }
+        }
+      },
+      "cssVars": {
+        "theme": {
+          "color-background": "var(--background)",
+          "color-foreground": "var(--foreground)",
+          "color-card": "var(--card)",
+          "color-card-foreground": "var(--card-foreground)",
+          "color-popover": "var(--popover)",
+          "color-popover-foreground": "var(--popover-foreground)",
+          "color-primary": "var(--primary)",
+          "color-primary-foreground": "var(--primary-foreground)",
+          "color-secondary": "var(--secondary)",
+          "color-secondary-foreground": "var(--secondary-foreground)",
+          "color-muted": "var(--muted)",
+          "color-muted-foreground": "var(--muted-foreground)",
+          "color-accent": "var(--accent)",
+          "color-accent-foreground": "var(--accent-foreground)",
+          "color-destructive": "var(--destructive)",
+          "color-destructive-foreground": "var(--destructive-foreground)",
+          "color-success": "var(--success)",
+          "color-success-foreground": "var(--success-foreground)",
+          "color-warning": "var(--warning)",
+          "color-warning-foreground": "var(--warning-foreground)",
+          "color-info": "var(--info)",
+          "color-info-foreground": "var(--info-foreground)",
+          "color-border": "var(--border)",
+          "color-input": "var(--input)",
+          "color-ring": "var(--ring)",
+          "color-overlay": "var(--overlay)",
+          "radius-sm": "calc(var(--radius) - 4px)",
+          "radius-md": "calc(var(--radius) - 2px)",
+          "radius-lg": "var(--radius)",
+          "radius-xl": "calc(var(--radius) + 4px)",
+          "radius-control": "var(--control-radius)",
+          "radius-surface": "var(--surface-radius)",
+          "spacing-control": "var(--control-height)",
+          "spacing-control-sm": "var(--control-height-sm)",
+          "spacing-control-lg": "var(--control-height-lg)",
+          "spacing-control-x": "var(--control-padding)",
+          "spacing-surface": "var(--surface-padding)",
+          "shadow-surface": "var(--surface-shadow)"
+        },
+        "light": {
+          "radius": "1rem",
+          "background": "oklch(1 0 0)",
+          "foreground": "oklch(0.145 0 0)",
+          "card": "oklch(1 0 0)",
+          "card-foreground": "oklch(0.145 0 0)",
+          "popover": "oklch(1 0 0)",
+          "popover-foreground": "oklch(0.145 0 0)",
+          "primary": "oklch(0.205 0 0)",
+          "primary-foreground": "oklch(0.985 0 0)",
+          "secondary": "oklch(0.97 0 0)",
+          "secondary-foreground": "oklch(0.205 0 0)",
+          "muted": "oklch(0.97 0 0)",
+          "muted-foreground": "oklch(0.43 0 0)",
+          "accent": "oklch(0.97 0 0)",
+          "accent-foreground": "oklch(0.205 0 0)",
+          "destructive": "oklch(0.505 0.213 27.518)",
+          "destructive-foreground": "oklch(0.985 0 0)",
+          "success": "oklch(0.448 0.119 151.328)",
+          "success-foreground": "oklch(0.985 0 0)",
+          "warning": "oklch(0.473 0.137 46.201)",
+          "warning-foreground": "oklch(0.985 0 0)",
+          "info": "oklch(0.488 0.243 264.376)",
+          "info-foreground": "oklch(0.985 0 0)",
+          "border": "oklch(0.922 0 0)",
+          "input": "oklch(0.6 0 0)",
+          "ring": "oklch(0.556 0 0)",
+          "overlay": "oklch(0 0 0 / 0.5)"
+        },
+        "dark": {
+          "background": "oklch(0.145 0 0)",
+          "foreground": "oklch(0.985 0 0)",
+          "card": "oklch(0.205 0 0)",
+          "card-foreground": "oklch(0.985 0 0)",
+          "popover": "oklch(0.205 0 0)",
+          "popover-foreground": "oklch(0.985 0 0)",
+          "primary": "oklch(0.922 0 0)",
+          "primary-foreground": "oklch(0.205 0 0)",
+          "secondary": "oklch(0.269 0 0)",
+          "secondary-foreground": "oklch(0.985 0 0)",
+          "muted": "oklch(0.269 0 0)",
+          "muted-foreground": "oklch(0.76 0 0)",
+          "accent": "oklch(0.269 0 0)",
+          "accent-foreground": "oklch(0.985 0 0)",
+          "destructive": "oklch(0.704 0.191 22.216)",
+          "destructive-foreground": "oklch(0.145 0 0)",
+          "success": "oklch(0.696 0.17 162.48)",
+          "success-foreground": "oklch(0.145 0 0)",
+          "warning": "oklch(0.828 0.189 84.429)",
+          "warning-foreground": "oklch(0.145 0 0)",
+          "info": "oklch(0.707 0.165 254.624)",
+          "info-foreground": "oklch(0.145 0 0)",
+          "border": "oklch(1 0 0 / 10%)",
+          "input": "oklch(0.55 0 0)",
+          "ring": "oklch(0.708 0 0)",
+          "overlay": "oklch(0 0 0 / 0.7)"
+        }
+      }
+    },
+    {
+      "name": "theme-compact",
+      "type": "registry:theme",
+      "title": "Compact theme",
+      "description": "Denser controls, tighter radii and padding. Applies inside any element with data-theme=\"compact\".",
+      "registryDependencies": [
+        "@eskais/theme"
+      ],
+      "css": {
+        "[data-theme=\"compact\"]": {
+          "--radius": "0.5rem",
+          "--control-radius": "0.5rem",
+          "--control-height": "2rem",
+          "--control-height-sm": "1.75rem",
+          "--control-height-lg": "2.25rem",
+          "--control-padding": "0.625rem",
+          "--surface-radius": "0.75rem",
+          "--surface-padding": "1rem",
+          "--surface-shadow": "0 1px 2px oklch(0 0 0 / 0.05)"
+        }
+      }
+    },
+    {
+      "name": "theme-glass",
+      "type": "registry:theme",
+      "title": "Glass theme",
+      "description": "Translucent, blurred surfaces. Applies inside any element with data-theme=\"glass\"; tune it with --glass-opacity and --glass-blur.",
+      "registryDependencies": [
+        "@eskais/theme"
+      ],
+      "css": {
+        "[data-theme=\"glass\"]": {
+          "--glass-opacity": "60%",
+          "--glass-blur": "20px",
+          "--glass-saturation": "1.6",
+          "--surface-backdrop": "blur(var(--glass-blur)) saturate(var(--glass-saturation))",
+          "--surface-shadow": "inset 0 1px 0 oklch(1 0 0 / 0.25), 0 12px 40px -12px oklch(0 0 0 / 0.3)"
+        },
+        "@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px)))": {
+          "[data-theme=\"glass\"]": {
+            "--glass-opacity": "100% !important"
+          }
+        },
+        "@media (prefers-reduced-transparency: reduce)": {
+          "[data-theme=\"glass\"]": {
+            "--glass-opacity": "100% !important",
+            "--surface-backdrop": "none !important"
+          }
+        }
+      }
+    },
+    {
+      "name": "button",
+      "type": "registry:ui",
+      "title": "Button",
+      "description": "UI SDK Button with variants: async pending state, focusable-when-disabled, link rendering.",
+      "dependencies": [
+        "@ui-sdk/core@0.1.0-beta.5",
+        "@ui-sdk/react@0.1.0-beta.5",
+        "class-variance-authority@0.7.1"
+      ],
+      "registryDependencies": [
+        "@eskais/utils",
+        "@eskais/theme"
+      ],
+      "files": [
+        {
+          "path": "registry/ui/button.tsx",
+          "type": "registry:ui"
+        }
+      ]
+    },
+    {
+      "name": "field",
+      "type": "registry:ui",
+      "title": "Field",
+      "description": "UI SDK Field parts: label, description and validation errors wired to the control.",
+      "dependencies": [
+        "@ui-sdk/core@0.1.0-beta.5",
+        "@ui-sdk/react@0.1.0-beta.5"
+      ],
+      "registryDependencies": [
+        "@eskais/utils",
+        "@eskais/theme"
+      ],
+      "files": [
+        {
+          "path": "registry/ui/field.tsx",
+          "type": "registry:ui"
+        }
+      ]
+    },
+    {
+      "name": "input",
+      "type": "registry:ui",
+      "title": "Input",
+      "description": "UI SDK Input, InputGroup and InputClear (clears and returns focus).",
+      "dependencies": [
+        "@ui-sdk/core@0.1.0-beta.5",
+        "@ui-sdk/react@0.1.0-beta.5"
+      ],
+      "registryDependencies": [
+        "@eskais/utils",
+        "@eskais/theme"
+      ],
+      "files": [
+        {
+          "path": "registry/ui/input.tsx",
+          "type": "registry:ui"
+        }
+      ]
+    },
+    {
+      "name": "search-field",
+      "type": "registry:ui",
+      "title": "Search Field",
+      "description": "Search landmark built with definePrimitive: Enter runs onSearch, Escape clears only when there is text, and agents get a submit action.",
+      "dependencies": [
+        "@ui-sdk/core@0.1.0-beta.5",
+        "@ui-sdk/react@0.1.0-beta.5"
+      ],
+      "registryDependencies": [
+        "@eskais/utils",
+        "@eskais/input"
+      ],
+      "files": [
+        {
+          "path": "registry/ui/search-field-primitive.ts",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/search-field.tsx",
+          "type": "registry:ui"
+        }
+      ]
+    },
+    {
+      "name": "dialog",
+      "type": "registry:ui",
+      "title": "Dialog",
+      "description": "UI SDK Dialog parts: focus trap, Escape, focus restore, dismissible and controller support.",
+      "dependencies": [
+        "@ui-sdk/core@0.1.0-beta.5",
+        "@ui-sdk/react@0.1.0-beta.5"
+      ],
+      "registryDependencies": [
+        "@eskais/utils",
+        "@eskais/button"
+      ],
+      "files": [
+        {
+          "path": "registry/ui/dialog.tsx",
+          "type": "registry:ui"
+        }
+      ]
+    },
+    {
+      "name": "confirm-dialog",
+      "type": "registry:ui",
+      "title": "Confirm Dialog",
+      "description": "UI SDK AlertDialog with an async confirm action: pending, no double submit, closes on success, inline error on failure, data-agent-confirm for destructive actions.",
+      "dependencies": [
+        "@ui-sdk/core@0.1.0-beta.5",
+        "@ui-sdk/react@0.1.0-beta.5"
+      ],
+      "registryDependencies": [
+        "@eskais/utils",
+        "@eskais/button",
+        "@eskais/dialog"
+      ],
+      "files": [
+        {
+          "path": "registry/ui/confirm-dialog.tsx",
+          "type": "registry:ui"
+        }
+      ]
+    },
+    {
+      "name": "card",
+      "type": "registry:ui",
+      "title": "Card",
+      "description": "Presentational card parts rendered with UI SDK renderElement (render prop, server-safe).",
+      "dependencies": [
+        "@ui-sdk/react@0.1.0-beta.5"
+      ],
+      "registryDependencies": [
+        "@eskais/utils",
+        "@eskais/theme"
+      ],
+      "files": [
+        {
+          "path": "registry/ui/card.tsx",
+          "type": "registry:ui"
+        }
+      ]
+    },
+    {
+      "name": "badge",
+      "type": "registry:ui",
+      "title": "Badge",
+      "description": "Presentational badge with semantic variants (success, warning, info, destructive).",
+      "dependencies": [
+        "@ui-sdk/react@0.1.0-beta.5",
+        "class-variance-authority@0.7.1"
+      ],
+      "registryDependencies": [
+        "@eskais/utils",
+        "@eskais/theme"
+      ],
+      "files": [
+        {
+          "path": "registry/ui/badge.tsx",
+          "type": "registry:ui"
+        }
+      ]
+    },
+    {
+      "name": "lint-rules",
+      "type": "registry:file",
+      "title": "Lint Rules (optional)",
+      "description": "Optional oxlint config with @shadcn/lint design-system rules for Eskais UI consumers. Extend it from your .oxlintrc.json.",
+      "devDependencies": [
+        "oxlint@1.93.0",
+        "@shadcn/lint@0.2.5"
+      ],
+      "files": [
+        {
+          "path": "registry/rules/eskais-ui.oxlintrc.json",
+          "type": "registry:file",
+          "target": "~/eskais-ui.oxlintrc.json"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,24 @@
+{
+  "compilerOptions": {
+    "target": "ES2024",
+    "lib": ["ES2024", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "jsx": "react-jsx",
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "noImplicitOverride": true,
+    "noFallthroughCasesInSwitch": true,
+    "isolatedModules": true,
+    "verbatimModuleSyntax": true,
+    "skipLibCheck": true,
+    "noEmit": true,
+    "types": ["node"],
+    "paths": {
+      "@/lib/*": ["./registry/lib/*"],
+      "@/components/ui/*": ["./registry/ui/*"],
+      "@/components/ui": ["./registry/ui"]
+    }
+  },
+  "include": ["registry", "test", "apps/showcase/src", "apps/showcase/vite.config.ts", "vitest.config.ts", "tooling"]
+}

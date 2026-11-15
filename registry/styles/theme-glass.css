@@ -1,0 +1,20 @@
+[data-theme="glass"] {
+  --glass-opacity: 60%;
+  --glass-blur: 20px;
+  --glass-saturation: 1.6;
+  --surface-backdrop: blur(var(--glass-blur)) saturate(var(--glass-saturation));
+  --surface-shadow: inset 0 1px 0 oklch(1 0 0 / 0.25), 0 12px 40px -12px oklch(0 0 0 / 0.3);
+}
+
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  [data-theme="glass"] {
+    --glass-opacity: 100% !important;
+  }
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  [data-theme="glass"] {
+    --glass-opacity: 100% !important;
+    --surface-backdrop: none !important;
+  }
+}

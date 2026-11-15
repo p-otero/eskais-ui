@@ -1,0 +1,23 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "theme-compact",
+  "title": "Compact theme",
+  "description": "Denser controls, tighter radii and padding. Applies inside any element with data-theme=\"compact\".",
+  "registryDependencies": [
+    "@eskais/theme"
+  ],
+  "css": {
+    "[data-theme=\"compact\"]": {
+      "--radius": "0.5rem",
+      "--control-radius": "0.5rem",
+      "--control-height": "2rem",
+      "--control-height-sm": "1.75rem",
+      "--control-height-lg": "2.25rem",
+      "--control-padding": "0.625rem",
+      "--surface-radius": "0.75rem",
+      "--surface-padding": "1rem",
+      "--surface-shadow": "0 1px 2px oklch(0 0 0 / 0.05)"
+    }
+  },
+  "type": "registry:theme"
+}

@@ -1,0 +1,130 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "plugins": ["typescript", "react", "jsx-a11y", "import", "unicorn", "oxc", "vitest"],
+  "jsPlugins": ["@shadcn/lint", "./tooling/oxlint-plugin-eskais/index.js"],
+  "categories": {
+    "correctness": "error",
+    "suspicious": "warn",
+    "perf": "warn"
+  },
+  "options": {
+    "reportUnusedDisableDirectives": "error"
+  },
+  "settings": {
+    "shadcn": {
+      "ui": "@/components/ui",
+      "mergeFunctions": ["cnState"],
+      "note": "Use the semantic tokens in registry/styles/theme.css; see AGENTS.md."
+    }
+  },
+  "ignorePatterns": ["public/r/**", "node_modules/**", "dist/**", ".agents/**"],
+  "rules": {
+    "react/rules-of-hooks": "error",
+    "react/exhaustive-deps": "error",
+    "react/purity": "error",
+    "react/refs": "error",
+    "react/immutability": "error",
+    "react/globals": "error",
+    "react/set-state-in-effect": "error",
+    "react/set-state-in-render": "error",
+    "react/static-components": "error",
+    "react/no-array-index-key": "error",
+    "react/no-unstable-nested-components": "error",
+    "react/react-in-jsx-scope": "off",
+    "no-restricted-imports": [
+      "error",
+      {
+        "patterns": [
+          {
+            "group": ["@ui-sdk/*/internal/*", "@ui-sdk/core/internal"],
+            "message": "Import UI SDK from its public entries."
+          },
+          {
+            "regex": "^@ui-sdk/react$",
+            "message": "Import UI SDK React from a subpath, like @ui-sdk/react/dialog."
+          }
+        ]
+      }
+    ],
+    "eskais/no-low-value-comments": "warn",
+    "shadcn/no-raw-colors": "error",
+    "shadcn/no-arbitrary-values": [
+      "error",
+      {
+        "allow": ["max-h-[calc(100dvh-2rem)]", "w-[calc(100%-2rem)]"]
+      }
+    ],
+    "shadcn/no-unknown-classes": "error",
+    "shadcn/require-static-classes": "error",
+    "oxc/no-map-spread": "off",
+    "unicorn/prefer-set-has": "off",
+    "vitest/valid-expect": [
+      "error",
+      {
+        "maxArgs": 2
+      }
+    ],
+    "vitest/require-mock-type-parameters": "off",
+    "vitest/expect-expect": [
+      "error",
+      {
+        "assertFunctionNames": ["expect", "checkServer", "checkPattern", "checkDirection"]
+      }
+    ],
+    "no-underscore-dangle": [
+      "warn",
+      {
+        "allow": ["__UI_SDK_STRICT__"]
+      }
+    ],
+    "import/no-unassigned-import": [
+      "warn",
+      {
+        "allow": ["**/*.css"]
+      }
+    ]
+  },
+  "overrides": [
+    {
+      "files": ["registry/**"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "group": ["@ui-sdk/*/internal/*", "@ui-sdk/core/internal"],
+                "message": "Import UI SDK from its public entries."
+              },
+              {
+                "regex": "^@ui-sdk/react$",
+                "message": "Import UI SDK React from a subpath, like @ui-sdk/react/dialog."
+              },
+              {
+                "regex": "^(bun|bun:.*|node:.*)$",
+                "message": "Registry code runs in consumers' browsers and Node/npm/pnpm projects."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": ["apps/showcase/**"],
+      "rules": {
+        "shadcn/no-restyle": [
+          "error",
+          {
+            "allow": ["layout"]
+          }
+        ]
+      }
+    },
+    {
+      "files": ["test/**", "tooling/screenshots.mjs", "tooling/contrast-check.mjs", "tooling/showcase-browser.mjs"],
+      "rules": {
+        "no-await-in-loop": "off"
+      }
+    }
+  ]
+}

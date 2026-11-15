@@ -1,0 +1,18 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "utils",
+  "title": "Utils",
+  "description": "cn() and cnState(), which merges classes into a UI SDK className that may be a function of state.",
+  "dependencies": [
+    "clsx@2.1.1",
+    "tailwind-merge@3.7.0"
+  ],
+  "files": [
+    {
+      "path": "registry/lib/utils.ts",
+      "content": "import { clsx, type ClassValue } from \"clsx\"\nimport { twMerge } from \"tailwind-merge\"\n\nfunction cn(...inputs: ClassValue[]) {\n  return twMerge(clsx(inputs))\n}\n\ntype StateClassName<State> = string | ((state: State) => string | undefined) | undefined\n\n/** Merges base classes with a UI SDK `className`, which may be a function of the part's state. */\nfunction cnState<State>(base: string, className: StateClassName<State>) {\n  if (typeof className === \"function\") return (state: State) => cn(base, className(state))\n  return cn(base, className)\n}\n\nexport { cn, cnState }\nexport type { StateClassName }\n",
+      "type": "registry:lib"
+    }
+  ],
+  "type": "registry:lib"
+}
