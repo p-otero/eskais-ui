@@ -35,6 +35,7 @@ import { AppearanceControls, theme } from "./appearance"
 import { Section } from "./section"
 import { OverlaysSection } from "./sections/overlays"
 import { StructureSection } from "./sections/structure"
+import { SelectionSection } from "./sections/selection"
 
 const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
 
@@ -229,6 +230,8 @@ function App() {
           >
             <SearchDemo />
           </Section>
+
+          <SelectionSection />
 
           <Section title="Dialog" description="Focus trap, Escape, focus restore and an agent-editable field.">
             <RenameDialog />

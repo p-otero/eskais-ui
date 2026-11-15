@@ -38,6 +38,11 @@ const items = [
   "drawer",
   "dropdown-menu",
   "toast",
+  "select",
+  "combobox",
+  "segmented-control",
+  "checkbox",
+  "textarea",
 ]
 const versions = {
   react: "19.3.1",

@@ -16,14 +16,15 @@ Eskais UI components are UI SDK parts styled with Tailwind v4 and semantic token
 
 ## Choose
 
-| Need                       | Use                                                                                                        |
-| -------------------------- | ---------------------------------------------------------------------------------------------------------- |
-| An action, possibly async  | `Button`: return a Promise from `onClick` for pending, no double press                                     |
-| A labeled text input       | `Field` + `FieldLabel` + `Input`; `InputGroup` + `InputClear` for a clear button                           |
-| A search box               | `SearchField label onSearch`: Enter runs `onSearch`, Escape clears only when there is text                 |
-| A modal                    | `Dialog` parts; `dismissible={false}` + `onDismissAttempt` for unsaved changes                             |
-| "Are you sure?"            | `ConfirmDialog onConfirm`: a returned Promise shows pending, closes on success, shows the error on failure |
-| Static grouping and labels | `Card` parts, `Badge`                                                                                      |
+| Need                       | Use                                                                                                                                                                                                               |
+| -------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| An action, possibly async  | `Button`: return a Promise from `onClick` for pending, no double press                                                                                                                                            |
+| A labeled text input       | `Field` + `FieldLabel` + `Input`; `InputGroup` + `InputClear` for a clear button                                                                                                                                  |
+| A search box               | `SearchField label onSearch`: Enter runs `onSearch`, Escape clears only when there is text                                                                                                                        |
+| A modal                    | `Dialog` parts; `dismissible={false}` + `onDismissAttempt` for unsaved changes                                                                                                                                    |
+| "Are you sure?"            | `ConfirmDialog onConfirm`: a returned Promise shows pending, closes on success, shows the error on failure                                                                                                        |
+| Static grouping and labels | `Card` parts, `Badge`                                                                                                                                                                                             |
+| Pick one of many, typed    | `Combobox` with `items` on the root, rendering options from `<ComboboxList>{(state) => state.items.map(…)}</ComboboxList>`. Static children aren't filtered, and agents then store the label instead of the value |
 
 ## Separate the layers
 

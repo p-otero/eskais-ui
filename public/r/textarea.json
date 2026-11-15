@@ -1,0 +1,23 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "textarea",
+  "title": "Textarea",
+  "description": "UI SDK Textarea: multi-line field with auto resize and a submit shortcut, labelled by Field.",
+  "dependencies": [
+    "@ui-sdk/core@0.1.0-beta.5",
+    "@ui-sdk/react@0.1.0-beta.5"
+  ],
+  "registryDependencies": [
+    "@eskais/utils",
+    "@eskais/theme",
+    "@eskais/field"
+  ],
+  "files": [
+    {
+      "path": "registry/ui/textarea.tsx",
+      "content": "\"use client\"\n\nimport { Textarea as TextareaPrimitive, createInputController } from \"@ui-sdk/react/textarea\"\nimport type { ComponentProps } from \"react\"\n\nimport { cnState } from \"@/lib/utils\"\n\n// rounded-control is a pill in the default theme and clips multi-line text; rounded-lg follows --radius instead.\nfunction Textarea({ className, ...props }: ComponentProps<typeof TextareaPrimitive>) {\n  return (\n    <TextareaPrimitive\n      className={cnState(\n        \"min-h-20 w-full min-w-0 rounded-lg border border-input bg-background/(--glass-opacity) px-control-x py-2 text-sm shadow-xs transition-colors outline-none placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring aria-invalid:border-destructive data-disabled:cursor-not-allowed data-disabled:opacity-50\",\n        className,\n      )}\n      {...props}\n    />\n  )\n}\n\nexport { Textarea, createInputController }\nexport type { InputController, TextareaState } from \"@ui-sdk/react/textarea\"\n",
+      "type": "registry:ui"
+    }
+  ],
+  "type": "registry:ui"
+}

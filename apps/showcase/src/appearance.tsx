@@ -1,11 +1,11 @@
 import { createLocalStorage, createPreference } from "@ui-sdk/core"
 import { Field, FieldLabel } from "@ui-sdk/react/field"
 import { usePreference } from "@ui-sdk/react/preferences"
-import { SegmentedControl, SegmentedControlIndicator, SegmentedControlItem } from "@ui-sdk/react/segmented-control"
 import { Slider, SliderControl, SliderIndicator, SliderThumb, SliderTrack, SliderValue } from "@ui-sdk/react/slider"
 import { useEffect, useState } from "react"
 
 import { Button } from "@/components/ui/button"
+import { SegmentedControl, SegmentedControlIndicator, SegmentedControlItem } from "@/components/ui/segmented-control"
 
 const themes = ["default", "compact", "glass"] as const
 type Theme = (typeof themes)[number]
@@ -23,19 +23,11 @@ function ThemePicker() {
   return (
     <Field className="flex flex-col gap-1.5">
       <FieldLabel className="text-sm font-medium">Theme</FieldLabel>
-      <SegmentedControl<Theme>
-        value={value}
-        onValueChange={(next) => next && theme.set(next)}
-        className="relative isolate inline-flex rounded-control border bg-muted/(--glass-opacity) p-1"
-      >
-        <SegmentedControlIndicator className="absolute top-(--segmented-control-indicator-top) left-(--segmented-control-indicator-left) -z-10 h-(--segmented-control-indicator-height) w-(--segmented-control-indicator-width) rounded-control bg-background shadow-sm transition-all duration-200" />
+      <SegmentedControl<Theme> value={value} onValueChange={(next) => next && theme.set(next)}>
+        <SegmentedControlIndicator />
         {themes.map((name) => (
-          <SegmentedControlItem
-            key={name}
-            value={name}
-            className="h-control-sm cursor-pointer rounded-control px-control-x text-sm font-medium text-muted-foreground capitalize outline-none focus-visible:ring-2 focus-visible:ring-ring data-checked:text-foreground"
-          >
-            {name}
+          <SegmentedControlItem key={name} value={name}>
+            {name.charAt(0).toUpperCase() + name.slice(1)}
           </SegmentedControlItem>
         ))}
       </SegmentedControl>
