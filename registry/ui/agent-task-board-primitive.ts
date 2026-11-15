@@ -1,6 +1,13 @@
-import { createChange, definePrimitive, dispatch, type ChangeDetails, type ChangeOptions } from "@ui-sdk/core"
+import {
+  createChange,
+  createController,
+  definePrimitive,
+  dispatch,
+  type ChangeDetails,
+  type ChangeOptions,
+} from "@ui-sdk/core"
 
-import { filterOptions, type TaskFilters } from "@/lib/agent-task-board"
+import { filterOptions, type TaskFilters } from "@/lib/agent-task-board-model"
 import type { AttemptView, TaskView, ThreadRef } from "@/lib/agent-task-types"
 
 type BoardView = "board" | "table"
@@ -25,6 +32,17 @@ type AgentTaskBoardOptions = {
   /** The contract's `onSelectTask`; the root component maps one onto the other. */
   onSelectedTaskIdChange?: (id: string | null, details: ChangeDetails<SelectReason>) => void
   onOpenThread?: (thread: ThreadRef, details: ChangeDetails<OpenThreadReason> & { attemptId: string }) => void
+  controller?: AgentTaskBoardController
+}
+
+interface AgentTaskBoardController {
+  setView: (view: BoardView, options?: ChangeOptions<ViewChangeReason>) => boolean | undefined
+  filter: (
+    partial: Partial<Record<keyof TaskFilters, string | null>>,
+    options?: ChangeOptions<FiltersChangeReason>,
+  ) => boolean | undefined
+  selectTask: (id: string | null, options?: ChangeOptions<SelectReason>) => boolean | undefined
+  openThread: (attemptId: string, options?: ChangeOptions<OpenThreadReason>) => boolean | undefined
 }
 
 const FILTER_KEYS = ["project", "profile", "model", "query"] as const
@@ -84,6 +102,7 @@ const agentTaskBoard = definePrimitive({
     defaultSelectedTaskId: "value",
     onSelectedTaskIdChange: "callback",
     onOpenThread: "callback",
+    controller: "value",
   },
   state: (options: AgentTaskBoardOptions) => ({
     view: options.view ?? options.defaultView ?? ("board" as BoardView),
@@ -135,5 +154,9 @@ const agentTaskBoard = definePrimitive({
   agent: { actions: ["selectTask", "openThread", "setView", "filter"], items: (api) => api.tasks() },
 })
 
-export { agentTaskBoard }
-export type { AgentApproval, AgentTaskBoardOptions, BoardMode, BoardView }
+function createAgentTaskBoardController() {
+  return createController<AgentTaskBoardController>()
+}
+
+export { agentTaskBoard, createAgentTaskBoardController }
+export type { AgentApproval, AgentTaskBoardController, AgentTaskBoardOptions, BoardMode, BoardView }

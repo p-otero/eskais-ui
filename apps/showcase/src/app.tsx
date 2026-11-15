@@ -42,6 +42,7 @@ import { ValuesSection } from "./sections/values"
 import { StatusSection } from "./sections/status"
 import { AgentsSection } from "./sections/agents"
 import { AttemptsSection } from "./sections/attempts"
+import { AgentTaskBoardSection } from "./sections/agent-task-board"
 
 const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
 
@@ -289,6 +290,8 @@ function App() {
           <AgentsSection />
 
           <ProposalsSection />
+
+          <AgentTaskBoardSection />
 
           <AgentPanel />
         </main>

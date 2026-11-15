@@ -1,4 +1,4 @@
-import { effectiveAgent, type TaskStatus, type TaskView } from "@/lib/agent-task-types"
+import { effectiveAgent, type AttemptView, type TaskStatus, type TaskView } from "@/lib/agent-task-types"
 import type { Quantity } from "@/lib/quantity"
 
 interface TaskFilters {
@@ -125,6 +125,11 @@ function attemptCount(task: TaskView): number {
   return task.counts?.attempts ?? task.attempts.length
 }
 
+/** The attempt `activeAttemptId` names, or else the latest one. */
+function activeAttempt(task: TaskView): AttemptView | undefined {
+  return task.attempts.find((attempt) => attempt.id === task.activeAttemptId) ?? task.attempts.at(-1)
+}
+
 const comparators: Record<Exclude<SortKey, "cost">, (a: TaskView, b: TaskView) => number> = {
   id: (a, b) => collator.compare(a.id, b.id),
   title: (a, b) => collator.compare(a.title, b.title),
@@ -174,6 +179,8 @@ function summarize(tasks: readonly TaskView[]): BoardSummary {
 
 export {
   TASK_STATUSES,
+  activeAttempt,
+  attemptCount,
   filterOptions,
   filterTasks,
   groupByStatus,

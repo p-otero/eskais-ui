@@ -28,6 +28,7 @@ UI SDK-first, agent-native React components, distributed as a shadcn-style regis
 | Agent tasks      | `agent-task-types`, `agent-badge`, `liveness-indicator`, `task-status`     |
 | Agent history    | `usage`, `attempt-timeline`                                                |
 | Agent board core | `agent-task-board-core` (logic, labels, agent actions), `proposal-actions` |
+| Agent task board | `task-card`, `task-detail-panel`, `agent-task-board` (the full board)      |
 | `theme`          | Color, shape, density and surface tokens; the default rounded look         |
 | `theme-compact`  | Denser controls and tighter radii inside `data-theme="compact"`            |
 | `theme-glass`    | Translucent, blurred surfaces inside `data-theme="glass"`                  |

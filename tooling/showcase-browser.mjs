@@ -50,6 +50,14 @@ async function setAppearance(page, theme, mode) {
   const dark = page.getByRole("button", { name: "Dark mode" })
   if ((mode === "dark") !== ((await dark.getAttribute("aria-pressed")) === "true")) await dark.click()
   await page.waitForTimeout(250)
+  // Inside `content-visibility: auto` columns off screen, a color transition only starts when something
+  // reads the style, so axe would read the previous theme's colors. Start them all, then finish them.
+  await page.evaluate(() => {
+    for (const element of document.querySelectorAll("*")) void getComputedStyle(element).color
+    for (const animation of document.getAnimations()) {
+      if (animation instanceof CSSTransition) animation.finish()
+    }
+  })
 }
 
 export { setAppearance, withShowcase }

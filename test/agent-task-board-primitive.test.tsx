@@ -7,7 +7,7 @@ import { expect, test, vi } from "vitest"
 import { agentTaskBoard } from "@/components/ui/agent-task-board-primitive"
 import { AgentTaskBoardRoot, AgentTaskProposalsRoot } from "@/components/ui/agent-task-board-root"
 import { agentTaskProposals } from "@/components/ui/agent-task-proposals-primitive"
-import type { TaskFilters } from "@/lib/agent-task-board"
+import type { TaskFilters } from "@/lib/agent-task-board-model"
 
 import { axeViolations } from "./axe"
 import { sampleTasks } from "./fixtures/agent-tasks"

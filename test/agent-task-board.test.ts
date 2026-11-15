@@ -8,7 +8,7 @@ import {
   sumQuantities,
   summarize,
   taskCost,
-} from "@/lib/agent-task-board"
+} from "@/lib/agent-task-board-model"
 import { agentTaskBoardLabels, agentTaskBoardLabelsEs, mergeLabels } from "@/lib/agent-task-board-labels"
 import type { TaskView } from "@/lib/agent-task-types"
 

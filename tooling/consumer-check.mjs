@@ -58,6 +58,9 @@ const items = [
   "attempt-timeline",
   "agent-task-board-core",
   "proposal-actions",
+  "task-card",
+  "task-detail-panel",
+  "agent-task-board",
 ]
 const versions = {
   react: "19.3.1",
@@ -181,6 +184,7 @@ export default defineConfig({
   write(
     "src/main.tsx",
     `import { createRoot } from "react-dom/client"
+import { AgentTaskBoard } from "@/components/ui/agent-task-board"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -189,10 +193,34 @@ import { Dialog, DialogContent, DialogTitle, DialogTrigger } from "@/components/
 import { Field, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { SearchField } from "@/components/ui/search-field"
+import type { TaskView } from "@/lib/agent-task-types"
 import "./index.css"
+
+const tasks: TaskView[] = [
+  {
+    id: "T-1",
+    title: "Index the docs",
+    status: "working",
+    dependsOn: [],
+    acceptance: [{ text: "Every page is indexed", result: "pass" }],
+    attempts: [
+      {
+        id: "T-1-A1",
+        kind: "implementation",
+        status: "active",
+        configured: { provider: "codex", model: "gpt" },
+        startedAt: "2026-11-15T17:40:00Z",
+        liveness: "running",
+      },
+    ],
+    updatedAt: "2026-11-15T18:40:00Z",
+  },
+]
 
 function App() {
   return (
+    <>
+    <AgentTaskBoard tasks={tasks} mode="snapshot" generatedAt="2026-11-15T18:42:00Z" timeZone="UTC" />
     <Card data-theme="glass">
       <CardHeader><CardTitle>Consumer</CardTitle></CardHeader>
       <CardContent>
@@ -204,6 +232,7 @@ function App() {
         <ConfirmDialog trigger="Delete" title="Delete?" confirmLabel="Delete" tone="destructive" agentConfirm="Deletes it" onConfirm={() => {}} />
       </CardContent>
     </Card>
+    </>
   )
 }
 

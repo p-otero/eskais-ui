@@ -38,6 +38,20 @@ Eskais UI components are UI SDK parts styled with Tailwind v4 and semantic token
 | Tokens and cost              | `UsageTable` / `UsageStat`; unknown stays `—`                                                                                                                                                                     |
 | An agent task's attempts     | `AttemptTimeline`; older attempts collapse past five                                                                                                                                                              |
 | Approve or reject a proposal | `ProposalActions` with `agentApproval` (`"confirm"` by default, `"allow"`, `"deny"`)                                                                                                                              |
+| A whole board of agent tasks | `AgentTaskBoard` with `tasks` and `mode`; see below                                                                                                                                                               |
+| One agent task, compact      | `TaskCard` (selects through a stretched button; chips and proposal buttons stay their own tab stops)                                                                                                              |
+| One agent task, in full      | `TaskDetailPanel`: non-modal, Escape and a close button call `onClose`                                                                                                                                            |
+
+## AgentTaskBoard
+
+`npx shadcn add @eskais/agent-task-board` installs the board and every piece it uses.
+
+- **Snapshot or live.** `mode="snapshot"` needs `generatedAt`: it is the board's "now", shown in a banner, and times never refresh. It shows no approve or reject actions. `mode="live"` refreshes times every 30 s, paused while the page is hidden; pass `now` only for tests and screenshots.
+- **One clock.** The board calls `useNow` once and passes `now` down. When you compose `TaskCard` or `TaskDetailPanel` yourself, do the same: one `useNow()` per screen, never one timer per time.
+- **Labels.** English by default. Override any string with `labels={{ columns: { done: "Shipped" } }}`, or pass `labels={agentTaskBoardLabelsEs}` from `@/components/ui/agent-task-board` for Spanish, including the pieces inside (status, liveness, usage, attempts). Pass `locale` and `timeZone` for formatting.
+- **Agents.** The board's root exposes `selectTask`, `setView`, `filter` and `openThread`. In live mode with `onApproveProposal`/`onRejectProposal`, `agentApproval` decides what an agent may do: `"confirm"` (default) asks a person through your bridge's `allow`, `"allow"` acts without asking, `"deny"` hides the actions from agents. People's buttons are the same either way.
+- **State.** `view`, `filters`, `columns` and `selectedTaskId` are each controlled or uncontrolled (`defaultView`, `defaultFilters`, `defaultSelectedTaskId`). Cancelled tasks are hidden until `columns` shows them.
+- **Static.** It works as one HTML file with no network: `node tooling/static-board.mjs` builds and checks one.
 
 ## Separate the layers
 

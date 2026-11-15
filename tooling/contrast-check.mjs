@@ -119,11 +119,20 @@ async function check(page, scope, context) {
 // Popups render only while open, so open each kind once and check it in place.
 const popups = [
   { name: "dialog", open: (page) => page.getByRole("button", { name: "Rename project" }), selector: '[role="dialog"]' },
-  { name: "listbox", open: (page) => page.getByRole("combobox", { name: "Model" }), selector: '[role="listbox"]' },
+  {
+    name: "listbox",
+    open: (page) => page.getByRole("combobox", { name: "Model", exact: true }).first(),
+    selector: '[role="listbox"]',
+  },
   {
     name: "menu",
     open: (page) => page.getByRole("button", { name: "Actions for Index the docs" }),
     selector: '[role="menu"]',
+  },
+  {
+    name: "task detail panel",
+    open: (page) => page.getByRole("button", { name: "Open T-014 Index the docs for search" }),
+    selector: '[data-slot="task-detail-panel"]',
   },
 ]
 

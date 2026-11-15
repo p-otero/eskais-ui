@@ -23,9 +23,47 @@ interface ProposalLabels {
 /**
  * Labels of the pieces the board composes (AgentBadge, LivenessIndicator,
  * UsageTable, AttemptTimeline), keyed by component, each its own Partial labels.
- * Typed loosely until those components land; narrow it then.
+ * Typed loosely here so this file needs no component; AgentTaskBoard narrows it.
  */
 type AgentTaskBoardComponentLabels = Record<string, Record<string, unknown>>
+
+interface CardLabels {
+  /** Accessible name of the button that selects the card; must contain the visible title. */
+  open: (id: string, title: string) => string
+  attempts: (count: number) => string
+  cost: string
+  acceptance: (id: string) => string
+  dependencies: (id: string) => string
+  decisionNeeded: string
+  /** Precedes the relative retry time, as in "Retry in 3 hours". */
+  retry: string
+  analysisMode: { review: string; autonomous: string }
+}
+
+interface PanelLabels {
+  close: string
+  goal: string
+  acceptance: string
+  noAcceptance: string
+  dependencies: string
+  dependenciesOf: (id: string) => string
+  decision: string
+  usage: string
+  usageOf: (id: string) => string
+  attempts: string
+  updated: string
+  cost: string
+  profile: string
+  project: string
+}
+
+type TableColumn = "id" | "title" | "status" | "profile" | "agent" | "attempts" | "cost" | "updatedAt"
+
+interface TableLabels {
+  name: string
+  columns: Record<TableColumn, string>
+  sortBy: (column: string) => string
+}
 
 interface AgentTaskBoardLabels {
   board: string
@@ -42,6 +80,7 @@ interface AgentTaskBoardLabels {
     anyModel: string
     search: string
     searchPlaceholder: string
+    clearSearch: string
     clear: string
   }
   views: { group: string; board: string; table: string }
@@ -57,6 +96,9 @@ interface AgentTaskBoardLabels {
   snapshot: (date: string) => string
   empty: { board: string; column: string; filtered: string; attempts: string }
   errors: { approveFailed: string; rejectFailed: string; unknown: string }
+  card: CardLabels
+  panel: PanelLabels
+  table: TableLabels
   components: AgentTaskBoardComponentLabels
 }
 
@@ -92,6 +134,7 @@ const agentTaskBoardLabels: AgentTaskBoardLabels = {
     anyModel: "Any model",
     search: "Search tasks",
     searchPlaceholder: "Search by ID, title or goal",
+    clearSearch: "Clear search",
     clear: "Clear filters",
   },
   views: { group: "View", board: "Board", table: "Table" },
@@ -131,6 +174,46 @@ const agentTaskBoardLabels: AgentTaskBoardLabels = {
     rejectFailed: "Couldn't reject the proposal.",
     unknown: "Something went wrong.",
   },
+  card: {
+    open: (id, title) => `Open ${id} ${title}`,
+    attempts: (count) => (count === 1 ? "1 attempt" : `${count} attempts`),
+    cost: "Cost",
+    acceptance: (id) => `Acceptance for ${id}`,
+    dependencies: (id) => `Dependencies of ${id}`,
+    decisionNeeded: "Decision needed",
+    retry: "Retry",
+    analysisMode: { review: "A person reviews it before agents run", autonomous: "Agents run it on their own" },
+  },
+  panel: {
+    close: "Close task details",
+    goal: "Goal",
+    acceptance: "Acceptance",
+    noAcceptance: "No acceptance criteria.",
+    dependencies: "Dependencies",
+    dependenciesOf: (id) => `Dependencies of ${id}`,
+    decision: "Decision needed",
+    usage: "Usage",
+    usageOf: (id) => `Usage of ${id}`,
+    attempts: "Attempts",
+    updated: "Updated",
+    cost: "Cost",
+    profile: "Profile",
+    project: "Project",
+  },
+  table: {
+    name: "Agent tasks table",
+    columns: {
+      id: "ID",
+      title: "Title",
+      status: "Status",
+      profile: "Profile",
+      agent: "Agent",
+      attempts: "Attempts",
+      cost: "Cost",
+      updatedAt: "Updated",
+    },
+    sortBy: (column) => `Sort by ${column}`,
+  },
   components: {},
 }
 
@@ -157,6 +240,7 @@ const agentTaskBoardLabelsEs: AgentTaskBoardLabels = {
     anyModel: "Cualquier modelo",
     search: "Buscar tareas",
     searchPlaceholder: "Busca por ID, título u objetivo",
+    clearSearch: "Borrar búsqueda",
     clear: "Quitar filtros",
   },
   views: { group: "Vista", board: "Tablero", table: "Tabla" },
@@ -196,6 +280,49 @@ const agentTaskBoardLabelsEs: AgentTaskBoardLabels = {
     rejectFailed: "No se pudo rechazar la propuesta.",
     unknown: "Algo ha fallado.",
   },
+  card: {
+    open: (id, title) => `Abrir ${id} ${title}`,
+    attempts: (count) => (count === 1 ? "1 intento" : `${count} intentos`),
+    cost: "Coste",
+    acceptance: (id) => `Aceptación de ${id}`,
+    dependencies: (id) => `Dependencias de ${id}`,
+    decisionNeeded: "Pendiente de decisión",
+    retry: "Reintento",
+    analysisMode: {
+      review: "Una persona la revisa antes de que trabajen los agentes",
+      autonomous: "Los agentes la hacen por su cuenta",
+    },
+  },
+  panel: {
+    close: "Cerrar detalles de la tarea",
+    goal: "Objetivo",
+    acceptance: "Aceptación",
+    noAcceptance: "Sin criterios de aceptación.",
+    dependencies: "Dependencias",
+    dependenciesOf: (id) => `Dependencias de ${id}`,
+    decision: "Pendiente de decisión",
+    usage: "Consumo",
+    usageOf: (id) => `Consumo de ${id}`,
+    attempts: "Intentos",
+    updated: "Actualizada",
+    cost: "Coste",
+    profile: "Perfil",
+    project: "Proyecto",
+  },
+  table: {
+    name: "Tabla de tareas de agentes",
+    columns: {
+      id: "ID",
+      title: "Título",
+      status: "Estado",
+      profile: "Perfil",
+      agent: "Agente",
+      attempts: "Intentos",
+      cost: "Coste",
+      updatedAt: "Actualizada",
+    },
+    sortBy: (column) => `Ordenar por ${column}`,
+  },
   components: {},
 }
 
@@ -220,4 +347,13 @@ function mergeLabels(
 }
 
 export { agentTaskBoardLabels, agentTaskBoardLabelsEs, mergeLabels }
-export type { AgentTaskBoardComponentLabels, AgentTaskBoardLabels, AgentTaskBoardLabelsInput, ProposalLabels }
+export type {
+  AgentTaskBoardComponentLabels,
+  AgentTaskBoardLabels,
+  AgentTaskBoardLabelsInput,
+  CardLabels,
+  PanelLabels,
+  ProposalLabels,
+  TableColumn,
+  TableLabels,
+}

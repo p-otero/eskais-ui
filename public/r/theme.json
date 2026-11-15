@@ -120,7 +120,9 @@
       "--glass-saturation": "1",
       "--board-column-min-width": "16rem",
       "--board-column-max-width": "22rem",
-      "--board-column-max-height": "40rem"
+      "--board-column-max-height": "40rem",
+      "--task-panel-width": "26rem",
+      "--task-panel-max-height": "70dvh"
     },
     "@utility backdrop-surface": {
       "-webkit-backdrop-filter": "var(--surface-backdrop)",

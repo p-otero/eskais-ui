@@ -3,7 +3,11 @@
 import { createParts } from "@ui-sdk/react/primitive"
 import type { ComponentProps } from "react"
 
-import { agentTaskBoard, type AgentTaskBoardOptions } from "@/components/ui/agent-task-board-primitive"
+import {
+  agentTaskBoard,
+  createAgentTaskBoardController,
+  type AgentTaskBoardOptions,
+} from "@/components/ui/agent-task-board-primitive"
 import { agentTaskProposals } from "@/components/ui/agent-task-proposals-primitive"
 
 const { Root: BoardRoot } = createParts(agentTaskBoard, { root: "div" })
@@ -17,5 +21,5 @@ function AgentTaskBoardRoot({ onSelectTask, ...props }: AgentTaskBoardRootProps)
   return <BoardRoot onSelectedTaskIdChange={onSelectTask} {...props} />
 }
 
-export { AgentTaskBoardRoot, AgentTaskProposalsRoot }
+export { AgentTaskBoardRoot, AgentTaskProposalsRoot, createAgentTaskBoardController }
 export type { AgentTaskBoardRootProps }

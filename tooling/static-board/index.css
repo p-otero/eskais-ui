@@ -1,0 +1,7 @@
+@layer ui-sdk;
+@import "tailwindcss" source(none);
+@import "../../registry/styles/theme.css";
+@import "../../registry/styles/theme-compact.css";
+
+@source "../../registry";
+@source "./main.tsx";

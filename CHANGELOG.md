@@ -21,9 +21,15 @@ Versions follow [semver](https://semver.org). Before 1.0, a minor version can br
 - Board pieces: `board`, `status-pill`, `dependency-chips`, `acceptance-list`, `stat`, `quantity`, `relative-time`.
 - Theme: `rounded-choice` radius, board column size tokens, and the `content-auto` and `text-vertical` utilities.
 - Agent task pieces: `agent-task-types`, `agent-badge`, `liveness-indicator`, `task-status`, `usage`, `attempt-timeline`, `agent-task-board-core` and `proposal-actions`, with English labels and Spanish presets.
+- `task-card`, `task-detail-panel` and `agent-task-board`: the full agent task board with filters, a board or sortable table view, a summary, a non-modal detail panel, snapshot and live modes, and a complete Spanish preset (`agentTaskBoardLabelsEs`).
+- The board primitive takes a `controller` (`createAgentTaskBoardController`), so a person's controls go through the same actions as an agent's.
+- Theme: `--task-panel-width` and `--task-panel-max-height`.
+- CI builds the board as one self-contained HTML file with Bun and opens it from `file://` with the network blocked.
 
 ### Changed
 
 - Fields share one surface style (`fieldSurfaceClassName`), and a `Field` holding a checkbox lays out as a row.
 
 - Reduced motion stops infinite animations instead of making them flicker.
+- `registry/lib/agent-task-board.ts` is now `agent-task-board-model.ts`, so it doesn't share a basename with `registry/ui/agent-task-board.tsx`. It also exports `activeAttempt` and `attemptCount`.
+- Board labels gain `card`, `panel`, `table` and `filters.clearSearch`.

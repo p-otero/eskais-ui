@@ -90,6 +90,9 @@ jobs:
       - name: Contrast and axe in Chrome, default and compact themes in light and dark
         timeout-minutes: 8
         run: bun run test:browser
+      - name: AgentTaskBoard as one static HTML file, opened from file:// with the network blocked
+        timeout-minutes: 5
+        run: node tooling/static-board.mjs
       - name: Screenshots for review (not a gate)
         run: node tooling/screenshots.mjs screenshots
         timeout-minutes: 5
