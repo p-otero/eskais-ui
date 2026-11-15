@@ -18,6 +18,10 @@ UI SDK-first, agent-native React components, distributed as a shadcn-style regis
 | `dialog`         | UI SDK `Dialog`                                                      |
 | `confirm-dialog` | UI SDK `AlertDialog` with an async `action` and `data-agent-confirm` |
 | `card`, `badge`  | `renderElement`, presentational                                      |
+| Overlays         | `tooltip`, `popover`, `drawer`, `dropdown-menu`, `toast`             |
+| Selection        | `select`, `combobox`, `segmented-control`, `checkbox`, `textarea`    |
+| Structure        | `tabs`, `collapsible`, `scroll-area`, `separator`, `avatar`          |
+| Display          | `skeleton`, `empty`, `kbd`, `table` (sortable headers)               |
 | `theme`          | Color, shape, density and surface tokens; the default rounded look   |
 | `theme-compact`  | Denser controls and tighter radii inside `data-theme="compact"`      |
 | `theme-glass`    | Translucent, blurred surfaces inside `data-theme="glass"`            |

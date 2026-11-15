@@ -106,6 +106,17 @@ async function check(page, scope, context) {
   console.log(`${scope}: ${result.violations.length} axe violations, ${measured} measured in pixels`)
 }
 
+// Popups render only while open, so open each kind once and check it in place.
+const popups = [
+  { name: "dialog", open: (page) => page.getByRole("button", { name: "Rename project" }), selector: '[role="dialog"]' },
+  { name: "listbox", open: (page) => page.getByRole("combobox", { name: "Model" }), selector: '[role="listbox"]' },
+  {
+    name: "menu",
+    open: (page) => page.getByRole("button", { name: "Actions for Index the docs" }),
+    selector: '[role="menu"]',
+  },
+]
+
 await withShowcase(async (page) => {
   await page.addScriptTag({ path: axePath })
   for (const theme of themes) {
@@ -118,12 +129,14 @@ await withShowcase(async (page) => {
         )
       }
       await check(page, `${theme}/${mode}`, "body")
-      await page.getByRole("button", { name: "Rename project" }).click()
-      await page.getByRole("dialog", { name: "Rename Apollo" }).waitFor()
-      await page.waitForTimeout(250)
-      await check(page, `${theme}/${mode} dialog`, '[role="dialog"]')
-      await page.keyboard.press("Escape")
-      await page.getByRole("dialog", { name: "Rename Apollo" }).waitFor({ state: "hidden" })
+      for (const popup of popups) {
+        await popup.open(page).click()
+        await page.locator(popup.selector).first().waitFor()
+        await page.waitForTimeout(250)
+        await check(page, `${theme}/${mode} ${popup.name}`, popup.selector)
+        await page.keyboard.press("Escape")
+        await page.locator(popup.selector).first().waitFor({ state: "hidden" })
+      }
     }
   }
 })
