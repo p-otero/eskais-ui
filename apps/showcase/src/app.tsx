@@ -33,6 +33,7 @@ import { SearchField } from "@/components/ui/search-field"
 import { agent, approval, type ApprovalRequest } from "./agent"
 import { AppearanceControls, theme } from "./appearance"
 import { Section } from "./section"
+import { OverlaysSection } from "./sections/overlays"
 import { StructureSection } from "./sections/structure"
 
 const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
@@ -265,6 +266,8 @@ function App() {
           </Section>
 
           <StructureSection />
+
+          <OverlaysSection />
 
           <AgentPanel />
         </main>

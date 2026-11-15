@@ -33,6 +33,11 @@ const items = [
   "empty",
   "kbd",
   "table",
+  "tooltip",
+  "popover",
+  "drawer",
+  "dropdown-menu",
+  "toast",
 ]
 const versions = {
   react: "19.3.1",

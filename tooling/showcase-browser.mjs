@@ -1,12 +1,23 @@
 // Serves the built showcase with `vite preview` and opens it in the system Chrome.
 import { spawn, spawnSync } from "node:child_process"
+import { createServer } from "node:net"
 import { resolve } from "node:path"
 
 import { chromium } from "playwright"
 
 const showcase = resolve(import.meta.dirname, "..", "apps", "showcase")
 
-async function withShowcase(run, { port = 4174 } = {}) {
+// A free port, so parallel checks (several worktrees at once) don't collide.
+async function freePort() {
+  const server = createServer()
+  await new Promise((ready) => server.listen(0, "127.0.0.1", ready))
+  const { port } = server.address()
+  await new Promise((closed) => server.close(closed))
+  return port
+}
+
+async function withShowcase(run) {
+  const port = await freePort()
   const server = spawn("npx", ["vite", "preview", "--port", String(port), "--strictPort"], {
     cwd: showcase,
     stdio: ["ignore", "pipe", "inherit"],
