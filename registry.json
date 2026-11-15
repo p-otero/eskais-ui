@@ -932,6 +932,21 @@
       ]
     },
     {
+      "name": "agent-task-types",
+      "type": "registry:lib",
+      "title": "Agent task types",
+      "description": "TaskView, AttemptView, AgentRef, UsageSummary and ThreadRef: the data contract of the agent task components, plus effectiveAgent and agentDiffers.",
+      "registryDependencies": [
+        "@eskais/quantity"
+      ],
+      "files": [
+        {
+          "path": "registry/lib/agent-task-types.ts",
+          "type": "registry:lib"
+        }
+      ]
+    },
+    {
       "name": "lint-rules",
       "type": "registry:file",
       "title": "Lint Rules (optional)",

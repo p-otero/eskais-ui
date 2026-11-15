@@ -49,6 +49,7 @@ const items = [
   "stat",
   "board",
   "status-pill",
+  "agent-task-types",
   "dependency-chips",
 ]
 const versions = {
