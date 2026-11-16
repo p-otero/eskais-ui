@@ -247,7 +247,10 @@ test("closing after confirmDiscard keeps the reason that asked", async () => {
 test("review step: prepare runs pending before the review and its values reach onSubmit", async () => {
   const user = userEvent.setup()
   let finish!: (result: { values: z.output<typeof schema> }) => void
-  const prepare = vi.fn(() => new Promise<{ values: z.output<typeof schema> }>((resolve) => (finish = resolve)))
+  const prepare = vi.fn(
+    (_values: z.output<typeof schema>) =>
+      new Promise<{ values: z.output<typeof schema> }>((resolve) => (finish = resolve)),
+  )
   const onSubmit = vi.fn()
   render(<ProjectDialog onSubmit={onSubmit} submitLabel="Review" reviewStep={{ ...reviewStep, prepare }} />)
   await user.click(screen.getByRole("button", { name: "New project" }))
@@ -255,7 +258,7 @@ test("review step: prepare runs pending before the review and its values reach o
   await user.click(screen.getByRole("button", { name: "Review" }))
   const review = screen.getByRole("button", { name: "Review" })
   await waitFor(() => expect(review.getAttribute("aria-busy")).toBe("true"))
-  expect(prepare).toHaveBeenCalledWith({ name: "Atlas", owner: "ada@example.com" })
+  expect(prepare.mock.lastCall?.[0]).toEqual({ name: "Atlas", owner: "ada@example.com" })
   finish({ values: { name: "Atlas (EU)", owner: "ada@example.com" } })
   expect(await screen.findByText("Atlas (EU)")).toBeTruthy()
   await user.click(screen.getByRole("button", { name: "Create for real" }))

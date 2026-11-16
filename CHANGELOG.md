@@ -13,6 +13,7 @@ Versions follow [semver](https://semver.org). Before 1.0, a minor version can br
 ### Fixed
 
 - `useFormFieldArray` takes `keyName` like react-hook-form's `useFieldArray` (`useFormFieldArray("components", { keyName: "fieldKey" })`), typed by a third type parameter, so rows whose items carry their own `id` keep it. `createForm().useFormFieldArray` infers it too.
+- `FormDialog` `reviewStep.prepare(values, { form })` gets the form instance. Values it returns are written into the form, so Edit shows them and they are submitted; values it writes through `form` without returning any are parsed again and reviewed. Returned values win.
 
 ## 0.1.0 (2026-11-16)
 
