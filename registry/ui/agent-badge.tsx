@@ -120,9 +120,9 @@ function AgentBadge({
       "data-differs": differs ? "" : undefined,
       title: detail ? undefined : title,
       className: cn(
-        "inline-flex max-w-full min-w-0 gap-x-1.5 text-xs text-foreground",
+        "inline-flex max-w-full min-w-0 gap-inline text-xs text-foreground",
         showAvatar ? "items-center" : "items-baseline",
-        detail ? "flex-wrap gap-y-0.5" : "whitespace-nowrap",
+        detail ? "flex-wrap" : "whitespace-nowrap",
         className,
       ),
       ...props,

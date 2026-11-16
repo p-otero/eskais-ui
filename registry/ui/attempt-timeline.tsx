@@ -87,7 +87,7 @@ function AttemptTimeline({
 
   if (hiddenCount === 0) return <div data-slot="attempt-timeline">{timeline}</div>
   return (
-    <Collapsible render={<div data-slot="attempt-timeline" />} className="gap-3">
+    <Collapsible render={<div data-slot="attempt-timeline" />} className="gap-items">
       <CollapsibleTrigger className="-ms-control-x self-start text-muted-foreground">
         {(state) => (
           <>

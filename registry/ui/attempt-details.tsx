@@ -60,7 +60,7 @@ function AttemptRoute({ attempt, attemptName, labels, renderAgent: custom, avata
   const renderAgent = custom ?? ((agent: AgentRef, requested: boolean) => defaultRenderAgent(agent, requested, avatars))
   const fallbacks = attempt.fallbacks ?? []
   return (
-    <div data-slot="attempt-route" className="flex flex-wrap items-center gap-x-2 gap-y-1">
+    <div data-slot="attempt-route" className="flex flex-wrap items-center gap-inline">
       {agentDiffers(attempt) && attempt.executed ? (
         <>
           {renderAgent(attempt.configured, true)}
@@ -79,15 +79,15 @@ function AttemptRoute({ attempt, attemptName, labels, renderAgent: custom, avata
             variant="ghost"
             size="sm"
             aria-label={labels.earlierRoutesFor(fallbacks.length, attemptName)}
-            className="h-auto px-1 py-0.5 text-xs text-muted-foreground"
+            className="h-auto px-inset-chip py-inset-chip text-xs text-muted-foreground"
           >
             {labels.earlierRoutes(fallbacks.length)}
           </PopoverTrigger>
           <PopoverContent>
             <PopoverTitle>{labels.earlierRoutesTitle}</PopoverTitle>
-            <ol className="flex flex-col gap-2 text-sm">
+            <ol className="flex flex-col gap-items text-sm">
               {fallbacks.map(({ agent, reason }) => (
-                <li key={`${agent.provider}/${agent.model}/${reason}`} className="flex flex-col gap-0.5">
+                <li key={`${agent.provider}/${agent.model}/${reason}`} className="flex flex-col gap-inline">
                   {renderAgent(agent, true)}
                   <span className="text-muted-foreground">{reason}</span>
                 </li>
@@ -114,9 +114,9 @@ function AttemptChecks({
   labels: AttemptTimelineLabels
 }) {
   return (
-    <ul aria-label={labels.checks} data-slot="attempt-checks" className="flex flex-col gap-0.5 text-sm">
+    <ul aria-label={labels.checks} data-slot="attempt-checks" className="flex flex-col gap-items text-sm">
       {checks.map((check) => (
-        <li key={check.name} data-result={check.result} className="flex flex-wrap gap-x-2">
+        <li key={check.name} data-result={check.result} className="flex flex-wrap gap-x-inline">
           <span className="font-medium">{check.name}</span>
           <span className={checkColor[check.result]}>{labels.check[check.result]}</span>
           {check.note && <span className="text-muted-foreground">{check.note}</span>}
@@ -128,10 +128,10 @@ function AttemptChecks({
 
 function AttemptCommits({ commits, labels }: { commits: string[]; labels: AttemptTimelineLabels }) {
   return (
-    <ul aria-label={labels.commits} data-slot="attempt-commits" className="flex flex-wrap gap-1">
+    <ul aria-label={labels.commits} data-slot="attempt-commits" className="flex flex-wrap gap-items">
       {commits.map((sha) => (
         <li key={sha}>
-          <code title={sha} className="rounded-sm border bg-muted px-1 font-mono text-xs text-foreground">
+          <code title={sha} className="rounded-sm border bg-muted px-inset-chip font-mono text-xs text-foreground">
             {sha.slice(0, 7)}
           </code>
         </li>
@@ -153,7 +153,7 @@ function AttemptBlocker({ blocker, labels, locale, timeZone, className }: Attemp
     <div
       data-slot="attempt-blocker"
       className={cn(
-        "flex flex-col gap-0.5 rounded-control border border-warning/40 bg-warning/10 px-control-x py-2 text-sm",
+        "flex flex-col gap-inline rounded-control border border-warning/40 bg-warning/10 px-inset-item py-inset-item text-sm",
         className,
       )}
     >

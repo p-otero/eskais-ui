@@ -11,7 +11,7 @@ function Textarea({ className, ...props }: ComponentProps<typeof TextareaPrimiti
   return (
     <TextareaPrimitive
       className={cnState(
-        `${fieldSurfaceClassName} min-h-20 w-full min-w-0 rounded-choice px-control-x py-2 text-sm outline-none placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring`,
+        `${fieldSurfaceClassName} min-h-20 w-full min-w-0 rounded-choice px-control-x py-inset-item text-sm outline-none placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring`,
         className,
       )}
       {...props}

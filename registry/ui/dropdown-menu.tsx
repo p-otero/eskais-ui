@@ -28,11 +28,12 @@ import { cnState } from "@/lib/utils"
 type ButtonLook = VariantProps<typeof buttonVariants>
 
 const menuContentClassName =
-  "z-50 m-0 flex max-h-(--available-height) min-w-48 flex-col overflow-y-auto overscroll-contain rounded-surface border bg-popover/(--glass-opacity) p-1.5 text-sm text-popover-foreground shadow-surface backdrop-surface outline-none origin-(--transform-origin) transition duration-150 data-ending-style:scale-95 data-ending-style:opacity-0 data-starting-style:scale-95 data-starting-style:opacity-0 motion-reduce:transition-opacity motion-reduce:data-ending-style:scale-100 motion-reduce:data-starting-style:scale-100"
+  "z-50 m-0 flex max-h-(--available-height) min-w-48 flex-col overflow-y-auto overscroll-contain rounded-surface border bg-popover/(--glass-opacity) p-inline text-sm text-popover-foreground shadow-surface backdrop-surface outline-none origin-(--transform-origin) transition duration-150 data-ending-style:scale-95 data-ending-style:opacity-0 data-starting-style:scale-95 data-starting-style:opacity-0 motion-reduce:transition-opacity motion-reduce:data-ending-style:scale-100 motion-reduce:data-starting-style:scale-100"
 
 const menuItemClassName =
-  "relative flex h-control-sm shrink-0 cursor-default items-center gap-2 rounded-control px-control-x outline-none select-none data-highlighted:bg-accent data-highlighted:text-accent-foreground data-disabled:opacity-50 data-destructive:text-destructive data-pending:cursor-progress [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0"
+  "relative flex h-control-sm shrink-0 cursor-default items-center gap-inline rounded-control px-inset-item outline-none select-none data-highlighted:bg-accent data-highlighted:text-accent-foreground data-disabled:opacity-50 data-destructive:text-destructive data-pending:cursor-progress [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0"
 
+// oxlint-disable-next-line eskais/spacing-tokens -- clears the absolute size-4 indicator: its start inset, its size and a gap
 const checkableItemClassName = `${menuItemClassName} ps-8`
 
 function DropdownMenuTrigger({
@@ -80,7 +81,7 @@ function DropdownMenuItemIndicator({
 }: ComponentProps<typeof MenuItemIndicatorPrimitive>) {
   return (
     <MenuItemIndicatorPrimitive
-      className={cnState("absolute start-2.5 inline-flex size-4 items-center justify-center", className)}
+      className={cnState("absolute start-(--item-padding-x) inline-flex size-4 items-center justify-center", className)}
       {...props}
     >
       {children ?? (
@@ -104,20 +105,22 @@ function DropdownMenuItemIcon({ className, ...props }: ComponentProps<typeof Men
 function DropdownMenuGroupLabel({ className, ...props }: ComponentProps<typeof MenuGroupLabelPrimitive>) {
   return (
     <MenuGroupLabelPrimitive
-      className={cnState("px-control-x py-1.5 text-xs font-medium text-muted-foreground", className)}
+      className={cnState("px-inset-item py-inline text-xs font-medium text-muted-foreground", className)}
       {...props}
     />
   )
 }
 
 function DropdownMenuSeparator({ className, ...props }: ComponentProps<typeof MenuSeparatorPrimitive>) {
-  return <MenuSeparatorPrimitive className={cnState("-mx-1.5 my-1.5 h-px shrink-0 bg-border", className)} {...props} />
+  return (
+    <MenuSeparatorPrimitive className={cnState("-mx-inline my-inline h-px shrink-0 bg-border", className)} {...props} />
+  )
 }
 
 function DropdownMenuShortcut({ className, ...props }: ComponentProps<typeof MenuShortcutPrimitive>) {
   return (
     <MenuShortcutPrimitive
-      className={cnState("ms-auto ps-4 text-xs tracking-widest text-muted-foreground", className)}
+      className={cnState("ms-auto ps-group text-xs tracking-widest text-muted-foreground", className)}
       {...props}
     />
   )

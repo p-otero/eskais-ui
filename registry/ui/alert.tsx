@@ -6,7 +6,8 @@ import { cn } from "@/lib/utils"
 type AlertTone = "info" | "success" | "warning" | "destructive"
 
 const alertVariants = cva(
-  "relative flex w-full flex-col gap-1 rounded-surface border bg-background/(--glass-opacity) p-surface text-sm text-foreground [&>svg]:absolute [&>svg]:start-surface [&>svg]:top-surface [&>svg]:size-4 [&>svg]:translate-y-0.5 [&>svg~*]:ps-7",
+  // oxlint-disable-next-line eskais/spacing-tokens -- clears the absolute size-4 icon plus a 12px gap
+  "relative flex w-full flex-col gap-inline rounded-surface border bg-background/(--glass-opacity) p-inset-surface text-sm text-foreground [&>svg]:absolute [&>svg]:start-inset-surface [&>svg]:top-inset-surface [&>svg]:size-4 [&>svg]:translate-y-0.5 [&>svg~*]:ps-7",
   {
     variants: {
       tone: {

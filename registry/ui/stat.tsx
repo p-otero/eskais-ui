@@ -13,7 +13,7 @@ function part(slot: string, base: string) {
 
 const Stat = part(
   "stat",
-  "flex h-full flex-col gap-1 rounded-surface border bg-card/(--glass-opacity) p-surface text-card-foreground backdrop-surface",
+  "flex h-full flex-col gap-inline rounded-surface border bg-card/(--glass-opacity) p-inset-surface text-card-foreground backdrop-surface",
 )
 const StatLabel = part("stat-label", "text-sm text-muted-foreground")
 const StatHint = part("stat-hint", "text-xs text-muted-foreground")
@@ -54,7 +54,7 @@ function StatGroup({ className, render, children, ...props }: StatGroupProps) {
       "data-slot": "stat-group",
       // Preflight's list-style: none strips list semantics in Safari unless the role is explicit.
       role: "list",
-      className: cn("flex flex-wrap gap-surface", className),
+      className: cn("flex flex-wrap gap-section", className),
       ...props,
       children: Children.map(children, (child) =>
         isValidElement(child) ? (

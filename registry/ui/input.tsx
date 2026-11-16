@@ -28,7 +28,7 @@ function InputGroup({ className, ...props }: ComponentProps<typeof InputGroupPri
   return (
     <InputGroupPrimitive
       className={cnState(
-        `${fieldSurfaceClassName} flex h-control rounded-control w-full items-center gap-2 px-control-x text-sm has-[input:focus-visible]:ring-2 has-[input:focus-visible]:ring-ring has-aria-invalid:border-destructive [&>svg]:size-4 [&>svg]:shrink-0 [&>svg]:text-muted-foreground`,
+        `${fieldSurfaceClassName} flex h-control rounded-control w-full items-center gap-inline px-control-x text-sm has-[input:focus-visible]:ring-2 has-[input:focus-visible]:ring-ring has-aria-invalid:border-destructive [&>svg]:size-4 [&>svg]:shrink-0 [&>svg]:text-muted-foreground`,
         className,
       )}
       {...props}
@@ -41,7 +41,8 @@ function InputClear({ className, children, ...props }: ComponentProps<typeof Inp
     <InputClearPrimitive
       aria-label="Clear"
       className={cnState(
-        "-mr-1 inline-flex size-6 shrink-0 cursor-pointer items-center justify-center rounded-full text-muted-foreground outline-none hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring",
+        // oxlint-disable-next-line eskais/spacing-tokens -- pulls the icon button into the padding so its glyph lines up with the text inset
+        "-me-1 inline-flex size-6 shrink-0 cursor-pointer items-center justify-center rounded-full text-muted-foreground outline-none hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring",
         className,
       )}
       {...props}

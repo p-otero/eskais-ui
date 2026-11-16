@@ -40,7 +40,7 @@ const columns: { key: TableColumn; sort?: SortKey; end?: boolean }[] = [
 ]
 
 const headerButtonClassName =
-  "-mx-2 inline-flex cursor-pointer items-center gap-1 rounded-control px-2 py-1 font-medium outline-none hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring [&_svg]:size-3.5"
+  "-mx-(--chip-padding-x) inline-flex cursor-pointer items-center gap-inline rounded-control px-inset-chip py-inset-chip font-medium outline-none hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring [&_svg]:size-3.5"
 
 function SortIcon({ direction }: { direction?: SortDirection }) {
   return (
@@ -126,7 +126,7 @@ function AgentTaskBoardTable({ tasks, selectedTaskId, display }: AgentTaskBoardT
                 </Button>
               </TableCell>
               <TableCell>
-                <span className="inline-flex items-center gap-1.5">
+                <span className="inline-flex items-center gap-inline">
                   <TaskStatusIcon status={task.status} />
                   <TaskStatusPill status={task.status} labels={labels.components.taskStatus} />
                 </span>

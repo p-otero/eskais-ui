@@ -20,7 +20,7 @@ function Slider<Value extends number | number[] = number | number[]>({
   return (
     <SliderPrimitive<Value>
       className={cnState(
-        "flex flex-col gap-1.5 data-disabled:opacity-50 data-[orientation=vertical]:h-40 data-[orientation=vertical]:w-fit",
+        "flex flex-col gap-inline data-disabled:opacity-50 data-[orientation=vertical]:h-40 data-[orientation=vertical]:w-fit",
         className,
       )}
       {...props}

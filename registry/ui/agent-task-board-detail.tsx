@@ -40,7 +40,7 @@ function AgentTaskBoardDetail({
     return (
       <>
         {/* People can't reach the board behind a modal, so agents don't see its controls either; the board's own actions still work. */}
-        <div data-agent-hidden={selected ? "" : undefined} className="flex flex-col gap-surface">
+        <div data-agent-hidden={selected ? "" : undefined} className="flex flex-col gap-section">
           {header}
           <div ref={bodyRef}>{children}</div>
         </div>
@@ -60,7 +60,7 @@ function AgentTaskBoardDetail({
       {header}
       <div
         ref={bodyRef}
-        className="flex flex-col gap-surface @4xl/agent-task-board:flex-row @4xl/agent-task-board:items-start"
+        className="flex flex-col gap-section @4xl/agent-task-board:flex-row @4xl/agent-task-board:items-start"
       >
         <div className="min-w-0 flex-1">{children}</div>
         {selected && (

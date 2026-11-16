@@ -90,7 +90,7 @@ function DataTableHeaderCell<Row>({
           aria-label={sortLabel(header)}
           data-slot="data-table-sort"
           data-align={column.align}
-          className="-mx-control-x gap-1 text-foreground data-[align=end]:flex-row-reverse [&_svg]:size-3.5"
+          className="-mx-control-x gap-inline text-foreground data-[align=end]:flex-row-reverse [&_svg]:size-3.5"
           onClick={(event) => onSort(event.nativeEvent)}
         >
           {column.header}
@@ -133,7 +133,7 @@ function DataTablePagination({
   labels,
 }: DataTablePaginationProps & { labels: Pick<DataTableLabels, "previousPage" | "nextPage" | "pageStatus"> }) {
   return (
-    <div data-slot="data-table-pagination" className="flex flex-wrap items-center justify-end gap-2">
+    <div data-slot="data-table-pagination" className="flex flex-wrap items-center justify-end gap-items">
       <span className="text-sm text-muted-foreground tabular-nums" aria-live="polite">
         {labels.pageStatus(page, pageCount)}
       </span>

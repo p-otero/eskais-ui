@@ -69,7 +69,7 @@ function AcceptanceIcon({ result }: { result: AcceptanceResult }) {
       strokeWidth="2.5"
       strokeLinecap="round"
       strokeLinejoin="round"
-      className={cn("mt-0.5 size-4 shrink-0", resultColor[result])}
+      className={cn("h-lh w-4 shrink-0", resultColor[result])}
     >
       {iconPaths[result]}
     </svg>
@@ -89,17 +89,17 @@ function AcceptanceList({ criteria, labels, className, render, ...props }: Accep
       "data-slot": "acceptance-list",
       // Preflight's list-style: none strips list semantics in Safari unless the role is explicit.
       role: "list",
-      className: cn("flex flex-col gap-2 text-sm", className),
+      className: cn("flex flex-col gap-items text-sm", className),
       ...props,
       children: criteria.map((criterion) => (
         <li
           key={criterion.id ?? criterion.text}
           data-slot="acceptance-item"
           data-result={criterion.result}
-          className="flex gap-2"
+          className="flex gap-inline"
         >
           <AcceptanceIcon result={criterion.result} />
-          <div className="flex min-w-0 flex-col gap-0.5">
+          <div className="flex min-w-0 flex-col gap-inline">
             <span className="sr-only">{text[criterion.result]}</span>
             <span>{criterion.text}</span>
             {criterion.evidence ? (
@@ -138,7 +138,7 @@ function AcceptanceBar({
       className={cn("w-full", className)}
       {...props}
     >
-      <MeterTrack className="flex h-2 w-full gap-0.5 overflow-hidden rounded-control bg-muted">
+      <MeterTrack className="flex h-2 w-full gap-px overflow-hidden rounded-control bg-muted">
         {results.map((result) =>
           counts[result] > 0 ? (
             <div

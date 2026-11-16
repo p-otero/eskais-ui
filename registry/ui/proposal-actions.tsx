@@ -41,7 +41,7 @@ function ProposalActions({
     <div
       data-slot="proposal-actions"
       data-agent-hidden={agentApproval === "deny" ? "" : undefined}
-      className={cn("flex flex-wrap items-start gap-2", className)}
+      className={cn("flex flex-wrap items-start gap-items", className)}
     >
       {onApprove ? (
         <Button
@@ -51,7 +51,7 @@ function ProposalActions({
           pendingAnnouncement={text.approving}
           onClick={() => onApprove(taskId)}
           render={(props, state) => (
-            <span className="flex flex-col items-start gap-1">
+            <span className="flex flex-col items-start gap-inline">
               <button {...props}>
                 <svg
                   data-show="pending"

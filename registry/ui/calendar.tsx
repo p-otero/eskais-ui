@@ -91,12 +91,12 @@ function CalendarDay({ className, ...props }: ComponentProps<typeof CalendarDayP
 function CalendarMonths({ months = 1, labels }: { months?: number; labels?: CalendarLabels }) {
   return (
     <>
-      <div data-slot="calendar-header" className="flex items-center gap-1">
+      <div data-slot="calendar-header" className="flex items-center gap-inline">
         <CalendarPrevious aria-label={labels?.previousMonth} />
         <CalendarHeading />
         <CalendarNext aria-label={labels?.nextMonth} />
       </div>
-      <div data-slot="calendar-months" className="flex flex-wrap gap-4">
+      <div data-slot="calendar-months" className="flex flex-wrap gap-group">
         {Array.from({ length: months }, (_, offset) => (
           <CalendarGrid key={offset} offset={offset}>
             <CalendarWeekdays>{(index) => <CalendarWeekday index={index} />}</CalendarWeekdays>
@@ -114,7 +114,7 @@ function Calendar({ className, children, labels, ...props }: CalendarProps) {
   return (
     <CalendarPrimitive
       className={cnState(
-        "inline-flex flex-col gap-2 rounded-surface border bg-card/(--glass-opacity) p-3 text-card-foreground backdrop-surface",
+        "inline-flex flex-col gap-items rounded-surface border bg-card/(--glass-opacity) p-items text-card-foreground backdrop-surface",
         className,
       )}
       {...props}

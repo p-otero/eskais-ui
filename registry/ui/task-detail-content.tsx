@@ -31,7 +31,7 @@ function TaskDetailMeta({
   labels?: TaskDisplayOptions["labels"]
 }) {
   return (
-    <div className="flex flex-wrap items-center gap-2 text-xs">
+    <div className="flex flex-wrap items-center gap-items text-xs">
       <span className="font-mono text-muted-foreground">{task.id}</span>
       <TaskStatusIcon status={task.status} />
       <TaskStatusPill status={task.status} labels={labels?.components.taskStatus} />
@@ -87,8 +87,8 @@ function TaskDetailContent({
         </Block>
       )}
 
-      <div className="flex flex-col gap-x-6 gap-y-3 @2xl/task-detail:flex-row">
-        <dl className="grid grid-cols-2 content-start gap-x-4 gap-y-2 text-sm @lg/task-detail:grid-cols-4 @2xl/task-detail:order-last @2xl/task-detail:w-64 @2xl/task-detail:shrink-0 @2xl/task-detail:grid-cols-2">
+      <div className="flex flex-col gap-x-section gap-y-group @2xl/task-detail:flex-row">
+        <dl className="grid grid-cols-2 content-start gap-x-group gap-y-items text-sm @lg/task-detail:grid-cols-4 @2xl/task-detail:order-last @2xl/task-detail:w-64 @2xl/task-detail:shrink-0 @2xl/task-detail:grid-cols-2">
           {task.project && <DetailValue term={text.project}>{task.project}</DetailValue>}
           {task.profile && <DetailValue term={text.profile}>{task.profile}</DetailValue>}
           <DetailValue term={text.updated}>

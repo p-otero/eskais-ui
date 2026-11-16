@@ -16,6 +16,7 @@ function Checkbox({ className, ...props }: ComponentProps<typeof CheckboxPrimiti
   return (
     <CheckboxPrimitive
       className={cnState(
+        // oxlint-disable-next-line eskais/spacing-tokens -- aligns the size-4 box with the label's first 20px line
         "inline-flex size-4 shrink-0 cursor-pointer items-center justify-center rounded-choice border border-input bg-background/(--glass-opacity) text-primary-foreground shadow-xs transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background aria-invalid:border-destructive data-checked:border-primary data-checked:bg-primary data-disabled:cursor-not-allowed data-disabled:opacity-50 data-indeterminate:border-primary data-indeterminate:bg-primary in-data-[slot=field]:mt-0.5",
         className,
       )}
@@ -41,7 +42,7 @@ function CheckboxIndicator({ className, children, ...props }: ComponentProps<typ
 }
 
 function CheckboxGroup({ className, ...props }: ComponentProps<typeof CheckboxGroupPrimitive>) {
-  return <CheckboxGroupPrimitive className={cnState("flex flex-col gap-2", className)} {...props} />
+  return <CheckboxGroupPrimitive className={cnState("flex flex-col gap-items", className)} {...props} />
 }
 
 export { Checkbox, CheckboxGroup, CheckboxIndicator, createCheckboxController, createCheckboxGroupController }

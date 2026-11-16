@@ -74,7 +74,7 @@ function PanelIcon() {
   )
 }
 
-const surfaceClassName = "flex min-h-0 flex-col gap-2 text-foreground"
+const surfaceClassName = "flex min-h-0 flex-col gap-group text-foreground"
 
 function Sidebar({
   label,
@@ -96,7 +96,7 @@ function Sidebar({
   const [drawerOpen, setDrawerOpen] = useState(false)
   const collapsed = collapsible && !narrow && (collapsedProp ?? ownCollapsed)
 
-  const body = <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto">{children}</div>
+  const body = <div className="flex min-h-0 flex-1 flex-col gap-group overflow-y-auto">{children}</div>
 
   if (narrow) {
     return (
@@ -106,13 +106,13 @@ function Sidebar({
         </DrawerTrigger>
         <DrawerBackdrop />
         <DrawerContent
-          className="gap-2 p-3"
+          className="gap-group p-items"
           onClickCapture={(event) => {
             if (event.target instanceof Element && event.target.closest("a[href]")) setDrawerOpen(false)
           }}
         >
-          <div className="flex items-center gap-2">
-            <DrawerTitle className="flex-1 truncate px-2 text-base">{label}</DrawerTitle>
+          <div className="flex items-center gap-inline">
+            <DrawerTitle className="flex-1 truncate px-inset-item text-base">{label}</DrawerTitle>
             <DrawerClose variant="ghost" size="icon" aria-label={labels.close}>
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
                 <path d="M18 6 6 18M6 6l12 12" />
@@ -140,11 +140,11 @@ function Sidebar({
       }}
       className={cn(
         surfaceClassName,
-        "group/sidebar h-full w-(--sidebar-width) shrink-0 overflow-hidden border-e bg-muted/(--glass-opacity) p-2 backdrop-surface transition-all duration-200 data-collapsed:w-(--sidebar-rail-width) motion-reduce:transition-none",
+        "group/sidebar h-full w-(--sidebar-width) shrink-0 overflow-hidden border-e bg-muted/(--glass-opacity) p-items backdrop-surface transition-all duration-200 data-collapsed:w-(--sidebar-rail-width) motion-reduce:transition-none",
         className,
       )}
     >
-      <div data-slot="sidebar-header" className="flex items-center gap-2 group-data-collapsed/sidebar:flex-col">
+      <div data-slot="sidebar-header" className="flex items-center gap-inline group-data-collapsed/sidebar:flex-col">
         <div className="min-w-0 flex-1 group-data-collapsed/sidebar:hidden">{header}</div>
         {collapsible && (
           <SidebarTrigger

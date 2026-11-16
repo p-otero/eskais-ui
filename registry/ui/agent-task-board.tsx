@@ -159,7 +159,7 @@ function AgentTaskBoard(props: AgentTaskBoardProps) {
       onOpenThread={onOpenThread && ((thread) => onOpenThread(thread))}
       className={cn("@container/agent-task-board min-w-0", props.className)}
     >
-      <div data-slot="agent-task-board-density" data-density={density} className="flex flex-col gap-surface">
+      <div data-slot="agent-task-board-density" data-density={density} className="flex flex-col gap-section">
         <AgentTaskBoardDetail
           header={
             <>

@@ -45,7 +45,7 @@ function DetailValue({ term, children, quantity, locale, formatCurrency, quantit
     )
   }
   return (
-    <div data-slot="task-detail-value" className="flex min-w-0 flex-col gap-0.5">
+    <div data-slot="task-detail-value" className="flex min-w-0 flex-col gap-inline">
       <dt className="text-xs text-muted-foreground">{term}</dt>
       <dd className="min-w-0 truncate">{value}</dd>
     </div>
@@ -71,7 +71,7 @@ function Block({
 }) {
   const Heading = `h${Math.min(level, 6)}` as "h3"
   return (
-    <section className={cn("flex flex-col gap-1.5", className)}>
+    <section className={cn("flex flex-col gap-inline", className)}>
       <Heading className="text-xs font-medium tracking-wide text-muted-foreground uppercase">{title}</Heading>
       {children}
     </section>

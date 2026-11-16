@@ -30,7 +30,7 @@ const contextMenuTriggerVariants = cva(
     variants: {
       variant: {
         plain: "",
-        area: "flex min-h-24 items-center justify-center border border-dashed p-surface text-center text-sm text-muted-foreground data-open:border-ring",
+        area: "flex min-h-24 items-center justify-center border border-dashed p-inset-surface text-center text-sm text-muted-foreground data-open:border-ring",
       },
     },
     defaultVariants: { variant: "plain" },

@@ -18,7 +18,7 @@ function ToggleGroup<T extends string = string>({
     "data-slot": "toggle-group",
     disabled: disabled ?? field?.disabled,
     className: cnState(
-      "inline-flex w-fit items-center gap-1 rounded-control data-disabled:opacity-50 data-[orientation=vertical]:flex-col data-[orientation=vertical]:items-stretch",
+      "inline-flex w-fit items-center gap-inline rounded-control data-disabled:opacity-50 data-[orientation=vertical]:flex-col data-[orientation=vertical]:items-stretch",
       className,
     ),
   }

@@ -16,7 +16,7 @@ import { fieldSurfaceClassName } from "@/components/ui/input"
 import { cnState } from "@/lib/utils"
 
 function NumberInput({ className, ...props }: ComponentProps<typeof NumberInputPrimitive>) {
-  return <NumberInputPrimitive className={cnState("flex flex-col gap-1.5", className)} {...props} />
+  return <NumberInputPrimitive className={cnState("flex flex-col gap-inline", className)} {...props} />
 }
 
 function NumberInputGroup({ className, ...props }: ComponentProps<typeof NumberInputGroupPrimitive>) {
@@ -35,7 +35,7 @@ function NumberInputControl({ className, ...props }: ComponentProps<typeof Numbe
   return (
     <NumberInputControlPrimitive
       className={cnState(
-        "h-full min-w-0 flex-1 bg-transparent px-2 text-center text-sm tabular-nums outline-none placeholder:text-muted-foreground data-disabled:cursor-not-allowed",
+        "h-full min-w-0 flex-1 bg-transparent px-inline text-center text-sm tabular-nums outline-none placeholder:text-muted-foreground data-disabled:cursor-not-allowed",
         className,
       )}
       {...props}

@@ -82,12 +82,12 @@ function TaskDetailDialog({
       >
         {current && (
           <>
-            <div className="flex shrink-0 items-start gap-2 border-b px-surface py-3">
-              <div className="flex min-w-0 flex-1 flex-wrap items-center gap-x-2 gap-y-1">
+            <div className="flex shrink-0 items-start gap-items border-b px-inset-surface py-group">
+              <div className="flex min-w-0 flex-1 flex-wrap items-center gap-inline">
                 <Title data-slot="task-detail-title" className="text-base leading-snug">
                   <span className="font-mono text-muted-foreground">{current.id}</span> {current.title}
                 </Title>
-                <span className="inline-flex items-center gap-1.5">
+                <span className="inline-flex items-center gap-inline">
                   <TaskStatusIcon status={current.status} />
                   <TaskStatusPill status={current.status} labels={labels.components.taskStatus} />
                 </span>
@@ -96,7 +96,7 @@ function TaskDetailDialog({
                 <CloseIcon />
               </Close>
             </div>
-            <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto overscroll-contain p-surface">
+            <div className="flex min-h-0 flex-1 flex-col gap-group overflow-y-auto overscroll-contain p-inset-surface">
               <TaskDetailContent task={current} labels={labels} {...content} headingLevel={3} />
             </div>
           </>

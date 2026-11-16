@@ -40,6 +40,7 @@ function DatePickerInput({ className, ...props }: ComponentProps<typeof DatePick
 function DatePickerTrigger({ className, children, ...props }: ComponentProps<typeof DatePickerTriggerPrimitive>) {
   return (
     <DatePickerTriggerPrimitive
+      // oxlint-disable-next-line eskais/spacing-tokens -- pulls the icon button into the padding so its glyph lines up with the text inset
       className={cnState(cn(buttonVariants({ variant: "ghost", size: "icon" }), "-me-2 size-control-sm"), className)}
       {...props}
     >
@@ -79,7 +80,7 @@ function DatePickerContent({ className, ...props }: ComponentProps<typeof DatePi
   return (
     <DatePickerContentPrimitive
       className={cnState(
-        "z-50 m-0 flex flex-col gap-2 rounded-surface border bg-popover/(--glass-opacity) p-3 text-popover-foreground shadow-surface backdrop-surface outline-none origin-(--transform-origin) transition duration-150 data-ending-style:scale-95 data-ending-style:opacity-0 data-starting-style:scale-95 data-starting-style:opacity-0 motion-reduce:transition-opacity motion-reduce:data-ending-style:scale-100 motion-reduce:data-starting-style:scale-100 data-[presentation=sheet]:rounded-b-none",
+        "z-50 m-0 flex flex-col gap-items rounded-surface border bg-popover/(--glass-opacity) p-items text-popover-foreground shadow-surface backdrop-surface outline-none origin-(--transform-origin) transition duration-150 data-ending-style:scale-95 data-ending-style:opacity-0 data-starting-style:scale-95 data-starting-style:opacity-0 motion-reduce:transition-opacity motion-reduce:data-ending-style:scale-100 motion-reduce:data-starting-style:scale-100 data-[presentation=sheet]:rounded-b-none",
         className,
       )}
       {...props}
@@ -108,12 +109,12 @@ function DatePicker({
   const text = { ...defaultLabels, ...labels }
   const range = props.mode === "range"
   return (
-    <DatePickerPrimitive className={cnState("flex w-full flex-col gap-1.5", className)} {...props}>
+    <DatePickerPrimitive className={cnState("flex w-full flex-col gap-inline", className)} {...props}>
       {children ?? (
         <>
           <div
             data-slot="date-picker-group"
-            className={`${fieldSurfaceClassName} flex h-control w-full items-center gap-2 rounded-control px-control-x text-sm has-[input:focus-visible]:ring-2 has-[input:focus-visible]:ring-ring has-aria-invalid:border-destructive`}
+            className={`${fieldSurfaceClassName} flex h-control w-full items-center gap-inline rounded-control px-control-x text-sm has-[input:focus-visible]:ring-2 has-[input:focus-visible]:ring-ring has-aria-invalid:border-destructive`}
           >
             <DatePickerInput aria-label={range ? text.start : label} placeholder={placeholder} />
             {range && (

@@ -12,7 +12,7 @@ import type { ComponentProps } from "react"
 import { cnState } from "@/lib/utils"
 
 const gaugeClassNames = {
-  root: "flex w-full flex-wrap items-baseline justify-between gap-x-3 gap-y-1.5",
+  root: "flex w-full flex-wrap items-baseline justify-between gap-inline",
   label: "text-sm font-medium",
   value: "text-sm text-muted-foreground tabular-nums",
   track: "relative h-2 w-full basis-full overflow-hidden rounded-full bg-input/40",

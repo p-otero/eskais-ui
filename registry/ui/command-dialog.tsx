@@ -16,7 +16,7 @@ import { cnState } from "@/lib/utils"
 
 // `shortcut="mod+k"` is opt-in: the trigger registers it only while mounted, so nothing listens by default.
 function CommandDialogTrigger({ className, ...props }: ComponentProps<typeof DialogTrigger>) {
-  return <DialogTrigger className={cnState("justify-between gap-6 text-muted-foreground", className)} {...props} />
+  return <DialogTrigger className={cnState("justify-between gap-group text-muted-foreground", className)} {...props} />
 }
 
 function CommandDialogShortcut({ className, ...props }: ComponentProps<typeof DialogShortcutPrimitive>) {

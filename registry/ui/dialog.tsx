@@ -23,7 +23,7 @@ const backdropClassName =
   "fixed inset-0 z-50 bg-overlay transition-opacity duration-150 data-ending-style:opacity-0 data-starting-style:opacity-0"
 
 const contentClassName =
-  "fixed inset-0 z-50 m-auto flex h-fit max-h-[calc(100%-2rem)] w-[calc(100%-2rem)] max-w-lg flex-col gap-4 overflow-y-auto overscroll-contain rounded-surface border bg-popover/(--glass-opacity) p-surface text-popover-foreground shadow-xl backdrop-surface outline-none transition duration-150 data-ending-style:scale-95 data-ending-style:opacity-0 data-starting-style:scale-95 data-starting-style:opacity-0"
+  "fixed inset-0 z-50 m-auto flex h-fit max-h-[calc(100%-2rem)] w-[calc(100%-2rem)] max-w-lg flex-col gap-group overflow-y-auto overscroll-contain rounded-surface border bg-popover/(--glass-opacity) p-inset-surface text-popover-foreground shadow-xl backdrop-surface outline-none transition duration-150 data-ending-style:scale-95 data-ending-style:opacity-0 data-starting-style:scale-95 data-starting-style:opacity-0"
 
 function DialogTrigger({
   className,
@@ -45,7 +45,7 @@ function DialogContent({ className, ...props }: ComponentProps<typeof DialogCont
 function DialogHeader({ className, render, ...props }: PartProps<"div">) {
   return renderElement(
     "div",
-    { "data-slot": "dialog-header", className: cn("flex flex-col gap-1.5", className), ...props },
+    { "data-slot": "dialog-header", className: cn("flex flex-col gap-inline", className), ...props },
     render,
   )
 }
@@ -55,7 +55,7 @@ function DialogFooter({ className, render, ...props }: PartProps<"div">) {
     "div",
     {
       "data-slot": "dialog-footer",
-      className: cn("flex flex-col-reverse gap-2 sm:flex-row sm:justify-end", className),
+      className: cn("flex flex-col-reverse gap-items sm:flex-row sm:justify-end", className),
       ...props,
     },
     render,

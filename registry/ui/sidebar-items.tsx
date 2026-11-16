@@ -18,15 +18,15 @@ type SidebarGroupProps = Omit<ComponentProps<"div">, "children"> & {
 function SidebarGroup({ label, className, children, ...props }: SidebarGroupProps) {
   const labelId = useId()
   return (
-    <div data-slot="sidebar-group" className={cn("flex flex-col gap-1", className)} {...props}>
+    <div data-slot="sidebar-group" className={cn("flex flex-col gap-inline", className)} {...props}>
       <div
         id={labelId}
         data-slot="sidebar-group-label"
-        className="truncate px-2 pt-2 text-xs font-medium text-muted-foreground group-data-collapsed/sidebar:sr-only"
+        className="truncate px-inset-item text-xs font-medium text-muted-foreground group-data-collapsed/sidebar:sr-only"
       >
         {label}
       </div>
-      <ul aria-labelledby={labelId} className="flex flex-col gap-0.5">
+      <ul aria-labelledby={labelId} className="flex flex-col gap-px">
         {children}
       </ul>
     </div>
@@ -42,7 +42,7 @@ type SidebarItemProps = Omit<ComponentProps<"a">, "children"> & {
 }
 
 const itemClassName =
-  "flex h-control w-full min-w-0 items-center gap-2 rounded-control px-control-x text-sm font-medium text-foreground outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:ring-2 focus-visible:ring-ring aria-[current=page]:bg-primary aria-[current=page]:text-primary-foreground group-data-collapsed/sidebar:justify-center group-data-collapsed/sidebar:px-0 [&_svg]:size-4 [&_svg]:shrink-0"
+  "flex h-control w-full min-w-0 items-center gap-inline rounded-control px-inset-item text-sm font-medium text-foreground outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:ring-2 focus-visible:ring-ring aria-[current=page]:bg-primary aria-[current=page]:text-primary-foreground group-data-collapsed/sidebar:justify-center group-data-collapsed/sidebar:px-0 [&_svg]:size-4 [&_svg]:shrink-0"
 
 function SidebarItem({ icon, current = false, badge, render, className, children, ...props }: SidebarItemProps) {
   const rail = use(SidebarRailContext)

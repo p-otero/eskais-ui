@@ -67,7 +67,7 @@ function LivenessIndicator({
     {
       "data-slot": "liveness",
       "data-liveness": liveness,
-      className: cn("inline-flex max-w-full flex-wrap items-center gap-x-2 gap-y-1 text-xs", className),
+      className: cn("inline-flex max-w-full flex-wrap items-center gap-inline text-xs", className),
       ...props,
       children: (
         <>

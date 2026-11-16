@@ -1,5 +1,29 @@
 import { clsx, type ClassValue } from "clsx"
-import { twMerge } from "tailwind-merge"
+import { extendTailwindMerge } from "tailwind-merge"
+
+// The theme's spacing tokens, so a consumer's `gap-4` or `h-10` replaces `gap-items` or `h-control` instead of
+// both landing in the class list.
+const twMerge = extendTailwindMerge({
+  extend: {
+    theme: {
+      spacing: [
+        "inline",
+        "items",
+        "group",
+        "section",
+        "inset-chip",
+        "inset-item",
+        "inset-surface",
+        "surface",
+        "control",
+        "control-sm",
+        "control-lg",
+        "control-x",
+        "control-inset",
+      ],
+    },
+  },
+})
 
 function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))

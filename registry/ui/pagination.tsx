@@ -82,7 +82,7 @@ function Pagination({ className, labels, children, "aria-label": ariaLabel, ...p
 function PaginationList({ className, ...props }: ComponentProps<typeof PaginationListPrimitive>) {
   return (
     <PaginationListPrimitive
-      className={cnState("m-0 flex list-none flex-row flex-wrap items-center gap-1 p-0", className)}
+      className={cnState("m-0 flex list-none flex-row flex-wrap items-center gap-inline p-0", className)}
       {...props}
     />
   )

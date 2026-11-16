@@ -137,7 +137,7 @@ function UsageStat({
     "div",
     {
       "data-slot": "usage-stat",
-      className: cn("flex min-w-0 flex-col gap-0.5", className),
+      className: cn("flex min-w-0 flex-col gap-inline", className),
       ...props,
       children: (
         <>
@@ -190,11 +190,11 @@ function UsageTable({ usage, columns, labels, locale, formatCurrency, className,
       <TableBody>
         {usageMetrics.map((metric) => (
           <TableRow key={metric} data-metric={metric}>
-            <TableHead scope="row" className="h-auto py-1.5 font-normal">
+            <TableHead scope="row" className="h-auto py-inset-item font-normal">
               {text[metric]}
             </TableHead>
             {shown.map((column) => (
-              <TableCell key={column.id} className="py-1.5 text-end">
+              <TableCell key={column.id} className="text-end">
                 <UsageQuantity
                   value={column.usage?.[metric]}
                   kind={metricKind[metric]}

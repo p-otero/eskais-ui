@@ -167,7 +167,21 @@ async function checkInBrowser(dist) {
       html.style.setProperty("--brand", "oklch(0.9 0.15 95)")
       const yellow = colors()
       html.style.removeProperty("--brand")
+      const spacing = () => {
+        const badge = getComputedStyle(document.querySelector("[data-slot=badge]"))
+        return {
+          button: getComputedStyle(button).columnGap,
+          badge: `${badge.paddingInlineStart} ${badge.paddingBlockStart}`,
+          card: getComputedStyle(document.querySelector("[data-slot=card]")).rowGap,
+        }
+      }
+      const compactSpacing = spacing()
+      const theme = html.getAttribute("data-theme")
+      html.removeAttribute("data-theme")
+      const defaultSpacing = spacing()
+      html.setAttribute("data-theme", theme)
       return {
+        spacing: { compact: compactSpacing, default: defaultSpacing },
         font: [...document.fonts].some((font) => font.family.includes("Geist") && font.status === "loaded"),
         neutral,
         blue,
@@ -179,6 +193,12 @@ async function checkInBrowser(dist) {
     if (result.blue.background === result.neutral.background) throw new Error("data-palette didn't change --primary")
     if (result.yellow.text === result.neutral.text)
       throw new Error("--primary-foreground didn't follow a light --brand")
+    const expected = {
+      compact: { button: "4px", badge: "6px 2px", card: "12px" },
+      default: { button: "6px", badge: "8px 2px", card: "16px" },
+    }
+    if (JSON.stringify(result.spacing) !== JSON.stringify(expected))
+      throw new Error(`The spacing roles didn't resolve: ${JSON.stringify(result.spacing)}`)
   } finally {
     await browser.close()
     site.close()

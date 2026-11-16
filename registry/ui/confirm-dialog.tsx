@@ -74,7 +74,7 @@ function ConfirmDialog({
       )}
       <AlertDialogBackdrop className={backdropClassName} />
       <AlertDialogContent className={cn(contentClassName, "max-w-md", className)}>
-        <div className="flex flex-col gap-1.5">
+        <div className="flex flex-col gap-inline">
           <AlertDialogTitle className="text-lg leading-none font-semibold">{title}</AlertDialogTitle>
           {description === undefined ? null : (
             <AlertDialogDescription className="text-sm text-muted-foreground">{description}</AlertDialogDescription>
@@ -86,11 +86,11 @@ function ConfirmDialog({
           data-tone={tone}
           data-agent-confirm={agentConfirm}
           render={(props, state) => (
-            <div className="flex flex-col gap-3">
+            <div className="flex flex-col gap-items">
               <p role="alert" className="text-sm text-destructive empty:hidden">
                 {state.error === undefined || state.error === null ? null : renderError(state.error)}
               </p>
-              <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+              <div className="flex flex-col-reverse gap-items sm:flex-row sm:justify-end">
                 <AlertDialogClose className={buttonVariants({ variant: "outline" })}>{cancelLabel}</AlertDialogClose>
                 <button
                   {...props}

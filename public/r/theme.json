@@ -48,7 +48,13 @@
       "spacing-control-sm": "var(--control-height-sm)",
       "spacing-control-lg": "var(--control-height-lg)",
       "spacing-control-x": "var(--control-padding)",
+      "spacing-inline": "var(--gap-inline)",
+      "spacing-items": "var(--gap-items)",
+      "spacing-group": "var(--gap-group)",
+      "spacing-section": "var(--gap-section)",
+      "spacing-inset-surface": "var(--surface-padding)",
       "spacing-surface": "var(--surface-padding)",
+      "spacing-control-inset": "calc((var(--control-height) - var(--control-height-sm)) / 2)",
       "shadow-surface": "var(--surface-shadow)"
     },
     "light": {
@@ -132,6 +138,14 @@
       "--choice-radius": "calc(var(--radius) / 2)",
       "--surface-radius": "calc(var(--radius) * 2)",
       "--surface-padding": "1.5rem",
+      "--gap-inline": "0.375rem",
+      "--gap-items": "0.5rem",
+      "--gap-group": "1rem",
+      "--gap-section": "1.5rem",
+      "--chip-padding-x": "0.5rem",
+      "--chip-padding-y": "0.125rem",
+      "--item-padding-x": "0.625rem",
+      "--item-padding-y": "0.5rem",
       "--surface-shadow": "0 4px 12px -2px oklch(0 0 0 / 0.08), 0 2px 4px -2px oklch(0 0 0 / 0.04)",
       "--surface-backdrop": "none",
       "--glass-opacity": "100%",
@@ -203,6 +217,18 @@
     "@utility content-auto": {
       "content-visibility": "auto",
       "contain-intrinsic-height": "auto var(--intrinsic-height, 24rem)"
+    },
+    "@utility px-inset-chip": {
+      "padding-inline": "var(--chip-padding-x)"
+    },
+    "@utility py-inset-chip": {
+      "padding-block": "var(--chip-padding-y)"
+    },
+    "@utility px-inset-item": {
+      "padding-inline": "var(--item-padding-x)"
+    },
+    "@utility py-inset-item": {
+      "padding-block": "var(--item-padding-y)"
     },
     "@utility text-vertical": {
       "writing-mode": "vertical-rl"

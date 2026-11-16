@@ -19,20 +19,20 @@ import type { ComponentProps } from "react"
 import { fieldSurfaceClassName } from "@/components/ui/input"
 import { cnState } from "@/lib/utils"
 
-const triggerClassName = `${fieldSurfaceClassName} flex h-control w-full min-w-0 cursor-pointer items-center justify-between gap-2 rounded-control px-control-x text-start text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring [&>svg]:size-4 [&>svg]:shrink-0 [&>svg]:text-muted-foreground`
+const triggerClassName = `${fieldSurfaceClassName} flex h-control w-full min-w-0 cursor-pointer items-center justify-between gap-inline rounded-control px-control-x text-start text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring [&>svg]:size-4 [&>svg]:shrink-0 [&>svg]:text-muted-foreground`
 
 const listPopupClassName =
-  "m-0 max-h-(--available-height) min-w-(--anchor-width) overflow-y-auto overscroll-contain rounded-surface border bg-popover/(--glass-opacity) p-1 text-popover-foreground shadow-surface backdrop-surface outline-none transition-opacity duration-100 data-ending-style:opacity-0 data-starting-style:opacity-0"
+  "m-0 max-h-(--available-height) min-w-(--anchor-width) overflow-y-auto overscroll-contain rounded-surface border bg-popover/(--glass-opacity) p-inline text-popover-foreground shadow-surface backdrop-surface outline-none transition-opacity duration-100 data-ending-style:opacity-0 data-starting-style:opacity-0"
 
 // A tint alone misses the 3:1 a state needs, so the highlight also draws a full ring.
 const listItemClassName =
-  "flex min-h-control-sm cursor-default items-center gap-2 rounded-control px-control-x py-1 text-sm outline-none select-none data-disabled:cursor-not-allowed data-disabled:opacity-50 data-highlighted:bg-accent data-highlighted:text-accent-foreground data-highlighted:ring-2 data-highlighted:ring-ring data-highlighted:ring-inset [&_svg]:size-4 [&_svg]:shrink-0"
+  "flex min-h-control-sm cursor-default items-center gap-inline rounded-control px-inset-item text-sm outline-none select-none data-disabled:cursor-not-allowed data-disabled:opacity-50 data-highlighted:bg-accent data-highlighted:text-accent-foreground data-highlighted:ring-2 data-highlighted:ring-ring data-highlighted:ring-inset [&_svg]:size-4 [&_svg]:shrink-0"
 
 const listIndicatorClassName = "ms-auto inline-flex items-center"
 
-const listGroupLabelClassName = "px-control-x py-1 text-xs font-medium text-muted-foreground"
+const listGroupLabelClassName = "px-inset-item py-inline text-xs font-medium text-muted-foreground"
 
-const listSeparatorClassName = "mx-2 my-1 h-px bg-border"
+const listSeparatorClassName = "-mx-inline my-inline h-px bg-border"
 
 function ChevronIcon() {
   return (

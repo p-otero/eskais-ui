@@ -24,7 +24,7 @@ type ButtonLook = VariantProps<typeof buttonVariants>
 const drawerBackdropClassName = "fixed inset-0 z-50 bg-overlay"
 
 const drawerContentClassName = [
-  "flex flex-col gap-4 overflow-y-auto overscroll-contain border bg-popover/(--glass-opacity) p-surface text-popover-foreground shadow-surface backdrop-surface outline-none",
+  "flex flex-col gap-group overflow-y-auto overscroll-contain border bg-popover/(--glass-opacity) p-inset-surface text-popover-foreground shadow-surface backdrop-surface outline-none",
   "data-[side=bottom]:mx-auto data-[side=bottom]:max-h-[calc(100%-2rem)] data-[side=bottom]:w-full data-[side=bottom]:max-w-2xl data-[side=bottom]:rounded-t-surface data-[side=bottom]:border-b-0",
   "data-[side=top]:mx-auto data-[side=top]:max-h-[calc(100%-2rem)] data-[side=top]:w-full data-[side=top]:max-w-2xl data-[side=top]:rounded-b-surface data-[side=top]:border-t-0",
   "data-[side=right]:h-full data-[side=right]:w-[calc(100%-2rem)] data-[side=right]:max-w-sm data-[side=right]:rounded-l-surface data-[side=right]:border-r-0",
@@ -64,7 +64,7 @@ function DrawerHandle({ className, ...props }: ComponentProps<typeof DrawerHandl
 function DrawerHeader({ className, render, ...props }: PartProps<"div">) {
   return renderElement(
     "div",
-    { "data-slot": "drawer-header", className: cn("flex flex-col gap-1.5", className), ...props },
+    { "data-slot": "drawer-header", className: cn("flex flex-col gap-inline", className), ...props },
     render,
   )
 }
@@ -74,7 +74,7 @@ function DrawerFooter({ className, render, ...props }: PartProps<"div">) {
     "div",
     {
       "data-slot": "drawer-footer",
-      className: cn("mt-auto flex flex-col-reverse gap-2 sm:flex-row sm:justify-end", className),
+      className: cn("mt-auto flex flex-col-reverse gap-items sm:flex-row sm:justify-end", className),
       ...props,
     },
     render,

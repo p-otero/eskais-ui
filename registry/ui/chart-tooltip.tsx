@@ -27,7 +27,7 @@ type ChartTooltipContentProps = ChartFormatOptions & {
 }
 
 const tooltipSurfaceClassName =
-  "grid min-w-32 items-start gap-1.5 rounded-lg border bg-popover/(--glass-opacity) px-control-x py-2 text-xs text-popover-foreground shadow-surface backdrop-surface"
+  "grid min-w-32 items-start gap-inline rounded-lg border bg-popover/(--glass-opacity) px-inset-item py-inset-item text-xs text-popover-foreground shadow-surface backdrop-surface"
 
 const indicatorClassName =
   "shrink-0 rounded-xs border-(--indicator-color) bg-(--indicator-color) data-[indicator=dot]:size-2.5 data-[indicator=line]:w-1 data-[indicator=dashed]:w-0 data-[indicator=dashed]:border-2 data-[indicator=dashed]:border-dashed data-[indicator=dashed]:bg-transparent"
@@ -72,7 +72,7 @@ function ChartTooltipContent({
   return (
     <div data-slot="chart-tooltip" className={cn(tooltipSurfaceClassName, className)}>
       {nested ? null : labelNode}
-      <div className="grid gap-1.5">
+      <div className="grid gap-inline">
         {items.map((item, index) => {
           const key = nameKey ?? String(item.name ?? item.dataKey ?? "value")
           const { key: seriesKey, series } = resolveChartSeries(config, item, key)
@@ -83,7 +83,7 @@ function ChartTooltipContent({
             <div
               key={`${String(item.dataKey ?? item.name)}-${item.graphicalItemId}`}
               data-slot="chart-tooltip-item"
-              className={cn("flex w-full flex-wrap items-stretch gap-2", indicator === "dot" && "items-center")}
+              className={cn("flex w-full flex-wrap items-stretch gap-inline", indicator === "dot" && "items-center")}
             >
               {formatter && item.value !== undefined ? (
                 formatter(item.value, item.name, item, index)
@@ -96,16 +96,17 @@ function ChartTooltipContent({
                       data-indicator={indicator}
                       aria-hidden="true"
                       style={{ "--indicator-color": indicatorColor } as CSSProperties}
+                      // oxlint-disable-next-line eskais/spacing-tokens -- centres the dashed bar on the label's line
                       className={cn(indicatorClassName, nested && indicator === "dashed" && "my-0.5")}
                     />
                   ) : null}
                   <div
                     className={cn(
-                      "flex flex-1 justify-between gap-4 leading-none",
+                      "flex flex-1 justify-between gap-items leading-none",
                       nested ? "items-end" : "items-center",
                     )}
                   >
-                    <div className="grid gap-1.5">
+                    <div className="grid gap-inline">
                       {nested ? labelNode : null}
                       <span className="text-muted-foreground">{series?.label ?? item.name}</span>
                     </div>

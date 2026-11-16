@@ -12,7 +12,10 @@ import { cnState } from "@/lib/utils"
 
 function RadioGroup<T extends string = string>({ className, ...props }: ComponentProps<typeof RadioGroupPrimitive<T>>) {
   return (
-    <RadioGroupPrimitive<T> className={cnState("flex flex-col gap-2 data-disabled:opacity-50", className)} {...props} />
+    <RadioGroupPrimitive<T>
+      className={cnState("flex flex-col gap-items data-disabled:opacity-50", className)}
+      {...props}
+    />
   )
 }
 

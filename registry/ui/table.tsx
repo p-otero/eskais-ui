@@ -14,6 +14,7 @@ function Table({ className, containerClassName, render, ...props }: TableProps) 
   const label = props["aria-label"]
   const labelledBy = props["aria-labelledby"]
   return (
+    // oxlint-disable-next-line eskais/spacing-tokens -- room for the h-2.5 horizontal scrollbar so it never covers the last row
     <ScrollArea type="auto" className={cn("w-full data-overflow-x:pb-3", containerClassName)}>
       <ScrollAreaViewport
         role={label || labelledBy ? "group" : undefined}
@@ -75,7 +76,7 @@ function TableHead({ className, render, ...props }: PartProps<"th">) {
     {
       "data-slot": "table-head",
       className: cn(
-        "h-control px-control-x text-start align-middle font-medium whitespace-nowrap text-muted-foreground aria-[sort=ascending]:text-foreground aria-[sort=descending]:text-foreground",
+        "h-control px-inset-item text-start align-middle font-medium whitespace-nowrap text-muted-foreground aria-[sort=ascending]:text-foreground aria-[sort=descending]:text-foreground",
         className,
       ),
       ...props,
@@ -89,7 +90,7 @@ function TableCell({ className, render, ...props }: PartProps<"td">) {
     "td",
     {
       "data-slot": "table-cell",
-      className: cn("max-w-80 truncate px-control-x py-2 align-middle", className),
+      className: cn("max-w-80 truncate px-inset-item py-inset-item align-middle", className),
       ...props,
     },
     render,
@@ -99,7 +100,7 @@ function TableCell({ className, render, ...props }: PartProps<"td">) {
 function TableCaption({ className, render, ...props }: PartProps<"caption">) {
   return renderElement(
     "caption",
-    { "data-slot": "table-caption", className: cn("mt-4 text-sm text-muted-foreground", className), ...props },
+    { "data-slot": "table-caption", className: cn("mt-group text-sm text-muted-foreground", className), ...props },
     render,
   )
 }

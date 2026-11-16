@@ -67,12 +67,14 @@ function AttemptEvent({ attempt, ...options }: AttemptEventOptions & { attempt: 
       value={attempt.id}
       status={live ? "current" : undefined}
       data-attempt-status={attempt.status}
-      className="group/attempt relative flex gap-3 rounded-control pb-surface outline-none data-last:pb-0 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+      className="group/attempt relative flex gap-items rounded-control pb-group outline-none data-last:pb-0 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
     >
+      {/* oxlint-disable-next-line eskais/spacing-tokens -- centres the size-3 marker on the first 20px line */}
       <TimelineMarker className={cn("mt-1 size-3 shrink-0 rounded-full border-2", markerColor[attempt.status])} />
+      {/* oxlint-disable-next-line eskais/spacing-tokens -- geometry: runs from under the size-3 marker, centred on it, to the next one */}
       <TimelineConnector className="absolute start-1.25 top-5 bottom-1 w-0.5 bg-border group-data-last/attempt:hidden" />
-      <div className="flex min-w-0 flex-1 flex-col gap-2">
-        <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+      <div className="flex min-w-0 flex-1 flex-col gap-items">
+        <div className="flex flex-wrap items-center gap-inline">
           <TimelineTitle className="text-sm font-semibold">
             {name} · {kind}
           </TimelineTitle>
@@ -82,7 +84,7 @@ function AttemptEvent({ attempt, ...options }: AttemptEventOptions & { attempt: 
             <AttemptStatusPill status={attempt.status} labels={labels.status} />
           )}
         </div>
-        <TimelineTime render={<div />} className="flex flex-wrap gap-x-3 text-xs text-muted-foreground">
+        <TimelineTime render={<div />} className="flex flex-wrap gap-x-items text-xs text-muted-foreground">
           <span>
             {labels.started} <RelativeTime value={attempt.startedAt} {...time} />
           </span>
@@ -92,7 +94,7 @@ function AttemptEvent({ attempt, ...options }: AttemptEventOptions & { attempt: 
             </span>
           )}
         </TimelineTime>
-        <TimelineDescription className="flex flex-col gap-1 text-sm">
+        <TimelineDescription className="flex flex-col gap-inline text-sm">
           <AttemptRoute
             attempt={attempt}
             attemptName={name}
@@ -101,7 +103,7 @@ function AttemptEvent({ attempt, ...options }: AttemptEventOptions & { attempt: 
             avatars={options.agentAvatars}
           />
           {(attempt.contextMode || attempt.repairOf) && (
-            <span className="flex flex-wrap gap-x-2 text-xs text-muted-foreground">
+            <span className="flex flex-wrap gap-x-inline text-xs text-muted-foreground">
               {attempt.contextMode && (
                 <span data-slot="attempt-context" data-mode={attempt.contextMode}>
                   {labels.context[attempt.contextMode]}
@@ -127,7 +129,7 @@ function AttemptEvent({ attempt, ...options }: AttemptEventOptions & { attempt: 
           <AttemptBlocker blocker={attempt.blocker} labels={labels} locale={locale} timeZone={timeZone} />
         )}
         {attempt.thread && (
-          <span className="flex flex-wrap items-center gap-x-1 text-sm">
+          <span className="flex flex-wrap items-center gap-x-inline text-sm">
             <span className="text-muted-foreground">{labels.thread}:</span>
             <AttemptThread thread={attempt.thread} label={labels.openThread} {...threads} />
           </span>

@@ -43,13 +43,13 @@ function UsageGrid({
       className: cn("@container/usage-grid", className),
       ...props,
       children: (
-        <dl className="grid grid-cols-2 gap-1.5 @sm/usage-grid:grid-cols-3 @xl/usage-grid:grid-cols-4">
+        <dl className="grid grid-cols-2 gap-items @sm/usage-grid:grid-cols-3 @xl/usage-grid:grid-cols-4">
           {usageGridMetrics.map(([metric, kind]) => (
             <div
               key={metric}
               data-slot="usage-grid-item"
               data-metric={metric}
-              className="flex min-w-0 flex-col gap-0.5 rounded-control border bg-card/(--glass-opacity) px-3 py-1.5"
+              className="flex min-w-0 flex-col gap-inline rounded-control border bg-card/(--glass-opacity) px-inset-item py-inset-item"
             >
               <dt className="truncate text-xs text-muted-foreground">{text[metric]}</dt>
               <dd className="text-sm font-semibold tabular-nums">

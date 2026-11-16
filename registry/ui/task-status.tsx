@@ -141,10 +141,10 @@ function ContextModePill({
   return (
     <span
       data-slot="context-mode"
-      className={cn("inline-flex max-w-full min-w-0 items-center gap-1.5 text-xs", className)}
+      className={cn("inline-flex max-w-full min-w-0 items-center gap-inline text-xs", className)}
     >
       {pill}
-      <span data-slot="context-mode-source" className="flex min-w-0 gap-1 text-muted-foreground">
+      <span data-slot="context-mode-source" className="flex min-w-0 gap-inline text-muted-foreground">
         <span className="shrink-0">{labels.from}</span>
         <span className="min-w-0 truncate text-foreground" title={sourceThread.title ?? sourceThread.id}>
           {renderThreadLink ? renderThreadLink(sourceThread) : (sourceThread.title ?? sourceThread.id)}

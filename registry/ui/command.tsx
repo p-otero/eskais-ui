@@ -35,7 +35,7 @@ function Command({ className, ...props }: ComponentProps<typeof CommandPrimitive
 
 function CommandInput({ className, ...props }: ComponentProps<typeof CommandInputPrimitive>) {
   return (
-    <div data-slot="command-input-wrapper" className="flex items-center gap-2 border-b px-control-x">
+    <div data-slot="command-input-wrapper" className="flex items-center gap-inline border-b px-control-x">
       <svg
         viewBox="0 0 24 24"
         fill="none"
@@ -63,7 +63,7 @@ function CommandList({ className, ...props }: ComponentProps<typeof CommandListP
   return (
     <CommandListPrimitive
       className={cnState(
-        "max-h-80 scroll-py-1.5 overflow-x-hidden overflow-y-auto overscroll-contain p-1.5",
+        "max-h-80 scroll-py-inline overflow-x-hidden overflow-y-auto overscroll-contain p-inline",
         className,
       )}
       {...props}
@@ -74,7 +74,7 @@ function CommandList({ className, ...props }: ComponentProps<typeof CommandListP
 function CommandEmpty({ className, ...props }: ComponentProps<typeof CommandEmptyPrimitive>) {
   return (
     <CommandEmptyPrimitive
-      className={cnState("py-6 text-center text-sm text-muted-foreground not-data-empty:hidden", className)}
+      className={cnState("py-section text-center text-sm text-muted-foreground not-data-empty:hidden", className)}
       {...props}
     />
   )
@@ -83,20 +83,20 @@ function CommandEmpty({ className, ...props }: ComponentProps<typeof CommandEmpt
 function CommandStatus({ className, ...props }: ComponentProps<typeof CommandStatusPrimitive>) {
   return (
     <CommandStatusPrimitive
-      className={cnState("px-control-x py-2 text-xs text-muted-foreground empty:hidden", className)}
+      className={cnState("px-inset-item py-inset-item text-xs text-muted-foreground empty:hidden", className)}
       {...props}
     />
   )
 }
 
 function CommandGroup({ className, ...props }: ComponentProps<typeof CommandGroupPrimitive>) {
-  return <CommandGroupPrimitive className={cnState("flex flex-col not-first:pt-1.5", className)} {...props} />
+  return <CommandGroupPrimitive className={cnState("flex flex-col not-first:pt-inline", className)} {...props} />
 }
 
 function CommandGroupLabel({ className, ...props }: ComponentProps<typeof CommandGroupLabelPrimitive>) {
   return (
     <CommandGroupLabelPrimitive
-      className={cnState("px-control-x py-1.5 text-xs font-medium text-muted-foreground", className)}
+      className={cnState("px-inset-item py-inline text-xs font-medium text-muted-foreground", className)}
       {...props}
     />
   )
@@ -106,7 +106,7 @@ function CommandItem({ className, ...props }: ComponentProps<typeof CommandItemP
   return (
     <CommandItemPrimitive
       className={cnState(
-        "relative flex h-control-sm shrink-0 cursor-default items-center gap-2 rounded-control px-control-x text-sm outline-none select-none data-highlighted:bg-accent data-highlighted:text-accent-foreground data-disabled:opacity-50 data-pending:cursor-progress [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
+        "relative flex h-control-sm shrink-0 cursor-default items-center gap-inline rounded-control px-inset-item text-sm outline-none select-none data-highlighted:bg-accent data-highlighted:text-accent-foreground data-disabled:opacity-50 data-pending:cursor-progress [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
         className,
       )}
       {...props}
@@ -127,7 +127,7 @@ function CommandItemIcon({ className, ...props }: ComponentProps<typeof CommandI
 }
 
 function CommandSeparator({ className, ...props }: ComponentProps<typeof CommandSeparatorPrimitive>) {
-  return <CommandSeparatorPrimitive className={cnState("-mx-1.5 my-1.5 h-px bg-border", className)} {...props} />
+  return <CommandSeparatorPrimitive className={cnState("-mx-inline my-inline h-px bg-border", className)} {...props} />
 }
 
 function CommandShortcut({ className, ...props }: ComponentProps<typeof CommandShortcutPrimitive>) {

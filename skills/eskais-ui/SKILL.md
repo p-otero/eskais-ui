@@ -88,12 +88,33 @@ Eskais UI components are UI SDK parts styled with Tailwind v4 and semantic token
 
 - Use the variants (`variant`, `size`) and the semantic tokens: `background`, `foreground`, `primary`, `secondary`, `muted`, `accent`, `destructive`, `success`, `warning`, `info`, `border`, `input`, `ring`, `overlay`.
 - Style state with UI SDK attributes: `data-pending`, `data-disabled`, `data-open`, `data-starting-style`, `data-ending-style`.
-- Use the shape and density tokens instead of fixed sizes: `rounded-control`, `rounded-choice` (checkbox, textarea), `rounded-surface`, `h-control` (`-sm`, `-lg`), `px-control-x`, `p-surface`, `gap-surface`, `shadow-surface`. Surfaces that may turn glassy use `bg-<color>/(--glass-opacity)` and `backdrop-surface`.
+- Use the shape and density tokens instead of fixed sizes: `rounded-control`, `rounded-choice` (checkbox, textarea), `rounded-surface`, `h-control` (`-sm`, `-lg`), `shadow-surface`, and the spacing roles below. Surfaces that may turn glassy use `bg-<color>/(--glass-opacity)` and `backdrop-surface`.
 - Theme and color scheme are app-level: `createAppearance({ colorScheme: "system" })` and `<Appearance appearance={…}>` from `@eskais/appearance` keep `.dark` and `data-theme` on `<html>` in sync; call `appearance.apply()` before the first render. Don't add a theme prop to a component.
 - Colour: set the seeds `--brand`, `--neutral-hue`, `--neutral-chroma` (and `--radius`) in `:root`; primary, its foreground, ring, accent and greys derive from them in light and dark. Or use a preset from `@eskais/palettes` with `data-palette="blue"` (`neutral`, `violet`, `green`, `orange`) on any element, or `createAppearance({ palette })`. To take over one colour, set that token in `:root` or `.dark`. Keep a custom brand at 4.5:1 on the background.
 - Themes are attribute scopes, not separate components: `data-theme="compact"` or `data-theme="glass"` on any element, nested freely. A theme only sets tokens; never branch on the theme in a component.
 - Pass layout classes (margin, width, grid placement) through `className`. To change how a component looks, edit its file in `components/ui/`, which you own.
 - Optional: `npx shadcn add @eskais/lint-rules` adds an oxlint config with `@shadcn/lint` rules (`no-restyle`, `no-raw-colors`…). Extend it from `.oxlintrc.json`.
+
+## Spacing
+
+Pick spacing by the relationship between the things it separates, never by a number; each role tightens under `data-theme="compact"`.
+
+| Utility                           | Role                                                                             |
+| --------------------------------- | -------------------------------------------------------------------------------- |
+| `gap-inline`                      | icon + text, or parts inside one control, chip or row                            |
+| `gap-items`                       | siblings in a list or stack: cards in a column, chips, buttons, form fields      |
+| `gap-group`                       | groups inside a surface: header vs body, dialog sections                         |
+| `gap-section`                     | surfaces on a page                                                               |
+| `px-inset-chip` / `py-inset-chip` | pills, badges, chips, kbd                                                        |
+| `px-inset-item` / `py-inset-item` | menu and list items, small cards, table cells                                    |
+| `px-control-x`                    | buttons, inputs, selects                                                         |
+| `p-inset-surface`                 | cards, dialogs, panels, popovers (`p-surface` is an alias)                       |
+| `p-control-inset`                 | the rim of a control-height bar around `-sm` items (tab list, segmented control) |
+
+- `inline`, `items`, `group`, `section` and `inset-surface` work with any spacing utility (`p-inline`, `pb-group`, `-mx-inline`). The chip and item insets are `px-`/`py-` only; otherwise use the variable, as in `-mx-(--item-padding-x)`.
+- Components never set their own outer margin; the parent spaces children with `gap-*`. Pass margin through `className` only when composing.
+- Sizes (`size-*`, `h-*`, `w-*`) aren't spacing; prefer `h-control` and friends.
+- In the registry, `eskais/spacing-tokens` rejects numeric spacing (`gap-2`, `md:px-1`). The exceptions are `0`, `px`, and a disable comment that gives the reason.
 
 ## Add a component to the registry
 

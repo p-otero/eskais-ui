@@ -30,8 +30,8 @@ function ChartLegendContent({
     <ul
       data-slot="chart-legend"
       className={cn(
-        "flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-xs",
-        verticalAlign === "top" ? "pb-3" : "pt-3",
+        "flex flex-wrap items-center justify-center gap-x-group gap-y-items text-xs",
+        verticalAlign === "top" ? "pb-group" : "pt-group",
         className,
       )}
     >
@@ -40,7 +40,7 @@ function ChartLegendContent({
         const { key: seriesKey, series } = resolveChartSeries(config, item, key)
         const Icon = series?.icon
         return (
-          <li key={seriesKey} data-slot="chart-legend-item" className="flex items-center gap-1.5">
+          <li key={seriesKey} data-slot="chart-legend-item" className="flex items-center gap-inline">
             {Icon && !hideIcon ? <Icon className="size-3 text-muted-foreground" /> : null}
             {!Icon && !hideIcon ? (
               <span

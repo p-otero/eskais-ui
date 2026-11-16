@@ -28,7 +28,7 @@ function AccordionTrigger({ className, children, ...props }: ComponentProps<type
   return (
     <AccordionTriggerPrimitive
       className={cnState(
-        "group/accordion-trigger flex min-h-control flex-1 cursor-pointer items-center justify-between gap-4 rounded-control py-2 text-start font-medium transition-colors outline-none hover:underline focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background data-disabled:cursor-not-allowed data-disabled:opacity-50 data-disabled:hover:no-underline [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
+        "group/accordion-trigger flex min-h-control flex-1 cursor-pointer items-center justify-between gap-inline rounded-control py-inset-item text-start font-medium transition-colors outline-none hover:underline focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background data-disabled:cursor-not-allowed data-disabled:opacity-50 data-disabled:hover:no-underline [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
         className,
       )}
       {...props}
@@ -65,7 +65,7 @@ function AccordionPanel({ className, children, ...props }: ComponentProps<typeof
       )}
       {...props}
     >
-      {(state) => <div className="pb-4">{typeof children === "function" ? children(state) : children}</div>}
+      {(state) => <div className="pb-group">{typeof children === "function" ? children(state) : children}</div>}
     </AccordionPanelPrimitive>
   )
 }

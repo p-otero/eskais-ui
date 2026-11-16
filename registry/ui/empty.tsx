@@ -11,15 +11,15 @@ function part(slot: string, base: string) {
 
 const Empty = part(
   "empty",
-  "flex min-w-0 flex-1 flex-col items-center justify-center gap-surface rounded-surface border border-dashed p-surface text-center text-balance",
+  "flex min-w-0 flex-1 flex-col items-center justify-center gap-group rounded-surface border border-dashed p-inset-surface text-center text-balance",
 )
-const EmptyHeader = part("empty-header", "flex max-w-sm flex-col items-center gap-2")
+const EmptyHeader = part("empty-header", "flex max-w-sm flex-col items-center gap-items")
 const EmptyTitle = part("empty-title", "text-lg font-medium")
 const EmptyDescription = part(
   "empty-description",
   "text-sm text-muted-foreground [&>a]:underline [&>a]:underline-offset-4 [&>a:hover]:text-foreground",
 )
-const EmptyContent = part("empty-content", "flex w-full max-w-sm flex-col items-center gap-4 text-sm text-balance")
+const EmptyContent = part("empty-content", "flex w-full max-w-sm flex-col items-center gap-group text-sm text-balance")
 
 const emptyMediaVariants = cva(
   "flex shrink-0 items-center justify-center [&_svg]:pointer-events-none [&_svg]:shrink-0",

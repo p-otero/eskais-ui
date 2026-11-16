@@ -40,7 +40,7 @@ function ComboboxControl({ className, render, ...props }: PartProps<"div">) {
       "data-slot": "combobox-control",
       className: cn(
         fieldSurfaceClassName,
-        "flex h-control w-full min-w-0 items-center gap-1 rounded-control ps-control-x pe-1.5 text-sm has-aria-invalid:border-destructive has-data-disabled:cursor-not-allowed has-data-disabled:opacity-50 has-[input:focus-visible]:ring-2 has-[input:focus-visible]:ring-ring",
+        "flex h-control w-full min-w-0 items-center gap-inline rounded-control ps-control-x pe-inline text-sm has-aria-invalid:border-destructive has-data-disabled:cursor-not-allowed has-data-disabled:opacity-50 has-[input:focus-visible]:ring-2 has-[input:focus-visible]:ring-ring",
         className,
       ),
       ...props,
@@ -102,7 +102,7 @@ function ComboboxContent({ className, ...props }: ComponentProps<typeof Combobox
 function ComboboxEmpty({ className, ...props }: ComponentProps<typeof ComboboxEmptyPrimitive>) {
   return (
     <ComboboxEmptyPrimitive
-      className={cnState("px-control-x py-2 text-sm text-muted-foreground empty:hidden", className)}
+      className={cnState("px-inset-item py-inset-item text-sm text-muted-foreground empty:hidden", className)}
       {...props}
     />
   )

@@ -18,7 +18,7 @@ import { floatingSurfaceClassName } from "@/components/ui/popover"
 import { cnState } from "@/lib/utils"
 
 const itemClassName =
-  "inline-flex h-control cursor-pointer items-center justify-center gap-1.5 rounded-control px-control-x text-sm font-medium whitespace-nowrap transition-colors outline-none hover:bg-accent hover:text-accent-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background data-disabled:cursor-not-allowed data-disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0"
+  "inline-flex h-control cursor-pointer items-center justify-center gap-inline rounded-control px-control-x text-sm font-medium whitespace-nowrap transition-colors outline-none hover:bg-accent hover:text-accent-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background data-disabled:cursor-not-allowed data-disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0"
 
 function NavigationMenu({ className, ...props }: ComponentProps<typeof NavigationMenuPrimitive>) {
   return (
@@ -33,7 +33,7 @@ function NavigationMenuList({ className, ...props }: ComponentProps<typeof Navig
   return (
     <NavigationMenuListPrimitive
       className={cnState(
-        "m-0 flex list-none items-center gap-1 p-0 data-[orientation=vertical]:flex-col data-[orientation=vertical]:items-stretch",
+        "m-0 flex list-none items-center gap-inline p-0 data-[orientation=vertical]:flex-col data-[orientation=vertical]:items-stretch",
         className,
       )}
       {...props}
@@ -78,7 +78,7 @@ function NavigationMenuContent({ className, ...props }: ComponentProps<typeof Na
   return (
     <NavigationMenuContentPrimitive
       className={cnState(
-        `${floatingSurfaceClassName} max-h-(--available-height) w-max max-w-(--available-width) overflow-y-auto p-1.5`,
+        `${floatingSurfaceClassName} max-h-(--available-height) w-max max-w-(--available-width) overflow-y-auto p-inline`,
         className,
       )}
       {...props}
@@ -90,7 +90,7 @@ const navigationMenuLinkVariants = cva("outline-none [&_svg]:pointer-events-none
   variants: {
     variant: {
       panel:
-        "flex flex-col gap-1 rounded-control px-control-x py-2 text-sm transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:ring-2 focus-visible:ring-ring data-has-icon:flex-row data-has-icon:items-center data-has-icon:gap-2 data-current:font-semibold",
+        "flex flex-col gap-inline rounded-control px-inset-item py-inset-item text-sm transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:ring-2 focus-visible:ring-ring data-has-icon:flex-row data-has-icon:items-center data-current:font-semibold",
       top: `${itemClassName} data-current:bg-accent data-current:text-accent-foreground`,
     },
   },

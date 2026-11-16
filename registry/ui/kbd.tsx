@@ -8,7 +8,7 @@ function Kbd({ className, render, ...props }: PartProps<"kbd">) {
     {
       "data-slot": "kbd",
       className: cn(
-        "inline-flex h-5 min-w-5 items-center justify-center gap-1 rounded-sm border bg-muted px-1 font-sans text-xs font-medium text-muted-foreground select-none [&_svg]:size-3 [&_svg]:shrink-0",
+        "inline-flex h-5 min-w-5 items-center justify-center gap-inline rounded-sm border bg-muted px-inset-chip font-sans text-xs font-medium text-muted-foreground select-none [&_svg]:size-3 [&_svg]:shrink-0",
         className,
       ),
       ...props,
@@ -20,7 +20,7 @@ function Kbd({ className, render, ...props }: PartProps<"kbd">) {
 function KbdGroup({ className, render, ...props }: PartProps<"kbd">) {
   return renderElement(
     "kbd",
-    { "data-slot": "kbd-group", className: cn("inline-flex items-center gap-1", className), ...props },
+    { "data-slot": "kbd-group", className: cn("inline-flex items-center gap-inline", className), ...props },
     render,
   )
 }

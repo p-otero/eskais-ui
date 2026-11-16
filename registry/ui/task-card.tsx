@@ -76,12 +76,12 @@ function TaskCardComponent({
       data-status={task.status}
       data-selected={selected ? "" : undefined}
       className={cn(
-        "relative flex flex-col gap-1 rounded-lg border bg-card/(--glass-opacity) px-(--task-card-padding-x,0.625rem) py-(--task-card-padding-y,0.5rem) text-sm text-card-foreground backdrop-surface hover:border-ring data-selected:border-primary data-selected:ring-1 data-selected:ring-primary",
+        "relative flex flex-col gap-inline rounded-lg border bg-card/(--glass-opacity) px-inset-item py-inset-item text-sm text-card-foreground backdrop-surface hover:border-ring data-selected:border-primary data-selected:ring-1 data-selected:ring-primary",
         className,
       )}
       {...props}
     >
-      <div className="flex min-w-0 items-center gap-2">
+      <div className="flex min-w-0 items-center gap-inline">
         <span data-slot="task-card-id" className="font-mono text-xs text-muted-foreground">
           {task.id}
         </span>
@@ -98,11 +98,11 @@ function TaskCardComponent({
           <UnassignedAvatar className="ms-auto" />
         )}
       </div>
-      <div className="flex min-w-0 items-start gap-1.5">
+      <div className="flex min-w-0 items-start gap-inline">
         <TaskStatusIcon
           status={task.status}
           label={parts.taskStatus?.[task.status] ?? taskStatusLabels[task.status]}
-          className="relative z-10 mt-0.75"
+          className="relative z-10 h-lh"
         />
         <Button
           data-task-select=""
@@ -126,7 +126,7 @@ function TaskCardComponent({
         onSelectTask={onSelectTask}
         canSelect={canSelect}
       />
-      <div data-slot="task-card-footer" className="flex items-center gap-2 text-xs text-muted-foreground">
+      <div data-slot="task-card-footer" className="flex items-center gap-items text-xs text-muted-foreground">
         <span className="min-w-0 truncate">
           {text.updated}{" "}
           <RelativeTime value={task.updatedAt} now={now} locale={locale} timeZone={timeZone} formatStyle="short" />

@@ -27,14 +27,14 @@ function PageHeader({
   const titleId = titleIdProp ?? generatedId
   const Heading = `h${headingLevel}` as const
   return (
-    <div data-slot="page-header" className={cn("flex flex-col gap-2", className)} {...props}>
+    <div data-slot="page-header" className={cn("flex flex-col gap-items", className)} {...props}>
       {breadcrumb !== undefined && (
         <div data-slot="page-header-breadcrumb" className="text-sm text-muted-foreground">
           {breadcrumb}
         </div>
       )}
-      <div className="flex flex-wrap items-start justify-between gap-x-surface gap-y-3">
-        <div className="flex min-w-0 flex-1 flex-col gap-1">
+      <div className="flex flex-wrap items-start justify-between gap-group">
+        <div className="flex min-w-0 flex-1 flex-col gap-inline">
           <Heading
             id={titleId}
             data-slot="page-header-title"
@@ -49,7 +49,7 @@ function PageHeader({
           )}
         </div>
         {actions !== undefined && (
-          <div data-slot="page-header-actions" className="flex flex-wrap items-center gap-2">
+          <div data-slot="page-header-actions" className="flex flex-wrap items-center gap-items">
             {actions}
           </div>
         )}

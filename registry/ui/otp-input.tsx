@@ -15,14 +15,14 @@ import { cnState } from "@/lib/utils"
 function OTPInput({ className, ...props }: ComponentProps<typeof OTPInputPrimitive>) {
   return (
     <OTPInputPrimitive
-      className={cnState("flex w-fit items-center gap-2 data-disabled:cursor-not-allowed", className)}
+      className={cnState("flex w-fit items-center gap-items data-disabled:cursor-not-allowed", className)}
       {...props}
     />
   )
 }
 
 function OTPInputGroup({ className, ...props }: ComponentProps<typeof OTPInputGroupPrimitive>) {
-  return <OTPInputGroupPrimitive className={cnState("flex items-center gap-1.5", className)} {...props} />
+  return <OTPInputGroupPrimitive className={cnState("flex items-center gap-inline", className)} {...props} />
 }
 
 // The input's own caret is hidden, so the active empty slot draws one.

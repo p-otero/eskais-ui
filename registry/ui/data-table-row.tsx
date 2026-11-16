@@ -38,7 +38,7 @@ function DataTableRow<Row>({ row, id, columns, selection }: DataTableRowProps<Ro
 function DataTableEmptyRow({ columns, children }: { columns: number; children?: ReactNode }) {
   return (
     <TableRow className="hover:bg-transparent">
-      <TableCell colSpan={columns} className="max-w-none p-2">
+      <TableCell colSpan={columns} className="max-w-none">
         {children !== undefined && <Empty className="border-0">{children}</Empty>}
       </TableCell>
     </TableRow>

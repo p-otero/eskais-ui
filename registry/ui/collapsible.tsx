@@ -18,7 +18,7 @@ function CollapsibleTrigger({ className, ...props }: ComponentProps<typeof Colla
   return (
     <CollapsibleTriggerPrimitive
       className={cnState(
-        "group/collapsible-trigger inline-flex min-h-control cursor-pointer items-center justify-between gap-2 rounded-control px-control-x text-start text-sm font-medium transition-colors outline-none hover:bg-accent hover:text-accent-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background data-disabled:cursor-not-allowed data-disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
+        "group/collapsible-trigger inline-flex min-h-control cursor-pointer items-center justify-between gap-inline rounded-control px-control-x text-start text-sm font-medium transition-colors outline-none hover:bg-accent hover:text-accent-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background data-disabled:cursor-not-allowed data-disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
         className,
       )}
       {...props}

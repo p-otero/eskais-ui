@@ -12,7 +12,7 @@ function BreadcrumbList({ className, render, ...props }: PartProps<"ol">) {
     {
       "data-slot": "breadcrumb-list",
       className: cn(
-        "m-0 flex list-none flex-wrap items-center gap-1.5 p-0 text-sm break-words text-muted-foreground",
+        "m-0 flex list-none flex-wrap items-center gap-inline p-0 text-sm break-words text-muted-foreground",
         className,
       ),
       ...props,
@@ -24,7 +24,7 @@ function BreadcrumbList({ className, render, ...props }: PartProps<"ol">) {
 function BreadcrumbItem({ className, render, ...props }: PartProps<"li">) {
   return renderElement(
     "li",
-    { "data-slot": "breadcrumb-item", className: cn("inline-flex items-center gap-1.5", className), ...props },
+    { "data-slot": "breadcrumb-item", className: cn("inline-flex items-center gap-inline", className), ...props },
     render,
   )
 }

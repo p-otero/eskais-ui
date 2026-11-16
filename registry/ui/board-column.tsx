@@ -79,7 +79,7 @@ function BoardColumn({
   const header = (
     <div
       data-slot="board-column-header"
-      className="flex min-h-control-sm items-center gap-2 px-3 group-data-collapsed/board-column:flex-col group-data-collapsed/board-column:px-2"
+      className="flex min-h-control-sm items-center gap-inline px-inset-item group-data-collapsed/board-column:flex-col group-data-collapsed/board-column:px-items"
     >
       {collapsible && (
         <CollapsibleTrigger
@@ -100,7 +100,7 @@ function BoardColumn({
       {actions !== undefined && (
         <div
           data-slot="board-column-actions"
-          className="flex items-center gap-1 group-data-collapsed/board-column:hidden"
+          className="flex items-center gap-inline group-data-collapsed/board-column:hidden"
         >
           {actions}
         </div>
@@ -111,9 +111,9 @@ function BoardColumn({
   const body = (
     <ScrollArea className="flex min-h-0 flex-col">
       <ScrollAreaViewport aria-labelledby={titleId} className="h-auto max-h-(--board-column-max-height)">
-        <ScrollAreaContent className="flex flex-col gap-2 px-2 pb-2 content-auto">
+        <ScrollAreaContent className="flex flex-col gap-items px-items pb-items content-auto">
           {Children.toArray(children).length === 0 && empty !== undefined ? (
-            <Empty className="p-4">{empty}</Empty>
+            <Empty className="p-group">{empty}</Empty>
           ) : (
             children
           )}
@@ -126,7 +126,7 @@ function BoardColumn({
   )
 
   const surface =
-    "flex w-full flex-col gap-1 rounded-surface border bg-muted/(--glass-opacity) pt-1.5 backdrop-surface group-data-collapsed/board-column:pb-2"
+    "flex w-full flex-col gap-inline rounded-surface border bg-muted/(--glass-opacity) pt-inline backdrop-surface group-data-collapsed/board-column:pb-items"
 
   return (
     <li
@@ -175,10 +175,10 @@ function BoardColumnGroup({ title, count, className, children, ...props }: Board
     <section
       aria-labelledby={titleId}
       data-slot="board-column-group"
-      className={cn("flex flex-col gap-1.5", className)}
+      className={cn("flex flex-col gap-items", className)}
       {...props}
     >
-      <div data-slot="board-column-group-header" className="flex items-center gap-2 px-1 pt-1">
+      <div data-slot="board-column-group-header" className="flex items-center gap-inline px-inline pt-inline">
         <Heading id={titleId} className="min-w-0 flex-1 truncate text-xs font-medium text-muted-foreground">
           {title}
         </Heading>

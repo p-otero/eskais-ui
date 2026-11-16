@@ -35,7 +35,7 @@ function Chevron({ path }: { path: string }) {
 }
 
 function Carousel({ className, ...props }: ComponentProps<typeof CarouselPrimitive>) {
-  return <CarouselPrimitive className={cnState("relative flex flex-col gap-3", className)} {...props} />
+  return <CarouselPrimitive className={cnState("relative flex flex-col gap-group", className)} {...props} />
 }
 
 function CarouselViewport({ className, ...props }: ComponentProps<typeof CarouselViewportPrimitive>) {
@@ -53,7 +53,7 @@ function CarouselViewport({ className, ...props }: ComponentProps<typeof Carouse
 function CarouselContent({ className, ...props }: ComponentProps<typeof CarouselContentPrimitive>) {
   return (
     <CarouselContentPrimitive
-      className={cnState("flex gap-surface data-[orientation=vertical]:flex-col", className)}
+      className={cnState("flex gap-section data-[orientation=vertical]:flex-col", className)}
       {...props}
     />
   )
@@ -92,7 +92,7 @@ function CarouselNext({
 function CarouselIndicatorGroup({ className, ...props }: ComponentProps<typeof CarouselIndicatorGroupPrimitive>) {
   return (
     <CarouselIndicatorGroupPrimitive
-      className={cnState("flex items-center justify-center gap-1", className)}
+      className={cnState("flex items-center justify-center gap-inline", className)}
       {...props}
     />
   )

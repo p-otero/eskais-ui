@@ -101,7 +101,7 @@ function DataTable<Row>({
         state.onPageChange?.(next, details)
         if (!details.canceled) setPage(next)
       }}
-      className={cn("flex w-full flex-col gap-3", className)}
+      className={cn("flex w-full flex-col gap-items", className)}
     >
       <Table aria-label={label} aria-busy={loading || undefined} className={tableClassName}>
         <TableHeader>

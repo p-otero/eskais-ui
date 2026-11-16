@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils"
 type StatusTone = "neutral" | "info" | "success" | "warning" | "destructive" | "muted"
 
 const statusPillVariants = cva(
-  "inline-flex w-fit max-w-full shrink-0 items-center gap-1.5 rounded-control border px-2 py-0.5 text-xs font-medium whitespace-nowrap [&_svg]:size-3 [&_svg]:shrink-0",
+  "inline-flex w-fit max-w-full shrink-0 items-center gap-inline rounded-control border px-inset-chip py-inset-chip text-xs font-medium whitespace-nowrap [&_svg]:size-3 [&_svg]:shrink-0",
   {
     variants: {
       tone: {
@@ -53,7 +53,7 @@ function StatusPill({ className, tone, dot, pulse, render, children, ...props }:
       children: (
         <>
           {dot && <StatusDot pulse={pulse} />}
-          <span data-slot="status-pill-label" className="inline-flex min-w-0 items-center gap-1">
+          <span data-slot="status-pill-label" className="inline-flex min-w-0 items-center gap-inline">
             {children}
           </span>
         </>

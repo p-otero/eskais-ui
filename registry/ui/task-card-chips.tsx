@@ -18,7 +18,7 @@ import { taskStatusTones } from "@/components/ui/task-status"
 import { usageFormatter } from "@/components/ui/usage"
 
 const chipClassName =
-  "relative z-10 inline-flex h-5 max-w-full min-w-0 items-center gap-1 rounded-md border px-1.5 text-xs whitespace-nowrap text-muted-foreground [&_svg]:size-3 [&_svg]:shrink-0"
+  "relative z-10 inline-flex h-5 max-w-full min-w-0 items-center gap-inline rounded-md border px-inset-chip text-xs whitespace-nowrap text-muted-foreground [&_svg]:size-3 [&_svg]:shrink-0"
 
 const toneText: Record<StatusTone, string> = {
   neutral: "text-foreground",
@@ -68,14 +68,14 @@ function TaskCardChips({
   const pressable = onSelectTask && task.dependsOn.some((dependency) => canSelect?.(dependency.id) ?? true)
 
   return (
-    <div data-slot="task-card-chips" className="flex min-w-0 flex-wrap items-center gap-1">
+    <div data-slot="task-card-chips" className="flex min-w-0 flex-wrap items-center gap-items">
       {(liveness || task.analysisMode) && (
         <Chip data-slot="task-card-signals">
           {liveness && (
             <span
               data-slot="task-card-liveness"
               title={livenessName}
-              className={cn("inline-flex min-w-0 items-center gap-1", toneText[livenessTones[liveness]])}
+              className={cn("inline-flex min-w-0 items-center gap-inline", toneText[livenessTones[liveness]])}
             >
               <span aria-hidden="true" className="relative inline-flex size-1.5 shrink-0">
                 {liveness === "running" && (
@@ -110,7 +110,7 @@ function TaskCardChips({
         }))}
         max={1}
         onSelect={pressable ? (id) => (canSelect?.(id) ?? true) && onSelectTask(id) : undefined}
-        className="relative z-10 min-w-0 gap-1"
+        className="relative z-10 min-w-0"
       />
       {needsDecision(task) && (
         <Chip title={task.decisionNeeded} className="border-warning/40 text-warning">

@@ -85,10 +85,13 @@ function AgentTaskBoardToolbar({
   const filtered = Object.values(filters).some(Boolean)
   const choices = (["project", "profile", "model"] as const).filter((name) => options[choiceSources[name]].length > 0)
   return (
-    <div data-slot="agent-task-board-toolbar" className="@container/agent-task-board-toolbar flex flex-col gap-3">
-      <div className="flex flex-wrap items-center justify-between gap-3">
+    <div data-slot="agent-task-board-toolbar" className="@container/agent-task-board-toolbar flex flex-col gap-items">
+      <div className="flex flex-wrap items-center justify-between gap-items">
         {generatedAt && (
-          <p data-slot="agent-task-board-snapshot" className="flex items-center gap-2 text-sm text-muted-foreground">
+          <p
+            data-slot="agent-task-board-snapshot"
+            className="flex items-center gap-inline text-sm text-muted-foreground"
+          >
             <svg
               viewBox="0 0 24 24"
               fill="none"
@@ -115,7 +118,7 @@ function AgentTaskBoardToolbar({
         </SegmentedControl>
       </div>
       <div className="flex">
-        <fieldset aria-label={labels.filters.group} className="flex min-w-0 flex-1 flex-wrap items-end gap-3">
+        <fieldset aria-label={labels.filters.group} className="flex min-w-0 flex-1 flex-wrap items-end gap-items">
           <SearchField
             label={labels.filters.search}
             clearLabel={labels.filters.clearSearch}

@@ -32,7 +32,11 @@ function FilterBar({
   ...props
 }: FilterBarProps) {
   return (
-    <Toolbar aria-label={label} className={cnState("flex w-full flex-wrap items-center gap-2", className)} {...props}>
+    <Toolbar
+      aria-label={label}
+      className={cnState("flex w-full flex-wrap items-center gap-items", className)}
+      {...props}
+    >
       {children}
       {isFiltered && onReset && (
         <FilterBarButton variant="ghost" data-slot="filter-bar-reset" onClick={(event) => onReset(event.nativeEvent)}>
@@ -50,7 +54,7 @@ function FilterBarButton({ className, variant = "outline", size, ...props }: Fil
 }
 
 function FilterBarSeparator({ className, ...props }: ComponentProps<typeof ToolbarSeparatorPrimitive>) {
-  return <ToolbarSeparatorPrimitive className={cnState("mx-1 h-5 w-px self-center bg-border", className)} {...props} />
+  return <ToolbarSeparatorPrimitive className={cnState("h-5 w-px self-center bg-border", className)} {...props} />
 }
 
 type FilterBarSearchProps = Omit<ComponentProps<typeof Input>, "aria-label" | "type"> & {

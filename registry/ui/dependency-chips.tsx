@@ -60,7 +60,7 @@ function DependencyChips({
   const hidden = items.length - visible.length
 
   return (
-    <ul data-slot="dependency-chips" className={cn("flex flex-wrap items-center gap-1.5", className)} {...props}>
+    <ul data-slot="dependency-chips" className={cn("flex flex-wrap items-center gap-items", className)} {...props}>
       {visible.map((item) => (
         <li
           key={item.id}

@@ -74,13 +74,13 @@ function TaskDetailPanel({
       aria-labelledby={titleId}
       onKeyDown={handleKeyDown}
       className={cn(
-        "@container/task-detail flex flex-col gap-surface overflow-y-auto overscroll-contain rounded-surface border bg-popover/(--glass-opacity) p-surface text-popover-foreground shadow-surface backdrop-surface",
+        "@container/task-detail flex flex-col gap-surface overflow-y-auto overscroll-contain rounded-surface border bg-popover/(--glass-opacity) p-inset-surface text-popover-foreground shadow-surface backdrop-surface",
         className,
       )}
       {...props}
     >
-      <header className="flex items-start gap-2">
-        <div className="flex min-w-0 flex-1 flex-col gap-1.5">
+      <header className="flex items-start gap-items">
+        <div className="flex min-w-0 flex-1 flex-col gap-inline">
           <TaskDetailMeta task={task} labels={labels} />
           <Title
             id={titleId}

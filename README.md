@@ -67,7 +67,7 @@ The theme asks for Geist Variable (`--font-sans`) and falls back to the system f
 
 ## Themes
 
-Components read tokens (`rounded-control`, `h-control`, `p-surface`, `bg-card/(--glass-opacity)`), so a theme is only CSS. Install the themes you want and switch them at runtime with an attribute, no reinstall:
+Components read tokens (`rounded-control`, `h-control`, `p-inset-surface`, `gap-items`, `bg-card/(--glass-opacity)`), so a theme is only CSS. Install the themes you want and switch them at runtime with an attribute, no reinstall:
 
 ```bash
 npx shadcn@latest add @eskais/theme-compact @eskais/theme-glass
