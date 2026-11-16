@@ -28,6 +28,7 @@ Versions follow [semver](https://semver.org). Before 1.0, a minor version can br
 - Navigation and overlays: `accordion`, `hover-card`, `context-menu`, `menubar`, `navigation-menu`, `breadcrumb`, `pagination` (standalone, with overridable labels) and `command` with a `CommandDialog` palette whose ⌘K shortcut is opt-in.
 - Forms: `radio-group`, `switch`, `slider`, `toggle`, `toggle-group`, `otp-input`, `number-input`, `label`, `progress`, `meter` and `alert`; the showcase's glass opacity uses the registry `Slider`.
 - Data and layout: `calendar`, `date-picker`, `carousel`, `resizable`, `sidebar` (icon rail, drawer on narrow screens), `data-table` (sort, selection, `renderPagination`) with `page-header` and `filter-bar`; theme tokens `--sidebar-width` and `--sidebar-rail-width`.
+- `chart` on Recharts v3 (`recharts@3.10.1`, installed only with this item): `ChartContainer` with a series config, tooltip and legend content, and `ChartDataTable`; theme tokens `--chart-1`…`--chart-5`.
 
 ### Changed
 

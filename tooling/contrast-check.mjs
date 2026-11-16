@@ -57,21 +57,24 @@ async function measure(page, selector) {
       Math.min(textBox.bottom, own.bottom) - top,
     )
     const style = getComputedStyle(element)
+    // SVG text (chart axes) is painted with fill, which text-fill-color neither sets nor hides.
+    const paint = element instanceof SVGElement ? "fill" : "-webkit-text-fill-color"
     const canvas = new OffscreenCanvas(1, 1).getContext("2d")
-    canvas.fillStyle = style.color
+    canvas.fillStyle = element instanceof SVGElement ? style.fill : style.color
     canvas.fillRect(0, 0, 1, 1)
     const color = [...canvas.getImageData(0, 0, 1, 1).data]
-    element.style.setProperty("-webkit-text-fill-color", "transparent")
+    element.style.setProperty(paint, "transparent")
     const size = Number.parseFloat(style.fontSize)
     const large = size >= 24 || (size >= 18.66 && Number(style.fontWeight) >= 700)
     return { box: { x: box.x, y: box.y, width: box.width, height: box.height }, color, large }
   }, selector)
   if (!text || text.box.width < 1 || text.box.height < 1) return null
   const png = await page.screenshot({ clip: text.box, animations: "disabled" })
-  await page.evaluate(
-    (target) => document.querySelector(target)?.style.removeProperty("-webkit-text-fill-color"),
-    selector,
-  )
+  await page.evaluate((target) => {
+    const element = document.querySelector(target)
+    element?.style.removeProperty("-webkit-text-fill-color")
+    element?.style.removeProperty("fill")
+  }, selector)
   const pixels = await page.evaluate(async (base64) => {
     const bitmap = await createImageBitmap(await (await fetch(`data:image/png;base64,${base64}`)).blob())
     const context = new OffscreenCanvas(bitmap.width, bitmap.height).getContext("2d")

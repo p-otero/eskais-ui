@@ -54,6 +54,7 @@ Eskais UI components are UI SDK parts styled with Tailwind v4 and semantic token
 | One agent task, in full            | `TaskDetailPanel`: non-modal, Escape and a close button call `onClose`                                                                                                                                                                               |
 | Dates, layout or data table        | `Calendar`/`DatePicker` (ISO, `locale`, `timeZone`), `Carousel`, `Resizable`, `Sidebar` (rail, drawer), `DataTable` (typed columns, `renderPagination`), `PageHeader`, `FilterBar` (a Toolbar)                                                       |
 | Menus, site navigation, paging, ⌘K | `ContextMenu`, `Menubar`, `NavigationMenu`, `Breadcrumb`, `Pagination page pageCount onPageChange labels`, `CommandDialog` + `Command` (pass `shortcut="mod+k"` to the trigger to opt in); `Accordion`, `HoverCard` for disclosure and link previews |
+| A chart                            | `ChartContainer config aria-labelledby` + Recharts (`accessibilityLayer`), `ChartTooltip`/`ChartLegend` + `…Content`, `ChartDataTable`. `--chart-3` (aqua) is low contrast: add a legend or value labels                                             |
 
 ## AgentTaskBoard
 

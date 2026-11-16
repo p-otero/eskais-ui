@@ -93,6 +93,11 @@
           "color-input": "var(--input)",
           "color-ring": "var(--ring)",
           "color-overlay": "var(--overlay)",
+          "color-chart-1": "var(--chart-1)",
+          "color-chart-2": "var(--chart-2)",
+          "color-chart-3": "var(--chart-3)",
+          "color-chart-4": "var(--chart-4)",
+          "color-chart-5": "var(--chart-5)",
           "radius-sm": "calc(var(--radius) - 4px)",
           "radius-md": "calc(var(--radius) - 2px)",
           "radius-lg": "var(--radius)",
@@ -134,7 +139,12 @@
           "border": "oklch(0.922 0 0)",
           "input": "oklch(0.6 0 0)",
           "ring": "oklch(0.556 0 0)",
-          "overlay": "oklch(0 0 0 / 0.5)"
+          "overlay": "oklch(0 0 0 / 0.5)",
+          "chart-1": "#2a78d6",
+          "chart-2": "#eb6834",
+          "chart-3": "#1baf7a",
+          "chart-4": "oklch(0.44 0.16 305)",
+          "chart-5": "oklch(0.48 0.09 75)"
         },
         "dark": {
           "background": "oklch(0.145 0 0)",
@@ -162,7 +172,12 @@
           "border": "oklch(1 0 0 / 10%)",
           "input": "oklch(0.55 0 0)",
           "ring": "oklch(0.708 0 0)",
-          "overlay": "oklch(0 0 0 / 0.7)"
+          "overlay": "oklch(0 0 0 / 0.7)",
+          "chart-1": "#3987e5",
+          "chart-2": "#d95926",
+          "chart-3": "#199e70",
+          "chart-4": "oklch(0.8 0.11 305)",
+          "chart-5": "oklch(0.86 0.14 90)"
         }
       }
     },
@@ -1875,6 +1890,46 @@
       "files": [
         {
           "path": "registry/ui/filter-bar.tsx",
+          "type": "registry:ui"
+        }
+      ]
+    },
+    {
+      "name": "chart",
+      "type": "registry:ui",
+      "title": "Chart",
+      "description": "Recharts v3 composed with Eskais tokens: ChartContainer maps a config to --color-<key> variables (light and dark), popover tooltips and legends, and ChartDataTable renders the same data as a table for screen readers and agents. The container is a figure that requires a name.",
+      "dependencies": [
+        "recharts@3.10.1"
+      ],
+      "registryDependencies": [
+        "@eskais/utils",
+        "@eskais/theme",
+        "@eskais/table"
+      ],
+      "files": [
+        {
+          "path": "registry/lib/chart-config.ts",
+          "type": "registry:lib"
+        },
+        {
+          "path": "registry/ui/chart-context.ts",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/chart-tooltip.tsx",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/chart-legend.tsx",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/chart-data-table.tsx",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/chart.tsx",
           "type": "registry:ui"
         }
       ]

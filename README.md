@@ -33,6 +33,7 @@ UI SDK-first, agent-native React components, distributed as a shadcn-style regis
 | Agent task board | `task-card`, `task-detail-panel`, `agent-task-board` (the full board)                                                       |
 | Data and layout  | `calendar`, `date-picker`, `carousel`, `resizable`, `sidebar`                                                               |
 | Data tables      | `data-table` (sort, select, pages), `page-header`, `filter-bar`                                                             |
+| Charts           | `chart` (Recharts v3, `--chart-1`…`--chart-5`, tooltip, legend, `ChartDataTable`)                                           |
 | Navigation       | `accordion`, `hover-card`, `context-menu`, `menubar`, `navigation-menu`, `breadcrumb`, `pagination`, `command` (⌘K palette) |
 | `theme`          | Color, shape, density and surface tokens; the default rounded look                                                          |
 | `theme-compact`  | Denser controls and tighter radii inside `data-theme="compact"`                                                             |

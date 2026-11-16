@@ -88,6 +88,7 @@ const items = [
   "data-table",
   "page-header",
   "filter-bar",
+  "chart",
 ]
 const versions = {
   react: "19.3.1",
