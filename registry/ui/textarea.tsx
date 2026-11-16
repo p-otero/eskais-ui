@@ -3,6 +3,7 @@
 import { Textarea as TextareaPrimitive, createInputController } from "@ui-sdk/react/textarea"
 import type { ComponentProps } from "react"
 
+import { floatingLabelControls } from "@/components/ui/field"
 import { fieldSurfaceClassName } from "@/components/ui/input"
 import { cnState } from "@/lib/utils"
 
@@ -18,6 +19,8 @@ function Textarea({ className, ...props }: ComponentProps<typeof TextareaPrimiti
     />
   )
 }
+
+floatingLabelControls.add(Textarea)
 
 export { Textarea, createInputController }
 export type { InputController, TextareaState } from "@ui-sdk/react/textarea"

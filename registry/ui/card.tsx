@@ -21,7 +21,7 @@ type CardSurface = "card" | "none" | "dashed"
 const cardVariants = cva("flex flex-col gap-group text-card-foreground", {
   variants: {
     surface: {
-      card: "rounded-surface border bg-card/(--glass-opacity) py-inset-surface shadow-surface backdrop-surface",
+      card: "rounded-surface border bg-card/(--glass-opacity) py-inset-surface field-label-surface-card shadow-surface backdrop-surface",
       dashed: "rounded-surface border border-dashed py-inset-surface",
       none: "[&>[data-slot^=card-]]:px-0",
     },

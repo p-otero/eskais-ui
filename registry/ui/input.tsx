@@ -7,6 +7,7 @@ import {
 } from "@ui-sdk/react/input"
 import type { ComponentProps } from "react"
 
+import { floatingLabelControls } from "@/components/ui/field"
 import { cnState } from "@/lib/utils"
 
 const fieldSurfaceClassName =
@@ -16,7 +17,7 @@ function Input({ className, ...props }: ComponentProps<typeof InputPrimitive>) {
   return (
     <InputPrimitive
       className={cnState(
-        `${fieldSurfaceClassName} h-control w-full rounded-control min-w-0 px-control-x text-sm outline-none placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring in-data-[slot=input-group]:h-auto in-data-[slot=input-group]:border-0 in-data-[slot=input-group]:bg-transparent in-data-[slot=input-group]:px-0 in-data-[slot=input-group]:shadow-none in-data-[slot=input-group]:focus-visible:ring-0`,
+        `${fieldSurfaceClassName} h-field-control w-full rounded-control min-w-0 px-control-x text-sm outline-none placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring in-data-[slot=input-group]:h-auto in-data-[slot=input-group]:border-0 in-data-[slot=input-group]:bg-transparent in-data-[slot=input-group]:px-0 in-data-[slot=input-group]:shadow-none in-data-[slot=input-group]:focus-visible:ring-0`,
         className,
       )}
       {...props}
@@ -28,7 +29,7 @@ function InputGroup({ className, ...props }: ComponentProps<typeof InputGroupPri
   return (
     <InputGroupPrimitive
       className={cnState(
-        `${fieldSurfaceClassName} flex h-control rounded-control w-full items-center gap-inline px-control-x text-sm has-[input:focus-visible]:ring-2 has-[input:focus-visible]:ring-ring has-aria-invalid:border-destructive [&>svg]:size-4 [&>svg]:shrink-0 [&>svg]:text-muted-foreground`,
+        `${fieldSurfaceClassName} flex h-field-control rounded-control w-full items-center gap-inline px-control-x text-sm has-[input:focus-visible]:ring-2 has-[input:focus-visible]:ring-ring has-aria-invalid:border-destructive [&>svg]:size-4 [&>svg]:shrink-0 [&>svg]:text-muted-foreground`,
         className,
       )}
       {...props}
@@ -62,5 +63,7 @@ function InputClear({ className, children, ...props }: ComponentProps<typeof Inp
     </InputClearPrimitive>
   )
 }
+
+floatingLabelControls.add(Input).add(InputGroup)
 
 export { fieldSurfaceClassName, Input, InputClear, InputGroup }

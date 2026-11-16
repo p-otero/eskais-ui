@@ -15,7 +15,14 @@ import {
 import { useController, type ControllerRenderProps, type FieldValues } from "react-hook-form"
 
 import { Checkbox } from "@/components/ui/checkbox"
-import { Field, FieldDescription, FieldError, FieldLabel } from "@/components/ui/field"
+import {
+  Field,
+  FieldDescription,
+  FieldError,
+  FieldLabel,
+  floatingLabelControls,
+  type FieldLabelPlacement,
+} from "@/components/ui/field"
 import { errorText, useFormContext } from "@/components/ui/form-context"
 import type { FormMessages } from "@/components/ui/form-messages"
 import { Input } from "@/components/ui/input"
@@ -74,6 +81,8 @@ type FormFieldProps = {
   name: string
   label?: ReactNode
   description?: ReactNode
+  /** `in` or `on` floats the label inside the control or on its border; the Form's `labelPlacement` by default. */
+  labelPlacement?: FieldLabelPlacement
   required?: boolean
   disabled?: boolean
   /** Messages for this field only; they win over the form's. */
@@ -105,6 +114,7 @@ function FormField({
   name,
   label,
   description,
+  labelPlacement,
   required,
   disabled,
   messages,
@@ -144,11 +154,13 @@ function FormField({
 
   let control: ReactNode = render?.(state)
   let checkedLayout = false
+  let floats = false
   if (!render) {
     const child = Children.only(children)
     if (!isValidElement<Record<string, unknown>>(child)) throw new Error("FormField needs one control as its child.")
     const adapter = adapterFor(child, bind)
     checkedLayout = adapter === checkedAdapter
+    floats = floatingLabelControls.has(child.type as object)
     control = cloneElement(child, {
       name: child.props.name ?? name,
       required: child.props.required ?? required,
@@ -160,11 +172,14 @@ function FormField({
     })
   }
 
+  // A form's default reaches only controls that can hold a floating label; a checkbox or switch never floats.
+  const placement = checkedLayout ? "top" : (labelPlacement ?? (floats ? context.labelPlacement : undefined) ?? "top")
   const fieldLabel = label === undefined ? null : <FieldLabel>{label}</FieldLabel>
   return (
     <FormFieldContext.Provider value={state}>
       <Field
         name={name}
+        labelPlacement={placement}
         invalid={Boolean(error)}
         disabled={state.disabled}
         className={cn(checkedLayout && (description || message) ? "flex-wrap" : undefined, className)}

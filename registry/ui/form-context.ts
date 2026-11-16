@@ -5,6 +5,7 @@ import type { StandardSchemaV1 } from "@standard-schema/spec"
 import { createContext, useContext } from "react"
 import type { FieldError, FieldValues, Resolver, UseFormReturn } from "react-hook-form"
 
+import type { FieldLabelPlacement } from "@/components/ui/field"
 import {
   issueFromInput,
   issueFromSchema,
@@ -18,6 +19,7 @@ import {
 type FormContextValue = {
   form: UseFormReturn<FieldValues>
   messages?: FormMessages
+  labelPlacement?: FieldLabelPlacement
   pending: boolean
   disabled: boolean
   fields: Map<string, string | undefined>

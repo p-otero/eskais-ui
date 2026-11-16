@@ -12,6 +12,7 @@ import {
 } from "@ui-sdk/react/number-input"
 import type { ComponentProps } from "react"
 
+import { floatingLabelControls, useFloatingPlaceholder } from "@/components/ui/field"
 import { fieldSurfaceClassName } from "@/components/ui/input"
 import { cnState } from "@/lib/utils"
 
@@ -23,7 +24,7 @@ function NumberInputGroup({ className, ...props }: ComponentProps<typeof NumberI
   return (
     <NumberInputGroupPrimitive
       className={cnState(
-        `${fieldSurfaceClassName} flex h-control w-full items-center overflow-hidden rounded-control has-[input:focus-visible]:ring-2 has-[input:focus-visible]:ring-ring has-aria-invalid:border-destructive`,
+        `${fieldSurfaceClassName} flex h-field-control w-full items-center overflow-hidden rounded-control has-[input:focus-visible]:ring-2 has-[input:focus-visible]:ring-ring has-aria-invalid:border-destructive`,
         className,
       )}
       {...props}
@@ -31,9 +32,10 @@ function NumberInputGroup({ className, ...props }: ComponentProps<typeof NumberI
   )
 }
 
-function NumberInputControl({ className, ...props }: ComponentProps<typeof NumberInputControlPrimitive>) {
+function NumberInputControl({ className, placeholder, ...props }: ComponentProps<typeof NumberInputControlPrimitive>) {
   return (
     <NumberInputControlPrimitive
+      placeholder={useFloatingPlaceholder(placeholder)}
       className={cnState(
         "h-full min-w-0 flex-1 bg-transparent px-inline text-center text-sm tabular-nums outline-none placeholder:text-muted-foreground data-disabled:cursor-not-allowed",
         className,
@@ -87,6 +89,8 @@ function NumberInputScrubAreaCursor({
     <NumberInputScrubAreaCursorPrimitive className={cnState("text-foreground [&_svg]:size-4", className)} {...props} />
   )
 }
+
+floatingLabelControls.add(NumberInput)
 
 export {
   createNumberInputController,

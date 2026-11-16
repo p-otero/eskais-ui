@@ -4,6 +4,7 @@ import { useFieldControl } from "@ui-sdk/react/field"
 import { createParts } from "@ui-sdk/react/primitive"
 import type { ComponentProps, ReactNode } from "react"
 
+import { floatingLabelControls } from "@/components/ui/field"
 import { fieldSurfaceClassName } from "@/components/ui/input"
 import { nativeSelect, type NativeSelectItem, type NativeSelectOptions } from "@/components/ui/native-select-primitive"
 import { cn } from "@/lib/utils"
@@ -67,7 +68,7 @@ function NativeSelect({
     className: cn(
       fieldSurfaceClassName,
       // oxlint-disable-next-line eskais/spacing-tokens -- the end padding clears the chevron drawn over the select
-      "h-control w-full min-w-0 cursor-pointer appearance-none rounded-control ps-control-x pe-9 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50",
+      "h-field-control w-full min-w-0 cursor-pointer appearance-none rounded-control ps-control-x pe-9 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50",
       className,
     ),
   }
@@ -109,6 +110,8 @@ function NativeSelect({
     </div>
   )
 }
+
+floatingLabelControls.add(NativeSelect)
 
 export { NativeSelect }
 export type { NativeSelectOption, NativeSelectOptionGroup, NativeSelectOptionList, NativeSelectProps }

@@ -18,6 +18,7 @@ import {
 import { renderElement, type PartProps } from "@ui-sdk/react/primitive"
 import type { ComponentProps } from "react"
 
+import { floatingLabelControls, useFloatingPlaceholder } from "@/components/ui/field"
 import { fieldSurfaceClassName } from "@/components/ui/input"
 import {
   CheckIcon,
@@ -40,7 +41,7 @@ function ComboboxControl({ className, render, ...props }: PartProps<"div">) {
       "data-slot": "combobox-control",
       className: cn(
         fieldSurfaceClassName,
-        "flex h-control w-full min-w-0 items-center gap-inline rounded-control ps-control-x pe-inline text-sm has-aria-invalid:border-destructive has-data-disabled:cursor-not-allowed has-data-disabled:opacity-50 has-[input:focus-visible]:ring-2 has-[input:focus-visible]:ring-ring",
+        "flex h-field-control w-full min-w-0 items-center gap-inline rounded-control ps-control-x pe-inline text-sm has-aria-invalid:border-destructive has-data-disabled:cursor-not-allowed has-data-disabled:opacity-50 has-[input:focus-visible]:ring-2 has-[input:focus-visible]:ring-ring",
         className,
       ),
       ...props,
@@ -49,9 +50,10 @@ function ComboboxControl({ className, render, ...props }: PartProps<"div">) {
   )
 }
 
-function ComboboxInput({ className, ...props }: ComponentProps<typeof ComboboxInputPrimitive>) {
+function ComboboxInput({ className, placeholder, ...props }: ComponentProps<typeof ComboboxInputPrimitive>) {
   return (
     <ComboboxInputPrimitive
+      placeholder={useFloatingPlaceholder(placeholder)}
       className={cnState(
         "h-full w-full min-w-0 bg-transparent outline-none placeholder:text-muted-foreground data-disabled:cursor-not-allowed",
         className,
@@ -131,6 +133,8 @@ function ComboboxGroupLabel({ className, ...props }: ComponentProps<typeof Combo
 function ComboboxSeparator({ className, ...props }: ComponentProps<typeof ComboboxSeparatorPrimitive>) {
   return <ComboboxSeparatorPrimitive className={cnState(listSeparatorClassName, className)} {...props} />
 }
+
+floatingLabelControls.add(Combobox)
 
 export {
   Combobox,

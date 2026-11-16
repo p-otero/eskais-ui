@@ -71,6 +71,23 @@
           }
         },
         "@custom-variant narrow (@media (width <= 47.5rem))": {},
+        "@custom-variant field-floated": {
+          ":focus-within > &": {
+            "@slot": {}
+          },
+          ":has([data-filled], [data-open]) > &": {
+            "@slot": {}
+          },
+          ":has(input[placeholder]:not(:placeholder-shown)) > &": {
+            "@slot": {}
+          },
+          ":has([data-slot=\"select-trigger\"]:not([data-placeholder])) > &": {
+            "@slot": {}
+          },
+          ":has(option:checked:not([value=\"\"])) > &": {
+            "@slot": {}
+          }
+        },
         ":root": {
           "--radius": "1rem",
           "--brand": "oklch(0.205 0 0)",
@@ -103,6 +120,10 @@
           "--control-height-lg": "2.5rem",
           "--control-height-touch": "2.75rem",
           "--control-padding": "0.875rem",
+          "--field-label-offset": "1rem",
+          "--field-label-float-y": "0.3125rem",
+          "--field-label-scale": "0.8125",
+          "--field-label-surface": "var(--background)",
           "--choice-radius": "calc(var(--radius) / 2)",
           "--surface-radius": "calc(var(--radius) * 1.25)",
           "--surface-padding": "1.5rem",
@@ -520,6 +541,7 @@
           "border-radius": "var(--floating-radius)",
           "background-color": "color-mix(in oklab, var(--popover) var(--floating-opacity), transparent)",
           "color": "var(--popover-foreground)",
+          "--field-label-surface": "color-mix(in oklab, var(--popover) var(--floating-opacity), var(--background))",
           "--tw-shadow": "var(--floating-shadow)",
           "box-shadow": "var(--tw-inset-shadow, 0 0 #0000), var(--tw-inset-ring-shadow, 0 0 #0000), var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow)",
           "-webkit-backdrop-filter": "var(--floating-backdrop)",
@@ -548,6 +570,12 @@
         },
         "@utility bg-glow": {
           "background-image": "radial-gradient(48rem 32rem at 12% -6rem, color-mix(in oklab, var(--link-brand) 14%, transparent), transparent), radial-gradient(40rem 28rem at 92% 4rem, color-mix(in oklab, var(--violet) 12%, transparent), transparent)"
+        },
+        "@utility field-label-surface-card": {
+          "--field-label-surface": "color-mix(in oklab, var(--card) var(--glass-opacity), var(--background))"
+        },
+        "@utility field-label-surface-popover": {
+          "--field-label-surface": "var(--popover)"
         },
         "@utility text-vertical": {
           "writing-mode": "vertical-rl"
@@ -719,6 +747,7 @@
           "spacing-control-sm": "var(--control-height-sm)",
           "spacing-control-lg": "var(--control-height-lg)",
           "spacing-control-x": "var(--control-padding)",
+          "spacing-field-control": "var(--field-control-height, var(--control-height))",
           "spacing-inline": "var(--gap-inline)",
           "spacing-items": "var(--gap-items)",
           "spacing-group": "var(--gap-group)",
@@ -1188,7 +1217,8 @@
       ],
       "registryDependencies": [
         "@eskais/utils",
-        "@eskais/theme"
+        "@eskais/theme",
+        "@eskais/field"
       ],
       "files": [
         {
@@ -1232,6 +1262,7 @@
       ],
       "registryDependencies": [
         "@eskais/utils",
+        "@eskais/theme",
         "@eskais/button"
       ],
       "files": [
@@ -1781,7 +1812,8 @@
       "registryDependencies": [
         "@eskais/utils",
         "@eskais/theme",
-        "@eskais/input"
+        "@eskais/input",
+        "@eskais/field"
       ],
       "files": [
         {
@@ -2594,7 +2626,8 @@
         "@eskais/utils",
         "@eskais/theme",
         "@eskais/dialog",
-        "@eskais/kbd"
+        "@eskais/kbd",
+        "@eskais/button"
       ],
       "files": [
         {
@@ -2606,7 +2639,7 @@
           "type": "registry:ui"
         }
       ],
-      "docs": "For a ⌘K palette: `<CommandDialog><CommandDialogTrigger shortcut=\"mod+k\">Search<CommandDialogShortcut /></CommandDialogTrigger><CommandDialogContent title=\"Search\"><Command onAction={…}>…</Command></CommandDialogContent></CommandDialog>`. The shortcut is opt-in, focus returns to the trigger that opened it, and `onOpenChange` reports both ways. For results from a server, use `useAsyncOptions` from `@ui-sdk/react/async-options` with `filter={false}`, `status` and `CommandStatus`; the skill's \"Global search\" recipe has the whole pattern. `createCommandDialogController()` opens it from code or from a second trigger (`controller={…}`)."
+      "docs": "For a ⌘K palette: `<CommandDialog><CommandDialogTrigger shortcut=\"mod+k\">Search<CommandDialogShortcut /></CommandDialogTrigger><CommandDialogContent title=\"Search\"><Command onAction={…}>…</Command></CommandDialogContent></CommandDialog>`. The shortcut is opt-in, focus returns to the trigger that opened it, and `onOpenChange` reports both ways. For results from a server, use `useAsyncOptions` from `@ui-sdk/react/async-options` with `filter={false}`, `status` and `CommandStatus`; the skill's \"Global search\" recipe has the whole pattern. `createCommandDialogController()` opens it from code. For a second way in, like a Topbar's `centerCompact` icon, use `<CommandDialogOpenButton controller={…} aria-label=\"Search\">`, not a second trigger: in UI SDK 0.1.0-beta.5 a second `CommandDialogTrigger` drops the dialog's agent label."
     },
     {
       "name": "radio-group",
@@ -2881,7 +2914,8 @@
         "@eskais/theme",
         "@eskais/button",
         "@eskais/input",
-        "@eskais/calendar"
+        "@eskais/calendar",
+        "@eskais/field"
       ],
       "files": [
         {
@@ -2903,7 +2937,8 @@
         "@eskais/utils",
         "@eskais/theme",
         "@eskais/date-picker",
-        "@eskais/input"
+        "@eskais/input",
+        "@eskais/field"
       ],
       "files": [
         {
@@ -3131,7 +3166,7 @@
       "type": "registry:ui",
       "title": "Topbar",
       "description": "The header of an application screen: full width and sticky, a bottom border instead of a shadow, leading (a SidebarTrigger or a breadcrumb), centre (search or a command trigger) and trailing slots, and an optional brand. The centre collapses to `centerCompact` on narrow screens. Glass gives it a translucent chrome fill.",
-      "docs": "`<Topbar brand={…} leading={<SidebarTrigger controller={sidebar} collapsed={collapsed} />} center={<CommandDialogTrigger controller={search} shortcut=\"mod+k\">Search</CommandDialogTrigger>} centerCompact={<CommandDialogTrigger controller={search} variant=\"ghost\" size=\"icon\" aria-label=\"Search\">…</CommandDialogTrigger>} trailing={<UserMenu />} />`. It renders `<header>`, which is the page's banner when it isn't inside `<main>` or a section. It sticks to the top of its scroll container; in a shell that owns the scroll (`fixed inset-0 flex flex-col`, the content `overflow-y-auto`), it simply sits first.",
+      "docs": "`<Topbar brand={…} leading={<SidebarTrigger controller={sidebar} collapsed={collapsed} />} center={<CommandDialogTrigger controller={search} shortcut=\"mod+k\">Search</CommandDialogTrigger>} centerCompact={<CommandDialogOpenButton controller={search} variant=\"ghost\" size=\"icon\" aria-label=\"Search\">…</CommandDialogOpenButton>} trailing={<UserMenu />} />`. It renders `<header>`, which is the page's banner when it isn't inside `<main>` or a section. It sticks to the top of its scroll container; in a shell that owns the scroll (`fixed inset-0 flex flex-col`, the content `overflow-y-auto`), it simply sits first.",
       "registryDependencies": [
         "@eskais/utils",
         "@eskais/theme"
