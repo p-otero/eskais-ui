@@ -79,7 +79,7 @@ function BoardColumn({
   const header = (
     <div
       data-slot="board-column-header"
-      className="flex min-h-control items-center gap-2 px-surface group-data-collapsed/board-column:flex-col group-data-collapsed/board-column:px-2"
+      className="flex min-h-control-sm items-center gap-2 px-3 group-data-collapsed/board-column:flex-col group-data-collapsed/board-column:px-2"
     >
       {collapsible && (
         <CollapsibleTrigger
@@ -111,7 +111,7 @@ function BoardColumn({
   const body = (
     <ScrollArea className="flex min-h-0 flex-col">
       <ScrollAreaViewport aria-labelledby={titleId} className="h-auto max-h-(--board-column-max-height)">
-        <ScrollAreaContent className="flex flex-col gap-2 px-surface pb-surface content-auto">
+        <ScrollAreaContent className="flex flex-col gap-2 px-2 pb-2 content-auto">
           {Children.toArray(children).length === 0 && empty !== undefined ? (
             <Empty className="p-4">{empty}</Empty>
           ) : (
@@ -126,7 +126,7 @@ function BoardColumn({
   )
 
   const surface =
-    "flex w-full flex-col gap-2 rounded-surface border bg-muted/(--glass-opacity) pt-2 backdrop-surface group-data-collapsed/board-column:pb-2"
+    "flex w-full flex-col gap-1 rounded-surface border bg-muted/(--glass-opacity) pt-1.5 backdrop-surface group-data-collapsed/board-column:pb-2"
 
   return (
     <li
@@ -175,10 +175,10 @@ function BoardColumnGroup({ title, count, className, children, ...props }: Board
     <section
       aria-labelledby={titleId}
       data-slot="board-column-group"
-      className={cn("flex flex-col gap-2", className)}
+      className={cn("flex flex-col gap-1.5", className)}
       {...props}
     >
-      <div data-slot="board-column-group-header" className="flex items-center gap-2 pt-2">
+      <div data-slot="board-column-group-header" className="flex items-center gap-2 px-1 pt-1">
         <Heading id={titleId} className="min-w-0 flex-1 truncate text-xs font-medium text-muted-foreground">
           {title}
         </Heading>

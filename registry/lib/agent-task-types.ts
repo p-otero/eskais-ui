@@ -19,6 +19,8 @@ interface AgentRef {
   environment?: string
   /** Short display name. */
   label?: string
+  /** Overrides the provider's avatar for this agent; `src` may be a data URI. */
+  avatar?: { src?: string }
 }
 
 interface UsageSummary {

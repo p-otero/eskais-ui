@@ -1033,11 +1033,16 @@
       "registryDependencies": [
         "@eskais/utils",
         "@eskais/theme",
-        "@eskais/agent-task-types"
+        "@eskais/agent-task-types",
+        "@eskais/avatar"
       ],
       "files": [
         {
           "path": "registry/ui/agent-badge.tsx",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/agent-avatar.tsx",
           "type": "registry:ui"
         }
       ]
@@ -1079,6 +1084,10 @@
         {
           "path": "registry/ui/task-status.tsx",
           "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/task-status-icon.tsx",
+          "type": "registry:ui"
         }
       ]
     },
@@ -1100,6 +1109,10 @@
       "files": [
         {
           "path": "registry/ui/usage.tsx",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/usage-grid.tsx",
           "type": "registry:ui"
         }
       ]
@@ -1239,6 +1252,10 @@
         },
         {
           "path": "registry/ui/agent-task-labels.ts",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/task-card-chips.tsx",
           "type": "registry:ui"
         }
       ]

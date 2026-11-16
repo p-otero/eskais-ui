@@ -18,7 +18,7 @@ import type { AgentTaskBoardLabels } from "@/components/ui/agent-task-labels"
 import { QuantityValue } from "@/components/ui/quantity-value"
 import { RelativeTime } from "@/components/ui/relative-time"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { TaskStatusPill } from "@/components/ui/task-status"
+import { TaskStatusIcon, TaskStatusPill } from "@/components/ui/task-status"
 import type { TaskDisplayOptions } from "@/components/ui/task-card"
 import { usageFormatter } from "@/components/ui/usage"
 
@@ -53,7 +53,7 @@ function SortIcon({ direction }: { direction?: SortDirection }) {
 }
 
 function AgentTaskBoardTable({ tasks, selectedTaskId, display }: AgentTaskBoardTableProps) {
-  const { labels, onSelectTask, now, locale, timeZone, formatCurrency } = display
+  const { labels, onSelectTask, now, locale, timeZone, formatCurrency, agentAvatars } = display
   const [sort, setSort] = useState<{ key: SortKey; direction: SortDirection }>({
     key: "status",
     direction: "ascending",
@@ -126,7 +126,10 @@ function AgentTaskBoardTable({ tasks, selectedTaskId, display }: AgentTaskBoardT
                 </Button>
               </TableCell>
               <TableCell>
-                <TaskStatusPill status={task.status} labels={labels.components.taskStatus} />
+                <span className="inline-flex items-center gap-1.5">
+                  <TaskStatusIcon status={task.status} />
+                  <TaskStatusPill status={task.status} labels={labels.components.taskStatus} />
+                </span>
               </TableCell>
               <TableCell className="text-muted-foreground">{task.profile ?? "—"}</TableCell>
               <TableCell className="max-w-56">
@@ -135,6 +138,7 @@ function AgentTaskBoardTable({ tasks, selectedTaskId, display }: AgentTaskBoardT
                     agent={effectiveAgent(attempt)}
                     requested={attempt.configured}
                     labels={labels.components.agentBadge}
+                    avatars={agentAvatars}
                   />
                 ) : (
                   "—"

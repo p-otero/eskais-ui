@@ -43,7 +43,7 @@ function pageLocale() {
 function AgentTaskBoard(props: AgentTaskBoardProps) {
   const { tasks, mode, generatedAt, formatCurrency, timeZone, agentApproval = "confirm" } = props
   const { onApproveProposal, onRejectProposal, renderThreadLink, onOpenThread } = props
-  const { detailPresentation = "dialog", density = "auto" } = props
+  const { detailPresentation = "dialog", density = "auto", agentAvatars } = props
   const labels = useMemo(() => resolveLabels(props.labels), [props.labels])
   const now = useNow({ now: mode === "snapshot" ? generatedAt : props.now })
   const locale = props.locale ?? pageLocale()
@@ -92,6 +92,7 @@ function AgentTaskBoard(props: AgentTaskBoardProps) {
       onRejectProposal: live ? onRejectProposal : undefined,
       onSelectTask: selectTask,
       canSelect: (id: string) => ids.has(id),
+      agentAvatars,
     }),
     [
       mode,
@@ -106,6 +107,7 @@ function AgentTaskBoard(props: AgentTaskBoardProps) {
       onRejectProposal,
       selectTask,
       ids,
+      agentAvatars,
     ],
   )
 

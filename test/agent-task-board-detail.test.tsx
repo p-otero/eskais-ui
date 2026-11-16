@@ -28,7 +28,7 @@ describe("detail dialog (default)", () => {
     expect(dialog.getAttribute("data-task-detail")).toBe("dialog")
     expect(dialog.contains(document.activeElement)).toBe(true)
     expect(within(dialog).getByRole("list", { name: "Attempts" })).toBeTruthy()
-    expect(within(dialog).getByRole("table", { name: "Usage of T-014" })).toBeTruthy()
+    expect(within(dialog).getByRole("group", { name: "Usage of T-014" })).toBeTruthy()
     expect(document.querySelector('[data-slot="task-detail-panel"]')).toBeNull()
 
     await user().click(within(dialog).getByRole("button", { name: "Close task details" }))

@@ -27,8 +27,8 @@ UI SDK-first, agent-native React components, distributed as a shadcn-style regis
 | Status           | `status-pill`, `dependency-chips`, `acceptance-list`, `stat`                                                                |
 | Values and time  | `quantity` (honest values), `relative-time` (`useNow`)                                                                      |
 | Layout           | `board` (columns, collapsible, groups)                                                                                      |
-| Agent tasks      | `agent-task-types`, `agent-badge`, `liveness-indicator`, `task-status`                                                      |
-| Agent history    | `usage`, `attempt-timeline`                                                                                                 |
+| Agent tasks      | `agent-task-types`, `agent-badge` (provider avatars), `liveness-indicator`, `task-status` (pills, icons)                    |
+| Agent history    | `usage` (table, compact grid), `attempt-timeline`                                                                           |
 | Agent board core | `agent-task-board-core` (logic, labels, agent actions), `proposal-actions`                                                  |
 | Agent task board | `task-card`, `task-detail-panel`, `agent-task-board` (the full board)                                                       |
 | Data and layout  | `calendar`, `date-picker`, `carousel`, `resizable`, `sidebar`                                                               |

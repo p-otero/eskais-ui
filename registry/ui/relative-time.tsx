@@ -51,9 +51,21 @@ type RelativeTimeProps = Omit<PartProps<"time">, "children" | "dateTime"> & {
   locale?: string
   timeZone?: string
   intervalMs?: number
+  /** "short" ("2 min. ago") or "narrow" where space is tight; "long" by default. */
+  formatStyle?: Intl.RelativeTimeFormatStyle
 }
 
-function RelativeTime({ value, now, locale, timeZone, intervalMs, className, render, ...props }: RelativeTimeProps) {
+function RelativeTime({
+  value,
+  now,
+  locale,
+  timeZone,
+  intervalMs,
+  formatStyle,
+  className,
+  render,
+  ...props
+}: RelativeTimeProps) {
   const current = useNow({ now, intervalMs })
   return renderElement(
     "time",
@@ -65,7 +77,7 @@ function RelativeTime({ value, now, locale, timeZone, intervalMs, className, ren
       // Server and browser differ in clock and time zone; the effect in useNow resyncs the text.
       suppressHydrationWarning: true,
       ...props,
-      children: formatRelative(value, { now: current, locale }),
+      children: formatRelative(value, { now: current, locale, style: formatStyle }),
     },
     render,
   )

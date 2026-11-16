@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils"
 import { agentTaskBoardLabels } from "@/components/ui/agent-task-labels"
 import { Dialog, DialogBackdrop, DialogClose, DialogContent, DialogTitle } from "@/components/ui/dialog"
 import { Drawer, DrawerBackdrop, DrawerClose, DrawerContent, DrawerTitle } from "@/components/ui/drawer"
-import { TaskStatusPill } from "@/components/ui/task-status"
+import { TaskStatusIcon, TaskStatusPill } from "@/components/ui/task-status"
 import { TaskDetailContent, type TaskDetailContentProps } from "@/components/ui/task-detail-content"
 import { CloseIcon } from "@/components/ui/task-detail-parts"
 import type { CloseReason } from "@/components/ui/task-detail-panel"
@@ -82,18 +82,21 @@ function TaskDetailDialog({
       >
         {current && (
           <>
-            <div className="flex shrink-0 items-start gap-2 border-b p-surface">
-              <div className="flex min-w-0 flex-1 flex-col items-start gap-1.5">
+            <div className="flex shrink-0 items-start gap-2 border-b px-surface py-3">
+              <div className="flex min-w-0 flex-1 flex-wrap items-center gap-x-2 gap-y-1">
                 <Title data-slot="task-detail-title" className="text-base leading-snug">
                   <span className="font-mono text-muted-foreground">{current.id}</span> {current.title}
                 </Title>
-                <TaskStatusPill status={current.status} labels={labels.components.taskStatus} />
+                <span className="inline-flex items-center gap-1.5">
+                  <TaskStatusIcon status={current.status} />
+                  <TaskStatusPill status={current.status} labels={labels.components.taskStatus} />
+                </span>
               </div>
               <Close variant="ghost" size="icon" aria-label={labels.panel.close}>
                 <CloseIcon />
               </Close>
             </div>
-            <div className="flex min-h-0 flex-1 flex-col gap-surface overflow-y-auto overscroll-contain p-surface">
+            <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto overscroll-contain p-surface">
               <TaskDetailContent task={current} labels={labels} {...content} headingLevel={3} />
             </div>
           </>

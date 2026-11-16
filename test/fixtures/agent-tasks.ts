@@ -78,6 +78,7 @@ const sampleTasks: TaskView[] = [
     status: "working",
     profile: "bounded",
     analysisMode: "autonomous",
+    labels: ["search", "docs"],
     dependsOn: [],
     acceptance: [
       { text: "Every page is indexed", result: "pass", evidence: "1,204 of 1,204" },

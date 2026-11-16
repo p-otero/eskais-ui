@@ -35,6 +35,8 @@ interface CardLabels {
   acceptance: (id: string) => string
   dependencies: (id: string) => string
   decisionNeeded: string
+  /** Precedes the relative time of the last change, as in "Updated 2 minutes ago". */
+  updated: string
   /** Precedes the relative retry time, as in "Retry in 3 hours". */
   retry: string
   analysisMode: { review: string; autonomous: string }
@@ -181,6 +183,7 @@ const agentTaskBoardLabels: AgentTaskBoardLabels = {
     acceptance: (id) => `Acceptance for ${id}`,
     dependencies: (id) => `Dependencies of ${id}`,
     decisionNeeded: "Decision needed",
+    updated: "Updated",
     retry: "Retry",
     analysisMode: { review: "A person reviews it before agents run", autonomous: "Agents run it on their own" },
   },
@@ -287,6 +290,7 @@ const agentTaskBoardLabelsEs: AgentTaskBoardLabels = {
     acceptance: (id) => `Aceptación de ${id}`,
     dependencies: (id) => `Dependencias de ${id}`,
     decisionNeeded: "Pendiente de decisión",
+    updated: "Actualizada",
     retry: "Reintento",
     analysisMode: {
       review: "Una persona la revisa antes de que trabajen los agentes",

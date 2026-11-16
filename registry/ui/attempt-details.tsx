@@ -2,6 +2,7 @@
 
 import type { ReactNode } from "react"
 
+import type { AgentAvatars } from "@/components/ui/agent-avatar"
 import { AgentBadge } from "@/components/ui/agent-badge"
 import { agentDiffers, effectiveAgent, type AgentRef, type AttemptView, type ThreadRef } from "@/lib/agent-task-types"
 import { formatInstant, toISO } from "@/lib/time"
@@ -38,10 +39,10 @@ function AttemptThread({
   )
 }
 
-function defaultRenderAgent(agent: AgentRef, requested: boolean) {
+function defaultRenderAgent(agent: AgentRef, requested: boolean, avatars?: AgentAvatars) {
   return (
     <span data-slot="attempt-agent" data-requested={requested || undefined} className="min-w-0">
-      <AgentBadge agent={agent} variant="detail" />
+      <AgentBadge agent={agent} variant="detail" avatars={avatars} />
     </span>
   )
 }
@@ -51,9 +52,12 @@ interface AttemptRouteProps {
   attemptName: string
   labels: AttemptTimelineLabels
   renderAgent?: (agent: AgentRef, requested: boolean) => ReactNode
+  /** Used by the default `renderAgent`. */
+  avatars?: AgentAvatars
 }
 
-function AttemptRoute({ attempt, attemptName, labels, renderAgent = defaultRenderAgent }: AttemptRouteProps) {
+function AttemptRoute({ attempt, attemptName, labels, renderAgent: custom, avatars }: AttemptRouteProps) {
+  const renderAgent = custom ?? ((agent: AgentRef, requested: boolean) => defaultRenderAgent(agent, requested, avatars))
   const fallbacks = attempt.fallbacks ?? []
   return (
     <div data-slot="attempt-route" className="flex flex-wrap items-center gap-x-2 gap-y-1">

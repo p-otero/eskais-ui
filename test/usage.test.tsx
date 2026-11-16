@@ -1,8 +1,9 @@
 import { render, screen, within } from "@testing-library/react"
-import { expect, test } from "vitest"
+import { describe, expect, test } from "vitest"
 
 import type { UsageSummary } from "@/lib/agent-task-types"
 import { UsageStat, UsageTable, usageLabelsEs } from "@/components/ui/usage"
+import { UsageGrid } from "@/components/ui/usage-grid"
 
 import { axeViolations } from "./axe"
 
@@ -95,4 +96,51 @@ test("a usage stat is one labeled, honest quantity", () => {
   expect(screen.getByTestId("tokens").textContent).toBe("Input18.2K18.2K")
   expect(screen.getByTestId("cost").querySelector('[aria-hidden="true"]')?.textContent).toBe("~$0.12")
   expect(screen.getByTestId("unknown").querySelector('[aria-hidden="true"]')?.textContent).toBe("—")
+})
+
+function gridTile(metric: string) {
+  const item = document.querySelector<HTMLElement>(`[data-slot="usage-grid-item"][data-metric="${metric}"]`)
+  const quantity = item?.querySelector<HTMLElement>('[data-slot="quantity"]')
+  if (!item || !quantity) throw new Error(`No ${metric} tile`)
+  return { item, quantity, text: quantity.querySelector('[aria-hidden="true"]')?.textContent }
+}
+
+describe("UsageGrid", () => {
+  test("shows every metric, key figures first, as one named group of terms", () => {
+    render(<UsageGrid usage={summary} locale="en-US" aria-label="Usage of T-1" />)
+    const group = screen.getByRole("group", { name: "Usage of T-1" })
+    const terms = within(group)
+      .getAllByRole("term")
+      .map((term) => term.textContent)
+    expect(terms).toEqual([
+      "Input tokens",
+      "Output tokens",
+      "Cache read",
+      "Reasoning tokens",
+      "Cost",
+      "Duration",
+      "Cache write",
+      "Active time",
+    ])
+  })
+
+  test("keeps values honest: dash for unknown, tilde for estimated, exact count in the title", () => {
+    render(<UsageGrid usage={summary} locale="en-US" />)
+    expect(gridTile("cacheWriteTokens").text).toBe("—")
+    expect(gridTile("activeMs").text).toBe("—")
+    expect(gridTile("cacheReadTokens").text).toBe("0")
+    expect(gridTile("costUsd").text).toBe("~$0.12")
+    expect(gridTile("costUsd").quantity.title).toBe("estimated: price table")
+    expect(gridTile("reasoningTokens").text).toBe("~1K")
+    expect(gridTile("reasoningTokens").quantity.title).toBe("1,000 · estimated: tokenizer")
+    expect(gridTile("inputTokens").quantity.title).toBe("18,240")
+  })
+
+  test("without usage every tile is unknown, and labels are overridable", async () => {
+    const { container } = render(<UsageGrid labels={usageLabelsEs} />)
+    expect(screen.getByRole("group", { name: "Consumo" })).toBeTruthy()
+    for (const metric of ["inputTokens", "costUsd", "durationMs"]) expect(gridTile(metric).text).toBe("—")
+    expect(screen.getByText("Tokens de entrada")).toBeTruthy()
+    expect(await axeViolations(container)).toEqual([])
+  })
 })

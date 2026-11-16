@@ -1,6 +1,7 @@
 import { renderElement, type PartProps } from "@ui-sdk/react/primitive"
 import type { AgentRef } from "@/lib/agent-task-types"
 import { cn } from "@/lib/utils"
+import { AgentAvatar, type AgentAvatars } from "@/components/ui/agent-avatar"
 
 interface AgentBadgeLabels {
   /** Visible marker before the requested agent, as in "requested zai/glm-5.3". */
@@ -49,6 +50,13 @@ function requestedDifference(agent: AgentRef, requested: AgentRef) {
   return requested.effort?.value ?? "—"
 }
 
+/** The agent in full, and what was requested when it differs: a title, or the name of an avatar shown alone. */
+function agentSummary(agent: AgentRef, requested: AgentRef | undefined, labels: AgentBadgeLabels = agentBadgeLabels) {
+  const differs = requested !== undefined && !sameAgent(agent, requested)
+  const requestedInFull = differs ? `${labels.requested} ${describeAgent(requested, labels)}` : undefined
+  return [describeAgent(agent, labels), requestedInFull].filter(Boolean).join(" — ")
+}
+
 /** What a card has room for: the agent's label, or the last segment of its model id. */
 function shortModel(agent: AgentRef) {
   return agent.label ?? agent.model.slice(agent.model.lastIndexOf("/") + 1)
@@ -78,6 +86,10 @@ type AgentBadgeProps = Omit<PartProps<"span">, "children"> & {
   /** Show the effort as "name: value". Defaults to true in the detail variant. */
   showEffortName?: boolean
   labels?: Partial<AgentBadgeLabels>
+  /** Images, icons or names per provider; initials on a provider color otherwise. */
+  avatars?: AgentAvatars
+  /** Shows the provider's avatar before the model. Defaults to true. */
+  showAvatar?: boolean
 }
 
 function AgentBadge({
@@ -86,6 +98,8 @@ function AgentBadge({
   variant = "compact",
   showEffortName,
   labels: labelOverrides,
+  avatars,
+  showAvatar = true,
   className,
   render,
   ...props
@@ -96,7 +110,7 @@ function AgentBadge({
   const effort = formatEffort(agent.effort, showEffortName ?? detail, labels)
   const requestedInFull = differs ? `${labels.requested} ${describeAgent(requested, labels)}` : undefined
   const marker = differs && !detail ? `${labels.requested} ${requestedDifference(agent, requested)}` : requestedInFull
-  const title = [describeAgent(agent, labels), requestedInFull].filter(Boolean).join(" — ")
+  const title = agentSummary(agent, requested, labels)
 
   return renderElement(
     "span",
@@ -106,7 +120,8 @@ function AgentBadge({
       "data-differs": differs ? "" : undefined,
       title: detail ? undefined : title,
       className: cn(
-        "inline-flex max-w-full min-w-0 items-baseline gap-x-1.5 text-xs text-foreground",
+        "inline-flex max-w-full min-w-0 gap-x-1.5 text-xs text-foreground",
+        showAvatar ? "items-center" : "items-baseline",
         detail ? "flex-wrap gap-y-0.5" : "whitespace-nowrap",
         className,
       ),
@@ -114,6 +129,7 @@ function AgentBadge({
       children: (
         <>
           {differs && <span className="sr-only">{labels.differs}</span>}
+          {showAvatar && <AgentAvatar agent={agent} avatars={avatars} />}
           {detail && (
             <span data-slot="agent-badge-provider" className="shrink-0 text-muted-foreground">
               {agent.provider}
@@ -156,5 +172,5 @@ function AgentBadge({
   )
 }
 
-export { AgentBadge, agentBadgeLabels, agentBadgeLabelsEs }
+export { AgentBadge, agentBadgeLabels, agentBadgeLabelsEs, agentSummary }
 export type { AgentBadgeLabels, AgentBadgeProps }

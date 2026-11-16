@@ -22,6 +22,7 @@ import {
   AttemptThread,
   type ThreadRendering,
 } from "@/components/ui/attempt-details"
+import type { AgentAvatars } from "@/components/ui/agent-avatar"
 import type { AttemptTimelineLabels } from "@/components/ui/attempt-timeline-labels"
 import { Collapsible, CollapsibleIcon, CollapsiblePanel, CollapsibleTrigger } from "@/components/ui/collapsible"
 import { RelativeTime } from "@/components/ui/relative-time"
@@ -44,6 +45,8 @@ interface AttemptEventOptions extends ThreadRendering {
   formatAttemptId: (id: string) => string
   renderStatus?: (attempt: AttemptView) => ReactNode
   renderAgent?: (agent: AgentRef, requested: boolean) => ReactNode
+  /** Images, icons or names per provider for the default agent badges. */
+  agentAvatars?: AgentAvatars
   now: Instant
   locale?: string
   timeZone?: string
@@ -90,7 +93,13 @@ function AttemptEvent({ attempt, ...options }: AttemptEventOptions & { attempt: 
           )}
         </TimelineTime>
         <TimelineDescription className="flex flex-col gap-1 text-sm">
-          <AttemptRoute attempt={attempt} attemptName={name} labels={labels} renderAgent={options.renderAgent} />
+          <AttemptRoute
+            attempt={attempt}
+            attemptName={name}
+            labels={labels}
+            renderAgent={options.renderAgent}
+            avatars={options.agentAvatars}
+          />
           {(attempt.contextMode || attempt.repairOf) && (
             <span className="flex flex-wrap gap-x-2 text-xs text-muted-foreground">
               {attempt.contextMode && (

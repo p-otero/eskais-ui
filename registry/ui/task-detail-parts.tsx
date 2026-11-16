@@ -3,6 +3,7 @@
 import type { ReactNode } from "react"
 
 import { formatQuantity, type Quantity, type QuantityLabels } from "@/lib/quantity"
+import { cn } from "@/lib/utils"
 import { QuantityValue } from "@/components/ui/quantity-value"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import { usageFormatter } from "@/components/ui/usage"
@@ -57,10 +58,20 @@ function insidePopup(target: EventTarget, panel: Element) {
   return popup !== null && popup !== panel && panel.contains(popup)
 }
 
-function Block({ title, level, children }: { title: string; level: number; children: ReactNode }) {
+function Block({
+  title,
+  level,
+  className,
+  children,
+}: {
+  title: string
+  level: number
+  className?: string
+  children: ReactNode
+}) {
   const Heading = `h${Math.min(level, 6)}` as "h3"
   return (
-    <section className="flex flex-col gap-2">
+    <section className={cn("flex flex-col gap-1.5", className)}>
       <Heading className="text-xs font-medium tracking-wide text-muted-foreground uppercase">{title}</Heading>
       {children}
     </section>

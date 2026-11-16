@@ -3,6 +3,7 @@ import type { ReactNode } from "react"
 import type { AttemptStatus, ContextMode, TaskStatus, ThreadRef } from "@/lib/agent-task-types"
 import { cn } from "@/lib/utils"
 import { StatusPill, type StatusPillProps, type StatusTone } from "@/components/ui/status-pill"
+import { TaskStatusIcon, type TaskStatusIconProps } from "@/components/ui/task-status-icon"
 
 const taskStatusTones: Record<TaskStatus, StatusTone> = {
   proposed: "warning",
@@ -156,6 +157,7 @@ function ContextModePill({
 export {
   AttemptStatusPill,
   ContextModePill,
+  TaskStatusIcon,
   TaskStatusPill,
   attemptStatusLabels,
   attemptStatusLabelsEs,
@@ -167,4 +169,4 @@ export {
   taskStatusLabelsEs,
   taskStatusTones,
 }
-export type { ContextModeLabels, ContextModePillProps }
+export type { ContextModeLabels, ContextModePillProps, TaskStatusIconProps }

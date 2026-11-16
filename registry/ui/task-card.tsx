@@ -3,22 +3,18 @@
 import { Button } from "@ui-sdk/react/button"
 import { memo, type ComponentProps } from "react"
 
-import { activeAttempt, attemptCount, needsDecision, taskCost } from "@/lib/agent-task-board-model"
-import { effectiveAgent, type TaskView } from "@/lib/agent-task-types"
+import { activeAttempt, attemptCount } from "@/lib/agent-task-board-model"
+import { agentDiffers, effectiveAgent, type TaskView } from "@/lib/agent-task-types"
 import type { Instant } from "@/lib/time"
 import { cn } from "@/lib/utils"
-import { AcceptanceBar, countAcceptance } from "@/components/ui/acceptance-list"
-import { AgentBadge } from "@/components/ui/agent-badge"
+import { AgentAvatar, UnassignedAvatar, type AgentAvatars } from "@/components/ui/agent-avatar"
+import { agentBadgeLabels, agentSummary } from "@/components/ui/agent-badge"
 import type { AgentApproval, BoardMode } from "@/components/ui/agent-task-board-primitive"
 import { agentTaskBoardLabels, type AgentTaskBoardLabels } from "@/components/ui/agent-task-labels"
-import { DependencyChips } from "@/components/ui/dependency-chips"
-import { LivenessIndicator } from "@/components/ui/liveness-indicator"
 import { ProposalActions } from "@/components/ui/proposal-actions"
-import { QuantityValue } from "@/components/ui/quantity-value"
-import { StatusPill } from "@/components/ui/status-pill"
-import { AnalysisModeIcon, TaskBlocker } from "@/components/ui/task-card-parts"
-import { taskStatusTones } from "@/components/ui/task-status"
-import { usageFormatter } from "@/components/ui/usage"
+import { RelativeTime } from "@/components/ui/relative-time"
+import { TaskCardChips } from "@/components/ui/task-card-chips"
+import { TaskStatusIcon, taskStatusLabels } from "@/components/ui/task-status"
 
 interface TaskDisplayOptions {
   mode?: BoardMode
@@ -34,6 +30,8 @@ interface TaskDisplayOptions {
   /** Makes each dependency chip a button; only dependencies for which `canSelect` is true are pressable. */
   onSelectTask?: (id: string) => void
   canSelect?: (id: string) => boolean
+  /** Images, icons or names per provider id; initials on a provider color otherwise. */
+  agentAvatars?: AgentAvatars
 }
 
 type TaskCardProps = Omit<ComponentProps<"article">, "children" | "onSelect"> &
@@ -44,14 +42,6 @@ type TaskCardProps = Omit<ComponentProps<"article">, "children" | "onSelect"> &
 
 function proposalError(error: unknown, labels: AgentTaskBoardLabels) {
   return (error instanceof Error && error.message) || labels.errors.unknown
-}
-
-function dependencyChips(task: TaskView) {
-  return task.dependsOn.map((dependency) => ({
-    id: dependency.id,
-    label: `${dependency.id} ${dependency.title ?? ""}`.trim(),
-    tone: taskStatusTones[dependency.status],
-  }))
 }
 
 function TaskCardComponent({
@@ -68,17 +58,16 @@ function TaskCardComponent({
   agentApproval,
   onSelectTask,
   canSelect,
+  agentAvatars,
   className,
   ...props
 }: TaskCardProps) {
   const text = labels.card
   const parts = labels.components
   const attempt = activeAttempt(task)
-  const blocker = attempt?.blocker
-  const counts = countAcceptance(task.acceptance)
+  const agent = attempt && effectiveAgent(attempt)
+  const agentName = agent && agentSummary(agent, attempt.configured, { ...agentBadgeLabels, ...parts.agentBadge })
   const attempts = attemptCount(task)
-  const time = { now, locale, timeZone }
-  const pressable = onSelectTask && task.dependsOn.some((dependency) => canSelect?.(dependency.id) ?? true)
 
   return (
     <article
@@ -87,81 +76,63 @@ function TaskCardComponent({
       data-status={task.status}
       data-selected={selected ? "" : undefined}
       className={cn(
-        "relative flex flex-col gap-2 rounded-surface border bg-card/(--glass-opacity) px-surface py-control-x text-sm text-card-foreground backdrop-surface hover:border-ring data-selected:border-primary data-selected:ring-1 data-selected:ring-primary",
+        "relative flex flex-col gap-1 rounded-lg border bg-card/(--glass-opacity) px-(--task-card-padding-x,0.625rem) py-(--task-card-padding-y,0.5rem) text-sm text-card-foreground backdrop-surface hover:border-ring data-selected:border-primary data-selected:ring-1 data-selected:ring-primary",
         className,
       )}
       {...props}
     >
-      <div className="flex min-w-0 items-center gap-2 text-xs">
-        <span data-slot="task-card-id" className="font-mono text-muted-foreground">
+      <div className="flex min-w-0 items-center gap-2">
+        <span data-slot="task-card-id" className="font-mono text-xs text-muted-foreground">
           {task.id}
         </span>
-        {task.analysisMode && (
-          <AnalysisModeIcon mode={task.analysisMode} label={text.analysisMode[task.analysisMode]} />
+        {agent ? (
+          <AgentAvatar
+            agent={agent}
+            avatars={agentAvatars}
+            label={agentName}
+            title={agentName}
+            data-differs={agentDiffers(attempt) ? "" : undefined}
+            className="relative z-10 ms-auto"
+          />
+        ) : (
+          <UnassignedAvatar className="ms-auto" />
         )}
-        {task.profile && <span className="ms-auto min-w-0 truncate text-muted-foreground">{task.profile}</span>}
       </div>
-      <Button
-        data-task-select=""
-        data-task-id={task.id}
-        aria-label={text.open(task.id, task.title)}
-        aria-current={selected ? "true" : undefined}
-        title={task.title}
-        onClick={() => onSelectTask?.(task.id)}
-        className="cursor-pointer text-start font-medium outline-none after:absolute after:inset-0 after:rounded-surface focus-visible:after:ring-2 focus-visible:after:ring-ring focus-visible:after:ring-offset-2 focus-visible:after:ring-offset-background"
-      >
-        <span className="line-clamp-2">{task.title}</span>
-      </Button>
-      {needsDecision(task) && (
-        <StatusPill tone="warning" title={task.decisionNeeded} data-slot="task-card-decision">
-          {text.decisionNeeded}
-        </StatusPill>
-      )}
-      {attempt && (
-        <AgentBadge
-          agent={effectiveAgent(attempt)}
-          requested={attempt.configured}
-          labels={parts.agentBadge}
-          className="relative z-10 w-fit"
+      <div className="flex min-w-0 items-start gap-1.5">
+        <TaskStatusIcon
+          status={task.status}
+          label={parts.taskStatus?.[task.status] ?? taskStatusLabels[task.status]}
+          className="relative z-10 mt-0.75"
         />
-      )}
-      {attempt?.liveness && attempt.liveness !== "finished" && (
-        <LivenessIndicator
-          liveness={attempt.liveness}
-          lastActivityAt={attempt.lastActivityAt}
-          labels={parts.liveness}
-          {...time}
-        />
-      )}
-      {task.acceptance.length > 0 && (
-        <AcceptanceBar
-          counts={counts}
-          labels={{ bar: text.acceptance(task.id) }}
-          formatSummary={parts.acceptanceSummary}
-        />
-      )}
-      {(attempts > 0 || task.usage) && (
-        <div className="flex items-center gap-3 text-xs text-muted-foreground">
-          <span>{text.attempts(attempts)}</span>
-          <span className="relative z-10 ms-auto">
-            <span className="sr-only">{text.cost} </span>
-            <QuantityValue
-              value={taskCost(task)}
-              format={usageFormatter("cost", { locale, formatCurrency })}
-              labels={parts.usage?.quantity}
-              className="text-foreground"
-            />
-          </span>
-        </div>
-      )}
-      <DependencyChips
-        aria-label={text.dependencies(task.id)}
-        items={dependencyChips(task)}
-        max={3}
-        onSelect={pressable ? (id) => (canSelect?.(id) ?? true) && onSelectTask(id) : undefined}
-        className="relative z-10"
+        <Button
+          data-task-select=""
+          data-task-id={task.id}
+          aria-label={text.open(task.id, task.title)}
+          aria-current={selected ? "true" : undefined}
+          title={task.title}
+          onClick={() => onSelectTask?.(task.id)}
+          className="min-w-0 cursor-pointer text-start leading-snug font-medium outline-none after:absolute after:inset-0 after:rounded-lg focus-visible:after:ring-2 focus-visible:after:ring-ring focus-visible:after:ring-offset-2 focus-visible:after:ring-offset-background"
+        >
+          <span className="line-clamp-2">{task.title}</span>
+        </Button>
+      </div>
+      <TaskCardChips
+        task={task}
+        labels={labels}
+        now={now}
+        locale={locale}
+        timeZone={timeZone}
+        formatCurrency={formatCurrency}
+        onSelectTask={onSelectTask}
+        canSelect={canSelect}
       />
-      {blocker && <TaskBlocker blocker={blocker} retryLabel={text.retry} {...time} />}
+      <div data-slot="task-card-footer" className="flex items-center gap-2 text-xs text-muted-foreground">
+        <span className="min-w-0 truncate">
+          {text.updated}{" "}
+          <RelativeTime value={task.updatedAt} now={now} locale={locale} timeZone={timeZone} formatStyle="short" />
+        </span>
+        {attempts > 0 && <span className="ms-auto shrink-0">{text.attempts(attempts)}</span>}
+      </div>
       {task.status === "proposed" && (
         <ProposalActions
           taskId={task.id}

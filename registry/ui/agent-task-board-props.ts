@@ -2,6 +2,7 @@ import type { ReactNode } from "react"
 
 import type { ColumnConfig, TaskFilters } from "@/lib/agent-task-board-model"
 import type { TaskView, ThreadRef } from "@/lib/agent-task-types"
+import type { AgentAvatars } from "@/components/ui/agent-avatar"
 import type { AgentApproval, BoardView } from "@/components/ui/agent-task-board-primitive"
 import type { AgentTaskBoardLabelsInput } from "@/components/ui/agent-task-labels"
 
@@ -30,6 +31,8 @@ interface AgentTaskBoardBaseProps {
   formatCurrency?: (usd: number) => string
   renderThreadLink?: (thread: ThreadRef) => ReactNode
   onOpenThread?: (thread: ThreadRef) => void
+  /** Images, icons or names per provider id. No logos ship; agents show initials on a provider color otherwise. */
+  agentAvatars?: AgentAvatars
   /** Live mode only. A returned Promise keeps the button pending and shows its error. */
   onApproveProposal?: ProposalCallback
   onRejectProposal?: ProposalCallback

@@ -40,14 +40,17 @@ type TaskBlockerProps = {
 
 function TaskBlocker({ blocker, retryLabel, ...time }: TaskBlockerProps) {
   return (
-    <p data-slot="task-card-blocker" className="flex items-start gap-1.5 text-xs text-destructive">
-      <svg {...iconProps} className="mt-px size-3.5 shrink-0">
+    <p
+      data-slot="task-card-blocker"
+      className="relative z-10 flex max-w-full min-w-0 items-start gap-1 rounded-md border border-destructive/40 px-1.5 py-0.5 text-xs text-destructive"
+    >
+      <svg {...iconProps} className="mt-0.5 size-3 shrink-0">
         <path d="M12 9v4M12 17h.01M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z" />
       </svg>
       <span className="min-w-0">
         {blocker.summary}
         {blocker.retryAt && (
-          <span className="relative z-10 text-muted-foreground">
+          <span className="text-muted-foreground">
             {" · "}
             {retryLabel} <RelativeTime value={blocker.retryAt} {...time} />
           </span>

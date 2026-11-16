@@ -66,10 +66,10 @@ describe("TaskCard", () => {
     expect(within(cardOf("T-016")!).getByText("Deploy token expired")).toBeTruthy()
     expect(within(cardOf("T-016")!).getByText("Decision needed")).toBeTruthy()
     expect(within(cardOf("T-013")!).getByRole("list", { name: "Dependencies of T-013" })).toBeTruthy()
-    expect(cardOf("T-014")?.querySelector('[data-slot="agent-badge"]')?.hasAttribute("data-differs")).toBe(true)
+    expect(cardOf("T-014")?.querySelector("[data-agent-avatar]")?.hasAttribute("data-differs")).toBe(true)
   })
 
-  test("shows a blocker's retry time and caps dependencies at three", async () => {
+  test("shows a blocker's retry time and keeps one dependency chip", async () => {
     const task: TaskView = {
       ...sampleTasks[3]!,
       dependsOn: ["A", "B", "C", "D"].map((id) => ({ id: `T-0${id}`, title: `Dep ${id}`, status: "done" })),
@@ -81,7 +81,7 @@ describe("TaskCard", () => {
     const blocker = cardOf(task.id)!.querySelector('[data-slot="task-card-blocker"]')!
     expect(blocker.textContent).toBe("Provider quota exhausted · Retry in 3 hours")
     expect(blocker.querySelector("time")?.getAttribute("title")).toMatch(/9:30/)
-    expect(within(cardOf(task.id)!).getByText("1 more")).toBeTruthy()
+    expect(within(cardOf(task.id)!).getByText("3 more")).toBeTruthy()
   })
 
   test("nothing in a card is focusable only for a tooltip, and chips are separate tab stops", async () => {
@@ -105,7 +105,7 @@ describe("selection and the side panel", () => {
     expect(panel()?.getAttribute("data-task-id")).toBe("T-014")
     expect(document.activeElement?.getAttribute("data-slot")).toBe("task-detail-title")
     expect(within(panel()!).getByRole("list", { name: "Attempts" })).toBeTruthy()
-    expect(within(panel()!).getByRole("table", { name: "Usage of T-014" })).toBeTruthy()
+    expect(within(panel()!).getByRole("group", { name: "Usage of T-014" })).toBeTruthy()
 
     await user().click(within(panel()!).getByRole("button", { name: "Close task details" }))
     expect(panel()).toBeNull()

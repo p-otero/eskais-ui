@@ -13,6 +13,7 @@ import { cnState } from "@/lib/utils"
 const avatarVariants = cva("relative flex shrink-0 overflow-hidden rounded-full select-none", {
   variants: {
     size: {
+      xs: "size-5 text-(length:--avatar-text-xs,0.625rem)",
       sm: "size-6 text-xs",
       default: "size-8 text-sm",
       lg: "size-10 text-base",
