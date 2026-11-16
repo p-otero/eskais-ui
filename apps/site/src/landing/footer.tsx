@@ -38,7 +38,7 @@ function Footer() {
       className="mt-auto bg-background/60"
       brand={
         <>
-          <Logo className="size-6" />
+          <Logo aria-hidden className="size-6" />
           Eskais UI
         </>
       }
