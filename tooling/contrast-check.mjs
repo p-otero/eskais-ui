@@ -41,10 +41,13 @@ function ratio(a, b) {
 }
 
 async function measure(page, selector) {
-  const text = await page.evaluate((target) => {
+  const text = await page.evaluate(async (target) => {
     const element = document.querySelector(target)
     if (!element || !element.textContent?.trim()) return null
     element.scrollIntoView({ block: "center" })
+    // `content-visibility: auto` content (board columns) lays out only once it nears the viewport, a frame after
+    // the scroll, and can move everything below it. Boxes read before then point the screenshot at the wrong pixels.
+    for (let frame = 0; frame < 3; frame++) await new Promise(requestAnimationFrame)
     const range = document.createRange()
     range.selectNodeContents(element)
     // Truncated text reports its full range width; clip to the element so a neighbor's pixels don't count.
