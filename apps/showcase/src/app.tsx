@@ -157,7 +157,9 @@ function DeleteProject() {
         await wait(1200)
         if (attempts.current++ === 0) throw new Error("Couldn't delete the project. Try again.")
       }}
-    />
+    >
+      Two agents are still running on it. They stop at once.
+    </ConfirmDialog>
   )
 }
 

@@ -47,14 +47,14 @@ function toastsWithText(text: Matcher, within?: ParentNode, options?: SelectorMa
 function queryToast(text: Matcher, within?: ParentNode, options?: SelectorMatcherOptions): HTMLElement | null {
   const found = toastsWithText(text, within, options)
   if (found.length > 1)
-    throw getConfig().getElementError(`Found ${found.length} toasts with ${text}`, container(within))
+    throw getConfig().getElementError(`Found ${found.length} toasts with ${String(text)}`, container(within))
   return found[0] ?? null
 }
 
 /** The toast showing an element whose text matches. Throws when none or several do. */
 function getToast(text: Matcher, within?: ParentNode, options?: SelectorMatcherOptions): HTMLElement {
   const found = queryToast(text, within, options)
-  if (!found) throw getConfig().getElementError(`Found no toast with ${text}`, container(within))
+  if (!found) throw getConfig().getElementError(`Found no toast with ${String(text)}`, container(within))
   return found
 }
 

@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from "@testing-library/react"
+import { cleanup, render, screen, waitFor } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { createAgent } from "@ui-sdk/react/agent"
 import { expect, test, vi } from "vitest"
@@ -180,4 +180,135 @@ test("an agent opens it, fills it and confirms the review", async () => {
   const confirmed = await agent.act({ steps: [{ ref: "Create for real", action: "press" }] })
   expect(confirmed.ok, confirmed.error?.message).toBe(true)
   await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1))
+})
+
+const closed = () => waitFor(() => expect(screen.queryByRole("dialog")).toBeNull())
+
+test("onOpenChange and onOpenChangeComplete say why it closed", async () => {
+  const user = userEvent.setup()
+  const onOpenChange = vi.fn()
+  const onOpenChangeComplete = vi.fn()
+  render(<ProjectDialog onOpenChange={onOpenChange} onOpenChangeComplete={onOpenChangeComplete} />)
+  const reasons = () => onOpenChange.mock.calls.map(([open, details]) => `${open}:${details.reason}`)
+  const open = async () => {
+    await user.click(screen.getByRole("button", { name: "New project" }))
+    await screen.findByRole("dialog", { name: "Create project" })
+  }
+
+  await open()
+  await user.keyboard("{Escape}")
+  await closed()
+  await waitFor(() =>
+    expect(onOpenChangeComplete).toHaveBeenLastCalledWith(false, expect.objectContaining({ reason: "escape" })),
+  )
+
+  await open()
+  await user.click(screen.getByRole("button", { name: "Cancel" }))
+  await closed()
+
+  await open()
+  await user.click(document.querySelector<HTMLElement>('[data-slot="dialog-backdrop"]')!)
+  await closed()
+
+  await open()
+  await fill(user)
+  await user.click(screen.getByRole("button", { name: "Create" }))
+  await closed()
+  await waitFor(() =>
+    expect(onOpenChangeComplete).toHaveBeenLastCalledWith(false, expect.objectContaining({ reason: "submit" })),
+  )
+
+  expect(reasons()).toEqual([
+    "true:trigger",
+    "false:escape",
+    "true:trigger",
+    "false:cancel",
+    "true:trigger",
+    "false:outside",
+    "true:trigger",
+    "false:submit",
+  ])
+  expect(onOpenChange.mock.calls[1]?.[1].dialogReason).toBe("escape-key")
+})
+
+test("closing after confirmDiscard keeps the reason that asked", async () => {
+  const user = userEvent.setup()
+  const onOpenChange = vi.fn()
+  render(<ProjectDialog confirmDiscard="Discard this project?" onOpenChange={onOpenChange} />)
+  await user.click(screen.getByRole("button", { name: "New project" }))
+  await user.type(screen.getByRole("textbox", { name: "Project name" }), "Atl")
+  await user.keyboard("{Escape}")
+  await screen.findByRole("alertdialog", { name: "Discard this project?" })
+  await user.click(screen.getByRole("button", { name: "Discard" }))
+  await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull())
+  expect(onOpenChange).toHaveBeenLastCalledWith(false, expect.objectContaining({ reason: "escape" }))
+})
+
+test("review step: prepare runs pending before the review and its values reach onSubmit", async () => {
+  const user = userEvent.setup()
+  let finish!: (result: { values: z.output<typeof schema> }) => void
+  const prepare = vi.fn(() => new Promise<{ values: z.output<typeof schema> }>((resolve) => (finish = resolve)))
+  const onSubmit = vi.fn()
+  render(<ProjectDialog onSubmit={onSubmit} submitLabel="Review" reviewStep={{ ...reviewStep, prepare }} />)
+  await user.click(screen.getByRole("button", { name: "New project" }))
+  await fill(user)
+  await user.click(screen.getByRole("button", { name: "Review" }))
+  const review = screen.getByRole("button", { name: "Review" })
+  await waitFor(() => expect(review.getAttribute("aria-busy")).toBe("true"))
+  expect(prepare).toHaveBeenCalledWith({ name: "Atlas", owner: "ada@example.com" })
+  finish({ values: { name: "Atlas (EU)", owner: "ada@example.com" } })
+  expect(await screen.findByText("Atlas (EU)")).toBeTruthy()
+  await user.click(screen.getByRole("button", { name: "Create for real" }))
+  await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1))
+  expect(onSubmit.mock.lastCall?.[0]).toEqual({ name: "Atlas (EU)", owner: "ada@example.com" })
+})
+
+test("review step: prepare errors stay on the fields or the root error", async () => {
+  const user = userEvent.setup()
+  const prepare = vi
+    .fn()
+    .mockResolvedValueOnce({ error: { fieldErrors: { owner: "Not on this team." } } })
+    .mockResolvedValueOnce({ error: { message: "Pricing is unavailable." } })
+  render(<ProjectDialog submitLabel="Review" reviewStep={{ ...reviewStep, prepare }} />)
+  await user.click(screen.getByRole("button", { name: "New project" }))
+  await fill(user)
+  await user.click(screen.getByRole("button", { name: "Review" }))
+  await waitFor(() => expect(document.activeElement).toBe(screen.getByRole("textbox", { name: "Owner email" })))
+  expect(screen.getByText("Not on this team.")).toBeTruthy()
+  await user.click(screen.getByRole("button", { name: "Review" }))
+  expect(await screen.findByText("Pricing is unavailable.")).toBeTruthy()
+  expect(screen.queryByRole("button", { name: "Create for real" })).toBeNull()
+})
+
+test("review step: editable hides Edit, a title follows the step", async () => {
+  const user = userEvent.setup()
+  const onSubmit = vi.fn().mockRejectedValue(new Error("Delivery failed."))
+  render(
+    <ProjectDialog
+      onSubmit={onSubmit}
+      submitLabel="Review"
+      reviewStep={{
+        ...reviewStep,
+        title: (step) => (step === "review" ? "Check the project" : "Create project"),
+        editable: (state) => state.error === undefined,
+      }}
+    />,
+  )
+  await user.click(screen.getByRole("button", { name: "New project" }))
+  await fill(user)
+  await user.click(screen.getByRole("button", { name: "Review" }))
+  expect(await screen.findByRole("dialog", { name: "Check the project" })).toBeTruthy()
+  expect(screen.getByRole("button", { name: "Edit details" })).toBeTruthy()
+  await user.click(screen.getByRole("button", { name: "Create for real" }))
+  expect(await screen.findByText("Delivery failed.")).toBeTruthy()
+  expect(screen.queryByRole("button", { name: "Edit details" })).toBeNull()
+
+  cleanup()
+  render(<ProjectDialog submitLabel="Review" reviewStep={{ ...reviewStep, editable: false }} />)
+  await user.click(screen.getByRole("button", { name: "New project" }))
+  await fill(user)
+  await user.click(screen.getByRole("button", { name: "Review" }))
+  await screen.findByRole("button", { name: "Create for real" })
+  expect(screen.queryByRole("button", { name: "Edit details" })).toBeNull()
+  expect(screen.getByRole("dialog", { name: "Create project" })).toBeTruthy()
 })

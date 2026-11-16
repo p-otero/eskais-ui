@@ -5,8 +5,7 @@ import { cva, type VariantProps } from "class-variance-authority"
 import type { ComponentProps } from "react"
 
 import { cnState } from "@/lib/utils"
-
-export {
+import {
   DropdownMenuCheckboxItem as ContextMenuCheckboxItem,
   DropdownMenuContent as ContextMenuContent,
   DropdownMenuGroup as ContextMenuGroup,
@@ -23,6 +22,24 @@ export {
   DropdownMenuSubTrigger as ContextMenuSubTrigger,
   createMenuController as createContextMenuController,
 } from "@/components/ui/dropdown-menu"
+
+export {
+  ContextMenuCheckboxItem,
+  ContextMenuContent,
+  ContextMenuGroup,
+  ContextMenuGroupLabel,
+  ContextMenuItem,
+  ContextMenuItemIcon,
+  ContextMenuItemIndicator,
+  ContextMenuRadioGroup,
+  ContextMenuRadioItem,
+  ContextMenuSeparator,
+  ContextMenuShortcut,
+  ContextMenuSub,
+  ContextMenuSubContent,
+  ContextMenuSubTrigger,
+  createContextMenuController,
+}
 
 const contextMenuTriggerVariants = cva(
   "rounded-surface outline-none select-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",

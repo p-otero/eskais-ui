@@ -5,8 +5,7 @@ import { Menubar as MenubarPrimitive, createMenubarController } from "@ui-sdk/re
 import type { ComponentProps } from "react"
 
 import { cnState } from "@/lib/utils"
-
-export {
+import {
   DropdownMenuCheckboxItem as MenubarCheckboxItem,
   DropdownMenuContent as MenubarContent,
   DropdownMenuGroup as MenubarGroup,
@@ -22,6 +21,23 @@ export {
   DropdownMenuSubContent as MenubarSubContent,
   DropdownMenuSubTrigger as MenubarSubTrigger,
 } from "@/components/ui/dropdown-menu"
+
+export {
+  MenubarCheckboxItem,
+  MenubarContent,
+  MenubarGroup,
+  MenubarGroupLabel,
+  MenubarItem,
+  MenubarItemIcon,
+  MenubarItemIndicator,
+  MenubarRadioGroup,
+  MenubarRadioItem,
+  MenubarSeparator,
+  MenubarShortcut,
+  MenubarSub,
+  MenubarSubContent,
+  MenubarSubTrigger,
+}
 
 function Menubar({ className, ...props }: ComponentProps<typeof MenubarPrimitive>) {
   return (

@@ -10,9 +10,17 @@ import {
   ScrollAreaThumb,
   ScrollAreaViewport,
 } from "@/components/ui/scroll-area"
+import {
+  BoardColumn,
+  BoardColumnGroup,
+  boardColumnLabels,
+  type BoardColumnLabels,
+  type BoardColumnProps,
+  type BoardColumnGroupProps,
+} from "@/components/ui/board-column"
 
-export { BoardColumn, BoardColumnGroup, boardColumnLabels } from "@/components/ui/board-column"
-export type { BoardColumnLabels, BoardColumnProps, BoardColumnGroupProps } from "@/components/ui/board-column"
+export { BoardColumn, BoardColumnGroup, boardColumnLabels }
+export type { BoardColumnLabels, BoardColumnProps, BoardColumnGroupProps }
 
 type BoardName =
   | { "aria-label": string; "aria-labelledby"?: never }

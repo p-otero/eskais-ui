@@ -5,7 +5,12 @@ import { Button } from "@ui-sdk/react/button"
 import { usePart, usePrimitive, type PartProps } from "@ui-sdk/react/primitive"
 import { useEffect, useMemo, useRef, useState } from "react"
 
-import { AttachmentThumb, type AttachmentSize } from "@/components/ui/attachment-thumb"
+import {
+  AttachmentThumb,
+  type AttachmentSize,
+  formatFileSize,
+  type AttachmentThumbProps,
+} from "@/components/ui/attachment-thumb"
 import {
   attachments as attachmentsPrimitive,
   type Attachment,
@@ -163,7 +168,7 @@ function AttachmentStrip({
 }
 
 export { AttachmentStrip, attachmentLabels }
-export { AttachmentThumb, formatFileSize } from "@/components/ui/attachment-thumb"
+export { AttachmentThumb, formatFileSize }
 export type { AttachmentLabels, AttachmentStripProps }
-export type { AttachmentSize, AttachmentThumbProps } from "@/components/ui/attachment-thumb"
-export type { Attachment, AttachmentOpenReason } from "@/components/ui/attachments-primitive"
+export type { AttachmentSize, AttachmentThumbProps }
+export type { Attachment, AttachmentOpenReason }

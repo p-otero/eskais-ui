@@ -84,7 +84,9 @@ Subpath imports in `package.json` work instead of `paths`, with no bundler alias
 }
 ```
 
-Set the aliases to `#components`, `#ui`, `#lib/utils`, `#lib` and `#hooks`. shadcn then writes imports with their extension (`#ui/button.tsx`, `#lib/utils.ts`), because Node resolves subpath imports to exact files, so add `"allowImportingTsExtensions": true` to `compilerOptions` (it needs `noEmit`, as in Vite's template). `node tooling/consumer-check.mjs npm imports` checks this setup.
+Set the aliases to `#components`, `#ui`, `#lib/utils`, `#lib` and `#hooks`. shadcn then writes imports with their extension (`#ui/button.tsx`, `#ui/form-context.ts`, `#lib/utils.ts`), because Node resolves subpath imports to exact files, so add `"allowImportingTsExtensions": true` to `compilerOptions` (it needs `noEmit`, as in Vite's template). Write your own imports the same way: `import { Button } from "#ui/button.tsx"`.
+
+Keep the extension out of the mapping. `ui` holds `.ts` files next to the `.tsx` ones (`form-context.ts`, `form-messages.ts`, every `*-primitive.ts`), so a mapping that appends one, like `"#ui/components/*": "./src/components/ui/*.tsx"`, can't reach them: shadcn then writes `#ui/components/form-context` with no extension, and it resolves to a `.tsx` file that doesn't exist. No pattern fixes that, since an import without an extension doesn't say which file it means. `node tooling/consumer-check.mjs npm imports` checks the mapping above with `form`, and `imports-tsx` checks that the `.tsx` one still fails.
 
 Two things to know when you run shadcn:
 

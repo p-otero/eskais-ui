@@ -5,7 +5,14 @@ import { ListboxItem } from "@ui-sdk/react/listbox"
 import { renderElement, type PartProps } from "@ui-sdk/react/primitive"
 import { createElement, useEffect, useLayoutEffect, useState, type ReactElement, type ReactNode } from "react"
 
-import { useListContext, type ListVariant } from "@/components/ui/list"
+import {
+  useListContext,
+  type ListVariant,
+  List,
+  ListGroup,
+  type ListGroupProps,
+  type ListProps,
+} from "@/components/ui/list"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import type { Tone } from "@/lib/tone"
 import { cn } from "@/lib/utils"
@@ -271,6 +278,6 @@ function ListItem({
 }
 
 export { IconTile, ListItem, ListItemActions, ListItemMeta, ListItemTitle }
-export { List, ListGroup } from "@/components/ui/list"
+export { List, ListGroup }
 export type { ListItemProps }
-export type { ListGroupProps, ListProps, ListVariant } from "@/components/ui/list"
+export type { ListGroupProps, ListProps, ListVariant }

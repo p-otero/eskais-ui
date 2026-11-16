@@ -60,6 +60,16 @@ const itemNotes: Record<string, ItemNotes> = {
     ],
     related: ["form", "dialog", "confirm-dialog"],
   },
+  "step-dialog": {
+    usage: "Use StepDialog (or StepForm inline) when one schema is too long for one screen.",
+    a11y: [
+      'The progress is an ordered list; the current step has aria-current="step".',
+      "Next and Back move focus to the step's heading; a failed submit returns to the step with the first error and focuses it.",
+      "Enter on any step goes to the next one, and on the last step submits.",
+    ],
+    agent: "Agents fill each step's fields by label and press Next, Back and the submit button by name.",
+    related: ["form", "form-dialog", "steps"],
+  },
   field: {
     a11y: [
       "FieldLabel, FieldDescription and FieldError are linked to the control automatically.",

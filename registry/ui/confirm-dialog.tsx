@@ -12,9 +12,11 @@ import {
 import type { VariantProps } from "class-variance-authority"
 import type { ComponentProps, ReactNode } from "react"
 
+import { Alert, AlertDescription } from "@/components/ui/alert"
 import { buttonVariants } from "@/components/ui/button"
 import { backdropClassName, contentClassName, useFocusReturn } from "@/components/ui/dialog"
 import { Spinner } from "@/components/ui/spinner"
+import type { Tone } from "@/lib/tone"
 import { cn } from "@/lib/utils"
 
 type AlertDialogRootProps = ComponentProps<typeof AlertDialog>
@@ -28,10 +30,25 @@ type ConfirmTone =
       agentConfirm: string
     }
 
+type ConfirmDialogLabels = {
+  /** The button that closes without confirming. "Cancel" by default; pass it in the page's language. */
+  cancel?: ReactNode
+}
+
 type ConfirmDialogProps = ConfirmTone & {
   title: ReactNode
   description?: ReactNode
+  /**
+   * A callout under the description, like "Three agents are still running on it": an Alert in the dialog's tone
+   * (`destructive`, or `info` for the default tone), read as part of the description. Text, or AlertTitle and
+   * AlertDescription parts.
+   */
+  children?: ReactNode
+  /** The callout's tone, when the dialog's doesn't fit. */
+  calloutTone?: Tone
   confirmLabel: ReactNode
+  labels?: ConfirmDialogLabels
+  /** @deprecated Use `labels.cancel`. */
   cancelLabel?: ReactNode
   /** Runs before the dialog closes. A returned Promise keeps it open and pending; a rejection keeps it open. */
   onConfirm: ConfirmAction
@@ -52,8 +69,11 @@ function defaultRenderError(error: unknown) {
 function ConfirmDialog({
   title,
   description,
+  children,
+  calloutTone,
   confirmLabel,
-  cancelLabel = "Cancel",
+  labels,
+  cancelLabel,
   onConfirm,
   tone = "default",
   agentConfirm,
@@ -65,6 +85,17 @@ function ConfirmDialog({
 }: ConfirmDialogProps) {
   const destructive = tone === "destructive"
   const focus = useFocusReturn(undefined)
+  const cancel = labels?.cancel ?? cancelLabel ?? "Cancel"
+  const callout =
+    children === undefined || children === null ? null : (
+      <Alert data-slot="confirm-dialog-callout" tone={calloutTone ?? (destructive ? "destructive" : "info")}>
+        {typeof children === "string" || typeof children === "number" ? (
+          <AlertDescription className="text-foreground">{children}</AlertDescription>
+        ) : (
+          children
+        )}
+      </Alert>
+    )
   return (
     <AlertDialog {...root}>
       {trigger === undefined ? null : (
@@ -80,8 +111,14 @@ function ConfirmDialog({
           <>
             <div className="flex flex-col gap-inline">
               <AlertDialogTitle className="text-title leading-none">{title}</AlertDialogTitle>
-              {description === undefined ? null : (
-                <AlertDialogDescription className="text-sm text-muted-foreground">{description}</AlertDialogDescription>
+              {description === undefined && callout === null ? null : (
+                <AlertDialogDescription
+                  render={<div />}
+                  className="flex flex-col gap-items text-sm text-muted-foreground"
+                >
+                  {description === undefined ? null : <div>{description}</div>}
+                  {callout}
+                </AlertDialogDescription>
               )}
             </div>
             <AlertDialogClose
@@ -95,9 +132,7 @@ function ConfirmDialog({
                     {state.error === undefined || state.error === null ? null : renderError(state.error)}
                   </p>
                   <div className="flex flex-col-reverse gap-items sm:flex-row sm:justify-end">
-                    <AlertDialogClose className={buttonVariants({ variant: "outline" })}>
-                      {cancelLabel}
-                    </AlertDialogClose>
+                    <AlertDialogClose className={buttonVariants({ variant: "outline" })}>{cancel}</AlertDialogClose>
                     <button
                       {...props}
                       className={cn(
@@ -120,4 +155,4 @@ function ConfirmDialog({
 }
 
 export { ConfirmDialog }
-export type { ConfirmDialogProps }
+export type { ConfirmDialogLabels, ConfirmDialogProps }

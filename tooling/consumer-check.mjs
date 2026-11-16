@@ -1,7 +1,7 @@
 // Installs registry items into fresh Vite apps with npm or pnpm (no Bun), builds them and checks them in Chrome.
-// Usage: node tooling/consumer-check.mjs [npm|pnpm] [fresh|init|aliases|imports…] (default: all). `fresh`: every item
-// on `@import "tailwindcss"`; `init`: the theme items on the stylesheet `shadcn init` writes (tooling/fixtures);
-// `aliases`: `~/` aliases; `imports`: `#ui/*` through package.json `imports` instead of tsconfig paths.
+// Usage: node tooling/consumer-check.mjs [npm|pnpm] [scenario…] (default: all): `fresh` (every item), `init` (the
+// stylesheet `shadcn init` writes), `aliases` (`~/`), `imports` (package.json `#ui/*`), `imports-tsx` (a mapping that
+// appends `.tsx`, which must fail to type-check).
 import { spawn } from "node:child_process"
 import { createReadStream, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, writeFileSync } from "node:fs"
 import { createServer } from "node:http"
@@ -138,6 +138,7 @@ const versions = {
   "tw-animate-css": "1.4.0",
   cn: "0.5.2",
   prettier: "3.9.10",
+  zod: "4.6.7",
 }
 const devDependencies = [
   "@types/react",
@@ -575,19 +576,29 @@ function App() {
 createRoot(document.getElementById("root")!).render(<App />)
 `
 
-// A few items with registry:lib files, imported through package.json subpath imports.
+// Items with registry:lib files, and registry:ui files of both extensions (form ships form-messages.ts and
+// form-context.ts next to form.tsx), imported through package.json subpath imports.
 const importsMain = `import { createRoot } from "react-dom/client"
+import { z } from "zod"
 import { Alert, AlertTitle } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
+import { Form, FormField } from "@/components/ui/form"
+import { formMessagesEs } from "@/components/ui/form-messages"
+import { Input } from "@/components/ui/input"
 import { ToastStack } from "@/components/ui/toast"
 import { cn } from "@/lib/utils"
 import "./index.css"
 ${probes}
+const schema = z.object({ name: z.string().min(1) })
+
 function App() {
   return (
     <main className="flex flex-col gap-items p-inset-surface">
       <Badge tone="violet">Design</Badge>
       <Alert tone="info"><AlertTitle>Queued</AlertTitle></Alert>
+      <Form schema={schema} defaultValues={{ name: "" }} messages={formMessagesEs} onSubmit={() => {}} label="Name">
+        <FormField name="name" label="Name"><Input /></FormField>
+      </Form>
       <ToastStack labels={{ close: "Dismiss" }} />
       <Probes />
     </main>
@@ -669,14 +680,51 @@ const scenarios = {
     // shadcn writes these imports with their .ts and .tsx extensions, as Node resolves subpath imports.
     rewrite: (source) =>
       source
+        .replaceAll(/from "@\/components\/ui\/(form-messages)"/g, 'from "#ui/$1.ts"')
         .replaceAll(/from "@\/components\/ui\/([\w-]+)"/g, 'from "#ui/$1.tsx"')
         .replaceAll(/from "@\/lib\/([\w-]+)"/g, 'from "#lib/$1.ts"'),
-    items: ["theme", "badge", "alert", "toast"],
+    dependencies: ["zod"],
+    items: ["theme", "badge", "alert", "toast", "form"],
     main: importsMain,
     builtCss: ["--brand", ".text-title{"],
     check: async () => {},
     literals: ["@", "#components", "#ui", "#lib"],
-    files: ["src/lib/utils.ts", "src/lib/tone.ts", "src/components/ui/badge.tsx", "src/components/ui/toast.tsx"],
+    files: [
+      "src/lib/utils.ts",
+      "src/lib/tone.ts",
+      "src/components/ui/badge.tsx",
+      "src/components/ui/toast.tsx",
+      "src/components/ui/form-context.ts",
+    ],
+  },
+  // The mapping that appends `.tsx` doesn't work: shadcn then writes `#ui/components/form-context` without an extension,
+  // and `ui` holds `.ts` files too (form-context.ts, *-primitive.ts). Kept so the README's advice stays true.
+  "imports-tsx": {
+    unsupported: {
+      file: "src/components/ui/form-actions.tsx",
+      specifier: 'from "#ui/components/form-context"',
+    },
+    css: `@layer ui-sdk;
+@import "tailwindcss";
+`,
+    imports: {
+      "#components/*": "./src/components/*.tsx",
+      "#ui/components/*": "./src/components/ui/*.tsx",
+      "#lib/*": "./src/lib/*.ts",
+      "#hooks/*": "./src/hooks/*.ts",
+    },
+    aliases: { components: "#components", ui: "#ui/components", utils: "#lib/utils", lib: "#lib", hooks: "#hooks" },
+    rewrite: (source) =>
+      source
+        .replaceAll(/from "@\/components\/ui\//g, 'from "#ui/components/')
+        .replaceAll(/from "@\/lib\//g, 'from "#lib/'),
+    dependencies: ["zod"],
+    items: ["theme", "badge", "alert", "toast", "form"],
+    main: importsMain,
+    builtCss: ["--brand", ".text-title{"],
+    check: async () => {},
+    literals: ["@", "#components", "#ui", "#lib"],
+    files: ["src/components/ui/form-context.ts"],
   },
 }
 
@@ -805,6 +853,17 @@ export default defineConfig({
 
   if (scenario.files) checkPlacement(app, scenario)
   write("src/main.tsx", scenario.rewrite?.(scenario.main) ?? scenario.main.replaceAll('from "@/', `from "${alias}/`))
+  if (scenario.unsupported) {
+    const { file, specifier } = scenario.unsupported
+    if (!readFileSync(join(app, file), "utf8").includes(specifier)) throw new Error(`${file} lacks ${specifier}`)
+    const failed = await exec(["tsc", "--noEmit"]).then(
+      () => false,
+      () => true,
+    )
+    if (!failed) throw new Error(`The ${name} mapping type-checked; update the README's advice`)
+    console.log(`Consumer check (${name}) failed to type-check, as the README says, with ${pm} in ${app}`)
+    return
+  }
   await exec(["tsc", "--noEmit"])
   await exec(["vite", "build"])
   const assets = join(app, "dist", "assets")

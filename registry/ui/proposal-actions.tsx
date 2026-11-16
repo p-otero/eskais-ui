@@ -76,7 +76,7 @@ function ProposalActions({
           title={text.rejectTitle(taskId)}
           description={text.rejectDescription}
           confirmLabel={text.rejectConfirm}
-          cancelLabel={text.cancel}
+          labels={{ cancel: text.cancel }}
           // ConfirmDialog's destructive tone always marks its button, even with an empty sentence, so "allow" drops the tone.
           {...(confirm ? { tone: "destructive", agentConfirm: text.rejectAgentConfirm(taskId) } : { tone: "default" })}
           pendingAnnouncement={text.rejecting}

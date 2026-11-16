@@ -70,6 +70,12 @@ type FormActionsProps = FormActionsTone & {
   onCancel?: () => void
   /** Another control, like a "Save draft" Button, placed before cancel. */
   secondaryAction?: ReactNode
+  /** Disables submit and cancel while something outside the form is busy; the form doesn't submit. */
+  disabled?: boolean
+  /** Disables only submit, for example until a required upload finishes; the form doesn't submit. */
+  submitDisabled?: boolean
+  /** Shows the pending look for work the app runs itself (the form's own submit needs nothing); the form doesn't submit. */
+  pending?: boolean
   className?: string
 }
 
@@ -81,15 +87,24 @@ function FormActions({
   secondaryAction,
   tone = "default",
   confirm,
+  disabled = false,
+  submitDisabled = false,
+  pending: forcedPending = false,
   className,
 }: FormActionsProps) {
   const context = useFormContext("FormActions")
   const destructive = tone === "destructive"
-  const { setConfirm } = context
+  const { setConfirm, setBlocked } = context
   useEffect(() => {
     setConfirm(destructive)
     return () => setConfirm(false)
   }, [destructive, setConfirm])
+  const blocked = disabled || submitDisabled || forcedPending
+  useEffect(() => {
+    setBlocked(blocked)
+    return () => setBlocked(false)
+  }, [blocked, setBlocked])
+  const pending = context.pending || forcedPending
 
   return (
     <div
@@ -101,14 +116,15 @@ function FormActions({
     >
       {secondaryAction}
       {cancel === undefined ? null : (
-        <Button type="button" variant="outline" disabled={context.pending} onClick={onCancel}>
+        <Button type="button" variant="outline" disabled={pending || disabled} onClick={onCancel}>
           {cancel}
         </Button>
       )}
       <Button
         type="submit"
         variant={destructive ? "destructive" : "default"}
-        loading={context.pending}
+        loading={pending}
+        disabled={(disabled || submitDisabled) && !pending}
         pendingAnnouncement={pendingLabel}
         data-agent-confirm={confirm}
       >

@@ -12,6 +12,7 @@ import { Link, type LinkProps } from "@/components/ui/link"
 import { PageLayout } from "@/components/ui/page-layout"
 import { ScrollArea, ScrollAreaScrollbar, ScrollAreaThumb, ScrollAreaViewport } from "@/components/ui/scroll-area"
 import { cn } from "@/lib/utils"
+import { DocsToc, useTocItems, type DocsTocItem, type DocsTocProps } from "@/components/ui/docs-toc"
 
 type DocsLayoutProps = ComponentProps<"div"> & {
   /** Usually a Sidebar. Fixed beside the content on wide screens; in the header row on narrow ones. */
@@ -195,6 +196,6 @@ function DocsBreadcrumb({ items, ...props }: DocsBreadcrumbProps) {
 }
 
 export { DocsBreadcrumb, DocsLayout, DocsPager }
-export { DocsToc, useTocItems } from "@/components/ui/docs-toc"
+export { DocsToc, useTocItems }
 export type { DocsBreadcrumbItem, DocsBreadcrumbProps, DocsLayoutProps, DocsPagerLabels, DocsPagerLink, DocsPagerProps }
-export type { DocsTocItem, DocsTocProps } from "@/components/ui/docs-toc"
+export type { DocsTocItem, DocsTocProps }

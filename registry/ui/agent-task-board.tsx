@@ -14,7 +14,7 @@ import {
   type ColumnConfig,
   type TaskFilters,
 } from "@/lib/agent-task-board-model"
-import type { AgentTaskBoardProps } from "@/components/ui/agent-task-board-props"
+import type { AgentTaskBoardProps, ColumnAccent } from "@/components/ui/agent-task-board-props"
 import { cn } from "@/lib/utils"
 import {
   AgentTaskBoardRoot,
@@ -264,4 +264,4 @@ function AgentTaskBoard(props: AgentTaskBoardProps) {
 }
 
 export { AgentTaskBoard, NO_STAGE, agentTaskBoardLabels, agentTaskBoardLabelsEs, taskStatusAccentTones }
-export type { AgentTaskBoardProps, ColumnAccent } from "@/components/ui/agent-task-board-props"
+export type { AgentTaskBoardProps, ColumnAccent }

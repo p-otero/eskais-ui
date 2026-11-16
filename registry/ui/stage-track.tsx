@@ -4,6 +4,7 @@ import { Link } from "@/components/ui/link"
 import { StatusPill } from "@/components/ui/status-pill"
 import type { Tone } from "@/lib/tone"
 import { cn } from "@/lib/utils"
+import { StageFilter, type StageFilterProps } from "@/components/ui/stage-filter"
 
 type Stage = { id: string; label: string; tone?: Tone }
 type StageSize = "sm" | "md"
@@ -193,6 +194,6 @@ function StageTrack({
 }
 
 export { StagePill, StageTrack }
-export { StageFilter } from "@/components/ui/stage-filter"
+export { StageFilter }
 export type { Stage, StagePillProps, StageSize, StageTrackProps }
-export type { StageFilterProps } from "@/components/ui/stage-filter"
+export type { StageFilterProps }
