@@ -1,10 +1,11 @@
 "use client"
 
-import { renderElement, usePart, usePrimitive, type PartProps } from "@ui-sdk/react/primitive"
+import { mergeProps, renderElement, usePart, usePrimitive, type PartProps } from "@ui-sdk/react/primitive"
 import { cva } from "class-variance-authority"
 import type { AriaAttributes, ReactNode } from "react"
 import { ArrowUpRightIcon } from "lucide-react"
 
+import { useFastLink } from "@/components/ui/fast-link"
 import { link, type LinkOptions } from "@/components/ui/link-primitive"
 import { cn } from "@/lib/utils"
 
@@ -49,6 +50,12 @@ type LinkProps = Omit<PartProps<"a">, "children"> & {
    * offers agents a `follow` action that calls it; links without it are invisible to agents.
    */
   onFollow?: LinkOptions["onFollow"]
+  /**
+   * Follows a same-origin link on mouse press, not release (default `true`): navigation only, as moving away can't
+   * cancel it (WCAG 2.5.2). Without `onFollow` it uses `location.assign`, so it is off with `render` or `onClick`,
+   * which act on the click. Off for `external`; `data-no-fast-link` on an ancestor turns a region off.
+   */
+  fast?: boolean
 }
 
 function linkProps({
@@ -62,7 +69,7 @@ function linkProps({
   rel,
   target,
   ...props
-}: Omit<LinkProps, "onFollow" | "render">) {
+}: Omit<LinkProps, "onFollow" | "render" | "fast">) {
   return {
     "data-slot": "link",
     "data-variant": variant,
@@ -87,14 +94,25 @@ function linkProps({
   }
 }
 
-function FollowLink({ onFollow, render, ...props }: LinkProps) {
+function FollowLink({ onFollow, render, fast = true, ...props }: LinkProps) {
   const handle = usePrimitive(link, { href: props.href, onFollow })
-  return usePart(handle, "root", {}, { ...linkProps(props), render }, "a")
+  const ref = useFastLink<HTMLAnchorElement>({
+    enabled: fast && !props.external,
+    onFollow: (_href, { event }) => handle.api.follow(event),
+  })
+  return usePart(handle, "root", {}, { ...mergeProps(linkProps(props), { ref }), render }, "a")
 }
 
-function Link({ onFollow, render, ...props }: LinkProps) {
-  if (onFollow) return <FollowLink onFollow={onFollow} render={render} {...props} />
-  return renderElement("a", linkProps(props), render)
+// Without `onFollow`, a router element or an `onClick` may route or cancel on the click, so a press must not
+// navigate first.
+function PlainLink({ render, fast = true, ...props }: Omit<LinkProps, "onFollow">) {
+  const ref = useFastLink<HTMLAnchorElement>({ enabled: fast && !props.external && !render && !props.onClick })
+  return renderElement("a", mergeProps(linkProps(props), { ref }), render)
+}
+
+function Link({ onFollow, ...props }: LinkProps) {
+  if (onFollow) return <FollowLink onFollow={onFollow} {...props} />
+  return <PlainLink {...props} />
 }
 
 export { Link, linkVariants }

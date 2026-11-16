@@ -16,7 +16,9 @@ import {
   ContextMenuSeparator,
   ContextMenuTrigger,
 } from "@/components/ui/context-menu"
+import { ButtonLink } from "@/components/ui/button-link"
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card"
+import { Link } from "@/components/ui/link"
 import {
   Menubar,
   MenubarContent,
@@ -59,7 +61,7 @@ function NavigationSection() {
   return (
     <Section
       title="Navigation"
-      description="Breadcrumb, navigation menu, menubar, context menu, hover card, accordion, pagination and a ⌘K palette."
+      description="Links that follow on press, breadcrumb, navigation menu, menubar, context menu, hover card, accordion, pagination and a ⌘K palette."
     >
       <div className="flex w-full flex-col gap-6">
         <Breadcrumb>
@@ -102,6 +104,19 @@ function NavigationSection() {
             </NavigationMenuItem>
           </NavigationMenuList>
         </NavigationMenu>
+
+        <div data-testid="fast-links" className="flex flex-wrap items-center gap-3 text-sm">
+          <p>
+            Open the <Link href="?demo=site">site demo</Link> or the{" "}
+            <Link href="?demo=shell" fast={false}>
+              shell demo (follows on release)
+            </Link>
+            .
+          </p>
+          <ButtonLink href="?demo=page" size="sm" variant="outline">
+            Page demo
+          </ButtonLink>
+        </div>
 
         <div className="flex flex-wrap items-center gap-3">
           <Menubar aria-label="Board menu">
