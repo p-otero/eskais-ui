@@ -1,6 +1,8 @@
 "use client"
 
 import { columnOrder, type ColumnConfig, type StatusColumn } from "@/lib/agent-task-board-model"
+import type { ReactNode } from "react"
+
 import type { TaskStatus, TaskView } from "@/lib/agent-task-types"
 import type { Tone } from "@/lib/tone"
 import type { AgentTaskBoardLabels } from "@/components/ui/agent-task-labels"
@@ -14,6 +16,7 @@ type AgentTaskBoardColumnsProps = {
   onCollapsedChange: (status: TaskStatus, collapsed: boolean) => void
   /** Each column's accent tone; none leaves the columns plain. */
   tones?: Record<TaskStatus, Tone>
+  renderCardActions?: (task: TaskView) => ReactNode
 }
 
 // Writes the full order, so changing one column never moves it ahead of the columns that had no config yet.
@@ -31,10 +34,17 @@ function AgentTaskBoardColumns({
   display,
   onCollapsedChange,
   tones,
+  renderCardActions,
 }: AgentTaskBoardColumnsProps) {
   const { labels } = display
   const card = (task: TaskView) => (
-    <TaskCard key={task.id} task={task} selected={task.id === selectedTaskId} {...display} />
+    <TaskCard
+      key={task.id}
+      task={task}
+      selected={task.id === selectedTaskId}
+      renderActions={renderCardActions}
+      {...display}
+    />
   )
 
   return (

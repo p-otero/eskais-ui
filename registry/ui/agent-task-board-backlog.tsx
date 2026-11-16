@@ -1,5 +1,7 @@
 "use client"
 
+import type { ReactNode } from "react"
+
 import { activeAttempt, backlogGroups } from "@/lib/agent-task-board-model"
 import { effectiveAgent, type TaskView } from "@/lib/agent-task-types"
 import { AgentAvatar } from "@/components/ui/agent-avatar"
@@ -18,6 +20,8 @@ type AgentTaskBoardBacklogProps = {
   tasks: TaskView[]
   selectedTaskId: string | null
   display: TaskDisplayOptions & { labels: AgentTaskBoardLabels }
+  /** After Approve/Reject in each row, in every mode. */
+  renderActions?: (task: TaskView) => ReactNode
 }
 
 const labelChipClassName =
@@ -27,16 +31,32 @@ function BacklogRow({
   task,
   selected,
   display,
+  renderActions,
 }: {
   task: TaskView
   selected: boolean
   display: AgentTaskBoardBacklogProps["display"]
+  renderActions?: AgentTaskBoardBacklogProps["renderActions"]
 }) {
   const { labels, now, locale, timeZone, mode = "snapshot", stages, statusTones, agentAvatars } = display
   const parts = labels.components
   const attempt = activeAttempt(task)
   const agent = attempt && effectiveAgent(attempt)
   const agentName = agent && agentSummary(agent, attempt.configured, { ...agentBadgeLabels, ...parts.agentBadge })
+
+  const proposalActions =
+    task.status === "proposed" && mode === "live" && (display.onApproveProposal || display.onRejectProposal) ? (
+      <ProposalActions
+        taskId={task.id}
+        mode={mode}
+        onApprove={display.onApproveProposal}
+        onReject={display.onRejectProposal}
+        agentApproval={display.agentApproval}
+        labels={labels.proposals}
+        renderError={(error) => proposalError(error, labels)}
+      />
+    ) : null
+  const hostActions = renderActions?.(task)
 
   return (
     <ListItem
@@ -78,16 +98,11 @@ function BacklogRow({
         )
       }
       actions={
-        task.status === "proposed" && mode === "live" && (display.onApproveProposal || display.onRejectProposal) ? (
-          <ProposalActions
-            taskId={task.id}
-            mode={mode}
-            onApprove={display.onApproveProposal}
-            onReject={display.onRejectProposal}
-            agentApproval={display.agentApproval}
-            labels={labels.proposals}
-            renderError={(error) => proposalError(error, labels)}
-          />
+        proposalActions || (hostActions != null && hostActions !== false) ? (
+          <>
+            {proposalActions}
+            {hostActions}
+          </>
         ) : undefined
       }
     />
@@ -95,7 +110,7 @@ function BacklogRow({
 }
 
 /** Proposals and to-do tasks that aren't ready, as rows grouped by why they wait. */
-function AgentTaskBoardBacklog({ tasks, selectedTaskId, display }: AgentTaskBoardBacklogProps) {
+function AgentTaskBoardBacklog({ tasks, selectedTaskId, display, renderActions }: AgentTaskBoardBacklogProps) {
   const { labels } = display
   const { proposed, notReady } = backlogGroups(tasks)
   if (proposed.length === 0 && notReady.length === 0) {
@@ -120,7 +135,13 @@ function AgentTaskBoardBacklog({ tasks, selectedTaskId, display }: AgentTaskBoar
       {groups.map((group) => (
         <ListGroup key={group.key} label={group.label} count={group.tasks.length}>
           {group.tasks.map((task) => (
-            <BacklogRow key={task.id} task={task} selected={task.id === selectedTaskId} display={display} />
+            <BacklogRow
+              key={task.id}
+              task={task}
+              selected={task.id === selectedTaskId}
+              display={display}
+              renderActions={renderActions}
+            />
           ))}
         </ListGroup>
       ))}
