@@ -12,7 +12,7 @@ import { Meter, MeterTrack } from "@/components/ui/meter"
 import { Progress, ProgressLabel, ProgressTrack } from "@/components/ui/progress"
 import { StatusDot, StatusPill } from "@/components/ui/status-pill"
 import { ToastStack, createToaster, toastTone } from "@/components/ui/toast"
-import { tones } from "@/lib/tone"
+import { Tone, tones } from "@/lib/tone"
 
 import { axeViolations } from "./axe"
 
@@ -110,4 +110,10 @@ test("a toast's type maps onto the shared tones", async () => {
   await user.click(screen.getByRole("button", { name: "Fail" }))
   const item = within(screen.getByRole("region", { name: "Notifications" })).getByRole("listitem")
   expect(item.className).toContain("border-destructive-border")
+})
+
+test("Tone names every tone, for code that avoids loose literals", () => {
+  expect(Object.values(Tone)).toEqual([...tones])
+  render(<Badge tone={Tone.success}>Done</Badge>)
+  expect(screen.getByText("Done").closest("[data-slot=badge]")?.className).toContain("success")
 })

@@ -9,7 +9,7 @@ type AlertTone = Tone
 
 const alertVariants = cva(
   // oxlint-disable-next-line shadcn/no-arbitrary-values -- the start padding clears the absolute size-4 icon plus a 12px gap, for the text and a wrapped action; two rows let the action span title and description
-  "@container relative grid w-full grid-cols-[minmax(0,1fr)_auto] gap-y-inline rounded-surface border bg-background/(--glass-opacity) p-inset-surface text-sm text-foreground has-[>[data-slot=alert-action]]:grid-rows-[auto_1fr] has-[>svg]:ps-[calc(var(--surface-padding)+1.75rem)] [&>:not([data-slot=alert-action])]:col-start-1 [&>svg]:absolute [&>svg]:start-inset-surface [&>svg]:top-inset-surface [&>svg]:size-4 [&>svg]:translate-y-0.5",
+  "@container relative grid w-full grid-cols-[minmax(0,1fr)_auto] gap-y-inline rounded-surface border bg-background/(--glass-opacity) p-inset-surface text-sm text-foreground has-[>[data-slot=alert-action]]:grid-rows-[auto_1fr] has-[>svg]:ps-[calc(var(--surface-padding)+1.75rem)] [&>:not([data-slot=alert-action],svg)]:col-start-1 [&>svg]:absolute [&>svg]:start-inset-surface [&>svg]:top-inset-surface [&>svg]:size-4 [&>svg]:translate-y-0.5",
   {
     variants: {
       tone: {

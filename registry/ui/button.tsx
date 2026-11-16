@@ -25,8 +25,17 @@ const buttonVariants = cva(
         lg: "h-control-lg px-control-x text-base",
         icon: "size-control",
       },
+      wrap: {
+        true: "h-auto shrink whitespace-normal py-inset-chip text-center",
+        false: "",
+      },
     },
-    defaultVariants: { variant: "default", size: "default" },
+    compoundVariants: [
+      { wrap: true, size: "sm", class: "min-h-control-sm" },
+      { wrap: true, size: "default", class: "min-h-control" },
+      { wrap: true, size: "lg", class: "min-h-control-lg" },
+    ],
+    defaultVariants: { variant: "default", size: "default", wrap: false },
   },
 )
 
@@ -36,6 +45,8 @@ type ButtonBaseProps = Omit<ComponentProps<typeof ButtonPrimitive>, "aria-label"
   variant?: ButtonVariants["variant"]
   /** Shows a spinner, sets `aria-busy` and ignores presses while keeping focus, for work this button didn't start. */
   loading?: boolean
+  /** Lets a text button shrink and wrap its label onto more lines in a tight row, instead of overflowing it. */
+  wrap?: boolean
 }
 
 type ButtonProps =
@@ -78,6 +89,7 @@ function Button({
   variant,
   size,
   loading,
+  wrap,
   disabled,
   focusableWhenDisabled,
   children,
@@ -91,7 +103,7 @@ function Button({
       {...(loading ? { "data-pending": "", "aria-busy": true } : {})}
       disabled={disabled || loading}
       focusableWhenDisabled={focusableWhenDisabled || loading}
-      className={cnState(buttonVariants({ variant, size }), className)}
+      className={cnState(buttonVariants({ variant, size, wrap: wrap && !iconOnly }), className)}
       {...props}
     >
       {typeof children === "function"

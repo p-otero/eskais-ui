@@ -6,7 +6,7 @@
   "files": [
     {
       "path": "registry/lib/tone.ts",
-      "content": "/**\n * The one vocabulary for what a status means, shared by Badge, Alert, StatusPill, Progress, Meter and Toast.\n * `violet` is a decorative category tone (a label, a kind of item), not a status.\n */\nconst tones = [\"neutral\", \"info\", \"success\", \"warning\", \"destructive\", \"violet\"] as const\n\ntype Tone = (typeof tones)[number]\n\nexport { tones }\nexport type { Tone }\n",
+      "content": "/**\n * The one vocabulary for what a status means, shared by Badge, Alert, StatusPill, Progress, Meter and Toast.\n * `violet` is a decorative category tone (a label, a kind of item), not a status.\n */\nconst tones = [\"neutral\", \"info\", \"success\", \"warning\", \"destructive\", \"violet\"] as const\n\ntype Tone = (typeof tones)[number]\n\n/** The same tones by name, for code that avoids loose string literals: `tone={Tone.success}`. */\nconst Tone = {\n  neutral: \"neutral\",\n  info: \"info\",\n  success: \"success\",\n  warning: \"warning\",\n  destructive: \"destructive\",\n  violet: \"violet\",\n} as const satisfies { [name in Tone]: name }\n\nexport { Tone, tones }\n",
       "type": "registry:lib"
     }
   ],

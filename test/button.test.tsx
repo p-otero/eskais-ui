@@ -209,3 +209,20 @@ test("a loading button has no axe violations", async () => {
   )
   expect(await axeViolations(container)).toEqual([])
 })
+
+test("wrap lets a text button shrink and wrap its label; icon buttons ignore it", () => {
+  render(
+    <>
+      <Button wrap>A long label that has to wrap in a tight row</Button>
+      <Button size="icon" aria-label="Close" wrap>
+        ×
+      </Button>
+    </>,
+  )
+  const text = screen.getByRole("button", { name: /long label/ }).classList
+  expect(text.contains("whitespace-normal")).toBe(true)
+  expect(text.contains("min-h-control")).toBe(true)
+  expect(text.contains("whitespace-nowrap")).toBe(false)
+  expect(text.contains("shrink-0")).toBe(false)
+  expect(screen.getByRole("button", { name: "Close" }).classList.contains("whitespace-nowrap")).toBe(true)
+})
