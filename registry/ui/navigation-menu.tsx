@@ -17,7 +17,7 @@ import type { ComponentProps } from "react"
 import { floatingSurfaceClassName } from "@/components/ui/popover"
 import { cnState } from "@/lib/utils"
 
-const itemClassName =
+const navigationMenuItemClassName =
   "inline-flex h-control cursor-pointer items-center justify-center gap-inline rounded-control px-control-x text-sm font-medium whitespace-nowrap transition-colors outline-none hover:bg-accent hover:text-accent-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background data-disabled:cursor-not-allowed data-disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0"
 
 function NavigationMenu({ className, ...props }: ComponentProps<typeof NavigationMenuPrimitive>) {
@@ -49,7 +49,7 @@ function NavigationMenuTrigger({
   return (
     <NavigationMenuTriggerPrimitive
       className={cnState(
-        `${itemClassName} group/navigation-menu-trigger data-open:bg-accent data-open:text-accent-foreground`,
+        `${navigationMenuItemClassName} group/navigation-menu-trigger data-open:bg-accent data-open:text-accent-foreground`,
         className,
       )}
       {...props}
@@ -91,7 +91,7 @@ const navigationMenuLinkVariants = cva("outline-none [&_svg]:pointer-events-none
     variant: {
       panel:
         "flex flex-col gap-inline rounded-control px-inset-item py-inset-item text-sm transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:ring-2 focus-visible:ring-ring data-has-icon:flex-row data-has-icon:items-center data-current:font-semibold",
-      top: `${itemClassName} data-current:bg-accent data-current:text-accent-foreground`,
+      top: `${navigationMenuItemClassName} data-current:bg-accent data-current:text-accent-foreground`,
     },
   },
   defaultVariants: { variant: "panel" },
@@ -138,4 +138,5 @@ export {
   NavigationMenuList,
   NavigationMenuTrigger,
   createNavigationMenuController,
+  navigationMenuItemClassName,
 }

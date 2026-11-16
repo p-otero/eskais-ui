@@ -46,6 +46,10 @@ import { AppearanceControls, appearance, palettes } from "./appearance"
 import { Section } from "./section"
 import { BoardSection } from "./sections/board"
 import { NavigationSection } from "./sections/navigation"
+import { SiteHeaderSection } from "./sections/site-header"
+import { TopbarSection } from "./sections/topbar"
+import { MobileNavSection } from "./sections/mobile-nav"
+import { ScrollingTabsSection } from "./sections/scrolling-tabs"
 import { OverlaysSection } from "./sections/overlays"
 import { DialogSizesSection } from "./sections/dialog-sizes"
 import { PageSection, StatesSection } from "./sections/page"
@@ -376,6 +380,14 @@ function App() {
           <FloatingSection />
 
           <NavigationSection />
+
+          <SiteHeaderSection />
+
+          <TopbarSection />
+
+          <MobileNavSection />
+
+          <ScrollingTabsSection />
 
           <ValuesSection />
 

@@ -10,38 +10,39 @@ UI SDK-first, agent-native React components, distributed as a shadcn-style regis
 
 ## Catalog
 
-| Item             | Built on                                                                                                                    |
-| ---------------- | --------------------------------------------------------------------------------------------------------------------------- |
-| `button`         | UI SDK `Button`: variants, async pending, focusable when disabled                                                           |
-| `field`, `input` | UI SDK `Field`, `Input`, `InputGroup`, `InputClear`                                                                         |
-| `search-field`   | Own primitive (`definePrimitive`) with a `submit` agent action                                                              |
-| `dialog`         | UI SDK `Dialog`                                                                                                             |
-| `confirm-dialog` | UI SDK `AlertDialog` with an async `action` and `data-agent-confirm`                                                        |
-| `card`, `badge`  | `renderElement`, presentational                                                                                             |
-| Overlays         | `tooltip`, `popover`, `drawer`, `dropdown-menu`, `toast`                                                                    |
-| Selection        | `select`, `combobox`, `segmented-control`, `checkbox`, `textarea`                                                           |
-| Form controls    | `radio-group`, `switch`, `slider`, `toggle`, `toggle-group`, `label`                                                        |
-| Inputs, feedback | `otp-input`, `number-input`, `progress`, `meter`, `alert`                                                                   |
-| Structure        | `tabs`, `collapsible`, `scroll-area`, `separator`, `avatar`                                                                 |
-| Display          | `skeleton`, `empty`, `kbd`, `table` (sortable headers)                                                                      |
-| Status           | `status-pill`, `dependency-chips`, `acceptance-list`, `stat`                                                                |
-| Values and time  | `quantity` (honest values), `relative-time` (`useNow`)                                                                      |
-| Layout           | `board` (columns, collapsible, groups)                                                                                      |
-| Agent tasks      | `agent-task-types`, `agent-badge` (provider avatars), `liveness-indicator`, `task-status` (pills, icons)                    |
-| Agent history    | `usage` (table, compact grid), `attempt-timeline`                                                                           |
-| Agent board core | `agent-task-board-core` (logic, labels, agent actions), `proposal-actions`                                                  |
-| Agent task board | `task-card`, `task-detail-panel`, `agent-task-board` (the full board)                                                       |
-| Data and layout  | `calendar`, `date-picker`, `carousel`, `resizable`, `sidebar`                                                               |
-| Data tables      | `data-table` (sort, select, pages), `page-header`, `filter-bar`                                                             |
-| Charts           | `chart` (Recharts v3, `--chart-1`…`--chart-5`, tooltip, legend, `ChartDataTable`)                                           |
-| Navigation       | `accordion`, `hover-card`, `context-menu`, `menubar`, `navigation-menu`, `breadcrumb`, `pagination`, `command` (⌘K palette) |
-| `theme`          | Color, shape, density and surface tokens; the default rounded look                                                          |
-| `theme-compact`  | Denser controls and tighter radii inside `data-theme="compact"`                                                             |
-| `theme-glass`    | Translucent, blurred surfaces inside `data-theme="glass"`                                                                   |
-| `palettes`       | Colour presets inside `data-palette="blue"` (also `neutral`, `violet`, `green`, `orange`)                                   |
-| `font-geist`     | Geist Variable from `@fontsource-variable/geist`, bundled (the default font); `font-inter` for Inter Variable               |
-| `appearance`     | `createAppearance` + `<Appearance>`: `.dark` and `data-theme` on `<html>`, following the system scheme                      |
-| `lint-rules`     | Optional `@shadcn/lint` config for consumers                                                                                |
+| Item             | Built on                                                                                                                     |
+| ---------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| `button`         | UI SDK `Button`: variants, async pending, focusable when disabled                                                            |
+| `field`, `input` | UI SDK `Field`, `Input`, `InputGroup`, `InputClear`                                                                          |
+| `search-field`   | Own primitive (`definePrimitive`) with a `submit` agent action                                                               |
+| `dialog`         | UI SDK `Dialog`                                                                                                              |
+| `confirm-dialog` | UI SDK `AlertDialog` with an async `action` and `data-agent-confirm`                                                         |
+| `card`, `badge`  | `renderElement`, presentational                                                                                              |
+| Overlays         | `tooltip`, `popover`, `drawer`, `dropdown-menu`, `toast`                                                                     |
+| Selection        | `select`, `combobox`, `segmented-control`, `checkbox`, `textarea`                                                            |
+| Form controls    | `radio-group`, `switch`, `slider`, `toggle`, `toggle-group`, `label`                                                         |
+| Inputs, feedback | `otp-input`, `number-input`, `progress`, `meter`, `alert`                                                                    |
+| Structure        | `tabs`, `collapsible`, `scroll-area`, `separator`, `avatar`                                                                  |
+| Display          | `skeleton`, `empty`, `kbd`, `table` (sortable headers)                                                                       |
+| Status           | `status-pill`, `dependency-chips`, `acceptance-list`, `stat`                                                                 |
+| Values and time  | `quantity` (honest values), `relative-time` (`useNow`)                                                                       |
+| Layout           | `board` (columns, collapsible, groups)                                                                                       |
+| Agent tasks      | `agent-task-types`, `agent-badge` (provider avatars), `liveness-indicator`, `task-status` (pills, icons)                     |
+| Agent history    | `usage` (table, compact grid), `attempt-timeline`                                                                            |
+| Agent board core | `agent-task-board-core` (logic, labels, agent actions), `proposal-actions`                                                   |
+| Agent task board | `task-card`, `task-detail-panel`, `agent-task-board` (the full board)                                                        |
+| Data and layout  | `calendar`, `date-picker`, `carousel`, `resizable`, `sidebar`                                                                |
+| Data tables      | `data-table` (sort, select, pages), `page-header`, `filter-bar`                                                              |
+| Charts           | `chart` (Recharts v3, `--chart-1`…`--chart-5`, tooltip, legend, `ChartDataTable`)                                            |
+| Navigation       | `accordion`, `hover-card`, `context-menu`, `menubar`, `navigation-menu`, `breadcrumb`, `pagination`, `command` (⌘K palette)  |
+| `theme`          | Color, shape, density and surface tokens; the default rounded look                                                           |
+| `theme-compact`  | Denser controls and tighter radii inside `data-theme="compact"`                                                              |
+| `theme-glass`    | Translucent, blurred surfaces inside `data-theme="glass"`                                                                    |
+| `palettes`       | Colour presets inside `data-palette="blue"` (also `neutral`, `violet`, `green`, `orange`)                                    |
+| `font-geist`     | Geist Variable from `@fontsource-variable/geist`, bundled (the default font); `font-inter` for Inter Variable                |
+| `appearance`     | `createAppearance` + `<Appearance>`: `.dark` and `data-theme` on `<html>`, following the system scheme                       |
+| `lint-rules`     | Optional `@shadcn/lint` config for consumers                                                                                 |
+| `test-utils`     | Testing Library helpers that find toasts and alerts past UI SDK's live regions (`getToast`, `queryAlerts`, `resetAnnouncer`) |
 
 ## Use it
 
@@ -69,6 +70,26 @@ Registry files import `@/components/ui/…`, `@/lib/…` and `@/lib/utils`; shad
 ```
 
 `components` and `utils` are required by shadcn; `ui` defaults to `<components>/ui` and `lib` to the folder of `utils`. Every alias must resolve through `compilerOptions.paths` in the **root** `tsconfig.json` (or `jsconfig.json`; `#` aliases through `imports` in `package.json`). shadcn reads no other file and doesn't follow `references`, so with Vite's template, which keeps `paths` in `tsconfig.app.json`, add them to `tsconfig.json` too. Otherwise shadcn writes the files into a folder literally named `@` (or `~`).
+
+Subpath imports in `package.json` work instead of `paths`, with no bundler alias: Node, TypeScript and Vite all read them.
+
+```json
+{
+  "imports": {
+    "#components/*": "./src/components/*",
+    "#ui/*": "./src/components/ui/*",
+    "#lib/*": "./src/lib/*",
+    "#hooks/*": "./src/hooks/*"
+  }
+}
+```
+
+Set the aliases to `#components`, `#ui`, `#lib/utils`, `#lib` and `#hooks`. shadcn then writes imports with their extension (`#ui/button.tsx`, `#lib/utils.ts`), because Node resolves subpath imports to exact files, so add `"allowImportingTsExtensions": true` to `compilerOptions` (it needs `noEmit`, as in Vite's template). `node tooling/consumer-check.mjs npm imports` checks this setup.
+
+Two things to know when you run shadcn:
+
+- **Package manager.** shadcn installs dependencies with the manager it finds from your lockfile, or from `packageManager` in `package.json`. In a pnpm project without a lockfile yet, set `"packageManager": "pnpm@<version>"`, or shadcn falls back to npm.
+- **Windows paths with a dotted folder.** shadcn 4.23.0 on Windows drops everything after a folder whose name starts with a dot, so a project under `C:\Users\me\.t3\…` gets its files written to `C:\Users\me\`. Run shadcn from a path without dotted folders, or map the project to a drive letter first: `subst X: C:\Users\me\.t3\worktrees\app`, then `cd /d X:\` and run it there (`subst X: /d` removes the mapping).
 
 Replace `main` with a tag (`v0.1.0`) to pin a version. Then add `@layer ui-sdk;` as the first line of your global CSS and run:
 

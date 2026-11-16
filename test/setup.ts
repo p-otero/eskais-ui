@@ -1,6 +1,8 @@
 import { cleanup } from "@testing-library/react"
 import { afterEach } from "vitest"
 
+import { resetAnnouncer } from "@/lib/test-utils"
+
 declare global {
   var __UI_SDK_STRICT__: boolean | undefined
   var IS_REACT_ACT_ENVIRONMENT: boolean | undefined
@@ -27,4 +29,7 @@ document.head.append(
   Object.assign(document.createElement("style"), { textContent: "[popover] { display: block !important }" }),
 )
 
-afterEach(cleanup)
+afterEach(() => {
+  cleanup()
+  resetAnnouncer()
+})

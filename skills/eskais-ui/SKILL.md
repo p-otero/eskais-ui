@@ -67,13 +67,68 @@ Eskais UI components are UI SDK parts styled with Tailwind v4 and semantic token
 | Dense rows or entity cards         | `List aria-label` + `ListGroup label count` + `ListItem id title leading subtitle status meta trailing actions href/onSelect selected`; `variant="card"` for cards; `value`/`onValueChange` on `List` makes it a Listbox. Agents get `select(id)`                                                                                                                                     |
 | A page's column                    | `PageLayout width header` (`dense`, `wide`, `full`; `variant="workspace"` for app screens). Renders `<main id="main">` only with `as="main"`, since the shell may own `<main>`; never a live region                                                                                                                                                                                   |
 | A titled block on a page           | `Section title eyebrow description action footer headingLevel surface padding`: Card composed; `surface="dashed"` for a create tile, `"none"` for no box                                                                                                                                                                                                                              |
+| A public site's header             | `SiteHeader label brand items actions renderLink`: a floating pill; links that don't fit move into "More" (measured, in order), `items` with children become dropdowns, a drawer with every link on narrow screens, `data-scrolled` once the page scrolls. Put a `SkipLink` before it                                                                                                 |
+| An app screen's header             | `Topbar brand leading center centerCompact trailing`: sticky, a bottom border, `centerCompact` replaces the centre on narrow screens. `SidebarTrigger controller collapsed` from `@eskais/sidebar` toggles a `Sidebar` (give it `trigger={false}`) through the same `createSidebarController()`                                                                                       |
+| Navigation on a phone              | `MobileNav label items overflow`: a bottom tab bar, up to five links (icon over label, `current`, `badge`), More for the rest, shown at `narrow:` only unless `always`. Hide the `Sidebar` with `narrow:hidden` and give the page `narrow:mb-(--mobile-nav-offset)` so it ends above the bar                                                                                          |
 | Skip past navigation               | `SkipLink` first in `<body>` (text required, `href` defaults to `#main`), with `PageLayout as="main"` or your own `<main id="main" tabIndex={-1}>`                                                                                                                                                                                                                                    |
+| Many tabs in little space          | `TabsList` scrolls on its own when its tabs don't fit (`scrollable="auto"`): edge fades, pointer-only scroll buttons (aria-hidden, not for agents), arrow keys reach every tab, works in rtl. `scrollable={false}` opts out                                                                                                                                                           |
 | A page title                       | `PageHeader title eyebrow description actions tabs breadcrumb headingLevel`; `tabs` holds a `TabsList` inside a `Tabs` that wraps the page; actions wrap below the title on narrow screens                                                                                                                                                                                            |
 | A date and a time together         | `DateTimePicker value onValueChange min max locale timeZone labels={{ time }}` in a `Field`: one local `"YYYY-MM-DDTHH:mm"` value; the time has its own label, which must not repeat the date label's words; `TimeInput` alone for a time of day                                                                                                                                      |
 | Dates, layout or data table        | `Calendar`/`DatePicker` (ISO, `locale`, `timeZone`), `Carousel`, `Resizable`, `Sidebar` (rail, drawer), `DataTable` (typed columns, `renderPagination`), `PageHeader`, `FilterBar` (a Toolbar)                                                                                                                                                                                        |
 | Menus, site navigation, paging, ⌘K | `ContextMenu`, `Menubar`, `NavigationMenu`, `Breadcrumb`, `Pagination page pageCount onPageChange labels`, `CommandDialog` + `Command` (pass `shortcut="mod+k"` to the trigger to opt in); `Accordion`, `HoverCard` for disclosure and link previews                                                                                                                                  |
 | A chart                            | `ChartContainer config aria-labelledby` + Recharts (`accessibilityLayer`), `ChartTooltip`/`ChartLegend` + `…Content`, `ChartDataTable`. every series meets 3:1 on the card, aqua (`--chart-3`) only just, so still add a legend or value labels. Series with a meaning take `var(--series-positive)`, `--series-negative`, `--series-target` or `--series-remaining`                  |
 | Write or show Markdown             | `MarkdownEditor label value onChange` (debounced; `onConflict` when a new `value` meets unsent edits) keeps the Markdown byte for byte and shows marks only while the caret is in their span; `codeLanguages={markdownCodeLanguages}` from `@eskais/markdown-editor-languages` is opt-in, `labels={markdownEditorLabelsEs}` for Spanish. `MarkdownView markdown` renders it read-only |
+
+## Global search (⌘K)
+
+A search that loads results from the server, opened from the `Topbar` with `mod+k`:
+
+```tsx
+import { useAsyncOptions } from "@ui-sdk/react/async-options"
+
+function GlobalSearch() {
+  const [dialog] = useState(() => createCommandDialogController())
+  const results = useAsyncOptions(searchWorkspace, { debounce: 200, immediate: true }) // (query, { signal }) => Promise<{ value, label }[]>
+  return (
+    <CommandDialog controller={dialog}>
+      <CommandDialogTrigger shortcut="mod+k">
+        <SearchIcon />
+        <span className="narrow:sr-only">Search the workspace</span>
+        <CommandDialogShortcut />
+      </CommandDialogTrigger>
+      <CommandDialogContent title="Search the workspace">
+        <Command
+          filter={false}
+          status={results.status}
+          onQueryChange={(query) => results.setQuery(query)}
+          onLoadMore={results.loadMore}
+          onAction={(value) => {
+            navigate(value)
+            dialog.close()
+          }}
+        >
+          <CommandInput aria-label="Search the workspace" />
+          <CommandStatus>{(state) => (state.loading ? "Searching…" : `${state.count} results`)}</CommandStatus>
+          <CommandEmpty>
+            {(state) => (state.empty && !state.loading ? `Nothing matches “${state.query}”` : null)}
+          </CommandEmpty>
+          <CommandList>
+            {results.items.map((item) => (
+              <CommandItem key={item.value} value={item.value} label={item.label}>
+                {item.label}
+              </CommandItem>
+            ))}
+          </CommandList>
+        </Command>
+      </CommandDialogContent>
+    </CommandDialog>
+  )
+}
+```
+
+- `filter={false}` keeps the server's order; `useAsyncOptions` debounces, aborts stale requests through `signal` and keeps the last results while loading. Pass `status` so the list gets `aria-busy` and `CommandStatus` announces counts.
+- The dialog returns focus to the trigger that opened it, and `onOpenChange` on `CommandDialog` reports both ways. `shortcut` is opt-in and only listens while the trigger is mounted.
+- Prefer one trigger whose text goes `narrow:sr-only`. A second trigger elsewhere (`<CommandDialogTrigger controller={dialog}>`, like a `Topbar`'s `centerCompact`) works for people, but in UI SDK 0.1.0-beta.5 the dialog then has no agent label: agents press it by `ref` with the trigger's name as the argument.
 
 ## AgentTaskBoard
 
@@ -162,6 +217,26 @@ Pick spacing by the relationship between the things it separates, never by a num
 ## Tone
 
 Status meaning has one vocabulary across Badge, Alert, StatusPill, StatusDot, Progress, Meter and Toast: `tone` is `neutral`, `info`, `success`, `warning` or `destructive` (`Tone` from `@/lib/tone`). Badge's `variant` is only its untoned look (`default`, `secondary`, `outline`); `variant="success"` and friends still work but are deprecated. A toast's tone comes from its type (`toastTone`: `error` is `destructive`).
+
+## Toasts
+
+- Place `<ToastStack />` once (or pass a `toaster` from `createToaster()`), and call `toast()`, `toast.success()`… from your handlers.
+- Its close buttons are named "Dismiss". Pass `labels={{ close: "Cerrar" }}` in the page's language (`closeLabel` is deprecated).
+- Each type leads with a decorative icon in its tone colour: `info` a circled i, `success` a check, `warning` a triangle, `error` a circled exclamation mark, `loading` a spinner, and `default` none. It is `aria-hidden`, so the title has to say what happened. In your own `Toast` composition, render `<ToastIcon type={item.type} />` before the title.
+- The region takes no pointer events: only the toasts themselves cover the page, so buttons beside or behind the stack stay clickable.
+- Timers pause while focus is in a toast, and while the pointer rests on one for `hoverDelay` ms (300 by default). A pointer that only passes over doesn't hold them.
+
+## Testing toasts and alerts
+
+UI SDK announces toasts through two visually hidden live regions it appends to `<body>`: `role="status"` (polite) and `role="alert"` (assertive), both marked `data-ui-sdk-announcer`. They stay for the page's life and keep the last text they announced, so after a toast closes `getByRole("alert")` and `getByText("Saved")` can still find its copy there.
+
+- Find a toast by its part, not by text on the whole page: `[data-slot="toast"]`, or `within(screen.getByRole("region", { name: "Notifications" }))` while a toast is showing (the region is only a landmark then).
+- `npx shadcn add @eskais/test-utils` adds the helpers to `lib/test-utils.ts`. It needs `@testing-library/dom` (a dev dependency).
+  - `getToast(text)` / `queryToast(text)`: the showing toast with an element whose text matches; both throw when several match, `getToast` also when none does. `queryToasts()` lists them, newest first, without toasts animating out.
+  - `queryAlerts()` / `queryStatuses()`: `role="alert"` / `role="status"` elements without the live regions.
+  - `isAnnouncer(node)`: whether a node is in a live region. `ignoreAnnouncer` is an `ignore` for text queries: `screen.getByText("Saved", { ignore: ignoreAnnouncer })`.
+  - `readAnnouncements()`: `{ polite, assertive }`, what the live regions hold. A toast is announced about 200ms after it shows.
+  - `resetAnnouncer()`: removes the live regions; UI SDK makes new ones on the next announcement. UI SDK exports no reset of its own, so call it in `afterEach`, after Testing Library's `cleanup`.
 
 ## Layers and motion
 

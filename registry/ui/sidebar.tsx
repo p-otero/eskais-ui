@@ -2,7 +2,7 @@
 
 import type { ChangeDetails } from "@ui-sdk/core"
 import { createParts } from "@ui-sdk/react/primitive"
-import { useMemo, useState, useSyncExternalStore, type ReactNode } from "react"
+import { useState, type ReactNode } from "react"
 
 import { buttonVariants } from "@/components/ui/button"
 import { Drawer, DrawerBackdrop, DrawerClose, DrawerContent, DrawerTitle, DrawerTrigger } from "@/components/ui/drawer"
@@ -13,23 +13,17 @@ import {
   type SidebarController,
 } from "@/components/ui/sidebar-primitive"
 import { SidebarGroup, SidebarItem, SidebarRailContext } from "@/components/ui/sidebar-items"
+import {
+  defaultNarrowQuery,
+  PanelIcon,
+  SidebarTrigger,
+  sidebarLabels,
+  useNarrow,
+  type SidebarLabels,
+} from "@/components/ui/sidebar-trigger"
 import { cn } from "@/lib/utils"
 
-const { Root: SidebarRoot, Trigger: SidebarTrigger } = createParts(sidebar, { root: "nav", trigger: "button" })
-
-type SidebarLabels = {
-  collapse: string
-  expand: string
-  open: string
-  close: string
-}
-
-const sidebarLabels: SidebarLabels = {
-  collapse: "Collapse sidebar",
-  expand: "Expand sidebar",
-  open: "Open navigation",
-  close: "Close navigation",
-}
+const { Root: SidebarRoot, Trigger: SidebarToggle } = createParts(sidebar, { root: "nav", trigger: "button" })
 
 type SidebarProps = {
   label: string
@@ -37,6 +31,8 @@ type SidebarProps = {
   defaultCollapsed?: boolean
   onCollapsedChange?: (collapsed: boolean, details: ChangeDetails<SidebarCollapsedChangeReason>) => void
   collapsible?: boolean
+  /** Hides the toggle in the header when a SidebarTrigger elsewhere, like in a Topbar, takes its place. */
+  trigger?: boolean
   controller?: SidebarController
   narrowQuery?: string
   header?: ReactNode
@@ -44,34 +40,6 @@ type SidebarProps = {
   labels?: Partial<SidebarLabels>
   className?: string
   children: ReactNode
-}
-
-function subscribeTo(query: string) {
-  return (notify: () => void) => {
-    if (typeof matchMedia !== "function") return () => {}
-    const list = matchMedia(query)
-    list.addEventListener("change", notify)
-    return () => list.removeEventListener("change", notify)
-  }
-}
-
-// The server and the first client render assume a wide screen, so hydration matches before the query runs.
-function useNarrow(query: string) {
-  const subscribe = useMemo(() => subscribeTo(query), [query])
-  return useSyncExternalStore(
-    subscribe,
-    () => typeof matchMedia === "function" && matchMedia(query).matches,
-    () => false,
-  )
-}
-
-function PanelIcon() {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-      <rect x="3" y="4" width="18" height="16" rx="2" />
-      <path d="M9 4v16" />
-    </svg>
-  )
 }
 
 const surfaceClassName = "flex min-h-0 flex-col gap-group text-foreground"
@@ -83,7 +51,8 @@ function Sidebar({
   onCollapsedChange,
   collapsible = true,
   controller,
-  narrowQuery = "(max-width: 767px)",
+  narrowQuery = defaultNarrowQuery,
+  trigger = true,
   header,
   footer,
   labels: labelOverrides,
@@ -146,13 +115,13 @@ function Sidebar({
     >
       <div data-slot="sidebar-header" className="flex items-center gap-inline group-data-collapsed/sidebar:flex-col">
         <div className="min-w-0 flex-1 group-data-collapsed/sidebar:hidden">{header}</div>
-        {collapsible && (
-          <SidebarTrigger
+        {collapsible && trigger && (
+          <SidebarToggle
             aria-label={collapsed ? labels.expand : labels.collapse}
             className={cn(buttonVariants({ variant: "ghost", size: "icon" }), "rtl:[&_svg]:-scale-x-100")}
           >
             <PanelIcon />
-          </SidebarTrigger>
+          </SidebarToggle>
         )}
       </div>
       <SidebarRailContext value={collapsed}>{body}</SidebarRailContext>
@@ -165,6 +134,7 @@ function Sidebar({
   )
 }
 
-export { createSidebarController, Sidebar, SidebarGroup, SidebarItem, sidebarLabels }
+export { createSidebarController, Sidebar, SidebarGroup, SidebarItem, sidebarLabels, SidebarTrigger }
 export type { SidebarController, SidebarLabels, SidebarProps }
+export type { SidebarTriggerProps } from "@/components/ui/sidebar-trigger"
 export type { SidebarGroupProps, SidebarItemProps } from "@/components/ui/sidebar-items"

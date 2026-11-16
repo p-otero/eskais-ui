@@ -101,8 +101,31 @@ test("the narrow and dark variants ship with the theme item", () => {
   const optedOut = ':root:not(.light, [data-color-scheme="light"])'
   expect(css["@custom-variant dark"]).toEqual({
     "&:where(.dark, .dark *)": { "@slot": {} },
-    "@media (prefers-color-scheme: dark)": { [`&:where(${optedOut}, ${optedOut} *)`]: { "@slot": {} } },
+    "@media (prefers-color-scheme: dark)": {
+      [`&:where(${optedOut})`]: { "@slot": {} },
+      [`&:where(${optedOut} *)`]: { "@slot": {} },
+    },
   })
+})
+
+// shadcn merges a rule into the stylesheet by its exact selector or at-rule params. Prettier, Biome and oxfmt put each
+// selector of a list on its own line and wrap anything past 80 columns, so such a key never matches after formatting.
+test("every rule in the theme items keeps its key through a formatter", () => {
+  const registry = JSON.parse(readFileSync("registry.json", "utf8")) as {
+    items: { name: string; css?: Record<string, unknown> }[]
+  }
+  const unstable: string[] = []
+  const walk = (node: Record<string, unknown>, depth: number) => {
+    for (const [key, value] of Object.entries(node)) {
+      if (typeof value !== "object" || value === null) continue
+      const outsideParens = key.replaceAll(/\((?:[^()]|\([^()]*\))*\)|\[[^\]]*\]/g, "")
+      // Four-space indentation, the widest common setting, with " {" after the key.
+      if (depth * 4 + key.length + 2 > 80 || (!key.startsWith("@") && outsideParens.includes(","))) unstable.push(key)
+      walk(value as Record<string, unknown>, depth + 1)
+    }
+  }
+  for (const item of registry.items) if (item.css) walk(item.css, 0)
+  expect(unstable).toEqual([])
 })
 
 test("the theme item gives shadcn nothing to mirror into @theme inline as a self-reference", () => {
