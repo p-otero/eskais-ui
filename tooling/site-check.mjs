@@ -9,6 +9,7 @@ const axePath = createRequire(import.meta.url).resolve("axe-core/axe.min.js")
 const pages = [
   "",
   "docs/installation/",
+  "docs/icons/",
   "docs/components/button/",
   "docs/components/form/",
   "docs/components/agent-task-board/",

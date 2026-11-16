@@ -2576,6 +2576,26 @@
       ]
     },
     {
+      "name": "icon",
+      "type": "registry:ui",
+      "title": "Icon",
+      "description": "Icon names a lucide-react icon (or any SVG component) for screen readers: <Icon icon={TrashIcon} label=\"Deleted\" /> renders role=img with that label. Decorative icons need no wrapper, since lucide hides them by default.",
+      "docs": "The registry draws its icons with `lucide-react`: import them by name (`import { CheckIcon } from \"lucide-react\"`). Lucide sets `aria-hidden` on an icon that has no `aria-*`, `role` or `title` prop, so a decorative icon needs no wrapper. Use `Icon` only when the icon carries meaning nothing else states: `<Icon icon={TriangleExclamationPointIcon} label=\"Blocked\" />` renders `role=\"img\"` with that `aria-label`. Size comes from the parent (Button, Badge, menu items and inputs set `[&_svg]:size-4`) or a `size-*` class: `size-3.5` beside `text-body-sm`, `size-4` beside `text-body`, `size-5` beside a title; our classes override lucide's `size` prop. Colour is `currentColor`: set a text colour, like `text-success`.",
+      "dependencies": [
+        "lucide-react@1.73.0"
+      ],
+      "registryDependencies": [
+        "@eskais/utils",
+        "@eskais/theme"
+      ],
+      "files": [
+        {
+          "path": "registry/ui/icon.tsx",
+          "type": "registry:ui"
+        }
+      ]
+    },
+    {
       "name": "context-menu",
       "type": "registry:ui",
       "title": "Context Menu",

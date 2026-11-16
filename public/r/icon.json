@@ -1,0 +1,22 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "icon",
+  "title": "Icon",
+  "description": "Icon names a lucide-react icon (or any SVG component) for screen readers: <Icon icon={TrashIcon} label=\"Deleted\" /> renders role=img with that label. Decorative icons need no wrapper, since lucide hides them by default.",
+  "dependencies": [
+    "lucide-react@1.73.0"
+  ],
+  "registryDependencies": [
+    "@eskais/utils",
+    "@eskais/theme"
+  ],
+  "files": [
+    {
+      "path": "registry/ui/icon.tsx",
+      "content": "import type { ComponentType, SVGAttributes } from \"react\"\n\nimport { cn } from \"@/lib/utils\"\n\ntype IconSvgProps = Omit<SVGAttributes<SVGSVGElement>, \"children\">\n\n/** A lucide icon, or any component that renders an `<svg>` and passes these props to it. */\ntype IconComponent = ComponentType<IconSvgProps>\n\ntype IconProps = IconSvgProps & {\n  icon: IconComponent\n  /**\n   * Makes the icon meaningful: `role=\"img\"` with this accessible name, in the page's language. Use it only when\n   * nothing else says what the icon means. Without it the icon is decorative and `aria-hidden`.\n   */\n  label?: string\n}\n\n/**\n * Renders an icon component as decorative or, with `label`, as a named image.\n *\n * Size comes from the parent (Button, Badge, menu items and inputs set `[&_svg]:size-4`) or from a `size-*` class:\n * `size-3.5` beside `text-body-sm` or `text-caption`, `size-4` beside `text-body`, `size-5` beside a title.\n * Colour is `currentColor`, so a text colour (`text-success`, `text-muted-foreground`) colours it.\n */\nfunction Icon({ icon: Component, label, className, ...props }: IconProps) {\n  const name = label ? { role: \"img\", \"aria-label\": label } : { \"aria-hidden\": true }\n  return <Component data-slot=\"icon\" className={cn(\"shrink-0\", className)} {...name} {...props} />\n}\n\nexport { Icon }\nexport type { IconComponent, IconProps }\n",
+      "type": "registry:ui"
+    }
+  ],
+  "docs": "The registry draws its icons with `lucide-react`: import them by name (`import { CheckIcon } from \"lucide-react\"`). Lucide sets `aria-hidden` on an icon that has no `aria-*`, `role` or `title` prop, so a decorative icon needs no wrapper. Use `Icon` only when the icon carries meaning nothing else states: `<Icon icon={TriangleExclamationPointIcon} label=\"Blocked\" />` renders `role=\"img\"` with that `aria-label`. Size comes from the parent (Button, Badge, menu items and inputs set `[&_svg]:size-4`) or a `size-*` class: `size-3.5` beside `text-body-sm`, `size-4` beside `text-body`, `size-5` beside a title; our classes override lucide's `size` prop. Colour is `currentColor`: set a text colour, like `text-success`.",
+  "type": "registry:ui"
+}

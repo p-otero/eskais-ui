@@ -62,8 +62,8 @@ function formatAcceptanceSummary({ pass, fail, unverified }: AcceptanceCounts) {
 }
 
 function AcceptanceIcon({ result }: { result: AcceptanceResult }) {
-  const Icon = resultIcons[result]
-  return <Icon strokeWidth={2.5} className={cn("h-lh w-4 shrink-0", resultColor[result])} />
+  const ResultIcon = resultIcons[result]
+  return <ResultIcon strokeWidth={2.5} className={cn("h-lh w-4 shrink-0", resultColor[result])} />
 }
 
 type AcceptanceListProps = Omit<PartProps<"ul">, "children"> & {
