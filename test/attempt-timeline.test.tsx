@@ -127,16 +127,21 @@ test("the active attempt holds the timeline's tab stop", async () => {
   await user.tab()
   expect(document.activeElement).toBe(screen.getByRole("button", { name: "Usage for A1" }))
   await user.tab()
+  expect(document.activeElement).toBe(screen.getByRole("link", { name: "Open thread Index docs, first try" }))
+  await user.tab()
   expect(document.activeElement).toBe(event(/^A2 · /))
   await user.keyboard("{ArrowUp}")
   expect(document.activeElement).toBe(event(/^A1 · /))
 })
 
-test("onOpenThread makes each thread a button; renderThreadLink replaces it; neither leaves text", async () => {
+test("onOpenThread makes each thread a button; an href alone a link; renderThreadLink replaces both; never the bare id", async () => {
   const user = userEvent.setup()
   const onOpenThread = vi.fn()
   const { unmount } = render(<Attempts onOpenThread={onOpenThread} />)
-  await user.click(screen.getByRole("button", { name: "Open thread th-2" }))
+  const button = screen.getByRole("button", { name: "Open thread th-2" })
+  expect(button.textContent).toBe("Open thread")
+  expect(button.getAttribute("title")).toBe("th-2")
+  await user.click(button)
   expect(onOpenThread).toHaveBeenCalledWith({ id: "th-2", href: "t3-thread://th-2" })
   unmount()
 
@@ -147,9 +152,15 @@ test("onOpenThread makes each thread a button; renderThreadLink replaces it; nei
   expect(screen.queryByRole("button", { name: /Open thread/ })).toBeNull()
   linked.unmount()
 
-  render(<Attempts />)
+  const plain = render(<Attempts />)
   expect(screen.queryByRole("button", { name: /Open thread|Open origin/ })).toBeNull()
-  expect(screen.getByText("th-2")).toBeTruthy()
+  expect(screen.getByRole("link", { name: "Open thread th-2" }).getAttribute("href")).toBe("t3-thread://th-2")
+  expect(screen.queryByText("th-2")).toBeNull()
+  plain.unmount()
+
+  const untitled = indexDocs.attempts.map((attempt) => ({ ...attempt, thread: { id: `${attempt.id}-thread` } }))
+  render(<Attempts attempts={untitled} />)
+  expect(screen.queryByText(/-thread$/)).toBeNull()
 })
 
 test("status and agents render through their render props", () => {

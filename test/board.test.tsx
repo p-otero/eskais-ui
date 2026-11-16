@@ -221,15 +221,18 @@ test("an agent can find every column and toggle, and collapse and expand a colum
   for (const label of ["Sprint", "Backlog", "Review", "Done", "Add to Backlog"]) {
     expect(labels, `${label} is missing from the snapshot`).toContain(label)
   }
-  const toggles = components.filter((entry) => entry.component === "collapsible")
-  expect(toggles.map((entry) => entry.label)).toEqual(["Backlog", "Done"])
-  expect(toggles.every((entry) => entry.actions.includes("setOpen"))).toBe(true)
+  const columns = components.filter((entry) => entry.component === "collapsible")
+  expect(columns.map((entry) => entry.label)).toEqual(["Backlog", "Done"])
+  expect(columns.every((entry) => entry.actions.includes("setOpen"))).toBe(true)
+  // The toggle's tooltip lists it under the button's own name, which is what an agent presses.
+  const toggles = components.filter((entry) => entry.component === "tooltip")
+  expect(toggles.map((entry) => entry.label)).toEqual(["Collapse Backlog", "Expand Done"])
 
   const result = await act(() =>
     agent.act({
       steps: [
-        { ref: "Backlog", action: "setOpen", args: [false] },
-        { ref: "Done", action: "setOpen", args: [true] },
+        { ref: "Collapse Backlog", action: "press" },
+        { ref: "Expand Done", action: "press" },
       ],
     }),
   )

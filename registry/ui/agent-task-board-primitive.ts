@@ -8,7 +8,7 @@ import {
 } from "@ui-sdk/core"
 
 import { filterOptions, type TaskFilters } from "@/lib/agent-task-board-model"
-import type { AttemptView, TaskView, ThreadRef } from "@/lib/agent-task-types"
+import type { AttemptView, TaskLink, TaskView, ThreadRef } from "@/lib/agent-task-types"
 
 type BoardView = "board" | "table"
 type BoardMode = "snapshot" | "live"
@@ -18,6 +18,7 @@ type ViewChangeReason = "item-press" | "imperative"
 type FiltersChangeReason = "item-press" | "input-change" | "clear-press" | "imperative"
 type SelectReason = "item-press" | "close-press" | "escape-key" | "outside-press" | "imperative"
 type OpenThreadReason = "item-press" | "link-press" | "imperative"
+type OpenLinkReason = "link-press" | "imperative"
 
 type AgentTaskBoardOptions = {
   tasks?: TaskView[]
@@ -32,6 +33,7 @@ type AgentTaskBoardOptions = {
   /** The contract's `onSelectTask`; the root component maps one onto the other. */
   onSelectedTaskIdChange?: (id: string | null, details: ChangeDetails<SelectReason>) => void
   onOpenThread?: (thread: ThreadRef, details: ChangeDetails<OpenThreadReason> & { attemptId: string }) => void
+  onOpenLink?: (link: TaskLink, details: ChangeDetails<OpenLinkReason> & { taskId: string }) => void
   controller?: AgentTaskBoardController
 }
 
@@ -43,6 +45,7 @@ interface AgentTaskBoardController {
   ) => boolean | undefined
   selectTask: (id: string | null, options?: ChangeOptions<SelectReason>) => boolean | undefined
   openThread: (attemptId: string, options?: ChangeOptions<OpenThreadReason>) => boolean | undefined
+  openLink: (taskId: string, link: string, options?: ChangeOptions<OpenLinkReason>) => boolean | undefined
 }
 
 const FILTER_KEYS = ["project", "profile", "model", "query"] as const
@@ -102,6 +105,7 @@ const agentTaskBoard = definePrimitive({
     defaultSelectedTaskId: "value",
     onSelectedTaskIdChange: "callback",
     onOpenThread: "callback",
+    onOpenLink: "callback",
     controller: "value",
   },
   state: (options: AgentTaskBoardOptions) => ({
@@ -142,6 +146,18 @@ const agentTaskBoard = definePrimitive({
         const details = { ...reasonOf(options), attemptId: attempt.id }
         return !dispatch(context, "onOpenThread", attempt.thread, details)
       },
+      openLink(taskId: unknown, link: unknown, options?: ChangeOptions<OpenLinkReason>) {
+        const task = tasks().find((candidate) => candidate.id === taskId)
+        if (!task) throw new RangeError(`No task "${String(taskId)}" on the board.`)
+        const links = task.links ?? []
+        const found = links.find((candidate) => candidate.href === link || candidate.label === link)
+        if (!found) {
+          const choices = links.map((candidate) => candidate.label).join(", ") || "none"
+          throw new RangeError(`Task "${task.id}" has no link "${String(link)}". Links: ${choices}.`)
+        }
+        if (!context.options().onOpenLink) throw new Error("This board doesn't open links.")
+        return !dispatch(context, "onOpenLink", found, { ...reasonOf(options), taskId: task.id })
+      },
       tasks: () => tasks().map((task) => ({ value: task.id, label: `${task.id} ${task.title}` })),
     }
   },
@@ -151,7 +167,7 @@ const agentTaskBoard = definePrimitive({
       attrs: (state) => ({ "data-view": state.view, "data-selected": state.selectedTaskId === null ? undefined : "" }),
     }),
   }),
-  agent: { actions: ["selectTask", "openThread", "setView", "filter"], items: (api) => api.tasks() },
+  agent: { actions: ["selectTask", "openThread", "openLink", "setView", "filter"], items: (api) => api.tasks() },
 })
 
 function createAgentTaskBoardController() {
@@ -159,4 +175,4 @@ function createAgentTaskBoardController() {
 }
 
 export { agentTaskBoard, createAgentTaskBoardController }
-export type { AgentApproval, AgentTaskBoardController, AgentTaskBoardOptions, BoardMode, BoardView }
+export type { AgentApproval, AgentTaskBoardController, AgentTaskBoardOptions, BoardMode, BoardView, OpenLinkReason }

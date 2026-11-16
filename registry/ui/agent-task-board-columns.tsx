@@ -2,6 +2,7 @@
 
 import type { ColumnConfig, StatusColumn } from "@/lib/agent-task-board-model"
 import type { TaskStatus, TaskView } from "@/lib/agent-task-types"
+import type { Tone } from "@/lib/tone"
 import type { AgentTaskBoardLabels } from "@/components/ui/agent-task-labels"
 import { Board, BoardColumn, BoardColumnGroup } from "@/components/ui/board"
 import { TaskCard, type TaskDisplayOptions } from "@/components/ui/task-card"
@@ -11,6 +12,8 @@ type AgentTaskBoardColumnsProps = {
   selectedTaskId: string | null
   display: TaskDisplayOptions & { labels: AgentTaskBoardLabels }
   onCollapsedChange: (status: TaskStatus, collapsed: boolean) => void
+  /** Each column's accent tone; none leaves the columns plain. */
+  tones?: Record<TaskStatus, Tone>
 }
 
 function withColumn(columns: readonly ColumnConfig[], status: TaskStatus, change: Partial<ColumnConfig>) {
@@ -20,7 +23,13 @@ function withColumn(columns: readonly ColumnConfig[], status: TaskStatus, change
     : [...columns, { status, ...change }]
 }
 
-function AgentTaskBoardColumns({ columns, selectedTaskId, display, onCollapsedChange }: AgentTaskBoardColumnsProps) {
+function AgentTaskBoardColumns({
+  columns,
+  selectedTaskId,
+  display,
+  onCollapsedChange,
+  tones,
+}: AgentTaskBoardColumnsProps) {
   const { labels } = display
   const card = (task: TaskView) => (
     <TaskCard key={task.id} task={task} selected={task.id === selectedTaskId} {...display} />
@@ -49,6 +58,7 @@ function AgentTaskBoardColumns({ columns, selectedTaskId, display, onCollapsedCh
             key={column.status}
             data-status={column.status}
             title={labels.columns[column.status]}
+            tone={tones?.[column.status]}
             count={column.tasks.length}
             collapsed={column.collapsed}
             onCollapsedChange={(collapsed) => onCollapsedChange(column.status, collapsed)}

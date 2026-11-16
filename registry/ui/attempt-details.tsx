@@ -1,6 +1,6 @@
 "use client"
 
-import type { ReactNode } from "react"
+import { createElement, type ReactNode } from "react"
 
 import type { AgentAvatars } from "@/components/ui/agent-avatar"
 import { AgentBadge } from "@/components/ui/agent-badge"
@@ -16,25 +16,70 @@ interface ThreadRendering {
   onOpenThread?: (thread: ThreadRef) => void
 }
 
+function AppWindowIcon() {
+  return (
+    <svg
+      aria-hidden="true"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <rect x="2" y="4" width="20" height="16" rx="2" />
+      <path d="M10 4v4M2 8h20M6 4v4" />
+    </svg>
+  )
+}
+
+/**
+ * `onOpenThread` gets a button, which agents can press; an `href` alone gets a link, which they can't.
+ * A thread with neither shows its title, never its bare id.
+ */
 function AttemptThread({
   thread,
   label,
+  text,
+  inline = false,
   renderThreadLink,
   onOpenThread,
-}: ThreadRendering & { thread: ThreadRef; label: (name: string) => string }) {
+}: ThreadRendering & {
+  thread: ThreadRef
+  label: (name: string) => string
+  /** Visible text of the button. */
+  text: string
+  /** Inside a sentence: a text link with the thread's title instead of a button. */
+  inline?: boolean
+}) {
   if (renderThreadLink) return renderThreadLink(thread)
-  const name = thread.title ?? thread.id
-  if (!onOpenThread) return <span data-slot="attempt-thread">{name}</span>
+  const operable = thread.href !== undefined || onOpenThread !== undefined
+  if (!operable) {
+    return thread.title ? (
+      <span data-slot="attempt-thread" title={thread.id}>
+        {thread.title}
+      </span>
+    ) : null
+  }
   return (
     <Button
       data-slot="attempt-thread"
-      variant="link"
+      variant={inline ? "link" : "outline"}
       size="sm"
-      aria-label={label(name)}
-      className="h-auto max-w-full p-0 whitespace-normal"
-      onClick={() => onOpenThread(thread)}
+      render={thread.href && !onOpenThread ? createElement("a", { href: thread.href }) : undefined}
+      aria-label={label(thread.title ?? thread.id)}
+      title={thread.id}
+      onClick={onOpenThread && (() => onOpenThread(thread))}
+      className={inline ? "h-auto max-w-full p-0 whitespace-normal" : "h-control-sm self-start"}
     >
-      {name}
+      {inline ? (
+        (thread.title ?? text)
+      ) : (
+        <>
+          <AppWindowIcon />
+          <span>{text}</span>
+        </>
+      )}
     </Button>
   )
 }

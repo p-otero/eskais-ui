@@ -21,6 +21,9 @@ interface AttemptTimelineLabels {
   blocker: string
   retryAt: string
   thread: string
+  /** Visible text of a thread's link button. */
+  threadLink: string
+  /** Accessible name of a thread's link button; must start with `threadLink`'s words. */
   openThread: (name: string) => string
   openSourceThread: (name: string) => string
   usage: string
@@ -65,6 +68,7 @@ const attemptTimelineLabels: AttemptTimelineLabels = {
   blocker: "Blocked",
   retryAt: "Retry at",
   thread: "Thread",
+  threadLink: "Open thread",
   openThread: (name) => `Open thread ${name}`,
   openSourceThread: (name) => `Open origin ${name}`,
   usage: "Usage",
@@ -112,6 +116,7 @@ const attemptTimelineLabelsEs: AttemptTimelineLabels = {
   blocker: "Bloqueado",
   retryAt: "Reintento",
   thread: "Hilo",
+  threadLink: "Abrir hilo",
   openThread: (name) => `Abrir hilo ${name}`,
   openSourceThread: (name) => `Abrir origen ${name}`,
   usage: "Consumo",

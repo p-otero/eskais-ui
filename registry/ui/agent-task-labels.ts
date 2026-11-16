@@ -43,7 +43,12 @@ const agentTaskBoardLabelsEs: AgentTaskBoardLabels = {
     },
     usage: usageLabelsEs,
     attemptTimeline: attemptTimelineLabelsEs,
-    boardColumn: { collapse: (title) => `Contraer ${title}`, expand: (title) => `Expandir ${title}` },
+    boardColumn: {
+      collapse: (title) => `Contraer ${title}`,
+      expand: (title) => `Expandir ${title}`,
+      collapseTooltip: "Contraer columna",
+      expandTooltip: "Expandir columna",
+    },
   },
 }
 

@@ -6,7 +6,7 @@ import { CollapsiblePanel } from "@ui-sdk/react/collapsible"
 import { Children, createContext, use, useId, useState, type ComponentProps, type ReactNode } from "react"
 
 import { Badge } from "@/components/ui/badge"
-import { Collapsible, CollapsibleIcon, CollapsibleTrigger } from "@/components/ui/collapsible"
+import { Collapsible, CollapsibleTrigger } from "@/components/ui/collapsible"
 import { Empty } from "@/components/ui/empty"
 import {
   ScrollArea,
@@ -15,18 +15,55 @@ import {
   ScrollAreaThumb,
   ScrollAreaViewport,
 } from "@/components/ui/scroll-area"
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
+import type { Tone } from "@/lib/tone"
 import { cn } from "@/lib/utils"
 
 type HeadingLevel = 2 | 3 | 4 | 5 | 6
 
 type BoardColumnLabels = {
+  /** Accessible name of the collapse button; must contain the tooltip's words for voice control. */
   collapse: (title: string) => string
   expand: (title: string) => string
+  collapseTooltip: string
+  expandTooltip: string
 }
 
 const boardColumnLabels: BoardColumnLabels = {
   collapse: (title) => `Collapse ${title}`,
   expand: (title) => `Expand ${title}`,
+  collapseTooltip: "Collapse column",
+  expandTooltip: "Expand column",
+}
+
+const toneColor = {
+  neutral: "[--column-tone:var(--input-strong)]",
+  info: "[--column-tone:var(--info)]",
+  success: "[--column-tone:var(--success)]",
+  warning: "[--column-tone:var(--warning)]",
+  destructive: "[--column-tone:var(--destructive)]",
+} satisfies Record<Tone, string>
+
+function FoldIcon({ unfold }: { unfold: boolean }) {
+  return (
+    <svg
+      data-slot="board-column-fold-icon"
+      aria-hidden="true"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M12 2v2M12 8v2M12 14v2M12 20v2" />
+      {unfold ? (
+        <path d="M16 12h6M8 12H2m17 3 3-3-3-3M5 9l-3 3 3 3" />
+      ) : (
+        <path d="M2 12h6m14 0h-6m3-3-3 3 3 3M5 15l3-3-3-3" />
+      )}
+    </svg>
+  )
 }
 
 const HeadingLevelContext = createContext<HeadingLevel>(3)
@@ -46,6 +83,8 @@ type BoardColumnProps = Omit<ComponentProps<"li">, "title" | "children"> & {
   actions?: ReactNode
   empty?: ReactNode
   headingLevel?: HeadingLevel
+  /** Marks the column with a dot before the title, a top border and a faint wash in this tone. */
+  tone?: Tone
   collapsible?: boolean
   collapsed?: boolean
   defaultCollapsed?: boolean
@@ -60,6 +99,7 @@ function BoardColumn({
   actions,
   empty,
   headingLevel = 3,
+  tone,
   collapsed: collapsedProp,
   defaultCollapsed,
   onCollapsedChange,
@@ -74,20 +114,19 @@ function BoardColumn({
   const collapsed = collapsible && (collapsedProp ?? uncontrolled)
   const Heading = `h${headingLevel}` as const
   const groupHeadingLevel = Math.min(headingLevel + 1, 6) as HeadingLevel
-  const { collapse, expand } = { ...boardColumnLabels, ...labels }
+  const { collapse, expand, collapseTooltip, expandTooltip } = { ...boardColumnLabels, ...labels }
 
   const header = (
     <div
       data-slot="board-column-header"
-      className="flex min-h-control-sm items-center gap-inline px-inset-item group-data-collapsed/board-column:flex-col group-data-collapsed/board-column:px-items"
+      className="group/board-column-header flex min-h-control-sm items-center gap-inline px-inset-item group-data-collapsed/board-column:flex-col group-data-collapsed/board-column:px-items"
     >
-      {collapsible && (
-        <CollapsibleTrigger
-          aria-label={collapsed ? expand(title) : collapse(title)}
-          className="size-control-sm justify-center px-0"
-        >
-          <CollapsibleIcon className="-rotate-90 group-data-open/collapsible-trigger:rotate-90 rtl:rotate-90 rtl:group-data-open/collapsible-trigger:-rotate-90" />
-        </CollapsibleTrigger>
+      {tone && (
+        <span
+          aria-hidden="true"
+          data-slot="board-column-dot"
+          className="size-2 shrink-0 rounded-full bg-(--column-tone)"
+        />
       )}
       <Heading
         id={titleId}
@@ -104,6 +143,21 @@ function BoardColumn({
         >
           {actions}
         </div>
+      )}
+      {collapsible && (
+        <Tooltip>
+          <TooltipTrigger
+            render={
+              <CollapsibleTrigger
+                aria-label={collapsed ? expand(title) : collapse(title)}
+                className="size-control-sm shrink-0 justify-center px-0 text-muted-foreground opacity-0 group-focus-within/board-column-header:opacity-100 group-hover/board-column-header:opacity-100 group-data-collapsed/board-column:order-first group-data-collapsed/board-column:opacity-100 focus-visible:opacity-100 pointer-coarse:opacity-100"
+              />
+            }
+          >
+            <FoldIcon unfold={collapsed} />
+          </TooltipTrigger>
+          <TooltipContent>{collapsed ? expandTooltip : collapseTooltip}</TooltipContent>
+        </Tooltip>
       )}
     </div>
   )
@@ -125,14 +179,18 @@ function BoardColumn({
     </ScrollArea>
   )
 
-  const surface =
-    "flex w-full flex-col gap-inline rounded-surface border bg-muted/(--glass-opacity) pt-inline backdrop-surface group-data-collapsed/board-column:pb-items"
+  const surface = cn(
+    "flex w-full flex-col gap-inline rounded-surface border bg-muted/(--glass-opacity) pt-inline backdrop-surface group-data-collapsed/board-column:pb-items",
+    tone && "board-column-wash border-t-2 border-t-(--column-tone)",
+  )
 
   return (
     <li
       data-slot="board-column"
       data-collapsed={collapsed ? "" : undefined}
+      data-tone={tone}
       className={cn(
+        tone && toneColor[tone],
         "group/board-column flex max-w-(--board-column-max-width) min-w-(--board-column-min-width) flex-1 data-collapsed:max-w-none data-collapsed:min-w-0 data-collapsed:flex-none",
         className,
       )}

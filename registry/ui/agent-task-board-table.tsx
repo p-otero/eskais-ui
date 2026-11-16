@@ -127,7 +127,7 @@ function AgentTaskBoardTable({ tasks, selectedTaskId, display }: AgentTaskBoardT
               </TableCell>
               <TableCell>
                 <span className="inline-flex items-center gap-inline">
-                  <TaskStatusIcon status={task.status} />
+                  <TaskStatusIcon status={task.status} tone={display.statusTones?.[task.status]} />
                   <TaskStatusPill status={task.status} labels={labels.components.taskStatus} />
                 </span>
               </TableCell>

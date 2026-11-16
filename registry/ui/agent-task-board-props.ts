@@ -1,7 +1,8 @@
 import type { ReactNode } from "react"
 
 import type { ColumnConfig, TaskFilters } from "@/lib/agent-task-board-model"
-import type { TaskView, ThreadRef } from "@/lib/agent-task-types"
+import type { TaskLink, TaskStatus, TaskView, ThreadRef } from "@/lib/agent-task-types"
+import type { Tone } from "@/lib/tone"
 import type { AgentAvatars } from "@/components/ui/agent-avatar"
 import type { AgentApproval, BoardView } from "@/components/ui/agent-task-board-primitive"
 import type { AgentTaskBoardLabelsInput } from "@/components/ui/agent-task-labels"
@@ -24,6 +25,10 @@ interface AgentTaskBoardBaseProps {
   onFiltersChange?: (filters: TaskFilters) => void
   columns?: ColumnConfig[]
   onColumnsChange?: (columns: ColumnConfig[]) => void
+  /** `"tint"` (default) marks each column with its tone: a dot, a top border and a faint wash. */
+  columnAccent?: ColumnAccent
+  /** Overrides `taskStatusAccentTones`; the cards' status icons follow. */
+  columnTones?: Partial<Record<TaskStatus, Tone>>
   selectedTaskId?: string | null
   defaultSelectedTaskId?: string | null
   onSelectTask?: (id: string | null) => void
@@ -31,6 +36,14 @@ interface AgentTaskBoardBaseProps {
   formatCurrency?: (usd: number) => string
   renderThreadLink?: (thread: ThreadRef) => ReactNode
   onOpenThread?: (thread: ThreadRef) => void
+  /** Replaces the default link in the detail's list of links. */
+  renderLink?: (link: TaskLink) => ReactNode
+  /** Takes over a link's click and the agent's `openLink`; without it, links navigate to their `href`. */
+  onOpenLink?: (link: TaskLink, task: TaskView) => void
+  /** Fills the detail's attachments slot, in the main column. */
+  renderAttachments?: (task: TaskView) => ReactNode
+  /** Fills the detail's location slot, in the side column. */
+  renderLocation?: (task: TaskView) => ReactNode
   /** Images, icons or names per provider id. No logos ship; agents show initials on a provider color otherwise. */
   agentAvatars?: AgentAvatars
   /** Live mode only. A returned Promise keeps the button pending and shows its error. */
@@ -49,6 +62,7 @@ interface AgentTaskBoardBaseProps {
 
 type DetailPresentation = "dialog" | "drawer" | "side"
 type BoardDensity = "comfortable" | "compact" | "auto"
+type ColumnAccent = "tint" | "none"
 
 type AgentTaskBoardProps = AgentTaskBoardBaseProps &
   (
@@ -60,4 +74,4 @@ type AgentTaskBoardProps = AgentTaskBoardBaseProps &
     | { mode: "live"; generatedAt?: string }
   )
 
-export type { AgentTaskBoardBaseProps, AgentTaskBoardProps, BoardDensity, DetailPresentation }
+export type { AgentTaskBoardBaseProps, AgentTaskBoardProps, BoardDensity, ColumnAccent, DetailPresentation }

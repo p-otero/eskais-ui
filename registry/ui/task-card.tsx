@@ -4,8 +4,9 @@ import { Button } from "@ui-sdk/react/button"
 import { memo, type ComponentProps } from "react"
 
 import { activeAttempt, attemptCount } from "@/lib/agent-task-board-model"
-import { agentDiffers, effectiveAgent, type TaskView } from "@/lib/agent-task-types"
+import { agentDiffers, effectiveAgent, type TaskLink, type TaskStatus, type TaskView } from "@/lib/agent-task-types"
 import type { Instant } from "@/lib/time"
+import type { Tone } from "@/lib/tone"
 import { cn } from "@/lib/utils"
 import { AgentAvatar, UnassignedAvatar, type AgentAvatars } from "@/components/ui/agent-avatar"
 import { agentBadgeLabels, agentSummary } from "@/components/ui/agent-badge"
@@ -15,6 +16,7 @@ import { ProposalActions } from "@/components/ui/proposal-actions"
 import { RelativeTime } from "@/components/ui/relative-time"
 import { TaskCardChips } from "@/components/ui/task-card-chips"
 import { TaskStatusIcon, taskStatusLabels } from "@/components/ui/task-status"
+import { PullRequestLink } from "@/components/ui/task-links"
 
 interface TaskDisplayOptions {
   mode?: BoardMode
@@ -32,6 +34,10 @@ interface TaskDisplayOptions {
   canSelect?: (id: string) => boolean
   /** Images, icons or names per provider id; initials on a provider color otherwise. */
   agentAvatars?: AgentAvatars
+  /** Tone of each status's icon; `taskStatusAccentTones` by default. */
+  statusTones?: Partial<Record<TaskStatus, Tone>>
+  /** Takes over a link's click; without it, links navigate to their `href`. */
+  onOpenLink?: (link: TaskLink, task: TaskView) => void
 }
 
 type TaskCardProps = Omit<ComponentProps<"article">, "children" | "onSelect"> &
@@ -59,6 +65,8 @@ function TaskCardComponent({
   onSelectTask,
   canSelect,
   agentAvatars,
+  statusTones,
+  onOpenLink,
   className,
   ...props
 }: TaskCardProps) {
@@ -68,6 +76,7 @@ function TaskCardComponent({
   const agent = attempt && effectiveAgent(attempt)
   const agentName = agent && agentSummary(agent, attempt.configured, { ...agentBadgeLabels, ...parts.agentBadge })
   const attempts = attemptCount(task)
+  const pullRequest = task.links?.find((link) => link.kind === "pull-request")
 
   return (
     <article
@@ -85,6 +94,14 @@ function TaskCardComponent({
         <span data-slot="task-card-id" className="font-mono text-xs text-muted-foreground">
           {task.id}
         </span>
+        {pullRequest && (
+          <PullRequestLink
+            link={pullRequest}
+            label={text.openPullRequest(pullRequest.label)}
+            onOpenLink={onOpenLink && ((link) => onOpenLink(link, task))}
+            className="relative z-10 ms-auto"
+          />
+        )}
         {agent ? (
           <AgentAvatar
             agent={agent}
@@ -92,15 +109,16 @@ function TaskCardComponent({
             label={agentName}
             title={agentName}
             data-differs={agentDiffers(attempt) ? "" : undefined}
-            className="relative z-10 ms-auto"
+            className={cn("relative z-10", !pullRequest && "ms-auto")}
           />
         ) : (
-          <UnassignedAvatar className="ms-auto" />
+          <UnassignedAvatar className={cn(!pullRequest && "ms-auto")} />
         )}
       </div>
       <div className="flex min-w-0 items-start gap-inline">
         <TaskStatusIcon
           status={task.status}
+          tone={statusTones?.[task.status]}
           label={parts.taskStatus?.[task.status] ?? taskStatusLabels[task.status]}
           className="relative z-10 h-lh"
         />

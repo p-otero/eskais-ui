@@ -32,8 +32,17 @@ Versions follow [semver](https://semver.org). Before 1.0, a minor version can br
 - `UsageGrid`: usage as dense tiles; the task detail uses it and sets its facts beside the acceptance list.
 - `chart` on Recharts v3 (`recharts@3.10.1`, installed only with this item): `ChartContainer` with a series config, tooltip and legend content, and `ChartDataTable`; theme tokens `--chart-1`…`--chart-5`.
 
+- `DialogContent` takes `size` (`sm`, `md` default, `lg`, `xl`, `full`) and `sheet` (a bottom sheet at `narrow:` width, on by default); `DialogBody` scrolls between a header and footer that stay in view, and long unbroken text wraps. Theme tokens `--dialog-opacity`, `--dialog-width`, `--dialog-max-height`, `--sheet-max-height`.
+- `AgentTaskBoard`: `columnAccent` and `columnTones` colour each column with the shared tones (`taskStatusAccentTones`); `TaskView.links` with `renderLink`, `onOpenLink` and an `openLink` agent action; `renderAttachments` and `renderLocation` slots in the detail.
+- `TaskLinks` and `PullRequestLink` (`task-links`), `AcceptanceList evidence="disclosure"`, `UsageGrid variant="compact"`, and a `tone` on `BoardColumn` and `TaskStatusIcon`.
+
 ### Changed
 
+- The task detail dialog is `xl` and sets a side column (meta, work, usage, links, location) beside the goal, acceptance and activity once it is 56rem wide; acceptance evidence folds into a disclosure and each attempt's usage toggle sits in its title row.
+- A board column's collapse toggle moved to the end of its header with a fold icon and a tooltip, shown on hover or focus (always on touch and while collapsed).
+- A thread with an `href` or `onOpenThread` opens from an "Open thread" button (`labels.openThread`) with its id in the tooltip; the bare id is never shown as text.
+- `TaskStatusIcon` colours follow the column tones, so a proposal's icon is neutral, not warning.
+- Dialogs and drawers fill with `--dialog-opacity`, so the task detail passes contrast under light glass.
 - Fields share one surface style (`fieldSurfaceClassName`), and a `Field` holding a checkbox lays out as a row.
 
 - Reduced motion stops infinite animations instead of making them flicker.

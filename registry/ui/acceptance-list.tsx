@@ -4,6 +4,7 @@ import { Meter, MeterTrack } from "@ui-sdk/react/meter"
 import { renderElement, type PartProps } from "@ui-sdk/react/primitive"
 import type { ComponentProps, ReactNode } from "react"
 
+import { Collapsible, CollapsibleIcon, CollapsiblePanel, CollapsibleTrigger } from "@/components/ui/collapsible"
 import { cn } from "@/lib/utils"
 
 type AcceptanceResult = "pass" | "fail" | "unverified"
@@ -79,9 +80,18 @@ function AcceptanceIcon({ result }: { result: AcceptanceResult }) {
 type AcceptanceListProps = Omit<PartProps<"ul">, "children"> & {
   criteria: readonly AcceptanceCriterion[]
   labels?: Partial<AcceptanceLabels>
+  /** `"disclosure"` keeps each criterion to one row and reveals its evidence on demand. */
+  evidence?: "inline" | "disclosure"
 }
 
-function AcceptanceList({ criteria, labels, className, render, ...props }: AcceptanceListProps) {
+function AcceptanceList({
+  criteria,
+  labels,
+  evidence: evidenceMode = "inline",
+  className,
+  render,
+  ...props
+}: AcceptanceListProps) {
   const text = { ...defaultAcceptanceLabels, ...labels }
   return renderElement(
     "ul",
@@ -99,15 +109,32 @@ function AcceptanceList({ criteria, labels, className, render, ...props }: Accep
           className="flex gap-inline"
         >
           <AcceptanceIcon result={criterion.result} />
-          <div className="flex min-w-0 flex-col gap-inline">
-            <span className="sr-only">{text[criterion.result]}</span>
-            <span>{criterion.text}</span>
-            {criterion.evidence ? (
-              <span data-slot="acceptance-evidence" className="text-xs text-muted-foreground">
-                {criterion.evidence}
-              </span>
-            ) : null}
-          </div>
+          {criterion.evidence && evidenceMode === "disclosure" ? (
+            <Collapsible className="min-w-0 flex-1">
+              <CollapsibleTrigger className="min-h-0 w-full justify-between rounded-sm px-0 text-start font-normal hover:bg-transparent hover:text-foreground hover:underline">
+                <span className="min-w-0">
+                  <span className="sr-only">{text[criterion.result]}</span>
+                  {criterion.text}
+                </span>
+                <CollapsibleIcon className="text-muted-foreground" />
+              </CollapsibleTrigger>
+              <CollapsiblePanel>
+                <p data-slot="acceptance-evidence" className="pt-inline text-xs text-muted-foreground">
+                  {criterion.evidence}
+                </p>
+              </CollapsiblePanel>
+            </Collapsible>
+          ) : (
+            <div className="flex min-w-0 flex-col gap-inline">
+              <span className="sr-only">{text[criterion.result]}</span>
+              <span>{criterion.text}</span>
+              {criterion.evidence ? (
+                <span data-slot="acceptance-evidence" className="text-xs text-muted-foreground">
+                  {criterion.evidence}
+                </span>
+              ) : null}
+            </div>
+          )}
         </li>
       )),
     },

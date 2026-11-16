@@ -26,6 +26,7 @@ import { AgentTaskBoardToolbar } from "@/components/ui/agent-task-board-toolbar"
 import { agentTaskBoardLabels, agentTaskBoardLabelsEs, resolveLabels } from "@/components/ui/agent-task-labels"
 import { useNow } from "@/components/ui/relative-time"
 import type { TaskDisplayOptions } from "@/components/ui/task-card"
+import { taskStatusAccentTones } from "@/components/ui/task-status"
 import { useBoardFocus } from "@/components/ui/use-board-focus"
 
 const NO_FILTERS: TaskFilters = {}
@@ -43,7 +44,9 @@ function pageLocale() {
 function AgentTaskBoard(props: AgentTaskBoardProps) {
   const { tasks, mode, generatedAt, formatCurrency, timeZone, agentApproval = "confirm" } = props
   const { onApproveProposal, onRejectProposal, renderThreadLink, onOpenThread } = props
-  const { detailPresentation = "dialog", density = "auto", agentAvatars } = props
+  const { detailPresentation = "dialog", density = "auto", agentAvatars, columnAccent = "tint" } = props
+  const { renderLink, onOpenLink, renderAttachments, renderLocation } = props
+  const tones = useMemo(() => ({ ...taskStatusAccentTones, ...props.columnTones }), [props.columnTones])
   const labels = useMemo(() => resolveLabels(props.labels), [props.labels])
   const now = useNow({ now: mode === "snapshot" ? generatedAt : props.now })
   const locale = props.locale ?? pageLocale()
@@ -93,6 +96,8 @@ function AgentTaskBoard(props: AgentTaskBoardProps) {
       onSelectTask: selectTask,
       canSelect: (id: string) => ids.has(id),
       agentAvatars,
+      statusTones: tones,
+      onOpenLink,
     }),
     [
       mode,
@@ -108,6 +113,8 @@ function AgentTaskBoard(props: AgentTaskBoardProps) {
       selectTask,
       ids,
       agentAvatars,
+      tones,
+      onOpenLink,
     ],
   )
 
@@ -125,6 +132,7 @@ function AgentTaskBoard(props: AgentTaskBoardProps) {
         columns={grouped}
         selectedTaskId={selectedId}
         display={display}
+        tones={columnAccent === "tint" ? tones : undefined}
         onCollapsedChange={(status, collapsed) => {
           const next = withColumn(columns, status, { collapsed })
           setColumns(next)
@@ -157,6 +165,13 @@ function AgentTaskBoard(props: AgentTaskBoardProps) {
         props.onSelectTask?.(id)
       }}
       onOpenThread={onOpenThread && ((thread) => onOpenThread(thread))}
+      onOpenLink={
+        onOpenLink &&
+        ((link, details) => {
+          const task = tasks.find((candidate) => candidate.id === details.taskId)
+          if (task) onOpenLink(link, task)
+        })
+      }
       className={cn("@container/agent-task-board min-w-0", props.className)}
     >
       <div data-slot="agent-task-board-density" data-density={density} className="flex flex-col gap-section">
@@ -189,6 +204,9 @@ function AgentTaskBoard(props: AgentTaskBoardProps) {
           returnFocus={cardOfLastTask}
           renderThreadLink={renderThreadLink}
           onOpenThread={onOpenThread}
+          renderLink={renderLink}
+          renderAttachments={renderAttachments}
+          renderLocation={renderLocation}
         >
           {content}
         </AgentTaskBoardDetail>
@@ -207,5 +225,5 @@ function AgentTaskBoard(props: AgentTaskBoardProps) {
   )
 }
 
-export { AgentTaskBoard, agentTaskBoardLabels, agentTaskBoardLabelsEs }
-export type { AgentTaskBoardProps }
+export { AgentTaskBoard, agentTaskBoardLabels, agentTaskBoardLabelsEs, taskStatusAccentTones }
+export type { AgentTaskBoardProps, ColumnAccent } from "@/components/ui/agent-task-board-props"

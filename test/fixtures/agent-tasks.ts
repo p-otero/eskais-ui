@@ -121,6 +121,16 @@ const sampleTasks: TaskView[] = [
     activeAttemptId: "T-014-A2",
     usage: usage(60_000, 10_500, 0.43),
     counts: { attempts: 2, repairs: 1, reviews: 0, humanInterventions: 0 },
+    links: [
+      {
+        kind: "pull-request",
+        href: "https://example.com/acme/docs/pull/128",
+        label: "#128 Index the docs for search",
+        state: "open",
+      },
+      { kind: "branch", href: "https://example.com/acme/docs/tree/index-docs", label: "index-docs" },
+      { kind: "issue", href: "https://example.com/acme/docs/issues/97", label: "#97 Search is slow" },
+    ],
     updatedAt: "2026-11-15T18:40:00Z",
   },
   {
@@ -149,6 +159,15 @@ const sampleTasks: TaskView[] = [
       },
     ],
     activeAttemptId: "T-015-A1",
+    links: [
+      {
+        kind: "pull-request",
+        href: "https://example.com/acme/app/pull/131",
+        label: "#131 Ask before destructive steps",
+        state: "merged",
+      },
+      { kind: "commit", href: "https://example.com/acme/app/commit/4f2a9c1", label: "4f2a9c1" },
+    ],
     updatedAt: "2026-11-15T17:55:00Z",
   },
   {

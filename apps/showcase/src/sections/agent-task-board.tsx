@@ -4,9 +4,9 @@ import { AgentTaskBoard } from "@/components/ui/agent-task-board"
 import type { DetailPresentation } from "@/components/ui/agent-task-board-props"
 import { Field, FieldLabel } from "@/components/ui/field"
 import { SegmentedControl, SegmentedControlIndicator, SegmentedControlItem } from "@/components/ui/segmented-control"
-import type { TaskStatus, TaskView } from "@/lib/agent-task-types"
+import type { TaskLink, TaskStatus, TaskView } from "@/lib/agent-task-types"
 
-import { GENERATED_AT, sampleTasks } from "../../../../test/fixtures/agent-tasks"
+import { GENERATED_AT, generateTasks, sampleTasks } from "../../../../test/fixtures/agent-tasks"
 import { Section } from "../section"
 
 const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
@@ -15,6 +15,7 @@ function AgentTaskBoardSection() {
   const [mode, setMode] = useState<"snapshot" | "live">("live")
   const [detail, setDetail] = useState<DetailPresentation>("dialog")
   const [tasks, setTasks] = useState<TaskView[]>(sampleTasks)
+  const [data, setData] = useState<"sample" | "large">("sample")
   const [log, setLog] = useState("Approve fails the first time on purpose.")
   const approvals = useRef(0)
 
@@ -41,6 +42,9 @@ function AgentTaskBoardSection() {
     timeZone: "UTC",
     detailPresentation: detail,
     onOpenThread: (thread: { id: string }) => setLog(`Open thread ${thread.id}.`),
+    onOpenLink: (link: TaskLink) => setLog(`Open ${link.label}.`),
+    renderLocation: (task: TaskView) =>
+      task.project ? <code className="font-mono text-xs">{task.project}</code> : null,
     onApproveProposal: approve,
     onRejectProposal: reject,
   }
@@ -67,6 +71,21 @@ function AgentTaskBoardSection() {
               <SegmentedControlItem value="dialog">Dialog</SegmentedControlItem>
               <SegmentedControlItem value="drawer">Drawer</SegmentedControlItem>
               <SegmentedControlItem value="side">Side</SegmentedControlItem>
+            </SegmentedControl>
+          </Field>
+          <Field>
+            <FieldLabel>Data</FieldLabel>
+            <SegmentedControl
+              value={data}
+              onValueChange={(next) => {
+                if (!next) return
+                setData(next)
+                setTasks(next === "large" ? generateTasks(200, 30) : sampleTasks)
+              }}
+            >
+              <SegmentedControlIndicator />
+              <SegmentedControlItem value="sample">Sample</SegmentedControlItem>
+              <SegmentedControlItem value="large">200 tasks</SegmentedControlItem>
             </SegmentedControl>
           </Field>
           <p className="text-sm text-muted-foreground" aria-live="polite">

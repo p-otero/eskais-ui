@@ -75,6 +75,13 @@ interface AttemptView {
   blocker?: { kind: string; summary: string; retryAt?: string }
 }
 
+interface TaskLink {
+  kind: "pull-request" | "branch" | "commit" | "issue" | "external"
+  href: string
+  label: string
+  state?: "draft" | "open" | "merged" | "closed"
+}
+
 interface TaskView {
   id: string
   title: string
@@ -98,6 +105,8 @@ interface TaskView {
   counts?: { attempts: number; repairs: number; reviews: number; humanInterventions: number }
   acceptedFirstPass?: boolean
   labels?: string[]
+  /** Pull requests, branches, commits, issues and other pages about the task. */
+  links?: TaskLink[]
   /** ISO 8601 UTC. */
   updatedAt: string
 }
@@ -125,6 +134,7 @@ export type {
   AttemptView,
   ContextMode,
   Liveness,
+  TaskLink,
   TaskStatus,
   TaskView,
   ThreadRef,

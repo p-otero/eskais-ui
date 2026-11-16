@@ -1,4 +1,4 @@
-import type { TaskStatus } from "@/lib/agent-task-types"
+import type { TaskLink, TaskStatus } from "@/lib/agent-task-types"
 
 interface ProposalLabels {
   /** Accessible name of the agent-only proposals group. */
@@ -40,6 +40,13 @@ interface CardLabels {
   /** Precedes the relative retry time, as in "Retry in 3 hours". */
   retry: string
   analysisMode: { review: string; autonomous: string }
+  /** Accessible name of the card's pull request icon link. */
+  openPullRequest: (label: string) => string
+}
+
+interface LinkLabels {
+  kind: Record<TaskLink["kind"], string>
+  state: Record<NonNullable<TaskLink["state"]>, string>
 }
 
 interface PanelLabels {
@@ -57,6 +64,18 @@ interface PanelLabels {
   cost: string
   profile: string
   project: string
+  status: string
+  labels: string
+  links: string
+  linksOf: (id: string) => string
+  activity: string
+  attachments: string
+  location: string
+  attemptsSummary: string
+  counts: { attempts: string; repairs: string; reviews: string; humanInterventions: string }
+  acceptedFirstPass: string
+  yes: string
+  no: string
 }
 
 type TableColumn = "id" | "title" | "status" | "profile" | "agent" | "attempts" | "cost" | "updatedAt"
@@ -100,6 +119,9 @@ interface AgentTaskBoardLabels {
   errors: { approveFailed: string; rejectFailed: string; unknown: string }
   card: CardLabels
   panel: PanelLabels
+  link: LinkLabels
+  /** Visible text of a thread's link; the thread's name goes in its accessible name and its id in a tooltip. */
+  openThread: string
   table: TableLabels
   components: AgentTaskBoardComponentLabels
 }
@@ -186,6 +208,7 @@ const agentTaskBoardLabels: AgentTaskBoardLabels = {
     updated: "Updated",
     retry: "Retry",
     analysisMode: { review: "A person reviews it before agents run", autonomous: "Agents run it on their own" },
+    openPullRequest: (label) => `Open pull request ${label}`,
   },
   panel: {
     close: "Close task details",
@@ -202,7 +225,24 @@ const agentTaskBoardLabels: AgentTaskBoardLabels = {
     cost: "Cost",
     profile: "Profile",
     project: "Project",
+    status: "Status",
+    labels: "Labels",
+    links: "Links",
+    linksOf: (id) => `Links of ${id}`,
+    activity: "Activity",
+    attachments: "Attachments",
+    location: "Location",
+    attemptsSummary: "Work",
+    counts: { attempts: "Attempts", repairs: "Repairs", reviews: "Reviews", humanInterventions: "Human interventions" },
+    acceptedFirstPass: "Accepted first pass",
+    yes: "Yes",
+    no: "No",
   },
+  link: {
+    kind: { "pull-request": "Pull request", branch: "Branch", commit: "Commit", issue: "Issue", external: "Link" },
+    state: { draft: "Draft", open: "Open", merged: "Merged", closed: "Closed" },
+  },
+  openThread: "Open thread",
   table: {
     name: "Agent tasks table",
     columns: {
@@ -296,6 +336,7 @@ const agentTaskBoardLabelsEs: AgentTaskBoardLabels = {
       review: "Una persona la revisa antes de que trabajen los agentes",
       autonomous: "Los agentes la hacen por su cuenta",
     },
+    openPullRequest: (label) => `Abrir pull request ${label}`,
   },
   panel: {
     close: "Cerrar detalles de la tarea",
@@ -312,7 +353,29 @@ const agentTaskBoardLabelsEs: AgentTaskBoardLabels = {
     cost: "Coste",
     profile: "Perfil",
     project: "Proyecto",
+    status: "Estado",
+    labels: "Etiquetas",
+    links: "Enlaces",
+    linksOf: (id) => `Enlaces de ${id}`,
+    activity: "Actividad",
+    attachments: "Adjuntos",
+    location: "Ubicación",
+    attemptsSummary: "Trabajo",
+    counts: {
+      attempts: "Intentos",
+      repairs: "Reparaciones",
+      reviews: "Revisiones",
+      humanInterventions: "Intervenciones humanas",
+    },
+    acceptedFirstPass: "Aceptada a la primera",
+    yes: "Sí",
+    no: "No",
   },
+  link: {
+    kind: { "pull-request": "Pull request", branch: "Rama", commit: "Commit", issue: "Incidencia", external: "Enlace" },
+    state: { draft: "Borrador", open: "Abierta", merged: "Fusionada", closed: "Cerrada" },
+  },
+  openThread: "Abrir hilo",
   table: {
     name: "Tabla de tareas de agentes",
     columns: {
@@ -356,6 +419,7 @@ export type {
   AgentTaskBoardLabels,
   AgentTaskBoardLabelsInput,
   CardLabels,
+  LinkLabels,
   PanelLabels,
   ProposalLabels,
   TableColumn,

@@ -36,6 +36,7 @@ import { Section } from "./section"
 import { BoardSection } from "./sections/board"
 import { NavigationSection } from "./sections/navigation"
 import { OverlaysSection } from "./sections/overlays"
+import { DialogSizesSection } from "./sections/dialog-sizes"
 import { FloatingSection } from "./sections/floating"
 import { ProposalsSection } from "./sections/proposals"
 import { StructureSection } from "./sections/structure"
@@ -296,6 +297,8 @@ function App() {
           <StructureSection />
 
           <OverlaysSection />
+
+          <DialogSizesSection />
 
           <FloatingSection />
 

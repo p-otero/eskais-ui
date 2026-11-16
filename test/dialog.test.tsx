@@ -6,6 +6,7 @@ import { expect, test, vi } from "vitest"
 import {
   Dialog,
   DialogBackdrop,
+  DialogBody,
   DialogClose,
   DialogContent,
   DialogDescription,
@@ -95,4 +96,54 @@ test("an agent can open the dialog and edit its field", async () => {
   const result = await agent.act({ steps: [{ ref: "Project name", action: "setValue", args: ["Atlas"] }] })
   expect(result.ok, result.error?.message).toBe(true)
   expect(screen.getByRole<HTMLInputElement>("textbox", { name: "Project name" }).value).toBe("Atlas")
+})
+
+function SizedDialog({ size, sheet }: { size?: "sm" | "md" | "lg" | "xl" | "full"; sheet?: boolean }) {
+  return (
+    <Dialog defaultOpen>
+      <DialogBackdrop />
+      <DialogContent size={size} sheet={sheet}>
+        <DialogHeader>
+          <DialogTitle>Sized</DialogTitle>
+        </DialogHeader>
+        <DialogBody>
+          <p>Body</p>
+        </DialogBody>
+        <DialogFooter>
+          <DialogClose>Close</DialogClose>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  )
+}
+
+test("sizes set the width; md is the default; the body scrolls between a header and footer that don't shrink", () => {
+  const widths = { sm: "max-w-sm", md: "max-w-lg", lg: "max-w-3xl", xl: "max-w-6xl", full: "max-w-none" } as const
+  for (const [size, width] of Object.entries(widths) as [keyof typeof widths, string][]) {
+    const { unmount } = render(<SizedDialog size={size} />)
+    const dialog = screen.getByRole("dialog", { name: "Sized" })
+    expect(dialog.getAttribute("data-size")).toBe(size)
+    expect(dialog.className).toContain(width)
+    expect(dialog.className).toContain("wrap-anywhere")
+    expect(dialog.className).not.toMatch(/\d+d?vh\b|h-screen/)
+    unmount()
+  }
+  render(<SizedDialog />)
+  const dialog = screen.getByRole("dialog", { name: "Sized" })
+  expect(dialog.getAttribute("data-size")).toBe("md")
+  expect(dialog.querySelector('[data-slot="dialog-body"]')?.className).toContain("overflow-y-auto")
+  expect(dialog.querySelector('[data-slot="dialog-header"]')?.className).toContain("shrink-0")
+  expect(dialog.querySelector('[data-slot="dialog-footer"]')?.className).toContain("shrink-0")
+})
+
+test("on narrow screens it is a bottom sheet unless sheet={false}", () => {
+  const { unmount } = render(<SizedDialog />)
+  const sheet = screen.getByRole("dialog", { name: "Sized" })
+  expect(sheet.hasAttribute("data-sheet")).toBe(true)
+  expect(sheet.className).toContain("narrow:rounded-b-none")
+  unmount()
+  render(<SizedDialog sheet={false} />)
+  const centered = screen.getByRole("dialog", { name: "Sized" })
+  expect(centered.hasAttribute("data-sheet")).toBe(false)
+  expect(centered.className).not.toContain("narrow:")
 })

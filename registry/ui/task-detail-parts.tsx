@@ -16,9 +16,22 @@ type DetailValueProps = {
   locale?: string
   formatCurrency?: (usd: number) => string
   quantityLabels?: Partial<QuantityLabels>
+  /** Term and value on one row. */
+  inline?: boolean
+  /** Lets the value wrap instead of truncating. */
+  wrap?: boolean
 }
 
-function DetailValue({ term, children, quantity, locale, formatCurrency, quantityLabels }: DetailValueProps) {
+function DetailValue({
+  term,
+  children,
+  quantity,
+  locale,
+  formatCurrency,
+  quantityLabels,
+  inline = false,
+  wrap = false,
+}: DetailValueProps) {
   let value = children
   if (quantity) {
     const format = usageFormatter("cost", { locale, formatCurrency })
@@ -45,9 +58,12 @@ function DetailValue({ term, children, quantity, locale, formatCurrency, quantit
     )
   }
   return (
-    <div data-slot="task-detail-value" className="flex min-w-0 flex-col gap-inline">
-      <dt className="text-xs text-muted-foreground">{term}</dt>
-      <dd className="min-w-0 truncate">{value}</dd>
+    <div
+      data-slot="task-detail-value"
+      className={cn("flex min-w-0 gap-inline", inline ? "items-baseline justify-between" : "flex-col")}
+    >
+      <dt className="min-w-0 truncate text-xs text-muted-foreground">{term}</dt>
+      <dd className={cn("min-w-0", wrap ? "wrap-anywhere" : "truncate", inline && "shrink-0 tabular-nums")}>{value}</dd>
     </div>
   )
 }

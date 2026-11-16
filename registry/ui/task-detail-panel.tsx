@@ -11,7 +11,7 @@ import { CloseIcon, insidePopup } from "@/components/ui/task-detail-parts"
 type CloseReason = "close-press" | "escape-key" | "outside-press"
 
 type TaskDetailPanelProps = Omit<ComponentProps<"section">, "children"> &
-  Omit<TaskDetailContentProps, "headingLevel"> & {
+  Omit<TaskDetailContentProps, "headingLevel" | "layout" | "showStatus"> & {
     onClose?: (reason: CloseReason) => void
     /** Heading level of the task title; sections inside take the next one. */
     headingLevel?: 2 | 3 | 4 | 5
@@ -33,6 +33,12 @@ function TaskDetailPanel({
   onClose,
   renderThreadLink,
   onOpenThread,
+  renderLink,
+  onOpenLink,
+  renderAttachments,
+  renderLocation,
+  agentAvatars,
+  statusTones,
   headingLevel = 2,
   className,
   onKeyDown,
@@ -55,6 +61,12 @@ function TaskDetailPanel({
     canSelect,
     renderThreadLink,
     onOpenThread,
+    renderLink,
+    onOpenLink,
+    renderAttachments,
+    renderLocation,
+    agentAvatars,
+    statusTones,
   }
 
   function handleKeyDown(event: KeyboardEvent<HTMLElement>) {
@@ -97,7 +109,7 @@ function TaskDetailPanel({
           </Button>
         )}
       </header>
-      <TaskDetailContent {...content} headingLevel={headingLevel + 1} />
+      <TaskDetailContent {...content} showStatus={false} headingLevel={headingLevel + 1} />
     </section>
   )
 }

@@ -2,7 +2,7 @@
 
 import type { ReactNode, Ref } from "react"
 
-import type { TaskView, ThreadRef } from "@/lib/agent-task-types"
+import type { TaskLink, TaskView, ThreadRef } from "@/lib/agent-task-types"
 import type { DetailPresentation } from "@/components/ui/agent-task-board-props"
 import type { TaskDisplayOptions } from "@/components/ui/task-card"
 import { TaskDetailDialog } from "@/components/ui/task-detail-dialog"
@@ -21,6 +21,9 @@ type AgentTaskBoardDetailProps = {
   returnFocus: () => HTMLElement | null
   renderThreadLink?: (thread: ThreadRef) => ReactNode
   onOpenThread?: (thread: ThreadRef) => void
+  renderLink?: (link: TaskLink) => ReactNode
+  renderAttachments?: (task: TaskView) => ReactNode
+  renderLocation?: (task: TaskView) => ReactNode
 }
 
 function AgentTaskBoardDetail({
@@ -34,8 +37,11 @@ function AgentTaskBoardDetail({
   returnFocus,
   renderThreadLink,
   onOpenThread,
+  renderLink,
+  renderAttachments,
+  renderLocation,
 }: AgentTaskBoardDetailProps) {
-  const threads = { renderThreadLink, onOpenThread }
+  const threads = { renderThreadLink, onOpenThread, renderLink, renderAttachments, renderLocation }
   if (presentation !== "side") {
     return (
       <>

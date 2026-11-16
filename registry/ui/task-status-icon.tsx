@@ -1,16 +1,26 @@
 import type { ComponentProps, ReactNode } from "react"
 
 import type { TaskStatus } from "@/lib/agent-task-types"
+import type { Tone } from "@/lib/tone"
 import { cn } from "@/lib/utils"
 
-const statusIconColor: Record<TaskStatus, string> = {
-  proposed: "text-warning",
-  todo: "text-muted-foreground",
-  working: "text-info",
-  review: "text-warning",
-  blocked: "text-destructive",
-  done: "text-success",
-  cancelled: "text-muted-foreground",
+/** What each status means, shared by the board's column accents and the status icons. */
+const taskStatusAccentTones: Record<TaskStatus, Tone> = {
+  proposed: "neutral",
+  todo: "neutral",
+  working: "info",
+  review: "warning",
+  blocked: "destructive",
+  done: "success",
+  cancelled: "neutral",
+}
+
+const toneIconColor: Record<Tone, string> = {
+  neutral: "text-muted-foreground",
+  info: "text-info",
+  success: "text-success",
+  warning: "text-warning",
+  destructive: "text-destructive",
 }
 
 const statusIconShape: Record<TaskStatus, ReactNode> = {
@@ -52,9 +62,11 @@ type TaskStatusIconProps = Omit<ComponentProps<"svg">, "children"> & {
   status: TaskStatus
   /** Names the icon when no status text is beside it; without it, it is decorative. */
   label?: string
+  /** Overrides the status's tone, as a board's `columnTones` does. */
+  tone?: Tone
 }
 
-function TaskStatusIcon({ status, label, className, ...props }: TaskStatusIconProps) {
+function TaskStatusIcon({ status, label, tone, className, ...props }: TaskStatusIconProps) {
   return (
     <svg
       viewBox="0 0 16 16"
@@ -65,10 +77,11 @@ function TaskStatusIcon({ status, label, className, ...props }: TaskStatusIconPr
       strokeLinejoin="round"
       data-slot="task-status-icon"
       data-status={status}
+      data-tone={tone ?? taskStatusAccentTones[status]}
       role={label ? "img" : undefined}
       aria-label={label}
       aria-hidden={label ? undefined : true}
-      className={cn("size-3.5 shrink-0", statusIconColor[status], className)}
+      className={cn("size-3.5 shrink-0", toneIconColor[tone ?? taskStatusAccentTones[status]], className)}
       {...props}
     >
       {statusIconShape[status]}
@@ -76,5 +89,5 @@ function TaskStatusIcon({ status, label, className, ...props }: TaskStatusIconPr
   )
 }
 
-export { TaskStatusIcon }
+export { TaskStatusIcon, taskStatusAccentTones }
 export type { TaskStatusIconProps }

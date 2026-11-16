@@ -222,6 +222,7 @@
       "--floating-radius": "calc(min(var(--control-radius), var(--control-height-sm) / 2) + var(--gap-inline))",
       "--floating-offset": "1rem",
       "--floating-opacity": "85%",
+      "--dialog-opacity": "max(92%, var(--glass-opacity))",
       "--floating-backdrop": "blur(16px) saturate(1.5)",
       "--floating-shadow": "0 1px 2px -1px oklch(0 0 0 / 0.06), 0 4px 10px -2px oklch(0 0 0 / 0.06), 0 16px 36px -8px oklch(0 0 0 / 0.14)",
       "--board-column-min-width": "16rem",
@@ -229,6 +230,11 @@
       "--board-column-max-height": "40rem",
       "--task-panel-width": "26rem",
       "--task-panel-max-height": "32rem",
+      "--task-detail-columns": "minmax(0, 1fr) minmax(16rem, 20rem)",
+      "--detail-value-columns": "repeat(auto-fill, minmax(8.5rem, 1fr))",
+      "--dialog-width": "calc(100% - 2 * var(--floating-offset))",
+      "--dialog-max-height": "calc(100% - 2 * var(--floating-offset))",
+      "--sheet-max-height": "calc(100% - var(--floating-offset))",
       "--sidebar-width": "16rem",
       "--sidebar-rail-width": "calc(var(--control-height) + 1rem)",
       "--type-meta-size": "0.6875rem",
@@ -433,6 +439,9 @@
     },
     "@utility text-vertical": {
       "writing-mode": "vertical-rl"
+    },
+    "@utility board-column-wash": {
+      "background-image": "linear-gradient( to bottom, color-mix(in oklab, var(--column-tone) 9%, transparent), transparent calc(var(--control-height-sm) + var(--gap-items)) )"
     },
     "@layer components": {
       "@media (pointer: coarse)": {

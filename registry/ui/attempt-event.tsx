@@ -53,6 +53,26 @@ interface AttemptEventOptions extends ThreadRendering {
   usageOpen: boolean
 }
 
+// The usage toggle sits in the title row and its table at the end, so one Collapsible spans the whole column.
+function AttemptColumn({
+  collapsible,
+  defaultOpen,
+  children,
+}: {
+  collapsible: boolean
+  defaultOpen: boolean
+  children: ReactNode
+}) {
+  const className = "flex min-w-0 flex-1 flex-col gap-items"
+  return collapsible ? (
+    <Collapsible defaultOpen={defaultOpen} className={className}>
+      {children}
+    </Collapsible>
+  ) : (
+    <div className={className}>{children}</div>
+  )
+}
+
 function AttemptEvent({ attempt, ...options }: AttemptEventOptions & { attempt: AttemptView }) {
   const { labels, formatAttemptId, now, locale, timeZone } = options
   const name = formatAttemptId(attempt.id)
@@ -73,7 +93,7 @@ function AttemptEvent({ attempt, ...options }: AttemptEventOptions & { attempt: 
       <TimelineMarker className={cn("mt-1 size-3 shrink-0 rounded-full border-2", markerColor[attempt.status])} />
       {/* oxlint-disable-next-line eskais/spacing-tokens -- geometry: runs from under the size-3 marker, centred on it, to the next one */}
       <TimelineConnector className="absolute start-1.25 top-5 bottom-1 w-0.5 bg-border group-data-last/attempt:hidden" />
-      <div className="flex min-w-0 flex-1 flex-col gap-items">
+      <AttemptColumn collapsible={attempt.usage !== undefined} defaultOpen={options.usageOpen}>
         <div className="flex flex-wrap items-center gap-inline">
           <TimelineTitle className="text-sm font-semibold">
             {name} · {kind}
@@ -82,6 +102,15 @@ function AttemptEvent({ attempt, ...options }: AttemptEventOptions & { attempt: 
             options.renderStatus(attempt)
           ) : (
             <AttemptStatusPill status={attempt.status} labels={labels.status} />
+          )}
+          {attempt.usage && (
+            <CollapsibleTrigger
+              aria-label={labels.usageFor(name)}
+              className="ms-auto h-control-sm min-h-0 px-inline text-xs"
+            >
+              <span>{labels.usage}</span>
+              <CollapsibleIcon />
+            </CollapsibleTrigger>
           )}
         </div>
         <TimelineTime render={<div />} className="flex flex-wrap gap-x-items text-xs text-muted-foreground">
@@ -111,7 +140,13 @@ function AttemptEvent({ attempt, ...options }: AttemptEventOptions & { attempt: 
                     <>
                       {" "}
                       {labels.from}{" "}
-                      <AttemptThread thread={attempt.sourceThread} label={labels.openSourceThread} {...threads} />
+                      <AttemptThread
+                        thread={attempt.sourceThread}
+                        label={labels.openSourceThread}
+                        text={labels.thread}
+                        inline
+                        {...threads}
+                      />
                     </>
                   )}
                 </span>
@@ -128,30 +163,29 @@ function AttemptEvent({ attempt, ...options }: AttemptEventOptions & { attempt: 
         {attempt.blocker && (
           <AttemptBlocker blocker={attempt.blocker} labels={labels} locale={locale} timeZone={timeZone} />
         )}
-        {attempt.thread && (
-          <span className="flex flex-wrap items-center gap-x-inline text-sm">
-            <span className="text-muted-foreground">{labels.thread}:</span>
-            <AttemptThread thread={attempt.thread} label={labels.openThread} {...threads} />
-          </span>
-        )}
+        {attempt.thread &&
+          (options.renderThreadLink || attempt.thread.href || options.onOpenThread ? (
+            <AttemptThread thread={attempt.thread} label={labels.openThread} text={labels.threadLink} {...threads} />
+          ) : (
+            attempt.thread.title && (
+              <span className="flex flex-wrap items-center gap-x-inline text-sm">
+                <span className="text-muted-foreground">{labels.thread}:</span>
+                <AttemptThread thread={attempt.thread} label={labels.openThread} text={labels.threadLink} />
+              </span>
+            )
+          ))}
         {attempt.usage && (
-          <Collapsible defaultOpen={options.usageOpen}>
-            <CollapsibleTrigger aria-label={labels.usageFor(name)} className="-ms-control-x self-start">
-              {labels.usage}
-              <CollapsibleIcon />
-            </CollapsibleTrigger>
-            <CollapsiblePanel>
-              <UsageTable
-                usage={attempt.usage}
-                aria-label={labels.usageTable(name)}
-                labels={options.usageLabels}
-                locale={locale}
-                formatCurrency={options.formatCurrency}
-              />
-            </CollapsiblePanel>
-          </Collapsible>
+          <CollapsiblePanel>
+            <UsageTable
+              usage={attempt.usage}
+              aria-label={labels.usageTable(name)}
+              labels={options.usageLabels}
+              locale={locale}
+              formatCurrency={options.formatCurrency}
+            />
+          </CollapsiblePanel>
         )}
-      </div>
+      </AttemptColumn>
     </TimelineItem>
   )
 }
