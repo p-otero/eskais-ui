@@ -9,6 +9,7 @@ Versions follow [semver](https://semver.org). Before 1.0, a minor version can br
 - Fast links: `Link`, `ButtonLink` and `NavigationMenuLink` follow a same-origin link on a primary mouse press instead of on release, with `@fast-link/core` 0.0.2 (through `onFollow`, or `location.assign`). `fast={false}` opts a link out and `data-no-fast-link` on any ancestor a region or the app; `FastLinkRegion` and `useFastLink` cover plain anchors. A `render`ed router link or a link with its own `onClick` stays on click unless it has `onFollow`.
 - Icons come from `lucide-react` (1.73.0): every hand-drawn icon in the registry is now a lucide import, and the items that use one depend on it. `icon` adds `Icon`, which names an icon for screen readers (`<Icon icon={TrashIcon} label="Deleted" />`). The `eskais/no-inline-icons` lint rule flags any other `<svg>` in `registry/**`.
 - Deprecated: `ChevronIcon` from `select` and `PanelIcon` from `sidebar` (import `ChevronDownIcon` and `PanelLeftIcon` from `lucide-react`). `CloseIcon` is no longer exported from `task-detail-parts`. `select` still exports lucide's `CheckIcon`.
+- `StepDialog` `resultStep={{ title, render: (result, { close, restart }) => … }}` (opt-in) shows what `onSubmit` resolved with inside the dialog instead of closing: focus moves to the result heading, Done (`labels.done`) and Escape close it, and `restart` starts over from step 1. `onOpenChange` now gets `details.reason` (`submit`, `done`, `cancel`, `escape`, `outside`, `dismiss`, `trigger`).
 
 ### Fixed
 
