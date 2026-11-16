@@ -138,6 +138,7 @@ const versions = {
   "tw-animate-css": "1.4.0",
   cn: "0.5.2",
   prettier: "3.9.10",
+  zod: "4.6.7",
 }
 const devDependencies = [
   "@types/react",
