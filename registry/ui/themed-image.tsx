@@ -1,0 +1,45 @@
+import type { ImgHTMLAttributes } from "react"
+
+import { cn } from "@/lib/utils"
+
+// The theme's dark rule, spelled out: `.dark` on an ancestor, or the system preference unless the page opted out.
+// A consumer's `dark:` variant may only follow `.dark`, so these don't rely on it.
+const lightOnlyClassName =
+  "[:where(.dark)_&]:hidden [@media(prefers-color-scheme:dark)]:[:root:not(.light,[data-color-scheme=light])_&]:hidden"
+const darkOnlyClassName =
+  "hidden [:where(.dark)_&]:block [@media(prefers-color-scheme:dark)]:[:root:not(.light,[data-color-scheme=light])_&]:block"
+
+type ThemedImageProps = Omit<ImgHTMLAttributes<HTMLImageElement>, "src"> & {
+  src: string
+  /** Shown instead of `src` while the page is dark. Both are rendered and CSS picks one, so nothing flashes. */
+  srcDark?: string
+}
+
+function ThemedImage({ src, srcDark, className, alt = "", ...props }: ThemedImageProps) {
+  if (!srcDark || srcDark === src) {
+    return <img data-slot="themed-image" src={src} alt={alt} className={className} {...props} />
+  }
+  return (
+    <>
+      <img
+        data-slot="themed-image"
+        data-scheme="light"
+        src={src}
+        alt={alt}
+        className={cn("block", className, lightOnlyClassName)}
+        {...props}
+      />
+      <img
+        data-slot="themed-image"
+        data-scheme="dark"
+        src={srcDark}
+        alt={alt}
+        className={cn(className, darkOnlyClassName)}
+        {...props}
+      />
+    </>
+  )
+}
+
+export { ThemedImage }
+export type { ThemedImageProps }

@@ -200,6 +200,11 @@ const popups = [
     open: (page) => page.getByRole("button", { name: "Open T-014 Index the docs for search" }),
     selector: '[data-task-detail="dialog"]',
   },
+  {
+    name: "lightbox",
+    open: (page) => page.getByRole("button", { name: "View import-error.png" }),
+    selector: '[data-slot="lightbox"]',
+  },
 ]
 
 await withShowcase(async (page) => {

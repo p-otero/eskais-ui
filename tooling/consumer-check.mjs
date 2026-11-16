@@ -96,6 +96,10 @@ const items = [
   "page-header",
   "filter-bar",
   "chart",
+  "lightbox",
+  "attachments",
+  "stage-track",
+  "list-item",
 ]
 const versions = {
   react: "19.3.1",
