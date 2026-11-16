@@ -23,6 +23,7 @@ type SpinnerProps = Omit<ComponentProps<"svg">, "children"> &
 // The theme collapses CSS animations under reduced motion, so the reduced-motion arc pulses with SMIL instead of spinning.
 function SpinnerGraphic({ className, size, ...props }: Omit<SpinnerProps, "label">) {
   return (
+    // oxlint-disable-next-line eskais/no-inline-icons -- an animated progress arc with a reduced-motion pulse
     <svg
       viewBox="0 0 24 24"
       fill="none"

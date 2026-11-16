@@ -14,6 +14,7 @@ import {
 import { mergeProps } from "@ui-sdk/react/primitive"
 import { cva, type VariantProps } from "class-variance-authority"
 import type { ComponentProps } from "react"
+import { ChevronDownIcon } from "lucide-react"
 
 import { useFastLink } from "@/components/ui/fast-link"
 import { floatingSurfaceClassName } from "@/components/ui/popover"
@@ -59,17 +60,7 @@ function NavigationMenuTrigger({
       {(state) => (
         <>
           {typeof children === "function" ? children(state) : children}
-          <svg
-            aria-hidden="true"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            className="size-3! transition-transform duration-panel ease-standard group-data-open/navigation-menu-trigger:rotate-180 motion-reduce:transition-none"
-          >
-            <path d="m6 9 6 6 6-6" />
-          </svg>
+          <ChevronDownIcon className="size-3! transition-transform duration-panel ease-standard group-data-open/navigation-menu-trigger:rotate-180 motion-reduce:transition-none" />
         </>
       )}
     </NavigationMenuTriggerPrimitive>

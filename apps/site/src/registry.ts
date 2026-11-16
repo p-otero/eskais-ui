@@ -26,6 +26,7 @@ const guideItems = [
   "palettes",
   "font-geist",
   "font-inter",
+  "icon",
 ]
 
 const componentItems = items.filter((item) => !guideItems.includes(item.name))

@@ -14,6 +14,7 @@ import {
   paginationRange,
 } from "@ui-sdk/react/pagination"
 import type { ComponentProps } from "react"
+import { ChevronLeftIcon, ChevronRightIcon } from "lucide-react"
 
 import { buttonVariants } from "@/components/ui/button"
 import { cnState } from "@/lib/utils"
@@ -35,11 +36,7 @@ const defaultPaginationLabels: PaginationLabels = {
 const stepClassName = `${buttonVariants({ variant: "ghost", size: "icon" })} data-disabled:cursor-not-allowed data-disabled:opacity-50 data-disabled:hover:bg-transparent rtl:[&_svg]:-scale-x-100`
 
 function Chevron({ direction }: { direction: "previous" | "next" }) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
-      <path d={direction === "previous" ? "m15 18-6-6 6-6" : "m9 18 6-6-6-6"} />
-    </svg>
-  )
+  return direction === "previous" ? <ChevronLeftIcon /> : <ChevronRightIcon />
 }
 
 type PaginationProps = ComponentProps<typeof PaginationPrimitive> & { labels?: Partial<PaginationLabels> }

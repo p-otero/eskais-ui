@@ -9,6 +9,7 @@ import {
   createAccordionController,
 } from "@ui-sdk/react/accordion"
 import type { ComponentProps } from "react"
+import { ChevronDownIcon } from "lucide-react"
 
 import { cnState } from "@/lib/utils"
 
@@ -36,19 +37,10 @@ function AccordionTrigger({ className, children, ...props }: ComponentProps<type
       {(state) => (
         <>
           {typeof children === "function" ? children(state) : children}
-          <svg
+          <ChevronDownIcon
             data-slot="accordion-icon"
-            aria-hidden="true"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
             className="text-muted-foreground transition-transform duration-panel ease-standard group-data-open/accordion-trigger:rotate-180 motion-reduce:transition-none"
-          >
-            <path d="m6 9 6 6 6-6" />
-          </svg>
+          />
         </>
       )}
     </AccordionTriggerPrimitive>

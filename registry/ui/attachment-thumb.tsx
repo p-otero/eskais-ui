@@ -2,6 +2,7 @@
 
 import { Button } from "@ui-sdk/react/button"
 import type { MouseEvent } from "react"
+import { FileIcon } from "lucide-react"
 
 import type { Attachment } from "@/components/ui/attachments-primitive"
 import { Link } from "@/components/ui/link"
@@ -49,7 +50,7 @@ type AttachmentThumbProps = {
   className?: string
 }
 
-function FileIcon({ size }: { size: AttachmentSize }) {
+function FileTile({ size }: { size: AttachmentSize }) {
   return (
     <span
       aria-hidden="true"
@@ -58,10 +59,7 @@ function FileIcon({ size }: { size: AttachmentSize }) {
         size === "sm" ? "size-8 [&_svg]:size-4" : "size-12 [&_svg]:size-5",
       )}
     >
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-        <path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z" />
-        <path d="M14 3v5h5" />
-      </svg>
+      <FileIcon />
     </span>
   )
 }
@@ -130,7 +128,7 @@ function AttachmentThumb({
   )
   const content = (
     <>
-      <FileIcon size={size} />
+      <FileTile size={size} />
       <span className="flex min-w-0 flex-col">
         <span data-slot="attachment-name" className="truncate text-body-sm font-medium">
           {attachment.name}

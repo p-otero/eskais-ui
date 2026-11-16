@@ -1,4 +1,5 @@
 import type { ReactNode } from "react"
+import { CheckIcon } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 
@@ -14,21 +15,6 @@ const titleClassName: Record<StepState, string> = {
   complete: "text-muted-foreground",
   current: "font-medium text-foreground",
   upcoming: "text-muted-foreground narrow:sr-only",
-}
-
-function CheckIcon() {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2.5"
-      aria-hidden="true"
-      className="size-3.5"
-    >
-      <path d="M20 6 9 17l-5-5" />
-    </svg>
-  )
 }
 
 type StepFormProgressProps = {
@@ -64,7 +50,7 @@ function StepFormProgress({ steps, current, label, className }: StepFormProgress
                 markerClassName[state],
               )}
             >
-              {state === "complete" ? <CheckIcon /> : index + 1}
+              {state === "complete" ? <CheckIcon strokeWidth={2.5} className="size-3.5" /> : index + 1}
             </span>
             <span className={cn("truncate", titleClassName[state])}>{step.title}</span>
           </li>

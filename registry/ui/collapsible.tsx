@@ -7,6 +7,7 @@ import {
   createCollapsibleController,
 } from "@ui-sdk/react/collapsible"
 import type { ComponentProps } from "react"
+import { ChevronDownIcon } from "lucide-react"
 
 import { cn, cnState } from "@/lib/utils"
 
@@ -26,22 +27,13 @@ function CollapsibleTrigger({ className, ...props }: ComponentProps<typeof Colla
   )
 }
 
-function CollapsibleIcon({ className, ...props }: ComponentProps<"svg">) {
+function CollapsibleIcon({ className, ...props }: ComponentProps<typeof ChevronDownIcon>) {
   return (
-    <svg
+    <ChevronDownIcon
       data-slot="collapsible-icon"
-      aria-hidden="true"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
       className={cn("transition-transform group-data-open/collapsible-trigger:rotate-180", className)}
       {...props}
-    >
-      <path d="m6 9 6 6 6-6" />
-    </svg>
+    />
   )
 }
 

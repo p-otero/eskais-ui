@@ -1,6 +1,7 @@
 "use client"
 
 import type { ComponentProps, ReactNode } from "react"
+import { CircleExclamationPointIcon } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Collapsible, CollapsibleIcon, CollapsiblePanel, CollapsibleTrigger } from "@/components/ui/collapsible"
@@ -39,15 +40,6 @@ type ErrorStateProps = Omit<ComponentProps<"div">, "title"> &
     size?: EmptySize
   }
 
-function ErrorIcon() {
-  return (
-    <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-      <circle cx="12" cy="12" r="9" />
-      <path d="M12 7.5v5m0 4h.01" />
-    </svg>
-  )
-}
-
 function ErrorState({
   title,
   message,
@@ -71,7 +63,7 @@ function ErrorState({
       <EmptyHeader role="alert">
         {size === "inline" ? null : (
           <EmptyMedia variant="icon" className="bg-destructive/10 text-destructive">
-            <ErrorIcon />
+            <CircleExclamationPointIcon />
           </EmptyMedia>
         )}
         <EmptyTitle>{title}</EmptyTitle>

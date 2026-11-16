@@ -21,6 +21,7 @@ import {
 } from "@ui-sdk/react/menu"
 import type { VariantProps } from "class-variance-authority"
 import type { ComponentProps } from "react"
+import { CheckIcon } from "lucide-react"
 
 import { buttonVariants } from "@/components/ui/button"
 import { cnState } from "@/lib/utils"
@@ -84,11 +85,7 @@ function DropdownMenuItemIndicator({
       className={cnState("absolute start-(--item-padding-x) inline-flex size-4 items-center justify-center", className)}
       {...props}
     >
-      {children ?? (
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-          <path d="M20 6 9 17l-5-5" />
-        </svg>
-      )}
+      {children ?? <CheckIcon />}
     </MenuItemIndicatorPrimitive>
   )
 }

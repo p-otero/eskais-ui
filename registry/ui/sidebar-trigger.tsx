@@ -1,6 +1,7 @@
 "use client"
 
 import { useMemo, useSyncExternalStore, type ComponentProps } from "react"
+import { PanelLeftIcon } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import type { SidebarController } from "@/components/ui/sidebar-primitive"
@@ -44,15 +45,6 @@ function useNarrow(query: string) {
   )
 }
 
-function PanelIcon() {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-      <rect x="3" y="4" width="18" height="16" rx="2" />
-      <path d="M9 4v16" />
-    </svg>
-  )
-}
-
 type SidebarTriggerProps = Omit<ComponentProps<typeof Button>, "size" | "aria-label" | "onClick"> & {
   /** The controller passed to the Sidebar it toggles. */
   controller: SidebarController
@@ -89,10 +81,13 @@ function SidebarTrigger({
       }}
       {...props}
     >
-      <PanelIcon />
+      <PanelLeftIcon />
     </Button>
   )
 }
+
+/** @deprecated Import `PanelLeftIcon` from `lucide-react`. */
+const PanelIcon = PanelLeftIcon
 
 export { defaultNarrowQuery, PanelIcon, SidebarTrigger, sidebarLabels, useNarrow }
 export type { SidebarLabels, SidebarTriggerProps }

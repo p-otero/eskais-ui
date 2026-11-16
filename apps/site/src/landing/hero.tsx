@@ -1,3 +1,4 @@
+import { ArrowRightIcon } from "lucide-react"
 import { useState } from "react"
 
 import { Button } from "@/components/ui/button"
@@ -9,7 +10,6 @@ import { TaskCard } from "@/components/ui/task-card"
 import type { TaskView } from "@/lib/agent-task-types"
 
 import { GENERATED_AT, sampleStages, sampleTasks } from "../examples/fixtures"
-import { ArrowRightIcon } from "../icons"
 import { followTo } from "../router"
 
 const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
@@ -91,7 +91,7 @@ function SiteHero() {
         <>
           <ButtonLink size="lg" className="group" {...followTo("/docs/installation")}>
             Get started
-            <ArrowRightIcon className="transition-transform duration-micro ease-standard group-hover:translate-x-0.5" />
+            <ArrowRightIcon className="transition-transform rtl:-scale-x-100 duration-micro ease-standard group-hover:translate-x-0.5" />
           </ButtonLink>
           <ButtonLink size="lg" variant="outline" {...followTo("/docs/components")}>
             Browse components

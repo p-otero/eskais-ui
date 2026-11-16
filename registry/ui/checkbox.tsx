@@ -8,6 +8,7 @@ import {
   createCheckboxGroupController,
 } from "@ui-sdk/react/checkbox"
 import type { ComponentProps } from "react"
+import { CheckIcon, MinusIcon } from "lucide-react"
 
 import { cnState } from "@/lib/utils"
 
@@ -31,12 +32,7 @@ function CheckboxIndicator({ className, children, ...props }: ComponentProps<typ
       className={cnState("inline-flex items-center justify-center [&_svg]:size-3.5", className)}
       {...props}
     >
-      {children ??
-        ((state) => (
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" aria-hidden="true">
-            <path d={state.indeterminate ? "M5 12h14" : "M20 6 9 17l-5-5"} />
-          </svg>
-        ))}
+      {children ?? ((state) => (state.indeterminate ? <MinusIcon strokeWidth={3} /> : <CheckIcon strokeWidth={3} />))}
     </CheckboxIndicatorPrimitive>
   )
 }

@@ -6,6 +6,7 @@ import {
   InputGroup as InputGroupPrimitive,
 } from "@ui-sdk/react/input"
 import type { ComponentProps } from "react"
+import { XIcon } from "lucide-react"
 
 import { floatingLabelControls } from "@/components/ui/field"
 import { cnState } from "@/lib/utils"
@@ -48,18 +49,7 @@ function InputClear({ className, children, ...props }: ComponentProps<typeof Inp
       )}
       {...props}
     >
-      {children ?? (
-        <svg
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          aria-hidden="true"
-          className="size-4"
-        >
-          <path d="M18 6 6 18M6 6l12 12" />
-        </svg>
-      )}
+      {children ?? <XIcon className="size-4" />}
     </InputClearPrimitive>
   )
 }

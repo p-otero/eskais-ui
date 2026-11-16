@@ -107,7 +107,8 @@
             ]
           }
         ],
-        "eskais/spacing-tokens": "error"
+        "eskais/spacing-tokens": "error",
+        "eskais/no-inline-icons": "error"
       }
     },
     {

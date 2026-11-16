@@ -1,4 +1,5 @@
 import { renderElement, type PartProps } from "@ui-sdk/react/primitive"
+import { ChevronRightIcon } from "lucide-react"
 
 import { Link, type LinkProps } from "@/components/ui/link"
 import { cn } from "@/lib/utils"
@@ -57,11 +58,7 @@ function BreadcrumbSeparator({ className, children, render, ...props }: PartProp
       role: "presentation",
       "aria-hidden": true,
       className: cn("inline-flex [&>svg]:size-3.5 rtl:[&>svg]:-scale-x-100", className),
-      children: children ?? (
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-          <path d="m9 18 6-6-6-6" />
-        </svg>
-      ),
+      children: children ?? <ChevronRightIcon />,
       ...props,
     },
     render,

@@ -2,6 +2,7 @@
 
 import { Button } from "@ui-sdk/react/button"
 import { useMemo, useState } from "react"
+import { ChevronDownIcon, ChevronUpIcon, ChevronsUpDownIcon } from "lucide-react"
 
 import {
   activeAttempt,
@@ -43,13 +44,9 @@ const headerButtonClassName =
   "-mx-(--chip-padding-x) inline-flex cursor-pointer items-center gap-inline rounded-control px-inset-chip py-inset-chip font-medium outline-none hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring [&_svg]:size-3.5"
 
 function SortIcon({ direction }: { direction?: SortDirection }) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-      {direction === "ascending" && <path d="m6 15 6-6 6 6" />}
-      {direction === "descending" && <path d="m6 9 6 6 6-6" />}
-      {!direction && <path d="m7 15 5 5 5-5M7 9l5-5 5 5" />}
-    </svg>
-  )
+  if (direction === "ascending") return <ChevronUpIcon />
+  if (direction === "descending") return <ChevronDownIcon />
+  return <ChevronsUpDownIcon />
 }
 
 function AgentTaskBoardTable({ tasks, selectedTaskId, display }: AgentTaskBoardTableProps) {

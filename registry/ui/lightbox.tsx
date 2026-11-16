@@ -5,6 +5,7 @@ import { Button } from "@ui-sdk/react/button"
 import { Dialog, DialogClose, DialogContent, DialogTitle } from "@ui-sdk/react/dialog"
 import { usePart, usePrimitive } from "@ui-sdk/react/primitive"
 import { useMemo, useState, type ComponentProps, type ReactNode } from "react"
+import { ChevronLeftIcon, ChevronRightIcon, ExternalLinkIcon, XIcon, ZoomInIcon } from "lucide-react"
 
 import { buttonVariants } from "@/components/ui/button"
 import { contentClassName, DialogBackdrop } from "@/components/ui/dialog"
@@ -72,14 +73,6 @@ const stepClassName = cn(
   "absolute inset-y-0 z-10 my-auto rounded-full bg-popover/(--glass-opacity) shadow-floating data-disabled:hidden",
 )
 
-function Icon({ path, className }: { path: string; className?: string }) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true" className={className}>
-      <path d={path} />
-    </svg>
-  )
-}
-
 type ViewProps = {
   items: readonly LightboxItem[]
   index: number
@@ -120,7 +113,7 @@ function LightboxView({ items, index, onIndexChange, labels }: ViewProps) {
           pressed={actual}
           onPressedChange={(pressed) => setZoom({ id: item.id, actual: pressed })}
         >
-          <Icon path="M3 7V3h4M21 7V3h-4M3 17v4h4M21 17v4h-4M9 12h6M12 9v6" />
+          <ZoomInIcon />
         </Toggle>
         <Link
           data-slot="lightbox-original"
@@ -131,10 +124,10 @@ function LightboxView({ items, index, onIndexChange, labels }: ViewProps) {
           aria-label={labels.openOriginal}
           className={iconButtonClassName}
         >
-          <Icon path="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5" />
+          <ExternalLinkIcon />
         </Link>
         <DialogClose aria-label={labels.close} className={iconButtonClassName}>
-          <Icon path="M18 6 6 18M6 6l12 12" />
+          <XIcon />
         </DialogClose>
       </div>
       <div data-slot="lightbox-stage" className="relative min-h-0 flex-1 bg-muted/(--glass-opacity)">
@@ -161,7 +154,7 @@ function LightboxView({ items, index, onIndexChange, labels }: ViewProps) {
               onClick={(event) => handle.api.previous({ reason: "item-press", event: event.nativeEvent })}
               className={cn(stepClassName, "start-group")}
             >
-              <Icon path="m15 18-6-6 6-6" className="rtl:rotate-180" />
+              <ChevronLeftIcon className="rtl:rotate-180" />
             </Button>
             <Button
               aria-label={labels.next}
@@ -170,7 +163,7 @@ function LightboxView({ items, index, onIndexChange, labels }: ViewProps) {
               onClick={(event) => handle.api.next({ reason: "item-press", event: event.nativeEvent })}
               className={cn(stepClassName, "end-group")}
             >
-              <Icon path="m9 18 6-6-6-6" className="rtl:rotate-180" />
+              <ChevronRightIcon className="rtl:rotate-180" />
             </Button>
           </>
         )}

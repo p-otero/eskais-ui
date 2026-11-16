@@ -13,6 +13,7 @@ import {
   createCalendarController,
 } from "@ui-sdk/react/calendar"
 import type { ComponentProps } from "react"
+import { ChevronLeftIcon, ChevronRightIcon } from "lucide-react"
 
 import { buttonVariants } from "@/components/ui/button"
 import { cnState } from "@/lib/utils"
@@ -20,18 +21,8 @@ import { cnState } from "@/lib/utils"
 type CalendarLabels = { previousMonth?: string; nextMonth?: string }
 
 function Chevron({ direction }: { direction: "previous" | "next" }) {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      aria-hidden="true"
-      className="rtl:rotate-180"
-    >
-      <path d={direction === "previous" ? "m15 18-6-6 6-6" : "m9 18 6-6-6-6"} />
-    </svg>
-  )
+  const Icon = direction === "previous" ? ChevronLeftIcon : ChevronRightIcon
+  return <Icon className="rtl:rotate-180" />
 }
 
 const stepClassName = buttonVariants({ variant: "ghost", size: "icon" })

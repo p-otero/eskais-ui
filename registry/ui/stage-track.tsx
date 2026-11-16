@@ -65,6 +65,7 @@ function Marker({ state, tone, size }: { state: StageState; tone: Tone | "defaul
       )}
     >
       {state === "reached" ? (
+        // oxlint-disable-next-line eskais/no-inline-icons -- a stage marker's tick, scaled with its marker at a heavier stroke
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.5">
           <path d="m5 12 5 5 9-10" />
         </svg>

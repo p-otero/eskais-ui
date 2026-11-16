@@ -1,4 +1,5 @@
 import type { ComponentProps, CSSProperties, ReactNode } from "react"
+import { ArrowLeftIcon, ArrowRightIcon } from "lucide-react"
 
 import {
   Breadcrumb,
@@ -112,18 +113,8 @@ const pagerCard =
   "group flex min-w-0 flex-1 flex-col gap-inline rounded-surface border bg-card px-inset-item py-inset-item outline-none transition-colors duration-micro ease-standard hover:border-input-strong focus-visible:ring-2 focus-visible:ring-ring"
 
 function Arrow({ direction }: { direction: "previous" | "next" }) {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      aria-hidden="true"
-      className="size-3.5 rtl:-scale-x-100"
-    >
-      <path d={direction === "previous" ? "M19 12H5m6 6-6-6 6-6" : "M5 12h14m-6-6 6 6-6 6"} />
-    </svg>
-  )
+  const Icon = direction === "previous" ? ArrowLeftIcon : ArrowRightIcon
+  return <Icon className="size-3.5 rtl:-scale-x-100" />
 }
 
 /** Links to the previous and next pages, as two cards. */

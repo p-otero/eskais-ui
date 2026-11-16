@@ -100,6 +100,7 @@ function UnassignedAvatar({ className }: { className?: string }) {
       aria-hidden="true"
       className={cn("inline-flex size-5 shrink-0 text-muted-foreground", className)}
     >
+      {/* oxlint-disable-next-line eskais/no-inline-icons -- a placeholder avatar, a dashed ring and figure, not an icon */}
       <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.25" className="size-full">
         <circle cx="10" cy="10" r="9" strokeDasharray="2.5 2" />
         <circle cx="10" cy="8" r="2.75" />

@@ -3,6 +3,7 @@
 import { createInputController } from "@ui-sdk/react/input"
 import { createParts } from "@ui-sdk/react/primitive"
 import { useState, type ComponentProps } from "react"
+import { SearchIcon } from "lucide-react"
 
 import { Input, InputClear, InputGroup } from "@/components/ui/input"
 import { searchField, type SearchFieldOptions } from "@/components/ui/search-field-primitive"
@@ -46,10 +47,7 @@ function SearchField({
     <SearchFieldRoot input={input} onSearch={onSearch} aria-label={label} className={cn("w-full", className)}>
       {/* UI SDK lists an input group as its own agent entry; naming it keeps every entry findable. */}
       <InputGroup render={<fieldset />} aria-label={label}>
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-          <circle cx="11" cy="11" r="7" />
-          <path d="m20 20-3.5-3.5" />
-        </svg>
+        <SearchIcon />
         <Input
           type="search"
           controller={input}
