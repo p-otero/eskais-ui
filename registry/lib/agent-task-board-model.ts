@@ -6,7 +6,7 @@ interface TaskFilters {
   profile?: string
   model?: string
   query?: string
-  /** Stage ids; a task matches when its location is in any of them. */
+  /** Stage ids; a task matches when its location is in any of them. `NO_STAGE` matches tasks without one. */
   stage?: string[]
 }
 
@@ -42,6 +42,9 @@ interface BoardSummary {
   awaitingDecision: number
 }
 
+/** The stage filter's id for tasks without a `location`. */
+const NO_STAGE = "__none__"
+
 const TASK_STATUSES: readonly TaskStatus[] = ["proposed", "todo", "working", "review", "blocked", "done", "cancelled"]
 const HIDDEN_BY_DEFAULT: ReadonlySet<TaskStatus> = new Set(["cancelled"])
 const UNKNOWN: Quantity = { value: null, quality: "unknown" }
@@ -58,7 +61,7 @@ function filterTasks(tasks: readonly TaskView[], filters: TaskFilters = {}): Tas
       (!filters.project || task.project === filters.project) &&
       (!filters.profile || task.profile === filters.profile) &&
       (!filters.model || task.attempts.some((attempt) => effectiveAgent(attempt).model === filters.model)) &&
-      (!filters.stage?.length || (task.location !== undefined && filters.stage.includes(task.location.stage))) &&
+      (!filters.stage?.length || filters.stage.includes(task.location?.stage ?? NO_STAGE)) &&
       (!query || [task.id, task.title, task.goal].some((text) => text?.toLowerCase().includes(query))),
   )
 }
@@ -71,11 +74,12 @@ function backlogGroups(tasks: readonly TaskView[]): { proposed: TaskView[]; notR
   }
 }
 
-/** How many tasks are in each stage, by stage id. */
+/** How many tasks are in each stage, by stage id; tasks without a location count under `NO_STAGE`. */
 function countByStage(tasks: readonly TaskView[]): Record<string, number> {
   const counts: Record<string, number> = {}
   for (const task of tasks) {
-    if (task.location) counts[task.location.stage] = (counts[task.location.stage] ?? 0) + 1
+    const stage = task.location?.stage ?? NO_STAGE
+    counts[stage] = (counts[stage] ?? 0) + 1
   }
   return counts
 }
@@ -198,6 +202,7 @@ function summarize(tasks: readonly TaskView[]): BoardSummary {
 }
 
 export {
+  NO_STAGE,
   TASK_STATUSES,
   activeAttempt,
   attemptCount,

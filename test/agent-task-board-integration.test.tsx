@@ -7,7 +7,7 @@ import { describe, expect, test, vi } from "vitest"
 import { AgentTaskBoard, agentTaskBoardLabelsEs, type AgentTaskBoardProps } from "@/components/ui/agent-task-board"
 import { agentTaskBoard } from "@/components/ui/agent-task-board-primitive"
 import { Button } from "@/components/ui/button"
-import { backlogGroups, countByStage, filterTasks } from "@/lib/agent-task-board-model"
+import { NO_STAGE, backlogGroups, countByStage, filterTasks } from "@/lib/agent-task-board-model"
 import type { TaskView } from "@/lib/agent-task-types"
 
 import { axeViolations } from "./axe"
@@ -42,7 +42,16 @@ describe("model", () => {
   test("the stage filter keeps tasks whose location is in any chosen stage", () => {
     expect(filterTasks(sampleTasks, { stage: ["pr", "prod"] }).map((task) => task.id)).toEqual(["T-014", "T-009"])
     expect(filterTasks(sampleTasks, { stage: [] })).toHaveLength(sampleTasks.length)
-    expect(countByStage(sampleTasks)).toEqual({ branch: 1, pr: 1, staging: 1, dev: 1, prod: 1 })
+    expect(countByStage(sampleTasks)).toEqual({ branch: 1, pr: 1, staging: 1, dev: 1, prod: 1, [NO_STAGE]: 2 })
+  })
+
+  test("NO_STAGE keeps the tasks without a location, alone or with stages", () => {
+    expect(filterTasks(sampleTasks, { stage: [NO_STAGE] }).map((task) => task.id)).toEqual(["T-011", "T-012"])
+    expect(filterTasks(sampleTasks, { stage: [NO_STAGE, "prod"] }).map((task) => task.id)).toEqual([
+      "T-011",
+      "T-012",
+      "T-009",
+    ])
   })
 
   test("the backlog holds proposals and the to-do tasks that aren't ready", () => {
@@ -70,6 +79,8 @@ describe("primitive", () => {
       expect(view.state.filters).toEqual({ stage: ["pr"] })
       expect(() => view.api.filter({ stage: ["qa"] })).toThrow(/No stage "qa". Choices: branch, pr, dev, staging, prod/)
       expect(() => view.api.filter({ stage: [1] })).toThrow(TypeError)
+      view.api.filter({ stage: [NO_STAGE, "dev"] })
+      expect(view.state.filters).toEqual({ stage: [NO_STAGE, "dev"] })
       view.api.filter({ stage: [] })
       expect(view.state.filters).toEqual({})
       view.api.filter({ stage: "pr" })
@@ -84,6 +95,21 @@ describe("primitive", () => {
     const view = mount(agentTaskBoard, { tasks: sampleTasks }, `<root aria-label="Agent tasks"></root>`)
     try {
       expect(() => view.api.filter({ stage: ["qa"] })).toThrow(/Choices: branch, pr, staging, dev, prod/)
+    } finally {
+      view.unmount()
+    }
+  })
+
+  test("with noStageLabel, filter takes the label for NO_STAGE, in any case", () => {
+    const view = mount(
+      agentTaskBoard,
+      { tasks: sampleTasks, stageIds: ["dev"], noStageLabel: "Sin etapa" },
+      `<root aria-label="Agent tasks"></root>`,
+    )
+    try {
+      view.api.filter({ stage: ["sin etapa", "dev", NO_STAGE] })
+      expect(view.state.filters).toEqual({ stage: [NO_STAGE, "dev"] })
+      expect(() => view.api.filter({ stage: "qa" })).toThrow(/Choices: dev, __none__ \("Sin etapa"\)/)
     } finally {
       view.unmount()
     }
@@ -200,6 +226,45 @@ describe("stage filter", () => {
     expect(visibleIds().toSorted()).toEqual(["T-009", "T-016"])
     await user().click(screen.getByRole("button", { name: "Clear filters" }))
     expect(visibleIds()).toHaveLength(sampleTasks.length)
+  })
+
+  test('"No stage" ends the row with its count and keeps the tasks without a location', async () => {
+    renderBoard()
+    await tick()
+    const row = screen.getByRole("group", { name: "Stage" })
+    const toggles = within(row).getAllByRole("button")
+    const none = toggles.at(-1)!
+    expect(none.textContent).toBe("No stage 2")
+    expect(none.hasAttribute("data-no-stage")).toBe(true)
+    await user().click(none)
+    expect(visibleIds().toSorted()).toEqual(["T-011", "T-012"])
+    await user().click(within(row).getByRole("button", { name: /^In Prod/ }))
+    expect(visibleIds().toSorted()).toEqual(["T-009", "T-011", "T-012"])
+    expect(await axeViolations(row)).toEqual([])
+  })
+
+  test('"No stage" shows only when a task lacks a location, unless stageFilterNone says otherwise', async () => {
+    const located = sampleTasks.filter((task) => task.location)
+    const { unmount } = renderBoard({ tasks: located })
+    await tick()
+    expect(screen.queryByRole("button", { name: /^No stage/ })).toBeNull()
+    unmount()
+
+    const forced = renderBoard({ tasks: located, stageFilterNone: true })
+    await tick()
+    expect(screen.getByRole("button", { name: /^No stage/ }).textContent).toBe("No stage 0")
+    forced.unmount()
+
+    renderBoard({ stageFilterNone: false, defaultFilters: { stage: [NO_STAGE] } })
+    await tick()
+    expect(screen.queryByRole("button", { name: /^No stage/ })).toBeNull()
+    expect(visibleIds().toSorted()).toEqual(["T-011", "T-012"])
+  })
+
+  test('"Sin etapa" in Spanish', async () => {
+    renderBoard({ labels: agentTaskBoardLabelsEs })
+    await tick()
+    expect(screen.getByRole("button", { name: /^Sin etapa/ })).toBeTruthy()
   })
 
   test("counts follow the other filters", async () => {
@@ -341,6 +406,13 @@ describe("agents", () => {
 
     const rejected = await agent.act({ steps: [{ ref: "Agent tasks", action: "filter", args: [{ stage: ["qa"] }] }] })
     expect(rejected.ok).toBe(false)
+
+    const none = await agent.act({ steps: [{ ref: "Agent tasks", action: "filter", args: [{ stage: ["No stage"] }] }] })
+    expect(none.ok, none.error?.message).toBe(true)
+    expect(backlogRows()).toEqual(["T-011"])
+    const byId = await agent.act({ steps: [{ ref: "Agent tasks", action: "filter", args: [{ stage: [NO_STAGE] }] }] })
+    expect(byId.ok, byId.error?.message).toBe(true)
+    expect(backlogRows()).toEqual(["T-011"])
 
     const opened = await agent.act({
       steps: [

@@ -1,6 +1,6 @@
 "use client"
 
-import type { FilterOptions, TaskFilters } from "@/lib/agent-task-board-model"
+import { NO_STAGE, type FilterOptions, type TaskFilters } from "@/lib/agent-task-board-model"
 import { formatInstant } from "@/lib/time"
 import type { AgentTaskBoardController, BoardView } from "@/components/ui/agent-task-board-primitive"
 import type { AgentTaskBoardLabels } from "@/components/ui/agent-task-labels"
@@ -75,6 +75,8 @@ type AgentTaskBoardToolbarProps = {
   stages?: readonly Stage[]
   /** Tasks per stage id under the other filters. */
   stageCounts?: Readonly<Record<string, number>>
+  /** Adds the "No stage" toggle. */
+  noStage?: boolean
 }
 
 const CLEARED = { project: null, profile: null, model: null, query: null, stage: null }
@@ -90,6 +92,7 @@ function AgentTaskBoardToolbar({
   timeZone,
   stages,
   stageCounts,
+  noStage,
 }: AgentTaskBoardToolbarProps) {
   const filtered = Object.values(filters).some((value) => (Array.isArray(value) ? value.length > 0 : Boolean(value)))
   const choices = (["project", "profile", "model"] as const).filter((name) => options[choiceSources[name]].length > 0)
@@ -159,6 +162,7 @@ function AgentTaskBoardToolbar({
           aria-label={labels.filters.stage}
           stages={stages}
           counts={stageCounts}
+          noStage={noStage ? { value: NO_STAGE, label: labels.filters.noStage } : undefined}
           size="sm"
           locale={locale}
           value={filters.stage ?? []}

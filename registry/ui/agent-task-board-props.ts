@@ -58,6 +58,11 @@ interface AgentTaskBoardBaseProps {
    * track, and the toolbar gets a row of stage toggles that filters by it.
    */
   stages?: Stage[]
+  /**
+   * Adds a last "No stage" toggle (`labels.filters.noStage`) for tasks without a `location`; it sets `NO_STAGE`
+   * in `filters.stage`. Defaults to true when `stages` is set and some task has no location.
+   */
+  stageFilterNone?: boolean
   /** Images, icons or names per provider id. No logos ship; agents show initials on a provider color otherwise. */
   agentAvatars?: AgentAvatars
   /** Live mode only. A returned Promise keeps the button pending and shows its error. */

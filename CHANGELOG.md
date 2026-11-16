@@ -6,6 +6,7 @@ Versions follow [semver](https://semver.org). Before 1.0, a minor version can br
 
 ### Added
 
+- AgentTaskBoard: a "No stage" toggle ends the stage filter (`stageFilterNone`, `labels.filters.noStage`) and matches tasks without a location through the exported `NO_STAGE`, which `filter({ stage })` also takes by its label; `StageFilter` takes `noStage`, and `countByStage` counts those tasks under `NO_STAGE`.
 - AgentTaskBoard: `renderBacklogActions(task)` adds host controls to each backlog row after Approve/Reject, in snapshot mode too, and `renderCardActions(task)` to each card; `TaskCard` takes `renderActions`.
 - Registry items: `utils`, `theme`, `button`, `field`, `input`, `search-field`, `dialog`, `confirm-dialog`, `card`, `badge`, `lint-rules`.
 - `search-field` primitive built with `definePrimitive`, with a `submit` agent action.
