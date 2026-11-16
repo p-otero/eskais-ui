@@ -38,6 +38,7 @@ UI SDK-first, agent-native React components, distributed as a shadcn-style regis
 | `theme`          | Color, shape, density and surface tokens; the default rounded look                                                          |
 | `theme-compact`  | Denser controls and tighter radii inside `data-theme="compact"`                                                             |
 | `theme-glass`    | Translucent, blurred surfaces inside `data-theme="glass"`                                                                   |
+| `appearance`     | `createAppearance` + `<Appearance>`: `.dark` and `data-theme` on `<html>`, following the system scheme                      |
 | `lint-rules`     | Optional `@shadcn/lint` config for consumers                                                                                |
 
 ## Use it
@@ -72,7 +73,26 @@ npx shadcn@latest add @eskais/theme-compact @eskais/theme-glass
 </html>
 ```
 
-Themes nest: a glass zone inside a compact page stays compact. Tune glass live by setting `--glass-opacity` (and `--glass-blur`) on the element that has `data-theme="glass"` or on a descendant. Glass falls back to solid surfaces when the browser lacks `backdrop-filter` or the user asks for reduced transparency. To persist a choice, `createPreference({ attribute: "data-theme", global: true })` from `@ui-sdk/core` does it; the showcase shows how.
+Themes nest: a glass zone inside a compact page stays compact. Tune glass live by setting `--glass-opacity` (and `--glass-blur`) on the element that has `data-theme="glass"` or on a descendant. Glass falls back to solid surfaces when the browser lacks `backdrop-filter` or the user asks for reduced transparency. Theme and color scheme are app-level choices, not component props. `npx shadcn@latest add @eskais/appearance` keeps them in sync on `<html>`:
+
+```tsx
+const appearance = createAppearance({ colorScheme: "system", theme: "default" })
+appearance.apply() // before the first render, so the page doesn't flash
+
+root.render(
+  <Appearance appearance={appearance}>
+    <App />
+  </Appearance>,
+)
+```
+
+`"system"` follows `prefers-color-scheme` live through `.dark`; `appearance.colorScheme.set("dark")` and `appearance.theme.set("compact")` change them, and `storage: { colorScheme, theme }` (from `createLocalStorage`) keeps them between visits. `"default"` leaves `data-theme` off. It needs no server, so it works in a static `file://` page. To avoid a flash before any script loads, put this in `<head>`:
+
+```html
+<script>
+  document.documentElement.classList.toggle("dark", matchMedia("(prefers-color-scheme: dark)").matches)
+</script>
+```
 
 Notes while UI SDK is in beta:
 

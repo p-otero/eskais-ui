@@ -21,7 +21,7 @@ type DependencyChipsProps = Omit<ComponentProps<"ul">, "children" | "onSelect" |
     empty?: ReactNode
   }
 
-const chipClassName = "max-w-48"
+const chipClassName = "min-w-0 max-w-48 shrink"
 
 const pressableClassName =
   "cursor-pointer outline-none transition-colors hover:border-current focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 focus-visible:ring-offset-background data-disabled:cursor-not-allowed data-disabled:opacity-50"
@@ -30,7 +30,7 @@ const formatMoreDefault = (count: number) => `${count} more`
 
 function Chip({ item, onSelect }: { item: DependencyChip; onSelect?: (id: string) => void }) {
   const label = <span className="min-w-0 truncate">{item.label}</span>
-  const className = cn(statusPillVariants({ tone: item.tone }), chipClassName)
+  const className = cn(statusPillVariants({ tone: item.tone }), "min-w-0 shrink", chipClassName)
   if (!onSelect) {
     return (
       <span title={item.label} className={className}>
@@ -62,7 +62,12 @@ function DependencyChips({
   return (
     <ul data-slot="dependency-chips" className={cn("flex flex-wrap items-center gap-1.5", className)} {...props}>
       {visible.map((item) => (
-        <li key={item.id} data-slot="dependency-chips-item" data-tone={item.tone ?? "neutral"} className="flex min-w-0">
+        <li
+          key={item.id}
+          data-slot="dependency-chips-item"
+          data-tone={item.tone ?? "neutral"}
+          className="flex min-w-0 max-w-full"
+        >
           <Chip item={item} onSelect={onSelect} />
         </li>
       ))}

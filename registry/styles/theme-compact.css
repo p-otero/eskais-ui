@@ -14,3 +14,39 @@
   --task-panel-width: 22rem;
   --sidebar-width: 14rem;
 }
+
+/* An AgentTaskBoard's density: the compact shape and spacing without its flatter shadow, so glass keeps its depth,
+   and narrower columns, so four fit a 1100px host. */
+[data-density="compact"] {
+  --radius: 0.5rem;
+  --control-radius: 0.5rem;
+  --control-height: 2rem;
+  --control-height-sm: 1.75rem;
+  --control-height-lg: 2.25rem;
+  --control-padding: 0.625rem;
+  --choice-radius: 0.25rem;
+  --surface-radius: 0.75rem;
+  --surface-padding: 1rem;
+  --board-column-min-width: 13rem;
+  --board-column-max-width: 15rem;
+  --task-panel-width: 22rem;
+  --sidebar-width: 14rem;
+}
+
+@container agent-task-board (width <= 75rem) {
+  [data-density="auto"] {
+    --radius: 0.5rem;
+    --control-radius: 0.5rem;
+    --control-height: 2rem;
+    --control-height-sm: 1.75rem;
+    --control-height-lg: 2.25rem;
+    --control-padding: 0.625rem;
+    --choice-radius: 0.25rem;
+    --surface-radius: 0.75rem;
+    --surface-padding: 1rem;
+    --board-column-min-width: 13rem;
+    --board-column-max-width: 15rem;
+    --task-panel-width: 22rem;
+    --sidebar-width: 14rem;
+  }
+}

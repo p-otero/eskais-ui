@@ -1,7 +1,8 @@
-import { createLocalStorage, createPreference } from "@ui-sdk/core"
+import { createLocalStorage } from "@ui-sdk/core"
 import { usePreference } from "@ui-sdk/react/preferences"
 import { useEffect, useState } from "react"
 
+import { createAppearance } from "@/components/ui/appearance"
 import { Button } from "@/components/ui/button"
 import { Field, FieldLabel } from "@/components/ui/field"
 import { SegmentedControl, SegmentedControlIndicator, SegmentedControlItem } from "@/components/ui/segmented-control"
@@ -10,13 +11,12 @@ import { Slider, SliderControl, SliderIndicator, SliderThumb, SliderTrack, Slide
 const themes = ["default", "compact", "glass"] as const
 type Theme = (typeof themes)[number]
 
-const theme = createPreference({
-  values: themes,
-  defaultValue: "default",
-  attribute: "data-theme",
-  global: true,
-  storage: createLocalStorage("eskais-showcase-theme"),
+// Light by default, so browser checks don't depend on the machine's color scheme.
+const appearance = createAppearance({
+  colorScheme: "light",
+  storage: { theme: createLocalStorage("eskais-showcase-theme") },
 })
+const { theme } = appearance
 
 function ThemePicker() {
   const { value } = usePreference(theme)
@@ -79,16 +79,9 @@ function GlassOpacity() {
 }
 
 function DarkToggle() {
-  const [dark, setDark] = useState(false)
+  const dark = usePreference(appearance.colorScheme).resolved === "dark"
   return (
-    <Button
-      variant="outline"
-      aria-pressed={dark}
-      onClick={() => {
-        document.documentElement.classList.toggle("dark", !dark)
-        setDark(!dark)
-      }}
-    >
+    <Button variant="outline" aria-pressed={dark} onClick={() => appearance.colorScheme.set(dark ? "light" : "dark")}>
       Dark mode
     </Button>
   )
@@ -104,4 +97,4 @@ function AppearanceControls() {
   )
 }
 
-export { AppearanceControls, theme }
+export { AppearanceControls, appearance }

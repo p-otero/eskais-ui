@@ -143,9 +143,9 @@ const popups = [
     selector: '[role="menu"]',
   },
   {
-    name: "task detail panel",
+    name: "task detail dialog",
     open: (page) => page.getByRole("button", { name: "Open T-014 Index the docs for search" }),
-    selector: '[data-slot="task-detail-panel"]',
+    selector: '[data-task-detail="dialog"]',
   },
 ]
 

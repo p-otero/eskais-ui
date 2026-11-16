@@ -11,7 +11,7 @@ const agent = createAgent({ allow: (step) => !step.confirm || approve })
 const tick = () => act(() => new Promise((resolve) => setTimeout(resolve, 0)))
 const onPage = () => agent.snapshot().filter((entry) => !entry.offPage && entry.component !== "more")
 
-test("an agent finds every control by name and can select, switch views, filter and open a thread", async () => {
+test("beside the side panel, an agent finds every control by name and can select, switch views, filter and open a thread", async () => {
   const onOpenThread = vi.fn()
   render(
     <AgentTaskBoard
@@ -19,6 +19,7 @@ test("an agent finds every control by name and can select, switch views, filter 
       mode="snapshot"
       generatedAt={GENERATED_AT}
       defaultSelectedTaskId="T-014"
+      detailPresentation="side"
       onOpenThread={onOpenThread}
     />,
   )

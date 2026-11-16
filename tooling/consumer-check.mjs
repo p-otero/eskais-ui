@@ -16,6 +16,7 @@ const items = [
   "theme",
   "theme-compact",
   "theme-glass",
+  "appearance",
   "button",
   "field",
   "input",
@@ -213,6 +214,7 @@ export default defineConfig({
     "src/main.tsx",
     `import { createRoot } from "react-dom/client"
 import { AgentTaskBoard } from "@/components/ui/agent-task-board"
+import { Appearance, createAppearance } from "@/components/ui/appearance"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -245,9 +247,12 @@ const tasks: TaskView[] = [
   },
 ]
 
+const appearance = createAppearance({ theme: "compact" })
+appearance.apply()
+
 function App() {
   return (
-    <>
+    <Appearance appearance={appearance}>
     <AgentTaskBoard tasks={tasks} mode="snapshot" generatedAt="2026-11-15T18:42:00Z" timeZone="UTC" />
     <Card data-theme="glass">
       <CardHeader><CardTitle>Consumer</CardTitle></CardHeader>
@@ -260,7 +265,7 @@ function App() {
         <ConfirmDialog trigger="Delete" title="Delete?" confirmLabel="Delete" tone="destructive" agentConfirm="Deletes it" onConfirm={() => {}} />
       </CardContent>
     </Card>
-    </>
+    </Appearance>
   )
 }
 
@@ -277,6 +282,7 @@ createRoot(document.getElementById("root")!).render(<App />)
   for (const expected of [
     '[data-theme="compact"]',
     '[data-theme="glass"]',
+    '[data-density="auto"]',
     ".h-control{",
     ".backdrop-surface{",
     "--glass-opacity",

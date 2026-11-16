@@ -6,9 +6,9 @@ import {
   AlertDialogDescription,
   AlertDialogTitle,
 } from "@ui-sdk/react/alert-dialog"
-import { Preferences } from "@ui-sdk/react/preferences"
 import { useRef, useState } from "react"
 
+import { Appearance } from "@/components/ui/appearance"
 import { Badge } from "@/components/ui/badge"
 import { Button, buttonVariants } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
@@ -31,7 +31,7 @@ import { Input, InputClear, InputGroup } from "@/components/ui/input"
 import { SearchField } from "@/components/ui/search-field"
 
 import { agent, approval, type ApprovalRequest } from "./agent"
-import { AppearanceControls, theme } from "./appearance"
+import { AppearanceControls, appearance } from "./appearance"
 import { Section } from "./section"
 import { BoardSection } from "./sections/board"
 import { NavigationSection } from "./sections/navigation"
@@ -188,7 +188,7 @@ function AgentPanel() {
 
 function App() {
   return (
-    <Preferences preferences={[theme]}>
+    <Appearance appearance={appearance}>
       <div className="mx-auto flex max-w-4xl flex-col gap-6 px-4 py-10">
         <header className="flex flex-wrap items-end justify-between gap-4">
           <div className="flex flex-col gap-1">
@@ -308,7 +308,7 @@ function App() {
           <AgentPanel />
         </main>
       </div>
-    </Preferences>
+    </Appearance>
   )
 }
 

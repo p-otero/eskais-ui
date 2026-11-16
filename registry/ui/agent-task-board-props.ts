@@ -34,8 +34,18 @@ interface AgentTaskBoardBaseProps {
   onApproveProposal?: ProposalCallback
   onRejectProposal?: ProposalCallback
   agentApproval?: AgentApproval
+  /**
+   * How a selected task's detail shows. `"dialog"` (default) and `"drawer"` are modal and leave the
+   * board's layout alone; `"side"` keeps the board usable beside a non-modal panel.
+   */
+  detailPresentation?: DetailPresentation
+  /** `"auto"` (default) switches to compact shape and spacing while the board is 75rem wide or less. */
+  density?: BoardDensity
   className?: string
 }
+
+type DetailPresentation = "dialog" | "drawer" | "side"
+type BoardDensity = "comfortable" | "compact" | "auto"
 
 type AgentTaskBoardProps = AgentTaskBoardBaseProps &
   (
@@ -47,4 +57,4 @@ type AgentTaskBoardProps = AgentTaskBoardBaseProps &
     | { mode: "live"; generatedAt?: string }
   )
 
-export type { AgentTaskBoardBaseProps, AgentTaskBoardProps }
+export type { AgentTaskBoardBaseProps, AgentTaskBoardProps, BoardDensity, DetailPresentation }

@@ -40,6 +40,8 @@ interface AgentTaskBoardProps {
   onApproveProposal?: (id: string) => void | Promise<void> // solo en live
   onRejectProposal?: (id: string) => void | Promise<void>
   agentApproval?: "confirm" | "allow" | "deny" // por defecto "confirm"
+  detailPresentation?: "dialog" | "drawer" | "side" // por defecto "dialog"
+  density?: "comfortable" | "compact" | "auto" // por defecto "auto"
 }
 
 interface TaskFilters {
@@ -52,7 +54,9 @@ interface TaskFilters {
 
 ## Comportamiento
 
-- **Panel de detalle**: no modal. Lateral en pantallas anchas e inferior en estrechas, para que el tablero y el puente de agentes sigan operativos.
+- **Detalle** (`detailPresentation`, por defecto `"dialog"`): un diálogo modal ancho que no estrecha el tablero; `"drawer"` lo abre como cajón a la derecha. Revierte la decisión anterior de panel no modal a petición de Pablo (2026-11-16): el panel lateral cortaba las columnas en hosts de unos 1100 px. `"side"` se mantiene, no modal, lateral en pantallas anchas e inferior en estrechas, para quien necesite operar el tablero mientras lee.
+- **Agentes con el detalle modal abierto**: los controles del tablero tras el modal quedan ocultos para los agentes (`data-agent-hidden`), igual que son inertes para las personas. Las acciones de la región del tablero siguen funcionando: `selectTask` cambia la tarea del diálogo, `filter` y `setView` cambian el tablero de detrás. Dentro del diálogo el agente lee el detalle, abre hilos, aprueba o rechaza según `agentApproval` y lo cierra con "Close task details".
+- **Densidad** (`density`, por defecto `"auto"`): con `"auto"`, el tablero usa las formas y espaciados compactos cuando su contenedor mide 75rem (1200 px) o menos; `"compact"` los fuerza y `"comfortable"` hereda los de la página.
 - **Aprobar y rechazar**: si el callback devuelve una Promise, el botón queda en estado pendiente, no admite doble envío y muestra el error si falla. Rechazar pide confirmación en pantalla.
 - **`agentApproval`**:
   - `"confirm"`: el agente puede aprobar o rechazar, pero con `data-agent-confirm`, es decir, con aprobación de una persona.

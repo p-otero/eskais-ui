@@ -2,7 +2,7 @@
   "$schema": "https://ui.shadcn.com/schema/registry-item.json",
   "name": "theme-compact",
   "title": "Compact theme",
-  "description": "Denser controls, tighter radii and padding. Applies inside any element with data-theme=\"compact\".",
+  "description": "Denser controls, tighter radii and padding. Applies inside any element with data-theme=\"compact\". Also holds AgentTaskBoard's density: compact shape and spacing under data-density=\"compact\", or data-density=\"auto\" while the board is 75rem wide or less.",
   "registryDependencies": [
     "@eskais/theme"
   ],
@@ -22,6 +22,38 @@
       "--board-column-max-width": "18rem",
       "--task-panel-width": "22rem",
       "--sidebar-width": "14rem"
+    },
+    "[data-density=\"compact\"]": {
+      "--radius": "0.5rem",
+      "--control-radius": "0.5rem",
+      "--control-height": "2rem",
+      "--control-height-sm": "1.75rem",
+      "--control-height-lg": "2.25rem",
+      "--control-padding": "0.625rem",
+      "--choice-radius": "0.25rem",
+      "--surface-radius": "0.75rem",
+      "--surface-padding": "1rem",
+      "--board-column-min-width": "13rem",
+      "--board-column-max-width": "15rem",
+      "--task-panel-width": "22rem",
+      "--sidebar-width": "14rem"
+    },
+    "@container agent-task-board (width <= 75rem)": {
+      "[data-density=\"auto\"]": {
+        "--radius": "0.5rem",
+        "--control-radius": "0.5rem",
+        "--control-height": "2rem",
+        "--control-height-sm": "1.75rem",
+        "--control-height-lg": "2.25rem",
+        "--control-padding": "0.625rem",
+        "--choice-radius": "0.25rem",
+        "--surface-radius": "0.75rem",
+        "--surface-padding": "1rem",
+        "--board-column-min-width": "13rem",
+        "--board-column-max-width": "15rem",
+        "--task-panel-width": "22rem",
+        "--sidebar-width": "14rem"
+      }
     }
   },
   "type": "registry:theme"

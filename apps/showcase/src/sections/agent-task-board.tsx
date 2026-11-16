@@ -1,6 +1,7 @@
 import { useRef, useState } from "react"
 
 import { AgentTaskBoard } from "@/components/ui/agent-task-board"
+import type { DetailPresentation } from "@/components/ui/agent-task-board-props"
 import { Field, FieldLabel } from "@/components/ui/field"
 import { SegmentedControl, SegmentedControlIndicator, SegmentedControlItem } from "@/components/ui/segmented-control"
 import type { TaskStatus, TaskView } from "@/lib/agent-task-types"
@@ -12,6 +13,7 @@ const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
 
 function AgentTaskBoardSection() {
   const [mode, setMode] = useState<"snapshot" | "live">("live")
+  const [detail, setDetail] = useState<DetailPresentation>("dialog")
   const [tasks, setTasks] = useState<TaskView[]>(sampleTasks)
   const [log, setLog] = useState("Approve fails the first time on purpose.")
   const approvals = useRef(0)
@@ -37,6 +39,7 @@ function AgentTaskBoardSection() {
   const shared = {
     tasks,
     timeZone: "UTC",
+    detailPresentation: detail,
     onOpenThread: (thread: { id: string }) => setLog(`Open thread ${thread.id}.`),
     onApproveProposal: approve,
     onRejectProposal: reject,
@@ -45,7 +48,7 @@ function AgentTaskBoardSection() {
   return (
     <Section
       title="AgentTaskBoard"
-      description="The full board for agent tasks: filters, board or table, summary, collapsible columns and a non-modal detail panel. Live mode decides proposals; snapshot mode is read-only."
+      description="The full board for agent tasks: filters, board or table, summary, collapsible columns, and the detail as a dialog, drawer or side panel. Live mode decides proposals; snapshot mode is read-only."
     >
       <div className="flex w-full flex-col gap-4">
         <div className="flex flex-wrap items-end gap-4">
@@ -55,6 +58,15 @@ function AgentTaskBoardSection() {
               <SegmentedControlIndicator />
               <SegmentedControlItem value="live">Live</SegmentedControlItem>
               <SegmentedControlItem value="snapshot">Snapshot</SegmentedControlItem>
+            </SegmentedControl>
+          </Field>
+          <Field>
+            <FieldLabel>Task detail</FieldLabel>
+            <SegmentedControl value={detail} onValueChange={(next) => next && setDetail(next)}>
+              <SegmentedControlIndicator />
+              <SegmentedControlItem value="dialog">Dialog</SegmentedControlItem>
+              <SegmentedControlItem value="drawer">Drawer</SegmentedControlItem>
+              <SegmentedControlItem value="side">Side</SegmentedControlItem>
             </SegmentedControl>
           </Field>
           <p className="text-sm text-muted-foreground" aria-live="polite">

@@ -1,6 +1,7 @@
 import { createRoot } from "react-dom/client"
 
 import { AgentTaskBoard } from "@/components/ui/agent-task-board"
+import { Appearance, createAppearance } from "@/components/ui/appearance"
 import type { TaskView } from "@/lib/agent-task-types"
 
 type BoardData = { tasks: TaskView[]; generatedAt: string }
@@ -9,8 +10,13 @@ const data = JSON.parse(document.getElementById("board-data")?.textContent ?? "n
 const root = document.getElementById("root")
 if (!data || !root) throw new Error("The page is missing its board data or root element.")
 
+const appearance = createAppearance()
+appearance.apply()
+
 createRoot(root).render(
-  <main className="bg-background p-surface text-foreground">
-    <AgentTaskBoard tasks={data.tasks} mode="snapshot" generatedAt={data.generatedAt} timeZone="UTC" />
-  </main>,
+  <Appearance appearance={appearance}>
+    <main className="bg-background p-surface text-foreground">
+      <AgentTaskBoard tasks={data.tasks} mode="snapshot" generatedAt={data.generatedAt} timeZone="UTC" />
+    </main>
+  </Appearance>,
 )

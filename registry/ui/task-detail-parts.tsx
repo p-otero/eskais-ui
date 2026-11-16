@@ -21,7 +21,11 @@ function DetailValue({ term, children, quantity, locale, formatCurrency, quantit
   let value = children
   if (quantity) {
     const format = usageFormatter("cost", { locale, formatCurrency })
-    const hint = formatQuantity(quantity, { format, locale, labels: quantityLabels }).title
+    const hint = formatQuantity(quantity, {
+      format,
+      locale,
+      labels: quantityLabels,
+    }).title
     const shown = (
       <QuantityValue value={quantity} format={format} locale={locale} labels={quantityLabels} title={undefined} />
     )
@@ -63,5 +67,13 @@ function Block({ title, level, children }: { title: string; level: number; child
   )
 }
 
-export { Block, DetailValue, insidePopup }
+function CloseIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+      <path d="M18 6 6 18M6 6l12 12" />
+    </svg>
+  )
+}
+
+export { Block, CloseIcon, DetailValue, insidePopup }
 export type { DetailValueProps }

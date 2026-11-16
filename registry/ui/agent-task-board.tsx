@@ -18,6 +18,7 @@ import {
   createAgentTaskBoardController,
 } from "@/components/ui/agent-task-board-root"
 import { AgentTaskBoardColumns, withColumn } from "@/components/ui/agent-task-board-columns"
+import { AgentTaskBoardDetail } from "@/components/ui/agent-task-board-detail"
 import { AgentTaskBoardEmpty } from "@/components/ui/agent-task-board-empty"
 import { AgentTaskBoardSummary } from "@/components/ui/agent-task-board-summary"
 import { AgentTaskBoardTable } from "@/components/ui/agent-task-board-table"
@@ -25,7 +26,6 @@ import { AgentTaskBoardToolbar } from "@/components/ui/agent-task-board-toolbar"
 import { agentTaskBoardLabels, agentTaskBoardLabelsEs, resolveLabels } from "@/components/ui/agent-task-labels"
 import { useNow } from "@/components/ui/relative-time"
 import type { TaskDisplayOptions } from "@/components/ui/task-card"
-import { TaskDetailPanel } from "@/components/ui/task-detail-panel"
 import { useBoardFocus } from "@/components/ui/use-board-focus"
 
 const NO_FILTERS: TaskFilters = {}
@@ -43,6 +43,7 @@ function pageLocale() {
 function AgentTaskBoard(props: AgentTaskBoardProps) {
   const { tasks, mode, generatedAt, formatCurrency, timeZone, agentApproval = "confirm" } = props
   const { onApproveProposal, onRejectProposal, renderThreadLink, onOpenThread } = props
+  const { detailPresentation = "dialog", density = "auto" } = props
   const labels = useMemo(() => resolveLabels(props.labels), [props.labels])
   const now = useNow({ now: mode === "snapshot" ? generatedAt : props.now })
   const locale = props.locale ?? pageLocale()
@@ -60,7 +61,9 @@ function AgentTaskBoard(props: AgentTaskBoardProps) {
   const selected = selectedId === null ? undefined : tasks.find((task) => task.id === selectedId)
   const live = mode === "live"
 
-  const { bodyRef, focusPanelNext, focusCardNext } = useBoardFocus(selectedId)
+  const { bodyRef, focusPanelNext, focusCardNext, cardOfLastTask } = useBoardFocus(selectedId, {
+    modal: detailPresentation !== "side",
+  })
   const selectTask = useCallback(
     (id: string) => {
       focusPanelNext()
@@ -69,7 +72,7 @@ function AgentTaskBoard(props: AgentTaskBoardProps) {
     [controller, focusPanelNext],
   )
   const closePanel = useCallback(
-    (reason: "close-press" | "escape-key") => {
+    (reason: "close-press" | "escape-key" | "outside-press" | "imperative") => {
       focusCardNext()
       controller.selectTask(null, { reason })
     },
@@ -152,45 +155,52 @@ function AgentTaskBoard(props: AgentTaskBoardProps) {
         props.onSelectTask?.(id)
       }}
       onOpenThread={onOpenThread && ((thread) => onOpenThread(thread))}
-      className={cn("flex min-w-0 flex-col gap-surface", props.className)}
+      className={cn("@container/agent-task-board min-w-0", props.className)}
     >
-      <AgentTaskBoardToolbar
-        options={options}
-        filters={filters}
-        view={view}
-        labels={labels}
-        controller={controller}
-        generatedAt={mode === "snapshot" ? generatedAt : undefined}
-        locale={locale}
-        timeZone={timeZone}
-      />
-      <AgentTaskBoardSummary summary={summary} labels={labels} locale={locale} formatCurrency={formatCurrency} />
-      <div ref={bodyRef} className="@container/agent-task-board">
-        <div className="flex flex-col gap-surface @4xl/agent-task-board:flex-row @4xl/agent-task-board:items-start">
-          <div className="min-w-0 flex-1">{content}</div>
-          {selected && (
-            <TaskDetailPanel
-              key={selected.id}
-              task={selected}
-              {...display}
-              onClose={closePanel}
-              renderThreadLink={renderThreadLink}
-              onOpenThread={onOpenThread}
-              className="sticky bottom-0 max-h-(--task-panel-max-height) @4xl/agent-task-board:top-0 @4xl/agent-task-board:bottom-auto @4xl/agent-task-board:w-(--task-panel-width) @4xl/agent-task-board:shrink-0"
-            />
-          )}
-        </div>
+      <div data-slot="agent-task-board-density" data-density={density} className="flex flex-col gap-surface">
+        <AgentTaskBoardDetail
+          header={
+            <>
+              <AgentTaskBoardToolbar
+                options={options}
+                filters={filters}
+                view={view}
+                labels={labels}
+                controller={controller}
+                generatedAt={mode === "snapshot" ? generatedAt : undefined}
+                locale={locale}
+                timeZone={timeZone}
+              />
+              <AgentTaskBoardSummary
+                summary={summary}
+                labels={labels}
+                locale={locale}
+                formatCurrency={formatCurrency}
+              />
+            </>
+          }
+          presentation={detailPresentation}
+          bodyRef={bodyRef}
+          selected={selected}
+          display={display}
+          onClose={closePanel}
+          returnFocus={cardOfLastTask}
+          renderThreadLink={renderThreadLink}
+          onOpenThread={onOpenThread}
+        >
+          {content}
+        </AgentTaskBoardDetail>
+        <AgentTaskProposalsRoot
+          aria-label={labels.proposals.group}
+          className="sr-only"
+          tasks={tasks}
+          mode={mode}
+          agentApproval={agentApproval}
+          agentConfirm={labels.proposals.agentConfirm}
+          onApproveProposal={live && onApproveProposal ? (id) => onApproveProposal(id) : undefined}
+          onRejectProposal={live && onRejectProposal ? (id) => onRejectProposal(id) : undefined}
+        />
       </div>
-      <AgentTaskProposalsRoot
-        aria-label={labels.proposals.group}
-        className="sr-only"
-        tasks={tasks}
-        mode={mode}
-        agentApproval={agentApproval}
-        agentConfirm={labels.proposals.agentConfirm}
-        onApproveProposal={live && onApproveProposal ? (id) => onApproveProposal(id) : undefined}
-        onRejectProposal={live && onRejectProposal ? (id) => onRejectProposal(id) : undefined}
-      />
     </AgentTaskBoardRoot>
   )
 }

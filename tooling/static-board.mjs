@@ -102,7 +102,7 @@ async function bundle(css, data, file) {
 // Cancelled tasks start hidden, so they have no card.
 const shownCards = (data) => JSON.parse(data).tasks.filter((task) => task.status !== "cancelled").length
 
-async function check(browser, file, { cards, select }) {
+async function check(browser, file, { cards, select, detail }) {
   const context = await browser.newContext({ viewport: { width: 1280, height: 900 }, offline: true })
   const page = await context.newPage()
   page.setDefaultTimeout(15_000)
@@ -122,7 +122,7 @@ async function check(browser, file, { cards, select }) {
   const rendered = await page.evaluate(() => performance.now())
   const started = Date.now()
   await page.getByRole("button", { name: select }).click()
-  await page.locator('[data-slot="task-detail-panel"]').waitFor()
+  await page.getByRole("dialog", { name: detail }).waitFor()
   const opened = Date.now() - started
   await context.close()
   if (blocked.length > 0) errors.push(`Blocked network requests: ${blocked.join(", ")}`)
@@ -142,13 +142,18 @@ try {
     const sample = await check(browser, output, {
       cards: shownCards(sampleData),
       select: "Open T-014 Index the docs for search",
+      detail: "T-014 Index the docs for search",
     })
-    const scale = await check(browser, scaleFile, { cards: shownCards(scaleData), select: /^Open G-014 / })
+    const scale = await check(browser, scaleFile, {
+      cards: shownCards(scaleData),
+      select: /^Open G-014 /,
+      detail: /^G-014 /,
+    })
     console.log(
-      `${output}: ${(size / 1024).toFixed(0)} KiB, board ready ${sample.rendered.toFixed(0)} ms after navigation, panel open in ${sample.opened} ms`,
+      `${output}: ${(size / 1024).toFixed(0)} KiB, board ready ${sample.rendered.toFixed(0)} ms after navigation, detail open in ${sample.opened} ms`,
     )
     console.log(
-      `200 tasks × up to 30 attempts: ${(scaleSize / 1024).toFixed(0)} KiB, board ready ${scale.rendered.toFixed(0)} ms after navigation, panel open in ${scale.opened} ms`,
+      `200 tasks × up to 30 attempts: ${(scaleSize / 1024).toFixed(0)} KiB, board ready ${scale.rendered.toFixed(0)} ms after navigation, detail open in ${scale.opened} ms`,
     )
     console.log("Static board check passed: renders from file:// with no network and no console errors.")
   } finally {

@@ -16,7 +16,7 @@ type AgentApproval = "confirm" | "allow" | "deny"
 
 type ViewChangeReason = "item-press" | "imperative"
 type FiltersChangeReason = "item-press" | "input-change" | "clear-press" | "imperative"
-type SelectReason = "item-press" | "close-press" | "escape-key" | "imperative"
+type SelectReason = "item-press" | "close-press" | "escape-key" | "outside-press" | "imperative"
 type OpenThreadReason = "item-press" | "link-press" | "imperative"
 
 type AgentTaskBoardOptions = {

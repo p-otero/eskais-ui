@@ -26,7 +26,7 @@ function renderBoard(props: Partial<AgentTaskBoardProps> = {}) {
 }
 
 const openButton = (id: string) => screen.getByRole("button", { name: new RegExp(`^Open ${id} `) })
-const panel = () => document.querySelector<HTMLElement>('[data-slot="task-detail-panel"]')
+const panel = () => document.querySelector<HTMLElement>('[data-slot="task-detail-panel"], [data-task-detail]')
 const cardOf = (id: string) => document.querySelector<HTMLElement>(`[data-slot="task-card"][data-task-id="${id}"]`)
 const visibleIds = () =>
   [...document.querySelectorAll('[data-slot="task-card"]')].map((element) => element.getAttribute("data-task-id"))
@@ -94,10 +94,10 @@ describe("TaskCard", () => {
   })
 })
 
-describe("selection and the detail panel", () => {
+describe("selection and the side panel", () => {
   test("pressing a card opens the panel, focuses it, and closing returns focus", async () => {
     const onSelectTask = vi.fn()
-    renderBoard({ onSelectTask })
+    renderBoard({ onSelectTask, detailPresentation: "side" })
     await tick()
     await user().click(openButton("T-014"))
     expect(onSelectTask).toHaveBeenLastCalledWith("T-014")
@@ -114,7 +114,7 @@ describe("selection and the detail panel", () => {
   })
 
   test("Escape inside the panel closes it; dependencies select their task", async () => {
-    renderBoard({ defaultSelectedTaskId: "T-013" })
+    renderBoard({ defaultSelectedTaskId: "T-013", detailPresentation: "side" })
     await tick()
     await user().click(within(panel()!).getByRole("button", { name: /T-012 Write the migration/ }))
     expect(panel()?.getAttribute("data-task-id")).toBe("T-012")
@@ -275,6 +275,7 @@ describe("accessibility", () => {
     expect(await axeViolations(container)).toEqual([])
     await user().click(openButton("T-014"))
     expect(await axeViolations(container)).toEqual([])
+    await user().keyboard("{Escape}")
     await user().click(screen.getByRole("radio", { name: "Table" }))
     expect(await axeViolations(container)).toEqual([])
   })
