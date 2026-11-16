@@ -7,18 +7,6 @@ type Item = { name: string; cssVars?: { theme: CssVars; light: CssVars; dark: Cs
 const registryPath = "registry.json"
 const read = (file: string) => readFileSync(`registry/styles/${file}`, "utf8").replaceAll(/\/\*[\s\S]*?\*\//g, "")
 
-function block(css: string, selector: string): CssVars {
-  const start = css.indexOf(`${selector} {`)
-  if (start === -1) throw new Error(`theme.css has no "${selector}" block`)
-  const body = css.slice(css.indexOf("{", start) + 1, css.indexOf("}", start))
-  const vars: CssVars = {}
-  for (const match of body.matchAll(/--([\w-]+):\s*([^;]+);/g)) {
-    const [, name, value] = match
-    if (name && value) vars[name] = value.trim()
-  }
-  return vars
-}
-
 // Turns plain nested CSS (rules, @media, @supports) into the object shape of a registry item's `css`.
 function tree(css: string): CssTree {
   let index = 0
@@ -52,20 +40,38 @@ const item = (name: string) => {
   return found
 }
 
-const themeCss = read("theme.css")
-item("theme").cssVars = {
-  theme: block(themeCss, "@theme inline"),
-  light: block(themeCss, ":root"),
-  dark: block(themeCss, ".dark"),
+const theme = tree(read("theme.css"))
+const derivedLight = ":root, [data-palette]"
+const derivedDark = ".dark, .dark [data-palette], [data-palette].dark"
+function vars(selector: string): CssVars {
+  const node = theme[selector]
+  if (!node || typeof node === "string") throw new Error(`theme.css has no "${selector}" block`)
+  return Object.fromEntries(
+    Object.entries(node).flatMap(([name, value]) =>
+      name.startsWith("--") && typeof value === "string" ? [[name.slice(2), value]] : [],
+    ),
+  )
 }
-const shapeStart = themeCss.indexOf(":where(:root) {")
-const shape = tree(themeCss.slice(shapeStart, themeCss.indexOf("}", shapeStart) + 1))
+const prefixed = (selector: string) =>
+  Object.fromEntries(Object.entries(vars(selector)).map(([name, value]) => [`--${name}`, value]))
+
+// shadcn writes cssVars to :root and .dark only; the palette scopes that repeat the derivation go in `css`.
+item("theme").cssVars = {
+  theme: vars("@theme inline"),
+  light: { ...vars(":root"), ...vars(derivedLight) },
+  dark: { ...vars(".dark"), ...vars(derivedDark) },
+}
 const { "@layer base": base } = item("theme").css ?? {}
 item("theme").css = {
-  ...shape,
-  ...Object.fromEntries(Object.entries(tree(themeCss)).filter(([selector]) => selector.startsWith("@utility "))),
+  ":where(:root)": prefixed(":where(:root)"),
+  "[data-palette]": prefixed(derivedLight),
+  ".dark [data-palette], [data-palette].dark": prefixed(derivedDark),
+  ...Object.fromEntries(
+    Object.entries(theme).filter(([selector]) => selector.startsWith("@utility ") || selector.startsWith("@supports ")),
+  ),
   ...(base ? { "@layer base": base } : {}),
 }
+item("palettes").css = tree(read("palettes.css"))
 item("theme-compact").css = tree(read("theme-compact.css"))
 item("theme-glass").css = tree(read("theme-glass.css"))
 

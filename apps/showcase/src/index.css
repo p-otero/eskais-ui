@@ -1,14 +1,12 @@
 @layer ui-sdk;
 @import "tailwindcss";
+@import "@fontsource-variable/geist";
 @import "../../../registry/styles/theme.css";
 @import "../../../registry/styles/theme-compact.css";
 @import "../../../registry/styles/theme-glass.css";
+@import "../../../registry/styles/palettes.css";
 
 @source "../../../registry";
-
-@theme {
-  --font-sans: InterVariable, Inter, ui-sans-serif, system-ui, sans-serif;
-}
 
 @layer base {
   html {

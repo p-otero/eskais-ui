@@ -29,6 +29,7 @@ afterEach(() => {
   prefersDark(false)
   html.classList.remove("dark")
   html.removeAttribute("data-theme")
+  html.removeAttribute("data-palette")
 })
 
 test("system follows the browser's color scheme as it changes", () => {
@@ -60,6 +61,16 @@ test("the theme sets data-theme on <html>, and default leaves it off", () => {
   expect(html.getAttribute("data-theme")).toBe("glass")
   act(() => void appearance.theme.set("default"))
   expect(html.hasAttribute("data-theme")).toBe(false)
+})
+
+test("the palette sets data-palette on <html>, and default leaves it off", () => {
+  const appearance = createAppearance({ palette: "blue" })
+  render(<Appearance appearance={appearance} />)
+  expect(html.getAttribute("data-palette")).toBe("blue")
+  act(() => void appearance.palette.set("orange"))
+  expect(html.getAttribute("data-palette")).toBe("orange")
+  act(() => void appearance.palette.set("default"))
+  expect(html.hasAttribute("data-palette")).toBe(false)
 })
 
 test("apply() writes the choice synchronously, before anything renders", () => {

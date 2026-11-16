@@ -1,3 +1,4 @@
+import "./fonts.css"
 import { createRoot } from "react-dom/client"
 
 import { AgentTaskBoard } from "@/components/ui/agent-task-board"

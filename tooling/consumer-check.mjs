@@ -4,7 +4,10 @@ import { spawn } from "node:child_process"
 import { createReadStream, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, writeFileSync } from "node:fs"
 import { createServer } from "node:http"
 import { tmpdir } from "node:os"
-import { join, normalize, resolve } from "node:path"
+import { extname, join, normalize, resolve } from "node:path"
+
+import { createRequire } from "node:module"
+import { pathToFileURL } from "node:url"
 
 const pm = process.argv[2] ?? "npm"
 if (pm !== "npm" && pm !== "pnpm") throw new Error(`Unsupported package manager: ${pm}`)
@@ -16,6 +19,8 @@ const items = [
   "theme",
   "theme-compact",
   "theme-glass",
+  "palettes",
+  "font-geist",
   "appearance",
   "button",
   "field",
@@ -102,6 +107,7 @@ const versions = {
   "@tailwindcss/vite": "4.3.5",
   typescript: "7.0.2",
   shadcn: "4.23.0",
+  playwright: "1.65.0",
 }
 
 const server = createServer((request, response) => {
@@ -115,6 +121,69 @@ const server = createServer((request, response) => {
 })
 await new Promise((ready) => server.listen(0, "127.0.0.1", ready))
 const { port } = server.address()
+
+const types = { ".html": "text/html", ".js": "text/javascript", ".css": "text/css", ".woff2": "font/woff2" }
+
+// Loads the built app in Chrome: the bundled font is in use, and the seeds drive the derived colors.
+// Playwright comes from the consumer app's own install, so this script runs with Node alone (no repo install).
+async function checkInBrowser(dist) {
+  const playwright = await import(
+    pathToFileURL(createRequire(join(dist, "..", "package.json")).resolve("playwright")).href
+  )
+  const { chromium } = playwright.default ?? playwright
+  const site = createServer((request, response) => {
+    const path = new URL(request.url, "http://x").pathname
+    const file = normalize(join(dist, path === "/" ? "index.html" : decodeURIComponent(path)))
+    if (!file.startsWith(dist) || !existsSync(file)) return response.writeHead(404).end()
+    response.writeHead(200, { "content-type": types[extname(file)] ?? "application/octet-stream" })
+    createReadStream(file).pipe(response)
+  })
+  await new Promise((ready) => site.listen(0, "127.0.0.1", ready))
+  const browser = await chromium.launch({ channel: "chrome" })
+  try {
+    const page = await browser.newPage()
+    await page.goto(`http://127.0.0.1:${site.address().port}/`)
+    await page.getByRole("button", { name: "Save" }).waitFor()
+    await page.addStyleTag({ content: "*, ::before, ::after { transition: none !important; }" })
+    const result = await page.evaluate(async () => {
+      await document.fonts.ready
+      const html = document.documentElement
+      const button = [...document.querySelectorAll('[data-slot="button"]')].find((node) => node.textContent === "Save")
+      const context = new OffscreenCanvas(1, 1).getContext("2d")
+      const rgb = (color) => {
+        context.clearRect(0, 0, 1, 1)
+        context.fillStyle = color
+        context.fillRect(0, 0, 1, 1)
+        return Array.from(context.getImageData(0, 0, 1, 1).data.slice(0, 3)).join(",")
+      }
+      const colors = () => {
+        const style = getComputedStyle(button)
+        return { background: rgb(style.backgroundColor), text: rgb(style.color) }
+      }
+      const neutral = colors()
+      html.setAttribute("data-palette", "blue")
+      const blue = colors()
+      html.removeAttribute("data-palette")
+      html.style.setProperty("--brand", "oklch(0.9 0.15 95)")
+      const yellow = colors()
+      html.style.removeProperty("--brand")
+      return {
+        font: [...document.fonts].some((font) => font.family.includes("Geist") && font.status === "loaded"),
+        neutral,
+        blue,
+        yellow,
+      }
+    })
+    console.log("In Chrome:", JSON.stringify(result))
+    if (!result.font) throw new Error("The Geist font didn't load in the built app")
+    if (result.blue.background === result.neutral.background) throw new Error("data-palette didn't change --primary")
+    if (result.yellow.text === result.neutral.text)
+      throw new Error("--primary-foreground didn't follow a light --brand")
+  } finally {
+    await browser.close()
+    site.close()
+  }
+}
 
 const app = mkdtempSync(join(tmpdir(), `eskais-consumer-${pm}-`))
 const write = (path, content) =>
@@ -145,6 +214,7 @@ try {
         "@tailwindcss/vite",
         "typescript",
         "shadcn",
+        "playwright",
       ].map((name) => [name, versions[name]]),
     ),
   })
@@ -286,11 +356,19 @@ createRoot(document.getElementById("root")!).render(<App />)
     ".h-control{",
     ".backdrop-surface{",
     "--glass-opacity",
+    "--brand",
+    '[data-palette="blue"]',
+    "oklch(from var(--brand)",
+    "Geist Variable",
   ]) {
     if (!css.includes(expected) && !css.includes(expected.replaceAll('"', ""))) {
       throw new Error(`Built CSS is missing ${expected}`)
     }
   }
+  if (!readdirSync(assets).some((file) => /^geist-latin-wght-normal.*\.woff2$/.test(file))) {
+    throw new Error("The build doesn't ship the Geist woff2 files")
+  }
+  await checkInBrowser(join(app, "dist"))
   console.log(`Consumer check passed with ${pm} in ${app}`)
 } finally {
   server.close()

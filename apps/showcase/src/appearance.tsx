@@ -10,10 +10,13 @@ import { Slider, SliderControl, SliderIndicator, SliderThumb, SliderTrack, Slide
 
 const themes = ["default", "compact", "glass"] as const
 type Theme = (typeof themes)[number]
+const palettes = ["neutral", "blue", "violet", "green", "orange"] as const
 
 // Light by default, so browser checks don't depend on the machine's color scheme.
 const appearance = createAppearance({
   colorScheme: "light",
+  palette: "neutral",
+  palettes,
   storage: { theme: createLocalStorage("eskais-showcase-theme") },
 })
 const { theme } = appearance
@@ -97,4 +100,4 @@ function AppearanceControls() {
   )
 }
 
-export { AppearanceControls, appearance }
+export { AppearanceControls, appearance, palettes }

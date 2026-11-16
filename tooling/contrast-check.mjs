@@ -1,14 +1,16 @@
 // Runs axe in a real browser for every theme and color mode, then measures the contrast axe can't:
 // text over gradients and glass, by rendering the background with the text hidden and checking its worst pixel.
-// Usage: node tooling/contrast-check.mjs [themes, default "default,compact"] [glass-opacity-percent]
+// Usage: node tooling/contrast-check.mjs [themes, default "default,compact"] [glass-opacity-percent] [--palettes=blue,green]
 // Glass is checked by hand (`bun run test:browser:glass`): blur without a GPU is too slow for CI.
 import { createRequire } from "node:module"
 
 import { setAppearance, withShowcase } from "./showcase-browser.mjs"
 
 const axePath = createRequire(import.meta.url).resolve("axe-core/axe.min.js")
-const themes = (process.argv[2] ?? "default,compact").split(",")
-const glassOpacity = process.argv[3]
+const palettesFlag = process.argv.find((arg) => arg.startsWith("--palettes="))
+const [themesArg, glassOpacity] = process.argv.slice(2).filter((arg) => arg !== palettesFlag)
+const themes = (themesArg ?? "default,compact").split(",")
+const palettes = palettesFlag ? palettesFlag.slice("--palettes=".length).split(",") : [undefined]
 const failures = []
 
 // page.evaluate has no timeout of its own; a stalled render would hang the job until CI kills it.
@@ -119,6 +121,47 @@ async function check(page, scope, context) {
   console.log(`${scope}: ${result.violations.length} axe violations, ${measured} measured in pixels`)
 }
 
+// Pairs axe may not meet on the page: [foreground, background, required ratio].
+const tokenPairs = [
+  ["primary-foreground", "primary", 4.5],
+  ["primary", "background", 4.5],
+  ["primary", "card", 3],
+  ["ring", "background", 3],
+  ["foreground", "background", 4.5],
+  ["muted-foreground", "muted", 4.5],
+  ["muted-foreground", "background", 4.5],
+  ["accent-foreground", "accent", 4.5],
+  ["secondary-foreground", "secondary", 4.5],
+  ["input", "background", 3],
+]
+
+async function checkTokens(page, scope) {
+  const colors = await page.evaluate(
+    (names) => {
+      const probe = document.createElement("span")
+      document.body.append(probe)
+      const context = new OffscreenCanvas(1, 1).getContext("2d")
+      const rgb = Object.fromEntries(
+        names.map((name) => {
+          probe.style.color = `var(--${name})`
+          context.clearRect(0, 0, 1, 1)
+          context.fillStyle = getComputedStyle(probe).color
+          context.fillRect(0, 0, 1, 1)
+          return [name, [...context.getImageData(0, 0, 1, 1).data]]
+        }),
+      )
+      probe.remove()
+      return rgb
+    },
+    [...new Set(tokenPairs.flatMap(([a, b]) => [a, b]))],
+  )
+  for (const [foreground, background, required] of tokenPairs) {
+    const value = ratio(colors[foreground], colors[background])
+    if (value < required)
+      failures.push(`${scope} --${foreground} on --${background}: ${value.toFixed(2)} < ${required}`)
+  }
+}
+
 // Popups render only while open, so open each kind once and check it in place.
 const popups = [
   { name: "dialog", open: (page) => page.getByRole("button", { name: "Rename project" }), selector: '[role="dialog"]' },
@@ -151,23 +194,27 @@ const popups = [
 
 await withShowcase(async (page) => {
   await page.addScriptTag({ path: axePath })
-  for (const theme of themes) {
-    for (const mode of ["light", "dark"]) {
-      await setAppearance(page, theme, mode)
-      if (theme === "glass" && glassOpacity) {
-        await page.evaluate(
-          (value) => document.documentElement.style.setProperty("--glass-opacity", `${value}%`),
-          glassOpacity,
-        )
-      }
-      await check(page, `${theme}/${mode}`, "body")
-      for (const popup of popups) {
-        await popup.open(page).click()
-        await page.locator(popup.selector).first().waitFor()
-        await page.waitForTimeout(250)
-        await check(page, `${theme}/${mode} ${popup.name}`, popup.selector)
-        await page.keyboard.press("Escape")
-        await page.locator(popup.selector).first().waitFor({ state: "hidden" })
+  for (const palette of palettes) {
+    for (const theme of themes) {
+      for (const mode of ["light", "dark"]) {
+        await setAppearance(page, theme, mode, palette)
+        if (theme === "glass" && glassOpacity) {
+          await page.evaluate(
+            (value) => document.documentElement.style.setProperty("--glass-opacity", `${value}%`),
+            glassOpacity,
+          )
+        }
+        const scope = palette ? `${palette} ${theme}/${mode}` : `${theme}/${mode}`
+        await checkTokens(page, scope)
+        await check(page, scope, "body")
+        for (const popup of popups) {
+          await popup.open(page).click()
+          await page.locator(popup.selector).first().waitFor()
+          await page.waitForTimeout(250)
+          await check(page, `${scope} ${popup.name}`, popup.selector)
+          await page.keyboard.press("Escape")
+          await page.locator(popup.selector).first().waitFor({ state: "hidden" })
+        }
       }
     }
   }

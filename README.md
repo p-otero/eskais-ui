@@ -38,6 +38,8 @@ UI SDK-first, agent-native React components, distributed as a shadcn-style regis
 | `theme`          | Color, shape, density and surface tokens; the default rounded look                                                          |
 | `theme-compact`  | Denser controls and tighter radii inside `data-theme="compact"`                                                             |
 | `theme-glass`    | Translucent, blurred surfaces inside `data-theme="glass"`                                                                   |
+| `palettes`       | Colour presets inside `data-palette="blue"` (also `neutral`, `violet`, `green`, `orange`)                                   |
+| `font-geist`     | Geist Variable from `@fontsource-variable/geist`, bundled (the default font); `font-inter` for Inter Variable               |
 | `appearance`     | `createAppearance` + `<Appearance>`: `.dark` and `data-theme` on `<html>`, following the system scheme                      |
 | `lint-rules`     | Optional `@shadcn/lint` config for consumers                                                                                |
 
@@ -58,6 +60,10 @@ Replace `main` with a tag (`v0.1.0`) to pin a version. Then add `@layer ui-sdk;`
 ```bash
 npx shadcn@latest add @eskais/theme @eskais/button @eskais/confirm-dialog
 ```
+
+## Font
+
+The theme asks for Geist Variable (`--font-sans`) and falls back to the system font. `npx shadcn@latest add @eskais/font-geist` installs `@fontsource-variable/geist` and adds `@import "@fontsource-variable/geist";` to your CSS, so the font ships with your bundle, with no CDN. `@eskais/font-inter` does the same for Inter Variable.
 
 ## Themes
 
@@ -93,6 +99,26 @@ root.render(
   document.documentElement.classList.toggle("dark", matchMedia("(prefers-color-scheme: dark)").matches)
 </script>
 ```
+
+## Theming
+
+Colours derive from a few seed tokens, in light and dark:
+
+```css
+:root {
+  --brand: oklch(0.5 0.2 262); /* primary, ring and accent */
+  --neutral-hue: 262; /* tints the greys… */
+  --neutral-chroma: 0.008; /* …by this much; 0 keeps them neutral */
+  --radius: 1rem; /* control, checkbox and surface corners */
+}
+```
+
+- **Set `--brand`.** `--primary-foreground` follows it, near-white or near-black, and reaches at least 4.5:1 on any sRGB colour. Dark mode lightens a dark brand on its own. Keep the brand itself at 4.5:1 on white, since links use it as text.
+- **Pick a preset.** `npx shadcn@latest add @eskais/palettes`, then put `data-palette="blue"` on `<html>` or on any element; it combines with `data-theme` and `.dark`. `createAppearance({ palette: "blue" })` keeps it on `<html>`. Every preset meets 4.5:1 for text and 3:1 for controls.
+- **Override any token.** Set `--primary`, `--muted` or any other token in `:root` or `.dark` to take it over completely.
+- The showcase has a Theme panel that edits the seeds live, checks contrast and copies the CSS.
+
+Derived colours use CSS relative colour syntax: Chrome 119, Firefox 128, Safari 18 and later. Older browsers keep the default neutral look.
 
 Notes while UI SDK is in beta:
 

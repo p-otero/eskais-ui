@@ -86,8 +86,9 @@ async function bundle(css, data, file) {
   const checks = [
     [markup, /<script[^>]+src=/i],
     [markup, /<link[^>]+rel="?(stylesheet|preload|modulepreload)/i],
-    [styles, /@font-face/i],
-    [styles, /url\(\s*["']?(https?:)?\/\//i],
+    [styles, /@import\b/i],
+    // Embedded fonts arrive as data: URLs; anything else in url() is fetched from outside the file.
+    [styles, /url\(\s*(?!["']?data:)/i],
   ]
   for (const [text, external] of checks) {
     if (external.test(text)) throw new Error(`${file} still loads something from outside the file: ${external}`)
@@ -120,6 +121,11 @@ async function check(browser, file, { cards, select, detail }) {
   await page.getByRole("region", { name: "Agent tasks" }).waitFor()
   await page.waitForFunction((count) => document.querySelectorAll('[data-slot="task-card"]').length === count, cards)
   const rendered = await page.evaluate(() => performance.now())
+  const fontLoaded = await page.evaluate(async () => {
+    await document.fonts.ready
+    return [...document.fonts].some((font) => font.family.includes("Geist") && font.status === "loaded")
+  })
+  if (!fontLoaded) errors.push("The embedded Geist font didn't load")
   const started = Date.now()
   await page.getByRole("button", { name: select }).click()
   await page.getByRole("dialog", { name: detail }).waitFor()

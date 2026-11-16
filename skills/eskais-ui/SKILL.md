@@ -12,7 +12,7 @@ Eskais UI components are UI SDK parts styled with Tailwind v4 and semantic token
 1. In `components.json`, add the registry once:
    `"registries": { "@eskais": "https://raw.githubusercontent.com/p-otero/eskais-ui/<ref>/public/r/{name}.json" }`, where `<ref>` is a tag like `v0.1.0`, or `main`.
 2. Put `@layer ui-sdk;` as the first line of the global stylesheet, above `@import "tailwindcss"`.
-3. `npx shadcn@latest add @eskais/theme @eskais/button` (any item; dependencies come along).
+3. `npx shadcn@latest add @eskais/theme @eskais/font-geist @eskais/button` (any item; dependencies come along). `font-geist` bundles the default font from npm; without it the theme falls back to the system font. `font-inter` is the alternative.
 
 ## Choose
 
@@ -54,7 +54,7 @@ Eskais UI components are UI SDK parts styled with Tailwind v4 and semantic token
 | One agent task, in full            | `TaskDetailDialog` (modal, or `presentation="drawer"`) or `TaskDetailPanel` (non-modal); Escape and a close button call `onClose`                                                                                                                    |
 | Dates, layout or data table        | `Calendar`/`DatePicker` (ISO, `locale`, `timeZone`), `Carousel`, `Resizable`, `Sidebar` (rail, drawer), `DataTable` (typed columns, `renderPagination`), `PageHeader`, `FilterBar` (a Toolbar)                                                       |
 | Menus, site navigation, paging, ⌘K | `ContextMenu`, `Menubar`, `NavigationMenu`, `Breadcrumb`, `Pagination page pageCount onPageChange labels`, `CommandDialog` + `Command` (pass `shortcut="mod+k"` to the trigger to opt in); `Accordion`, `HoverCard` for disclosure and link previews |
-| A chart                            | `ChartContainer config aria-labelledby` + Recharts (`accessibilityLayer`), `ChartTooltip`/`ChartLegend` + `…Content`, `ChartDataTable`. `--chart-3` (aqua) is low contrast: add a legend or value labels                                             |
+| A chart                            | `ChartContainer config aria-labelledby` + Recharts (`accessibilityLayer`), `ChartTooltip`/`ChartLegend` + `…Content`, `ChartDataTable`. every series meets 3:1 on the card, aqua (`--chart-3`) only just, so still add a legend or value labels      |
 
 ## AgentTaskBoard
 
@@ -90,6 +90,7 @@ Eskais UI components are UI SDK parts styled with Tailwind v4 and semantic token
 - Style state with UI SDK attributes: `data-pending`, `data-disabled`, `data-open`, `data-starting-style`, `data-ending-style`.
 - Use the shape and density tokens instead of fixed sizes: `rounded-control`, `rounded-choice` (checkbox, textarea), `rounded-surface`, `h-control` (`-sm`, `-lg`), `px-control-x`, `p-surface`, `gap-surface`, `shadow-surface`. Surfaces that may turn glassy use `bg-<color>/(--glass-opacity)` and `backdrop-surface`.
 - Theme and color scheme are app-level: `createAppearance({ colorScheme: "system" })` and `<Appearance appearance={…}>` from `@eskais/appearance` keep `.dark` and `data-theme` on `<html>` in sync; call `appearance.apply()` before the first render. Don't add a theme prop to a component.
+- Colour: set the seeds `--brand`, `--neutral-hue`, `--neutral-chroma` (and `--radius`) in `:root`; primary, its foreground, ring, accent and greys derive from them in light and dark. Or use a preset from `@eskais/palettes` with `data-palette="blue"` (`neutral`, `violet`, `green`, `orange`) on any element, or `createAppearance({ palette })`. To take over one colour, set that token in `:root` or `.dark`. Keep a custom brand at 4.5:1 on the background.
 - Themes are attribute scopes, not separate components: `data-theme="compact"` or `data-theme="glass"` on any element, nested freely. A theme only sets tokens; never branch on the theme in a component.
 - Pass layout classes (margin, width, grid placement) through `className`. To change how a component looks, edit its file in `components/ui/`, which you own.
 - Optional: `npx shadcn add @eskais/lint-rules` adds an oxlint config with `@shadcn/lint` rules (`no-restyle`, `no-raw-colors`…). Extend it from `.oxlintrc.json`.

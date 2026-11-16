@@ -19,7 +19,7 @@
     "test:watch": "vitest",
     "registry:build": "bun tooling/sync-theme.ts && shadcn build",
     "registry:validate": "shadcn registry validate",
-    "test:browser": "bun run build:showcase && node tooling/contrast-check.mjs",
+    "test:browser": "bun run build:showcase && node tooling/contrast-check.mjs && node tooling/contrast-check.mjs default --palettes=blue,violet,green,orange",
     "test:browser:glass": "bun run build:showcase && node tooling/contrast-check.mjs glass",
     "screenshots": "bun run build:showcase && node tooling/screenshots.mjs screenshots",
     "verify": "bun run lint && bun run format:check && bun run typecheck && bun run test && bun run registry:build"
@@ -34,6 +34,7 @@
     "tailwind-merge": "3.7.0"
   },
   "devDependencies": {
+    "@fontsource-variable/geist": "5.3.0",
     "@shadcn/lint": "0.2.5",
     "@testing-library/dom": "10.4.2",
     "@testing-library/react": "16.3.3",

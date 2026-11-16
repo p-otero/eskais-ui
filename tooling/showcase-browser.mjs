@@ -45,8 +45,9 @@ async function withShowcase(run) {
   if (errors.length > 0) throw new Error(`Console errors:\n${errors.join("\n")}`)
 }
 
-async function setAppearance(page, theme, mode) {
+async function setAppearance(page, theme, mode, palette) {
   await page.getByRole("radio", { name: theme }).click()
+  if (palette) await page.getByRole("radio", { name: palette, exact: false }).click()
   const dark = page.getByRole("button", { name: "Dark mode" })
   if ((mode === "dark") !== ((await dark.getAttribute("aria-pressed")) === "true")) await dark.click()
   await page.waitForTimeout(250)

@@ -31,7 +31,7 @@ import { Input, InputClear, InputGroup } from "@/components/ui/input"
 import { SearchField } from "@/components/ui/search-field"
 
 import { agent, approval, type ApprovalRequest } from "./agent"
-import { AppearanceControls, appearance } from "./appearance"
+import { AppearanceControls, appearance, palettes } from "./appearance"
 import { Section } from "./section"
 import { BoardSection } from "./sections/board"
 import { NavigationSection } from "./sections/navigation"
@@ -47,6 +47,7 @@ import { AttemptsSection } from "./sections/attempts"
 import { AgentTaskBoardSection } from "./sections/agent-task-board"
 import { DataSection } from "./sections/data"
 import { ChartsSection } from "./sections/charts"
+import { ThemeEditor } from "./theme-editor"
 
 const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
 
@@ -199,6 +200,12 @@ function App() {
         </header>
 
         <main className="flex flex-col gap-6">
+          <Section
+            title="Theme"
+            description="Seed tokens: pick a preset or a brand colour, tint the greys, set the radius, then copy the CSS."
+          >
+            <ThemeEditor appearance={appearance} palettes={palettes} />
+          </Section>
           <Section title="Button" description="Variants, sizes, async pending and focusable-when-disabled.">
             <Button>Default</Button>
             <Button variant="secondary">Secondary</Button>

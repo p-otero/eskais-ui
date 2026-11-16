@@ -1,0 +1,37 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "palettes",
+  "title": "Colour palettes",
+  "description": "Ready colour presets: data-palette=\"neutral\" (the default look), \"blue\", \"violet\", \"green\" or \"orange\" on any element. Each sets the theme's --brand and neutral tint seeds; they combine with data-theme and .dark.",
+  "registryDependencies": [
+    "@eskais/theme"
+  ],
+  "css": {
+    "[data-palette=\"neutral\"]": {
+      "--brand": "oklch(0.205 0 0)",
+      "--neutral-hue": "0",
+      "--neutral-chroma": "0"
+    },
+    "[data-palette=\"blue\"]": {
+      "--brand": "oklch(0.5 0.2 262)",
+      "--neutral-hue": "262",
+      "--neutral-chroma": "0.008"
+    },
+    "[data-palette=\"violet\"]": {
+      "--brand": "oklch(0.5 0.22 293)",
+      "--neutral-hue": "293",
+      "--neutral-chroma": "0.008"
+    },
+    "[data-palette=\"green\"]": {
+      "--brand": "oklch(0.5 0.13 150)",
+      "--neutral-hue": "150",
+      "--neutral-chroma": "0.006"
+    },
+    "[data-palette=\"orange\"]": {
+      "--brand": "oklch(0.56 0.17 45)",
+      "--neutral-hue": "45",
+      "--neutral-chroma": "0.006"
+    }
+  },
+  "type": "registry:theme"
+}
