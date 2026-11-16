@@ -22,6 +22,8 @@ import { contrastRatio, themeSnippet, type Seeds } from "./theme-snippet"
 
 type Overrides = { brand?: string; tint?: number; radius?: number }
 
+const CUSTOM = "custom"
+
 const thumb =
   "size-4 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-background bg-(--color-picker-color) shadow-sm ring-1 ring-foreground/50 outline-none focus-visible:ring-3 focus-visible:ring-ring"
 
@@ -141,6 +143,7 @@ function ThemeEditor<Theme extends string, Palette extends string>({
     }
   }, [appearance])
 
+  const customised = Object.keys(overrides).length > 0
   const snippet = themeSnippet(seeds)
   const override = (next: Overrides) => {
     const merged =
@@ -155,10 +158,10 @@ function ThemeEditor<Theme extends string, Palette extends string>({
       <div className="flex flex-col gap-4">
         <Field>
           <FieldLabel>Preset</FieldLabel>
-          <SegmentedControl<Palette>
-            value={palette}
+          <SegmentedControl<Palette | typeof CUSTOM>
+            value={customised ? CUSTOM : palette}
             onValueChange={(next) => {
-              if (!next) return
+              if (!next || next === CUSTOM) return
               override({})
               appearance.palette.set(next)
             }}
@@ -169,6 +172,7 @@ function ThemeEditor<Theme extends string, Palette extends string>({
                 {name.charAt(0).toUpperCase() + name.slice(1)}
               </SegmentedControlItem>
             ))}
+            {customised && <SegmentedControlItem value={CUSTOM}>Custom</SegmentedControlItem>}
           </SegmentedControl>
         </Field>
         <Field>

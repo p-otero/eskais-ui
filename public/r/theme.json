@@ -234,8 +234,23 @@
       "writing-mode": "vertical-rl"
     },
     "@layer base": {
+      "*": {
+        "border-color": "var(--border)",
+        "outline-color": "color-mix(in oklab, var(--ring) 50%, transparent)"
+      },
+      "body": {
+        "background-color": "var(--background)",
+        "color": "var(--foreground)"
+      },
       "[data-slot=\"button\"]:not([data-pending]) [data-show=\"pending\"], [data-slot=\"button\"][data-pending] [data-show=\"idle\"], [data-slot=\"alert-dialog-close\"]:not([data-pending]) [data-show=\"pending\"], [data-slot=\"alert-dialog-close\"][data-pending] [data-show=\"idle\"]": {
         "display": "none"
+      },
+      "@media (prefers-reduced-motion: reduce)": {
+        "*, ::before, ::after": {
+          "transition-duration": "0.01ms !important",
+          "animation-duration": "0.01ms !important",
+          "animation-iteration-count": "1 !important"
+        }
       }
     }
   },

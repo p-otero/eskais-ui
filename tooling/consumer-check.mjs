@@ -180,7 +180,9 @@ async function checkInBrowser(dist) {
       html.removeAttribute("data-theme")
       const defaultSpacing = spacing()
       html.setAttribute("data-theme", theme)
+      const card = getComputedStyle(document.querySelector("[data-slot=card]"))
       return {
+        border: { card: rgb(card.borderTopColor), token: rgb(getComputedStyle(html).getPropertyValue("--border")) },
         spacing: { compact: compactSpacing, default: defaultSpacing },
         font: [...document.fonts].some((font) => font.family.includes("Geist") && font.status === "loaded"),
         neutral,
@@ -189,6 +191,7 @@ async function checkInBrowser(dist) {
       }
     })
     console.log("In Chrome:", JSON.stringify(result))
+    if (result.border.card !== result.border.token) throw new Error("Borders don't use --border")
     if (!result.font) throw new Error("The Geist font didn't load in the built app")
     if (result.blue.background === result.neutral.background) throw new Error("data-palette didn't change --primary")
     if (result.yellow.text === result.neutral.text)

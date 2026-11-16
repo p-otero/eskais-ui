@@ -61,7 +61,6 @@ item("theme").cssVars = {
   light: { ...vars(":root"), ...vars(derivedLight) },
   dark: { ...vars(".dark"), ...vars(derivedDark) },
 }
-const { "@layer base": base } = item("theme").css ?? {}
 item("theme").css = {
   ":where(:root)": prefixed(":where(:root)"),
   "[data-palette]": prefixed(derivedLight),
@@ -69,7 +68,8 @@ item("theme").css = {
   ...Object.fromEntries(
     Object.entries(theme).filter(([selector]) => selector.startsWith("@utility ") || selector.startsWith("@supports ")),
   ),
-  ...(base ? { "@layer base": base } : {}),
+  // Apps that skip `shadcn init` have no `* { border-color }` rule, so borders fall back to currentColor.
+  "@layer base": theme["@layer base"] ?? {},
 }
 item("palettes").css = tree(read("palettes.css"))
 item("theme-compact").css = tree(read("theme-compact.css"))
