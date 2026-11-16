@@ -2931,7 +2931,7 @@
           "type": "registry:ui"
         }
       ],
-      "docs": "Put a `SkipLink` first in `<body>`, before the `Sidebar`, so keyboard users can jump past the navigation, and give the page content the target: `<SkipLink>Skip to content</SkipLink><Sidebar …/><PageLayout as=\"main\">…</PageLayout>` (PageLayout renders `<main id=\"main\">`). If your shell renders `<main>` itself, give it `id=\"main\" tabIndex={-1}`. To toggle it from a `Topbar`, pass one `createSidebarController()` to both: `<Topbar leading={<SidebarTrigger controller={sidebar} collapsed={collapsed} />} /><Sidebar controller={sidebar} collapsed={collapsed} onCollapsedChange={setCollapsed} trigger={false}>…</Sidebar>`. `collapsed` gives the trigger `aria-expanded` and the name of the next step; without it the trigger is named \"Toggle sidebar\". On narrow screens it renders nothing, and the Sidebar shows its own drawer button."
+      "docs": "Put a `SkipLink` first in `<body>`, before the `Sidebar`, so keyboard users can jump past the navigation, and give the page content the target: `<SkipLink>Skip to content</SkipLink><Sidebar …/><PageLayout as=\"main\">…</PageLayout>` (PageLayout renders `<main id=\"main\">`). If your shell renders `<main>` itself, give it `id=\"main\"` (and `tabIndex={-1}`, so the no-JavaScript fallback moves focus too), or pass the SkipLink a `target` id or ref. To toggle it from a `Topbar`, pass one `createSidebarController()` to both: `<Topbar leading={<SidebarTrigger controller={sidebar} collapsed={collapsed} />} /><Sidebar controller={sidebar} collapsed={collapsed} onCollapsedChange={setCollapsed} trigger={false}>…</Sidebar>`. `collapsed` gives the trigger `aria-expanded` and the name of the next step; without it the trigger is named \"Toggle sidebar\". On narrow screens it renders nothing, and the Sidebar shows its own drawer button."
     },
     {
       "name": "data-table",
@@ -2981,7 +2981,7 @@
       "type": "registry:ui",
       "title": "Skip Link",
       "description": "A link to the main content that stays hidden until it takes keyboard focus, then floats at the top start of the viewport above everything else.",
-      "docs": "Render it first in `<body>`: `<SkipLink>Skip to content</SkipLink>`. The text is required (write it in the page's language); `href` defaults to `#main`, which `PageLayout as=\"main\"` provides. See the Sidebar docs for where it goes in an app shell.",
+      "docs": "Render it first in `<body>`: `<SkipLink>Skip to content</SkipLink>`. The text is required (write it in the page's language). `target` is the element to skip to, an id or a ref, and defaults to `\"main\"`, which `PageLayout as=\"main\"` provides. Activating the link focuses the target (giving it `tabIndex={-1}` if it can't take focus) and scrolls it into view without changing the URL, so a hash router keeps its route. It is still a real `<a href=\"#main\">` (`#` plus the id; pass `href` for a ref target), which works without JavaScript and for a middle or modified click; it only prevents the default when it could focus the target. See the Sidebar docs for where it goes in an app shell.",
       "registryDependencies": [
         "@eskais/utils",
         "@eskais/theme"
@@ -2998,7 +2998,7 @@
       "type": "registry:ui",
       "title": "Page Layout",
       "description": "A page's column: centered at a dense (73.75rem), wide (90rem) or full width, with page gutters and gap-section between blocks, a header slot, and a workspace variant without padding for app-like screens.",
-      "docs": "`<PageLayout header={<PageHeader … />}>…</PageLayout>`. It renders a `div` by default, because the app shell often owns `<main>`; pass `as=\"main\"` when the page is the main content, and it renders `<main id=\"main\" tabIndex={-1}>` (pass `id` to change it) so a SkipLink reaches it. It is never a live region: announce changes from the component that changes (an Alert with `live`, a DataState). `variant=\"workspace\"` drops the gutters and the width cap, for screens that lay out their own panes.",
+      "docs": "`<PageLayout header={<PageHeader … />}>…</PageLayout>`. It renders a `div` by default, because the app shell often owns `<main>`; pass `as=\"main\"` when the page is the main content, and it renders `<main id=\"main\" tabIndex={-1}>` (pass `id` to change it) so a SkipLink reaches it. The SkipLink focuses it by id without touching the URL, so hash-routed apps keep their route; with a custom `id`, pass the same value as the SkipLink's `target`. It is never a live region: announce changes from the component that changes (an Alert with `live`, a DataState). `variant=\"workspace\"` drops the gutters and the width cap, for screens that lay out their own panes.",
       "dependencies": [
         "class-variance-authority@0.7.1"
       ],
