@@ -1,12 +1,16 @@
 import { TreeFragment, type SyntaxNode, type Tree } from "@lezer/common"
 import type { ReactNode } from "react"
 
+import { CodeBlock, type CodeBlockLabels } from "@/components/ui/code-block"
+import { Link } from "@/components/ui/link"
 import { markdownParser, type WikilinkResolver } from "@/components/ui/markdown-syntax"
 
 type RenderOptions = {
   resolveWikilink?: WikilinkResolver
   wikilinkHref?: (slug: string) => string | undefined
   taskLabel: string
+  /** Names for fenced code blocks and their copy buttons. */
+  codeLabels?: Partial<CodeBlockLabels>
   /** Puts each table cell's offset in the source on `data-source-from`. */
   sourcePositions?: boolean
 }
@@ -131,9 +135,9 @@ function renderInline(cx: Context, node: SyntaxNode): ReactNode {
       return parts.href === undefined ? (
         <span key={key}>{label}</span>
       ) : (
-        <a key={key} href={parts.href} title={parts.title}>
+        <Link key={key} href={parts.href} title={parts.title}>
           {label}
-        </a>
+        </Link>
       )
     }
     case "Autolink": {
@@ -141,9 +145,9 @@ function renderInline(cx: Context, node: SyntaxNode): ReactNode {
       const text = url ? slice(cx, url) : slice(cx, node)
       const href = safeHref(/^[^\s@:]+@/.test(text) ? `mailto:${text}` : text)
       return href ? (
-        <a key={key} href={href}>
+        <Link key={key} href={href}>
           {text}
-        </a>
+        </Link>
       ) : (
         text
       )
@@ -163,9 +167,9 @@ function renderInline(cx: Context, node: SyntaxNode): ReactNode {
       const href = resolution.exists ? cx.wikilinkHref?.(slug) : undefined
       const props = { "data-slot": "markdown-wikilink", "data-unresolved": resolution.exists ? undefined : "" }
       return href ? (
-        <a key={key} href={href} {...props}>
+        <Link key={key} href={href} {...props}>
           {text}
-        </a>
+        </Link>
       ) : (
         <span key={key} {...props}>
           {text}
@@ -232,17 +236,16 @@ function renderBlock(cx: Context, node: SyntaxNode, tight = false): ReactNode {
       const info = node.getChild("CodeInfo")
       const text = node.getChild("CodeText")
       return (
-        <pre key={key}>
-          <code data-language={info ? slice(cx, info) : undefined}>{text ? slice(cx, text) + "\n" : ""}</code>
-        </pre>
+        <CodeBlock
+          key={key}
+          code={text ? slice(cx, text) : ""}
+          language={info ? slice(cx, info) : undefined}
+          labels={cx.codeLabels}
+        />
       )
     }
     case "CodeBlock":
-      return (
-        <pre key={key}>
-          <code>{slice(cx, node).replace(/^( {1,4}|\t)/gm, "") + "\n"}</code>
-        </pre>
-      )
+      return <CodeBlock key={key} code={slice(cx, node).replace(/^( {1,4}|\t)/gm, "")} labels={cx.codeLabels} />
     case "HorizontalRule":
       return <hr key={key} />
     case "Table":

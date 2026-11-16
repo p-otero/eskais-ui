@@ -1,5 +1,6 @@
 import { renderElement, type PartProps } from "@ui-sdk/react/primitive"
 
+import { Link, type LinkProps } from "@/components/ui/link"
 import { cn } from "@/lib/utils"
 
 function Breadcrumb({ render, "aria-label": label = "Breadcrumb", ...props }: PartProps<"nav">) {
@@ -29,18 +30,9 @@ function BreadcrumbItem({ className, render, ...props }: PartProps<"li">) {
   )
 }
 
-function BreadcrumbLink({ className, render, ...props }: PartProps<"a">) {
-  return renderElement(
-    "a",
-    {
-      "data-slot": "breadcrumb-link",
-      className: cn(
-        "rounded-sm underline-offset-4 transition-colors outline-none hover:text-foreground hover:underline focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
-        className,
-      ),
-      ...props,
-    },
-    render,
+function BreadcrumbLink({ className, variant = "nav", ...props }: LinkProps) {
+  return (
+    <Link data-slot="breadcrumb-link" variant={variant} className={cn("hover:text-foreground", className)} {...props} />
   )
 }
 

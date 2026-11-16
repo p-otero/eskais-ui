@@ -1,0 +1,46 @@
+@layer ui-sdk;
+@import "tailwindcss";
+@import "@fontsource-variable/geist";
+@import "@fontsource-variable/geist-mono";
+@import "../../../registry/styles/theme.css";
+@import "../../../registry/styles/theme-compact.css";
+@import "../../../registry/styles/theme-glass.css";
+@import "../../../registry/styles/palettes.css";
+
+@source "../../../registry";
+
+:root {
+  /* The floating header: its offset, the bar's rim and one control. Docs columns stick below it. */
+  --site-header: calc(var(--floating-offset) * 2 + var(--control-height) + var(--gap-inline) * 2);
+  --docs-sidebar: 16rem;
+}
+
+@layer base {
+  html {
+    font-feature-settings:
+      "liga" 1,
+      "calt" 1;
+    scroll-padding-top: calc(var(--site-header) + var(--gap-group));
+  }
+  html,
+  body,
+  #root {
+    height: 100%;
+  }
+}
+
+[data-slot="site"] {
+  background:
+    radial-gradient(48rem 32rem at 12% -6rem, color-mix(in oklch, var(--link-brand) 14%, transparent), transparent),
+    radial-gradient(40rem 28rem at 92% 4rem, color-mix(in oklch, var(--violet) 12%, transparent), transparent),
+    var(--background);
+}
+
+html[data-theme="glass"] body {
+  background:
+    radial-gradient(40rem 30rem at 10% 0%, color-mix(in oklch, var(--info) 35%, transparent), transparent),
+    radial-gradient(36rem 28rem at 90% 30%, color-mix(in oklch, var(--success) 30%, transparent), transparent),
+    radial-gradient(40rem 32rem at 30% 90%, color-mix(in oklch, var(--warning) 30%, transparent), transparent),
+    var(--background);
+  background-attachment: fixed;
+}

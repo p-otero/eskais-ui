@@ -8,6 +8,7 @@ export default defineConfig({
     alias: {
       "@/lib": root("./registry/lib"),
       "@/components/ui": root("./registry/ui"),
+      "@/components": root("./registry/blocks"),
     },
   },
   test: {

@@ -12,13 +12,24 @@
     "isolatedModules": true,
     "verbatimModuleSyntax": true,
     "skipLibCheck": true,
+    "resolveJsonModule": true,
     "noEmit": true,
     "types": ["node"],
     "paths": {
       "@/lib/*": ["./registry/lib/*"],
       "@/components/ui/*": ["./registry/ui/*"],
-      "@/components/ui": ["./registry/ui"]
+      "@/components/ui": ["./registry/ui"],
+      "@/components/*": ["./registry/blocks/*"]
     }
   },
-  "include": ["registry", "test", "apps/showcase/src", "apps/showcase/vite.config.ts", "vitest.config.ts", "tooling"]
+  "include": [
+    "registry",
+    "test",
+    "apps/showcase/src",
+    "apps/showcase/vite.config.ts",
+    "apps/site/src",
+    "apps/site/vite.config.ts",
+    "vitest.config.ts",
+    "tooling"
+  ]
 }

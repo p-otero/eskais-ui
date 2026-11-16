@@ -8,6 +8,7 @@ import { useMemo, useState, type ComponentProps, type ReactNode } from "react"
 
 import { buttonVariants } from "@/components/ui/button"
 import { contentClassName, DialogBackdrop } from "@/components/ui/dialog"
+import { Link } from "@/components/ui/link"
 import { lightbox, type LightboxIndexChangeReason } from "@/components/ui/lightbox-primitive"
 import { ThemedImage } from "@/components/ui/themed-image"
 import { Toggle } from "@/components/ui/toggle"
@@ -64,6 +65,7 @@ type LightboxProps = {
   children?: ReactNode
 }
 
+// oxlint-disable-next-line shadcn/require-static-classes -- the Button look, from buttonVariants, on a link
 const iconButtonClassName = cn(buttonVariants({ variant: "ghost", size: "icon" }), "shrink-0")
 const stepClassName = cn(
   buttonVariants({ variant: "outline", size: "icon" }),
@@ -120,8 +122,9 @@ function LightboxView({ items, index, onIndexChange, labels }: ViewProps) {
         >
           <Icon path="M3 7V3h4M21 7V3h-4M3 17v4h4M21 17v4h-4M9 12h6M12 9v6" />
         </Toggle>
-        <a
+        <Link
           data-slot="lightbox-original"
+          variant="plain"
           href={item.href ?? item.src}
           target="_blank"
           rel="noreferrer"
@@ -129,7 +132,7 @@ function LightboxView({ items, index, onIndexChange, labels }: ViewProps) {
           className={iconButtonClassName}
         >
           <Icon path="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5" />
-        </a>
+        </Link>
         <DialogClose aria-label={labels.close} className={iconButtonClassName}>
           <Icon path="M18 6 6 18M6 6l12 12" />
         </DialogClose>

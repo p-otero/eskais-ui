@@ -1,5 +1,6 @@
 import { createElement, type ComponentProps } from "react"
 
+import { Link } from "@/components/ui/link"
 import { StatusPill } from "@/components/ui/status-pill"
 import type { Tone } from "@/lib/tone"
 import { cn } from "@/lib/utils"
@@ -170,15 +171,16 @@ function StageTrack({
                 <Marker state={state} tone={tone} size={size} />
               </span>
               {href ? (
-                <a
+                <Link
                   href={href}
+                  variant="plain"
                   className={cn(
                     labelClassName,
                     "rounded-choice underline-offset-2 outline-none hover:underline focus-visible:ring-2 focus-visible:ring-ring",
                   )}
                 >
                   {stage.label}
-                </a>
+                </Link>
               ) : (
                 <span className={labelClassName}>{stage.label}</span>
               )}
