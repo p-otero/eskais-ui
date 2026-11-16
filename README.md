@@ -31,6 +31,8 @@ UI SDK-first, agent-native React components, distributed as a shadcn-style regis
 | Agent history    | `usage`, `attempt-timeline`                                                                                                 |
 | Agent board core | `agent-task-board-core` (logic, labels, agent actions), `proposal-actions`                                                  |
 | Agent task board | `task-card`, `task-detail-panel`, `agent-task-board` (the full board)                                                       |
+| Data and layout  | `calendar`, `date-picker`, `carousel`, `resizable`, `sidebar`                                                               |
+| Data tables      | `data-table` (sort, select, pages), `page-header`, `filter-bar`                                                             |
 | Navigation       | `accordion`, `hover-card`, `context-menu`, `menubar`, `navigation-menu`, `breadcrumb`, `pagination`, `command` (⌘K palette) |
 | `theme`          | Color, shape, density and surface tokens; the default rounded look                                                          |
 | `theme-compact`  | Denser controls and tighter radii inside `data-theme="compact"`                                                             |

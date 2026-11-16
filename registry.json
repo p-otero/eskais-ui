@@ -44,7 +44,9 @@
           "--board-column-max-width": "22rem",
           "--board-column-max-height": "40rem",
           "--task-panel-width": "26rem",
-          "--task-panel-max-height": "32rem"
+          "--task-panel-max-height": "32rem",
+          "--sidebar-width": "16rem",
+          "--sidebar-rail-width": "calc(var(--control-height) + 1rem)"
         },
         "@utility backdrop-surface": {
           "-webkit-backdrop-filter": "var(--surface-backdrop)",
@@ -186,7 +188,8 @@
           "--surface-shadow": "0 1px 2px oklch(0 0 0 / 0.05)",
           "--board-column-min-width": "14rem",
           "--board-column-max-width": "18rem",
-          "--task-panel-width": "22rem"
+          "--task-panel-width": "22rem",
+          "--sidebar-width": "14rem"
         }
       }
     },
@@ -1670,6 +1673,208 @@
       "files": [
         {
           "path": "registry/ui/alert.tsx",
+          "type": "registry:ui"
+        }
+      ]
+    },
+    {
+      "name": "calendar",
+      "type": "registry:ui",
+      "title": "Calendar",
+      "description": "UI SDK Calendar: a month grid with arrow, Page Up/Down and Home/End keys, single, multiple or range selection, several months, min/max and unavailable dates, locale and timeZone.",
+      "dependencies": [
+        "@ui-sdk/core@0.1.0-beta.5",
+        "@ui-sdk/react@0.1.0-beta.5",
+        "class-variance-authority@0.7.1"
+      ],
+      "registryDependencies": [
+        "@eskais/utils",
+        "@eskais/theme",
+        "@eskais/button"
+      ],
+      "files": [
+        {
+          "path": "registry/ui/calendar.tsx",
+          "type": "registry:ui"
+        }
+      ]
+    },
+    {
+      "name": "date-picker",
+      "type": "registry:ui",
+      "title": "Date Picker",
+      "description": "UI SDK Date Picker: type a date in the locale's format or pick it from a calendar popup, single or range, with a format hint, an optional clear button and ISO values.",
+      "dependencies": [
+        "@ui-sdk/core@0.1.0-beta.5",
+        "@ui-sdk/react@0.1.0-beta.5",
+        "class-variance-authority@0.7.1"
+      ],
+      "registryDependencies": [
+        "@eskais/utils",
+        "@eskais/theme",
+        "@eskais/button",
+        "@eskais/input",
+        "@eskais/calendar"
+      ],
+      "files": [
+        {
+          "path": "registry/ui/date-picker.tsx",
+          "type": "registry:ui"
+        }
+      ]
+    },
+    {
+      "name": "carousel",
+      "type": "registry:ui",
+      "title": "Carousel",
+      "description": "UI SDK Carousel: native scroll-snap slides with Previous and Next, arrow keys, indicators and optional rotation; agents page it by name.",
+      "dependencies": [
+        "@ui-sdk/core@0.1.0-beta.5",
+        "@ui-sdk/react@0.1.0-beta.5",
+        "class-variance-authority@0.7.1"
+      ],
+      "registryDependencies": [
+        "@eskais/utils",
+        "@eskais/theme",
+        "@eskais/button"
+      ],
+      "files": [
+        {
+          "path": "registry/ui/carousel.tsx",
+          "type": "registry:ui"
+        }
+      ]
+    },
+    {
+      "name": "resizable",
+      "type": "registry:ui",
+      "title": "Resizable",
+      "description": "UI SDK Resizable: panels with named separator handles that move with the pointer or arrow keys, collapse with Enter and can save their layout.",
+      "dependencies": [
+        "@ui-sdk/core@0.1.0-beta.5",
+        "@ui-sdk/react@0.1.0-beta.5"
+      ],
+      "registryDependencies": [
+        "@eskais/utils",
+        "@eskais/theme"
+      ],
+      "files": [
+        {
+          "path": "registry/ui/resizable.tsx",
+          "type": "registry:ui"
+        }
+      ]
+    },
+    {
+      "name": "sidebar",
+      "type": "registry:ui",
+      "title": "Sidebar",
+      "description": "App navigation: a named landmark with groups and items (href or a router link), the current page marked with aria-current, collapsing to an icon rail with tooltips and opening in a drawer on narrow screens. Agents collapse and expand it by name.",
+      "dependencies": [
+        "@ui-sdk/core@0.1.0-beta.5",
+        "@ui-sdk/react@0.1.0-beta.5",
+        "class-variance-authority@0.7.1"
+      ],
+      "registryDependencies": [
+        "@eskais/utils",
+        "@eskais/theme",
+        "@eskais/button",
+        "@eskais/drawer",
+        "@eskais/tooltip"
+      ],
+      "files": [
+        {
+          "path": "registry/ui/sidebar-primitive.ts",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/sidebar-items.tsx",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/sidebar.tsx",
+          "type": "registry:ui"
+        }
+      ]
+    },
+    {
+      "name": "data-table",
+      "type": "registry:ui",
+      "title": "Data Table",
+      "description": "Generic typed table: sortable columns with aria-sort, optional row selection with a mixed select-all, loading and empty states, and pagination through renderPagination. Sort, selection and page are controlled or not, and agents can sort, select and page it.",
+      "dependencies": [
+        "@ui-sdk/core@0.1.0-beta.5",
+        "@ui-sdk/react@0.1.0-beta.5",
+        "class-variance-authority@0.7.1"
+      ],
+      "registryDependencies": [
+        "@eskais/utils",
+        "@eskais/theme",
+        "@eskais/button",
+        "@eskais/checkbox",
+        "@eskais/empty",
+        "@eskais/skeleton",
+        "@eskais/table",
+        "@eskais/pagination"
+      ],
+      "files": [
+        {
+          "path": "registry/lib/data-table-model.ts",
+          "type": "registry:lib"
+        },
+        {
+          "path": "registry/ui/data-table-primitive.ts",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/data-table-parts.tsx",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/data-table-row.tsx",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/data-table.tsx",
+          "type": "registry:ui"
+        }
+      ]
+    },
+    {
+      "name": "page-header",
+      "type": "registry:ui",
+      "title": "Page Header",
+      "description": "Presentational page header: a title at the heading level you choose, a description, an actions slot and an optional breadcrumb slot.",
+      "registryDependencies": [
+        "@eskais/utils",
+        "@eskais/theme"
+      ],
+      "files": [
+        {
+          "path": "registry/ui/page-header.tsx",
+          "type": "registry:ui"
+        }
+      ]
+    },
+    {
+      "name": "filter-bar",
+      "type": "registry:ui",
+      "title": "Filter Bar",
+      "description": "A UI SDK Toolbar of filters with one tab stop and arrow keys, a search field inside it, and a reset button that shows while filters apply.",
+      "dependencies": [
+        "@ui-sdk/core@0.1.0-beta.5",
+        "@ui-sdk/react@0.1.0-beta.5",
+        "class-variance-authority@0.7.1"
+      ],
+      "registryDependencies": [
+        "@eskais/utils",
+        "@eskais/theme",
+        "@eskais/button",
+        "@eskais/input"
+      ],
+      "files": [
+        {
+          "path": "registry/ui/filter-bar.tsx",
           "type": "registry:ui"
         }
       ]

@@ -20,6 +20,8 @@
   --board-column-max-height: 40rem;
   --task-panel-width: 26rem;
   --task-panel-max-height: 32rem;
+  --sidebar-width: 16rem;
+  --sidebar-rail-width: calc(var(--control-height) + 1rem);
 }
 
 :root {

@@ -1,0 +1,25 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "filter-bar",
+  "title": "Filter Bar",
+  "description": "A UI SDK Toolbar of filters with one tab stop and arrow keys, a search field inside it, and a reset button that shows while filters apply.",
+  "dependencies": [
+    "@ui-sdk/core@0.1.0-beta.5",
+    "@ui-sdk/react@0.1.0-beta.5",
+    "class-variance-authority@0.7.1"
+  ],
+  "registryDependencies": [
+    "@eskais/utils",
+    "@eskais/theme",
+    "@eskais/button",
+    "@eskais/input"
+  ],
+  "files": [
+    {
+      "path": "registry/ui/filter-bar.tsx",
+      "content": "\"use client\"\n\nimport {\n  Toolbar,\n  ToolbarButton as ToolbarButtonPrimitive,\n  ToolbarInput,\n  ToolbarSeparator as ToolbarSeparatorPrimitive,\n  createToolbarController,\n} from \"@ui-sdk/react/toolbar\"\nimport type { VariantProps } from \"class-variance-authority\"\nimport type { ComponentProps, ReactNode } from \"react\"\n\nimport { buttonVariants } from \"@/components/ui/button\"\nimport { Input, InputGroup } from \"@/components/ui/input\"\nimport { cn, cnState } from \"@/lib/utils\"\n\ntype FilterBarProps = Omit<ComponentProps<typeof Toolbar>, \"aria-label\" | \"children\"> & {\n  label: string\n  children?: ReactNode\n  isFiltered?: boolean\n  onReset?: (event: MouseEvent) => void\n  resetLabel?: string\n}\n\nfunction FilterBar({\n  label,\n  isFiltered = false,\n  onReset,\n  resetLabel = \"Reset filters\",\n  className,\n  children,\n  ...props\n}: FilterBarProps) {\n  return (\n    <Toolbar aria-label={label} className={cnState(\"flex w-full flex-wrap items-center gap-2\", className)} {...props}>\n      {children}\n      {isFiltered && onReset && (\n        <FilterBarButton variant=\"ghost\" data-slot=\"filter-bar-reset\" onClick={(event) => onReset(event.nativeEvent)}>\n          {resetLabel}\n        </FilterBarButton>\n      )}\n    </Toolbar>\n  )\n}\n\ntype FilterBarButtonProps = ComponentProps<typeof ToolbarButtonPrimitive> & VariantProps<typeof buttonVariants>\n\nfunction FilterBarButton({ className, variant = \"outline\", size, ...props }: FilterBarButtonProps) {\n  return <ToolbarButtonPrimitive className={cnState(buttonVariants({ variant, size }), className)} {...props} />\n}\n\nfunction FilterBarSeparator({ className, ...props }: ComponentProps<typeof ToolbarSeparatorPrimitive>) {\n  return <ToolbarSeparatorPrimitive className={cnState(\"mx-1 h-5 w-px self-center bg-border\", className)} {...props} />\n}\n\ntype FilterBarSearchProps = Omit<ComponentProps<typeof Input>, \"aria-label\" | \"type\"> & {\n  label: string\n}\n\nfunction FilterBarSearch({ label, className, ...props }: FilterBarSearchProps) {\n  return (\n    <InputGroup render={<search />} aria-label={label} className={cn(\"w-full sm:max-w-64 sm:flex-1\", className)}>\n      <svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" strokeWidth=\"2\" aria-hidden=\"true\">\n        <circle cx=\"11\" cy=\"11\" r=\"7\" />\n        <path d=\"m20 20-3.5-3.5\" />\n      </svg>\n      <ToolbarInput\n        render={\n          <Input type=\"search\" aria-label={label} className=\"[&::-webkit-search-cancel-button]:hidden\" {...props} />\n        }\n      />\n    </InputGroup>\n  )\n}\n\nexport { createToolbarController, FilterBar, FilterBarButton, FilterBarSearch, FilterBarSeparator }\nexport type { FilterBarButtonProps, FilterBarProps, FilterBarSearchProps }\n",
+      "type": "registry:ui"
+    }
+  ],
+  "type": "registry:ui"
+}

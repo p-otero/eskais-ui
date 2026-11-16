@@ -80,6 +80,14 @@ const items = [
   "breadcrumb",
   "pagination",
   "command",
+  "calendar",
+  "date-picker",
+  "carousel",
+  "resizable",
+  "sidebar",
+  "data-table",
+  "page-header",
+  "filter-bar",
 ]
 const versions = {
   react: "19.3.1",
