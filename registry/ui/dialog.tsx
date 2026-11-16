@@ -12,20 +12,21 @@ import {
 } from "@ui-sdk/react/dialog"
 import { renderElement, type PartProps } from "@ui-sdk/react/primitive"
 import { cva, type VariantProps } from "class-variance-authority"
-import type { ComponentProps } from "react"
+import { useLayoutEffect, useRef, type ComponentProps, type ReactNode, type RefObject } from "react"
 
 import { buttonVariants } from "@/components/ui/button"
 import { cn, cnState } from "@/lib/utils"
 
 type ButtonLook = VariantProps<typeof buttonVariants>
 
+// While they animate out, the backdrop and content let presses through, so the first click on the page counts.
 const backdropClassName =
-  "fixed inset-0 z-overlay bg-overlay transition-opacity duration-dialog ease-standard data-ending-style:opacity-0 data-starting-style:opacity-0"
+  "fixed inset-0 z-overlay bg-overlay transition-opacity duration-dialog ease-standard data-ending-style:pointer-events-none data-ending-style:opacity-0 data-starting-style:opacity-0"
 
 // Sizes and offsets come from the containing block (the viewport for a top-layer dialog) through %, never viewport units.
 const dialogContentVariants = cva(
   [
-    "fixed inset-0 z-overlay m-auto flex h-fit max-h-(--dialog-max-height) w-(--dialog-width) min-w-0 flex-col gap-group overflow-y-auto overscroll-contain rounded-floating border border-floating-border bg-popover p-inset-surface text-popover-foreground wrap-anywhere shadow-floating outline-none transition duration-dialog ease-standard data-ending-style:scale-95 data-ending-style:opacity-0 data-starting-style:scale-95 data-starting-style:opacity-0",
+    "fixed inset-0 z-overlay m-auto flex h-fit max-h-(--dialog-max-height) w-(--dialog-width) min-w-0 flex-col gap-group overflow-y-auto overscroll-contain rounded-floating border border-floating-border bg-popover p-inset-surface text-popover-foreground wrap-anywhere shadow-floating outline-none transition duration-dialog ease-standard data-ending-style:pointer-events-none data-ending-style:scale-95 data-ending-style:opacity-0 data-starting-style:scale-95 data-starting-style:opacity-0",
   ],
   {
     variants: {
@@ -70,14 +71,90 @@ type DialogContentProps = ComponentProps<typeof DialogContentPrimitive> & {
   sheet?: boolean
 }
 
-function DialogContent({ className, size = "md", sheet = true, ...props }: DialogContentProps) {
+type FocusMemory = { opener: HTMLElement | null; movedBeforeOpen: boolean }
+type FinalFocus = ComponentProps<typeof DialogContentPrimitive>["finalFocus"]
+
+function focusedElement() {
+  const active = document.activeElement
+  return active instanceof HTMLElement && active !== document.body ? active : null
+}
+
+// Mounts before the content's children, so its layout effect runs before React's `autoFocus` inside them, and
+// records the element to return to. Unmounted with focus still inside (the dialog itself left the page while
+// open), it gives focus back to that element instead of letting it fall to <body>.
+function FocusOpener({ memoryRef, restore }: { memoryRef: RefObject<FocusMemory>; restore: boolean }) {
+  const recorded = useRef(false)
+  useLayoutEffect(() => {
+    if (!recorded.current) {
+      recorded.current = true
+      memoryRef.current = { opener: focusedElement(), movedBeforeOpen: false }
+    }
+    return () => {
+      const inside = document.activeElement
+      const { opener } = memoryRef.current
+      queueMicrotask(() => {
+        if (!restore || !opener?.isConnected || inside?.isConnected || focusedElement()) return
+        opener.focus({ preventScroll: true })
+      })
+    }
+  }, [memoryRef, restore])
+  return null
+}
+
+// Mounts after the children: focus that moved between the two was taken by `autoFocus`, before UI SDK could
+// record where it came from.
+function FocusMoved({ memoryRef }: { memoryRef: RefObject<FocusMemory> }) {
+  const checked = useRef(false)
+  useLayoutEffect(() => {
+    if (checked.current) return
+    checked.current = true
+    memoryRef.current = { ...memoryRef.current, movedBeforeOpen: focusedElement() !== memoryRef.current.opener }
+  }, [memoryRef])
+  return null
+}
+
+function withFocusMarkers(content: ReactNode, memoryRef: RefObject<FocusMemory>, restore: boolean) {
+  return (
+    <>
+      <FocusOpener memoryRef={memoryRef} restore={restore} />
+      {content}
+      <FocusMoved memoryRef={memoryRef} />
+    </>
+  )
+}
+
+/**
+ * Keeps focus return working when UI SDK can't see the opener: the content unmounts while open
+ * (`{open && <Dialog open />}`), or a React `autoFocus` field took focus first. Pass the content's
+ * `finalFocus`, and wrap its children.
+ */
+function useFocusReturn(finalFocus: FinalFocus) {
+  const memoryRef = useRef<FocusMemory>({ opener: null, movedBeforeOpen: false })
+  const restore = finalFocus !== "none"
+  const returnTo = () => {
+    const { opener, movedBeforeOpen } = memoryRef.current
+    return movedBeforeOpen && opener?.isConnected ? opener : null
+  }
+  function wrap<State>(children: ReactNode | ((state: State) => ReactNode)) {
+    return typeof children === "function"
+      ? (state: State) => withFocusMarkers(children(state), memoryRef, restore)
+      : withFocusMarkers(children, memoryRef, restore)
+  }
+  return { finalFocus: finalFocus ?? returnTo, wrap }
+}
+
+function DialogContent({ className, size = "md", sheet = true, finalFocus, children, ...props }: DialogContentProps) {
+  const focus = useFocusReturn(finalFocus)
   return (
     <DialogContentPrimitive
       data-size={size}
       data-sheet={sheet ? "" : undefined}
       className={cnState(dialogContentVariants({ size, sheet }), className)}
+      finalFocus={focus.finalFocus}
       {...props}
-    />
+    >
+      {focus.wrap(children)}
+    </DialogContentPrimitive>
   )
 }
 
@@ -153,5 +230,6 @@ export {
   contentClassName,
   createDialogController,
   dialogContentVariants,
+  useFocusReturn,
 }
 export type { DialogContentProps, DialogSize }

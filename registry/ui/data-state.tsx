@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, type ReactNode } from "react"
+import { useEffect, useRef, type ReactNode } from "react"
 
 import { Empty, EmptyDescription, EmptyHeader, EmptyTitle, type EmptySize } from "@/components/ui/empty"
 import { ErrorState } from "@/components/ui/error-state"
@@ -32,13 +32,16 @@ type EmptyProps = { empty: ReactNode } | { empty?: undefined; labels: { emptyTit
 
 type DataStateProps<T, E> = {
   status: DataStatus
+  /** The result. Read only while `status` is success: data passed while pending is not shown. */
   data: T | undefined
+  /** Shown as content, marked busy, while pending before the first success, like cached or initial data. */
+  placeholderData?: T
   error?: E
   /** Whether successful data counts as empty. By default an empty array, `null` or `undefined` does. */
   isEmpty?: (data: T) => boolean
   /** Replaces the default LoadingState. */
   loading?: ReactNode
-  /** Keeps showing the last data while `status` is pending again, marked busy. Default true. */
+  /** Keeps showing the data of the last success while `status` is pending again, marked busy. Default true. */
   keepPreviousData?: boolean
   /** A refetch in the background while `status` stays success, as some data libraries report it. */
   fetching?: boolean
@@ -58,10 +61,22 @@ function messageOf(error: unknown) {
   return error === undefined || error === null ? undefined : String(error)
 }
 
+// A ref written after commit, not state set during render: that rendered twice for every new `data` array,
+// and a render that never commits must not change what counts as the last result.
+function useLastSuccess<T>(status: DataStatus, data: T | undefined) {
+  const last = useRef<{ data: T }>(undefined)
+  useEffect(() => {
+    if (status === "success" && data !== undefined) last.current = { data }
+  }, [status, data])
+  // oxlint-disable-next-line react/refs -- read only on renders the props cause; a change to it needs no render of its own
+  return last.current?.data
+}
+
 function DataState<T, E = unknown>(props: DataStateProps<T, E>) {
   const {
     status,
     data,
+    placeholderData,
     error,
     isEmpty = defaultIsEmpty,
     loading,
@@ -75,12 +90,11 @@ function DataState<T, E = unknown>(props: DataStateProps<T, E>) {
     ...defaultLabels,
     ...(props.labels as Partial<DataStateLabels> | undefined),
   }
-  const [previous, setPrevious] = useState<{ data: T }>()
-  if (status === "success" && data !== undefined && previous?.data !== data) setPrevious({ data })
+  const lastSuccess = useLastSuccess(status, data)
 
   const blank = (value: T | undefined): value is undefined => value === undefined || value === null || isEmpty(value)
-  const kept = status === "pending" && keepPreviousData ? (data ?? previous?.data) : undefined
-  const shown = status === "success" ? data : kept
+  const kept = keepPreviousData ? lastSuccess : undefined
+  const shown = status === "success" ? data : status === "pending" ? (kept ?? placeholderData) : undefined
   const busy = (status === "pending" && !blank(shown)) || (status === "success" && fetching)
 
   let content: ReactNode

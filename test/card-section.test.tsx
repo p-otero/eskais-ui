@@ -31,10 +31,39 @@ test("a card with a title is a section labelled by it", async () => {
   const heading = screen.getByRole("heading", { level: 3, name: "Build minutes" })
   expect(region.getAttribute("aria-labelledby")).toBe(heading.id)
   expect(container.querySelector("[data-slot=card-eyebrow]")?.className).toContain("text-meta")
-  const action = container.querySelector("[data-slot=card-action]")!
-  expect(action.className).toContain("col-start-2")
-  expect(action.parentElement?.className).toContain("has-[>[data-slot=card-action]]:grid-cols-[minmax(0,1fr)_auto]")
   expect(await axeViolations(container)).toEqual([])
+})
+
+function classes(element: Element) {
+  return element.className.split(/\s+/)
+}
+
+test("the header is a container: the action sits beside the title from about 20rem and wraps below it under that", () => {
+  const { container } = render(
+    <Card>
+      <CardHeader>
+        <CardTitle>Build minutes</CardTitle>
+        <CardAction>
+          <Button size="sm">Export minutes</Button>
+        </CardAction>
+      </CardHeader>
+    </Card>,
+  )
+  const header = container.querySelector("[data-slot=card-header]")!
+  const action = container.querySelector("[data-slot=card-action]")!
+  expect(classes(header)).toContain("@container/card-header")
+  expect(header.className).toMatch(/grid-cols-\[minmax\(min\(8rem,100%\),1fr\)_minmax\(0,auto\)\]/)
+  // Narrow first: the action spans the row after the title, then moves beside it at the container breakpoint.
+  expect(classes(action)).toEqual(expect.arrayContaining(["col-span-full", "order-last", "flex-wrap"]))
+  expect(classes(action)).toEqual(
+    expect.arrayContaining([
+      "@min-[17rem]/card-header:col-span-1",
+      "@min-[17rem]/card-header:col-start-2",
+      "@min-[17rem]/card-header:row-start-1",
+    ]),
+  )
+  expect(classes(action)).not.toContain("col-start-2")
+  expect(classes(header)).toContain("[&>:not([data-slot=card-action])]:@max-[17rem]/card-header:col-span-full")
 })
 
 test("a card without a title has no name and no dangling reference", async () => {

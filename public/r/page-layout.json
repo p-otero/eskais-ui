@@ -17,6 +17,6 @@
       "type": "registry:ui"
     }
   ],
-  "docs": "`<PageLayout header={<PageHeader … />}>…</PageLayout>`. It renders a `div` by default, because the app shell often owns `<main>`; pass `as=\"main\"` when the page is the main content, and it renders `<main id=\"main\" tabIndex={-1}>` (pass `id` to change it) so a SkipLink reaches it. It is never a live region: announce changes from the component that changes (an Alert with `live`, a DataState). `variant=\"workspace\"` drops the gutters and the width cap, for screens that lay out their own panes.",
+  "docs": "`<PageLayout header={<PageHeader … />}>…</PageLayout>`. It renders a `div` by default, because the app shell often owns `<main>`; pass `as=\"main\"` when the page is the main content, and it renders `<main id=\"main\" tabIndex={-1}>` (pass `id` to change it) so a SkipLink reaches it. The SkipLink focuses it by id without touching the URL, so hash-routed apps keep their route; with a custom `id`, pass the same value as the SkipLink's `target`. It is never a live region: announce changes from the component that changes (an Alert with `live`, a DataState). `variant=\"workspace\"` drops the gutters and the width cap, for screens that lay out their own panes.",
   "type": "registry:ui"
 }
