@@ -1,6 +1,7 @@
 "use client"
 
 import { createElement, type ReactNode } from "react"
+import { AppWindowIcon } from "lucide-react"
 
 import type { AgentAvatars } from "@/components/ui/agent-avatar"
 import { AgentBadge } from "@/components/ui/agent-badge"
@@ -14,23 +15,6 @@ import type { AttemptTimelineLabels, CheckResult } from "@/components/ui/attempt
 interface ThreadRendering {
   renderThreadLink?: (thread: ThreadRef) => ReactNode
   onOpenThread?: (thread: ThreadRef) => void
-}
-
-function AppWindowIcon() {
-  return (
-    <svg
-      aria-hidden="true"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <rect x="2" y="4" width="20" height="16" rx="2" />
-      <path d="M10 4v4M2 8h20M6 4v4" />
-    </svg>
-  )
 }
 
 /**

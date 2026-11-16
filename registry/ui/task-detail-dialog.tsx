@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, type ComponentProps } from "react"
+import { XIcon } from "lucide-react"
 
 import type { TaskView } from "@/lib/agent-task-types"
 import { cn } from "@/lib/utils"
@@ -8,7 +9,6 @@ import { agentTaskBoardLabels } from "@/components/ui/agent-task-labels"
 import { Dialog, DialogBackdrop, DialogBody, DialogClose, DialogContent, DialogTitle } from "@/components/ui/dialog"
 import { Drawer, DrawerBackdrop, DrawerClose, DrawerContent, DrawerTitle } from "@/components/ui/drawer"
 import { TaskDetailContent, type TaskDetailContentProps } from "@/components/ui/task-detail-content"
-import { CloseIcon } from "@/components/ui/task-detail-parts"
 import type { CloseReason } from "@/components/ui/task-detail-panel"
 
 type TaskDetailDialogProps = Omit<TaskDetailContentProps, "task" | "headingLevel" | "layout" | "showStatus"> & {
@@ -93,7 +93,7 @@ function TaskDetailDialog({
                 <span className="font-mono text-muted-foreground">{current.id}</span> {current.title}
               </Title>
               <Close variant="ghost" size="icon" aria-label={labels.panel.close}>
-                <CloseIcon />
+                <XIcon />
               </Close>
             </div>
             <Body className="@container/task-detail mx-0 p-inset-surface">

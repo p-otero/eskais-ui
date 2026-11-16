@@ -17,6 +17,7 @@ import {
   createCommandController,
 } from "@ui-sdk/react/command"
 import type { ComponentProps } from "react"
+import { SearchIcon } from "lucide-react"
 
 import { Kbd } from "@/components/ui/kbd"
 import { cnState } from "@/lib/utils"
@@ -36,18 +37,7 @@ function Command({ className, ...props }: ComponentProps<typeof CommandPrimitive
 function CommandInput({ className, ...props }: ComponentProps<typeof CommandInputPrimitive>) {
   return (
     <div data-slot="command-input-wrapper" className="flex items-center gap-inline border-b px-control-x">
-      <svg
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-        aria-hidden="true"
-        className="size-4 shrink-0 text-muted-foreground"
-      >
-        <circle cx="11" cy="11" r="7" />
-        <path d="m20 20-3.5-3.5" />
-      </svg>
+      <SearchIcon className="size-4 shrink-0 text-muted-foreground" />
       <CommandInputPrimitive
         className={cnState(
           "h-control-lg w-full min-w-0 bg-transparent text-sm outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50",

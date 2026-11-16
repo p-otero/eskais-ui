@@ -17,12 +17,11 @@ import {
 } from "@ui-sdk/react/combobox"
 import { renderElement, type PartProps } from "@ui-sdk/react/primitive"
 import type { ComponentProps } from "react"
+import { CheckIcon, ChevronDownIcon, XIcon } from "lucide-react"
 
 import { floatingLabelControls, useFloatingPlaceholder } from "@/components/ui/field"
 import { fieldSurfaceClassName } from "@/components/ui/input"
 import {
-  CheckIcon,
-  ChevronIcon,
   listGroupLabelClassName,
   listIndicatorClassName,
   listItemClassName,
@@ -75,7 +74,7 @@ function ComboboxTrigger({
       className={cnState(`${iconButtonClassName} data-open:[&_svg]:rotate-180`, className)}
       {...props}
     >
-      {children ?? <ChevronIcon />}
+      {children ?? <ChevronDownIcon />}
     </ComboboxTriggerPrimitive>
   )
 }
@@ -88,11 +87,7 @@ function ComboboxClear({
 }: ComponentProps<typeof ComboboxClearPrimitive>) {
   return (
     <ComboboxClearPrimitive aria-label={ariaLabel} className={cnState(iconButtonClassName, className)} {...props}>
-      {children ?? (
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-          <path d="M18 6 6 18M6 6l12 12" />
-        </svg>
-      )}
+      {children ?? <XIcon />}
     </ComboboxClearPrimitive>
   )
 }
@@ -121,7 +116,7 @@ function ComboboxItemIndicator({
 }: ComponentProps<typeof ComboboxItemIndicatorPrimitive>) {
   return (
     <ComboboxItemIndicatorPrimitive className={cnState(listIndicatorClassName, className)} {...props}>
-      {children ?? <CheckIcon />}
+      {children ?? <CheckIcon strokeWidth={2.5} />}
     </ComboboxItemIndicatorPrimitive>
   )
 }

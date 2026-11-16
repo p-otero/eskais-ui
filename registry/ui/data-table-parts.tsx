@@ -2,6 +2,7 @@
 
 import type { ChangeDetails } from "@ui-sdk/core"
 import type { ReactNode } from "react"
+import { ChevronDownIcon, ChevronUpIcon, ChevronsUpDownIcon } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Checkbox, CheckboxIndicator, type CheckedState } from "@/components/ui/checkbox"
@@ -54,13 +55,9 @@ type DataTablePaginationProps = {
 }
 
 function SortIcon({ direction }: { direction?: SortDirection }) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-      {direction === "ascending" && <path d="m6 15 6-6 6 6" />}
-      {direction === "descending" && <path d="m6 9 6 6 6-6" />}
-      {!direction && <path d="m7 15 5 5 5-5M7 9l5-5 5 5" />}
-    </svg>
-  )
+  if (direction === "ascending") return <ChevronUpIcon />
+  if (direction === "descending") return <ChevronDownIcon />
+  return <ChevronsUpDownIcon />
 }
 
 function DataTableHeaderCell<Row>({

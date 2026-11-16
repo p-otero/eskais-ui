@@ -4,6 +4,7 @@ import type { ChangeDetails } from "@ui-sdk/core"
 import type { CollapsibleOpenChangeReason } from "@ui-sdk/react/collapsible"
 import { CollapsiblePanel } from "@ui-sdk/react/collapsible"
 import { Children, createContext, use, useId, useState, type ComponentProps, type ReactNode } from "react"
+import { CircleMinusIcon, CirclePlusIcon } from "lucide-react"
 
 import { Badge } from "@/components/ui/badge"
 import { Collapsible, CollapsibleTrigger } from "@/components/ui/collapsible"
@@ -46,22 +47,8 @@ const toneColor = {
 } satisfies Record<Tone, string>
 
 function CollapseIcon({ collapsed }: { collapsed: boolean }) {
-  return (
-    <svg
-      data-slot="board-column-collapse-icon"
-      data-icon={collapsed ? "circle-plus" : "circle-minus"}
-      aria-hidden="true"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <circle cx="12" cy="12" r="10" />
-      <path d={collapsed ? "M8 12h8M12 8v8" : "M8 12h8"} />
-    </svg>
-  )
+  const Icon = collapsed ? CirclePlusIcon : CircleMinusIcon
+  return <Icon data-slot="board-column-collapse-icon" data-icon={collapsed ? "circle-plus" : "circle-minus"} />
 }
 
 const HeadingLevelContext = createContext<HeadingLevel>(3)

@@ -3,6 +3,7 @@
 import { useFieldControl } from "@ui-sdk/react/field"
 import { createParts } from "@ui-sdk/react/primitive"
 import type { ComponentProps, ReactNode } from "react"
+import { ChevronDownIcon } from "lucide-react"
 
 import { floatingLabelControls } from "@/components/ui/field"
 import { fieldSurfaceClassName } from "@/components/ui/input"
@@ -103,9 +104,7 @@ function NativeSelect({
         aria-hidden="true"
         className="pointer-events-none absolute inset-y-0 end-control-x flex items-center text-muted-foreground [&>svg]:size-4"
       >
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-          <path d="m6 9 6 6 6-6" />
-        </svg>
+        <ChevronDownIcon />
       </span>
     </div>
   )

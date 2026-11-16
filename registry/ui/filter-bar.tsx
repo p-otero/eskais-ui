@@ -9,6 +9,7 @@ import {
 } from "@ui-sdk/react/toolbar"
 import type { VariantProps } from "class-variance-authority"
 import type { ComponentProps, ReactNode } from "react"
+import { SearchIcon } from "lucide-react"
 
 import { buttonVariants } from "@/components/ui/button"
 import { Input, InputGroup } from "@/components/ui/input"
@@ -64,10 +65,7 @@ type FilterBarSearchProps = Omit<ComponentProps<typeof Input>, "aria-label" | "t
 function FilterBarSearch({ label, className, ...props }: FilterBarSearchProps) {
   return (
     <InputGroup render={<search />} aria-label={label} className={cn("w-full sm:max-w-64 sm:flex-1", className)}>
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-        <circle cx="11" cy="11" r="7" />
-        <path d="m20 20-3.5-3.5" />
-      </svg>
+      <SearchIcon />
       <ToolbarInput
         render={
           <Input type="search" aria-label={label} className="[&::-webkit-search-cancel-button]:hidden" {...props} />

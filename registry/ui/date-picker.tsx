@@ -10,6 +10,7 @@ import {
   createDatePickerController,
 } from "@ui-sdk/react/date-picker"
 import type { ComponentProps } from "react"
+import { CalendarIcon, XIcon } from "lucide-react"
 
 import { buttonVariants } from "@/components/ui/button"
 import { CalendarMonths, type CalendarLabels } from "@/components/ui/calendar"
@@ -46,12 +47,7 @@ function DatePickerTrigger({ className, children, ...props }: ComponentProps<typ
       className={cnState(cn(buttonVariants({ variant: "ghost", size: "icon" }), "-me-2 size-control-sm"), className)}
       {...props}
     >
-      {children ?? (
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-          <rect x="3" y="5" width="18" height="16" rx="2" />
-          <path d="M16 3v4M8 3v4M3 11h18" />
-        </svg>
-      )}
+      {children ?? <CalendarIcon />}
     </DatePickerTriggerPrimitive>
   )
 }
@@ -65,11 +61,7 @@ function DatePickerClear({ className, children, ...props }: ComponentProps<typeo
       )}
       {...props}
     >
-      {children ?? (
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-          <path d="M18 6 6 18M6 6l12 12" />
-        </svg>
-      )}
+      {children ?? <XIcon />}
     </DatePickerClearPrimitive>
   )
 }

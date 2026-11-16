@@ -13,26 +13,12 @@ import {
   createCarouselController,
 } from "@ui-sdk/react/carousel"
 import type { ComponentProps } from "react"
+import { ChevronLeftIcon, ChevronRightIcon } from "lucide-react"
 
 import { buttonVariants } from "@/components/ui/button"
 import { cnState } from "@/lib/utils"
 
 const stepClassName = buttonVariants({ variant: "outline", size: "icon" })
-
-function Chevron({ path }: { path: string }) {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      aria-hidden="true"
-      className="in-data-[orientation=horizontal]:rtl:rotate-180 in-data-[orientation=vertical]:rotate-90"
-    >
-      <path d={path} />
-    </svg>
-  )
-}
 
 function Carousel({ className, ...props }: ComponentProps<typeof CarouselPrimitive>) {
   return <CarouselPrimitive className={cnState("relative flex flex-col gap-group", className)} {...props} />
@@ -71,7 +57,9 @@ function CarouselPrevious({
 }: ComponentProps<typeof CarouselPreviousPrimitive>) {
   return (
     <CarouselPreviousPrimitive aria-label={label} className={cnState(stepClassName, className)} {...props}>
-      {children ?? <Chevron path="m15 18-6-6 6-6" />}
+      {children ?? (
+        <ChevronLeftIcon className="in-data-[orientation=horizontal]:rtl:rotate-180 in-data-[orientation=vertical]:rotate-90" />
+      )}
     </CarouselPreviousPrimitive>
   )
 }
@@ -84,7 +72,9 @@ function CarouselNext({
 }: ComponentProps<typeof CarouselNextPrimitive>) {
   return (
     <CarouselNextPrimitive aria-label={label} className={cnState(stepClassName, className)} {...props}>
-      {children ?? <Chevron path="m9 18 6-6-6-6" />}
+      {children ?? (
+        <ChevronRightIcon className="in-data-[orientation=horizontal]:rtl:rotate-180 in-data-[orientation=vertical]:rotate-90" />
+      )}
     </CarouselNextPrimitive>
   )
 }

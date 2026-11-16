@@ -3,6 +3,7 @@
 import type { ChangeDetails } from "@ui-sdk/core"
 import { createParts } from "@ui-sdk/react/primitive"
 import { useState, type ReactNode } from "react"
+import { PanelLeftIcon, XIcon } from "lucide-react"
 
 import { buttonVariants } from "@/components/ui/button"
 import { Drawer, DrawerBackdrop, DrawerClose, DrawerContent, DrawerTitle, DrawerTrigger } from "@/components/ui/drawer"
@@ -21,7 +22,6 @@ import {
 } from "@/components/ui/sidebar-items"
 import {
   defaultNarrowQuery,
-  PanelIcon,
   SidebarTrigger,
   sidebarLabels,
   useNarrow,
@@ -78,7 +78,7 @@ function Sidebar({
     return (
       <Drawer side="start" open={drawerOpen} onOpenChange={setDrawerOpen}>
         <DrawerTrigger variant="ghost" size="icon" aria-label={labels.open} className={className}>
-          <PanelIcon />
+          <PanelLeftIcon />
         </DrawerTrigger>
         <DrawerBackdrop />
         <DrawerContent
@@ -90,9 +90,7 @@ function Sidebar({
           <div className="flex items-center gap-inline">
             <DrawerTitle className="flex-1 truncate px-inset-item text-base">{label}</DrawerTitle>
             <DrawerClose variant="ghost" size="icon" aria-label={labels.close}>
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-                <path d="M18 6 6 18M6 6l12 12" />
-              </svg>
+              <XIcon />
             </DrawerClose>
           </div>
           <SidebarRoot aria-label={label} collapsed={false} className={cn(surfaceClassName, "flex-1")}>
@@ -127,7 +125,7 @@ function Sidebar({
             aria-label={collapsed ? labels.expand : labels.collapse}
             className={cn(buttonVariants({ variant: "ghost", size: "icon" }), "rtl:[&_svg]:-scale-x-100")}
           >
-            <PanelIcon />
+            <PanelLeftIcon />
           </SidebarToggle>
         )}
       </div>

@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useRef, useState, type ReactNode, type RefObject } from "react"
+import { ChevronLeftIcon, ChevronRightIcon } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 
@@ -59,14 +60,6 @@ function useScrollEdges() {
   return { ref, edges, scroll }
 }
 
-function Chevron({ d }: { d: string }) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
-      <path d={d} />
-    </svg>
-  )
-}
-
 type ScrollButtonProps = { side: "left" | "right"; label: string; onScroll: () => void }
 
 // Pointer-only, so aria-hidden and out of the tab order; agents select tabs on the tablist itself.
@@ -86,7 +79,7 @@ function ScrollButton({ side, label, onScroll }: ScrollButtonProps) {
         data-agent-hidden=""
         onClick={onScroll}
       >
-        <Chevron d={side === "left" ? "m15 18-6-6 6-6" : "m9 18 6-6-6-6"} />
+        {side === "left" ? <ChevronLeftIcon /> : <ChevronRightIcon />}
       </Button>
     </span>
   )

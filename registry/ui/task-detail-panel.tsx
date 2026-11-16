@@ -1,12 +1,13 @@
 "use client"
 
 import { useId, type ComponentProps, type KeyboardEvent } from "react"
+import { XIcon } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 import { agentTaskBoardLabels } from "@/components/ui/agent-task-labels"
 import { Button } from "@/components/ui/button"
 import { TaskDetailContent, TaskDetailMeta, type TaskDetailContentProps } from "@/components/ui/task-detail-content"
-import { CloseIcon, insidePopup } from "@/components/ui/task-detail-parts"
+import { insidePopup } from "@/components/ui/task-detail-parts"
 
 type CloseReason = "close-press" | "escape-key" | "outside-press"
 
@@ -105,7 +106,7 @@ function TaskDetailPanel({
         </div>
         {onClose && (
           <Button variant="ghost" size="icon" aria-label={labels.panel.close} onClick={() => onClose("close-press")}>
-            <CloseIcon />
+            <XIcon />
           </Button>
         )}
       </header>

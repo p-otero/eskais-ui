@@ -1,4 +1,6 @@
 import { renderElement, type PartProps } from "@ui-sdk/react/primitive"
+import { ArrowLeftRightIcon } from "lucide-react"
+
 import type { AgentRef } from "@/lib/agent-task-types"
 import { cn } from "@/lib/utils"
 import { AgentAvatar, type AgentAvatars } from "@/components/ui/agent-avatar"
@@ -60,21 +62,6 @@ function agentSummary(agent: AgentRef, requested: AgentRef | undefined, labels: 
 /** What a card has room for: the agent's label, or the last segment of its model id. */
 function shortModel(agent: AgentRef) {
   return agent.label ?? agent.model.slice(agent.model.lastIndexOf("/") + 1)
-}
-
-function SwapIcon() {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      aria-hidden="true"
-      className="size-3 shrink-0 self-center"
-    >
-      <path d="M7 4 3 8l4 4M3 8h13M17 20l4-4-4-4M21 16H8" />
-    </svg>
-  )
 }
 
 type AgentBadgeProps = Omit<PartProps<"span">, "children"> & {
@@ -161,7 +148,7 @@ function AgentBadge({
               </span>
             ) : (
               <span data-slot="agent-badge-requested" className="inline-flex shrink-0 text-warning">
-                <SwapIcon />
+                <ArrowLeftRightIcon className="size-3 shrink-0 self-center" />
                 <span className="sr-only">{marker}</span>
               </span>
             ))}

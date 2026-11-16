@@ -1,6 +1,7 @@
 "use client"
 
 import type { ComponentProps, ReactElement, ReactNode } from "react"
+import { EllipsisIcon } from "lucide-react"
 
 import {
   NavigationMenu,
@@ -47,16 +48,8 @@ const slotClassName =
 const iconClassName =
   "relative inline-flex h-control-sm w-full max-w-14 items-center justify-center rounded-full transition-colors group-data-current/mobile-nav-item:bg-accent group-data-current/mobile-nav-item:text-accent-foreground group-data-open/mobile-nav-item:bg-accent [&_svg]:size-5 [&_svg]:shrink-0"
 
-function DotsIcon() {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
-      <path d="M5 12h.01M12 12h.01M19 12h.01" />
-    </svg>
-  )
-}
-
 const noOverflow: MobileNavItem[] = []
-const dots = <DotsIcon />
+const dots = <EllipsisIcon />
 
 // oxlint-disable-next-line shadcn/no-arbitrary-values -- keeps the links above the home indicator
 const safeAreaClassName = "pb-[env(safe-area-inset-bottom)]"
