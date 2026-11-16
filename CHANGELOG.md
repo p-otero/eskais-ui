@@ -4,6 +4,10 @@ Versions follow [semver](https://semver.org). Before 1.0, a minor version can br
 
 ## Unreleased
 
+## 0.1.0 (2026-11-16)
+
+First release. The docs site is published to GitHub Pages from each release, and the registry can be pinned to the tag: `https://raw.githubusercontent.com/p-otero/eskais-ui/v0.1.0/public/r/{name}.json`.
+
 ### Added
 
 - AgentTaskBoard: `filterControls` chooses which built-in filter controls show, so a host picker can replace one; hidden filters still apply and agents can still set them, and "Clear filters" leaves them alone.
