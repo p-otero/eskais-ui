@@ -1168,6 +1168,7 @@
       "type": "registry:ui",
       "title": "Dialog",
       "description": "UI SDK Dialog parts: focus trap, Escape, focus restore, dismissible and controller support.",
+      "docs": "Focus returns to whatever opened the dialog. `DialogContent` records the focused element as it opens, so focus still comes back when the dialog leaves the page while open (`{open && <Dialog open>…</Dialog>}`) and when a field inside has React's `autoFocus`, which takes focus before UI SDK records where it came from. To choose the first field, pass `initialFocus` to `DialogContent` (a selector like `\"#name\"`, an element, or a function), not `autoFocus`: it is how UI SDK decides where focus starts, and after a touch press it focuses the dialog itself so no on-screen keyboard pops up. Prefer keeping the `Dialog` mounted and driving `open`: an unmounted dialog skips its exit transition. `finalFocus` overrides where focus returns; `\"none\"` leaves it alone, also on unmount. While the dialog animates out, its backdrop and content are inert (UI SDK) and `pointer-events: none`, so the first click on the page after closing lands. ConfirmDialog, FormDialog, CommandDialog and Drawer share all of this.",
       "dependencies": [
         "@ui-sdk/core@0.1.0-beta.5",
         "@ui-sdk/react@0.1.0-beta.5"
@@ -1624,6 +1625,7 @@
       "type": "registry:ui",
       "title": "Drawer",
       "description": "UI SDK Drawer parts: a modal sheet from any edge (bottom or side), draggable, with focus trap, Escape and focus restore.",
+      "docs": "`DrawerContent` returns focus like `DialogContent` (see the Dialog docs): also when the drawer unmounts while open or a field has `autoFocus`; prefer `initialFocus`. Its closing backdrop and content are `pointer-events: none`, but in UI SDK 0.1.0-beta.5 the drawer itself still cancels a press on the page while it slides out, so a click in that moment is lost.",
       "dependencies": [
         "@ui-sdk/core@0.1.0-beta.5",
         "@ui-sdk/react@0.1.0-beta.5",
@@ -1632,7 +1634,8 @@
       "registryDependencies": [
         "@eskais/utils",
         "@eskais/theme",
-        "@eskais/button"
+        "@eskais/button",
+        "@eskais/dialog"
       ],
       "files": [
         {

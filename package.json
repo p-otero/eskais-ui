@@ -19,7 +19,7 @@
     "test:watch": "vitest",
     "registry:build": "bun tooling/sync-theme.ts && shadcn build",
     "registry:validate": "shadcn registry validate",
-    "test:browser": "bun run build:showcase && node tooling/contrast-check.mjs && node tooling/contrast-check.mjs default --palettes=blue,violet,green,orange",
+    "test:browser": "bun run build:showcase && node tooling/overlay-check.mjs && node tooling/contrast-check.mjs && node tooling/contrast-check.mjs default --palettes=blue,violet,green,orange",
     "test:browser:glass": "bun run build:showcase && node tooling/contrast-check.mjs glass",
     "screenshots": "bun run build:showcase && node tooling/screenshots.mjs screenshots",
     "verify": "bun run lint && bun run format:check && bun run typecheck && bun run test && bun run registry:build"
