@@ -32,6 +32,7 @@ const alerts = [
   { tone: "success", title: "Deployed", description: "Apollo is live on the production domain." },
   { tone: "warning", title: "Quota almost used", description: "New runs pause when the month's quota runs out." },
   { tone: "destructive", title: "Deploy failed", description: "The build exited with code 1. See the log." },
+  { tone: "violet", title: "Design review", description: "A category, not a status: tagged for the design team." },
 ] as const
 
 function Controls() {

@@ -14,10 +14,11 @@ const alertVariants = cva(
     variants: {
       tone: {
         neutral: "[&>svg]:text-muted-foreground",
-        info: "border-info/50 [&>svg]:text-info [&_[data-slot=alert-title]]:text-info",
-        success: "border-success/50 [&>svg]:text-success [&_[data-slot=alert-title]]:text-success",
-        warning: "border-warning/50 [&>svg]:text-warning [&_[data-slot=alert-title]]:text-warning",
-        destructive: "border-destructive/50 [&>svg]:text-destructive [&_[data-slot=alert-title]]:text-destructive",
+        info: "border-info-border [&>svg]:text-info [&_[data-slot=alert-title]]:text-info",
+        success: "border-success-border [&>svg]:text-success [&_[data-slot=alert-title]]:text-success",
+        warning: "border-warning-border [&>svg]:text-warning [&_[data-slot=alert-title]]:text-warning",
+        destructive: "border-destructive-border [&>svg]:text-destructive [&_[data-slot=alert-title]]:text-destructive",
+        violet: "border-violet-border [&>svg]:text-violet [&_[data-slot=alert-title]]:text-violet",
       },
     },
     defaultVariants: { tone: "info" },

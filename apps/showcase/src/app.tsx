@@ -337,6 +337,7 @@ function App() {
             <Badge tone="warning">Building</Badge>
             <Badge tone="info">Preview</Badge>
             <Badge tone="destructive">Failed</Badge>
+            <Badge tone="violet">Design</Badge>
             <Card className="w-full max-w-sm">
               <CardHeader>
                 <CardEyebrow>Project</CardEyebrow>

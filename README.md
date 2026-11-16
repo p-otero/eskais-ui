@@ -55,11 +55,28 @@ The registry installs from GitHub. Add it once to `components.json`:
 }
 ```
 
+Registry files import `@/components/ui/…`, `@/lib/…` and `@/lib/utils`; shadcn writes each file through your aliases and rewrites those imports to them, so any prefix works (`~/`, `#/`, a monorepo package). It needs these `aliases` in `components.json`:
+
+```json
+{
+  "aliases": {
+    "components": "~/components",
+    "ui": "~/components/ui",
+    "utils": "~/lib/utils",
+    "lib": "~/lib"
+  }
+}
+```
+
+`components` and `utils` are required by shadcn; `ui` defaults to `<components>/ui` and `lib` to the folder of `utils`. Every alias must resolve through `compilerOptions.paths` in the **root** `tsconfig.json` (or `jsconfig.json`; `#` aliases through `imports` in `package.json`). shadcn reads no other file and doesn't follow `references`, so with Vite's template, which keeps `paths` in `tsconfig.app.json`, add them to `tsconfig.json` too. Otherwise shadcn writes the files into a folder literally named `@` (or `~`).
+
 Replace `main` with a tag (`v0.1.0`) to pin a version. Then add `@layer ui-sdk;` as the first line of your global CSS and run:
 
 ```bash
 npx shadcn@latest add @eskais/theme @eskais/button @eskais/confirm-dialog
 ```
+
+`theme` brings `utils`: its `cn` knows the theme's utilities (`text-meta`, `text-body`, `gap-items`, `rounded-surface`…), which another `cn` reads as colours or unknown classes, so `cn("text-meta", "text-muted-foreground")` would drop the size. If `shadcn init` already wrote `lib/utils.ts`, add with `--overwrite` (or answer yes when asked) so ours replaces it; without the flag shadcn skips files that exist.
 
 ## Font
 
@@ -107,12 +124,14 @@ Colours derive from a few seed tokens, in light and dark:
 ```css
 :root {
   --brand: oklch(0.5 0.2 262); /* primary, ring and accent */
+  --link-brand: oklch(0.55 0.2 260); /* links and the caret; a blue by default */
   --neutral-hue: 262; /* tints the greys… */
   --neutral-chroma: 0.008; /* …by this much; 0 keeps them neutral */
   --radius: 1rem; /* control, checkbox and surface corners */
 }
 ```
 
+- **Set `--link-brand`** to colour links apart from the brand. It defaults to a blue, so links keep a hue under the near-black neutral brand; their lightness is clamped to keep 4.5:1. The palettes set it to their brand.
 - **Set `--brand`.** `--primary-foreground` follows it, near-white or near-black, and reaches at least 4.5:1 on any sRGB colour. Dark mode lightens a dark brand on its own. Keep the brand itself at 4.5:1 on white, since links use it as text.
 - **Pick a preset.** `npx shadcn@latest add @eskais/palettes`, then put `data-palette="blue"` on `<html>` or on any element; it combines with `data-theme` and `.dark`. `createAppearance({ palette: "blue" })` keeps it on `<html>`. Every preset meets 4.5:1 for text and 3:1 for controls.
 - **Override any token.** Set `--primary`, `--muted` or any other token in `:root` or `.dark` to take it over completely.

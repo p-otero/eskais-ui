@@ -20,6 +20,10 @@ function tree(css: string): CssTree {
         buffer = ""
       } else if (char === "}") {
         break
+      } else if (char === ";" && !buffer.includes(":")) {
+        // A statement such as `@slot` or `@custom-variant narrow (…)`: shadcn writes `{}` as `@rule;`.
+        node[buffer.trim().replaceAll(/\s+/g, " ")] = {}
+        buffer = ""
       } else if (char === ";") {
         const colon = buffer.indexOf(":")
         node[buffer.slice(0, colon).trim()] = buffer
@@ -44,8 +48,11 @@ const item = (name: string) => {
 }
 
 const theme = tree(read("theme.css"))
-// The dark variant comes from `shadcn init`; the others ship with the theme as statements.
-const customVariants = [...read("theme.css").matchAll(/^@custom-variant (?!dark\b)[^;{]+(?=;)/gm)].map(([rule]) => rule)
+// shadcn writes its one-line `@custom-variant dark (&:is(.dark *))` into any stylesheet without a custom variant, above
+// what an item adds. Tailwind keeps the last definition of a variant, so the theme's block, appended later, wins.
+const customVariants = Object.fromEntries(
+  Object.entries(theme).filter(([selector]) => selector.startsWith("@custom-variant ")),
+)
 const derivedLight = ":root, [data-palette]"
 const derivedDark = ".dark, .dark [data-palette], [data-palette].dark"
 function vars(selector: string): CssVars {
@@ -60,14 +67,31 @@ function vars(selector: string): CssVars {
 const prefixed = (selector: string) =>
   Object.fromEntries(Object.entries(vars(selector)).map(([name, value]) => [`--${name}`, value]))
 
-// shadcn writes cssVars to :root and .dark only; the palette scopes that repeat the derivation go in `css`.
-item("theme").cssVars = {
-  theme: vars("@theme inline"),
-  light: { ...vars(":root"), ...vars(derivedLight) },
-  dark: { ...vars(".dark"), ...vars(derivedDark) },
+const themeVars = vars("@theme inline")
+// shadcn mirrors each cssVars.light/dark entry into `@theme inline`: `--color-x: var(--x)` for a value starting with
+// hsl, rgb, # or oklch, a self-referencing `--x: var(--x)` otherwise. Only colours that have their `--color-x` stay;
+// the rest go in `css` rules on the same selectors, which shadcn merges into an existing rule.
+const mirrored = ([name, value]: [string, string]) =>
+  /^(hsl|rgb|#|oklch)/.test(value) && Object.hasOwn(themeVars, `color-${name}`)
+function split(entries: CssVars) {
+  return {
+    cssVars: Object.fromEntries(Object.entries(entries).filter(mirrored)),
+    css: Object.fromEntries(
+      Object.entries(entries)
+        .filter((entry) => !mirrored(entry))
+        .map(([name, value]) => [`--${name}`, value]),
+    ),
+  }
 }
+const light = split({ ...vars(":root"), ...vars(derivedLight) })
+const dark = split({ ...vars(".dark"), ...vars(derivedDark) })
+
+// shadcn writes cssVars to :root and .dark only; the palette scopes that repeat the derivation go in `css`.
+item("theme").cssVars = { theme: themeVars, light: light.cssVars, dark: dark.cssVars }
 item("theme").css = {
-  ...Object.fromEntries(customVariants.map((rule) => [rule, {}])),
+  ...customVariants,
+  ":root": light.css,
+  ".dark": dark.css,
   ":where(:root)": prefixed(":where(:root)"),
   "[data-palette]": prefixed(derivedLight),
   ".dark [data-palette], [data-palette].dark": prefixed(derivedDark),

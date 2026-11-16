@@ -41,6 +41,15 @@ Spacing is chosen by role. The values change with the theme (compact is tighter)
 3. Choose by relationship, not by look: parts of the same thing use `gap-inline` (inside one control or row) or `gap-items` (siblings); distinct groups use `gap-group`; separate surfaces use `gap-section`.
 4. Sizes (`size-*`, `h-*`, `w-*`) are not spacing. Leave them, but prefer the tokens (`h-control`, `size-control-sm`).
 
+## Theme item
+
+`bun run registry:build` copies `registry/styles/*.css` into the theme items of `registry.json` (`tooling/sync-theme.ts`). shadcn mirrors every `cssVars.light`/`dark` entry into the consumer's `@theme inline`, as `--color-x: var(--x)` for a value that starts with `hsl`, `rgb`, `#` or `oklch` and as a self-reference `--x: var(--x)` for anything else.
+
+1. Only a colour with its own `--color-x` in `@theme inline` goes to `cssVars`; sync-theme moves seeds, shapes, shadows and colours computed with `var()`, `color()` or `color-mix()` to `css` rules on `:root` and `.dark`. A test fails otherwise.
+2. `@theme inline` defines the whole radius scale, `sm` to `4xl`, so it replaces the one `shadcn init` writes.
+3. The base rules use the `@apply` lists `shadcn init` writes; shadcn merges an item's `@apply` into an existing one.
+4. `node tooling/consumer-check.mjs` installs the theme into the stylesheet `shadcn init` writes (`tooling/fixtures`) and fails on a self-reference, a leftover radius, a duplicated base rule or a second `add` that changes the file.
+
 ## Elevation
 
 Two levels: surfaces (`shadow-surface`, `rounded-surface`, `backdrop-surface`) and floating UI.
@@ -62,14 +71,15 @@ Two levels: surfaces (`shadow-surface`, `rounded-surface`, `backdrop-surface`) a
 
 ## Text colours
 
-| Token         | Utility          | Role                                                   | Light                                       | Dark                                               |
-| ------------- | ---------------- | ------------------------------------------------------ | ------------------------------------------- | -------------------------------------------------- |
-| `--link`      | `text-link`      | inline links, Button `variant="link"`, link-like chips | `--brand`, lightness capped at 0.5          | `--brand` mirrored like `--primary`, at least 0.74 |
-| `--link-soft` | `text-link-soft` | quieter links (wikilinks, references), an editor caret | `--brand` at 55% chroma, lightness 0.42–0.5 | the same, lightness 0.74–0.82                      |
+| Token         | Utility          | Role                                                   | Light                                            | Dark                                                    |
+| ------------- | ---------------- | ------------------------------------------------------ | ------------------------------------------------ | ------------------------------------------------------- |
+| `--link`      | `text-link`      | inline links, Button `variant="link"`, link-like chips | `--link-brand`, lightness capped at 0.5          | `--link-brand` mirrored like `--primary`, at least 0.74 |
+| `--link-soft` | `text-link-soft` | quieter links (wikilinks, references), an editor caret | `--link-brand` at 55% chroma, lightness 0.42–0.5 | the same, lightness 0.74–0.82                           |
 
-1. Both reach 4.5:1 on `background`, `card` and `muted` in every palette and mode; `bun run test:browser` checks it. A custom `--brand` keeps that, since the lightness is clamped.
-2. `--accent` is a surface (hover and selected fills) with `accent-foreground` on it. Never use `text-accent` or `--accent` as a text colour.
-3. Pair a link colour with an underline (at rest or on hover) so it doesn't rely on colour alone.
+1. Both derive from the `--link-brand` seed, not `--brand`, so links keep a hue under the near-black neutral brand. It defaults to a blue, `oklch(0.55 0.2 260)`; the coloured palettes set it to their brand.
+2. Both reach 4.5:1 on `background`, `card` and `muted` in every palette and mode; `bun run test:browser` checks it. A custom `--link-brand` keeps that, since the lightness is clamped.
+3. `--accent` is a surface (hover and selected fills) with `accent-foreground` on it, and nothing else: never a text colour (`text-accent`) or a stroke (`border-accent`, `ring-accent`, `outline-accent`, `stroke-`, `fill-`, `decoration-`, `divide-accent`). It is a near-background tint with no contrast guarantee. For a stroke use `border-input-strong` (a control's edge, 3:1), `border-primary` or `ring-ring` (selected or focused); for coloured text, `text-link`. A unit test greps `registry/**`.
+4. Pair a link colour with an underline (at rest or on hover) so it doesn't rely on colour alone.
 
 ## Dark mode
 
@@ -77,7 +87,7 @@ Two levels: surfaces (`shadow-surface`, `rounded-surface`, `backdrop-surface`) a
 
 1. An explicit light choice opts out: `createAppearance().apply()` (and UI SDK's `Preferences`) write `data-color-scheme` with the choice (`system`, `light`, `dark`) on `<html>`. A server that knows the choice can render `<html data-color-scheme="light">` or `class="light"`.
 2. The fallback repeats the `.dark` declarations at the same specificity; a test fails if the two drift apart. Change both together.
-3. The theme's `dark:` variant follows the same rule. Apps whose `dark:` variant comes from `shadcn init` (`&:is(.dark *)`) only follow `.dark`; the registry components use tokens, not `dark:`, so they work either way.
+3. The theme's `dark:` variant follows the same rule, and the `theme` item ships it as a `@custom-variant dark { … }` block. shadcn also writes its one-line `@custom-variant dark (&:is(.dark *))` into any stylesheet that has no custom variant yet, above what the item adds; Tailwind keeps the last definition, so the theme's block wins as long as it stays below. `node tooling/consumer-check.mjs` checks it in Chrome. The registry components use tokens, not `dark:`, so they work either way.
 
 ## Chart series
 
@@ -96,13 +106,16 @@ Each reaches 3:1 on `background` and `card` in both modes and every palette (`bu
 
 One vocabulary says what a status means: `Tone` from `@/lib/tone` (`@eskais/tone`).
 
-| Tone          | Meaning                              | Colour tokens                              |
-| ------------- | ------------------------------------ | ------------------------------------------ |
-| `neutral`     | no judgement: draft, queued, unknown | `secondary` fill, `muted-foreground` marks |
-| `info`        | something to know, in progress       | `info`                                     |
-| `success`     | done, healthy, passed                | `success`                                  |
-| `warning`     | needs attention soon                 | `warning`                                  |
-| `destructive` | failed, blocked, irreversible        | `destructive`                              |
+| Tone          | Meaning                                         | Solid (marks, dots, indicators)    |
+| ------------- | ----------------------------------------------- | ---------------------------------- |
+| `neutral`     | no judgement: draft, queued, unknown            | `muted-foreground`                 |
+| `info`        | something to know, in progress                  | `info`                             |
+| `success`     | done, healthy, passed                           | `success`                          |
+| `warning`     | needs attention soon                            | `warning`                          |
+| `destructive` | failed, blocked, irreversible                   | `destructive`                      |
+| `violet`      | a category (a label, a kind of item), no status | `violet`, with `violet-foreground` |
+
+Every tone also has soft tokens, for chips and tinted surfaces: `--{tone}-soft` (the fill, clearly visible in dark mode too), `--{tone}-soft-foreground` (text on it, at least 4.5:1) and `--{tone}-border` (its edge), as `bg-info-soft text-info-soft-foreground border-info-border`. Badge, StatusPill, list item icon tiles and the alert and toast edges use them; never tint with an opacity modifier (`bg-info/10`, `border-info/30`), which disappears over a dark or glass surface. `bg-skeleton` is the loading placeholder fill, translucent so it shows on any surface. `bun run test:browser` checks all of them in both modes and every palette.
 
 | Component          | Prop                     | Default          | Notes                                                                                                                                        |
 | ------------------ | ------------------------ | ---------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -117,14 +130,14 @@ Never add a component-specific word for these (`error`, `danger`, `positive`); m
 
 ## Typography
 
-Text is sized by role. Each `text-*` step sets size, line height and weight together; compact tightens them.
+Text is sized by role. Each `text-*` step sets size and line height, and the meta, title and display steps a weight too; compact tightens them. Caption, body-sm and body set no weight, so the text keeps what it inherits or its element gives it: a `<strong>`, `<b>` or `<th>` stays bold.
 
 | Utility           | Role                                                        | Default (size/line/weight) | Compact (size/line) |
 | ----------------- | ----------------------------------------------------------- | -------------------------- | ------------------- |
 | `text-meta`       | eyebrows, kickers, overlines; pair with `tracking-meta`     | 11/14/500                  | 11/14               |
-| `text-caption`    | hints, timestamps, table footnotes                          | 12/16/400                  | 11.5/15             |
-| `text-body-sm`    | secondary text, descriptions in dense UI                    | 13/18/400                  | 12/16               |
-| `text-body`       | default UI and reading text                                 | 14/20/400                  | 13/18               |
+| `text-caption`    | hints, timestamps, table footnotes                          | 12/16/inherited            | 11.5/15             |
+| `text-body-sm`    | secondary text, descriptions in dense UI                    | 13/18/inherited            | 12/16               |
+| `text-body`       | default UI and reading text                                 | 14/20/inherited            | 13/18               |
 | `text-title-sm`   | card, panel and list-group titles                           | 15/20/600                  | 14/18               |
 | `text-title`      | dialog, drawer and section titles                           | 18/24/600                  | 16/22               |
 | `text-display-sm` | page titles, stat values                                    | 24/28/650                  | 20/24               |

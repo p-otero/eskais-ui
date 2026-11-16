@@ -53,10 +53,11 @@ type ToastProps = ComponentProps<typeof ToastPrimitive> & {
 
 const toastToneClassNames = {
   neutral: "",
-  info: "border-info/50",
-  success: "border-success/50",
-  warning: "border-warning/50",
-  destructive: "border-destructive/50",
+  info: "border-info-border",
+  success: "border-success-border",
+  warning: "border-warning-border",
+  destructive: "border-destructive-border",
+  violet: "border-violet-border",
 } satisfies Record<Tone, string>
 
 // The type is only known from the part's state, so the tone's classes come from a class-name function.

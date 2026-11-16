@@ -35,6 +35,7 @@ Versions follow [semver](https://semver.org). Before 1.0, a minor version can br
 - `DialogContent` takes `size` (`sm`, `md` default, `lg`, `xl`, `full`) and `sheet` (a bottom sheet at `narrow:` width, on by default); `DialogBody` scrolls between a header and footer that stay in view, and long unbroken text wraps. Theme tokens `--dialog-opacity`, `--dialog-width`, `--dialog-max-height`, `--sheet-max-height`.
 - `AgentTaskBoard`: `columnAccent` and `columnTones` colour each column with the shared tones (`taskStatusAccentTones`); `TaskView.links` with `renderLink`, `onOpenLink` and an `openLink` agent action; `renderAttachments` and `renderLocation` slots in the detail.
 - `TaskLinks` and `PullRequestLink` (`task-links`), `AcceptanceList evidence="disclosure"`, `UsageGrid variant="compact"`, and a `tone` on `BoardColumn` and `TaskStatusIcon`.
+- Soft tone tokens `--{tone}-soft`, `--{tone}-soft-foreground` and `--{tone}-border` for `neutral`, `info`, `success`, `warning`, `destructive` and the new `violet`, a decorative category tone (also `--violet` and `--violet-foreground`) in the `Tone` type and every toned component. Badge, StatusPill, list item icon tiles and the alert and toast edges use them instead of `bg-*/10` and `border-*/30`. `--skeleton` (`bg-skeleton`) fills `Skeleton`. The contrast check covers them in both modes and every palette.
 
 ### Changed
 
@@ -48,3 +49,10 @@ Versions follow [semver](https://semver.org). Before 1.0, a minor version can br
 - Reduced motion stops infinite animations instead of making them flicker.
 - `registry/lib/agent-task-board.ts` is now `agent-task-board-model.ts`, so it doesn't share a basename with `registry/ui/agent-task-board.tsx`. It also exports `activeAttempt` and `attemptCount`.
 - Board labels gain `card`, `panel`, `table` and `filters.clearSearch`.
+- The `theme` item ships the `dark` variant: `dark:` follows `.dark` and, before any script runs, the system scheme unless `<html>` opts into light. It stays below the one-line variant `shadcn` writes, which Tailwind then ignores.
+- Installing `theme` into a stylesheet that `shadcn init` already wrote leaves no `--x: var(--x)` self-references in `@theme inline`: seeds, shapes, shadows and computed colours ship as `css` rules on `:root` and `.dark`. The radius scale runs to `4xl` and replaces the one `shadcn init` writes, and the base rules use the same `@apply` lists, so they merge instead of repeating.
+- `theme` depends on `utils`: the theme's utilities (`text-meta`, `gap-items`, `rounded-surface`…) only merge correctly with its `cn`, which now also replaces `rounded-control`/`-choice`/`-surface`/`-floating` and `shadow-surface`/`-floating` with another radius or shadow.
+- `text-caption`, `text-body-sm` and `text-body` no longer set a font weight, so `<strong>`, `<b>` and `<th>` keep theirs; meta, title and display steps still set one. `StageFilter` counts set `font-normal` to keep their look.
+- `--link` and `--link-soft` derive from a new `--link-brand` seed (a blue, `oklch(0.55 0.2 260)`, by default) instead of `--brand`, so links keep a hue under the neutral palette. The colour palettes set it to their brand; the showcase theme editor edits it and adds it to the CSS snippet.
+- The install docs list the `components.json` aliases shadcn needs to place registry files and rewrite their imports (`components`, `ui`, `utils`, `lib`, resolving through `paths` in the root `tsconfig.json`), and `consumer-check` installs through `~/` aliases.
+- AGENTS.md and the skill say `--accent` is a surface only, never text or a stroke (use `border-input-strong`, `border-primary`, `ring-ring` or `text-link`); a unit test greps the registry for it.

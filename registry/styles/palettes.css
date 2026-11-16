@@ -1,29 +1,34 @@
 [data-palette="neutral"] {
   --brand: oklch(0.205 0 0);
+  --link-brand: oklch(0.55 0.2 260);
   --neutral-hue: 0;
   --neutral-chroma: 0;
 }
 
 [data-palette="blue"] {
   --brand: oklch(0.5 0.2 262);
+  --link-brand: oklch(0.5 0.2 262);
   --neutral-hue: 262;
   --neutral-chroma: 0.008;
 }
 
 [data-palette="violet"] {
   --brand: oklch(0.5 0.22 293);
+  --link-brand: oklch(0.5 0.22 293);
   --neutral-hue: 293;
   --neutral-chroma: 0.008;
 }
 
 [data-palette="green"] {
   --brand: oklch(0.5 0.13 150);
+  --link-brand: oklch(0.5 0.13 150);
   --neutral-hue: 150;
   --neutral-chroma: 0.006;
 }
 
 [data-palette="orange"] {
   --brand: oklch(0.56 0.17 45);
+  --link-brand: oklch(0.56 0.17 45);
   --neutral-hue: 45;
   --neutral-chroma: 0.006;
 }

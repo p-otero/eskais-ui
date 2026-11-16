@@ -39,6 +39,7 @@ function StatusSection() {
         <StatusPill tone="destructive" dot>
           Failed
         </StatusPill>
+        <StatusPill tone="violet">Design</StatusPill>
         <StatusPill tone="muted">Archived</StatusPill>
       </div>
       <ul className="flex flex-wrap items-center gap-4 text-sm">

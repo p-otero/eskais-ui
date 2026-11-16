@@ -143,7 +143,24 @@ const tokenPairs = [
     [`series-${series}`, "background", 3],
     [`series-${series}`, "card", 3],
   ]),
+  // Soft tones: text on the tinted fill; the fill and its edge visible against the page and a card.
+  ...["neutral", "info", "success", "warning", "destructive", "violet"].flatMap((tone) => [
+    [`${tone}-soft-foreground`, `${tone}-soft`, 4.5],
+    [`${tone}-soft`, "card", 1.1],
+    [`${tone}-border`, "background", 1.4],
+    [`${tone}-border`, "card", 1.4],
+  ]),
+  ["violet-foreground", "violet", 4.5],
+  ["violet", "background", 4.5],
+  ["violet", "card", 4.5],
+  ["skeleton", "background", 1.15],
+  ["skeleton", "card", 1.15],
 ]
+
+// A translucent token (the skeleton) shows the surface under it, so it's measured composited over that surface.
+function over([r, g, b, alpha], back) {
+  return [r, g, b].map((value, index) => (value * alpha + back[index] * (255 - alpha)) / 255)
+}
 
 async function checkTokens(page, scope) {
   const colors = await page.evaluate(
@@ -166,7 +183,7 @@ async function checkTokens(page, scope) {
     [...new Set(tokenPairs.flatMap(([a, b]) => [a, b]))],
   )
   for (const [foreground, background, required] of tokenPairs) {
-    const value = ratio(colors[foreground], colors[background])
+    const value = ratio(over(colors[foreground], colors[background]), colors[background])
     if (value < required)
       failures.push(`${scope} --${foreground} on --${background}: ${value.toFixed(2)} < ${required}`)
   }

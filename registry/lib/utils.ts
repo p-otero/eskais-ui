@@ -22,6 +22,8 @@ const twMerge = extendTailwindMerge({
         "control-inset",
       ],
       text: ["meta", "caption", "body-sm", "body", "title-sm", "title", "display-sm", "display"],
+      radius: ["control", "choice", "surface", "floating"],
+      shadow: ["surface", "floating"],
       tracking: ["meta", "tight"],
       ease: ["standard"],
     },

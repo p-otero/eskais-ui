@@ -5,11 +5,12 @@ import type { Tone } from "@/lib/tone"
 import { cn } from "@/lib/utils"
 
 const toneClassNames = {
-  neutral: "border-border bg-secondary text-secondary-foreground",
-  info: "border-info/30 bg-info/10 text-info",
-  success: "border-success/30 bg-success/10 text-success",
-  warning: "border-warning/30 bg-warning/10 text-warning",
-  destructive: "border-destructive/30 bg-destructive/10 text-destructive",
+  neutral: "border-neutral-border bg-neutral-soft text-neutral-soft-foreground",
+  info: "border-info-border bg-info-soft text-info-soft-foreground",
+  success: "border-success-border bg-success-soft text-success-soft-foreground",
+  warning: "border-warning-border bg-warning-soft text-warning-soft-foreground",
+  destructive: "border-destructive-border bg-destructive-soft text-destructive-soft-foreground",
+  violet: "border-violet-border bg-violet-soft text-violet-soft-foreground",
 } satisfies Record<Tone, string>
 
 const badgeVariants = cva(
@@ -32,7 +33,7 @@ const badgeVariants = cva(
 )
 
 type BadgeLook = "default" | "secondary" | "outline"
-type DeprecatedBadgeTone = Exclude<Tone, "neutral">
+type DeprecatedBadgeTone = Exclude<Tone, "neutral" | "violet">
 
 type BadgeProps = PartProps<"span"> & {
   /** What the badge means; takes precedence over `variant`. */

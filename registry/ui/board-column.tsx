@@ -42,6 +42,7 @@ const toneColor = {
   success: "[--column-tone:var(--success)]",
   warning: "[--column-tone:var(--warning)]",
   destructive: "[--column-tone:var(--destructive)]",
+  violet: "[--column-tone:var(--violet)]",
 } satisfies Record<Tone, string>
 
 function FoldIcon({ unfold }: { unfold: boolean }) {

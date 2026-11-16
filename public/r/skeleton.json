@@ -13,7 +13,7 @@
   "files": [
     {
       "path": "registry/ui/skeleton.tsx",
-      "content": "import { renderElement, type PartProps } from \"@ui-sdk/react/primitive\"\n\nimport { cn } from \"@/lib/utils\"\n\n// motion-reduce stops the pulse outright: the theme's shortened durations would turn an infinite loop into flicker.\nfunction Skeleton({ className, render, ...props }: PartProps<\"div\">) {\n  return renderElement(\n    \"div\",\n    {\n      \"data-slot\": \"skeleton\",\n      \"aria-hidden\": true,\n      className: cn(\"animate-pulse rounded-control bg-foreground/10 motion-reduce:animate-none\", className),\n      ...props,\n    },\n    render,\n  )\n}\n\nexport { Skeleton }\n",
+      "content": "import { renderElement, type PartProps } from \"@ui-sdk/react/primitive\"\n\nimport { cn } from \"@/lib/utils\"\n\n// motion-reduce stops the pulse outright: the theme's shortened durations would turn an infinite loop into flicker.\nfunction Skeleton({ className, render, ...props }: PartProps<\"div\">) {\n  return renderElement(\n    \"div\",\n    {\n      \"data-slot\": \"skeleton\",\n      \"aria-hidden\": true,\n      className: cn(\"animate-pulse rounded-control bg-skeleton motion-reduce:animate-none\", className),\n      ...props,\n    },\n    render,\n  )\n}\n\nexport { Skeleton }\n",
       "type": "registry:ui"
     }
   ],

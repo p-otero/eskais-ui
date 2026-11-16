@@ -14,6 +14,7 @@ const dotClassNames = {
   success: "bg-success",
   warning: "bg-warning",
   destructive: "bg-destructive",
+  violet: "bg-violet",
 } satisfies Record<Tone | "default", string>
 
 type StageFilterProps = Omit<ComponentProps<typeof ToggleGroup<string>>, "children" | "multiple" | "orientation"> & {
@@ -56,7 +57,7 @@ function StageFilter({ stages, counts, multiple = true, size = "md", locale, cla
             {count !== undefined && (
               <>
                 {" "}
-                <span className="text-caption text-muted-foreground tabular-nums group-data-pressed/stage:text-primary-foreground">
+                <span className="text-caption font-normal text-muted-foreground tabular-nums group-data-pressed/stage:text-primary-foreground">
                   {format.format(count)}
                 </span>
               </>

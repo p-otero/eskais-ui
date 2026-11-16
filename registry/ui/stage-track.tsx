@@ -16,6 +16,7 @@ const fillClassNames = {
   success: "bg-success text-success-foreground border-success",
   warning: "bg-warning text-warning-foreground border-warning",
   destructive: "bg-destructive text-destructive-foreground border-destructive",
+  violet: "bg-violet text-violet-foreground border-violet",
 } satisfies Record<Tone | "default", string>
 
 const lineClassNames = {
@@ -25,6 +26,7 @@ const lineClassNames = {
   success: "bg-success",
   warning: "bg-warning",
   destructive: "bg-destructive",
+  violet: "bg-violet",
 } satisfies Record<Tone | "default", string>
 
 const ringClassNames = {
@@ -34,6 +36,7 @@ const ringClassNames = {
   success: "ring-success/25",
   warning: "ring-warning/25",
   destructive: "ring-destructive/25",
+  violet: "ring-violet/25",
 } satisfies Record<Tone | "default", string>
 
 function stateOf(index: number, currentIndex: number): StageState {

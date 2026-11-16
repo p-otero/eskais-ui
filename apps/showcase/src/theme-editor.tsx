@@ -20,7 +20,7 @@ import { StatusPill } from "@/components/ui/status-pill"
 
 import { contrastRatio, themeSnippet, type Seeds } from "./theme-snippet"
 
-type Overrides = { brand?: string; tint?: number; radius?: number }
+type Overrides = { brand?: string; linkBrand?: string; tint?: number; radius?: number }
 
 const CUSTOM = "custom"
 
@@ -38,6 +38,7 @@ function readSeeds(): Seeds {
   const read = (name: string) => style.getPropertyValue(name).trim()
   return {
     brand: plainOklch(read("--brand")),
+    linkBrand: plainOklch(read("--link-brand")),
     neutralHue: Number(read("--neutral-hue")) || 0,
     neutralChroma: Number(read("--neutral-chroma")) || 0,
     radius: Number.parseFloat(read("--radius")) || 0,
@@ -51,6 +52,7 @@ function applyOverrides(overrides: Overrides) {
   const set = (name: string, value: string | undefined) =>
     value === undefined ? root.removeProperty(name) : root.setProperty(name, value)
   set("--brand", overrides.brand)
+  set("--link-brand", overrides.linkBrand)
   set("--neutral-chroma", overrides.tint === undefined ? undefined : String(overrides.tint))
   set("--neutral-hue", overrides.tint === undefined ? undefined : String(hueOf(overrides.brand ?? readSeeds().brand)))
   set("--radius", overrides.radius === undefined ? undefined : `${overrides.radius}rem`)
@@ -61,6 +63,7 @@ function measure() {
     seeds: readSeeds(),
     primary: contrastRatio("var(--primary-foreground)", "var(--primary)"),
     text: contrastRatio("var(--foreground)", "var(--background)"),
+    link: contrastRatio("var(--link)", "var(--muted)"),
   }
 }
 
@@ -126,7 +129,7 @@ function ThemeEditor<Theme extends string, Palette extends string>({
 }) {
   const { value: palette } = usePreference(appearance.palette)
   const [overrides, setOverrides] = useState<Overrides>({})
-  const [{ seeds, primary, text }, setMeasured] = useState(measure)
+  const [{ seeds, primary, text, link }, setMeasured] = useState(measure)
   const [copied, setCopied] = useState("")
   const snippetId = useId()
 
@@ -146,8 +149,7 @@ function ThemeEditor<Theme extends string, Palette extends string>({
   const customised = Object.keys(overrides).length > 0
   const snippet = themeSnippet(seeds)
   const override = (next: Overrides) => {
-    const merged =
-      next.brand === undefined && next.tint === undefined && next.radius === undefined ? {} : { ...overrides, ...next }
+    const merged = Object.values(next).every((value) => value === undefined) ? {} : { ...overrides, ...next }
     applyOverrides(merged)
     setOverrides(merged)
     setMeasured(measure())
@@ -202,6 +204,24 @@ function ThemeEditor<Theme extends string, Palette extends string>({
             </div>
           </ColorPicker>
         </Field>
+        <Field>
+          <FieldLabel>Link colour</FieldLabel>
+          <ColorPicker
+            space="oklch"
+            value={seeds.linkBrand}
+            onValueChange={(linkBrand) => override({ linkBrand })}
+            className="flex items-center gap-2"
+          >
+            <ColorPickerSwatch className="size-control shrink-0 rounded-choice border bg-(--color-picker-color)" />
+            <ColorPickerInput
+              aria-label="Link colour in OKLCH"
+              className="h-control w-full min-w-0 rounded-control border border-input bg-background px-control-x text-sm outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+            />
+          </ColorPicker>
+          <p className="text-sm text-muted-foreground">
+            Links and the editor caret derive from it, capped in lightness to keep 4.5:1.
+          </p>
+        </Field>
         <SeedSlider
           label="Neutral tint"
           value={seeds.neutralChroma}
@@ -226,6 +246,7 @@ function ThemeEditor<Theme extends string, Palette extends string>({
           <h3 className="text-sm font-medium">Contrast (needs 4.5:1)</h3>
           <ContrastRow label="Primary foreground on primary" ratio={primary} />
           <ContrastRow label="Text on background" ratio={text} />
+          <ContrastRow label="Links on muted" ratio={link} />
         </div>
         <pre
           id={snippetId}

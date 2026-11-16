@@ -2,5 +2,12 @@
   "$schema": "./node_modules/oxfmt/configuration_schema.json",
   "printWidth": 120,
   "semi": false,
-  "ignorePatterns": ["public/r/**", "registry.json", "bun.lock", ".agents/**", "skills-lock.json"]
+  "ignorePatterns": [
+    "public/r/**",
+    "registry.json",
+    "bun.lock",
+    ".agents/**",
+    "skills-lock.json",
+    "tooling/fixtures/**"
+  ]
 }

@@ -21,6 +21,7 @@ const toneIconColor: Record<Tone, string> = {
   success: "text-success",
   warning: "text-warning",
   destructive: "text-destructive",
+  violet: "text-violet",
 }
 
 const statusIconShape: Record<TaskStatus, ReactNode> = {

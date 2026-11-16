@@ -1,8 +1,9 @@
-type Seeds = { brand: string; neutralHue: number; neutralChroma: number; radius: number }
+type Seeds = { brand: string; linkBrand: string; neutralHue: number; neutralChroma: number; radius: number }
 
 function themeSnippet(seeds: Seeds) {
   return `:root {
   --brand: ${seeds.brand};
+  --link-brand: ${seeds.linkBrand};
   --neutral-hue: ${seeds.neutralHue};
   --neutral-chroma: ${seeds.neutralChroma};
   --radius: ${seeds.radius}rem;

@@ -2,11 +2,11 @@
   "$schema": "https://ui.shadcn.com/schema/registry-item.json",
   "name": "tone",
   "title": "Tone",
-  "description": "The Tone type: neutral, info, success, warning and destructive, the one status vocabulary of Badge, Alert, StatusPill, Progress, Meter and Toast.",
+  "description": "The Tone type: neutral, info, success, warning and destructive, the one status vocabulary of Badge, Alert, StatusPill, Progress, Meter and Toast, plus violet, a category tone that is not a status.",
   "files": [
     {
       "path": "registry/lib/tone.ts",
-      "content": "/** The one vocabulary for what a status means, shared by Badge, Alert, StatusPill, Progress, Meter and Toast. */\nconst tones = [\"neutral\", \"info\", \"success\", \"warning\", \"destructive\"] as const\n\ntype Tone = (typeof tones)[number]\n\nexport { tones }\nexport type { Tone }\n",
+      "content": "/**\n * The one vocabulary for what a status means, shared by Badge, Alert, StatusPill, Progress, Meter and Toast.\n * `violet` is a decorative category tone (a label, a kind of item), not a status.\n */\nconst tones = [\"neutral\", \"info\", \"success\", \"warning\", \"destructive\", \"violet\"] as const\n\ntype Tone = (typeof tones)[number]\n\nexport { tones }\nexport type { Tone }\n",
       "type": "registry:lib"
     }
   ],

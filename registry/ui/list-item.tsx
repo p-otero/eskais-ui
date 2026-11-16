@@ -21,11 +21,12 @@ const stretchedClassNames = {
 } satisfies Record<ListVariant, string>
 
 const toneClassNames = {
-  neutral: "bg-muted text-muted-foreground",
-  info: "bg-info/10 text-info",
-  success: "bg-success/10 text-success",
-  warning: "bg-warning/10 text-warning",
-  destructive: "bg-destructive/10 text-destructive",
+  neutral: "bg-neutral-soft text-neutral-soft-foreground",
+  info: "bg-info-soft text-info-soft-foreground",
+  success: "bg-success-soft text-success-soft-foreground",
+  warning: "bg-warning-soft text-warning-soft-foreground",
+  destructive: "bg-destructive-soft text-destructive-soft-foreground",
+  violet: "bg-violet-soft text-violet-soft-foreground",
 } satisfies Record<Tone, string>
 
 /** An icon on a tinted square, for a row's `leading`. */

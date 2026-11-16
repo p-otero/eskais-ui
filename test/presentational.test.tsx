@@ -43,10 +43,10 @@ test("a badge tone maps to semantic tokens, and a tone passed as variant still w
   )
   const stale = screen.getByText("Stale")
   expect(stale.dataset.tone).toBe("warning")
-  expect(stale.className).toContain("text-warning")
+  expect(stale.className).toContain("text-warning-soft-foreground")
   const draft = screen.getByText("Draft")
   expect(draft.dataset.tone).toBe("neutral")
-  expect(draft.className).toContain("bg-secondary")
+  expect(draft.className).toContain("bg-neutral-soft")
 })
 
 test("badge variants map to semantic tokens", () => {

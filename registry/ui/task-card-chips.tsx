@@ -26,6 +26,7 @@ const toneText: Record<StatusTone, string> = {
   success: "text-success",
   warning: "text-warning",
   destructive: "text-destructive",
+  violet: "text-violet",
   muted: "text-muted-foreground",
 }
 
