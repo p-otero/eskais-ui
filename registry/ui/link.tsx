@@ -50,9 +50,9 @@ type LinkProps = Omit<PartProps<"a">, "children"> & {
    */
   onFollow?: LinkOptions["onFollow"]
   /**
-   * Follows a same-origin link on a primary mouse press instead of on release (default `true`); keyboard, touch, pen
-   * and modified presses stay native. Off for `external` links, and for a `render`ed router link without `onFollow`,
-   * which navigates on its own click. `data-no-fast-link` on any ancestor turns it off for a region.
+   * Follows a same-origin link on mouse press, not release (default `true`): navigation only, as moving away can't
+   * cancel it (WCAG 2.5.2). Without `onFollow` it uses `location.assign`, so it is off with `render` or `onClick`,
+   * which act on the click. Off for `external`; `data-no-fast-link` on an ancestor turns a region off.
    */
   fast?: boolean
 }
@@ -115,9 +115,10 @@ function FollowLink({ onFollow, render, fast = true, ...props }: LinkProps) {
   return usePart(handle, "root", {}, { ...mergeProps(linkProps(props), { ref }), render }, "a")
 }
 
-// Without `onFollow`, a router element navigates on its own click, so a press must not navigate first.
+// Without `onFollow`, a router element or an `onClick` may route or cancel on the click, so a press must not
+// navigate first.
 function PlainLink({ render, fast = true, ...props }: Omit<LinkProps, "onFollow">) {
-  const ref = useFastLink<HTMLAnchorElement>({ enabled: fast && !props.external && !render })
+  const ref = useFastLink<HTMLAnchorElement>({ enabled: fast && !props.external && !render && !props.onClick })
   return renderElement("a", mergeProps(linkProps(props), { ref }), render)
 }
 

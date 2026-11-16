@@ -137,6 +137,22 @@ describe("Link fast navigation", () => {
     expect(press(screen.getByRole("link", { name: "Router" })).defaultPrevented).toBe(false)
   })
 
+  test("a link with its own onClick keeps the click, so a router's handler still runs and decides", () => {
+    const seen: boolean[] = []
+    const onClick = vi.fn((event: { defaultPrevented: boolean; preventDefault(): void }) => {
+      seen.push(event.defaultPrevented)
+      event.preventDefault()
+    })
+    render(
+      <Link href="/routed" onClick={onClick}>
+        Routed
+      </Link>,
+    )
+    const click = press(screen.getByRole("link", { name: "Routed" }))
+    expect(seen).toEqual([false])
+    expect(click.defaultPrevented).toBe(true)
+  })
+
   test("a rendered router link with onFollow follows on press", () => {
     const onFollow = vi.fn()
     render(
