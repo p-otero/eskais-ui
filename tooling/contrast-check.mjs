@@ -48,16 +48,17 @@ async function measure(page, selector) {
     const range = document.createRange()
     range.selectNodeContents(element)
     // Truncated text reports its full range width; clip to the element so a neighbor's pixels don't count.
-    const textBox = range.getBoundingClientRect()
+    // Text that wraps is measured line by line: the box around both lines takes in the words beside it.
     const own = element.getBoundingClientRect()
-    const left = Math.max(textBox.left, own.left)
-    const top = Math.max(textBox.top, own.top)
-    const box = new DOMRect(
-      left,
-      top,
-      Math.min(textBox.right, own.right) - left,
-      Math.min(textBox.bottom, own.bottom) - top,
-    )
+    const boxes = [...range.getClientRects()]
+      .map((line) => {
+        const left = Math.max(line.left, own.left)
+        const top = Math.max(line.top, own.top)
+        const width = Math.min(line.right, own.right) - left
+        const height = Math.min(line.bottom, own.bottom) - top
+        return { x: left, y: top, width, height }
+      })
+      .filter((line) => line.width >= 1 && line.height >= 1)
     const style = getComputedStyle(element)
     // SVG text (chart axes) is painted with fill, which text-fill-color neither sets nor hides.
     const paint = element instanceof SVGElement ? "fill" : "-webkit-text-fill-color"
@@ -66,23 +67,44 @@ async function measure(page, selector) {
     canvas.fillRect(0, 0, 1, 1)
     const color = [...canvas.getImageData(0, 0, 1, 1).data]
     element.style.setProperty(paint, "transparent")
+    // Marks drawn beside or under the text (a status dot, an icon, a checkbox, a bullet, an underline) aren't
+    // what the text sits on; sampled as background they pair the text with its own colour. An underline is
+    // painted in the colour of the element that declares it, which may be an ancestor. Only glyph-sized marks
+    // are hidden, so a highlight or fill behind the text still counts.
+    for (let node = element; node; node = node.parentElement) node.dataset.contrastMeasure = ""
+    const line = Number.parseFloat(style.lineHeight) || Number.parseFloat(style.fontSize) * 1.5
+    for (const mark of element.querySelectorAll("*")) {
+      const rect = mark.getBoundingClientRect()
+      const replaced = mark.matches("svg, img, input, canvas, [aria-hidden='true']")
+      if ((replaced || !mark.textContent?.trim()) && rect.width <= line * 1.5 && rect.height <= line * 1.5) {
+        mark.dataset.contrastMark = ""
+      }
+    }
     const size = Number.parseFloat(style.fontSize)
     const large = size >= 24 || (size >= 18.66 && Number(style.fontWeight) >= 700)
-    return { box: { x: box.x, y: box.y, width: box.width, height: box.height }, color, large }
+    return { boxes, color, large }
   }, selector)
-  if (!text || text.box.width < 1 || text.box.height < 1) return null
-  const png = await page.screenshot({ clip: text.box, animations: "disabled" })
+  if (!text || text.boxes.length === 0) return null
+  const pngs = []
+  for (const box of text.boxes) pngs.push(await page.screenshot({ clip: box, animations: "disabled" }))
   await page.evaluate((target) => {
     const element = document.querySelector(target)
     element?.style.removeProperty("-webkit-text-fill-color")
     element?.style.removeProperty("fill")
+    for (const node of document.querySelectorAll("[data-contrast-measure]")) delete node.dataset.contrastMeasure
+    if (!element) return
+    for (const mark of element.querySelectorAll("[data-contrast-mark]")) delete mark.dataset.contrastMark
   }, selector)
-  const pixels = await page.evaluate(async (base64) => {
-    const bitmap = await createImageBitmap(await (await fetch(`data:image/png;base64,${base64}`)).blob())
-    const context = new OffscreenCanvas(bitmap.width, bitmap.height).getContext("2d")
-    context.drawImage(bitmap, 0, 0)
-    return [...context.getImageData(0, 0, bitmap.width, bitmap.height).data]
-  }, png.toString("base64"))
+  const pixels = []
+  for (const png of pngs) {
+    const lineData = await page.evaluate(async (base64) => {
+      const bitmap = await createImageBitmap(await (await fetch(`data:image/png;base64,${base64}`)).blob())
+      const context = new OffscreenCanvas(bitmap.width, bitmap.height).getContext("2d")
+      context.drawImage(bitmap, 0, 0)
+      return [...context.getImageData(0, 0, bitmap.width, bitmap.height).data]
+    }, png.toString("base64"))
+    for (const value of lineData) pixels.push(value)
+  }
   const [r, g, b, alpha] = text.color
   const ratios = []
   for (let index = 0; index < pixels.length; index += 4) {
@@ -226,6 +248,11 @@ const popups = [
 
 await withShowcase(async (page) => {
   await page.addScriptTag({ path: axePath })
+  await page.addStyleTag({
+    content:
+      "[data-contrast-measure] { text-decoration-color: transparent !important }\n" +
+      "[data-contrast-measure] [data-contrast-mark] { visibility: hidden !important }",
+  })
   for (const palette of palettes) {
     for (const theme of themes) {
       for (const mode of ["light", "dark"]) {

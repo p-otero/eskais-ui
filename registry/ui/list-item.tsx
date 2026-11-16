@@ -12,7 +12,7 @@ import { cn } from "@/lib/utils"
 
 const rowClassNames = {
   row: "rounded-control hover:bg-accent/60 data-selected:bg-accent data-selected:text-accent-foreground",
-  card: "rounded-lg border bg-card/(--glass-opacity) text-card-foreground shadow-surface backdrop-surface hover:border-ring data-selected:border-primary data-selected:ring-1 data-selected:ring-primary",
+  card: "rounded-lg border bg-card/(--glass-opacity) text-card-foreground shadow-surface backdrop-surface hover:border-ring data-selected:border-ring data-selected:bg-accent data-selected:text-accent-foreground data-selected:ring-3 data-selected:ring-ring/25",
 } satisfies Record<ListVariant, string>
 
 const stretchedClassNames = {
@@ -248,6 +248,7 @@ function ListItem({
       <ListboxItem
         value={id}
         data-slot="list-item"
+        data-item-id={id}
         data-variant={variant}
         className={cn(rowClassName, "cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-ring")}
       >
@@ -258,6 +259,7 @@ function ListItem({
   return (
     <li
       data-slot="list-item"
+      data-item-id={id}
       data-variant={variant}
       data-selected={selected ? "" : undefined}
       data-pressable={pressable ? "" : undefined}

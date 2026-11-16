@@ -8,6 +8,7 @@ import {
 import type { TaskStatus } from "@/lib/agent-task-types"
 import type { AcceptanceCounts, AcceptanceLabels } from "@/components/ui/acceptance-list"
 import { agentBadgeLabelsEs, type AgentBadgeLabels } from "@/components/ui/agent-badge"
+import type { AttachmentLabels } from "@/components/ui/attachments"
 import { attemptTimelineLabelsEs, type AttemptTimelineLabels } from "@/components/ui/attempt-timeline-labels"
 import type { BoardColumnLabels } from "@/components/ui/board-column"
 import { livenessLabelsEs, type LivenessLabels } from "@/components/ui/liveness-indicator"
@@ -23,6 +24,8 @@ interface AgentTaskComponentLabels {
   usage?: Partial<UsageLabels>
   attemptTimeline?: Partial<AttemptTimelineLabels>
   boardColumn?: Partial<BoardColumnLabels>
+  /** The detail's attachment strip and its lightbox. */
+  attachments?: Partial<AttachmentLabels>
 }
 
 type AgentTaskBoardLabels = Omit<BaseLabels, "components"> & { components: AgentTaskComponentLabels }
@@ -48,6 +51,19 @@ const agentTaskBoardLabelsEs: AgentTaskBoardLabels = {
       expand: (title) => `Expandir ${title}`,
       collapseTooltip: "Contraer columna",
       expandTooltip: "Expandir columna",
+    },
+    attachments: {
+      open: (name) => `Abrir ${name}`,
+      more: (count) => `Mostrar ${count} adjuntos más`,
+      lightbox: {
+        viewer: "Visor de imágenes",
+        previous: "Imagen anterior",
+        next: "Imagen siguiente",
+        close: "Cerrar visor",
+        actualSize: "Tamaño real",
+        openOriginal: "Abrir original",
+        counter: (position, count) => `${position} / ${count}`,
+      },
     },
   },
 }

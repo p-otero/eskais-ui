@@ -4,7 +4,7 @@ Petición de NF Board (2026-11-15). La especificación original está en https:/
 
 ## Sin cambios
 
-Se mantienen tal cual: `Quality`, `Quantity`, `AgentRef`, `UsageSummary`, `ThreadRef` y `AttemptView`. `TaskView` gana `links` (ver Enlaces). Las fechas son strings ISO 8601 UTC. El adaptador NF → props vive en NF Board.
+Se mantienen tal cual: `Quality`, `Quantity`, `AgentRef`, `UsageSummary`, `ThreadRef` y `AttemptView`. `TaskView` gana `links` (ver Enlaces), `attachments` (ver Adjuntos) y `location` (ver Ubicación). Las fechas son strings ISO 8601 UTC. El adaptador NF → props vive en NF Board.
 
 ## Props
 
@@ -17,9 +17,9 @@ interface AgentTaskBoardProps {
   locale?: string // BCP 47; por defecto, el lang de la página
   timeZone?: string // IANA; por defecto, la del navegador. NF lo pasa siempre en snapshot
 
-  view?: "board" | "table"
-  defaultView?: "board" | "table"
-  onViewChange?: (view: "board" | "table") => void
+  view?: "board" | "table" | "backlog"
+  defaultView?: "board" | "table" | "backlog"
+  onViewChange?: (view: "board" | "table" | "backlog") => void
 
   filters?: TaskFilters
   defaultFilters?: TaskFilters
@@ -41,8 +41,9 @@ interface AgentTaskBoardProps {
   onOpenThread?: (thread: ThreadRef) => void
   renderLink?: (link: TaskLink) => React.ReactNode // sustituye cada enlace de la lista del detalle
   onOpenLink?: (link: TaskLink, task: TaskView) => void // toma el clic y la acción openLink
-  renderAttachments?: (task: TaskView) => React.ReactNode // hueco provisional en la columna principal
-  renderLocation?: (task: TaskView) => React.ReactNode // hueco provisional en la columna lateral
+  renderAttachments?: (task: TaskView) => React.ReactNode // sustituye la tira de adjuntos de la columna principal
+  renderLocation?: (task: TaskView) => React.ReactNode // sustituye la pista de etapas de la columna lateral
+  stages?: Stage[] // el flujo al que apunta task.location, en orden (@eskais/stage-track)
 
   onApproveProposal?: (id: string) => void | Promise<void> // solo en live
   onRejectProposal?: (id: string) => void | Promise<void>
@@ -56,7 +57,10 @@ interface TaskFilters {
   profile?: string
   model?: string
   query?: string
+  stage?: string[] // ids de etapa; coincide la tarea cuya ubicación está en cualquiera
 }
+
+type Stage = { id: string; label: string; tone?: Tone } // @eskais/stage-track
 
 type Tone = "neutral" | "info" | "success" | "warning" | "destructive" // @eskais/tone
 
@@ -70,6 +74,8 @@ interface TaskLink {
 interface TaskView {
   // … lo de la especificación original, más:
   links?: TaskLink[]
+  attachments?: Attachment[] // el tipo de @eskais/attachments
+  location?: { stage: string; href?: string } // stage es el id de una de las `stages` del tablero
 }
 ```
 
@@ -78,8 +84,9 @@ interface TaskView {
 - **Detalle** (`detailPresentation`, por defecto `"dialog"`): un diálogo modal ancho que no estrecha el tablero; `"drawer"` lo abre como cajón a la derecha. Revierte la decisión anterior de panel no modal a petición de Pablo (2026-11-16): el panel lateral cortaba las columnas en hosts de unos 1100 px. `"side"` se mantiene, no modal, lateral en pantallas anchas e inferior en estrechas, para quien necesite operar el tablero mientras lee.
 - **Agentes con el detalle modal abierto**: los controles del tablero tras el modal quedan ocultos para los agentes (`data-agent-hidden`), igual que son inertes para las personas. Las acciones de la región del tablero siguen funcionando: `selectTask` cambia la tarea del diálogo, `filter` y `setView` cambian el tablero de detrás. Dentro del diálogo el agente lee el detalle, abre hilos, aprueba o rechaza según `agentApproval` y lo cierra con "Close task details".
 - **Columnas**:
-  - El botón de contraer va al final de la cabecera, con un icono de plegar (desplegar si está contraída) y un tooltip (`labels.components.boardColumn.collapseTooltip` / `expandTooltip`: "Collapse column" / "Expand column"). Aparece al pasar el ratón o con el foco dentro de la cabecera; siempre visible en punteros táctiles y con la columna contraída. Su nombre accesible sigue siendo "Collapse Done". Los agentes lo pulsan por ese nombre (`press`); el tooltip lo lista como su propio componente.
+  - El botón de contraer va al final de la cabecera, con un icono de círculo con un menos (`CircleMinus`; con un más, `CirclePlus`, si está contraída) y un tooltip (`labels.components.boardColumn.collapseTooltip` / `expandTooltip`: "Collapse column" / "Expand column"). Aparece al pasar el ratón o con el foco dentro de la cabecera; siempre visible en punteros táctiles y con la columna contraída. Su nombre accesible sigue siendo "Collapse Done". Los agentes lo pulsan por ese nombre (`press`); el tooltip lo lista como su propio componente.
   - El orden sale del array `columns`. Reordenar queda fuera; el nombre `reorderableColumns` se reserva para cuando llegue.
+  - Contraer una columna llama a `onColumnsChange` con la lista completa en el orden actual, así la columna nunca salta delante de las que aún no tenían configuración.
   - `columnAccent="tint"` (por defecto) marca cada columna con su tono: un punto antes del título, un borde superior de 2 px y un lavado muy suave en la cabecera, mezclado con `transparent` en `color-mix` para que el cristal se vea a través. `"none"` las deja lisas.
   - Tonos por defecto (`taskStatusAccentTones`): `proposed`, `todo` y `cancelled` neutral; `working` info; `review` warning; `blocked` destructive; `done` success. `columnTones` los sobrescribe, y los iconos de estado de las tarjetas, la tabla y el detalle los siguen.
 - **Hilos**: un `ThreadRef` con `href` se muestra como un botón pequeño con borde, un icono de ventana y `labels.openThread` ("Open thread" / "Abrir hilo"); el id va en el `title`, nunca como texto. Con `onOpenThread` el botón es un `<button>` (los agentes lo pueden pulsar) y llama al callback; con solo `href` es un enlace. Sin ninguno de los dos se muestra el título, si lo hay. `renderThreadLink` sustituye todo lo anterior.
@@ -87,9 +94,20 @@ interface TaskView {
   - Van en la columna lateral del detalle, con icono según `kind` (git-pull-request, git-branch, git-commit, circle-dot, external-link) y `state` como `StatusPill`: draft neutral, open info, merged success, closed destructive.
   - La tarjeta muestra un enlace de icono a la primera pull request, con nombre `labels.card.openPullRequest(label)`.
   - Sin `onOpenLink` los enlaces navegan a su `href`; con él, el clic llama al callback. `renderLink` sustituye cada enlace de la lista.
+- **Adjuntos** (`TaskView.attachments`):
+  - La columna principal del detalle muestra un `AttachmentStrip` llamado `labels.panel.attachmentsOf(id)`. Las imágenes se abren en el `Lightbox` (con `srcDark` en modo oscuro); los ficheros, en su `href`.
+  - La tarjeta muestra un chip pequeño con un clip y el número de adjuntos; el lector de pantalla lee `labels.card.attachments(n)`.
+  - Los agentes los abren con la acción `openAttachment(id)` de la propia tira.
+  - `renderAttachments` sustituye la tira.
+- **Ubicación** (`TaskView.location` y `stages`):
+  - La columna lateral del detalle muestra un `StageTrack variant="track"` llamado `labels.panel.locationOf(id)`, con la etapa actual enlazada a `location.href`. Si la etapa no está en `stages`, solo un `StagePill`.
+  - La tarjeta muestra un `StagePill`, también sin `stages` (con el id como texto).
+  - Con `stages`, la barra muestra una fila `StageFilter` (`labels.filters.stage`) con el número de tareas por etapa bajo los demás filtros. Filtra por `TaskFilters.stage`; vacía, no filtra.
+  - `renderLocation` sustituye la pista.
+- **Backlog** (`view="backlog"`): una `List` de `ListItem` con las tareas `proposed` y las `todo` que no están listas (`ready === false`, o dependencias sin terminar si falta `ready`), en dos `ListGroup` con su número: `labels.backlog.proposed` y `labels.backlog.notReady`. Cada fila lleva el icono de estado, el id, el título (dos líneas y puntos suspensivos), las etiquetas como chips, la etapa y, al final, el avatar del agente o la hora de actualización. En live, las propuestas llevan Aprobar/Rechazar con las mismas reglas que la tarjeta. Elegir una fila abre el detalle como una tarjeta, y al cerrarlo el foco vuelve a la fila. Sin tareas, `labels.empty.backlog`.
 - **Detalle en diálogo** (`detailPresentation="dialog"`): `Dialog` de tamaño `xl`. Cuando el contenido mide 56 rem o más (consulta de contenedor), dos columnas:
-  - Principal: objetivo, decisión pendiente, aceptación, adjuntos (`renderAttachments`) y actividad (la línea de intentos; el botón de consumo de cada intento va en su fila de título).
-  - Lateral: estado, perfil, proyecto, actualización, etiquetas (y el coste si no hay consumo), dependencias, resumen de trabajo (intentos, reparaciones, revisiones, intervenciones, aceptada a la primera), consumo con `UsageGrid variant="compact"`, enlaces y ubicación (`renderLocation`).
+  - Principal: objetivo, decisión pendiente, aceptación, adjuntos y actividad (la línea de intentos; el botón de consumo de cada intento va en su fila de título).
+  - Lateral: estado, perfil, proyecto, actualización, etiquetas (y el coste si no hay consumo), dependencias, resumen de trabajo (intentos, reparaciones, revisiones, intervenciones, aceptada a la primera), consumo con `UsageGrid variant="compact"`, enlaces y ubicación.
   - Más estrecho, una columna con la lateral detrás de la principal. En pantallas `narrow:` el diálogo es una hoja inferior.
   - La aceptación es una lista compacta, una línea por criterio con su icono; la evidencia se abre con un desplegable (collapsible de UI SDK) por criterio, nunca solo en un tooltip.
   - `"drawer"` y `"side"` siguen funcionando, en una columna.
@@ -112,9 +130,10 @@ interface TaskView {
   - Desconocido se muestra como `—`.
   - Estimado se muestra con `~`. En la tarjeta lleva texto para lectores de pantalla y `title`. En el panel y en la tabla, tooltip con la fuente.
   - Los IDs de modelo largos se recortan por el medio en la tarjeta y se muestran enteros en el panel.
-- **Acciones de agente**: `selectTask`, `openThread`, `openLink`, `setView`, `filter`. `openLink(taskId, link)` acepta el `label` o el `href` de un enlace de esa tarea y llama a `onOpenLink`; sin `onOpenLink` falla ("This board doesn't open links"), igual que `openThread` sin `onOpenThread`. Un Button de UI SDK dibujado como enlace no tiene `press` para agentes; por eso existen estas acciones. Además `approveProposal` y `rejectProposal`, solo en live y según `agentApproval`.
+- **Acciones de agente**: `selectTask`, `openThread`, `openLink`, `setView` (`"board"`, `"table"` o `"backlog"`), `filter` (`{ project, profile, model, query, stage }`; `stage` es una lista de ids de `stages`, o de las etapas que nombran las tareas si falta, y `null` o `[]` la quita). `openLink(taskId, link)` acepta el `label` o el `href` de un enlace de esa tarea y llama a `onOpenLink`; sin `onOpenLink` falla ("This board doesn't open links"), igual que `openThread` sin `onOpenThread`. Un Button de UI SDK dibujado como enlace no tiene `press` para agentes; por eso existen estas acciones. Además `approveProposal` y `rejectProposal`, solo en live y según `agentApproval`.
+- **Otras acciones**: la tira de adjuntos expone `openAttachment(id)` y la lista del backlog (`labels.backlog.name`) `select(id)`.
 - **Escala**: hasta 200 tareas sin virtualizar, con `content-visibility: auto` en las columnas. Se verifica con un fixture de 200 tareas × 30 intentos.
-- **Empaquetado**: debe funcionar como un único HTML estático, sin fetch y con fuentes de fallback. Se comprobará en CI.
+- **Empaquetado**: debe funcionar como un único HTML estático, sin fetch y con fuentes de fallback. Los adjuntos del fixture son SVG en URI `data:`, así que también van dentro del fichero. Se comprobará en CI.
 
 ## Etiquetas nuevas
 
@@ -125,6 +144,9 @@ Todas tienen valor en `agentTaskBoardLabels` (inglés) y en `agentTaskBoardLabel
 - `link.kind` y `link.state`: los nombres de cada tipo y estado de enlace.
 - `panel`: `status`, `labels`, `links`, `linksOf(id)`, `activity`, `attachments`, `location`, `attemptsSummary`, `counts.{attempts, repairs, reviews, humanInterventions}`, `acceptedFirstPass`, `yes`, `no`.
 - `components.boardColumn`: `collapseTooltip` y `expandTooltip`.
+- `views.backlog`, `backlog.{name, proposed, notReady}`, `empty.backlog`, `filters.stage`.
+- `card.attachments(count)`, `panel.attachmentsOf(id)` y `panel.locationOf(id)`.
+- `components.attachments`: las de `AttachmentStrip` (`open`, `more`) y su `lightbox`.
 - `components.attemptTimeline.threadLink`: el texto del botón de un hilo cuando se usa `AttemptTimeline` sola; el tablero le pasa `openThread`.
 
 ## Diálogo

@@ -45,10 +45,11 @@ const toneColor = {
   violet: "[--column-tone:var(--violet)]",
 } satisfies Record<Tone, string>
 
-function FoldIcon({ unfold }: { unfold: boolean }) {
+function CollapseIcon({ collapsed }: { collapsed: boolean }) {
   return (
     <svg
-      data-slot="board-column-fold-icon"
+      data-slot="board-column-collapse-icon"
+      data-icon={collapsed ? "circle-plus" : "circle-minus"}
       aria-hidden="true"
       viewBox="0 0 24 24"
       fill="none"
@@ -57,12 +58,8 @@ function FoldIcon({ unfold }: { unfold: boolean }) {
       strokeLinecap="round"
       strokeLinejoin="round"
     >
-      <path d="M12 2v2M12 8v2M12 14v2M12 20v2" />
-      {unfold ? (
-        <path d="M16 12h6M8 12H2m17 3 3-3-3-3M5 9l-3 3 3 3" />
-      ) : (
-        <path d="M2 12h6m14 0h-6m3-3-3 3 3 3M5 15l3-3-3-3" />
-      )}
+      <circle cx="12" cy="12" r="10" />
+      <path d={collapsed ? "M8 12h8M12 8v8" : "M8 12h8"} />
     </svg>
   )
 }
@@ -155,7 +152,7 @@ function BoardColumn({
               />
             }
           >
-            <FoldIcon unfold={collapsed} />
+            <CollapseIcon collapsed={collapsed} />
           </TooltipTrigger>
           <TooltipContent>{collapsed ? expandTooltip : collapseTooltip}</TooltipContent>
         </Tooltip>

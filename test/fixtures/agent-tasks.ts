@@ -1,5 +1,7 @@
 import type { Quantity } from "@/lib/quantity"
 import type { AgentRef, AttemptView, TaskStatus, TaskView, UsageSummary } from "@/lib/agent-task-types"
+import type { Attachment } from "@/components/ui/attachments"
+import type { Stage } from "@/components/ui/stage-track"
 
 const GENERATED_AT = "2026-11-15T18:42:00Z"
 
@@ -36,6 +38,45 @@ const claude: AgentRef = {
 }
 const pi: AgentRef = { provider: "pi", model: "zai/glm-5.3", effort: { name: "thinking", value: "high" } }
 
+const sampleStages: Stage[] = [
+  { id: "branch", label: "Branch" },
+  { id: "pr", label: "Pull request" },
+  { id: "dev", label: "In Dev", tone: "info" },
+  { id: "staging", label: "In Staging", tone: "warning" },
+  { id: "prod", label: "In Prod", tone: "success" },
+]
+
+const schemes = {
+  light: { page: "#f6f7f9", panel: "#ffffff", line: "#dfe3e8", text: "#1d2330", muted: "#8a93a3" },
+  dark: { page: "#11141a", panel: "#1a1f28", line: "#2c333f", text: "#e7eaf0", muted: "#6f7889" },
+}
+
+/** A tiny inline screenshot, so the board stays one file with no network. */
+function screen(scheme: keyof typeof schemes, accent: string, rows: number): string {
+  const c = schemes[scheme]
+  const lines = Array.from(
+    { length: rows },
+    (_, row) =>
+      `<rect x="24" y="${72 + row * 28}" width="${120 + ((row * 53) % 140)}" height="10" rx="5" fill="${row === 1 ? accent : c.muted}"/>`,
+  ).join("")
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="320" height="200" viewBox="0 0 320 200"><rect width="320" height="200" fill="${c.page}"/><rect x="12" y="12" width="296" height="176" rx="12" fill="${c.panel}" stroke="${c.line}"/><rect x="24" y="28" width="140" height="14" rx="7" fill="${c.text}"/><rect x="236" y="24" width="60" height="22" rx="6" fill="${accent}"/>${lines}</svg>`
+  return `data:image/svg+xml,${encodeURIComponent(svg)}`
+}
+
+function image(id: string, name: string, alt: string, accent: string, rows: number): Attachment {
+  return {
+    id,
+    name,
+    kind: "image",
+    alt,
+    src: screen("light", accent, rows),
+    srcDark: screen("dark", accent, rows),
+    mimeType: "image/svg+xml",
+  }
+}
+
+const searchLog = ["indexing 1204 pages", "retry: quota exhausted", "fallback: codex"].join("\n")
+
 /** A small, hand-written board that covers every state the components must render. */
 const sampleTasks: TaskView[] = [
   {
@@ -44,6 +85,7 @@ const sampleTasks: TaskView[] = [
     status: "proposed",
     profile: "reasoning",
     analysisMode: "review",
+    labels: ["pricing", "performance"],
     dependsOn: [],
     acceptance: [],
     attempts: [],
@@ -67,6 +109,8 @@ const sampleTasks: TaskView[] = [
     status: "todo",
     ready: false,
     profile: "bounded",
+    labels: ["usage"],
+    location: { stage: "branch" },
     dependsOn: [{ id: "T-012", title: "Write the migration for the attempts table", status: "todo" }],
     acceptance: [],
     attempts: [],
@@ -119,6 +163,21 @@ const sampleTasks: TaskView[] = [
       },
     ],
     activeAttemptId: "T-014-A2",
+    attachments: [
+      image("T-014-shot-1", "search-results.png", "Search results page with the docs index", "#3b6fe0", 4),
+      image("T-014-shot-2", "index-status.png", "Index status panel at 1,204 pages", "#1f9d6b", 3),
+      {
+        id: "T-014-log",
+        name: "indexer.log",
+        kind: "file",
+        alt: "Indexer log",
+        src: `data:text/plain,${encodeURIComponent(searchLog)}`,
+        href: `data:text/plain,${encodeURIComponent(searchLog)}`,
+        size: searchLog.length,
+        mimeType: "text/plain",
+      },
+    ],
+    location: { stage: "pr", href: "https://example.com/acme/docs/pull/128" },
     usage: usage(60_000, 10_500, 0.43),
     counts: { attempts: 2, repairs: 1, reviews: 0, humanInterventions: 0 },
     links: [
@@ -159,6 +218,8 @@ const sampleTasks: TaskView[] = [
       },
     ],
     activeAttemptId: "T-015-A1",
+    attachments: [image("T-015-shot-1", "approval-dialog.png", "The approval dialog asking a person", "#c2410c", 2)],
+    location: { stage: "staging", href: "https://example.com/acme/app/deployments/staging" },
     links: [
       {
         kind: "pull-request",
@@ -190,6 +251,7 @@ const sampleTasks: TaskView[] = [
       },
     ],
     decisionNeeded: "Rotate the deploy token?",
+    location: { stage: "dev" },
     updatedAt: "2026-11-15T15:05:00Z",
   },
   {
@@ -215,12 +277,14 @@ const sampleTasks: TaskView[] = [
     ],
     acceptedFirstPass: true,
     usage: usage(25_000, 6_000, 0.58),
+    location: { stage: "prod" },
     updatedAt: "2026-11-15T10:45:00Z",
   },
 ]
 
 const statuses: TaskStatus[] = ["proposed", "todo", "working", "review", "blocked", "done", "cancelled"]
 const agents = [codex, claude, pi]
+const generatedShot = image("G-shot", "screenshot.png", "A generated screenshot", "#3b6fe0", 3)
 
 /** A deterministic large board: `count` tasks with up to `maxAttempts` attempts each. */
 function generateTasks(count = 200, maxAttempts = 30): TaskView[] {
@@ -252,9 +316,12 @@ function generateTasks(count = 200, maxAttempts = 30): TaskView[] {
       acceptance: [{ text: "Checks pass", result: index % 3 === 0 ? "pass" : "unverified" }],
       attempts,
       activeAttemptId: status === "working" ? attempts.at(-1)?.id : undefined,
+      labels: index % 4 === 0 ? ["generated"] : undefined,
+      location: index % 3 === 0 ? undefined : { stage: sampleStages[index % sampleStages.length]?.id ?? "dev" },
+      attachments: index % 10 === 0 ? [{ ...generatedShot, id: `G-${index}-shot` }] : undefined,
       updatedAt: GENERATED_AT,
     }
   })
 }
 
-export { GENERATED_AT, generateTasks, sampleTasks }
+export { GENERATED_AT, generateTasks, sampleStages, sampleTasks }

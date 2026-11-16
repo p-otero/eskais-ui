@@ -1,3 +1,4 @@
+import { TASK_STATUSES } from "@/lib/agent-task-board-model"
 import { act, render, screen, within } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { useState } from "react"
@@ -43,6 +44,8 @@ function Controlled() {
     />
   )
 }
+const columnHeadings = () => screen.getAllByRole("heading", { level: 3 }).map((heading) => heading.textContent)
+
 describe("TaskCard", () => {
   test("renders every state in the sample", async () => {
     renderBoard({ columns: [{ status: "cancelled", hidden: false }] })
@@ -226,9 +229,13 @@ describe("modes, columns and labels", () => {
     const onColumnsChange = vi.fn()
     renderBoard({ onColumnsChange })
     await tick()
-    await user().click(screen.getByRole("button", { name: "Collapse Done" }))
-    expect(onColumnsChange).toHaveBeenLastCalledWith([{ status: "done", collapsed: true }])
-    expect(screen.getByRole("button", { name: "Expand Done" })).toBeTruthy()
+    const before = columnHeadings()
+    await user().click(screen.getByRole("button", { name: "Collapse Review" }))
+    expect(onColumnsChange).toHaveBeenLastCalledWith(
+      TASK_STATUSES.map((status) => (status === "review" ? { status, collapsed: true } : { status })),
+    )
+    expect(screen.getByRole("button", { name: "Expand Review" })).toBeTruthy()
+    expect(columnHeadings()).toEqual(before)
     expect(screen.queryByRole("heading", { name: "Cancelled" })).toBeNull()
   })
 

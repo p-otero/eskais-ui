@@ -3,6 +3,7 @@
 import { useCallback, useMemo, useState, type ReactNode } from "react"
 
 import {
+  countByStage,
   filterOptions,
   filterTasks,
   groupByStatus,
@@ -17,6 +18,7 @@ import {
   AgentTaskProposalsRoot,
   createAgentTaskBoardController,
 } from "@/components/ui/agent-task-board-root"
+import { AgentTaskBoardBacklog } from "@/components/ui/agent-task-board-backlog"
 import { AgentTaskBoardColumns, withColumn } from "@/components/ui/agent-task-board-columns"
 import { AgentTaskBoardDetail } from "@/components/ui/agent-task-board-detail"
 import { AgentTaskBoardEmpty } from "@/components/ui/agent-task-board-empty"
@@ -31,6 +33,7 @@ import { useBoardFocus } from "@/components/ui/use-board-focus"
 
 const NO_FILTERS: TaskFilters = {}
 const NO_COLUMNS: ColumnConfig[] = []
+const CLEARED = { project: null, profile: null, model: null, query: null, stage: null }
 
 function useControllable<T>(value: T | undefined, initial: T) {
   const [own, setOwn] = useState(initial)
@@ -45,7 +48,7 @@ function AgentTaskBoard(props: AgentTaskBoardProps) {
   const { tasks, mode, generatedAt, formatCurrency, timeZone, agentApproval = "confirm" } = props
   const { onApproveProposal, onRejectProposal, renderThreadLink, onOpenThread } = props
   const { detailPresentation = "dialog", density = "auto", agentAvatars, columnAccent = "tint" } = props
-  const { renderLink, onOpenLink, renderAttachments, renderLocation } = props
+  const { renderLink, onOpenLink, renderAttachments, renderLocation, stages } = props
   const tones = useMemo(() => ({ ...taskStatusAccentTones, ...props.columnTones }), [props.columnTones])
   const labels = useMemo(() => resolveLabels(props.labels), [props.labels])
   const now = useNow({ now: mode === "snapshot" ? generatedAt : props.now })
@@ -59,6 +62,12 @@ function AgentTaskBoard(props: AgentTaskBoardProps) {
   const options = useMemo(() => filterOptions(tasks), [tasks])
   const ids = useMemo(() => new Set(tasks.map((task) => task.id)), [tasks])
   const filtered = useMemo(() => filterTasks(tasks, filters), [tasks, filters])
+  const stageIds = useMemo(() => stages?.map((stage) => stage.id), [stages])
+  const stageCounts = useMemo(() => {
+    if (!stages) return undefined
+    const counts = countByStage(filterTasks(tasks, { ...filters, stage: undefined }))
+    return Object.fromEntries(stages.map((stage) => [stage.id, counts[stage.id] ?? 0]))
+  }, [stages, tasks, filters])
   const grouped = useMemo(() => groupByStatus(filtered, columns), [filtered, columns])
   const summary = useMemo(() => summarize(filtered), [filtered])
   const selected = selectedId === null ? undefined : tasks.find((task) => task.id === selectedId)
@@ -98,6 +107,7 @@ function AgentTaskBoard(props: AgentTaskBoardProps) {
       agentAvatars,
       statusTones: tones,
       onOpenLink,
+      stages,
     }),
     [
       mode,
@@ -115,17 +125,19 @@ function AgentTaskBoard(props: AgentTaskBoardProps) {
       agentAvatars,
       tones,
       onOpenLink,
+      stages,
     ],
   )
 
-  const clearFilters = () =>
-    controller.filter({ project: null, profile: null, model: null, query: null }, { reason: "clear-press" })
+  const clearFilters = () => controller.filter(CLEARED, { reason: "clear-press" })
 
   let content: ReactNode
   if (filtered.length === 0) {
     content = <AgentTaskBoardEmpty labels={labels} filtered={tasks.length > 0} onClear={clearFilters} />
   } else if (view === "table") {
     content = <AgentTaskBoardTable tasks={filtered} selectedTaskId={selectedId} display={display} />
+  } else if (view === "backlog") {
+    content = <AgentTaskBoardBacklog tasks={filtered} selectedTaskId={selectedId} display={display} />
   } else {
     content = (
       <AgentTaskBoardColumns
@@ -149,6 +161,7 @@ function AgentTaskBoard(props: AgentTaskBoardProps) {
       data-mode={mode}
       controller={controller}
       tasks={tasks}
+      stageIds={stageIds}
       view={view}
       onViewChange={(next) => {
         setView(next)
@@ -187,6 +200,8 @@ function AgentTaskBoard(props: AgentTaskBoardProps) {
                 generatedAt={mode === "snapshot" ? generatedAt : undefined}
                 locale={locale}
                 timeZone={timeZone}
+                stages={stages}
+                stageCounts={stageCounts}
               />
               <AgentTaskBoardSummary
                 summary={summary}

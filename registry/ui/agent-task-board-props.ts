@@ -6,6 +6,7 @@ import type { Tone } from "@/lib/tone"
 import type { AgentAvatars } from "@/components/ui/agent-avatar"
 import type { AgentApproval, BoardView } from "@/components/ui/agent-task-board-primitive"
 import type { AgentTaskBoardLabelsInput } from "@/components/ui/agent-task-labels"
+import type { Stage } from "@/components/ui/stage-track"
 
 type ProposalCallback = (id: string) => void | Promise<void>
 
@@ -40,10 +41,15 @@ interface AgentTaskBoardBaseProps {
   renderLink?: (link: TaskLink) => ReactNode
   /** Takes over a link's click and the agent's `openLink`; without it, links navigate to their `href`. */
   onOpenLink?: (link: TaskLink, task: TaskView) => void
-  /** Fills the detail's attachments slot, in the main column. */
+  /** Replaces the attachment strip of `task.attachments` in the detail's main column. */
   renderAttachments?: (task: TaskView) => ReactNode
-  /** Fills the detail's location slot, in the side column. */
+  /** Replaces the stage track of `task.location` in the detail's side column. */
   renderLocation?: (task: TaskView) => ReactNode
+  /**
+   * The pipeline `task.location` points into, in order. Cards show the stage as a pill, the detail as a
+   * track, and the toolbar gets a row of stage toggles that filters by it.
+   */
+  stages?: Stage[]
   /** Images, icons or names per provider id. No logos ship; agents show initials on a provider color otherwise. */
   agentAvatars?: AgentAvatars
   /** Live mode only. A returned Promise keeps the button pending and shows its error. */

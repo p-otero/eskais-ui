@@ -6,7 +6,10 @@ type Intent = "panel" | "card" | null
 
 function selectButton(root: HTMLElement | null, id: string | null) {
   if (!root || id === null) return null
-  return root.querySelector<HTMLElement>(`[data-task-select][data-task-id="${CSS.escape(id)}"]`)
+  const escaped = CSS.escape(id)
+  return root.querySelector<HTMLElement>(
+    `[data-task-select][data-task-id="${escaped}"], [data-item-id="${escaped}"] [data-slot="list-item-primary"]`,
+  )
 }
 
 /**

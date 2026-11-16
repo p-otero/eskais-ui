@@ -16,6 +16,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { StageFilter, type Stage } from "@/components/ui/stage-track"
 
 type ChoiceKey = "project" | "profile" | "model"
 
@@ -70,7 +71,13 @@ type AgentTaskBoardToolbarProps = {
   generatedAt?: string
   locale?: string
   timeZone?: string
+  /** Shows a row of stage toggles when set. */
+  stages?: readonly Stage[]
+  /** Tasks per stage id under the other filters. */
+  stageCounts?: Readonly<Record<string, number>>
 }
+
+const CLEARED = { project: null, profile: null, model: null, query: null, stage: null }
 
 function AgentTaskBoardToolbar({
   options,
@@ -81,8 +88,10 @@ function AgentTaskBoardToolbar({
   generatedAt,
   locale,
   timeZone,
+  stages,
+  stageCounts,
 }: AgentTaskBoardToolbarProps) {
-  const filtered = Object.values(filters).some(Boolean)
+  const filtered = Object.values(filters).some((value) => (Array.isArray(value) ? value.length > 0 : Boolean(value)))
   const choices = (["project", "profile", "model"] as const).filter((name) => options[choiceSources[name]].length > 0)
   return (
     <div data-slot="agent-task-board-toolbar" className="@container/agent-task-board-toolbar flex flex-col gap-items">
@@ -115,6 +124,7 @@ function AgentTaskBoardToolbar({
           <SegmentedControlIndicator />
           <SegmentedControlItem value="board">{labels.views.board}</SegmentedControlItem>
           <SegmentedControlItem value="table">{labels.views.table}</SegmentedControlItem>
+          <SegmentedControlItem value="backlog">{labels.views.backlog}</SegmentedControlItem>
         </SegmentedControl>
       </div>
       <div className="flex">
@@ -138,17 +148,25 @@ function AgentTaskBoardToolbar({
             />
           ))}
           {filtered && (
-            <Button
-              variant="ghost"
-              onClick={() =>
-                controller.filter({ project: null, profile: null, model: null, query: null }, { reason: "clear-press" })
-              }
-            >
+            <Button variant="ghost" onClick={() => controller.filter(CLEARED, { reason: "clear-press" })}>
               {labels.filters.clear}
             </Button>
           )}
         </fieldset>
       </div>
+      {stages && stages.length > 0 && (
+        <StageFilter
+          aria-label={labels.filters.stage}
+          stages={stages}
+          counts={stageCounts}
+          size="sm"
+          locale={locale}
+          value={filters.stage ?? []}
+          onValueChange={(value) =>
+            controller.filter({ stage: value.length > 0 ? value : null }, { reason: "item-press" })
+          }
+        />
+      )}
     </div>
   )
 }

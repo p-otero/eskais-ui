@@ -6,7 +6,7 @@ import { Field, FieldLabel } from "@/components/ui/field"
 import { SegmentedControl, SegmentedControlIndicator, SegmentedControlItem } from "@/components/ui/segmented-control"
 import type { TaskLink, TaskStatus, TaskView } from "@/lib/agent-task-types"
 
-import { GENERATED_AT, generateTasks, sampleTasks } from "../../../../test/fixtures/agent-tasks"
+import { GENERATED_AT, generateTasks, sampleStages, sampleTasks } from "../../../../test/fixtures/agent-tasks"
 import { Section } from "../section"
 
 const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
@@ -43,8 +43,7 @@ function AgentTaskBoardSection() {
     detailPresentation: detail,
     onOpenThread: (thread: { id: string }) => setLog(`Open thread ${thread.id}.`),
     onOpenLink: (link: TaskLink) => setLog(`Open ${link.label}.`),
-    renderLocation: (task: TaskView) =>
-      task.project ? <code className="font-mono text-xs">{task.project}</code> : null,
+    stages: sampleStages,
     onApproveProposal: approve,
     onRejectProposal: reject,
   }
@@ -52,7 +51,7 @@ function AgentTaskBoardSection() {
   return (
     <Section
       title="AgentTaskBoard"
-      description="The full board for agent tasks: filters, board or table, summary, collapsible columns, and the detail as a dialog, drawer or side panel. Live mode decides proposals; snapshot mode is read-only."
+      description="The full board for agent tasks: filters and stages, board, table or backlog, summary, collapsible columns, attachments, and the detail as a dialog, drawer or side panel. Live mode decides proposals; snapshot mode is read-only."
     >
       <div className="flex w-full flex-col gap-4">
         <div className="flex flex-wrap items-end gap-4">

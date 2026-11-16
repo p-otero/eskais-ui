@@ -65,15 +65,17 @@ test("the collapse toggle ends the column header, names its column and shows a t
   expect(header?.contains(toggle)).toBe(true)
   // After the title and the count, so it no longer reads as "move left".
   expect(count && count.compareDocumentPosition(toggle) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
-  expect(toggle.querySelector('[data-slot="board-column-fold-icon"]')).not.toBeNull()
+  const icon = () => toggle.querySelector('[data-slot="board-column-collapse-icon"]')?.getAttribute("data-icon")
+  expect(icon()).toBe("circle-minus")
 
   await user.hover(toggle)
   expect((await screen.findByRole("tooltip")).textContent).toBe("Contraer columna")
 
   const result = await act(() => agent.act({ steps: [{ ref: "Contraer Hechas", action: "press" }] }))
   expect(result.ok, result.error?.message).toBe(true)
-  expect(onColumnsChange).toHaveBeenLastCalledWith([{ status: "done", collapsed: true }])
-  expect(screen.getByRole("button", { name: "Expandir Hechas" })).toBeTruthy()
+  expect(onColumnsChange.mock.lastCall?.[0]).toContainEqual({ status: "done", collapsed: true })
+  expect(screen.getByRole("button", { name: "Expandir Hechas" })).toBe(toggle)
+  expect(icon()).toBe("circle-plus")
 })
 
 test("a thread opens from an 'Open thread' button that keeps its id in a tooltip, never as its text", async () => {

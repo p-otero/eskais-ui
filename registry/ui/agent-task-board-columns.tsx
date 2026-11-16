@@ -1,6 +1,6 @@
 "use client"
 
-import type { ColumnConfig, StatusColumn } from "@/lib/agent-task-board-model"
+import { columnOrder, type ColumnConfig, type StatusColumn } from "@/lib/agent-task-board-model"
 import type { TaskStatus, TaskView } from "@/lib/agent-task-types"
 import type { Tone } from "@/lib/tone"
 import type { AgentTaskBoardLabels } from "@/components/ui/agent-task-labels"
@@ -16,11 +16,13 @@ type AgentTaskBoardColumnsProps = {
   tones?: Record<TaskStatus, Tone>
 }
 
+// Writes the full order, so changing one column never moves it ahead of the columns that had no config yet.
 function withColumn(columns: readonly ColumnConfig[], status: TaskStatus, change: Partial<ColumnConfig>) {
-  const found = columns.some((column) => column.status === status)
-  return found
-    ? columns.map((column) => (column.status === status ? { ...column, ...change } : column))
-    : [...columns, { status, ...change }]
+  const config = new Map(columns.map((column) => [column.status, column]))
+  return columnOrder(columns).map((each) => {
+    const column = config.get(each) ?? { status: each }
+    return each === status ? { ...column, ...change } : column
+  })
 }
 
 function AgentTaskBoardColumns({

@@ -1,4 +1,5 @@
 import type { Quantity } from "@/lib/quantity"
+import type { Attachment } from "@/components/ui/attachments"
 
 type TaskStatus = "proposed" | "todo" | "working" | "review" | "blocked" | "done" | "cancelled"
 
@@ -82,6 +83,13 @@ interface TaskLink {
   state?: "draft" | "open" | "merged" | "closed"
 }
 
+/** Where the task's work is in a pipeline; `stage` is the id of one of the board's `stages`. */
+interface TaskLocation {
+  stage: string
+  /** What the stage stands for, like the deployment or the pull request. */
+  href?: string
+}
+
 interface TaskView {
   id: string
   title: string
@@ -107,6 +115,9 @@ interface TaskView {
   labels?: string[]
   /** Pull requests, branches, commits, issues and other pages about the task. */
   links?: TaskLink[]
+  /** Screenshots and files; images open in a lightbox. */
+  attachments?: Attachment[]
+  location?: TaskLocation
   /** ISO 8601 UTC. */
   updatedAt: string
 }
@@ -135,6 +146,7 @@ export type {
   ContextMode,
   Liveness,
   TaskLink,
+  TaskLocation,
   TaskStatus,
   TaskView,
   ThreadRef,

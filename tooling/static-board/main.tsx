@@ -4,8 +4,9 @@ import { createRoot } from "react-dom/client"
 import { AgentTaskBoard } from "@/components/ui/agent-task-board"
 import { Appearance, createAppearance } from "@/components/ui/appearance"
 import type { TaskView } from "@/lib/agent-task-types"
+import type { Stage } from "@/components/ui/stage-track"
 
-type BoardData = { tasks: TaskView[]; generatedAt: string }
+type BoardData = { tasks: TaskView[]; stages?: Stage[]; generatedAt: string }
 
 const data = JSON.parse(document.getElementById("board-data")?.textContent ?? "null") as BoardData | null
 const root = document.getElementById("root")
@@ -17,7 +18,13 @@ appearance.apply()
 createRoot(root).render(
   <Appearance appearance={appearance}>
     <main className="bg-background p-surface text-foreground">
-      <AgentTaskBoard tasks={data.tasks} mode="snapshot" generatedAt={data.generatedAt} timeZone="UTC" />
+      <AgentTaskBoard
+        tasks={data.tasks}
+        stages={data.stages}
+        mode="snapshot"
+        generatedAt={data.generatedAt}
+        timeZone="UTC"
+      />
     </main>
   </Appearance>,
 )

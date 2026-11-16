@@ -10,7 +10,7 @@ import {
 import { filterOptions, type TaskFilters } from "@/lib/agent-task-board-model"
 import type { AttemptView, TaskLink, TaskView, ThreadRef } from "@/lib/agent-task-types"
 
-type BoardView = "board" | "table"
+type BoardView = "board" | "table" | "backlog"
 type BoardMode = "snapshot" | "live"
 type AgentApproval = "confirm" | "allow" | "deny"
 
@@ -22,6 +22,8 @@ type OpenLinkReason = "link-press" | "imperative"
 
 type AgentTaskBoardOptions = {
   tasks?: TaskView[]
+  /** Stage ids the `stage` filter accepts; without it, the stages the tasks' locations name. */
+  stageIds?: readonly string[]
   view?: BoardView
   defaultView?: BoardView
   onViewChange?: (view: BoardView, details: ChangeDetails<ViewChangeReason>) => void
@@ -39,16 +41,18 @@ type AgentTaskBoardOptions = {
 
 interface AgentTaskBoardController {
   setView: (view: BoardView, options?: ChangeOptions<ViewChangeReason>) => boolean | undefined
-  filter: (
-    partial: Partial<Record<keyof TaskFilters, string | null>>,
-    options?: ChangeOptions<FiltersChangeReason>,
-  ) => boolean | undefined
+  filter: (partial: FilterChange, options?: ChangeOptions<FiltersChangeReason>) => boolean | undefined
   selectTask: (id: string | null, options?: ChangeOptions<SelectReason>) => boolean | undefined
   openThread: (attemptId: string, options?: ChangeOptions<OpenThreadReason>) => boolean | undefined
   openLink: (taskId: string, link: string, options?: ChangeOptions<OpenLinkReason>) => boolean | undefined
 }
 
-const FILTER_KEYS = ["project", "profile", "model", "query"] as const
+type FilterChange = Partial<Record<Exclude<keyof TaskFilters, "stage">, string | null>> & {
+  stage?: readonly string[] | string | null
+}
+
+const VIEWS: readonly BoardView[] = ["board", "table", "backlog"]
+const FILTER_KEYS = ["project", "profile", "model", "query", "stage"] as const
 const CHOICE_KEYS = { project: "projects", profile: "profiles", model: "models" } as const
 
 function reasonOf<Reason extends string>(options: unknown): { reason: Reason | "imperative"; event?: Event } {
@@ -58,7 +62,27 @@ function reasonOf<Reason extends string>(options: unknown): { reason: Reason | "
 }
 
 // The agent bridge passes action arguments unchecked, so every action validates its own.
-function checkFilters(partial: unknown, current: TaskFilters, tasks: readonly TaskView[]): TaskFilters {
+function checkStages(value: unknown, allowed: readonly string[]): string[] | undefined {
+  const list = typeof value === "string" ? [value] : value
+  if (!Array.isArray(list) || list.some((stage) => typeof stage !== "string")) {
+    throw new TypeError(`Filter "stage" takes a list of stage ids, or null to clear it.`)
+  }
+  for (const stage of list) {
+    if (!allowed.includes(stage)) throw new RangeError(`No stage "${stage}". Choices: ${allowed.join(", ")}.`)
+  }
+  return list.length > 0 ? [...new Set(list as string[])] : undefined
+}
+
+function stageChoices(tasks: readonly TaskView[], stageIds: readonly string[] | undefined): string[] {
+  return stageIds ? [...stageIds] : [...new Set(tasks.flatMap((task) => (task.location ? [task.location.stage] : [])))]
+}
+
+function checkFilters(
+  partial: unknown,
+  current: TaskFilters,
+  tasks: readonly TaskView[],
+  stageIds: readonly string[] | undefined,
+): TaskFilters {
   if (typeof partial !== "object" || partial === null || Array.isArray(partial)) {
     throw new TypeError(`filter takes an object with any of: ${FILTER_KEYS.join(", ")}.`)
   }
@@ -71,6 +95,12 @@ function checkFilters(partial: unknown, current: TaskFilters, tasks: readonly Ta
     const filterKey = key as keyof TaskFilters
     if (value === null || value === undefined || value === "") {
       delete next[filterKey]
+      continue
+    }
+    if (filterKey === "stage") {
+      const stages = checkStages(value, stageChoices(tasks, stageIds))
+      if (stages) next.stage = stages
+      else delete next.stage
       continue
     }
     if (typeof value !== "string") throw new TypeError(`Filter "${key}" takes text, or null to clear it.`)
@@ -95,6 +125,7 @@ const agentTaskBoard = definePrimitive({
   name: "agent-task-board",
   options: {
     tasks: "list",
+    stageIds: "list",
     view: "string",
     defaultView: "string",
     onViewChange: "callback",
@@ -125,11 +156,11 @@ const agentTaskBoard = definePrimitive({
     const tasks = () => context.options().tasks ?? []
     return {
       setView(view: unknown, options?: ChangeOptions<ViewChangeReason>) {
-        if (view !== "board" && view !== "table") throw new TypeError(`setView takes "board" or "table".`)
-        return change("view", view, reasonOf(options))
+        if (!VIEWS.includes(view as BoardView)) throw new TypeError(`setView takes one of: ${VIEWS.join(", ")}.`)
+        return change("view", view as BoardView, reasonOf(options))
       },
       filter(partial: unknown, options?: ChangeOptions<FiltersChangeReason>) {
-        const next = checkFilters(partial, context.store.get().filters, tasks())
+        const next = checkFilters(partial, context.store.get().filters, tasks(), context.options().stageIds)
         return change("filters", next, reasonOf(options))
       },
       selectTask(id: unknown, options?: ChangeOptions<SelectReason>) {
@@ -175,4 +206,12 @@ function createAgentTaskBoardController() {
 }
 
 export { agentTaskBoard, createAgentTaskBoardController }
-export type { AgentApproval, AgentTaskBoardController, AgentTaskBoardOptions, BoardMode, BoardView, OpenLinkReason }
+export type {
+  AgentApproval,
+  AgentTaskBoardController,
+  AgentTaskBoardOptions,
+  BoardMode,
+  BoardView,
+  FilterChange,
+  OpenLinkReason,
+}

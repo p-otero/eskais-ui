@@ -7,6 +7,7 @@ import type { TaskLink, TaskView, ThreadRef } from "@/lib/agent-task-types"
 import { cn } from "@/lib/utils"
 import { AcceptanceList } from "@/components/ui/acceptance-list"
 import { agentTaskBoardLabels } from "@/components/ui/agent-task-labels"
+import { AttachmentStrip } from "@/components/ui/attachments"
 import { AttemptTimeline } from "@/components/ui/attempt-timeline"
 import { DependencyChips } from "@/components/ui/dependency-chips"
 import { ProposalActions } from "@/components/ui/proposal-actions"
@@ -15,6 +16,7 @@ import { TaskStatusIcon, TaskStatusPill, taskStatusTones } from "@/components/ui
 import { proposalError, type TaskDisplayOptions } from "@/components/ui/task-card"
 import { Block, DetailValue } from "@/components/ui/task-detail-parts"
 import { TaskLinks } from "@/components/ui/task-links"
+import { TaskLocationTrack } from "@/components/ui/task-location"
 import { UsageGrid } from "@/components/ui/usage-grid"
 
 type TaskDetailContentProps = TaskDisplayOptions & {
@@ -23,9 +25,9 @@ type TaskDetailContentProps = TaskDisplayOptions & {
   onOpenThread?: (thread: ThreadRef) => void
   /** Replaces the default link in the detail's list of links. */
   renderLink?: (link: TaskLink) => ReactNode
-  /** Fills the attachments slot in the main column. */
+  /** Replaces the attachment strip in the main column. */
   renderAttachments?: (task: TaskView) => ReactNode
-  /** Fills the location slot in the side column. */
+  /** Replaces the stage track in the side column. */
   renderLocation?: (task: TaskView) => ReactNode
   /**
    * `"split"` sets the side column beside the main one once the content is 56rem wide, inside an
@@ -75,6 +77,7 @@ function TaskDetailContent({
   renderLocation,
   agentAvatars,
   statusTones,
+  stages,
   layout = "stack",
   showStatus = true,
   headingLevel = 3,
@@ -84,8 +87,22 @@ function TaskDetailContent({
   const time = { now, locale, timeZone }
   const selectable = onSelectTask && task.dependsOn.some((dependency) => canSelect?.(dependency.id) ?? true)
   const counts = task.counts
-  const attachments = renderAttachments?.(task)
-  const location = renderLocation?.(task)
+  const attachments = renderAttachments
+    ? renderAttachments(task)
+    : task.attachments &&
+      task.attachments.length > 0 && (
+        <AttachmentStrip
+          attachments={task.attachments}
+          aria-label={text.attachmentsOf(task.id)}
+          labels={parts.attachments}
+          locale={locale}
+        />
+      )
+  const location = renderLocation
+    ? renderLocation(task)
+    : task.location && (
+        <TaskLocationTrack location={task.location} stages={stages} aria-label={text.locationOf(task.id)} />
+      )
   const links = task.links ?? []
   const split = layout === "split"
 

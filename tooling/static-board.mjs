@@ -51,7 +51,7 @@ async function taskData(kind) {
   const tasks = kind === "sample" ? "sampleTasks" : "generateTasks(200, 30)"
   writeFileSync(
     script,
-    `import { GENERATED_AT, generateTasks, sampleTasks } from "${fixture}"\nconsole.log(JSON.stringify({ tasks: ${tasks}, generatedAt: GENERATED_AT }))\n`,
+    `import { GENERATED_AT, generateTasks, sampleStages, sampleTasks } from "${fixture}"\nconsole.log(JSON.stringify({ tasks: ${tasks}, stages: sampleStages, generatedAt: GENERATED_AT }))\n`,
   )
   return (await run("bun", [script])).trim()
 }

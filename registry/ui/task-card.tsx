@@ -14,6 +14,7 @@ import type { AgentApproval, BoardMode } from "@/components/ui/agent-task-board-
 import { agentTaskBoardLabels, type AgentTaskBoardLabels } from "@/components/ui/agent-task-labels"
 import { ProposalActions } from "@/components/ui/proposal-actions"
 import { RelativeTime } from "@/components/ui/relative-time"
+import type { Stage } from "@/components/ui/stage-track"
 import { TaskCardChips } from "@/components/ui/task-card-chips"
 import { TaskStatusIcon, taskStatusLabels } from "@/components/ui/task-status"
 import { PullRequestLink } from "@/components/ui/task-links"
@@ -38,6 +39,8 @@ interface TaskDisplayOptions {
   statusTones?: Partial<Record<TaskStatus, Tone>>
   /** Takes over a link's click; without it, links navigate to their `href`. */
   onOpenLink?: (link: TaskLink, task: TaskView) => void
+  /** The pipeline a task's `location` points into. */
+  stages?: readonly Stage[]
 }
 
 type TaskCardProps = Omit<ComponentProps<"article">, "children" | "onSelect"> &
@@ -67,6 +70,7 @@ function TaskCardComponent({
   agentAvatars,
   statusTones,
   onOpenLink,
+  stages,
   className,
   ...props
 }: TaskCardProps) {
@@ -143,6 +147,7 @@ function TaskCardComponent({
         formatCurrency={formatCurrency}
         onSelectTask={onSelectTask}
         canSelect={canSelect}
+        stages={stages}
       />
       <div data-slot="task-card-footer" className="flex items-center gap-items text-xs text-muted-foreground">
         <span className="min-w-0 truncate">

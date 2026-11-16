@@ -11,9 +11,11 @@ import type { AgentTaskBoardLabels } from "@/components/ui/agent-task-labels"
 import { DependencyChips } from "@/components/ui/dependency-chips"
 import { livenessLabels, livenessTones } from "@/components/ui/liveness-indicator"
 import { QuantityValue } from "@/components/ui/quantity-value"
+import { StagePill } from "@/components/ui/stage-track"
 import type { StatusTone } from "@/components/ui/status-pill"
 import { AnalysisModeIcon, TaskBlocker } from "@/components/ui/task-card-parts"
 import type { TaskDisplayOptions } from "@/components/ui/task-card"
+import { stageOf } from "@/components/ui/task-location"
 import { taskStatusTones } from "@/components/ui/task-status"
 import { usageFormatter } from "@/components/ui/usage"
 
@@ -42,7 +44,7 @@ function Chip({ className, children, ...props }: ComponentProps<"span">) {
 
 type TaskCardChipsProps = Pick<
   TaskDisplayOptions,
-  "now" | "locale" | "timeZone" | "formatCurrency" | "onSelectTask" | "canSelect"
+  "now" | "locale" | "timeZone" | "formatCurrency" | "onSelectTask" | "canSelect" | "stages"
 > & {
   task: TaskView
   labels: AgentTaskBoardLabels
@@ -57,6 +59,7 @@ function TaskCardChips({
   formatCurrency,
   onSelectTask,
   canSelect,
+  stages,
 }: TaskCardChipsProps) {
   const text = labels.card
   const parts = labels.components
@@ -67,9 +70,17 @@ function TaskCardChips({
   const livenessName = liveness && (parts.liveness?.[liveness] ?? livenessLabels[liveness])
   const counts = countAcceptance(task.acceptance)
   const pressable = onSelectTask && task.dependsOn.some((dependency) => canSelect?.(dependency.id) ?? true)
+  const attachments = task.attachments?.length ?? 0
 
   return (
     <div data-slot="task-card-chips" className="flex min-w-0 flex-wrap items-center gap-items">
+      {task.location && (
+        <StagePill
+          stage={stageOf(stages, task.location.stage)}
+          href={task.location.href}
+          className="relative z-10 max-w-full"
+        />
+      )}
       {(liveness || task.analysisMode) && (
         <Chip data-slot="task-card-signals">
           {liveness && (
@@ -130,6 +141,25 @@ function TaskCardChips({
             labels={parts.usage?.quantity}
             className="text-foreground"
           />
+        </Chip>
+      )}
+      {attachments > 0 && (
+        <Chip data-slot="task-card-attachments" title={text.attachments(attachments)}>
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden="true"
+          >
+            <path d="m16 6-8.4 8.6a2 2 0 0 0 2.8 2.8l8.4-8.6a4 4 0 1 0-5.6-5.6l-8.4 8.5a6 6 0 1 0 8.5 8.5l8.4-8.5" />
+          </svg>
+          <span aria-hidden="true" className="tabular-nums">
+            {attachments}
+          </span>
+          <span className="sr-only">{text.attachments(attachments)}</span>
         </Chip>
       )}
       {task.acceptance.length > 0 && (

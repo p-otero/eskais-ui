@@ -6,6 +6,8 @@ interface TaskFilters {
   profile?: string
   model?: string
   query?: string
+  /** Stage ids; a task matches when its location is in any of them. */
+  stage?: string[]
 }
 
 interface ColumnConfig {
@@ -56,8 +58,26 @@ function filterTasks(tasks: readonly TaskView[], filters: TaskFilters = {}): Tas
       (!filters.project || task.project === filters.project) &&
       (!filters.profile || task.profile === filters.profile) &&
       (!filters.model || task.attempts.some((attempt) => effectiveAgent(attempt).model === filters.model)) &&
+      (!filters.stage?.length || (task.location !== undefined && filters.stage.includes(task.location.stage))) &&
       (!query || [task.id, task.title, task.goal].some((text) => text?.toLowerCase().includes(query))),
   )
+}
+
+/** Proposals and the to-do tasks that aren't ready yet: what isn't on its way. */
+function backlogGroups(tasks: readonly TaskView[]): { proposed: TaskView[]; notReady: TaskView[] } {
+  return {
+    proposed: tasks.filter((task) => task.status === "proposed"),
+    notReady: tasks.filter((task) => task.status === "todo" && !isReady(task)),
+  }
+}
+
+/** How many tasks are in each stage, by stage id. */
+function countByStage(tasks: readonly TaskView[]): Record<string, number> {
+  const counts: Record<string, number> = {}
+  for (const task of tasks) {
+    if (task.location) counts[task.location.stage] = (counts[task.location.stage] ?? 0) + 1
+  }
+  return counts
 }
 
 function isReady(task: TaskView): boolean {
@@ -181,6 +201,9 @@ export {
   TASK_STATUSES,
   activeAttempt,
   attemptCount,
+  backlogGroups,
+  columnOrder,
+  countByStage,
   filterOptions,
   filterTasks,
   groupByStatus,

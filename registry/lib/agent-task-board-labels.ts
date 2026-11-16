@@ -42,6 +42,8 @@ interface CardLabels {
   analysisMode: { review: string; autonomous: string }
   /** Accessible name of the card's pull request icon link. */
   openPullRequest: (label: string) => string
+  /** Read after the card's paperclip count. */
+  attachments: (count: number) => string
 }
 
 interface LinkLabels {
@@ -70,7 +72,10 @@ interface PanelLabels {
   linksOf: (id: string) => string
   activity: string
   attachments: string
+  attachmentsOf: (id: string) => string
   location: string
+  /** Names the stage track of a task. */
+  locationOf: (id: string) => string
   attemptsSummary: string
   counts: { attempts: string; repairs: string; reviews: string; humanInterventions: string }
   acceptedFirstPass: string
@@ -103,8 +108,11 @@ interface AgentTaskBoardLabels {
     searchPlaceholder: string
     clearSearch: string
     clear: string
+    /** Names the row of stage toggles. */
+    stage: string
   }
-  views: { group: string; board: string; table: string }
+  views: { group: string; board: string; table: string; backlog: string }
+  backlog: { name: string; proposed: string; notReady: string }
   summary: {
     group: string
     total: string
@@ -115,7 +123,7 @@ interface AgentTaskBoardLabels {
   }
   proposals: ProposalLabels
   snapshot: (date: string) => string
-  empty: { board: string; column: string; filtered: string; attempts: string }
+  empty: { board: string; column: string; filtered: string; attempts: string; backlog: string }
   errors: { approveFailed: string; rejectFailed: string; unknown: string }
   card: CardLabels
   panel: PanelLabels
@@ -160,8 +168,10 @@ const agentTaskBoardLabels: AgentTaskBoardLabels = {
     searchPlaceholder: "Search by ID, title or goal",
     clearSearch: "Clear search",
     clear: "Clear filters",
+    stage: "Stage",
   },
-  views: { group: "View", board: "Board", table: "Table" },
+  views: { group: "View", board: "Board", table: "Table", backlog: "Backlog" },
+  backlog: { name: "Backlog", proposed: "Proposed", notReady: "Not ready" },
   summary: {
     group: "Summary",
     total: "Tasks",
@@ -192,6 +202,7 @@ const agentTaskBoardLabels: AgentTaskBoardLabels = {
     column: "Nothing here.",
     filtered: "No tasks match these filters.",
     attempts: "No attempts yet.",
+    backlog: "Nothing in the backlog.",
   },
   errors: {
     approveFailed: "Couldn't approve the proposal.",
@@ -209,6 +220,7 @@ const agentTaskBoardLabels: AgentTaskBoardLabels = {
     retry: "Retry",
     analysisMode: { review: "A person reviews it before agents run", autonomous: "Agents run it on their own" },
     openPullRequest: (label) => `Open pull request ${label}`,
+    attachments: (count) => (count === 1 ? "1 attachment" : `${count} attachments`),
   },
   panel: {
     close: "Close task details",
@@ -231,7 +243,9 @@ const agentTaskBoardLabels: AgentTaskBoardLabels = {
     linksOf: (id) => `Links of ${id}`,
     activity: "Activity",
     attachments: "Attachments",
+    attachmentsOf: (id) => `Attachments of ${id}`,
     location: "Location",
+    locationOf: (id) => `Stage of ${id}`,
     attemptsSummary: "Work",
     counts: { attempts: "Attempts", repairs: "Repairs", reviews: "Reviews", humanInterventions: "Human interventions" },
     acceptedFirstPass: "Accepted first pass",
@@ -285,8 +299,10 @@ const agentTaskBoardLabelsEs: AgentTaskBoardLabels = {
     searchPlaceholder: "Busca por ID, título u objetivo",
     clearSearch: "Borrar búsqueda",
     clear: "Quitar filtros",
+    stage: "Etapa",
   },
-  views: { group: "Vista", board: "Tablero", table: "Tabla" },
+  views: { group: "Vista", board: "Tablero", table: "Tabla", backlog: "Backlog" },
+  backlog: { name: "Backlog", proposed: "Propuestas", notReady: "No listas" },
   summary: {
     group: "Resumen",
     total: "Tareas",
@@ -317,6 +333,7 @@ const agentTaskBoardLabelsEs: AgentTaskBoardLabels = {
     column: "Nada por aquí.",
     filtered: "Ninguna tarea coincide con estos filtros.",
     attempts: "Todavía no hay intentos.",
+    backlog: "No hay nada en el backlog.",
   },
   errors: {
     approveFailed: "No se pudo aprobar la propuesta.",
@@ -337,6 +354,7 @@ const agentTaskBoardLabelsEs: AgentTaskBoardLabels = {
       autonomous: "Los agentes la hacen por su cuenta",
     },
     openPullRequest: (label) => `Abrir pull request ${label}`,
+    attachments: (count) => (count === 1 ? "1 adjunto" : `${count} adjuntos`),
   },
   panel: {
     close: "Cerrar detalles de la tarea",
@@ -359,7 +377,9 @@ const agentTaskBoardLabelsEs: AgentTaskBoardLabels = {
     linksOf: (id) => `Enlaces de ${id}`,
     activity: "Actividad",
     attachments: "Adjuntos",
+    attachmentsOf: (id) => `Adjuntos de ${id}`,
     location: "Ubicación",
+    locationOf: (id) => `Etapa de ${id}`,
     attemptsSummary: "Trabajo",
     counts: {
       attempts: "Intentos",

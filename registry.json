@@ -1675,7 +1675,8 @@
       "title": "Agent task types",
       "description": "TaskView, AttemptView, AgentRef, UsageSummary and ThreadRef: the data contract of the agent task components, plus effectiveAgent and agentDiffers.",
       "registryDependencies": [
-        "@eskais/quantity"
+        "@eskais/quantity",
+        "@eskais/attachments"
       ],
       "files": [
         {
@@ -1905,7 +1906,9 @@
         "@eskais/task-status",
         "@eskais/usage",
         "@eskais/button",
-        "@eskais/tone"
+        "@eskais/tone",
+        "@eskais/stage-track",
+        "@eskais/attachments"
       ],
       "files": [
         {
@@ -1926,6 +1929,10 @@
         },
         {
           "path": "registry/ui/task-links.tsx",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/task-location.tsx",
           "type": "registry:ui"
         }
       ]
@@ -1953,7 +1960,9 @@
         "@eskais/tooltip",
         "@eskais/usage",
         "@eskais/dialog",
-        "@eskais/drawer"
+        "@eskais/drawer",
+        "@eskais/attachments",
+        "@eskais/stage-track"
       ],
       "files": [
         {
@@ -2004,7 +2013,12 @@
         "@eskais/stat",
         "@eskais/table",
         "@eskais/task-status",
-        "@eskais/usage"
+        "@eskais/usage",
+        "@eskais/list-item",
+        "@eskais/stage-track",
+        "@eskais/attachments",
+        "@eskais/proposal-actions",
+        "@eskais/toggle-group"
       ],
       "files": [
         {
@@ -2033,6 +2047,10 @@
         },
         {
           "path": "registry/ui/agent-task-board-table.tsx",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/agent-task-board-backlog.tsx",
           "type": "registry:ui"
         },
         {
