@@ -67,6 +67,7 @@ import { AgentTaskBoardSection } from "./sections/agent-task-board"
 import { DataSection } from "./sections/data"
 import { ChartsSection } from "./sections/charts"
 import { MarkdownSection } from "./sections/markdown"
+import { CodeSection } from "./sections/code"
 import { AttachmentsSection, LightboxSection } from "./sections/media"
 import { StagesSection } from "./sections/stages"
 import { ListsSection } from "./sections/lists"
@@ -408,6 +409,8 @@ function App() {
           <ChartsSection />
 
           <MarkdownSection />
+
+          <CodeSection />
           <LightboxSection />
 
           <AttachmentsSection />

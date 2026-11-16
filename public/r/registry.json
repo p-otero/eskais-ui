@@ -83,7 +83,8 @@
           "--series-negative": "var(--destructive)",
           "--series-target": "color-mix(in oklab, var(--foreground) 80%, var(--background))",
           "--series-remaining": "color-mix(in oklab, var(--muted-foreground) 70%, var(--muted))",
-          "--skeleton": "color-mix(in oklab, var(--foreground) 10%, transparent)"
+          "--skeleton": "color-mix(in oklab, var(--foreground) 10%, transparent)",
+          "--code-highlight": "color-mix(in oklab, var(--foreground) 6%, var(--muted))"
         },
         ".dark": {
           "--floating-shadow": "inset 0 1px 0 oklch(1 0 0 / 0.05), 0 1px 2px oklch(0 0 0 / 0.3), 0 8px 20px -4px oklch(0 0 0 / 0.4), 0 24px 48px -12px oklch(0 0 0 / 0.55)",
@@ -92,7 +93,8 @@
           "--series-negative": "var(--destructive)",
           "--series-target": "color-mix(in oklab, var(--foreground) 80%, var(--background))",
           "--series-remaining": "color-mix(in oklab, var(--muted-foreground) 70%, var(--muted))",
-          "--skeleton": "color-mix(in oklab, var(--foreground) 14%, transparent)"
+          "--skeleton": "color-mix(in oklab, var(--foreground) 14%, transparent)",
+          "--code-highlight": "color-mix(in oklab, var(--foreground) 8%, var(--muted))"
         },
         ":where(:root)": {
           "--control-radius": "calc(var(--radius) * 2)",
@@ -183,7 +185,8 @@
           "--neutral-soft": "oklch(0.955 var(--neutral-chroma) var(--neutral-hue))",
           "--neutral-soft-foreground": "oklch(0.32 var(--neutral-chroma) var(--neutral-hue))",
           "--neutral-border": "oklch(0.86 var(--neutral-chroma) var(--neutral-hue))",
-          "--skeleton": "color-mix(in oklab, var(--foreground) 10%, transparent)"
+          "--skeleton": "color-mix(in oklab, var(--foreground) 10%, transparent)",
+          "--code-highlight": "color-mix(in oklab, var(--foreground) 6%, var(--muted))"
         },
         ".dark [data-palette]": {
           "--background": "oklch(0.145 var(--neutral-chroma) var(--neutral-hue))",
@@ -215,7 +218,8 @@
           "--neutral-soft": "oklch(0.3 var(--neutral-chroma) var(--neutral-hue))",
           "--neutral-soft-foreground": "oklch(0.9 var(--neutral-chroma) var(--neutral-hue))",
           "--neutral-border": "oklch(0.42 var(--neutral-chroma) var(--neutral-hue))",
-          "--skeleton": "color-mix(in oklab, var(--foreground) 14%, transparent)"
+          "--skeleton": "color-mix(in oklab, var(--foreground) 14%, transparent)",
+          "--code-highlight": "color-mix(in oklab, var(--foreground) 8%, var(--muted))"
         },
         "[data-palette].dark": {
           "--background": "oklch(0.145 var(--neutral-chroma) var(--neutral-hue))",
@@ -247,7 +251,8 @@
           "--neutral-soft": "oklch(0.3 var(--neutral-chroma) var(--neutral-hue))",
           "--neutral-soft-foreground": "oklch(0.9 var(--neutral-chroma) var(--neutral-hue))",
           "--neutral-border": "oklch(0.42 var(--neutral-chroma) var(--neutral-hue))",
-          "--skeleton": "color-mix(in oklab, var(--foreground) 14%, transparent)"
+          "--skeleton": "color-mix(in oklab, var(--foreground) 14%, transparent)",
+          "--code-highlight": "color-mix(in oklab, var(--foreground) 8%, var(--muted))"
         },
         "@media (prefers-color-scheme: dark)": {
           ":root:where(:not(.light, [data-color-scheme=\"light\"]))": {
@@ -283,6 +288,15 @@
             "--chart-3": "#199e70",
             "--chart-4": "oklch(0.8 0.11 305)",
             "--chart-5": "oklch(0.86 0.14 90)",
+            "--syntax-keyword": "oklch(0.8 0.12 300)",
+            "--syntax-string": "oklch(0.82 0.13 150)",
+            "--syntax-number": "oklch(0.82 0.11 60)",
+            "--syntax-comment": "oklch(0.76 0.015 260)",
+            "--syntax-function": "oklch(0.8 0.1 255)",
+            "--syntax-type": "oklch(0.83 0.09 195)",
+            "--syntax-property": "oklch(0.8 0.1 20)",
+            "--syntax-tag": "oklch(0.8 0.11 345)",
+            "--syntax-punctuation": "oklch(0.8 0.01 260)",
             "--background": "oklch(0.145 var(--neutral-chroma) var(--neutral-hue))",
             "--foreground": "oklch(0.985 var(--neutral-chroma) var(--neutral-hue))",
             "--card": "oklch(0.205 var(--neutral-chroma) var(--neutral-hue))",
@@ -312,7 +326,8 @@
             "--neutral-soft": "oklch(0.3 var(--neutral-chroma) var(--neutral-hue))",
             "--neutral-soft-foreground": "oklch(0.9 var(--neutral-chroma) var(--neutral-hue))",
             "--neutral-border": "oklch(0.42 var(--neutral-chroma) var(--neutral-hue))",
-            "--skeleton": "color-mix(in oklab, var(--foreground) 14%, transparent)"
+            "--skeleton": "color-mix(in oklab, var(--foreground) 14%, transparent)",
+            "--code-highlight": "color-mix(in oklab, var(--foreground) 8%, var(--muted))"
           },
           ":root:where(:not(.light, [data-color-scheme=\"light\"])) [data-palette]": {
             "--background": "oklch(0.145 var(--neutral-chroma) var(--neutral-hue))",
@@ -344,7 +359,8 @@
             "--neutral-soft": "oklch(0.3 var(--neutral-chroma) var(--neutral-hue))",
             "--neutral-soft-foreground": "oklch(0.9 var(--neutral-chroma) var(--neutral-hue))",
             "--neutral-border": "oklch(0.42 var(--neutral-chroma) var(--neutral-hue))",
-            "--skeleton": "color-mix(in oklab, var(--foreground) 14%, transparent)"
+            "--skeleton": "color-mix(in oklab, var(--foreground) 14%, transparent)",
+            "--code-highlight": "color-mix(in oklab, var(--foreground) 8%, var(--muted))"
           },
           ":root[data-palette]:where(:not(.light, [data-color-scheme=\"light\"]))": {
             "--background": "oklch(0.145 var(--neutral-chroma) var(--neutral-hue))",
@@ -376,7 +392,8 @@
             "--neutral-soft": "oklch(0.3 var(--neutral-chroma) var(--neutral-hue))",
             "--neutral-soft-foreground": "oklch(0.9 var(--neutral-chroma) var(--neutral-hue))",
             "--neutral-border": "oklch(0.42 var(--neutral-chroma) var(--neutral-hue))",
-            "--skeleton": "color-mix(in oklab, var(--foreground) 14%, transparent)"
+            "--skeleton": "color-mix(in oklab, var(--foreground) 14%, transparent)",
+            "--code-highlight": "color-mix(in oklab, var(--foreground) 8%, var(--muted))"
           }
         },
         "[data-elevation=\"flat\"]": {
@@ -524,6 +541,14 @@
         "@utility py-inset-item": {
           "padding-block": "var(--item-padding-y)"
         },
+        "@utility bg-grid-lines": {
+          "background-image": "linear-gradient(to right, color-mix(in oklab, var(--foreground) 5%, transparent) 1px, transparent 1px), linear-gradient(to bottom, color-mix(in oklab, var(--foreground) 5%, transparent) 1px, transparent 1px)",
+          "background-size": "3rem 3rem",
+          "mask-image": "radial-gradient(ellipse at top, black 30%, transparent 75%)"
+        },
+        "@utility bg-glow": {
+          "background-image": "radial-gradient(48rem 32rem at 12% -6rem, color-mix(in oklab, var(--link-brand) 14%, transparent), transparent), radial-gradient(40rem 28rem at 92% 4rem, color-mix(in oklab, var(--violet) 12%, transparent), transparent)"
+        },
         "@utility text-vertical": {
           "writing-mode": "vertical-rl"
         },
@@ -669,6 +694,16 @@
           "color-series-negative": "var(--series-negative)",
           "color-series-target": "var(--series-target)",
           "color-series-remaining": "var(--series-remaining)",
+          "color-syntax-keyword": "var(--syntax-keyword)",
+          "color-syntax-string": "var(--syntax-string)",
+          "color-syntax-number": "var(--syntax-number)",
+          "color-syntax-comment": "var(--syntax-comment)",
+          "color-syntax-function": "var(--syntax-function)",
+          "color-syntax-type": "var(--syntax-type)",
+          "color-syntax-property": "var(--syntax-property)",
+          "color-syntax-tag": "var(--syntax-tag)",
+          "color-syntax-punctuation": "var(--syntax-punctuation)",
+          "color-code-highlight": "var(--code-highlight)",
           "radius-sm": "calc(var(--radius) - 4px)",
           "radius-md": "calc(var(--radius) - 2px)",
           "radius-lg": "var(--radius)",
@@ -735,6 +770,15 @@
           "chart-3": "#0ba975",
           "chart-4": "oklch(0.44 0.16 305)",
           "chart-5": "oklch(0.48 0.09 75)",
+          "syntax-keyword": "oklch(0.47 0.2 300)",
+          "syntax-string": "oklch(0.46 0.12 150)",
+          "syntax-number": "oklch(0.48 0.13 45)",
+          "syntax-comment": "oklch(0.48 0.015 260)",
+          "syntax-function": "oklch(0.47 0.17 262)",
+          "syntax-type": "oklch(0.46 0.09 200)",
+          "syntax-property": "oklch(0.48 0.16 20)",
+          "syntax-tag": "oklch(0.47 0.18 345)",
+          "syntax-punctuation": "oklch(0.42 0.01 260)",
           "background": "oklch(1 var(--neutral-chroma) var(--neutral-hue))",
           "foreground": "oklch(0.145 var(--neutral-chroma) var(--neutral-hue))",
           "card": "oklch(1 var(--neutral-chroma) var(--neutral-hue))",
@@ -791,6 +835,15 @@
           "chart-3": "#199e70",
           "chart-4": "oklch(0.8 0.11 305)",
           "chart-5": "oklch(0.86 0.14 90)",
+          "syntax-keyword": "oklch(0.8 0.12 300)",
+          "syntax-string": "oklch(0.82 0.13 150)",
+          "syntax-number": "oklch(0.82 0.11 60)",
+          "syntax-comment": "oklch(0.76 0.015 260)",
+          "syntax-function": "oklch(0.8 0.1 255)",
+          "syntax-type": "oklch(0.83 0.09 195)",
+          "syntax-property": "oklch(0.8 0.1 20)",
+          "syntax-tag": "oklch(0.8 0.11 345)",
+          "syntax-punctuation": "oklch(0.8 0.01 260)",
           "background": "oklch(0.145 var(--neutral-chroma) var(--neutral-hue))",
           "foreground": "oklch(0.985 var(--neutral-chroma) var(--neutral-hue))",
           "card": "oklch(0.205 var(--neutral-chroma) var(--neutral-hue))",
@@ -1080,7 +1133,7 @@
       "name": "button",
       "type": "registry:ui",
       "title": "Button",
-      "description": "UI SDK Button with variants: async pending state, a loading prop with a spinner, focusable-when-disabled, link rendering.",
+      "description": "UI SDK Button with variants: async pending state, a loading prop with a spinner, focusable-when-disabled, link rendering. ButtonLink is a Link with the Button look, for calls to action that navigate.",
       "dependencies": [
         "@ui-sdk/core@0.1.0-beta.5",
         "@ui-sdk/react@0.1.0-beta.5",
@@ -1089,11 +1142,16 @@
       "registryDependencies": [
         "@eskais/utils",
         "@eskais/theme",
-        "@eskais/spinner"
+        "@eskais/spinner",
+        "@eskais/link"
       ],
       "files": [
         {
           "path": "registry/ui/button.tsx",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/button-link.tsx",
           "type": "registry:ui"
         }
       ],
@@ -2492,7 +2550,8 @@
       ],
       "registryDependencies": [
         "@eskais/utils",
-        "@eskais/theme"
+        "@eskais/theme",
+        "@eskais/link"
       ],
       "files": [
         {
@@ -2911,7 +2970,8 @@
         "@eskais/theme",
         "@eskais/button",
         "@eskais/drawer",
-        "@eskais/tooltip"
+        "@eskais/tooltip",
+        "@eskais/link"
       ],
       "files": [
         {
@@ -3184,7 +3244,8 @@
         "@eskais/theme",
         "@eskais/button",
         "@eskais/dialog",
-        "@eskais/toggle"
+        "@eskais/toggle",
+        "@eskais/link"
       ],
       "files": [
         {
@@ -3214,7 +3275,8 @@
       "registryDependencies": [
         "@eskais/utils",
         "@eskais/theme",
-        "@eskais/lightbox"
+        "@eskais/lightbox",
+        "@eskais/link"
       ],
       "files": [
         {
@@ -3246,7 +3308,8 @@
         "@eskais/tone",
         "@eskais/theme",
         "@eskais/status-pill",
-        "@eskais/toggle-group"
+        "@eskais/toggle-group",
+        "@eskais/link"
       ],
       "files": [
         {
@@ -3311,14 +3374,16 @@
       "name": "markdown-view",
       "type": "registry:ui",
       "title": "Markdown View",
-      "description": "Renders Markdown (CommonMark, GFM tables, tasks and strikethrough, and [[wikilinks]]) to React elements with the Lezer parser: raw HTML shows as text, only http, https, mailto and tel links become links, and each top-level block is memoised so long notes re-render only what changed.",
+      "description": "Renders Markdown (CommonMark, GFM tables, tasks and strikethrough, and [[wikilinks]]) to React elements with the Lezer parser, fenced code as a highlighted CodeBlock: raw HTML shows as text, only http, https, mailto and tel links become links, and each top-level block is memoised so long notes re-render only what changed.",
       "dependencies": [
         "@lezer/common@1.5.5",
         "@lezer/markdown@1.8.1"
       ],
       "registryDependencies": [
         "@eskais/utils",
-        "@eskais/theme"
+        "@eskais/theme",
+        "@eskais/link",
+        "@eskais/code-block"
       ],
       "files": [
         {
@@ -3448,6 +3513,209 @@
         {
           "path": "registry/ui/markdown-editor-languages.ts",
           "type": "registry:ui"
+        }
+      ]
+    },
+    {
+      "name": "link",
+      "type": "registry:ui",
+      "title": "Link",
+      "description": "Text link with inline, nav, muted, standalone and plain variants: underlined at rest or on hover so it never relies on colour, external and new-tab handling, aria-current, render for router links, and an opt-in onFollow that routes plain clicks and gives agents a follow action.",
+      "dependencies": [
+        "@ui-sdk/core@0.1.0-beta.5",
+        "@ui-sdk/react@0.1.0-beta.5",
+        "class-variance-authority@0.7.1"
+      ],
+      "registryDependencies": [
+        "@eskais/utils",
+        "@eskais/theme"
+      ],
+      "files": [
+        {
+          "path": "registry/ui/link-primitive.ts",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/link.tsx",
+          "type": "registry:ui"
+        }
+      ]
+    },
+    {
+      "name": "code-block",
+      "type": "registry:ui",
+      "title": "Code Block",
+      "description": "CodeBlock and CodeTabs: syntax highlighting for ts, tsx, js, jsx, json, css, html, bash, md and diff with Lezer parsers loaded on first use, rendered as React elements in syntax tokens that hold 4.5:1; a filename header, copy (an agent action too), line numbers, highlighted lines, wrap and a max height. Code for inline code.",
+      "dependencies": [
+        "@ui-sdk/core@0.1.0-beta.5",
+        "@ui-sdk/react@0.1.0-beta.5",
+        "@lezer/common@1.5.5",
+        "@lezer/highlight@1.2.5",
+        "@lezer/javascript@1.5.6",
+        "@lezer/json@1.0.3",
+        "@lezer/css@1.3.9",
+        "@lezer/html@1.3.13",
+        "@lezer/markdown@1.8.1"
+      ],
+      "registryDependencies": [
+        "@eskais/utils",
+        "@eskais/theme",
+        "@eskais/button",
+        "@eskais/tabs"
+      ],
+      "files": [
+        {
+          "path": "registry/ui/code-highlight.ts",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/code-block-primitive.ts",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/code-block.tsx",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/code-tabs.tsx",
+          "type": "registry:ui"
+        }
+      ]
+    },
+    {
+      "name": "hero",
+      "type": "registry:block",
+      "title": "Hero",
+      "description": "The top of a landing page: an eyebrow chip, a title with an optional muted second line, a description, actions, a copyable install command and an aside for a live demo, side by side or centered by container width, over a token-drawn grid or glow.",
+      "registryDependencies": [
+        "@eskais/utils",
+        "@eskais/theme",
+        "@eskais/code-block"
+      ],
+      "files": [
+        {
+          "path": "registry/ui/hero.tsx",
+          "type": "registry:ui"
+        }
+      ]
+    },
+    {
+      "name": "section-heading",
+      "type": "registry:block",
+      "title": "Section Heading",
+      "description": "The heading of a page section: eyebrow, a large title, a description and actions, start-aligned or centered, with the heading level and id the enclosing section names itself by.",
+      "registryDependencies": [
+        "@eskais/utils",
+        "@eskais/theme"
+      ],
+      "files": [
+        {
+          "path": "registry/ui/section-heading.tsx",
+          "type": "registry:ui"
+        }
+      ]
+    },
+    {
+      "name": "bento",
+      "type": "registry:block",
+      "title": "Bento",
+      "description": "Bento and BentoTile: a container-query grid of Card tiles that spans columns on wide containers, falls to two columns and then one, and can make a whole tile a link without covering the controls inside.",
+      "registryDependencies": [
+        "@eskais/utils",
+        "@eskais/theme",
+        "@eskais/card",
+        "@eskais/link"
+      ],
+      "files": [
+        {
+          "path": "registry/ui/bento.tsx",
+          "type": "registry:ui"
+        }
+      ]
+    },
+    {
+      "name": "steps",
+      "type": "registry:block",
+      "title": "Steps",
+      "description": "Steps and Step: an ordered list with numbered markers, a title, a description and any content per step, side by side on wide containers and stacked on narrow ones.",
+      "registryDependencies": [
+        "@eskais/utils",
+        "@eskais/theme"
+      ],
+      "files": [
+        {
+          "path": "registry/ui/steps.tsx",
+          "type": "registry:ui"
+        }
+      ]
+    },
+    {
+      "name": "site-footer",
+      "type": "registry:block",
+      "title": "Site Footer",
+      "description": "A page footer: brand, description, groups of links as named navigation landmarks, and a bottom line.",
+      "registryDependencies": [
+        "@eskais/utils",
+        "@eskais/theme",
+        "@eskais/link",
+        "@eskais/separator"
+      ],
+      "files": [
+        {
+          "path": "registry/ui/site-footer.tsx",
+          "type": "registry:ui"
+        }
+      ]
+    },
+    {
+      "name": "docs-layout",
+      "type": "registry:block",
+      "title": "Docs Layout",
+      "description": "DocsLayout (a sidebar slot fixed beside the content, a sticky header slot, the main landmark and a table of contents slot), DocsToc (headings marked as you read with IntersectionObserver), DocsPager and DocsBreadcrumb.",
+      "dependencies": [
+        "@ui-sdk/core@0.1.0-beta.5",
+        "@ui-sdk/react@0.1.0-beta.5"
+      ],
+      "registryDependencies": [
+        "@eskais/utils",
+        "@eskais/theme",
+        "@eskais/link",
+        "@eskais/breadcrumb",
+        "@eskais/page-layout",
+        "@eskais/scroll-area"
+      ],
+      "files": [
+        {
+          "path": "registry/ui/docs-toc.tsx",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/docs-layout.tsx",
+          "type": "registry:ui"
+        }
+      ]
+    },
+    {
+      "name": "landing-page",
+      "type": "registry:block",
+      "title": "Landing Page",
+      "description": "A whole landing page made only of blocks (Hero, SectionHeading, Bento, Steps and SiteFooter, with a header slot), with its content in one object: the template to copy and edit.",
+      "registryDependencies": [
+        "@eskais/utils",
+        "@eskais/theme",
+        "@eskais/badge",
+        "@eskais/bento",
+        "@eskais/button",
+        "@eskais/code-block",
+        "@eskais/hero",
+        "@eskais/section-heading",
+        "@eskais/site-footer",
+        "@eskais/steps"
+      ],
+      "files": [
+        {
+          "path": "registry/blocks/landing-page.tsx",
+          "type": "registry:component"
         }
       ]
     }

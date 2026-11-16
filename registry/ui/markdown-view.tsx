@@ -6,6 +6,7 @@ import {
   type Parsed,
   type RenderOptions,
 } from "@/components/ui/markdown-view-render"
+import type { CodeBlockLabels } from "@/components/ui/code-block"
 import type { WikilinkResolver } from "@/components/ui/markdown-syntax"
 import { cn } from "@/lib/utils"
 
@@ -18,6 +19,8 @@ type MarkdownViewProps = Omit<ComponentProps<"div">, "children"> & {
    */
   wikilinkHref?: (slug: string) => string | undefined
   taskLabel?: string
+  /** Names for fenced code blocks and their copy buttons. Keep it stable, like `resolveWikilink`. */
+  codeLabels?: Partial<CodeBlockLabels>
   /** Marks each table cell with its offset in `markdown` (`data-source-from`). */
   sourcePositions?: boolean
 }
@@ -30,9 +33,8 @@ const prose = [
   "[&_ul]:list-disc [&_ol]:list-decimal [&_ul,&_ol]:flex [&_ul,&_ol]:flex-col [&_ul,&_ol]:gap-inline [&_ul,&_ol]:ps-group",
   "[&_li:has(>[data-slot=markdown-view-task])]:list-none [&_[data-slot=markdown-view-task]]:inline-flex [&_[data-slot=markdown-view-task]]:items-baseline [&_[data-slot=markdown-view-task]]:gap-inline [&_input]:accent-primary",
   "[&_blockquote]:flex [&_blockquote]:flex-col [&_blockquote]:gap-items [&_blockquote]:border-s-2 [&_blockquote]:ps-items [&_blockquote]:text-muted-foreground",
-  "[&_code]:rounded-sm [&_code]:bg-muted [&_code]:px-px [&_code]:font-mono [&_code]:text-[0.9em]",
-  "[&_pre]:overflow-x-auto [&_pre]:rounded-control [&_pre]:bg-muted [&_pre]:px-inset-item [&_pre]:py-inset-item [&_pre]:font-mono [&_pre]:text-xs [&_pre_code]:bg-transparent [&_pre_code]:px-0",
-  "[&_[data-slot=markdown-view-raw]]:whitespace-pre-wrap [&_[data-slot=markdown-view-raw]]:bg-transparent [&_[data-slot=markdown-view-raw]]:text-muted-foreground",
+  "[&_:not(pre)>code]:rounded-sm [&_:not(pre)>code]:bg-muted [&_:not(pre)>code]:px-px [&_:not(pre)>code]:font-mono [&_:not(pre)>code]:text-[0.9em]",
+  "[&_[data-slot=markdown-view-raw]]:font-mono [&_[data-slot=markdown-view-raw]]:text-xs [&_[data-slot=markdown-view-raw]]:whitespace-pre-wrap [&_[data-slot=markdown-view-raw]]:text-muted-foreground",
   "[&_hr]:border-border [&_table]:w-full [&_table]:border-collapse [&_th]:border-b [&_th]:px-inset-item [&_th]:py-inset-item [&_th]:text-start [&_th]:font-semibold [&_td]:border-b [&_td]:px-inset-item [&_td]:py-inset-item",
   "[&_img]:max-w-full [&_img]:rounded-control",
 ].join(" ")
@@ -55,14 +57,15 @@ function MarkdownView({
   resolveWikilink,
   wikilinkHref,
   taskLabel = "Task done",
+  codeLabels,
   sourcePositions,
   className,
   ...props
 }: MarkdownViewProps) {
   const deferred = useDeferredValue(markdown)
   const options = useMemo<RenderOptions>(
-    () => ({ resolveWikilink, wikilinkHref, taskLabel, sourcePositions }),
-    [resolveWikilink, wikilinkHref, taskLabel, sourcePositions],
+    () => ({ resolveWikilink, wikilinkHref, taskLabel, sourcePositions, codeLabels }),
+    [resolveWikilink, wikilinkHref, taskLabel, sourcePositions, codeLabels],
   )
   const [instance] = useState(() => ({}))
   const { blocks, references } = useMemo(() => {

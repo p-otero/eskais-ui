@@ -4,6 +4,7 @@ import { Button } from "@ui-sdk/react/button"
 import type { MouseEvent } from "react"
 
 import type { Attachment } from "@/components/ui/attachments-primitive"
+import { Link } from "@/components/ui/link"
 import { ThemedImage } from "@/components/ui/themed-image"
 import { cn } from "@/lib/utils"
 
@@ -123,6 +124,7 @@ function AttachmentThumb({
     .join(" · ")
   const chip = cn(
     "flex max-w-64 shrink-0 items-center gap-inline rounded-lg border bg-card/(--glass-opacity) px-inset-item text-start text-card-foreground",
+    // oxlint-disable-next-line shadcn/require-static-classes -- one of two static heights, picked by size
     sizeClassNames[size],
     className,
   )
@@ -145,8 +147,9 @@ function AttachmentThumb({
 
   if (attachment.href) {
     return (
-      <a
+      <Link
         {...shared}
+        variant="plain"
         href={attachment.href}
         target="_blank"
         rel="noreferrer"
@@ -155,7 +158,7 @@ function AttachmentThumb({
         className={pressable}
       >
         {content}
-      </a>
+      </Link>
     )
   }
   if (onOpen) {

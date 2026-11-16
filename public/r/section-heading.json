@@ -1,0 +1,18 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "section-heading",
+  "title": "Section Heading",
+  "description": "The heading of a page section: eyebrow, a large title, a description and actions, start-aligned or centered, with the heading level and id the enclosing section names itself by.",
+  "registryDependencies": [
+    "@eskais/utils",
+    "@eskais/theme"
+  ],
+  "files": [
+    {
+      "path": "registry/ui/section-heading.tsx",
+      "content": "import type { ComponentProps, ReactNode } from \"react\"\n\nimport { cn } from \"@/lib/utils\"\n\ntype SectionHeadingProps = Omit<ComponentProps<\"header\">, \"title\"> & {\n  eyebrow?: ReactNode\n  title: ReactNode\n  description?: ReactNode\n  /** Links or buttons beside the heading on wide containers, below it on narrow ones. */\n  actions?: ReactNode\n  align?: \"start\" | \"center\"\n  headingLevel?: 2 | 3 | 4\n  /** The heading's id, so the enclosing `<section aria-labelledby>` can name itself after it. */\n  headingId?: string\n}\n\n/** The heading of a page section: eyebrow, a large title, a description and optional actions. */\nfunction SectionHeading({\n  eyebrow,\n  title,\n  description,\n  actions,\n  align = \"start\",\n  headingLevel = 2,\n  headingId,\n  className,\n  ...props\n}: SectionHeadingProps) {\n  const Heading = `h${headingLevel}` as const\n  const centered = align === \"center\"\n  return (\n    <header\n      data-slot=\"section-heading\"\n      data-align={align}\n      className={cn(\n        \"@container flex w-full flex-col gap-group\",\n        centered ? \"items-center text-center\" : \"@2xl:flex-row @2xl:items-end @2xl:justify-between\",\n        className,\n      )}\n      {...props}\n    >\n      <div className={cn(\"flex max-w-2xl min-w-0 flex-col gap-items\", centered && \"items-center\")}>\n        {eyebrow !== undefined && (\n          <p data-slot=\"section-heading-eyebrow\" className=\"text-meta tracking-meta text-muted-foreground uppercase\">\n            {eyebrow}\n          </p>\n        )}\n        <Heading\n          id={headingId}\n          data-slot=\"section-heading-title\"\n          className=\"text-3xl font-semibold tracking-tight text-balance @xl:text-4xl\"\n        >\n          {title}\n        </Heading>\n        {description !== undefined && (\n          <p data-slot=\"section-heading-description\" className=\"text-body text-pretty text-muted-foreground\">\n            {description}\n          </p>\n        )}\n      </div>\n      {actions !== undefined && (\n        <div data-slot=\"section-heading-actions\" className=\"flex shrink-0 flex-wrap items-center gap-items\">\n          {actions}\n        </div>\n      )}\n    </header>\n  )\n}\n\nexport { SectionHeading }\nexport type { SectionHeadingProps }\n",
+      "type": "registry:ui"
+    }
+  ],
+  "type": "registry:block"
+}

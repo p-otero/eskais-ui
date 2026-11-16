@@ -17,6 +17,10 @@ if (pm !== "npm" && pm !== "pnpm") throw new Error(`Unsupported package manager:
 const repo = resolve(import.meta.dirname, "..")
 const registryDir = join(repo, "public", "r")
 const allItems = [
+  "link",
+  "code-block",
+  "hero",
+  "landing-page",
   "utils",
   "tone",
   "test-utils",
@@ -317,7 +321,22 @@ async function checkEverything(page) {
     const defaultSpacing = spacing()
     html.setAttribute("data-theme", theme)
     const card = getComputedStyle(document.querySelector("[data-slot=card]"))
+    // The parser loads on first use, so the highlighted keyword appears a moment after the first render.
+    const keyword = await new Promise((done) => {
+      const started = Date.now()
+      const poll = () => {
+        const found = document.querySelector('[data-slot="code-block"][aria-label="answer.ts"] .text-syntax-keyword')
+        if (found || Date.now() - started > 5000) done(found)
+        else setTimeout(poll, 100)
+      }
+      poll()
+    })
     return {
+      code: keyword ? { text: keyword.textContent, color: rgb(getComputedStyle(keyword).color) } : null,
+      blocks: ["hero", "bento", "steps", "site-footer", "section-heading"].filter(
+        (slot) => !document.querySelector(`[data-slot="${slot}"]`),
+      ),
+      link: document.querySelector('[data-slot="link"]')?.getAttribute("data-variant"),
       markdown: document.querySelector(".cm-line[data-md-heading]")?.textContent,
       border: { card: rgb(card.borderTopColor), token: rgb(getComputedStyle(html).getPropertyValue("--border")) },
       spacing: { compact: compactSpacing, default: defaultSpacing },
@@ -328,6 +347,10 @@ async function checkEverything(page) {
     }
   })
   console.log("In Chrome:", JSON.stringify(result))
+  if (result.code?.text !== "const" || result.code.color === "0,0,0")
+    throw new Error(`CodeBlock didn't highlight with the syntax tokens: ${JSON.stringify(result.code)}`)
+  if (result.blocks.length > 0) throw new Error(`Blocks missing from the landing page: ${result.blocks.join(", ")}`)
+  if (result.link !== "inline") throw new Error("Link didn't render")
   if (result.markdown !== "Notes") throw new Error(`MarkdownEditor didn't render its heading: ${result.markdown}`)
   if (result.border.card !== result.border.token) throw new Error("Borders don't use --border")
   if (!result.font) throw new Error("The Geist font didn't load in the built app")
@@ -410,6 +433,10 @@ import { Form, FormActions, FormField, FormRootError, formMessagesEs } from "@/c
 import { FormDialog } from "@/components/ui/form-dialog"
 import type { StandardSchemaV1 } from "@standard-schema/spec"
 import { Input } from "@/components/ui/input"
+import { CodeBlock } from "@/components/ui/code-block"
+import { Hero } from "@/components/ui/hero"
+import { Link } from "@/components/ui/link"
+import { LandingPage } from "@/components/landing-page"
 import { PageHeader } from "@/components/ui/page-header"
 import { PageLayout } from "@/components/ui/page-layout"
 import { SearchField } from "@/components/ui/search-field"
@@ -496,6 +523,9 @@ function App() {
         <ConfirmDialog trigger="Delete" title="Delete?" confirmLabel="Delete" tone="destructive" agentConfirm="Deletes it" onConfirm={() => {}} />
       </CardContent>
     </Card>
+    <Hero headingLevel={2} title="Blocks" install="npx shadcn add @eskais/hero" actions={<Link href="#docs" onFollow={() => {}}>Docs</Link>} />
+    <CodeBlock code={"const answer = 42"} language="ts" title="answer.ts" lineNumbers />
+    <LandingPage as="div" />
     <Probes />
     </PageLayout>
     <MobileNav label="Phone" items={[{ label: "Home", href: "/", icon: <span aria-hidden="true">H</span>, current: true }]} />

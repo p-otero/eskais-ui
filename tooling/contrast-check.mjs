@@ -179,6 +179,17 @@ const tokenPairs = [
   ["violet", "card", 4.5],
   ["skeleton", "background", 1.15],
   ["skeleton", "card", 1.15],
+  // Code sits on muted; a highlighted line on code-highlight.
+  ...["keyword", "string", "number", "comment", "function", "type", "property", "tag", "punctuation"].flatMap(
+    (tone) => [
+      [`syntax-${tone}`, "muted", 4.5],
+      [`syntax-${tone}`, "code-highlight", 4.5],
+    ],
+  ),
+  ["foreground", "code-highlight", 4.5],
+  ["muted-foreground", "code-highlight", 4.5],
+  ["success-soft-foreground", "success-soft", 4.5],
+  ["destructive-soft-foreground", "destructive-soft", 4.5],
 ]
 
 // A translucent token (the skeleton) shows the surface under it, so it's measured composited over that surface.
