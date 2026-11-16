@@ -1,18 +1,56 @@
-import type { ComponentProps, ReactNode } from "react"
+import type { ComponentProps, MouseEvent, ReactNode, RefObject } from "react"
 
 import { cn } from "@/lib/utils"
 
-type SkipLinkProps = Omit<ComponentProps<"a">, "children"> & {
+// `target` replaces the anchor attribute: a skip link never opens another browsing context.
+type SkipLinkProps = Omit<ComponentProps<"a">, "children" | "target"> & {
   /** The link text, in the page's language, like "Skip to content". */
   children: ReactNode
+  /**
+   * The element to focus: an id, or a ref. Defaults to the id in `href`, then `"main"`.
+   * Activating the link focuses it and scrolls it into view without changing the URL, so hash routers keep their route.
+   */
+  target?: string | RefObject<HTMLElement | null>
+}
+
+function resolveTarget(target: SkipLinkProps["target"], link: HTMLAnchorElement) {
+  if (typeof target !== "string") return target?.current ?? null
+  const root = link.getRootNode() as Document | ShadowRoot
+  return root.getElementById?.(target) ?? link.ownerDocument.getElementById(target)
+}
+
+function focusTarget(element: HTMLElement) {
+  element.focus({ preventScroll: true })
+  if (element.ownerDocument.activeElement === element) return true
+  if (element.hasAttribute("tabindex")) return false
+  element.tabIndex = -1
+  element.focus({ preventScroll: true })
+  if (element.ownerDocument.activeElement === element) return true
+  element.removeAttribute("tabindex")
+  return false
 }
 
 // Fixed, not absolute, so it shows at the top of the viewport wherever the page is scrolled when it takes focus.
-function SkipLink({ href = "#main", className, children, ...props }: SkipLinkProps) {
+function SkipLink({ href, target, onClick, className, children, ...props }: SkipLinkProps) {
+  const id = target ?? (href?.startsWith("#") && href.length > 1 ? href.slice(1) : "main")
+  const resolvedHref = href ?? (typeof id === "string" ? `#${id}` : "#main")
+
+  const handleClick = (event: MouseEvent<HTMLAnchorElement>) => {
+    onClick?.(event)
+    // A modified or middle click opens the link elsewhere, where the plain #fragment is right.
+    if (event.defaultPrevented || event.button !== 0) return
+    if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return
+    const element = resolveTarget(id, event.currentTarget)
+    if (!element || !focusTarget(element)) return
+    event.preventDefault()
+    element.scrollIntoView({ block: "start" })
+  }
+
   return (
     <a
       data-slot="skip-link"
-      href={href}
+      href={resolvedHref}
+      onClick={handleClick}
       className={cn(
         "sr-only rounded-control border border-floating-border bg-popover px-control-x text-sm font-medium text-popover-foreground shadow-floating outline-none focus:not-sr-only focus:fixed focus:start-floating focus:top-floating focus:z-toast focus:inline-flex focus:h-control focus:items-center focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
         className,

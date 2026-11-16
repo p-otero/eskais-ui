@@ -1256,6 +1256,7 @@
       "type": "registry:ui",
       "title": "Dialog",
       "description": "UI SDK Dialog parts: focus trap, Escape, focus restore, dismissible and controller support.",
+      "docs": "Focus returns to whatever opened the dialog. `DialogContent` records the focused element as it opens, so focus still comes back when the dialog leaves the page while open (`{open && <Dialog open>…</Dialog>}`) and when a field inside has React's `autoFocus`, which takes focus before UI SDK records where it came from. To choose the first field, pass `initialFocus` to `DialogContent` (a selector like `\"#name\"`, an element, or a function), not `autoFocus`: it is how UI SDK decides where focus starts, and after a touch press it focuses the dialog itself so no on-screen keyboard pops up. Prefer keeping the `Dialog` mounted and driving `open`: an unmounted dialog skips its exit transition. `finalFocus` overrides where focus returns; `\"none\"` leaves it alone, also on unmount. While the dialog animates out, its backdrop and content are inert (UI SDK) and `pointer-events: none`, so the first click on the page after closing lands. ConfirmDialog, FormDialog, CommandDialog and Drawer share all of this.",
       "dependencies": [
         "@ui-sdk/core@0.1.0-beta.5",
         "@ui-sdk/react@0.1.0-beta.5"
@@ -1390,7 +1391,7 @@
           "type": "registry:ui"
         }
       ],
-      "docs": "A `Card` renders `<section>`; once it holds a `CardTitle` it gets `aria-labelledby` pointing at the title, so it is a named region. Give the title `headingLevel` to make it a heading. `CardEyebrow` sits above the title, `CardAction` at the top end of `CardHeader`. `surface` is `card` (default), `dashed` or `none`. To keep a card out of the landmarks (a card per list item), pass `render={<div />}` or `render={<li />}`."
+      "docs": "A `Card` renders `<section>`; once it holds a `CardTitle` it gets `aria-labelledby` pointing at the title, so it is a named region. Give the title `headingLevel` to make it a heading. `CardEyebrow` sits above the title, `CardAction` at the top end of `CardHeader`. The header is a container (`@container/card-header`): the action sits beside the title, which keeps at least 8rem, once the header has 17rem of content (a card of about 20rem), and wraps below the title, start-aligned, in a narrower card. Its buttons wrap among themselves rather than overflow. `surface` is `card` (default), `dashed` or `none`. To keep a card out of the landmarks (a card per list item), pass `render={<div />}` or `render={<li />}`."
     },
     {
       "name": "section",
@@ -1582,7 +1583,7 @@
       "type": "registry:ui",
       "title": "States",
       "description": "Screen states that never lie: LoadingState (spinner or skeleton, busy, label for screen readers), ErrorState (alert, retry, collapsible details) and DataState, which picks loading, error, empty or your content from a status and never shows empty while pending or after an error.",
-      "docs": "One item, three components (`error-state`, `loading-state`, `data-state`), since DataState renders the other two and Empty by default. `<DataState status data error onRetry labels={{ errorTitle, retry, emptyTitle }}>{(data) => …}</DataState>` works with any data library: map its status to `pending`, `error` or `success`. Visible copy has no default: the types require `errorTitle` and `emptyTitle` (and `retry` with `onRetry`) unless you pass `renderError` and `empty`. `loading` and `refreshing` are screen-reader labels and default to English. While a refetch is pending, the last data stays on screen with `aria-busy` and a small spinner (`keepPreviousData`, default true); pass `fetching` for libraries whose status stays `success` during a refetch. `isEmpty` decides what counts as empty (an empty array, `null` or `undefined` by default). Every state takes `size`: `inline`, `panel` (default) or `page`.",
+      "docs": "One item, three components (`error-state`, `loading-state`, `data-state`), since DataState renders the other two and Empty by default. `<DataState status data error onRetry labels={{ errorTitle, retry, emptyTitle }}>{(data) => …}</DataState>` works with any data library: map its status to `pending`, `error` or `success`. Visible copy has no default: the types require `errorTitle` and `emptyTitle` (and `retry` with `onRetry`) unless you pass `renderError` and `empty`. `loading` and `refreshing` are screen-reader labels and default to English. It picks one state from `status`: `error` shows the error; `success` shows empty when `isEmpty(data)` holds and your content otherwise; `pending` shows the data of the last `success` (`keepPreviousData`, default true), else `placeholderData`, with `aria-busy` and a small spinner, and loading when neither is there or both are empty. `data` is read only with `success`: an initial value passed while pending (an `[]` default, a cache guess) never counts as a result, so the first load always shows loading; pass it as `placeholderData` to show it busy instead. Pass `fetching` for libraries whose status stays `success` during a refetch. `isEmpty` decides what counts as empty (an empty array, `null` or `undefined` by default). Every state takes `size`: `inline`, `panel` (default) or `page`.",
       "dependencies": [
         "@ui-sdk/react@0.1.0-beta.5",
         "class-variance-authority@0.7.1"
@@ -1713,6 +1714,7 @@
       "type": "registry:ui",
       "title": "Drawer",
       "description": "UI SDK Drawer parts: a modal sheet from any edge (bottom or side), draggable, with focus trap, Escape and focus restore.",
+      "docs": "`DrawerContent` returns focus like `DialogContent` (see the Dialog docs): also when the drawer unmounts while open or a field has `autoFocus`; prefer `initialFocus`. Its closing backdrop and content are `pointer-events: none`, but in UI SDK 0.1.0-beta.5 the drawer itself still cancels a press on the page while it slides out, so a click in that moment is lost.",
       "dependencies": [
         "@ui-sdk/core@0.1.0-beta.5",
         "@ui-sdk/react@0.1.0-beta.5",
@@ -1721,7 +1723,8 @@
       "registryDependencies": [
         "@eskais/utils",
         "@eskais/theme",
-        "@eskais/button"
+        "@eskais/button",
+        "@eskais/dialog"
       ],
       "files": [
         {
@@ -3026,7 +3029,7 @@
           "type": "registry:ui"
         }
       ],
-      "docs": "Put a `SkipLink` first in `<body>`, before the `Sidebar`, so keyboard users can jump past the navigation, and give the page content the target: `<SkipLink>Skip to content</SkipLink><Sidebar …/><PageLayout as=\"main\">…</PageLayout>` (PageLayout renders `<main id=\"main\">`). If your shell renders `<main>` itself, give it `id=\"main\" tabIndex={-1}`. To toggle it from a `Topbar`, pass one `createSidebarController()` to both: `<Topbar leading={<SidebarTrigger controller={sidebar} collapsed={collapsed} />} /><Sidebar controller={sidebar} collapsed={collapsed} onCollapsedChange={setCollapsed} trigger={false}>…</Sidebar>`. `collapsed` gives the trigger `aria-expanded` and the name of the next step; without it the trigger is named \"Toggle sidebar\". On narrow screens it renders nothing, and the Sidebar shows its own drawer button."
+      "docs": "Put a `SkipLink` first in `<body>`, before the `Sidebar`, so keyboard users can jump past the navigation, and give the page content the target: `<SkipLink>Skip to content</SkipLink><Sidebar …/><PageLayout as=\"main\">…</PageLayout>` (PageLayout renders `<main id=\"main\">`). If your shell renders `<main>` itself, give it `id=\"main\"` (and `tabIndex={-1}`, so the no-JavaScript fallback moves focus too), or pass the SkipLink a `target` id or ref. To toggle it from a `Topbar`, pass one `createSidebarController()` to both: `<Topbar leading={<SidebarTrigger controller={sidebar} collapsed={collapsed} />} /><Sidebar controller={sidebar} collapsed={collapsed} onCollapsedChange={setCollapsed} trigger={false}>…</Sidebar>`. `collapsed` gives the trigger `aria-expanded` and the name of the next step; without it the trigger is named \"Toggle sidebar\". On narrow screens it renders nothing, and the Sidebar shows its own drawer button."
     },
     {
       "name": "data-table",
@@ -3076,7 +3079,7 @@
       "type": "registry:ui",
       "title": "Skip Link",
       "description": "A link to the main content that stays hidden until it takes keyboard focus, then floats at the top start of the viewport above everything else.",
-      "docs": "Render it first in `<body>`: `<SkipLink>Skip to content</SkipLink>`. The text is required (write it in the page's language); `href` defaults to `#main`, which `PageLayout as=\"main\"` provides. See the Sidebar docs for where it goes in an app shell.",
+      "docs": "Render it first in `<body>`: `<SkipLink>Skip to content</SkipLink>`. The text is required (write it in the page's language). `target` is the element to skip to, an id or a ref, and defaults to `\"main\"`, which `PageLayout as=\"main\"` provides. Activating the link focuses the target (giving it `tabIndex={-1}` if it can't take focus) and scrolls it into view without changing the URL, so a hash router keeps its route. It is still a real `<a href=\"#main\">` (`#` plus the id; pass `href` for a ref target), which works without JavaScript and for a middle or modified click; it only prevents the default when it could focus the target. See the Sidebar docs for where it goes in an app shell.",
       "registryDependencies": [
         "@eskais/utils",
         "@eskais/theme"
@@ -3093,7 +3096,7 @@
       "type": "registry:ui",
       "title": "Page Layout",
       "description": "A page's column: centered at a dense (73.75rem), wide (90rem) or full width, with page gutters and gap-section between blocks, a header slot, and a workspace variant without padding for app-like screens.",
-      "docs": "`<PageLayout header={<PageHeader … />}>…</PageLayout>`. It renders a `div` by default, because the app shell often owns `<main>`; pass `as=\"main\"` when the page is the main content, and it renders `<main id=\"main\" tabIndex={-1}>` (pass `id` to change it) so a SkipLink reaches it. It is never a live region: announce changes from the component that changes (an Alert with `live`, a DataState). `variant=\"workspace\"` drops the gutters and the width cap, for screens that lay out their own panes.",
+      "docs": "`<PageLayout header={<PageHeader … />}>…</PageLayout>`. It renders a `div` by default, because the app shell often owns `<main>`; pass `as=\"main\"` when the page is the main content, and it renders `<main id=\"main\" tabIndex={-1}>` (pass `id` to change it) so a SkipLink reaches it. The SkipLink focuses it by id without touching the URL, so hash-routed apps keep their route; with a custom `id`, pass the same value as the SkipLink's `target`. It is never a live region: announce changes from the component that changes (an Alert with `live`, a DataState). `variant=\"workspace\"` drops the gutters and the width cap, for screens that lay out their own panes.",
       "dependencies": [
         "class-variance-authority@0.7.1"
       ],

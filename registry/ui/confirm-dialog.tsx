@@ -13,7 +13,7 @@ import type { VariantProps } from "class-variance-authority"
 import type { ComponentProps, ReactNode } from "react"
 
 import { buttonVariants } from "@/components/ui/button"
-import { backdropClassName, contentClassName } from "@/components/ui/dialog"
+import { backdropClassName, contentClassName, useFocusReturn } from "@/components/ui/dialog"
 import { Spinner } from "@/components/ui/spinner"
 import { cn } from "@/lib/utils"
 
@@ -64,6 +64,7 @@ function ConfirmDialog({
   ...root
 }: ConfirmDialogProps) {
   const destructive = tone === "destructive"
+  const focus = useFocusReturn(undefined)
   return (
     <AlertDialog {...root}>
       {trigger === undefined ? null : (
@@ -74,36 +75,45 @@ function ConfirmDialog({
         </AlertDialogTrigger>
       )}
       <AlertDialogBackdrop className={backdropClassName} />
-      <AlertDialogContent className={cn(contentClassName, "max-w-md", className)}>
-        <div className="flex flex-col gap-inline">
-          <AlertDialogTitle className="text-title leading-none">{title}</AlertDialogTitle>
-          {description === undefined ? null : (
-            <AlertDialogDescription className="text-sm text-muted-foreground">{description}</AlertDialogDescription>
-          )}
-        </div>
-        <AlertDialogClose
-          value="confirm"
-          action={onConfirm}
-          data-tone={tone}
-          data-agent-confirm={agentConfirm}
-          render={(props, state) => (
-            <div className="flex flex-col gap-items">
-              <p role="alert" className="text-sm text-destructive empty:hidden">
-                {state.error === undefined || state.error === null ? null : renderError(state.error)}
-              </p>
-              <div className="flex flex-col-reverse gap-items sm:flex-row sm:justify-end">
-                <AlertDialogClose className={buttonVariants({ variant: "outline" })}>{cancelLabel}</AlertDialogClose>
-                <button
-                  {...props}
-                  className={cn(buttonVariants({ variant: destructive ? "destructive" : "default" }), props.className)}
-                >
-                  <Spinner data-show="pending" />
-                  {confirmLabel}
-                </button>
-              </div>
+      <AlertDialogContent className={cn(contentClassName, "max-w-md", className)} finalFocus={focus.finalFocus}>
+        {focus.wrap(
+          <>
+            <div className="flex flex-col gap-inline">
+              <AlertDialogTitle className="text-title leading-none">{title}</AlertDialogTitle>
+              {description === undefined ? null : (
+                <AlertDialogDescription className="text-sm text-muted-foreground">{description}</AlertDialogDescription>
+              )}
             </div>
-          )}
-        />
+            <AlertDialogClose
+              value="confirm"
+              action={onConfirm}
+              data-tone={tone}
+              data-agent-confirm={agentConfirm}
+              render={(props, state) => (
+                <div className="flex flex-col gap-items">
+                  <p role="alert" className="text-sm text-destructive empty:hidden">
+                    {state.error === undefined || state.error === null ? null : renderError(state.error)}
+                  </p>
+                  <div className="flex flex-col-reverse gap-items sm:flex-row sm:justify-end">
+                    <AlertDialogClose className={buttonVariants({ variant: "outline" })}>
+                      {cancelLabel}
+                    </AlertDialogClose>
+                    <button
+                      {...props}
+                      className={cn(
+                        buttonVariants({ variant: destructive ? "destructive" : "default" }),
+                        props.className,
+                      )}
+                    >
+                      <Spinner data-show="pending" />
+                      {confirmLabel}
+                    </button>
+                  </div>
+                </div>
+              )}
+            />
+          </>,
+        )}
       </AlertDialogContent>
     </AlertDialog>
   )
