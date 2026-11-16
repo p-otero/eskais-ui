@@ -1,0 +1,6 @@
+export * from "./cm-core"
+export { commonmarkLanguage, markdownKeymap } from "@codemirror/lang-markdown"
+export { Language, LanguageSupport } from "@codemirror/language"
+export { parseCode } from "@lezer/markdown"
+export { classHighlighter } from "@lezer/highlight"
+export { markdownExtensions } from "@/components/ui/markdown-syntax"

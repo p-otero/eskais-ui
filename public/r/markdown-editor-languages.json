@@ -1,0 +1,20 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "markdown-editor-languages",
+  "title": "Markdown Editor Languages",
+  "description": "Every code language CodeMirror knows, for MarkdownEditor's fenced code blocks; each language loads the first time a block names it. Opt-in, since the list adds about 230 KB of shared chunks to most bundles.",
+  "dependencies": [
+    "@codemirror/language-data@6.5.2"
+  ],
+  "registryDependencies": [
+    "@eskais/markdown-editor"
+  ],
+  "files": [
+    {
+      "path": "registry/ui/markdown-editor-languages.ts",
+      "content": "import { languages } from \"@codemirror/language-data\"\n\n/** Every language CodeMirror knows, each fetched the first time a fenced block names it. */\nconst markdownCodeLanguages = languages\n\nexport { markdownCodeLanguages }\n",
+      "type": "registry:ui"
+    }
+  ],
+  "type": "registry:ui"
+}

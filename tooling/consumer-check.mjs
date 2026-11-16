@@ -101,6 +101,9 @@ const items = [
   "page-header",
   "filter-bar",
   "chart",
+  "markdown-view",
+  "markdown-editor",
+  "markdown-editor-languages",
   "lightbox",
   "attachments",
   "stage-track",
@@ -192,6 +195,7 @@ async function checkInBrowser(dist) {
       html.setAttribute("data-theme", theme)
       const card = getComputedStyle(document.querySelector("[data-slot=card]"))
       return {
+        markdown: document.querySelector(".cm-line[data-md-heading]")?.textContent,
         border: { card: rgb(card.borderTopColor), token: rgb(getComputedStyle(html).getPropertyValue("--border")) },
         spacing: { compact: compactSpacing, default: defaultSpacing },
         font: [...document.fonts].some((font) => font.family.includes("Geist") && font.status === "loaded"),
@@ -201,6 +205,7 @@ async function checkInBrowser(dist) {
       }
     })
     console.log("In Chrome:", JSON.stringify(result))
+    if (result.markdown !== "Notes") throw new Error(`MarkdownEditor didn't render its heading: ${result.markdown}`)
     if (result.border.card !== result.border.token) throw new Error("Borders don't use --border")
     if (!result.font) throw new Error("The Geist font didn't load in the built app")
     if (result.blue.background === result.neutral.background) throw new Error("data-palette didn't change --primary")
@@ -329,6 +334,9 @@ import { Input } from "@/components/ui/input"
 import { PageHeader } from "@/components/ui/page-header"
 import { PageLayout } from "@/components/ui/page-layout"
 import { SearchField } from "@/components/ui/search-field"
+import { MarkdownEditor } from "@/components/ui/markdown-editor"
+import { markdownCodeLanguages } from "@/components/ui/markdown-editor-languages"
+import { MarkdownView } from "@/components/ui/markdown-view"
 import { Section } from "@/components/ui/section"
 import { SkipLink } from "@/components/ui/skip-link"
 import { Spinner } from "@/components/ui/spinner"
@@ -381,6 +389,8 @@ function App() {
         <Button loading>Saving</Button>
         <Field><FieldLabel>Name</FieldLabel><Input /></Field>
         <SearchField label="Search" onSearch={() => {}} />
+        <MarkdownEditor label="Notes" defaultValue={"# Notes\\n\\n**Bold** and [[link]]\\n"} codeLanguages={markdownCodeLanguages} />
+        <MarkdownView markdown="- [x] done" />
         <Dialog><DialogTrigger>Open</DialogTrigger><DialogContent><DialogTitle>Hi</DialogTitle></DialogContent></Dialog>
         <ConfirmDialog trigger="Delete" title="Delete?" confirmLabel="Delete" tone="destructive" agentConfirm="Deletes it" onConfirm={() => {}} />
       </CardContent>

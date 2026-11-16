@@ -2759,6 +2759,150 @@
           "target": "~/eskais-ui.oxlintrc.json"
         }
       ]
+    },
+    {
+      "name": "markdown-view",
+      "type": "registry:ui",
+      "title": "Markdown View",
+      "description": "Renders Markdown (CommonMark, GFM tables, tasks and strikethrough, and [[wikilinks]]) to React elements with the Lezer parser: raw HTML shows as text, only http, https, mailto and tel links become links, and each top-level block is memoised so long notes re-render only what changed.",
+      "dependencies": [
+        "@lezer/common@1.5.5",
+        "@lezer/markdown@1.8.1"
+      ],
+      "registryDependencies": [
+        "@eskais/utils",
+        "@eskais/theme"
+      ],
+      "files": [
+        {
+          "path": "registry/ui/markdown-syntax.ts",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/markdown-view-render.tsx",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/markdown-view.tsx",
+          "type": "registry:ui"
+        }
+      ]
+    },
+    {
+      "name": "markdown-editor",
+      "type": "registry:ui",
+      "title": "Markdown Editor",
+      "description": "A Markdown editor on CodeMirror 6 with a Typora-like live preview: the document is the Markdown text, so loading and saving keep every byte. Marks show only while the caret is inside their span; headings, bullets and quotes never show theirs; tables render as tables off the caret. Slash and [[ menus, a one-row toolbar with an overflow menu, English and Spanish labels, and agent actions (getMarkdown, insertText, replaceSelection, insertWikilink, toggleFormat, setHeading, toggleTask; setMarkdown needs approval).",
+      "docs": "The value is plain Markdown: `value`/`onChange` (debounced by `changeDelay`, 300 ms; flushed on blur and unmount) or `defaultValue`. Loading never fires `onChange`. A `value` that arrives while edits are still waiting for `onChange` calls `onConflict({ local, remote })`: return the text to keep, or nothing to take the remote; without it the local text goes out through `onChange` first and then the remote applies. Code languages are opt-in: `npx shadcn add @eskais/markdown-editor-languages` and pass `codeLanguages={markdownCodeLanguages}`. Pass `cspNonce` under a strict Content Security Policy (CodeMirror injects a style element). Spanish labels: `labels={markdownEditorLabelsEs}`. Shortcuts: Mod+B/I/E, Mod+Shift+X, Mod+Alt+0..6 for paragraph and heading levels, Tab/Shift+Tab to nest list items, Mod+Enter to toggle a task; Escape then Tab leaves the editor.",
+      "dependencies": [
+        "@codemirror/commands@6.11.1",
+        "@codemirror/lang-markdown@6.5.2",
+        "@codemirror/language@6.13.1",
+        "@codemirror/state@6.7.6",
+        "@codemirror/view@6.43.15",
+        "@lezer/common@1.5.5",
+        "@lezer/highlight@1.2.5",
+        "@lezer/markdown@1.8.1",
+        "@ui-sdk/core@0.1.0-beta.5",
+        "@ui-sdk/react@0.1.0-beta.5"
+      ],
+      "registryDependencies": [
+        "@eskais/utils",
+        "@eskais/theme",
+        "@eskais/markdown-view",
+        "@eskais/button",
+        "@eskais/input",
+        "@eskais/popover",
+        "@eskais/dropdown-menu"
+      ],
+      "files": [
+        {
+          "path": "registry/ui/markdown-editor.tsx",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/markdown-editor-adapter.ts",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/markdown-editor-blocks.ts",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/markdown-editor-commands.ts",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/markdown-editor-inline.ts",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/markdown-editor-labels.ts",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/markdown-editor-lines.ts",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/markdown-editor-menus.tsx",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/markdown-editor-portals.tsx",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/markdown-editor-preview.ts",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/markdown-editor-primitive.ts",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/markdown-editor-state.ts",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/markdown-editor-structure.ts",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/markdown-editor-sync.ts",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/markdown-editor-theme.ts",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/markdown-editor-toolbar.tsx",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/markdown-editor-widgets.ts",
+          "type": "registry:ui"
+        }
+      ]
+    },
+    {
+      "name": "markdown-editor-languages",
+      "type": "registry:ui",
+      "title": "Markdown Editor Languages",
+      "description": "Every code language CodeMirror knows, for MarkdownEditor's fenced code blocks; each language loads the first time a block names it. Opt-in, since the list adds about 230 KB of shared chunks to most bundles.",
+      "dependencies": [
+        "@codemirror/language-data@6.5.2"
+      ],
+      "registryDependencies": [
+        "@eskais/markdown-editor"
+      ],
+      "files": [
+        {
+          "path": "registry/ui/markdown-editor-languages.ts",
+          "type": "registry:ui"
+        }
+      ]
     }
   ]
 }

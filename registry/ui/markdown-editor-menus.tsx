@@ -1,0 +1,189 @@
+"use client"
+
+import type { EditorView } from "@codemirror/view"
+import {
+  TriggerMenu,
+  TriggerMenuContent,
+  TriggerMenuEmpty,
+  TriggerMenuItem,
+  TriggerMenuList,
+  TriggerMenuStatus,
+  type TextEditorAdapter,
+  type TriggerDefinition,
+  type TriggerMenuDataItem,
+} from "@ui-sdk/react/trigger-menu"
+import { useMemo, type ReactNode } from "react"
+
+import { toDocText, toggleFormat, type MarkdownFormat } from "@/components/ui/markdown-editor-commands"
+import { markdownEditorLabelsEn, type MarkdownEditorLabels } from "@/components/ui/markdown-editor-labels"
+import { setHeading } from "@/components/ui/markdown-editor-lines"
+import { wikilinkText } from "@/components/ui/markdown-syntax"
+
+type SlashCommand = {
+  value: string
+  label: string
+  keywords?: string[]
+  hint?: string
+  /** Replaces the typed `/query` (from `from` to `to`) with whatever the command inserts. */
+  run: (view: EditorView, range: { from: number; to: number }) => void
+}
+
+type WikilinkSuggestion = { slug: string; label?: string }
+type SuggestWikilinks = (query: string, context: { signal: AbortSignal }) => Promise<WikilinkSuggestion[]>
+
+function insertBlock(text: string, caret = text.length): SlashCommand["run"] {
+  return (view, { from, to }) => {
+    const line = view.state.doc.lineAt(from)
+    const lead = view.state.sliceDoc(line.from, from).trim() ? "\n\n" : ""
+    const block = lead + text
+    const insert = toDocText(view.state, block)
+    const offset = toDocText(view.state, block.slice(0, lead.length + caret)).length
+    view.dispatch({
+      changes: { from, to, insert },
+      selection: { anchor: from + view.state.toText(insert.slice(0, offset)).length },
+      userEvent: "input.complete",
+      scrollIntoView: true,
+    })
+  }
+}
+
+/** Removes the typed `/query`, then formats the line it was on. */
+function lineCommand(apply: (view: EditorView) => unknown): SlashCommand["run"] {
+  return (view, { from, to }) => {
+    view.dispatch({ changes: { from, to }, selection: { anchor: from }, userEvent: "input.complete" })
+    apply(view)
+  }
+}
+
+type SlashLabels = Pick<
+  MarkdownEditorLabels,
+  | "paragraph"
+  | "heading1"
+  | "heading2"
+  | "heading3"
+  | "bulletList"
+  | "orderedList"
+  | "taskList"
+  | "quote"
+  | "codeBlock"
+  | "table"
+  | "divider"
+>
+
+const heading = (level: number) => lineCommand((view) => setHeading(view, level))
+const lines = (format: MarkdownFormat) => lineCommand((view) => toggleFormat(view, format))
+
+function markdownSlashCommands(labels: Partial<SlashLabels> = {}): SlashCommand[] {
+  const text = { ...markdownEditorLabelsEn, ...labels }
+  return [
+    { value: "paragraph", label: text.paragraph, keywords: ["text"], run: heading(0) },
+    { value: "h1", label: text.heading1, keywords: ["title"], hint: "#", run: heading(1) },
+    { value: "h2", label: text.heading2, hint: "##", run: heading(2) },
+    { value: "h3", label: text.heading3, hint: "###", run: heading(3) },
+    { value: "bullet", label: text.bulletList, hint: "-", run: lines("bulletList") },
+    { value: "ordered", label: text.orderedList, hint: "1.", run: lines("orderedList") },
+    { value: "task", label: text.taskList, hint: "- [ ]", run: lines("taskList") },
+    { value: "quote", label: text.quote, hint: ">", run: lines("quote") },
+    { value: "code", label: text.codeBlock, hint: "```", run: insertBlock("```\n\n```", 4) },
+    { value: "table", label: text.table, hint: "| |", run: insertBlock("|  |  |\n| --- | --- |\n|  |  |", 2) },
+    { value: "divider", label: text.divider, hint: "---", run: insertBlock("---\n") },
+  ]
+}
+
+type MarkdownEditorMenusProps = {
+  adapter: TextEditorAdapter | undefined
+  view: EditorView | undefined
+  slashCommands: SlashCommand[]
+  suggestWikilinks?: SuggestWikilinks
+  onOpenChange: (open: boolean) => void
+  emptyLabel: ReactNode
+}
+
+function MarkdownEditorMenus({
+  adapter,
+  view,
+  slashCommands,
+  suggestWikilinks,
+  onOpenChange,
+  emptyLabel,
+}: MarkdownEditorMenusProps) {
+  const triggers = useMemo<TriggerDefinition[]>(() => {
+    const list: TriggerDefinition[] = [
+      {
+        char: "/",
+        boundary: "word",
+        type: "command",
+        items: slashCommands.map(({ value, label, keywords }) => ({ value, label, keywords })),
+      },
+    ]
+    if (suggestWikilinks) {
+      list.push({
+        char: "[[",
+        boundary: "anywhere",
+        spaces: true,
+        maxLength: 80,
+        pattern: /[^\]|[\r\n]/u,
+        items: async (query, { signal }) =>
+          (await suggestWikilinks(query, { signal })).map((item) => ({
+            value: item.slug,
+            label: item.label ?? item.slug,
+          })),
+        insert: (item) => wikilinkText(item.value),
+      })
+    }
+    return list
+  }, [slashCommands, suggestWikilinks])
+
+  return (
+    <TriggerMenu
+      editor={adapter}
+      triggers={triggers}
+      onOpenChange={(open) => onOpenChange(open)}
+      onSelect={(value, details) => {
+        if (details.trigger !== "/" || !view) return
+        const command = slashCommands.find((entry) => entry.value === value)
+        if (!command) return
+        details.preventDefault()
+        command.run(view, { from: details.match.start, to: details.match.end })
+      }}
+    >
+      <TriggerMenuContent
+        side="bottom"
+        align="start"
+        sideOffset={4}
+        className="max-h-(--available-height) w-64 overflow-y-auto surface-floating p-inline"
+      >
+        <TriggerMenuStatus className="sr-only" />
+        <TriggerMenuEmpty className="px-inset-item py-inset-item text-sm text-muted-foreground not-data-empty:hidden">
+          {emptyLabel}
+        </TriggerMenuEmpty>
+        <TriggerMenuList className="flex flex-col aria-busy:opacity-60">
+          {(state) =>
+            (state.items as TriggerMenuDataItem[]).map((item) => {
+              const hint =
+                state.trigger === "/"
+                  ? slashCommands.find((entry) => entry.value === item.value)?.hint
+                  : item.value !== item.label
+                    ? item.value
+                    : undefined
+              return (
+                <TriggerMenuItem
+                  key={String(item.value)}
+                  value={item.value}
+                  label={item.label}
+                  className="flex h-control-sm cursor-default items-center justify-between gap-inline rounded-control px-inset-item text-sm outline-none select-none data-disabled:opacity-50 data-highlighted:bg-accent data-highlighted:text-accent-foreground"
+                >
+                  <span className="truncate">{item.label}</span>
+                  {hint && <span className="shrink-0 font-mono text-xs text-muted-foreground">{hint}</span>}
+                </TriggerMenuItem>
+              )
+            })
+          }
+        </TriggerMenuList>
+      </TriggerMenuContent>
+    </TriggerMenu>
+  )
+}
+
+export { MarkdownEditorMenus, markdownSlashCommands }
+export type { SlashCommand, SlashLabels, SuggestWikilinks, WikilinkSuggestion }
