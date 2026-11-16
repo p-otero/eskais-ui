@@ -59,10 +59,10 @@ type TypedForm<Schema extends StandardSchemaV1> = {
   FormField: (props: FormFieldProps<FormValuesOf<Schema>>) => ReactNode
   useFormInstance: () => UseFormReturn<FormValuesOf<Schema>>
   useFormWatch: <Name extends FieldPath<FormValuesOf<Schema>>>(name: Name) => FieldPathValue<FormValuesOf<Schema>, Name>
-  useFormFieldArray: <Name extends ArrayPath<FormValuesOf<Schema>>>(
+  useFormFieldArray: <Name extends ArrayPath<FormValuesOf<Schema>>, KeyName extends string = "id">(
     name: Name,
-    options?: UseFormFieldArrayOptions<FormValuesOf<Schema>, Name>,
-  ) => UseFieldArrayReturn<FormValuesOf<Schema>, Name>
+    options?: UseFormFieldArrayOptions<FormValuesOf<Schema>, Name, KeyName>,
+  ) => UseFieldArrayReturn<FormValuesOf<Schema>, Name, KeyName>
 }
 
 /**
@@ -70,7 +70,13 @@ type TypedForm<Schema extends StandardSchemaV1> = {
  * `const { Form, FormField } = createForm<typeof schema>()`. They are the same components, only typed.
  */
 function createForm<Schema extends StandardSchemaV1>(): TypedForm<Schema> {
-  return { Form, FormField, useFormInstance, useFormWatch, useFormFieldArray } as unknown as TypedForm<Schema>
+  return {
+    Form,
+    FormField,
+    useFormInstance,
+    useFormWatch,
+    useFormFieldArray,
+  } as unknown as TypedForm<Schema>
 }
 
 export { Form, createForm }

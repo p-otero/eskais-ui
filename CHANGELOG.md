@@ -10,6 +10,10 @@ Versions follow [semver](https://semver.org). Before 1.0, a minor version can br
 - Icons come from `lucide-react` (1.73.0): every hand-drawn icon in the registry is now a lucide import, and the items that use one depend on it. `icon` adds `Icon`, which names an icon for screen readers (`<Icon icon={TrashIcon} label="Deleted" />`). The `eskais/no-inline-icons` lint rule flags any other `<svg>` in `registry/**`.
 - Deprecated: `ChevronIcon` from `select` and `PanelIcon` from `sidebar` (import `ChevronDownIcon` and `PanelLeftIcon` from `lucide-react`). `CloseIcon` is no longer exported from `task-detail-parts`. `select` still exports lucide's `CheckIcon`.
 
+### Fixed
+
+- `useFormFieldArray` takes `keyName` like react-hook-form's `useFieldArray` (`useFormFieldArray("components", { keyName: "fieldKey" })`), typed by a third type parameter, so rows whose items carry their own `id` keep it. `createForm().useFormFieldArray` infers it too.
+
 ## 0.1.0 (2026-11-16)
 
 First release. The docs site is published to GitHub Pages from each release, and the registry can be pinned to the tag: `https://raw.githubusercontent.com/p-otero/eskais-ui/v0.1.0/public/r/{name}.json`.

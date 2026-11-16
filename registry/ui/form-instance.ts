@@ -24,10 +24,12 @@ function useFormInstance<Values extends FieldValues = FieldValues>(): UseFormRet
   return useFormContext("useFormInstance").form as unknown as UseFormReturn<Values>
 }
 
-type UseFormFieldArrayOptions<Values extends FieldValues, Name extends ArrayPath<Values>> = Omit<
-  UseFieldArrayProps<Values, Name>,
-  "name" | "control"
->
+/** react-hook-form's `useFieldArray` options without `name` and `control`; `keyName` names the rows' key property. */
+type UseFormFieldArrayOptions<
+  Values extends FieldValues,
+  Name extends ArrayPath<Values>,
+  KeyName extends string = "id",
+> = Omit<UseFieldArrayProps<Values, Name, KeyName>, "name" | "control">
 
 /** A field's live value, re-rendering only the caller: react-hook-form's `useWatch` bound to the surrounding `Form`. */
 function useFormWatch<Values extends FieldValues = FieldValues, Name extends FieldPath<Values> = FieldPath<Values>>(
@@ -37,13 +39,22 @@ function useFormWatch<Values extends FieldValues = FieldValues, Name extends Fie
   return useWatch<Values, Name>({ name, control: form.control })
 }
 
-/** react-hook-form's `useFieldArray` bound to the surrounding `Form`. Key rows by `field.id`, never by index. */
+/**
+ * react-hook-form's `useFieldArray` bound to the surrounding `Form`. Key rows by `field.id`, never by index. When the
+ * items carry their own `id`, pass `keyName: "fieldKey"` (any free name) and key rows by `field.fieldKey`:
+ * react-hook-form writes its row key over the property `keyName` names.
+ */
 function useFormFieldArray<
   Values extends FieldValues = FieldValues,
   Name extends ArrayPath<Values> = ArrayPath<Values>,
->(name: Name, options?: UseFormFieldArrayOptions<Values, Name>): UseFieldArrayReturn<Values, Name> {
+  KeyName extends string = "id",
+>(name: Name, options?: UseFormFieldArrayOptions<Values, Name, KeyName>): UseFieldArrayReturn<Values, Name, KeyName> {
   const form = useFormContext("useFormFieldArray").form as unknown as UseFormReturn<Values>
-  return useFieldArray<Values, Name>({ ...options, name, control: form.control })
+  return useFieldArray<Values, Name, KeyName>({
+    ...options,
+    name,
+    control: form.control,
+  })
 }
 
 export { useFormFieldArray, useFormInstance, useFormWatch }
