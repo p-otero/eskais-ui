@@ -11,9 +11,11 @@ import {
   NavigationMenuTrigger as NavigationMenuTriggerPrimitive,
   createNavigationMenuController,
 } from "@ui-sdk/react/navigation-menu"
+import { mergeProps } from "@ui-sdk/react/primitive"
 import { cva, type VariantProps } from "class-variance-authority"
 import type { ComponentProps } from "react"
 
+import { useFastLink } from "@/components/ui/fast-link"
 import { floatingSurfaceClassName } from "@/components/ui/popover"
 import { cnState } from "@/lib/utils"
 
@@ -97,13 +99,19 @@ const navigationMenuLinkVariants = cva("outline-none [&_svg]:pointer-events-none
   defaultVariants: { variant: "panel" },
 })
 
-function NavigationMenuLink({
-  className,
-  variant,
-  ...props
-}: ComponentProps<typeof NavigationMenuLinkPrimitive> & VariantProps<typeof navigationMenuLinkVariants>) {
+type NavigationMenuLinkProps = ComponentProps<typeof NavigationMenuLinkPrimitive> &
+  VariantProps<typeof navigationMenuLinkVariants> & {
+    /** Follows on a primary mouse press, like `Link` (default `true`); off for a `render`ed router link. */
+    fast?: boolean
+  }
+
+function NavigationMenuLink({ className, variant, fast = true, ...props }: NavigationMenuLinkProps) {
+  const ref = useFastLink<HTMLAnchorElement>({ enabled: fast && !props.render })
   return (
-    <NavigationMenuLinkPrimitive className={cnState(navigationMenuLinkVariants({ variant }), className)} {...props} />
+    <NavigationMenuLinkPrimitive
+      className={cnState(navigationMenuLinkVariants({ variant }), className)}
+      {...mergeProps({ ref }, props)}
+    />
   )
 }
 

@@ -2610,7 +2610,8 @@
       "registryDependencies": [
         "@eskais/utils",
         "@eskais/theme",
-        "@eskais/popover"
+        "@eskais/popover",
+        "@eskais/link"
       ],
       "files": [
         {
@@ -3602,17 +3603,22 @@
       "name": "link",
       "type": "registry:ui",
       "title": "Link",
-      "description": "Text link with inline, nav, muted, standalone and plain variants: underlined at rest or on hover so it never relies on colour, external and new-tab handling, aria-current, render for router links, and an opt-in onFollow that routes plain clicks and gives agents a follow action.",
+      "description": "Text link with inline, nav, muted, standalone and plain variants: underlined at rest or on hover so it never relies on colour, external and new-tab handling, aria-current, render for router links, an opt-in onFollow that routes plain clicks and gives agents a follow action, and fast navigation on a primary mouse press (fast={false} or data-no-fast-link to opt out); FastLinkRegion and useFastLink do the same for plain anchors.",
       "dependencies": [
         "@ui-sdk/core@0.1.0-beta.5",
         "@ui-sdk/react@0.1.0-beta.5",
-        "class-variance-authority@0.7.1"
+        "class-variance-authority@0.7.1",
+        "@fast-link/core@0.0.2"
       ],
       "registryDependencies": [
         "@eskais/utils",
         "@eskais/theme"
       ],
       "files": [
+        {
+          "path": "registry/ui/fast-link.tsx",
+          "type": "registry:ui"
+        },
         {
           "path": "registry/ui/link-primitive.ts",
           "type": "registry:ui"
