@@ -32,5 +32,6 @@
       "type": "registry:ui"
     }
   ],
+  "docs": "Put a `SkipLink` first in `<body>`, before the `Sidebar`, so keyboard users can jump past the navigation, and give the page content the target: `<SkipLink>Skip to content</SkipLink><Sidebar …/><PageLayout as=\"main\">…</PageLayout>` (PageLayout renders `<main id=\"main\">`). If your shell renders `<main>` itself, give it `id=\"main\" tabIndex={-1}`.",
   "type": "registry:ui"
 }

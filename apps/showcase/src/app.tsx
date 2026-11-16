@@ -11,7 +11,16 @@ import { useRef, useState } from "react"
 import { Appearance } from "@/components/ui/appearance"
 import { Badge } from "@/components/ui/badge"
 import { Button, buttonVariants } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import {
+  Card,
+  CardAction,
+  CardContent,
+  CardDescription,
+  CardEyebrow,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
 import { ConfirmDialog } from "@/components/ui/confirm-dialog"
 import {
   backdropClassName,
@@ -29,6 +38,8 @@ import {
 import { Field, FieldDescription, FieldError, FieldLabel } from "@/components/ui/field"
 import { Input, InputClear, InputGroup } from "@/components/ui/input"
 import { SearchField } from "@/components/ui/search-field"
+import { SkipLink } from "@/components/ui/skip-link"
+import { Spinner } from "@/components/ui/spinner"
 
 import { agent, approval, type ApprovalRequest } from "./agent"
 import { AppearanceControls, appearance, palettes } from "./appearance"
@@ -37,6 +48,7 @@ import { BoardSection } from "./sections/board"
 import { NavigationSection } from "./sections/navigation"
 import { OverlaysSection } from "./sections/overlays"
 import { DialogSizesSection } from "./sections/dialog-sizes"
+import { PageSection, StatesSection } from "./sections/page"
 import { FloatingSection } from "./sections/floating"
 import { ProposalsSection } from "./sections/proposals"
 import { StructureSection } from "./sections/structure"
@@ -69,6 +81,31 @@ function SearchDemo() {
         {searches.length === 0 ? "Press Enter to search, Escape to clear." : `Searched ${searches.join(", ")}`}
       </p>
     </div>
+  )
+}
+
+function LoadingButtons() {
+  const [loading, setLoading] = useState(false)
+  return (
+    <>
+      <Button variant="outline" aria-pressed={loading} onClick={() => setLoading(!loading)}>
+        Simulate loading
+      </Button>
+      <Button loading={loading}>
+        <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <path d="M12 3v12m0 0-4-4m4 4 4-4M5 21h14" />
+        </svg>
+        Export
+      </Button>
+      <Button variant="secondary" loading={loading}>
+        Publish
+      </Button>
+      <Button variant="ghost" size="icon" aria-label="Refresh" loading={loading}>
+        <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <path d="M20 11a8 8 0 1 0-2.3 5.7M20 4v7h-7" />
+        </svg>
+      </Button>
+    </>
   )
 }
 
@@ -195,6 +232,7 @@ function AgentPanel() {
 function App() {
   return (
     <Appearance appearance={appearance}>
+      <SkipLink>Skip to content</SkipLink>
       <div className="mx-auto flex max-w-4xl flex-col gap-6 px-4 py-10">
         <header className="flex flex-wrap items-end justify-between gap-4">
           <div className="flex flex-col gap-1">
@@ -204,14 +242,17 @@ function App() {
           <AppearanceControls />
         </header>
 
-        <main className="flex flex-col gap-6">
+        <main id="main" tabIndex={-1} className="flex flex-col gap-6 outline-none">
           <Section
             title="Theme"
             description="Seed tokens: pick a preset or a brand colour, tint the greys, set the radius, then copy the CSS."
           >
             <ThemeEditor appearance={appearance} palettes={palettes} />
           </Section>
-          <Section title="Button" description="Variants, sizes, async pending and focusable-when-disabled.">
+          <Section
+            title="Button"
+            description="Variants, sizes, async pending, loading (the spinner replaces the leading icon, the width holds) and focusable-when-disabled."
+          >
             <Button>Default</Button>
             <Button variant="secondary">Secondary</Button>
             <Button variant="outline">Outline</Button>
@@ -226,6 +267,20 @@ function App() {
             <Button disabled focusableWhenDisabled>
               Unavailable
             </Button>
+            <LoadingButtons />
+          </Section>
+
+          <Section
+            title="Spinner"
+            description="Sized like an icon, in currentColor. Decorative by default; a label makes it a status. Pulses under reduced motion."
+          >
+            <Spinner size="sm" />
+            <Spinner />
+            <Spinner size="lg" />
+            <span className="inline-flex items-center gap-inline text-sm text-muted-foreground">
+              <Spinner label="Syncing projects" />
+              Syncing
+            </span>
           </Section>
 
           <Section title="Input" description="Field wiring, input groups and a clear button that returns focus.">
@@ -269,7 +324,10 @@ function App() {
             <DeleteProject />
           </Section>
 
-          <Section title="Card and Badge" description="Presentational parts on semantic tokens.">
+          <Section
+            title="Card and Badge"
+            description="A titled Card is a section named by its title. Eyebrow, action slot and heading level."
+          >
             <Badge>Default</Badge>
             <Badge variant="secondary">Secondary</Badge>
             <Badge variant="outline">Outline</Badge>
@@ -280,8 +338,14 @@ function App() {
             <Badge tone="destructive">Failed</Badge>
             <Card className="w-full max-w-sm">
               <CardHeader>
-                <CardTitle>Apollo</CardTitle>
+                <CardEyebrow>Project</CardEyebrow>
+                <CardTitle headingLevel={3}>Apollo</CardTitle>
                 <CardDescription>Last deployed 2 hours ago</CardDescription>
+                <CardAction>
+                  <Button size="sm" variant="ghost">
+                    Share
+                  </Button>
+                </CardAction>
               </CardHeader>
               <CardContent>
                 <Badge tone="success">Ready</Badge>
@@ -293,6 +357,10 @@ function App() {
               </CardFooter>
             </Card>
           </Section>
+
+          <PageSection />
+
+          <StatesSection />
 
           <StructureSection />
 

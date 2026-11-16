@@ -1,13 +1,14 @@
 "use client"
 
-import { Button as ButtonPrimitive } from "@ui-sdk/react/button"
+import { Button as ButtonPrimitive, type ButtonState } from "@ui-sdk/react/button"
 import { cva, type VariantProps } from "class-variance-authority"
-import type { ComponentProps } from "react"
+import { Children, isValidElement, type ComponentProps, type ReactNode } from "react"
 
+import { Spinner } from "@/components/ui/spinner"
 import { cnState } from "@/lib/utils"
 
 const buttonVariants = cva(
-  "touch-target inline-flex shrink-0 cursor-pointer items-center justify-center gap-inline rounded-control text-sm font-medium whitespace-nowrap transition-colors outline-none select-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background data-disabled:cursor-not-allowed data-disabled:opacity-50 active:not-data-disabled:translate-y-px data-pending:cursor-progress [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
+  "touch-target inline-flex shrink-0 cursor-pointer items-center justify-center gap-inline rounded-control text-sm font-medium whitespace-nowrap transition-colors outline-none select-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background data-disabled:not-data-pending:cursor-not-allowed data-disabled:not-data-pending:opacity-50 active:not-data-disabled:translate-y-px data-pending:relative data-pending:cursor-progress data-pending:[&>[data-slot=spinner]+*]:hidden data-pending:has-[>[data-slot=spinner][data-overlay]]:text-transparent! [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
   {
     variants: {
       variant: {
@@ -29,16 +30,74 @@ const buttonVariants = cva(
   },
 )
 
-type ButtonProps = ComponentProps<typeof ButtonPrimitive> & VariantProps<typeof buttonVariants>
+type ButtonVariants = VariantProps<typeof buttonVariants>
 
-function Button({ className, variant, size, ...props }: ButtonProps) {
+type ButtonBaseProps = Omit<ComponentProps<typeof ButtonPrimitive>, "aria-label"> & {
+  variant?: ButtonVariants["variant"]
+  /** Shows a spinner, sets `aria-busy` and ignores presses while keeping focus, for work this button didn't start. */
+  loading?: boolean
+}
+
+type ButtonProps =
+  | (ButtonBaseProps & { size?: Exclude<ButtonVariants["size"], "icon">; "aria-label"?: string })
+  | (ButtonBaseProps & { size: "icon"; "aria-label": string })
+
+const overlaySpinnerVariants = cva("absolute inset-0 m-auto", {
+  variants: {
+    variant: {
+      default: "text-primary-foreground",
+      secondary: "text-secondary-foreground",
+      outline: "text-foreground",
+      ghost: "text-foreground",
+      destructive: "text-destructive-foreground",
+      link: "text-link",
+    },
+  },
+  defaultVariants: { variant: "default" },
+})
+
+// A leading icon is swapped for the spinner, so the width holds. Text alone stays in place with transparent colour
+// under a centered spinner. It stays a direct child: Chrome drops text inside a wrapper from a busy button's name.
+function withSpinner(children: ReactNode, iconOnly: boolean, variant: ButtonVariants["variant"]) {
+  const items = Children.toArray(children)
+  const leadingIcon = isValidElement(items[0]) && (items.length > 1 || iconOnly)
+  return (
+    <>
+      {leadingIcon ? (
+        <Spinner data-show="pending" />
+      ) : (
+        <Spinner data-show="pending" data-overlay="" className={overlaySpinnerVariants({ variant })} />
+      )}
+      {children}
+    </>
+  )
+}
+
+function Button({
+  className,
+  variant,
+  size,
+  loading,
+  disabled,
+  focusableWhenDisabled,
+  children,
+  ...props
+}: ButtonProps) {
+  const iconOnly = size === "icon"
   return (
     <ButtonPrimitive
       data-variant={variant ?? "default"}
       data-size={size ?? "default"}
+      {...(loading ? { "data-pending": "", "aria-busy": true } : {})}
+      disabled={disabled || loading}
+      focusableWhenDisabled={focusableWhenDisabled || loading}
       className={cnState(buttonVariants({ variant, size }), className)}
       {...props}
-    />
+    >
+      {typeof children === "function"
+        ? (state: ButtonState) => withSpinner(children(state), iconOnly, variant)
+        : withSpinner(children, iconOnly, variant)}
+    </ButtonPrimitive>
   )
 }
 

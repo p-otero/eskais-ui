@@ -1,4 +1,5 @@
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import { Button } from "@/components/ui/button"
 import { Field, FieldDescription, FieldLabel } from "@/components/ui/field"
 import { Label } from "@/components/ui/label"
 import { Meter, MeterLabel, MeterTrack, MeterValue } from "@/components/ui/meter"
@@ -148,6 +149,26 @@ function FormsSection() {
             <AlertDescription>{alert.description}</AlertDescription>
           </Alert>
         ))}
+        <Alert
+          tone="destructive"
+          className="sm:col-span-2"
+          action={
+            <Button size="sm" variant="outline">
+              Retry upload
+            </Button>
+          }
+        >
+          <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <circle cx="12" cy="12" r="9" />
+            <path d="M12 8v4m0 4h.01" />
+          </svg>
+          <AlertTitle>Upload of quarterly-report-final-v12-reviewed-approved-signed.pdf failed</AlertTitle>
+          <AlertDescription>
+            The file at
+            https://storage.example.com/uploads/2026/11/quarterly-report-final-v12-reviewed-approved-signed.pdf timed
+            out. The action moves below the text when the alert is narrow.
+          </AlertDescription>
+        </Alert>
       </div>
     </Section>
   )

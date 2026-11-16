@@ -1,13 +1,12 @@
-import { useId, type ReactNode } from "react"
+import type { ReactNode } from "react"
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 
 function Section({ title, description, children }: { title: string; description: string; children: ReactNode }) {
-  const titleId = useId()
   return (
-    <Card render={<section aria-labelledby={titleId} />}>
+    <Card>
       <CardHeader>
-        <CardTitle render={<h2 id={titleId}>{title}</h2>} />
+        <CardTitle headingLevel={2}>{title}</CardTitle>
         <CardDescription>{description}</CardDescription>
       </CardHeader>
       <CardContent>

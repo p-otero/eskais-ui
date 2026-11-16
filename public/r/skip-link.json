@@ -1,0 +1,19 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "skip-link",
+  "title": "Skip Link",
+  "description": "A link to the main content that stays hidden until it takes keyboard focus, then floats at the top start of the viewport above everything else.",
+  "registryDependencies": [
+    "@eskais/utils",
+    "@eskais/theme"
+  ],
+  "files": [
+    {
+      "path": "registry/ui/skip-link.tsx",
+      "content": "import type { ComponentProps, ReactNode } from \"react\"\n\nimport { cn } from \"@/lib/utils\"\n\ntype SkipLinkProps = Omit<ComponentProps<\"a\">, \"children\"> & {\n  /** The link text, in the page's language, like \"Skip to content\". */\n  children: ReactNode\n}\n\n// Fixed, not absolute, so it shows at the top of the viewport wherever the page is scrolled when it takes focus.\nfunction SkipLink({ href = \"#main\", className, children, ...props }: SkipLinkProps) {\n  return (\n    <a\n      data-slot=\"skip-link\"\n      href={href}\n      className={cn(\n        \"sr-only rounded-control border border-floating-border bg-popover px-control-x text-sm font-medium text-popover-foreground shadow-floating outline-none focus:not-sr-only focus:fixed focus:start-floating focus:top-floating focus:z-toast focus:inline-flex focus:h-control focus:items-center focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background\",\n        className,\n      )}\n      {...props}\n    >\n      {children}\n    </a>\n  )\n}\n\nexport { SkipLink }\nexport type { SkipLinkProps }\n",
+      "type": "registry:ui"
+    }
+  ],
+  "docs": "Render it first in `<body>`: `<SkipLink>Skip to content</SkipLink>`. The text is required (write it in the page's language); `href` defaults to `#main`, which `PageLayout as=\"main\"` provides. See the Sidebar docs for where it goes in an app shell.",
+  "type": "registry:ui"
+}

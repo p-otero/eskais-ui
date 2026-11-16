@@ -745,13 +745,12 @@
       ]
     },
     {
-      "name": "button",
+      "name": "spinner",
       "type": "registry:ui",
-      "title": "Button",
-      "description": "UI SDK Button with variants: async pending state, focusable-when-disabled, link rendering.",
+      "title": "Spinner",
+      "description": "An SVG spinner in currentColor, sized like an icon (sm, md, lg). Decorative by default; with a label it becomes a role=status region. Pulses instead of spinning under reduced motion.",
+      "docs": "Decorative by default (`aria-hidden`): put it next to text that already says what is loading, or inside a Button, which shows it while pending. Pass `label` (in the page's language) when the spinner is the only sign of loading: it becomes `role=\"status\"` with a screen-reader-only label.",
       "dependencies": [
-        "@ui-sdk/core@0.1.0-beta.5",
-        "@ui-sdk/react@0.1.0-beta.5",
         "class-variance-authority@0.7.1"
       ],
       "registryDependencies": [
@@ -760,10 +759,33 @@
       ],
       "files": [
         {
-          "path": "registry/ui/button.tsx",
+          "path": "registry/ui/spinner.tsx",
           "type": "registry:ui"
         }
       ]
+    },
+    {
+      "name": "button",
+      "type": "registry:ui",
+      "title": "Button",
+      "description": "UI SDK Button with variants: async pending state, a loading prop with a spinner, focusable-when-disabled, link rendering.",
+      "dependencies": [
+        "@ui-sdk/core@0.1.0-beta.5",
+        "@ui-sdk/react@0.1.0-beta.5",
+        "class-variance-authority@0.7.1"
+      ],
+      "registryDependencies": [
+        "@eskais/utils",
+        "@eskais/theme",
+        "@eskais/spinner"
+      ],
+      "files": [
+        {
+          "path": "registry/ui/button.tsx",
+          "type": "registry:ui"
+        }
+      ],
+      "docs": "Return a Promise from `onClick` and the button stays pending until it settles: `aria-busy`, presses ignored, focus kept, a spinner, and `pendingAnnouncement` after a second. For work the button didn't start (a form submit, a mutation elsewhere), pass `loading`: it renders the same state through `disabled` + `focusableWhenDisabled`, as UI SDK documents for external pending flags. The spinner takes the leading icon's place, or sits centered over the label, so the width never changes. `size=\"icon\"` requires `aria-label`."
     },
     {
       "name": "field",
@@ -861,7 +883,8 @@
       "registryDependencies": [
         "@eskais/utils",
         "@eskais/button",
-        "@eskais/dialog"
+        "@eskais/dialog",
+        "@eskais/spinner"
       ],
       "files": [
         {
@@ -874,9 +897,10 @@
       "name": "card",
       "type": "registry:ui",
       "title": "Card",
-      "description": "Presentational card parts rendered with UI SDK renderElement (render prop, server-safe).",
+      "description": "Card parts: a titled card renders as a section labelled by its title, with an eyebrow, a top-end action slot, a heading level on the title and card, dashed or bare surfaces.",
       "dependencies": [
-        "@ui-sdk/react@0.1.0-beta.5"
+        "@ui-sdk/react@0.1.0-beta.5",
+        "class-variance-authority@0.7.1"
       ],
       "registryDependencies": [
         "@eskais/utils",
@@ -885,6 +909,25 @@
       "files": [
         {
           "path": "registry/ui/card.tsx",
+          "type": "registry:ui"
+        }
+      ],
+      "docs": "A `Card` renders `<section>`; once it holds a `CardTitle` it gets `aria-labelledby` pointing at the title, so it is a named region. Give the title `headingLevel` to make it a heading. `CardEyebrow` sits above the title, `CardAction` at the top end of `CardHeader`. `surface` is `card` (default), `dashed` or `none`. To keep a card out of the landmarks (a card per list item), pass `render={<div />}` or `render={<li />}`."
+    },
+    {
+      "name": "section",
+      "type": "registry:ui",
+      "title": "Section",
+      "description": "A titled block of a page, composed from Card: eyebrow, title at a heading level, description, top-end action, footer; card, bare or dashed (create tile) surfaces and sm or md padding.",
+      "docs": "`<Section title=\"Members\" action={<Button>Invite</Button>}>…</Section>` renders a `section` named by its title (an `h2` unless `headingLevel` says otherwise). `surface=\"none\"` keeps the heading without a box, `surface=\"dashed\"` is the outlined tile for creating something. `padding=\"sm\"` tightens dense dashboards.",
+      "registryDependencies": [
+        "@eskais/utils",
+        "@eskais/theme",
+        "@eskais/card"
+      ],
+      "files": [
+        {
+          "path": "registry/ui/section.tsx",
           "type": "registry:ui"
         }
       ]
@@ -1034,7 +1077,7 @@
       "name": "empty",
       "type": "registry:ui",
       "title": "Empty",
-      "description": "Presentational empty-state parts: media, title, description and actions.",
+      "description": "Presentational empty-state parts in three sizes (inline, panel, page): media, title, description and actions.",
       "dependencies": [
         "@ui-sdk/react@0.1.0-beta.5",
         "class-variance-authority@0.7.1"
@@ -1046,6 +1089,40 @@
       "files": [
         {
           "path": "registry/ui/empty.tsx",
+          "type": "registry:ui"
+        }
+      ]
+    },
+    {
+      "name": "states",
+      "type": "registry:ui",
+      "title": "States",
+      "description": "Screen states that never lie: LoadingState (spinner or skeleton, busy, label for screen readers), ErrorState (alert, retry, collapsible details) and DataState, which picks loading, error, empty or your content from a status and never shows empty while pending or after an error.",
+      "docs": "One item, three components (`error-state`, `loading-state`, `data-state`), since DataState renders the other two and Empty by default. `<DataState status data error onRetry labels={{ errorTitle, retry, emptyTitle }}>{(data) => …}</DataState>` works with any data library: map its status to `pending`, `error` or `success`. Visible copy has no default: the types require `errorTitle` and `emptyTitle` (and `retry` with `onRetry`) unless you pass `renderError` and `empty`. `loading` and `refreshing` are screen-reader labels and default to English. While a refetch is pending, the last data stays on screen with `aria-busy` and a small spinner (`keepPreviousData`, default true); pass `fetching` for libraries whose status stays `success` during a refetch. `isEmpty` decides what counts as empty (an empty array, `null` or `undefined` by default). Every state takes `size`: `inline`, `panel` (default) or `page`.",
+      "dependencies": [
+        "@ui-sdk/react@0.1.0-beta.5",
+        "class-variance-authority@0.7.1"
+      ],
+      "registryDependencies": [
+        "@eskais/utils",
+        "@eskais/theme",
+        "@eskais/button",
+        "@eskais/collapsible",
+        "@eskais/empty",
+        "@eskais/skeleton",
+        "@eskais/spinner"
+      ],
+      "files": [
+        {
+          "path": "registry/ui/loading-state.tsx",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/error-state.tsx",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/data-state.tsx",
           "type": "registry:ui"
         }
       ]
@@ -1681,7 +1758,8 @@
         "@eskais/theme",
         "@eskais/button",
         "@eskais/confirm-dialog",
-        "@eskais/agent-task-board-core"
+        "@eskais/agent-task-board-core",
+        "@eskais/spinner"
       ],
       "files": [
         {
@@ -2246,7 +2324,7 @@
       "name": "alert",
       "type": "registry:ui",
       "title": "Alert",
-      "description": "Presentational alert with the shared tones (neutral, info, success, warning, destructive); role=alert only when asked.",
+      "description": "Presentational alert with the shared tones (neutral, info, success, warning, destructive), a trailing action slot, long text that wraps, and an opt-in live role.",
       "dependencies": [
         "@ui-sdk/react@0.1.0-beta.5",
         "class-variance-authority@0.7.1"
@@ -2261,7 +2339,8 @@
           "path": "registry/ui/alert.tsx",
           "type": "registry:ui"
         }
-      ]
+      ],
+      "docs": "Put an optional icon (`aria-hidden`), `AlertTitle` and `AlertDescription` inside. `action` takes a trailing Button; it moves below the text when the alert is narrower than 28rem. An alert is not a live region by default: pass `live` for one that appears after the page loads, and it becomes `role=\"alert\"` for warning and destructive tones and `role=\"status\"` otherwise. `announce` still works and is deprecated."
     },
     {
       "name": "calendar",
@@ -2381,7 +2460,8 @@
           "path": "registry/ui/sidebar.tsx",
           "type": "registry:ui"
         }
-      ]
+      ],
+      "docs": "Put a `SkipLink` first in `<body>`, before the `Sidebar`, so keyboard users can jump past the navigation, and give the page content the target: `<SkipLink>Skip to content</SkipLink><Sidebar …/><PageLayout as=\"main\">…</PageLayout>` (PageLayout renders `<main id=\"main\">`). If your shell renders `<main>` itself, give it `id=\"main\" tabIndex={-1}`."
     },
     {
       "name": "data-table",
@@ -2427,10 +2507,47 @@
       ]
     },
     {
+      "name": "skip-link",
+      "type": "registry:ui",
+      "title": "Skip Link",
+      "description": "A link to the main content that stays hidden until it takes keyboard focus, then floats at the top start of the viewport above everything else.",
+      "docs": "Render it first in `<body>`: `<SkipLink>Skip to content</SkipLink>`. The text is required (write it in the page's language); `href` defaults to `#main`, which `PageLayout as=\"main\"` provides. See the Sidebar docs for where it goes in an app shell.",
+      "registryDependencies": [
+        "@eskais/utils",
+        "@eskais/theme"
+      ],
+      "files": [
+        {
+          "path": "registry/ui/skip-link.tsx",
+          "type": "registry:ui"
+        }
+      ]
+    },
+    {
+      "name": "page-layout",
+      "type": "registry:ui",
+      "title": "Page Layout",
+      "description": "A page's column: centered at a dense (73.75rem), wide (90rem) or full width, with page gutters and gap-section between blocks, a header slot, and a workspace variant without padding for app-like screens.",
+      "docs": "`<PageLayout header={<PageHeader … />}>…</PageLayout>`. It renders a `div` by default, because the app shell often owns `<main>`; pass `as=\"main\"` when the page is the main content, and it renders `<main id=\"main\" tabIndex={-1}>` (pass `id` to change it) so a SkipLink reaches it. It is never a live region: announce changes from the component that changes (an Alert with `live`, a DataState). `variant=\"workspace\"` drops the gutters and the width cap, for screens that lay out their own panes.",
+      "dependencies": [
+        "class-variance-authority@0.7.1"
+      ],
+      "registryDependencies": [
+        "@eskais/utils",
+        "@eskais/theme"
+      ],
+      "files": [
+        {
+          "path": "registry/ui/page-layout.tsx",
+          "type": "registry:ui"
+        }
+      ]
+    },
+    {
       "name": "page-header",
       "type": "registry:ui",
       "title": "Page Header",
-      "description": "Presentational page header: a title at the heading level you choose, a description, an actions slot and an optional breadcrumb slot.",
+      "description": "Presentational page header: an eyebrow, a title at the heading level you choose, a description, an actions slot that wraps below the title on narrow screens, a breadcrumb slot and a tabs slot.",
       "registryDependencies": [
         "@eskais/utils",
         "@eskais/theme"
@@ -2440,7 +2557,8 @@
           "path": "registry/ui/page-header.tsx",
           "type": "registry:ui"
         }
-      ]
+      ],
+      "docs": "The title is an `h1` by default (`headingLevel` changes it) with a generated id, or `titleId`, for `aria-labelledby`. `eyebrow` is a small uppercase kicker above it. `tabs` takes a `TabsList` under the title row: wrap the page in `Tabs` so the list and its `TabsPanel`s share a root, and name the list with `aria-label`."
     },
     {
       "name": "filter-bar",

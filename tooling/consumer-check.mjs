@@ -23,6 +23,7 @@ const items = [
   "palettes",
   "font-geist",
   "appearance",
+  "spinner",
   "button",
   "field",
   "input",
@@ -30,6 +31,7 @@ const items = [
   "dialog",
   "confirm-dialog",
   "card",
+  "section",
   "badge",
   "tabs",
   "collapsible",
@@ -38,6 +40,7 @@ const items = [
   "avatar",
   "skeleton",
   "empty",
+  "states",
   "kbd",
   "table",
   "tooltip",
@@ -93,6 +96,8 @@ const items = [
   "resizable",
   "sidebar",
   "data-table",
+  "skip-link",
+  "page-layout",
   "page-header",
   "filter-bar",
   "chart",
@@ -317,10 +322,16 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { ConfirmDialog } from "@/components/ui/confirm-dialog"
+import { DataState } from "@/components/ui/data-state"
 import { Dialog, DialogContent, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Field, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
+import { PageHeader } from "@/components/ui/page-header"
+import { PageLayout } from "@/components/ui/page-layout"
 import { SearchField } from "@/components/ui/search-field"
+import { Section } from "@/components/ui/section"
+import { SkipLink } from "@/components/ui/skip-link"
+import { Spinner } from "@/components/ui/spinner"
 import { StatusDot } from "@/components/ui/status-pill"
 import type { TaskView } from "@/lib/agent-task-types"
 import "./index.css"
@@ -352,6 +363,13 @@ appearance.apply()
 function App() {
   return (
     <Appearance appearance={appearance}>
+    <SkipLink>Skip to content</SkipLink>
+    <PageLayout as="main" header={<PageHeader eyebrow="Consumer" title="Page" />}>
+    <Section title="Data" action={<Spinner label="Syncing" />}>
+      <DataState status="success" data={["a"]} labels={{ errorTitle: "Failed", emptyTitle: "Empty" }}>
+        {(items) => <p>{items.join(", ")}</p>}
+      </DataState>
+    </Section>
     <AgentTaskBoard tasks={tasks} mode="snapshot" generatedAt="2026-11-15T18:42:00Z" timeZone="UTC" />
     <Card data-theme="glass">
       <CardHeader><CardTitle className="narrow:text-title">Consumer</CardTitle></CardHeader>
@@ -360,12 +378,14 @@ function App() {
         <Badge tone="warning">Stale</Badge>
         <StatusDot tone="success" label="Online" pulse />
         <Button onClick={() => Promise.resolve()}>Save</Button>
+        <Button loading>Saving</Button>
         <Field><FieldLabel>Name</FieldLabel><Input /></Field>
         <SearchField label="Search" onSearch={() => {}} />
         <Dialog><DialogTrigger>Open</DialogTrigger><DialogContent><DialogTitle>Hi</DialogTitle></DialogContent></Dialog>
         <ConfirmDialog trigger="Delete" title="Delete?" confirmLabel="Delete" tone="destructive" agentConfirm="Deletes it" onConfirm={() => {}} />
       </CardContent>
     </Card>
+    </PageLayout>
     </Appearance>
   )
 }

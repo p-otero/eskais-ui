@@ -14,7 +14,7 @@ function ModelId() {
   return (
     <>
       <Tooltip delay={0}>
-        <TooltipTrigger render={<Button variant="ghost" size="icon" />}>
+        <TooltipTrigger render={<Button variant="ghost" size="icon" aria-label="Copy model ID" />}>
           <svg aria-hidden="true" />
         </TooltipTrigger>
         <TooltipContent>Copy model ID</TooltipContent>

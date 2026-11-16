@@ -2,6 +2,7 @@
 
 import { Button } from "@/components/ui/button"
 import { ConfirmDialog } from "@/components/ui/confirm-dialog"
+import { Spinner } from "@/components/ui/spinner"
 import type { AgentApproval, BoardMode } from "@/components/ui/agent-task-board-primitive"
 import { agentTaskBoardLabels, type ProposalLabels } from "@/lib/agent-task-board-labels"
 import { cn } from "@/lib/utils"
@@ -53,17 +54,7 @@ function ProposalActions({
           render={(props, state) => (
             <span className="flex flex-col items-start gap-inline">
               <button {...props}>
-                <svg
-                  data-show="pending"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  aria-hidden="true"
-                  className="animate-spin not-in-data-pending:hidden"
-                >
-                  <path d="M21 12a9 9 0 1 1-6.219-8.56" />
-                </svg>
+                <Spinner data-show="pending" />
                 {text.approve}
               </button>
               <span role="alert" className="text-sm text-destructive empty:hidden">

@@ -1,0 +1,20 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "section",
+  "title": "Section",
+  "description": "A titled block of a page, composed from Card: eyebrow, title at a heading level, description, top-end action, footer; card, bare or dashed (create tile) surfaces and sm or md padding.",
+  "registryDependencies": [
+    "@eskais/utils",
+    "@eskais/theme",
+    "@eskais/card"
+  ],
+  "files": [
+    {
+      "path": "registry/ui/section.tsx",
+      "content": "import type { ComponentProps, ReactNode } from \"react\"\n\nimport {\n  Card,\n  CardAction,\n  CardContent,\n  CardDescription,\n  CardEyebrow,\n  CardFooter,\n  CardHeader,\n  CardTitle,\n  type CardHeadingLevel,\n  type CardSurface,\n} from \"@/components/ui/card\"\nimport { cn } from \"@/lib/utils\"\n\ntype SectionProps = Omit<ComponentProps<typeof Card>, \"title\" | \"surface\"> & {\n  title: ReactNode\n  eyebrow?: ReactNode\n  description?: ReactNode\n  /** A control at the top end of the header, like a Button or a menu trigger. */\n  action?: ReactNode\n  headingLevel?: CardHeadingLevel\n  /** `card` (default), `none` for a titled group without a box, `dashed` for a \"create\" tile. */\n  surface?: CardSurface\n  /** `sm` tightens the inset for dense dashboards. Ignored without a surface. */\n  padding?: \"sm\" | \"md\"\n  footer?: ReactNode\n  titleId?: string\n}\n\nfunction Section({\n  title,\n  eyebrow,\n  description,\n  action,\n  headingLevel = 2,\n  surface = \"card\",\n  padding = \"md\",\n  footer,\n  titleId,\n  className,\n  children,\n  ...props\n}: SectionProps) {\n  const small = padding === \"sm\" && surface !== \"none\"\n  return (\n    <Card\n      data-padding={padding}\n      surface={surface}\n      className={cn(small && \"py-group [&>[data-slot^=card-]]:px-group\", className)}\n      {...props}\n    >\n      <CardHeader>\n        {eyebrow === undefined ? null : <CardEyebrow>{eyebrow}</CardEyebrow>}\n        <CardTitle headingLevel={headingLevel} id={titleId}>\n          {title}\n        </CardTitle>\n        {description === undefined ? null : <CardDescription>{description}</CardDescription>}\n        {action === undefined ? null : <CardAction>{action}</CardAction>}\n      </CardHeader>\n      {children === undefined ? null : <CardContent>{children}</CardContent>}\n      {footer === undefined ? null : <CardFooter>{footer}</CardFooter>}\n    </Card>\n  )\n}\n\nexport { Section }\nexport type { SectionProps }\n",
+      "type": "registry:ui"
+    }
+  ],
+  "docs": "`<Section title=\"Members\" action={<Button>Invite</Button>}>…</Section>` renders a `section` named by its title (an `h2` unless `headingLevel` says otherwise). `surface=\"none\"` keeps the heading without a box, `surface=\"dashed\"` is the outlined tile for creating something. `padding=\"sm\"` tightens dense dashboards.",
+  "type": "registry:ui"
+}

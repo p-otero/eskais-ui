@@ -14,7 +14,7 @@ import {
   YAxis,
 } from "recharts"
 
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardAction, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import {
   ChartContainer,
   ChartDataTable,
@@ -96,12 +96,12 @@ function ChartCard({
   const titleId = useId()
   return (
     <Card className="min-w-0">
-      <CardHeader className="flex-row flex-wrap items-start justify-between">
-        <div className="flex flex-col gap-1.5">
-          <CardTitle render={<h3 id={titleId}>{title}</h3>} />
-          <CardDescription>{description}</CardDescription>
-        </div>
-        {action}
+      <CardHeader>
+        <CardTitle headingLevel={3} id={titleId}>
+          {title}
+        </CardTitle>
+        <CardDescription>{description}</CardDescription>
+        {action === undefined ? null : <CardAction>{action}</CardAction>}
       </CardHeader>
       <CardContent>
         <div className="flex flex-col gap-3">{children(titleId)}</div>

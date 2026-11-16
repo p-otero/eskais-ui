@@ -1,0 +1,22 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "page-layout",
+  "title": "Page Layout",
+  "description": "A page's column: centered at a dense (73.75rem), wide (90rem) or full width, with page gutters and gap-section between blocks, a header slot, and a workspace variant without padding for app-like screens.",
+  "dependencies": [
+    "class-variance-authority@0.7.1"
+  ],
+  "registryDependencies": [
+    "@eskais/utils",
+    "@eskais/theme"
+  ],
+  "files": [
+    {
+      "path": "registry/ui/page-layout.tsx",
+      "content": "import { cva } from \"class-variance-authority\"\nimport type { ComponentProps, ReactNode } from \"react\"\n\nimport { cn } from \"@/lib/utils\"\n\ntype PageWidth = \"dense\" | \"wide\" | \"full\"\n\nconst pageLayoutVariants = cva(\"flex w-full min-w-0 flex-col\", {\n  variants: {\n    variant: {\n      default: \"items-center px-section py-section narrow:px-group narrow:py-group\",\n      workspace: \"min-h-0 flex-1\",\n    },\n  },\n  defaultVariants: { variant: \"default\" },\n})\n\nconst pageContentVariants = cva(\"flex w-full min-w-0 flex-col\", {\n  variants: {\n    variant: { default: \"gap-section\", workspace: \"min-h-0 flex-1\" },\n    width: { dense: \"max-w-295\", wide: \"max-w-360\", full: \"\" },\n  },\n  defaultVariants: { variant: \"default\", width: \"dense\" },\n})\n\ntype PageLayoutProps = Omit<ComponentProps<\"div\">, \"title\"> & {\n  /** `dense` caps the content at 73.75rem, `wide` at 90rem, `full` has no cap. Ignored by the workspace variant. */\n  width?: PageWidth\n  /** `workspace` drops the padding and the cap for app-like screens that lay out their own panes. */\n  variant?: \"default\" | \"workspace\"\n  /** Usually a PageHeader. It comes first, in the same column as the content. */\n  header?: ReactNode\n  /**\n   * `main` renders the `<main>` landmark, with `id=\"main\"` unless you pass one, so a SkipLink's default `#main` reaches it.\n   * Leave it as `div` when the app shell already renders `<main>`: a page has only one.\n   */\n  as?: \"div\" | \"main\"\n}\n\nfunction PageLayout({\n  width = \"dense\",\n  variant = \"default\",\n  header,\n  as = \"div\",\n  id,\n  className,\n  children,\n  ...props\n}: PageLayoutProps) {\n  const Element = as\n  const workspace = variant === \"workspace\"\n  // tabIndex -1 lets a skip link move focus into <main>, not only scroll to it, so the next Tab starts there.\n  return (\n    <Element\n      data-slot=\"page-layout\"\n      data-variant={variant}\n      data-width={workspace ? \"full\" : width}\n      id={as === \"main\" ? (id ?? \"main\") : id}\n      tabIndex={as === \"main\" ? -1 : undefined}\n      className={cn(pageLayoutVariants({ variant }), as === \"main\" && \"outline-none\", className)}\n      {...props}\n    >\n      <div\n        data-slot=\"page-layout-content\"\n        className={pageContentVariants({ variant, width: workspace ? \"full\" : width })}\n      >\n        {header}\n        {children}\n      </div>\n    </Element>\n  )\n}\n\nexport { PageLayout }\nexport type { PageLayoutProps, PageWidth }\n",
+      "type": "registry:ui"
+    }
+  ],
+  "docs": "`<PageLayout header={<PageHeader … />}>…</PageLayout>`. It renders a `div` by default, because the app shell often owns `<main>`; pass `as=\"main\"` when the page is the main content, and it renders `<main id=\"main\" tabIndex={-1}>` (pass `id` to change it) so a SkipLink reaches it. It is never a live region: announce changes from the component that changes (an Alert with `live`, a DataState). `variant=\"workspace\"` drops the gutters and the width cap, for screens that lay out their own panes.",
+  "type": "registry:ui"
+}

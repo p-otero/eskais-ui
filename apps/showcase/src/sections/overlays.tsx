@@ -110,7 +110,7 @@ function OverlaysSection() {
       description="Tooltip, popover, drawer, dropdown menu and toast. Floating surfaces turn glassy with the glass theme."
     >
       <Tooltip>
-        <TooltipTrigger render={<Button variant="outline" size="icon" />}>
+        <TooltipTrigger render={<Button variant="outline" size="icon" aria-label="Copy model ID" />}>
           <CopyIcon />
         </TooltipTrigger>
         <TooltipContent>Copy model ID</TooltipContent>

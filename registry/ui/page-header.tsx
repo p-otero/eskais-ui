@@ -6,19 +6,25 @@ type PageHeadingLevel = 1 | 2 | 3 | 4 | 5 | 6
 
 type PageHeaderProps = Omit<ComponentProps<"div">, "title"> & {
   title: ReactNode
+  /** A short kicker above the title, like the section or object type. */
+  eyebrow?: ReactNode
   headingLevel?: PageHeadingLevel
   description?: ReactNode
   actions?: ReactNode
   breadcrumb?: ReactNode
+  /** A slot under the title row for a TabsList. Wrap the page in Tabs so the list and its panels share one root. */
+  tabs?: ReactNode
   titleId?: string
 }
 
 function PageHeader({
   title,
+  eyebrow,
   headingLevel = 1,
   description,
   actions,
   breadcrumb,
+  tabs,
   titleId: titleIdProp,
   className,
   ...props
@@ -33,9 +39,18 @@ function PageHeader({
           {breadcrumb}
         </div>
       )}
-      <div className="flex flex-wrap items-start justify-between gap-group">
+      <div className="flex flex-wrap items-start justify-between gap-group narrow:flex-col narrow:items-stretch">
         <div className="flex min-w-0 flex-1 flex-col gap-inline">
-          <Heading id={titleId} data-slot="page-header-title" className="text-display-sm tracking-tight text-balance">
+          {eyebrow !== undefined && (
+            <p data-slot="page-header-eyebrow" className="text-meta tracking-meta text-muted-foreground uppercase">
+              {eyebrow}
+            </p>
+          )}
+          <Heading
+            id={titleId}
+            data-slot="page-header-title"
+            className="text-display-sm tracking-tight text-balance wrap-anywhere"
+          >
             {title}
           </Heading>
           {description !== undefined && (
@@ -50,6 +65,12 @@ function PageHeader({
           </div>
         )}
       </div>
+      {tabs !== undefined && (
+        // The bleed keeps the tabs' focus rings inside the scroll box, which would clip them.
+        <div data-slot="page-header-tabs" className="-m-inline flex min-w-0 overflow-x-auto p-inline">
+          {tabs}
+        </div>
+      )}
     </div>
   )
 }
