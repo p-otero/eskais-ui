@@ -88,6 +88,21 @@ Set the aliases to `#components`, `#ui`, `#lib/utils`, `#lib` and `#hooks`. shad
 
 Keep the extension out of the mapping. `ui` holds `.ts` files next to the `.tsx` ones (`form-context.ts`, `form-messages.ts`, every `*-primitive.ts`), so a mapping that appends one, like `"#ui/components/*": "./src/components/ui/*.tsx"`, can't reach them: shadcn then writes `#ui/components/form-context` with no extension, and it resolves to a `.tsx` file that doesn't exist. No pattern fixes that, since an import without an extension doesn't say which file it means. `node tooling/consumer-check.mjs npm imports` checks the mapping above with `form`, and `imports-tsx` checks that the `.tsx` one still fails.
 
+A `ui/` folder isn't required: a flat layout, with every component in `src/components`, works too. Point both aliases at that folder:
+
+```json
+{
+  "imports": {
+    "#components/*": "./src/components/*",
+    "#ui/*": "./src/components/*",
+    "#lib/*": "./src/lib/*",
+    "#hooks/*": "./src/hooks/*"
+  }
+}
+```
+
+The aliases stay the same (`#components`, `#ui`, `#lib/utils`, `#lib`, `#hooks`), and shadcn writes the files into `src/components`. In the files it writes, it imports one component from another through the first alias that matches, `components`: `form-actions.tsx` imports `#components/form-context.ts`, not `#ui/form-context.ts`. Both resolve to the same file, so your own code can import either way (`#ui/button.tsx` or `#components/button.tsx`). With a `ui/` folder, as above, every import between components is `#ui/…`. `node tooling/consumer-check.mjs npm imports-flat` checks the flat layout with `form`.
+
 Two things to know when you run shadcn:
 
 - **Package manager.** shadcn installs dependencies with the manager it finds from your lockfile, or from `packageManager` in `package.json`. In a pnpm project without a lockfile yet, set `"packageManager": "pnpm@<version>"`, or shadcn falls back to npm.

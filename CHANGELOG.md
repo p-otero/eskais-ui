@@ -16,6 +16,7 @@ Versions follow [semver](https://semver.org). Before 1.0, a minor version can br
 - `FormDialog` `reviewStep.prepare(values, { form })` gets the form instance. Values it returns are written into the form, so Edit shows them and they are submitted; values it writes through `form` without returning any are parsed again and reviewed. Returned values win.
 - `formIssueMessage` writes a reserved `@@form:` prefix, so every code round-trips: `formIssueMessage("email")` used to come back as `invalid` with the text "email". A coded issue's `message` is now `undefined`, not the code, so a `messages` function that prefers `issue.message` no longer prints the raw code. Messages in the earlier `code|{json}` form still read.
 - `select.tsx` writes its internal empty value with an escape sequence instead of a raw NUL character, which made git treat the file as binary. A test fails on any raw control character other than tab, LF and CR in `registry`, `apps`, `tooling` and `test`.
+- README and skill: a flat layout (`#ui/*` and `#components/*` on one `src/components` folder) is supported, and shadcn then writes the imports between components as `#components/x.tsx`. The `imports-flat` consumer check covers it.
 
 ## 0.1.0 (2026-11-16)
 
