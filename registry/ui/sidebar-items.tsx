@@ -1,12 +1,10 @@
 "use client"
 
-import { renderElement } from "@ui-sdk/react/primitive"
-import { createContext, createElement, use, useId, type ComponentProps, type ReactElement, type ReactNode } from "react"
+import { createContext, use, useId, type ComponentProps, type ReactElement, type ReactNode } from "react"
 
+import { Link, type LinkProps } from "@/components/ui/link"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import { cn } from "@/lib/utils"
-
-type TooltipTriggerProps = Omit<ComponentProps<typeof TooltipTrigger>, "render">
 
 const SidebarRailContext = createContext(false)
 
@@ -33,7 +31,7 @@ function SidebarGroup({ label, className, children, ...props }: SidebarGroupProp
   )
 }
 
-type SidebarItemProps = Omit<ComponentProps<"a">, "children"> & {
+type SidebarItemProps = Omit<LinkProps, "children" | "current" | "variant" | "render"> & {
   icon?: ReactNode
   current?: boolean
   badge?: ReactNode
@@ -49,7 +47,8 @@ function SidebarItem({ icon, current = false, badge, render, className, children
   const linkProps = {
     "data-slot": "sidebar-item",
     "data-current": current ? "" : undefined,
-    "aria-current": current ? ("page" as const) : undefined,
+    current,
+    variant: "plain" as const,
     className: cn(itemClassName, className),
     ...props,
   }
@@ -64,13 +63,13 @@ function SidebarItem({ icon, current = false, badge, render, className, children
     <li data-slot="sidebar-item-container">
       {rail ? (
         <Tooltip type="label">
-          <TooltipTrigger render={render ?? createElement("a")} {...(linkProps as TooltipTriggerProps)}>
-            {content}
-          </TooltipTrigger>
+          <TooltipTrigger render={<Link {...linkProps} render={render} />}>{content}</TooltipTrigger>
           <TooltipContent side="right">{children}</TooltipContent>
         </Tooltip>
       ) : (
-        renderElement("a", { ...linkProps, children: content }, render)
+        <Link {...linkProps} render={render}>
+          {content}
+        </Link>
       )}
     </li>
   )

@@ -1,0 +1,20 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "site-footer",
+  "title": "Site Footer",
+  "description": "A page footer: brand, description, groups of links as named navigation landmarks, and a bottom line.",
+  "registryDependencies": [
+    "@eskais/utils",
+    "@eskais/theme",
+    "@eskais/link",
+    "@eskais/separator"
+  ],
+  "files": [
+    {
+      "path": "registry/ui/site-footer.tsx",
+      "content": "import type { ComponentProps, ReactNode } from \"react\"\n\nimport { Link, type LinkProps } from \"@/components/ui/link\"\nimport { Separator } from \"@/components/ui/separator\"\nimport { cn } from \"@/lib/utils\"\n\ntype SiteFooterLink = Omit<LinkProps, \"children\" | \"variant\"> & { label: ReactNode; href: string }\n\ntype SiteFooterGroup = {\n  /** The group's heading, which also names its navigation landmark. */\n  title: string\n  links: readonly SiteFooterLink[]\n}\n\ntype SiteFooterProps = Omit<ComponentProps<\"footer\">, \"children\"> & {\n  /** The logo and name, usually a Link to the home page. */\n  brand?: ReactNode\n  description?: ReactNode\n  groups?: readonly SiteFooterGroup[]\n  /** The line under the separator: a copyright, a licence, a note. */\n  bottom?: ReactNode\n  /** Anything else beside the groups, like a newsletter form. */\n  children?: ReactNode\n}\n\nconst noGroups: readonly SiteFooterGroup[] = []\n\nfunction SiteFooter({ brand, description, groups = noGroups, bottom, className, children, ...props }: SiteFooterProps) {\n  return (\n    <footer data-slot=\"site-footer\" className={cn(\"@container w-full border-t\", className)} {...props}>\n      <div className=\"mx-auto flex w-full max-w-295 flex-col gap-group px-section py-section narrow:px-group\">\n        <div className=\"flex flex-col gap-section @3xl:flex-row @3xl:justify-between\">\n          {(brand !== undefined || description !== undefined) && (\n            <div className=\"flex max-w-xs flex-col gap-items\">\n              {brand !== undefined && (\n                <div data-slot=\"site-footer-brand\" className=\"flex items-center gap-inline text-title-sm\">\n                  {brand}\n                </div>\n              )}\n              {description !== undefined && <p className=\"text-body-sm text-muted-foreground\">{description}</p>}\n            </div>\n          )}\n          <div className=\"flex flex-wrap gap-section\">\n            {groups.map((group) => (\n              <nav key={group.title} aria-label={group.title} className=\"flex flex-col gap-items\">\n                <p className=\"text-meta tracking-meta text-muted-foreground uppercase\">{group.title}</p>\n                <ul className=\"flex flex-col gap-inline\">\n                  {group.links.map(({ label, ...link }) => (\n                    <li key={link.href}>\n                      <Link variant=\"muted\" className=\"text-body-sm\" {...link}>\n                        {label}\n                      </Link>\n                    </li>\n                  ))}\n                </ul>\n              </nav>\n            ))}\n            {children}\n          </div>\n        </div>\n        {bottom !== undefined && (\n          <>\n            <Separator />\n            <div data-slot=\"site-footer-bottom\" className=\"text-caption text-muted-foreground\">\n              {bottom}\n            </div>\n          </>\n        )}\n      </div>\n    </footer>\n  )\n}\n\nexport { SiteFooter }\nexport type { SiteFooterGroup, SiteFooterLink, SiteFooterProps }\n",
+      "type": "registry:ui"
+    }
+  ],
+  "type": "registry:block"
+}

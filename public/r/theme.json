@@ -94,6 +94,16 @@
       "color-series-negative": "var(--series-negative)",
       "color-series-target": "var(--series-target)",
       "color-series-remaining": "var(--series-remaining)",
+      "color-syntax-keyword": "var(--syntax-keyword)",
+      "color-syntax-string": "var(--syntax-string)",
+      "color-syntax-number": "var(--syntax-number)",
+      "color-syntax-comment": "var(--syntax-comment)",
+      "color-syntax-function": "var(--syntax-function)",
+      "color-syntax-type": "var(--syntax-type)",
+      "color-syntax-property": "var(--syntax-property)",
+      "color-syntax-tag": "var(--syntax-tag)",
+      "color-syntax-punctuation": "var(--syntax-punctuation)",
+      "color-code-highlight": "var(--code-highlight)",
       "radius-sm": "calc(var(--radius) - 4px)",
       "radius-md": "calc(var(--radius) - 2px)",
       "radius-lg": "var(--radius)",
@@ -160,6 +170,15 @@
       "chart-3": "#0ba975",
       "chart-4": "oklch(0.44 0.16 305)",
       "chart-5": "oklch(0.48 0.09 75)",
+      "syntax-keyword": "oklch(0.47 0.2 300)",
+      "syntax-string": "oklch(0.46 0.12 150)",
+      "syntax-number": "oklch(0.48 0.13 45)",
+      "syntax-comment": "oklch(0.48 0.015 260)",
+      "syntax-function": "oklch(0.47 0.17 262)",
+      "syntax-type": "oklch(0.46 0.09 200)",
+      "syntax-property": "oklch(0.48 0.16 20)",
+      "syntax-tag": "oklch(0.47 0.18 345)",
+      "syntax-punctuation": "oklch(0.42 0.01 260)",
       "background": "oklch(1 var(--neutral-chroma) var(--neutral-hue))",
       "foreground": "oklch(0.145 var(--neutral-chroma) var(--neutral-hue))",
       "card": "oklch(1 var(--neutral-chroma) var(--neutral-hue))",
@@ -216,6 +235,15 @@
       "chart-3": "#199e70",
       "chart-4": "oklch(0.8 0.11 305)",
       "chart-5": "oklch(0.86 0.14 90)",
+      "syntax-keyword": "oklch(0.8 0.12 300)",
+      "syntax-string": "oklch(0.82 0.13 150)",
+      "syntax-number": "oklch(0.82 0.11 60)",
+      "syntax-comment": "oklch(0.76 0.015 260)",
+      "syntax-function": "oklch(0.8 0.1 255)",
+      "syntax-type": "oklch(0.83 0.09 195)",
+      "syntax-property": "oklch(0.8 0.1 20)",
+      "syntax-tag": "oklch(0.8 0.11 345)",
+      "syntax-punctuation": "oklch(0.8 0.01 260)",
       "background": "oklch(0.145 var(--neutral-chroma) var(--neutral-hue))",
       "foreground": "oklch(0.985 var(--neutral-chroma) var(--neutral-hue))",
       "card": "oklch(0.205 var(--neutral-chroma) var(--neutral-hue))",
@@ -269,7 +297,8 @@
       "--series-negative": "var(--destructive)",
       "--series-target": "color-mix(in oklab, var(--foreground) 80%, var(--background))",
       "--series-remaining": "color-mix(in oklab, var(--muted-foreground) 70%, var(--muted))",
-      "--skeleton": "color-mix(in oklab, var(--foreground) 10%, transparent)"
+      "--skeleton": "color-mix(in oklab, var(--foreground) 10%, transparent)",
+      "--code-highlight": "color-mix(in oklab, var(--foreground) 6%, var(--muted))"
     },
     ".dark": {
       "--floating-shadow": "inset 0 1px 0 oklch(1 0 0 / 0.05), 0 1px 2px oklch(0 0 0 / 0.3), 0 8px 20px -4px oklch(0 0 0 / 0.4), 0 24px 48px -12px oklch(0 0 0 / 0.55)",
@@ -278,7 +307,8 @@
       "--series-negative": "var(--destructive)",
       "--series-target": "color-mix(in oklab, var(--foreground) 80%, var(--background))",
       "--series-remaining": "color-mix(in oklab, var(--muted-foreground) 70%, var(--muted))",
-      "--skeleton": "color-mix(in oklab, var(--foreground) 14%, transparent)"
+      "--skeleton": "color-mix(in oklab, var(--foreground) 14%, transparent)",
+      "--code-highlight": "color-mix(in oklab, var(--foreground) 8%, var(--muted))"
     },
     ":where(:root)": {
       "--control-radius": "calc(var(--radius) * 2)",
@@ -369,7 +399,8 @@
       "--neutral-soft": "oklch(0.955 var(--neutral-chroma) var(--neutral-hue))",
       "--neutral-soft-foreground": "oklch(0.32 var(--neutral-chroma) var(--neutral-hue))",
       "--neutral-border": "oklch(0.86 var(--neutral-chroma) var(--neutral-hue))",
-      "--skeleton": "color-mix(in oklab, var(--foreground) 10%, transparent)"
+      "--skeleton": "color-mix(in oklab, var(--foreground) 10%, transparent)",
+      "--code-highlight": "color-mix(in oklab, var(--foreground) 6%, var(--muted))"
     },
     ".dark [data-palette]": {
       "--background": "oklch(0.145 var(--neutral-chroma) var(--neutral-hue))",
@@ -401,7 +432,8 @@
       "--neutral-soft": "oklch(0.3 var(--neutral-chroma) var(--neutral-hue))",
       "--neutral-soft-foreground": "oklch(0.9 var(--neutral-chroma) var(--neutral-hue))",
       "--neutral-border": "oklch(0.42 var(--neutral-chroma) var(--neutral-hue))",
-      "--skeleton": "color-mix(in oklab, var(--foreground) 14%, transparent)"
+      "--skeleton": "color-mix(in oklab, var(--foreground) 14%, transparent)",
+      "--code-highlight": "color-mix(in oklab, var(--foreground) 8%, var(--muted))"
     },
     "[data-palette].dark": {
       "--background": "oklch(0.145 var(--neutral-chroma) var(--neutral-hue))",
@@ -433,7 +465,8 @@
       "--neutral-soft": "oklch(0.3 var(--neutral-chroma) var(--neutral-hue))",
       "--neutral-soft-foreground": "oklch(0.9 var(--neutral-chroma) var(--neutral-hue))",
       "--neutral-border": "oklch(0.42 var(--neutral-chroma) var(--neutral-hue))",
-      "--skeleton": "color-mix(in oklab, var(--foreground) 14%, transparent)"
+      "--skeleton": "color-mix(in oklab, var(--foreground) 14%, transparent)",
+      "--code-highlight": "color-mix(in oklab, var(--foreground) 8%, var(--muted))"
     },
     "@media (prefers-color-scheme: dark)": {
       ":root:where(:not(.light, [data-color-scheme=\"light\"]))": {
@@ -469,6 +502,15 @@
         "--chart-3": "#199e70",
         "--chart-4": "oklch(0.8 0.11 305)",
         "--chart-5": "oklch(0.86 0.14 90)",
+        "--syntax-keyword": "oklch(0.8 0.12 300)",
+        "--syntax-string": "oklch(0.82 0.13 150)",
+        "--syntax-number": "oklch(0.82 0.11 60)",
+        "--syntax-comment": "oklch(0.76 0.015 260)",
+        "--syntax-function": "oklch(0.8 0.1 255)",
+        "--syntax-type": "oklch(0.83 0.09 195)",
+        "--syntax-property": "oklch(0.8 0.1 20)",
+        "--syntax-tag": "oklch(0.8 0.11 345)",
+        "--syntax-punctuation": "oklch(0.8 0.01 260)",
         "--background": "oklch(0.145 var(--neutral-chroma) var(--neutral-hue))",
         "--foreground": "oklch(0.985 var(--neutral-chroma) var(--neutral-hue))",
         "--card": "oklch(0.205 var(--neutral-chroma) var(--neutral-hue))",
@@ -498,7 +540,8 @@
         "--neutral-soft": "oklch(0.3 var(--neutral-chroma) var(--neutral-hue))",
         "--neutral-soft-foreground": "oklch(0.9 var(--neutral-chroma) var(--neutral-hue))",
         "--neutral-border": "oklch(0.42 var(--neutral-chroma) var(--neutral-hue))",
-        "--skeleton": "color-mix(in oklab, var(--foreground) 14%, transparent)"
+        "--skeleton": "color-mix(in oklab, var(--foreground) 14%, transparent)",
+        "--code-highlight": "color-mix(in oklab, var(--foreground) 8%, var(--muted))"
       },
       ":root:where(:not(.light, [data-color-scheme=\"light\"])) [data-palette]": {
         "--background": "oklch(0.145 var(--neutral-chroma) var(--neutral-hue))",
@@ -530,7 +573,8 @@
         "--neutral-soft": "oklch(0.3 var(--neutral-chroma) var(--neutral-hue))",
         "--neutral-soft-foreground": "oklch(0.9 var(--neutral-chroma) var(--neutral-hue))",
         "--neutral-border": "oklch(0.42 var(--neutral-chroma) var(--neutral-hue))",
-        "--skeleton": "color-mix(in oklab, var(--foreground) 14%, transparent)"
+        "--skeleton": "color-mix(in oklab, var(--foreground) 14%, transparent)",
+        "--code-highlight": "color-mix(in oklab, var(--foreground) 8%, var(--muted))"
       },
       ":root[data-palette]:where(:not(.light, [data-color-scheme=\"light\"]))": {
         "--background": "oklch(0.145 var(--neutral-chroma) var(--neutral-hue))",
@@ -562,7 +606,8 @@
         "--neutral-soft": "oklch(0.3 var(--neutral-chroma) var(--neutral-hue))",
         "--neutral-soft-foreground": "oklch(0.9 var(--neutral-chroma) var(--neutral-hue))",
         "--neutral-border": "oklch(0.42 var(--neutral-chroma) var(--neutral-hue))",
-        "--skeleton": "color-mix(in oklab, var(--foreground) 14%, transparent)"
+        "--skeleton": "color-mix(in oklab, var(--foreground) 14%, transparent)",
+        "--code-highlight": "color-mix(in oklab, var(--foreground) 8%, var(--muted))"
       }
     },
     "[data-elevation=\"flat\"]": {
@@ -709,6 +754,14 @@
     },
     "@utility py-inset-item": {
       "padding-block": "var(--item-padding-y)"
+    },
+    "@utility bg-grid-lines": {
+      "background-image": "linear-gradient(to right, color-mix(in oklab, var(--foreground) 5%, transparent) 1px, transparent 1px), linear-gradient(to bottom, color-mix(in oklab, var(--foreground) 5%, transparent) 1px, transparent 1px)",
+      "background-size": "3rem 3rem",
+      "mask-image": "radial-gradient(ellipse at top, black 30%, transparent 75%)"
+    },
+    "@utility bg-glow": {
+      "background-image": "radial-gradient(48rem 32rem at 12% -6rem, color-mix(in oklab, var(--link-brand) 14%, transparent), transparent), radial-gradient(40rem 28rem at 92% 4rem, color-mix(in oklab, var(--violet) 12%, transparent), transparent)"
     },
     "@utility text-vertical": {
       "writing-mode": "vertical-rl"

@@ -1,0 +1,18 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "steps",
+  "title": "Steps",
+  "description": "Steps and Step: an ordered list with numbered markers, a title, a description and any content per step, side by side on wide containers and stacked on narrow ones.",
+  "registryDependencies": [
+    "@eskais/utils",
+    "@eskais/theme"
+  ],
+  "files": [
+    {
+      "path": "registry/ui/steps.tsx",
+      "content": "import { Children, createContext, use, type ComponentProps, type CSSProperties, type ReactNode } from \"react\"\n\nimport { cn } from \"@/lib/utils\"\n\nconst StepNumber = createContext(0)\n\ntype StepsProps = ComponentProps<\"ol\"> & {\n  /** `auto` lays the steps side by side on a wide container (48rem and up) and stacks them below. */\n  orientation?: \"auto\" | \"vertical\" | \"horizontal\"\n}\n\n/** Numbered steps as an ordered list, so screen readers count them too; the markers repeat the numbers visually. */\nfunction Steps({ orientation = \"auto\", className, style, children, ...props }: StepsProps) {\n  const count = Children.toArray(children).length\n  return (\n    <div data-slot=\"steps-container\" className=\"@container w-full min-w-0\">\n      <ol\n        data-slot=\"steps\"\n        data-orientation={orientation}\n        className={cn(\n          \"grid list-none gap-group\",\n          orientation === \"horizontal\" && \"grid-cols-(--steps-columns) gap-items\",\n          orientation === \"auto\" && \"@3xl:grid-cols-(--steps-columns) @3xl:gap-items\",\n          className,\n        )}\n        style={{ ...style, \"--steps-columns\": `repeat(${count}, minmax(0, 1fr))` } as CSSProperties}\n        {...props}\n      >\n        {Children.map(children, (child, index) => (\n          <StepNumber value={index + 1}>{child}</StepNumber>\n        ))}\n      </ol>\n    </div>\n  )\n}\n\ntype StepProps = Omit<ComponentProps<\"li\">, \"title\"> & {\n  title: ReactNode\n  description?: ReactNode\n  headingLevel?: 2 | 3 | 4\n  /** Anything that belongs to the step, like a CodeBlock; it fills the remaining height. */\n  children?: ReactNode\n}\n\nfunction Step({ title, description, headingLevel = 3, className, children, ...props }: StepProps) {\n  const Heading = `h${headingLevel}` as const\n  const number = use(StepNumber)\n  return (\n    <li data-slot=\"step\" className={cn(\"flex min-w-0 flex-col gap-items\", className)} {...props}>\n      <div className=\"flex items-center gap-items\">\n        <span\n          data-slot=\"step-marker\"\n          aria-hidden=\"true\"\n          className=\"flex size-7 shrink-0 items-center justify-center rounded-full bg-primary font-mono text-caption text-primary-foreground\"\n        >\n          {number}\n        </span>\n        <Heading data-slot=\"step-title\" className=\"text-title-sm tracking-tight\">\n          {title}\n        </Heading>\n      </div>\n      {description !== undefined && (\n        <p data-slot=\"step-description\" className=\"text-body-sm text-pretty text-muted-foreground\">\n          {description}\n        </p>\n      )}\n      {children !== undefined && <div className=\"flex min-w-0 flex-1 flex-col gap-items\">{children}</div>}\n    </li>\n  )\n}\n\nexport { Step, Steps }\nexport type { StepProps, StepsProps }\n",
+      "type": "registry:ui"
+    }
+  ],
+  "type": "registry:block"
+}

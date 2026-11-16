@@ -123,6 +123,16 @@
   --chart-3: #0ba975;
   --chart-4: oklch(0.44 0.16 305);
   --chart-5: oklch(0.48 0.09 75);
+  /* Code on --muted: every syntax colour reaches 4.5:1 on it and on a highlighted line, in every palette. */
+  --syntax-keyword: oklch(0.47 0.2 300);
+  --syntax-string: oklch(0.46 0.12 150);
+  --syntax-number: oklch(0.48 0.13 45);
+  --syntax-comment: oklch(0.48 0.015 260);
+  --syntax-function: oklch(0.47 0.17 262);
+  --syntax-type: oklch(0.46 0.09 200);
+  --syntax-property: oklch(0.48 0.16 20);
+  --syntax-tag: oklch(0.47 0.18 345);
+  --syntax-punctuation: oklch(0.42 0.01 260);
 }
 
 .dark {
@@ -160,6 +170,15 @@
   --chart-3: #199e70;
   --chart-4: oklch(0.8 0.11 305);
   --chart-5: oklch(0.86 0.14 90);
+  --syntax-keyword: oklch(0.8 0.12 300);
+  --syntax-string: oklch(0.82 0.13 150);
+  --syntax-number: oklch(0.82 0.11 60);
+  --syntax-comment: oklch(0.76 0.015 260);
+  --syntax-function: oklch(0.8 0.1 255);
+  --syntax-type: oklch(0.83 0.09 195);
+  --syntax-property: oklch(0.8 0.1 20);
+  --syntax-tag: oklch(0.8 0.11 345);
+  --syntax-punctuation: oklch(0.8 0.01 260);
 }
 
 /* Derived from the seeds. A custom property computes where it's declared, so the derivation repeats on every
@@ -215,6 +234,8 @@
   --neutral-border: oklch(0.86 var(--neutral-chroma) var(--neutral-hue));
   /* Translucent, so it shows on glass and on any surface it loads over. */
   --skeleton: color-mix(in oklab, var(--foreground) 10%, transparent);
+  /* A highlighted line of code: opaque, so the syntax colours keep their contrast on it. */
+  --code-highlight: color-mix(in oklab, var(--foreground) 6%, var(--muted));
 }
 
 .dark,
@@ -263,6 +284,7 @@
   --neutral-soft-foreground: oklch(0.9 var(--neutral-chroma) var(--neutral-hue));
   --neutral-border: oklch(0.42 var(--neutral-chroma) var(--neutral-hue));
   --skeleton: color-mix(in oklab, var(--foreground) 14%, transparent);
+  --code-highlight: color-mix(in oklab, var(--foreground) 8%, var(--muted));
 }
 
 /* Dark before any script runs: follows the system unless <html> opted into light (.light, or the
@@ -303,6 +325,15 @@
     --chart-3: #199e70;
     --chart-4: oklch(0.8 0.11 305);
     --chart-5: oklch(0.86 0.14 90);
+    --syntax-keyword: oklch(0.8 0.12 300);
+    --syntax-string: oklch(0.82 0.13 150);
+    --syntax-number: oklch(0.82 0.11 60);
+    --syntax-comment: oklch(0.76 0.015 260);
+    --syntax-function: oklch(0.8 0.1 255);
+    --syntax-type: oklch(0.83 0.09 195);
+    --syntax-property: oklch(0.8 0.1 20);
+    --syntax-tag: oklch(0.8 0.11 345);
+    --syntax-punctuation: oklch(0.8 0.01 260);
   }
   :root:where(:not(.light, [data-color-scheme="light"])),
   :root:where(:not(.light, [data-color-scheme="light"])) [data-palette],
@@ -348,6 +379,7 @@
     --neutral-soft-foreground: oklch(0.9 var(--neutral-chroma) var(--neutral-hue));
     --neutral-border: oklch(0.42 var(--neutral-chroma) var(--neutral-hue));
     --skeleton: color-mix(in oklab, var(--foreground) 14%, transparent);
+    --code-highlight: color-mix(in oklab, var(--foreground) 8%, var(--muted));
   }
 }
 
@@ -505,6 +537,16 @@
   --color-series-negative: var(--series-negative);
   --color-series-target: var(--series-target);
   --color-series-remaining: var(--series-remaining);
+  --color-syntax-keyword: var(--syntax-keyword);
+  --color-syntax-string: var(--syntax-string);
+  --color-syntax-number: var(--syntax-number);
+  --color-syntax-comment: var(--syntax-comment);
+  --color-syntax-function: var(--syntax-function);
+  --color-syntax-type: var(--syntax-type);
+  --color-syntax-property: var(--syntax-property);
+  --color-syntax-tag: var(--syntax-tag);
+  --color-syntax-punctuation: var(--syntax-punctuation);
+  --color-code-highlight: var(--code-highlight);
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
@@ -612,6 +654,21 @@
       inset-inline: min(0px, (100% - var(--control-height-touch)) / 2);
     }
   }
+}
+
+/* Page decoration behind a hero: a faint grid that fades out downwards, and a wash from the link and violet seeds. */
+@utility bg-grid-lines {
+  background-image:
+    linear-gradient(to right, color-mix(in oklab, var(--foreground) 5%, transparent) 1px, transparent 1px),
+    linear-gradient(to bottom, color-mix(in oklab, var(--foreground) 5%, transparent) 1px, transparent 1px);
+  background-size: 3rem 3rem;
+  mask-image: radial-gradient(ellipse at top, black 30%, transparent 75%);
+}
+
+@utility bg-glow {
+  background-image:
+    radial-gradient(48rem 32rem at 12% -6rem, color-mix(in oklab, var(--link-brand) 14%, transparent), transparent),
+    radial-gradient(40rem 28rem at 92% 4rem, color-mix(in oklab, var(--violet) 12%, transparent), transparent);
 }
 
 @utility text-vertical {

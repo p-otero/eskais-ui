@@ -122,7 +122,13 @@
       }
     },
     {
-      "files": ["test/**", "tooling/screenshots.mjs", "tooling/contrast-check.mjs", "tooling/showcase-browser.mjs"],
+      "files": [
+        "test/**",
+        "tooling/screenshots.mjs",
+        "tooling/contrast-check.mjs",
+        "tooling/showcase-browser.mjs",
+        "tooling/site-check.mjs"
+      ],
       "rules": {
         "no-await-in-loop": "off"
       }
