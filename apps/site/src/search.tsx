@@ -13,33 +13,41 @@ import {
 import {
   CommandDialog,
   CommandDialogContent,
+  CommandDialogOpenButton,
   CommandDialogShortcut,
   CommandDialogTrigger,
+  createCommandDialogController,
 } from "@/components/ui/command-dialog"
 
 import { docSections } from "./pages"
 import { navigate } from "./router"
 
+// The labelled trigger keeps ⌘K and the name agents open the dialog by while it is hidden on narrow screens, where
+// an icon button opens the same dialog through the controller.
 function SiteSearch() {
-  const [open, setOpen] = useState(false)
+  const [search] = useState(() => createCommandDialogController())
   return (
-    <CommandDialog open={open} onOpenChange={setOpen}>
-      <CommandDialogTrigger
-        shortcut="mod+k"
-        variant="outline"
-        aria-label="Search docs"
-        className="w-56 narrow:w-auto narrow:px-0 narrow:size-control"
-      >
+    <CommandDialog controller={search}>
+      <CommandDialogTrigger controller={search} shortcut="mod+k" variant="outline" className="w-56 narrow:hidden">
         <span className="flex items-center gap-inline">
           <SearchIcon />
-          <span className="narrow:sr-only">Search docs</span>
+          Search docs
         </span>
-        <CommandDialogShortcut className="narrow:hidden" />
+        <CommandDialogShortcut />
       </CommandDialogTrigger>
+      <CommandDialogOpenButton
+        controller={search}
+        variant="ghost"
+        size="icon"
+        aria-label="Search docs"
+        className="hidden narrow:inline-flex"
+      >
+        <SearchIcon />
+      </CommandDialogOpenButton>
       <CommandDialogContent title="Search the docs">
         <Command
           onAction={(route) => {
-            setOpen(false)
+            search.close()
             navigate(route)
           }}
         >
