@@ -40,6 +40,7 @@ function ResizableHandle({ className, withGrip = false, children, ...props }: Re
             data-slot="resizable-grip"
             className="z-10 flex h-6 w-3 items-center justify-center rounded-choice border bg-background in-data-[orientation=vertical]:h-3 in-data-[orientation=vertical]:w-6"
           >
+            {/* oxlint-disable-next-line eskais/no-inline-icons -- the separator's filled grip dots, sized to the handle */}
             <svg
               viewBox="0 0 6 14"
               className="h-3.5 w-1.5 fill-muted-foreground in-data-[orientation=vertical]:rotate-90"

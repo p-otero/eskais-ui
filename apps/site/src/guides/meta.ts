@@ -32,6 +32,13 @@ const guides: GuideMeta[] = [
       "One vocabulary for status: neutral, info, success, warning, destructive and violet, with soft tokens and links.",
   },
   {
+    slug: "icons",
+    title: "Icons",
+    description:
+      "lucide-react icons by name, decorative or named with Icon, sized by their control and coloured by tone.",
+    covers: ["icon"],
+  },
+  {
     slug: "agents",
     title: "Agents",
     description:

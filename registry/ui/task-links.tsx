@@ -1,6 +1,15 @@
 "use client"
 
 import { createElement, type ComponentProps, type MouseEvent, type ReactNode } from "react"
+import {
+  CircleDotIcon,
+  ExternalLinkIcon,
+  GitBranchIcon,
+  GitCommitHorizontalIcon,
+  GitPullRequestIcon,
+  type LucideIcon,
+  type LucideProps,
+} from "lucide-react"
 
 import type { TaskLink } from "@/lib/agent-task-types"
 import type { Tone } from "@/lib/tone"
@@ -18,55 +27,17 @@ const taskLinkStateTones: Record<LinkState, Tone> = {
   closed: "destructive",
 }
 
-const kindPaths: Record<LinkKind, ReactNode> = {
-  "pull-request": (
-    <>
-      <circle cx="18" cy="18" r="3" />
-      <circle cx="6" cy="6" r="3" />
-      <path d="M13 6h3a2 2 0 0 1 2 2v7M6 9v12" />
-    </>
-  ),
-  branch: (
-    <>
-      <path d="M6 3v12" />
-      <circle cx="18" cy="6" r="3" />
-      <circle cx="6" cy="18" r="3" />
-      <path d="M18 9a9 9 0 0 1-9 9" />
-    </>
-  ),
-  commit: (
-    <>
-      <circle cx="12" cy="12" r="3" />
-      <path d="M3 12h6m6 0h6" />
-    </>
-  ),
-  issue: (
-    <>
-      <circle cx="12" cy="12" r="10" />
-      <circle cx="12" cy="12" r="1" />
-    </>
-  ),
-  external: <path d="M15 3h6v6M10 14 21 3m-3 10v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />,
+const kindIcons: Record<LinkKind, LucideIcon> = {
+  "pull-request": GitPullRequestIcon,
+  branch: GitBranchIcon,
+  commit: GitCommitHorizontalIcon,
+  issue: CircleDotIcon,
+  external: ExternalLinkIcon,
 }
 
-function TaskLinkIcon({ kind, className, ...props }: ComponentProps<"svg"> & { kind: LinkKind }) {
-  return (
-    <svg
-      data-slot="task-link-icon"
-      data-kind={kind}
-      aria-hidden="true"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className={cn("size-4 shrink-0", className)}
-      {...props}
-    >
-      {kindPaths[kind]}
-    </svg>
-  )
+function TaskLinkIcon({ kind, className, ...props }: LucideProps & { kind: LinkKind }) {
+  const Icon = kindIcons[kind]
+  return <Icon data-slot="task-link-icon" data-kind={kind} className={cn("size-4 shrink-0", className)} {...props} />
 }
 
 interface TaskLinkLabels {

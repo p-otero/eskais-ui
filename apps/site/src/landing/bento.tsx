@@ -1,4 +1,19 @@
 import { usePreference } from "@ui-sdk/react/preferences"
+import {
+  CalendarIcon,
+  CircleCheckIcon,
+  CircleExclamationPointIcon,
+  ClockIcon,
+  CopyIcon,
+  GitPullRequestIcon,
+  InfoIcon,
+  PaperclipIcon,
+  SearchIcon,
+  TagIcon,
+  TriangleExclamationPointIcon,
+  ZapIcon,
+  type LucideIcon,
+} from "lucide-react"
 import { lazy, Suspense, useState } from "react"
 import { z } from "zod"
 
@@ -24,6 +39,7 @@ import { cn } from "@/lib/utils"
 
 import { agent } from "../agent"
 import { appearance, palettes, themes, type Palette, type Theme } from "../appearance"
+import { followTo } from "../router"
 
 const LiveEditor = lazy(() => import("./live-editor"))
 const LiveChart = lazy(() => import("./live-chart"))
@@ -295,16 +311,6 @@ const changes = [
   { id: "ENG-371", title: "Show seat usage on the billing page", stage: "dev", tone: "info" as Tone },
 ]
 
-function PipelineIcon() {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-      <circle cx="6" cy="6" r="2.5" />
-      <circle cx="18" cy="18" r="2.5" />
-      <path d="M6 8.5v3a4 4 0 0 0 4 4h5.5" />
-    </svg>
-  )
-}
-
 function PipelineCard() {
   const [selected, setSelected] = useState("ENG-398")
   const current = changes.find((change) => change.id === selected) ?? changes[0]!
@@ -313,7 +319,7 @@ function PipelineCard() {
       eyebrow="StageTrack + ListItem"
       title="Where every change is"
       description="Dense rows that select with one tab stop, and a pipeline whose markers never rely on colour alone."
-      span={6}
+      span={4}
     >
       <div className="grid grid-cols-2 items-start gap-section max-lg:grid-cols-1">
         <List aria-label="Changes">
@@ -324,7 +330,7 @@ function PipelineCard() {
               title={change.title}
               leading={
                 <IconTile tone={change.tone}>
-                  <PipelineIcon />
+                  <GitPullRequestIcon />
                 </IconTile>
               }
               subtitle={<span className="font-mono">{change.id}</span>}
@@ -350,6 +356,44 @@ function PipelineCard() {
   )
 }
 
+const iconSamples: [LucideIcon, Tone][] = [
+  [CircleCheckIcon, "success"],
+  [InfoIcon, "info"],
+  [TriangleExclamationPointIcon, "warning"],
+  [CircleExclamationPointIcon, "destructive"],
+  [TagIcon, "violet"],
+  [ClockIcon, "neutral"],
+  [GitPullRequestIcon, "info"],
+  [ZapIcon, "warning"],
+  [SearchIcon, "neutral"],
+  [CopyIcon, "neutral"],
+  [CalendarIcon, "violet"],
+  [PaperclipIcon, "success"],
+]
+
+function IconsCard() {
+  return (
+    <BentoTile
+      eyebrow="Icons"
+      title="lucide-react, by name"
+      description="Imported the way shadcn does, sized by their control, coloured by tone, and hidden from screen readers and agents unless they mean something."
+      span={2}
+      {...followTo("/docs/icons")}
+    >
+      <ul aria-label="Icons in tones" className="mt-auto grid grid-cols-4 gap-items">
+        {iconSamples.map(([Glyph, tone], index) => (
+          // oxlint-disable-next-line react/no-array-index-key -- a fixed sample where an icon can repeat
+          <li key={index} className="flex">
+            <IconTile tone={tone} className="aspect-square size-auto w-full [&_svg]:size-5">
+              <Glyph />
+            </IconTile>
+          </li>
+        ))}
+      </ul>
+    </BentoTile>
+  )
+}
+
 function Features() {
   return (
     <section aria-labelledby="features-title" className="flex flex-col gap-section py-section">
@@ -365,6 +409,7 @@ function Features() {
         <ToneCard />
         <EditorCard />
         <ChartCard />
+        <IconsCard />
         <PipelineCard />
       </Bento>
     </section>

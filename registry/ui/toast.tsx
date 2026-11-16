@@ -14,6 +14,14 @@ import type { ToastType } from "@ui-sdk/react/toast"
 import type { VariantProps } from "class-variance-authority"
 import { useCallback } from "react"
 import type { ComponentProps, Ref } from "react"
+import {
+  CircleCheckIcon,
+  CircleExclamationPointIcon,
+  InfoIcon,
+  TriangleExclamationPointIcon,
+  XIcon,
+  type LucideIcon,
+} from "lucide-react"
 
 import { buttonVariants } from "@/components/ui/button"
 import { Spinner } from "@/components/ui/spinner"
@@ -164,27 +172,19 @@ function ToastClose({
   return <ToastClosePrimitive className={cnState(buttonVariants({ variant, size }), className)} {...props} />
 }
 
-function CloseIcon() {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-      <path d="M18 6 6 18M6 6l12 12" />
-    </svg>
-  )
-}
-
-const toneIconPaths = {
-  info: "M12 16v-4M12 8h.01",
-  success: "m8.5 12 2.5 2.5 4.5-5",
-  warning: "M12 9v4M12 17h.01M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z",
-  destructive: "M12 8v4M12 16h.01",
-} satisfies Partial<Record<Tone, string>>
+const toneIcons = {
+  info: InfoIcon,
+  success: CircleCheckIcon,
+  warning: TriangleExclamationPointIcon,
+  destructive: CircleExclamationPointIcon,
+} satisfies Partial<Record<Tone, LucideIcon>>
 
 const toneIconClassNames = {
   info: "text-info",
   success: "text-success",
   warning: "text-warning",
   destructive: "text-destructive",
-} satisfies Record<keyof typeof toneIconPaths, string>
+} satisfies Record<keyof typeof toneIcons, string>
 
 type ToastIconProps = Omit<ComponentProps<"span">, "children"> & {
   /** The toast's type: `loading` shows a spinner, and the others the icon of their tone. */
@@ -197,8 +197,9 @@ type ToastIconProps = Omit<ComponentProps<"span">, "children"> & {
 function ToastIcon({ type = "default", tone, className, ...props }: ToastIconProps) {
   const resolved = tone ?? toastTone(type)
   const loading = type === "loading" && tone === undefined
-  if (!loading && !(resolved in toneIconPaths)) return null
-  const key = resolved as keyof typeof toneIconPaths
+  if (!loading && !(resolved in toneIcons)) return null
+  const key = resolved as keyof typeof toneIcons
+  const Icon = toneIcons[key]
   return (
     <span
       data-slot="toast-icon"
@@ -207,22 +208,7 @@ function ToastIcon({ type = "default", tone, className, ...props }: ToastIconPro
       className={cn("flex shrink-0", loading ? "text-muted-foreground" : toneIconClassNames[key], className)}
       {...props}
     >
-      {loading ? (
-        <Spinner size="md" />
-      ) : (
-        <svg
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          className="size-4"
-        >
-          {key !== "warning" && <circle cx="12" cy="12" r="10" />}
-          <path d={toneIconPaths[key]} />
-        </svg>
-      )}
+      {loading ? <Spinner size="md" /> : <Icon className="size-4" />}
     </span>
   )
 }
@@ -259,7 +245,7 @@ function ToastStack({ labels, closeLabel, ...props }: ToastStackProps) {
           ) : (
             item.dismissible !== false && (
               <ToastClose aria-label={close} className="size-control-sm px-0">
-                <CloseIcon />
+                <XIcon />
               </ToastClose>
             )
           )}

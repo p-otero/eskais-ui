@@ -3,6 +3,7 @@
 import { renderElement, usePart, usePrimitive, type PartProps } from "@ui-sdk/react/primitive"
 import { cva } from "class-variance-authority"
 import type { AriaAttributes, ReactNode } from "react"
+import { ArrowUpRightIcon } from "lucide-react"
 
 import { link, type LinkOptions } from "@/components/ui/link-primitive"
 import { cn } from "@/lib/utils"
@@ -50,24 +51,6 @@ type LinkProps = Omit<PartProps<"a">, "children"> & {
   onFollow?: LinkOptions["onFollow"]
 }
 
-function ExternalIcon() {
-  return (
-    <svg
-      data-slot="link-external-icon"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true"
-      className="ms-px inline-block size-3 shrink-0 align-baseline rtl:-scale-x-100"
-    >
-      <path d="M7 17 17 7M8 7h9v9" />
-    </svg>
-  )
-}
-
 function linkProps({
   variant = "inline",
   external = false,
@@ -91,7 +74,12 @@ function linkProps({
     children: (
       <>
         {children}
-        {external && <ExternalIcon />}
+        {external && (
+          <ArrowUpRightIcon
+            data-slot="link-external-icon"
+            className="ms-px inline-block size-3 shrink-0 align-baseline rtl:-scale-x-100"
+          />
+        )}
         {newTab && <span className="sr-only"> {newTabLabel}</span>}
       </>
     ),

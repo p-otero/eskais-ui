@@ -1,3 +1,4 @@
+import { MoonIcon, SunIcon } from "lucide-react"
 import { usePreference } from "@ui-sdk/react/preferences"
 import { ButtonLink } from "@/components/ui/button-link"
 import { Floating, FloatingContent } from "@/components/ui/floating"
@@ -14,7 +15,7 @@ import { Toggle } from "@/components/ui/toggle"
 
 import { appearance } from "./appearance"
 import { categories } from "./content/categories"
-import { GithubIcon, Logo, MoonIcon, SunIcon } from "./icons"
+import { GithubIcon, Logo } from "./icons"
 import { followTo, linkTo, useRoute } from "./router"
 import { SiteSearch } from "./search"
 

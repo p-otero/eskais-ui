@@ -10,6 +10,9 @@ First release. The docs site is published to GitHub Pages from each release, and
 
 ### Added
 
+- Icons come from `lucide-react` (1.73.0): every hand-drawn icon in the registry is now a lucide import, and the items that use one depend on it. `icon` adds `Icon`, which names an icon for screen readers (`<Icon icon={TrashIcon} label="Deleted" />`). The `eskais/no-inline-icons` lint rule flags any other `<svg>` in `registry/**`.
+- Deprecated: `ChevronIcon` from `select` and `PanelIcon` from `sidebar` (import `ChevronDownIcon` and `PanelLeftIcon` from `lucide-react`). `CloseIcon` is no longer exported from `task-detail-parts`. `select` still exports lucide's `CheckIcon`.
+
 - AgentTaskBoard: `filterControls` chooses which built-in filter controls show, so a host picker can replace one; hidden filters still apply and agents can still set them, and "Clear filters" leaves them alone.
 - AgentTaskBoard: a "No stage" toggle ends the stage filter (`stageFilterNone`, `labels.filters.noStage`) and matches tasks without a location through the exported `NO_STAGE`, which `filter({ stage })` also takes by its label; `StageFilter` takes `noStage`, and `countByStage` counts those tasks under `NO_STAGE`.
 - AgentTaskBoard: `renderBacklogActions(task)` adds host controls to each backlog row after Approve/Reject, in snapshot mode too, and `renderCardActions(task)` to each card; `TaskCard` takes `renderActions`.

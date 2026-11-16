@@ -1213,7 +1213,8 @@
       "description": "UI SDK Input, InputGroup and InputClear (clears and returns focus).",
       "dependencies": [
         "@ui-sdk/core@0.1.0-beta.5",
-        "@ui-sdk/react@0.1.0-beta.5"
+        "@ui-sdk/react@0.1.0-beta.5",
+        "lucide-react@1.73.0"
       ],
       "registryDependencies": [
         "@eskais/utils",
@@ -1234,7 +1235,8 @@
       "description": "Search landmark built with definePrimitive: Enter runs onSearch, Escape clears only when there is text, and agents get a submit action.",
       "dependencies": [
         "@ui-sdk/core@0.1.0-beta.5",
-        "@ui-sdk/react@0.1.0-beta.5"
+        "@ui-sdk/react@0.1.0-beta.5",
+        "lucide-react@1.73.0"
       ],
       "registryDependencies": [
         "@eskais/utils",
@@ -1307,7 +1309,8 @@
         "@ui-sdk/react@0.1.0-beta.5",
         "react-hook-form@7.91.0",
         "@hookform/resolvers@7.0.2",
-        "@standard-schema/spec@1.1.0"
+        "@standard-schema/spec@1.1.0",
+        "lucide-react@1.73.0"
       ],
       "registryDependencies": [
         "@eskais/utils",
@@ -1392,7 +1395,8 @@
         "@ui-sdk/react@0.1.0-beta.5",
         "@standard-schema/spec@1.1.0",
         "react-hook-form@7.91.0",
-        "class-variance-authority@0.7.1"
+        "class-variance-authority@0.7.1",
+        "lucide-react@1.73.0"
       ],
       "registryDependencies": [
         "@eskais/utils",
@@ -1483,7 +1487,8 @@
       "description": "UI SDK Tabs: arrow-key navigation, automatic or manual activation, controller support, a selected state that reads at 3:1, and a list that scrolls when its tabs don't fit, with edge fades and pointer-only scroll buttons.",
       "dependencies": [
         "@ui-sdk/core@0.1.0-beta.5",
-        "@ui-sdk/react@0.1.0-beta.5"
+        "@ui-sdk/react@0.1.0-beta.5",
+        "lucide-react@1.73.0"
       ],
       "registryDependencies": [
         "@eskais/utils",
@@ -1509,7 +1514,8 @@
       "description": "UI SDK Collapsible: disclosure with aria-expanded, animated height, controller support and a rotating chevron icon.",
       "dependencies": [
         "@ui-sdk/core@0.1.0-beta.5",
-        "@ui-sdk/react@0.1.0-beta.5"
+        "@ui-sdk/react@0.1.0-beta.5",
+        "lucide-react@1.73.0"
       ],
       "registryDependencies": [
         "@eskais/utils",
@@ -1630,7 +1636,8 @@
       "docs": "One item, three components (`error-state`, `loading-state`, `data-state`), since DataState renders the other two and Empty by default. `<DataState status data error onRetry labels={{ errorTitle, retry, emptyTitle }}>{(data) => …}</DataState>` works with any data library: map its status to `pending`, `error` or `success`. Visible copy has no default: the types require `errorTitle` and `emptyTitle` (and `retry` with `onRetry`) unless you pass `renderError` and `empty`. `loading` and `refreshing` are screen-reader labels and default to English. It picks one state from `status`: `error` shows the error; `success` shows empty when `isEmpty(data)` holds and your content otherwise; `pending` shows the data of the last `success` (`keepPreviousData`, default true), else `placeholderData`, with `aria-busy` and a small spinner, and loading when neither is there or both are empty. `data` is read only with `success`: an initial value passed while pending (an `[]` default, a cache guess) never counts as a result, so the first load always shows loading; pass it as `placeholderData` to show it busy instead. Pass `fetching` for libraries whose status stays `success` during a refetch. `isEmpty` decides what counts as empty (an empty array, `null` or `undefined` by default). Every state takes `size`: `inline`, `panel` (default) or `page`.",
       "dependencies": [
         "@ui-sdk/react@0.1.0-beta.5",
-        "class-variance-authority@0.7.1"
+        "class-variance-authority@0.7.1",
+        "lucide-react@1.73.0"
       ],
       "registryDependencies": [
         "@eskais/utils",
@@ -1785,7 +1792,8 @@
       "dependencies": [
         "@ui-sdk/core@0.1.0-beta.5",
         "@ui-sdk/react@0.1.0-beta.5",
-        "class-variance-authority@0.7.1"
+        "class-variance-authority@0.7.1",
+        "lucide-react@1.73.0"
       ],
       "registryDependencies": [
         "@eskais/utils",
@@ -1807,7 +1815,8 @@
       "dependencies": [
         "@ui-sdk/core@0.1.0-beta.5",
         "@ui-sdk/react@0.1.0-beta.5",
-        "class-variance-authority@0.7.1"
+        "class-variance-authority@0.7.1",
+        "lucide-react@1.73.0"
       ],
       "registryDependencies": [
         "@eskais/utils",
@@ -1831,7 +1840,8 @@
       "description": "UI SDK Select: trigger, popup list, items with a check indicator, groups and separators, or `options` as data with a clearable none choice. Works inside Field; agents choose by label.",
       "dependencies": [
         "@ui-sdk/core@0.1.0-beta.5",
-        "@ui-sdk/react@0.1.0-beta.5"
+        "@ui-sdk/react@0.1.0-beta.5",
+        "lucide-react@1.73.0"
       ],
       "registryDependencies": [
         "@eskais/utils",
@@ -1854,7 +1864,8 @@
       "description": "A styled native <select> for mobile-heavy forms, with the same options shape as Select, a placeholder and a clearable none choice. A small primitive reports it to agents, which a bare <select> is not.",
       "dependencies": [
         "@ui-sdk/core@0.1.0-beta.5",
-        "@ui-sdk/react@0.1.0-beta.5"
+        "@ui-sdk/react@0.1.0-beta.5",
+        "lucide-react@1.73.0"
       ],
       "registryDependencies": [
         "@eskais/utils",
@@ -1881,7 +1892,8 @@
       "description": "UI SDK Combobox: a filtering input with clear and trigger buttons and a popup list. Works inside Field; agents choose by label.",
       "dependencies": [
         "@ui-sdk/core@0.1.0-beta.5",
-        "@ui-sdk/react@0.1.0-beta.5"
+        "@ui-sdk/react@0.1.0-beta.5",
+        "lucide-react@1.73.0"
       ],
       "registryDependencies": [
         "@eskais/utils",
@@ -1925,7 +1937,8 @@
       "description": "UI SDK Checkbox and CheckboxGroup: checked, unchecked and indeterminate, labelled by Field.",
       "dependencies": [
         "@ui-sdk/core@0.1.0-beta.5",
-        "@ui-sdk/react@0.1.0-beta.5"
+        "@ui-sdk/react@0.1.0-beta.5",
+        "lucide-react@1.73.0"
       ],
       "registryDependencies": [
         "@eskais/utils",
@@ -2013,7 +2026,8 @@
       "description": "A list of pass, fail and unverified criteria with evidence, and a segmented AcceptanceBar on the UI SDK Meter with an accessible summary.",
       "dependencies": [
         "@ui-sdk/core@0.1.0-beta.5",
-        "@ui-sdk/react@0.1.0-beta.5"
+        "@ui-sdk/react@0.1.0-beta.5",
+        "lucide-react@1.73.0"
       ],
       "registryDependencies": [
         "@eskais/utils",
@@ -2054,7 +2068,8 @@
       "description": "Generic kanban layout: a named, horizontally scrolling list of columns with headers, counts, actions, collapsible columns agents can toggle by name, groups and an empty slot.",
       "dependencies": [
         "@ui-sdk/core@0.1.0-beta.5",
-        "@ui-sdk/react@0.1.0-beta.5"
+        "@ui-sdk/react@0.1.0-beta.5",
+        "lucide-react@1.73.0"
       ],
       "registryDependencies": [
         "@eskais/utils",
@@ -2141,7 +2156,8 @@
       "title": "Agent Badge",
       "description": "Provider, model and effort of an AgentRef: compact for cards (one line, long model ids cut in the middle, full text in title) or detail for panels, with a marker when the agent that ran isn't the one requested.",
       "dependencies": [
-        "@ui-sdk/react@0.1.0-beta.5"
+        "@ui-sdk/react@0.1.0-beta.5",
+        "lucide-react@1.73.0"
       ],
       "registryDependencies": [
         "@eskais/utils",
@@ -2238,7 +2254,8 @@
       "description": "An agent task's attempts on the UI SDK Timeline: kind, status, times, configured and executed route with earlier routes in a popover, context, repairs, checks, commits, blockers, thread links agents can press, usage per attempt and older attempts behind a toggle.",
       "dependencies": [
         "@ui-sdk/core@0.1.0-beta.5",
-        "@ui-sdk/react@0.1.0-beta.5"
+        "@ui-sdk/react@0.1.0-beta.5",
+        "lucide-react@1.73.0"
       ],
       "registryDependencies": [
         "@eskais/utils",
@@ -2336,7 +2353,8 @@
       "title": "Task Card",
       "description": "A compact agent task card: id, two-line title, profile, active agent, liveness, acceptance bar, attempts and cost, dependency chips, blocker with its retry time, decision and analysis-mode markers, and proposal actions in live mode. A stretched UI SDK Button selects it without nesting other controls.",
       "dependencies": [
-        "@ui-sdk/react@0.1.0-beta.5"
+        "@ui-sdk/react@0.1.0-beta.5",
+        "lucide-react@1.73.0"
       ],
       "registryDependencies": [
         "@eskais/utils",
@@ -2393,7 +2411,8 @@
       "title": "Task Detail Panel",
       "description": "An agent task's goal, acceptance and evidence, dependencies that select their task, the pending decision with proposal actions, usage and the attempt timeline. TaskDetailPanel shows it as a non-modal panel; TaskDetailDialog as a modal dialog or a right-side drawer. Escape and a close button close either.",
       "dependencies": [
-        "@ui-sdk/react@0.1.0-beta.5"
+        "@ui-sdk/react@0.1.0-beta.5",
+        "lucide-react@1.73.0"
       ],
       "registryDependencies": [
         "@eskais/utils",
@@ -2440,7 +2459,8 @@
       "description": "The full board for AI agent tasks: filters, search, a board or sortable table view, a summary, collapsible status columns with ready and waiting groups, a detail dialog, drawer or side panel, compact density on narrow hosts, snapshot and live modes, English and Spanish labels, and agent actions to select, filter, switch views, open threads and decide proposals.",
       "dependencies": [
         "@ui-sdk/core@0.1.0-beta.5",
-        "@ui-sdk/react@0.1.0-beta.5"
+        "@ui-sdk/react@0.1.0-beta.5",
+        "lucide-react@1.73.0"
       ],
       "registryDependencies": [
         "@eskais/utils",
@@ -2520,7 +2540,8 @@
       "description": "UI SDK Accordion parts: triggers in headings, Enter and Space toggle, animated panels on the density tokens.",
       "dependencies": [
         "@ui-sdk/core@0.1.0-beta.5",
-        "@ui-sdk/react@0.1.0-beta.5"
+        "@ui-sdk/react@0.1.0-beta.5",
+        "lucide-react@1.73.0"
       ],
       "registryDependencies": [
         "@eskais/utils",
@@ -2550,6 +2571,26 @@
       "files": [
         {
           "path": "registry/ui/hover-card.tsx",
+          "type": "registry:ui"
+        }
+      ]
+    },
+    {
+      "name": "icon",
+      "type": "registry:ui",
+      "title": "Icon",
+      "description": "Icon names a lucide-react icon (or any SVG component) for screen readers: <Icon icon={TrashIcon} label=\"Deleted\" /> renders role=img with that label. Decorative icons need no wrapper, since lucide hides them by default.",
+      "docs": "The registry draws its icons with `lucide-react`: import them by name (`import { CheckIcon } from \"lucide-react\"`). Lucide sets `aria-hidden` on an icon that has no `aria-*`, `role` or `title` prop, so a decorative icon needs no wrapper. Use `Icon` only when the icon carries meaning nothing else states: `<Icon icon={TriangleExclamationPointIcon} label=\"Blocked\" />` renders `role=\"img\"` with that `aria-label`. Size comes from the parent (Button, Badge, menu items and inputs set `[&_svg]:size-4`) or a `size-*` class: `size-3.5` beside `text-body-sm`, `size-4` beside `text-body`, `size-5` beside a title; our classes override lucide's `size` prop. Colour is `currentColor`: set a text colour, like `text-success`.",
+      "dependencies": [
+        "lucide-react@1.73.0"
+      ],
+      "registryDependencies": [
+        "@eskais/utils",
+        "@eskais/theme"
+      ],
+      "files": [
+        {
+          "path": "registry/ui/icon.tsx",
           "type": "registry:ui"
         }
       ]
@@ -2605,7 +2646,8 @@
       "dependencies": [
         "@ui-sdk/core@0.1.0-beta.5",
         "@ui-sdk/react@0.1.0-beta.5",
-        "class-variance-authority@0.7.1"
+        "class-variance-authority@0.7.1",
+        "lucide-react@1.73.0"
       ],
       "registryDependencies": [
         "@eskais/utils",
@@ -2625,7 +2667,8 @@
       "title": "Breadcrumb",
       "description": "Presentational breadcrumb trail: a navigation named Breadcrumb, an ordered list and aria-current on the current page.",
       "dependencies": [
-        "@ui-sdk/react@0.1.0-beta.5"
+        "@ui-sdk/react@0.1.0-beta.5",
+        "lucide-react@1.73.0"
       ],
       "registryDependencies": [
         "@eskais/utils",
@@ -2646,7 +2689,8 @@
       "description": "UI SDK Pagination that works standalone: page, pageCount or total and pageSize, onPageChange with details, overridable labels.",
       "dependencies": [
         "@ui-sdk/core@0.1.0-beta.5",
-        "@ui-sdk/react@0.1.0-beta.5"
+        "@ui-sdk/react@0.1.0-beta.5",
+        "lucide-react@1.73.0"
       ],
       "registryDependencies": [
         "@eskais/utils",
@@ -2667,7 +2711,8 @@
       "description": "UI SDK Command list with search, groups, empty state and Kbd shortcuts, plus a CommandDialog palette with an opt-in mod+K trigger.",
       "dependencies": [
         "@ui-sdk/core@0.1.0-beta.5",
-        "@ui-sdk/react@0.1.0-beta.5"
+        "@ui-sdk/react@0.1.0-beta.5",
+        "lucide-react@1.73.0"
       ],
       "registryDependencies": [
         "@eskais/utils",
@@ -2824,7 +2869,8 @@
       "description": "UI SDK NumberInput: typed, stepped and formatted numbers with step buttons, named by Field.",
       "dependencies": [
         "@ui-sdk/core@0.1.0-beta.5",
-        "@ui-sdk/react@0.1.0-beta.5"
+        "@ui-sdk/react@0.1.0-beta.5",
+        "lucide-react@1.73.0"
       ],
       "registryDependencies": [
         "@eskais/utils",
@@ -2932,7 +2978,8 @@
       "dependencies": [
         "@ui-sdk/core@0.1.0-beta.5",
         "@ui-sdk/react@0.1.0-beta.5",
-        "class-variance-authority@0.7.1"
+        "class-variance-authority@0.7.1",
+        "lucide-react@1.73.0"
       ],
       "registryDependencies": [
         "@eskais/utils",
@@ -2954,7 +3001,8 @@
       "dependencies": [
         "@ui-sdk/core@0.1.0-beta.5",
         "@ui-sdk/react@0.1.0-beta.5",
-        "class-variance-authority@0.7.1"
+        "class-variance-authority@0.7.1",
+        "lucide-react@1.73.0"
       ],
       "registryDependencies": [
         "@eskais/utils",
@@ -3003,7 +3051,8 @@
       "dependencies": [
         "@ui-sdk/core@0.1.0-beta.5",
         "@ui-sdk/react@0.1.0-beta.5",
-        "class-variance-authority@0.7.1"
+        "class-variance-authority@0.7.1",
+        "lucide-react@1.73.0"
       ],
       "registryDependencies": [
         "@eskais/utils",
@@ -3045,7 +3094,8 @@
       "dependencies": [
         "@ui-sdk/core@0.1.0-beta.5",
         "@ui-sdk/react@0.1.0-beta.5",
-        "class-variance-authority@0.7.1"
+        "class-variance-authority@0.7.1",
+        "lucide-react@1.73.0"
       ],
       "registryDependencies": [
         "@eskais/utils",
@@ -3083,7 +3133,8 @@
       "dependencies": [
         "@ui-sdk/core@0.1.0-beta.5",
         "@ui-sdk/react@0.1.0-beta.5",
-        "class-variance-authority@0.7.1"
+        "class-variance-authority@0.7.1",
+        "lucide-react@1.73.0"
       ],
       "registryDependencies": [
         "@eskais/utils",
@@ -3180,7 +3231,8 @@
       "docs": "Put a `SkipLink` first in `<body>`, then the header: `<SkipLink>Skip to content</SkipLink><SiteHeader label=\"Main\" brand={<a href=\"/\">…</a>} items={[{ label: \"Pricing\", href: \"/pricing\", current: true }, { label: \"Solutions\", items: […] }]} actions={<Button>Sign in</Button>} /><PageLayout as=\"main\">…</PageLayout>`. `renderLink={(item) => <Link to={item.href} />}` (or `render` per item) uses your router's link. It sticks `--floating-offset` below the top of its scroll container; set `--site-header-width` to change its 64rem cap. `moreLabel`, `menuLabel` and `closeLabel` are English by default. Style the scrolled state with `group-data-scrolled/site-header:`.",
       "dependencies": [
         "@ui-sdk/core@0.1.0-beta.5",
-        "@ui-sdk/react@0.1.0-beta.5"
+        "@ui-sdk/react@0.1.0-beta.5",
+        "lucide-react@1.73.0"
       ],
       "registryDependencies": [
         "@eskais/utils",
@@ -3233,7 +3285,8 @@
       "docs": "Pair it with a `Sidebar`: the sidebar on wide screens, this bar on narrow ones. `<Sidebar className=\"narrow:hidden\" …/><PageLayout as=\"main\" className=\"narrow:mb-(--mobile-nav-offset)\">…</PageLayout><MobileNav label=\"Main\" items={[{ label: \"Home\", href: \"/\", icon: <HomeIcon />, current: true }, …]} overflow={[…]} />`. The page keeps `--mobile-nav-offset` (the bar's `--mobile-nav-height`, 3.5rem, plus the bottom safe area) clear so nothing hides under it; add `viewport-fit=cover` to the viewport meta for the safe area to apply. Past five items, or with `overflow`, the fifth slot is More (`moreLabel`, English by default, and `moreIcon`). `renderLink` or `render` per item takes your router's link. It never uses viewport units.",
       "dependencies": [
         "@ui-sdk/core@0.1.0-beta.5",
-        "@ui-sdk/react@0.1.0-beta.5"
+        "@ui-sdk/react@0.1.0-beta.5",
+        "lucide-react@1.73.0"
       ],
       "registryDependencies": [
         "@eskais/utils",
@@ -3255,7 +3308,8 @@
       "dependencies": [
         "@ui-sdk/core@0.1.0-beta.5",
         "@ui-sdk/react@0.1.0-beta.5",
-        "class-variance-authority@0.7.1"
+        "class-variance-authority@0.7.1",
+        "lucide-react@1.73.0"
       ],
       "registryDependencies": [
         "@eskais/utils",
@@ -3319,7 +3373,8 @@
       "docs": "Pass `items` ({ id, src, srcDark?, alt, name?, href? }) and control `open`/`onOpenChange` and `index`/`onIndexChange`, or put a `DialogTrigger` inside as children. `srcDark` is rendered next to `src` and CSS shows it under `.dark` or the system dark preference (unless `<html>` opts into light), so there is no flash. Focus returns to the trigger, or to whatever was focused when it opened; pass `finalFocus` to override. The dialog is sized in % of the top layer, never viewport units. Labels are English and overridable through `labels`. Agents see `Image viewer` with `next`, `previous` and `goTo(index)` (0-based).",
       "dependencies": [
         "@ui-sdk/core@0.1.0-beta.5",
-        "@ui-sdk/react@0.1.0-beta.5"
+        "@ui-sdk/react@0.1.0-beta.5",
+        "lucide-react@1.73.0"
       ],
       "registryDependencies": [
         "@eskais/utils",
@@ -3352,7 +3407,8 @@
       "docs": "Each attachment is { id, name, kind: \"image\" | \"file\", src, srcDark?, thumbnail?, thumbnailDark?, alt, href?, size?, mimeType? }. Dark variants are rendered beside the light ones and CSS shows the one that matches the theme (`.dark`, or the system preference unless the page opted into light), so there is no flash. `onOpen(attachment, details)` runs before anything opens, for people and agents (`details.source === \"agent\"`); `details.cancel()` keeps it closed. Sizes are formatted with Intl in `locale`. The strip needs an `aria-label`; the other labels are English and overridable through `labels` (`open`, `more`, `lightbox`). Focus returns to the thumbnail that opened the lightbox.",
       "dependencies": [
         "@ui-sdk/core@0.1.0-beta.5",
-        "@ui-sdk/react@0.1.0-beta.5"
+        "@ui-sdk/react@0.1.0-beta.5",
+        "lucide-react@1.73.0"
       ],
       "registryDependencies": [
         "@eskais/utils",
@@ -3498,7 +3554,8 @@
         "@lezer/highlight@1.2.5",
         "@lezer/markdown@1.8.1",
         "@ui-sdk/core@0.1.0-beta.5",
-        "@ui-sdk/react@0.1.0-beta.5"
+        "@ui-sdk/react@0.1.0-beta.5",
+        "lucide-react@1.73.0"
       ],
       "registryDependencies": [
         "@eskais/utils",
@@ -3606,7 +3663,8 @@
       "dependencies": [
         "@ui-sdk/core@0.1.0-beta.5",
         "@ui-sdk/react@0.1.0-beta.5",
-        "class-variance-authority@0.7.1"
+        "class-variance-authority@0.7.1",
+        "lucide-react@1.73.0"
       ],
       "registryDependencies": [
         "@eskais/utils",
@@ -3637,7 +3695,8 @@
         "@lezer/json@1.0.3",
         "@lezer/css@1.3.9",
         "@lezer/html@1.3.13",
-        "@lezer/markdown@1.8.1"
+        "@lezer/markdown@1.8.1",
+        "lucide-react@1.73.0"
       ],
       "registryDependencies": [
         "@eskais/utils",
@@ -3756,7 +3815,8 @@
       "description": "DocsLayout (a sidebar slot fixed beside the content, a sticky header slot, the main landmark and a table of contents slot), DocsToc (headings marked as you read with IntersectionObserver), DocsPager and DocsBreadcrumb.",
       "dependencies": [
         "@ui-sdk/core@0.1.0-beta.5",
-        "@ui-sdk/react@0.1.0-beta.5"
+        "@ui-sdk/react@0.1.0-beta.5",
+        "lucide-react@1.73.0"
       ],
       "registryDependencies": [
         "@eskais/utils",

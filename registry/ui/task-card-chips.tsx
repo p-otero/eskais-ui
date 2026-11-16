@@ -1,6 +1,7 @@
 "use client"
 
 import type { ComponentProps } from "react"
+import { PaperclipIcon } from "lucide-react"
 
 import { activeAttempt, needsDecision, taskCost } from "@/lib/agent-task-board-model"
 import type { TaskView } from "@/lib/agent-task-types"
@@ -145,17 +146,7 @@ function TaskCardChips({
       )}
       {attachments > 0 && (
         <Chip data-slot="task-card-attachments" title={text.attachments(attachments)}>
-          <svg
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            aria-hidden="true"
-          >
-            <path d="m16 6-8.4 8.6a2 2 0 0 0 2.8 2.8l8.4-8.6a4 4 0 1 0-5.6-5.6l-8.4 8.5a6 6 0 1 0 8.5 8.5l8.4-8.5" />
-          </svg>
+          <PaperclipIcon />
           <span aria-hidden="true" className="tabular-nums">
             {attachments}
           </span>

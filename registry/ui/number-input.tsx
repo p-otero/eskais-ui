@@ -11,6 +11,7 @@ import {
   createNumberInputController,
 } from "@ui-sdk/react/number-input"
 import type { ComponentProps } from "react"
+import { MinusIcon, PlusIcon } from "lucide-react"
 
 import { floatingLabelControls, useFloatingPlaceholder } from "@/components/ui/field"
 import { fieldSurfaceClassName } from "@/components/ui/input"
@@ -48,18 +49,10 @@ function NumberInputControl({ className, placeholder, ...props }: ComponentProps
 const stepButtonClassName =
   "inline-flex h-full w-control shrink-0 cursor-pointer items-center justify-center text-muted-foreground transition-colors outline-none hover:bg-accent hover:text-accent-foreground data-disabled:cursor-not-allowed data-disabled:opacity-50 data-disabled:hover:bg-transparent [&_svg]:size-4"
 
-function StepIcon({ path }: { path: string }) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-      <path d={path} />
-    </svg>
-  )
-}
-
 function NumberInputDecrement({ className, children, ...props }: ComponentProps<typeof NumberInputDecrementPrimitive>) {
   return (
     <NumberInputDecrementPrimitive aria-label="Decrease" className={cnState(stepButtonClassName, className)} {...props}>
-      {children ?? <StepIcon path="M5 12h14" />}
+      {children ?? <MinusIcon />}
     </NumberInputDecrementPrimitive>
   )
 }
@@ -67,7 +60,7 @@ function NumberInputDecrement({ className, children, ...props }: ComponentProps<
 function NumberInputIncrement({ className, children, ...props }: ComponentProps<typeof NumberInputIncrementPrimitive>) {
   return (
     <NumberInputIncrementPrimitive aria-label="Increase" className={cnState(stepButtonClassName, className)} {...props}>
-      {children ?? <StepIcon path="M12 5v14M5 12h14" />}
+      {children ?? <PlusIcon />}
     </NumberInputIncrementPrimitive>
   )
 }

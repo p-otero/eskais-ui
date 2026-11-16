@@ -2,6 +2,7 @@
 
 import { useEffect, type ReactNode } from "react"
 import { useFormState } from "react-hook-form"
+import { CircleExclamationPointIcon } from "lucide-react"
 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
@@ -33,10 +34,7 @@ function FormRootError({ title, className }: FormRootErrorProps) {
       data-slot="form-root-error"
       className={cn("outline-none focus-visible:ring-2 focus-visible:ring-ring", className)}
     >
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-        <circle cx="12" cy="12" r="9" />
-        <path d="M12 8v4M12 16h.01" />
-      </svg>
+      <CircleExclamationPointIcon />
       {title === undefined ? null : <AlertTitle>{title}</AlertTitle>}
       <AlertDescription>
         {lines.length === 1 ? (

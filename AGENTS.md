@@ -188,6 +188,15 @@ On a coarse pointer (`@media (pointer: coarse)`), controls reach a hit area of a
 2. Prefer container queries (`@container`, `@md:`) for a component that lives in panels of different widths; `narrow:` is for page layout.
 3. It is a max-width variant, so write the wide layout first and override it: `flex-row narrow:flex-col`.
 
+## Icons
+
+Icons come from `lucide-react`, imported by name the way shadcn does: `import { ChevronDownIcon, XIcon } from "lucide-react"`. Every item whose files import it lists `lucide-react@<exact version>` in `dependencies`; a test fails otherwise.
+
+1. Never draw an icon by hand. `eskais/no-inline-icons` flags every `<svg>` element in `registry/**`, whatever the function is called. A drawing that isn't an icon (the spinner's arc, task status rings, a stage marker's tick, an avatar placeholder, a grip) disables it on the line before: `// oxlint-disable-next-line eskais/no-inline-icons -- <reason>` (`{/* … */}` inside JSX children).
+2. Lucide hides an icon from assistive tech (and so from agents) unless it gets an `aria-*`, `role` or `title` prop. A decorative icon needs nothing. A meaningful one, with no text beside it, uses `<Icon icon={XIcon} label="…" />` from `icon`.
+3. Size comes from the parent (`[&_svg]:size-4` in Button, Badge, menu items, inputs) or a `size-*` class: `size-3.5` beside `text-body-sm`, `size-4` beside `text-body`, `size-5` beside a title. Classes override lucide's `size` prop (24 by default, so an unsized icon is 24px). Keep lucide's stroke of 2; a tick in a small indicator (checkbox, select) takes `strokeWidth={2.5}` or `3`.
+4. Colour is `currentColor`: set a text colour (`text-muted-foreground`, `text-success`). Mirror direction icons in right-to-left with `rtl:-scale-x-100` or `rtl:rotate-180`.
+
 ## Comments
 
 - Don't narrate what the code does; rename and restructure until the intent is obvious.

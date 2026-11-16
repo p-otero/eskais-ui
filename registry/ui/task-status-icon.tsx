@@ -69,6 +69,7 @@ type TaskStatusIconProps = Omit<ComponentProps<"svg">, "children"> & {
 
 function TaskStatusIcon({ status, label, tone, className, ...props }: TaskStatusIconProps) {
   return (
+    // oxlint-disable-next-line eskais/no-inline-icons -- status rings on a 16px grid, filled and cut out per status; no icon set has them
     <svg
       viewBox="0 0 16 16"
       fill="none"

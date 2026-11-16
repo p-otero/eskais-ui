@@ -3,6 +3,7 @@
 import { Meter, MeterTrack } from "@ui-sdk/react/meter"
 import { renderElement, type PartProps } from "@ui-sdk/react/primitive"
 import type { ComponentProps, ReactNode } from "react"
+import { CheckIcon, CircleDashedIcon, XIcon, type LucideIcon } from "lucide-react"
 
 import { Collapsible, CollapsibleIcon, CollapsiblePanel, CollapsibleTrigger } from "@/components/ui/collapsible"
 import { cn } from "@/lib/utils"
@@ -43,10 +44,10 @@ const segmentColor: Record<AcceptanceResult, string> = {
   unverified: "bg-muted-foreground",
 }
 
-const iconPaths: Record<AcceptanceResult, ReactNode> = {
-  pass: <path d="m5 12 5 5L20 7" />,
-  fail: <path d="M18 6 6 18M6 6l12 12" />,
-  unverified: <circle cx="12" cy="12" r="8" strokeDasharray="3 3" />,
+const resultIcons: Record<AcceptanceResult, LucideIcon> = {
+  pass: CheckIcon,
+  fail: XIcon,
+  unverified: CircleDashedIcon,
 }
 
 function countAcceptance(criteria: readonly Pick<AcceptanceCriterion, "result">[]): AcceptanceCounts {
@@ -61,20 +62,8 @@ function formatAcceptanceSummary({ pass, fail, unverified }: AcceptanceCounts) {
 }
 
 function AcceptanceIcon({ result }: { result: AcceptanceResult }) {
-  return (
-    <svg
-      aria-hidden="true"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2.5"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className={cn("h-lh w-4 shrink-0", resultColor[result])}
-    >
-      {iconPaths[result]}
-    </svg>
-  )
+  const ResultIcon = resultIcons[result]
+  return <ResultIcon strokeWidth={2.5} className={cn("h-lh w-4 shrink-0", resultColor[result])} />
 }
 
 type AcceptanceListProps = Omit<PartProps<"ul">, "children"> & {

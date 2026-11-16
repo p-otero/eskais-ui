@@ -1,3 +1,4 @@
+import { SearchIcon } from "lucide-react"
 import { useState } from "react"
 
 import {
@@ -16,7 +17,6 @@ import {
   CommandDialogTrigger,
 } from "@/components/ui/command-dialog"
 
-import { SearchIcon } from "./icons"
 import { docSections } from "./pages"
 import { navigate } from "./router"
 
