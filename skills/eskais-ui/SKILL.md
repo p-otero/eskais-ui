@@ -67,13 +67,68 @@ Eskais UI components are UI SDK parts styled with Tailwind v4 and semantic token
 | Dense rows or entity cards         | `List aria-label` + `ListGroup label count` + `ListItem id title leading subtitle status meta trailing actions href/onSelect selected`; `variant="card"` for cards; `value`/`onValueChange` on `List` makes it a Listbox. Agents get `select(id)`                                                                                                                                     |
 | A page's column                    | `PageLayout width header` (`dense`, `wide`, `full`; `variant="workspace"` for app screens). Renders `<main id="main">` only with `as="main"`, since the shell may own `<main>`; never a live region                                                                                                                                                                                   |
 | A titled block on a page           | `Section title eyebrow description action footer headingLevel surface padding`: Card composed; `surface="dashed"` for a create tile, `"none"` for no box                                                                                                                                                                                                                              |
+| A public site's header             | `SiteHeader label brand items actions renderLink`: a floating pill; links that don't fit move into "More" (measured, in order), `items` with children become dropdowns, a drawer with every link on narrow screens, `data-scrolled` once the page scrolls. Put a `SkipLink` before it                                                                                                 |
+| An app screen's header             | `Topbar brand leading center centerCompact trailing`: sticky, a bottom border, `centerCompact` replaces the centre on narrow screens. `SidebarTrigger controller collapsed` from `@eskais/sidebar` toggles a `Sidebar` (give it `trigger={false}`) through the same `createSidebarController()`                                                                                       |
+| Navigation on a phone              | `MobileNav label items overflow`: a bottom tab bar, up to five links (icon over label, `current`, `badge`), More for the rest, shown at `narrow:` only unless `always`. Hide the `Sidebar` with `narrow:hidden` and give the page `narrow:mb-(--mobile-nav-offset)` so it ends above the bar                                                                                          |
 | Skip past navigation               | `SkipLink` first in `<body>` (text required, `href` defaults to `#main`), with `PageLayout as="main"` or your own `<main id="main" tabIndex={-1}>`                                                                                                                                                                                                                                    |
+| Many tabs in little space          | `TabsList` scrolls on its own when its tabs don't fit (`scrollable="auto"`): edge fades, pointer-only scroll buttons (aria-hidden, not for agents), arrow keys reach every tab, works in rtl. `scrollable={false}` opts out                                                                                                                                                           |
 | A page title                       | `PageHeader title eyebrow description actions tabs breadcrumb headingLevel`; `tabs` holds a `TabsList` inside a `Tabs` that wraps the page; actions wrap below the title on narrow screens                                                                                                                                                                                            |
 | A date and a time together         | `DateTimePicker value onValueChange min max locale timeZone labels={{ time }}` in a `Field`: one local `"YYYY-MM-DDTHH:mm"` value; the time has its own label, which must not repeat the date label's words; `TimeInput` alone for a time of day                                                                                                                                      |
 | Dates, layout or data table        | `Calendar`/`DatePicker` (ISO, `locale`, `timeZone`), `Carousel`, `Resizable`, `Sidebar` (rail, drawer), `DataTable` (typed columns, `renderPagination`), `PageHeader`, `FilterBar` (a Toolbar)                                                                                                                                                                                        |
 | Menus, site navigation, paging, ⌘K | `ContextMenu`, `Menubar`, `NavigationMenu`, `Breadcrumb`, `Pagination page pageCount onPageChange labels`, `CommandDialog` + `Command` (pass `shortcut="mod+k"` to the trigger to opt in); `Accordion`, `HoverCard` for disclosure and link previews                                                                                                                                  |
 | A chart                            | `ChartContainer config aria-labelledby` + Recharts (`accessibilityLayer`), `ChartTooltip`/`ChartLegend` + `…Content`, `ChartDataTable`. every series meets 3:1 on the card, aqua (`--chart-3`) only just, so still add a legend or value labels. Series with a meaning take `var(--series-positive)`, `--series-negative`, `--series-target` or `--series-remaining`                  |
 | Write or show Markdown             | `MarkdownEditor label value onChange` (debounced; `onConflict` when a new `value` meets unsent edits) keeps the Markdown byte for byte and shows marks only while the caret is in their span; `codeLanguages={markdownCodeLanguages}` from `@eskais/markdown-editor-languages` is opt-in, `labels={markdownEditorLabelsEs}` for Spanish. `MarkdownView markdown` renders it read-only |
+
+## Global search (⌘K)
+
+A search that loads results from the server, opened from the `Topbar` with `mod+k`:
+
+```tsx
+import { useAsyncOptions } from "@ui-sdk/react/async-options"
+
+function GlobalSearch() {
+  const [dialog] = useState(() => createCommandDialogController())
+  const results = useAsyncOptions(searchWorkspace, { debounce: 200, immediate: true }) // (query, { signal }) => Promise<{ value, label }[]>
+  return (
+    <CommandDialog controller={dialog}>
+      <CommandDialogTrigger shortcut="mod+k">
+        <SearchIcon />
+        <span className="narrow:sr-only">Search the workspace</span>
+        <CommandDialogShortcut />
+      </CommandDialogTrigger>
+      <CommandDialogContent title="Search the workspace">
+        <Command
+          filter={false}
+          status={results.status}
+          onQueryChange={(query) => results.setQuery(query)}
+          onLoadMore={results.loadMore}
+          onAction={(value) => {
+            navigate(value)
+            dialog.close()
+          }}
+        >
+          <CommandInput aria-label="Search the workspace" />
+          <CommandStatus>{(state) => (state.loading ? "Searching…" : `${state.count} results`)}</CommandStatus>
+          <CommandEmpty>
+            {(state) => (state.empty && !state.loading ? `Nothing matches “${state.query}”` : null)}
+          </CommandEmpty>
+          <CommandList>
+            {results.items.map((item) => (
+              <CommandItem key={item.value} value={item.value} label={item.label}>
+                {item.label}
+              </CommandItem>
+            ))}
+          </CommandList>
+        </Command>
+      </CommandDialogContent>
+    </CommandDialog>
+  )
+}
+```
+
+- `filter={false}` keeps the server's order; `useAsyncOptions` debounces, aborts stale requests through `signal` and keeps the last results while loading. Pass `status` so the list gets `aria-busy` and `CommandStatus` announces counts.
+- The dialog returns focus to the trigger that opened it, and `onOpenChange` on `CommandDialog` reports both ways. `shortcut` is opt-in and only listens while the trigger is mounted.
+- Prefer one trigger whose text goes `narrow:sr-only`. A second trigger elsewhere (`<CommandDialogTrigger controller={dialog}>`, like a `Topbar`'s `centerCompact`) works for people, but in UI SDK 0.1.0-beta.5 the dialog then has no agent label: agents press it by `ref` with the trigger's name as the argument.
 
 ## AgentTaskBoard
 

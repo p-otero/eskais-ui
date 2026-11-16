@@ -103,6 +103,9 @@ const allItems = [
   "sidebar",
   "data-table",
   "skip-link",
+  "site-header",
+  "topbar",
+  "mobile-nav",
   "page-layout",
   "page-header",
   "filter-bar",
@@ -386,11 +389,14 @@ import { Input } from "@/components/ui/input"
 import { PageHeader } from "@/components/ui/page-header"
 import { PageLayout } from "@/components/ui/page-layout"
 import { SearchField } from "@/components/ui/search-field"
+import { MobileNav } from "@/components/ui/mobile-nav"
 import { MarkdownEditor } from "@/components/ui/markdown-editor"
 import { markdownCodeLanguages } from "@/components/ui/markdown-editor-languages"
 import { MarkdownView } from "@/components/ui/markdown-view"
 import { Section } from "@/components/ui/section"
+import { SiteHeader } from "@/components/ui/site-header"
 import { SkipLink } from "@/components/ui/skip-link"
+import { Topbar } from "@/components/ui/topbar"
 import { Spinner } from "@/components/ui/spinner"
 import { StatusDot } from "@/components/ui/status-pill"
 import type { TaskView } from "@/lib/agent-task-types"
@@ -433,6 +439,8 @@ function App() {
   return (
     <Appearance appearance={appearance}>
     <SkipLink>Skip to content</SkipLink>
+    <SiteHeader label="Main" brand={<a href="/">Home</a>} items={[{ label: "Docs", href: "/docs", current: true }, { label: "More docs", items: [{ label: "API", href: "/api" }] }]} />
+    <Topbar brand={<span>App</span>} trailing={<Button>Account</Button>} />
     <PageLayout as="main" header={<PageHeader eyebrow="Consumer" title="Page" />}>
     <Section title="Data" action={<Spinner label="Syncing" />}>
       <DataState status="success" data={["a"]} labels={{ errorTitle: "Failed", emptyTitle: "Empty" }}>
@@ -466,6 +474,7 @@ function App() {
     </Card>
     <Probes />
     </PageLayout>
+    <MobileNav label="Phone" items={[{ label: "Home", href: "/", icon: <span aria-hidden="true">H</span>, current: true }]} />
     </Appearance>
   )
 }

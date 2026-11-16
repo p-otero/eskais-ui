@@ -57,6 +57,9 @@
   --sheet-max-height: calc(100% - var(--floating-offset));
   --sidebar-width: 16rem;
   --sidebar-rail-width: calc(var(--control-height) + 1rem);
+  /* A MobileNav's bar, and the space a page keeps clear under it, safe area included. */
+  --mobile-nav-height: 3.5rem;
+  --mobile-nav-offset: calc(var(--mobile-nav-height) + env(safe-area-inset-bottom));
   --type-meta-size: 0.6875rem;
   --type-meta-leading: 0.875rem;
   --type-caption-size: 0.75rem;

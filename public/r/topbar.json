@@ -1,0 +1,19 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "topbar",
+  "title": "Topbar",
+  "description": "The header of an application screen: full width and sticky, a bottom border instead of a shadow, leading (a SidebarTrigger or a breadcrumb), centre (search or a command trigger) and trailing slots, and an optional brand. The centre collapses to `centerCompact` on narrow screens. Glass gives it a translucent chrome fill.",
+  "registryDependencies": [
+    "@eskais/utils",
+    "@eskais/theme"
+  ],
+  "files": [
+    {
+      "path": "registry/ui/topbar.tsx",
+      "content": "import type { ComponentProps, ReactNode } from \"react\"\n\nimport { cn } from \"@/lib/utils\"\n\ntype TopbarProps = Omit<ComponentProps<\"header\">, \"children\"> & {\n  /** A logo or product name, before `leading`. */\n  brand?: ReactNode\n  /** A SidebarTrigger or a Breadcrumb. */\n  leading?: ReactNode\n  /** Search or a command palette trigger, centred. */\n  center?: ReactNode\n  /** Shown instead of `center` on narrow screens, usually an icon Button that opens the same thing. */\n  centerCompact?: ReactNode\n  /** Notifications, appearance and the user menu. */\n  trailing?: ReactNode\n}\n\n// Leading and trailing grow equally from zero, so the centre slot stays centred whatever each side holds.\nfunction Topbar({ brand, leading, center, centerCompact, trailing, className, ...props }: TopbarProps) {\n  return (\n    <header\n      data-slot=\"topbar\"\n      className={cn(\n        \"sticky top-0 z-sticky flex w-full min-w-0 items-center gap-group border-b bg-background/(--glass-opacity) px-group py-items backdrop-surface narrow:gap-items narrow:px-items\",\n        className,\n      )}\n      {...props}\n    >\n      <div data-slot=\"topbar-leading\" className=\"flex min-w-0 flex-1 items-center gap-items\">\n        {brand !== undefined && (\n          <div data-slot=\"topbar-brand\" className=\"flex shrink-0 items-center\">\n            {brand}\n          </div>\n        )}\n        {leading}\n      </div>\n      {center !== undefined && (\n        <div\n          data-slot=\"topbar-center\"\n          className={cn(\"flex min-w-0 flex-1 justify-center\", centerCompact !== undefined && \"narrow:hidden\")}\n        >\n          {center}\n        </div>\n      )}\n      <div data-slot=\"topbar-trailing\" className=\"flex min-w-0 flex-1 items-center justify-end gap-items\">\n        {centerCompact !== undefined && (\n          <div data-slot=\"topbar-center-compact\" className=\"hidden narrow:flex\">\n            {centerCompact}\n          </div>\n        )}\n        {trailing}\n      </div>\n    </header>\n  )\n}\n\nexport { Topbar }\nexport type { TopbarProps }\n",
+      "type": "registry:ui"
+    }
+  ],
+  "docs": "`<Topbar brand={…} leading={<SidebarTrigger controller={sidebar} collapsed={collapsed} />} center={<CommandDialogTrigger controller={search} shortcut=\"mod+k\">Search</CommandDialogTrigger>} centerCompact={<CommandDialogTrigger controller={search} variant=\"ghost\" size=\"icon\" aria-label=\"Search\">…</CommandDialogTrigger>} trailing={<UserMenu />} />`. It renders `<header>`, which is the page's banner when it isn't inside `<main>` or a section. It sticks to the top of its scroll container; in a shell that owns the scroll (`fixed inset-0 flex flex-col`, the content `overflow-y-auto`), it simply sits first.",
+  "type": "registry:ui"
+}
