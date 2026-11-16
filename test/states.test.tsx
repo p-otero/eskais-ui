@@ -1,6 +1,7 @@
-import { act, render, screen } from "@testing-library/react"
+import { act, cleanup, render, screen } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { createAgent } from "@ui-sdk/react/agent"
+import { StrictMode } from "react"
 import { expect, test, vi } from "vitest"
 
 import { DataState, type DataStatus } from "@/components/ui/data-state"
@@ -165,6 +166,103 @@ test("isEmpty decides what counts as empty", () => {
     </DataState>,
   )
   expect(screen.getByText("No results")).toBeTruthy()
+})
+
+type Page = { items: Project[]; loaded: boolean }
+
+function PagedProjects({ status, data, placeholderData }: { status: DataStatus; data?: Page; placeholderData?: Page }) {
+  return (
+    <DataState
+      status={status}
+      data={data}
+      placeholderData={placeholderData}
+      isEmpty={(page) => page.loaded && page.items.length === 0}
+      labels={labels}
+    >
+      {(page) => (
+        <ul aria-label="Projects">
+          {page.items.map((project) => (
+            <li key={project.id}>{project.name}</li>
+          ))}
+        </ul>
+      )}
+    </DataState>
+  )
+}
+
+test("data passed while pending, before any success, still shows loading", () => {
+  const { rerender } = render(<PagedProjects status="pending" data={{ items: [], loaded: false }} />)
+  expect(shown()).toBe("loading")
+  rerender(<PagedProjects status="pending" data={{ items: apollo, loaded: false }} />)
+  expect(shown()).toBe("loading")
+  rerender(<PagedProjects status="success" data={{ items: apollo, loaded: true }} />)
+  expect(shown()).toBe("data")
+})
+
+test("an initial [] with a custom isEmpty shows loading, not content", () => {
+  render(
+    <DataState status="pending" data={[] as Project[]} isEmpty={() => false} labels={labels}>
+      {(projects) => <ul aria-label="Projects">{projects.length}</ul>}
+    </DataState>,
+  )
+  expect(shown()).toBe("loading")
+})
+
+test("only data from a past success is kept during a refetch", () => {
+  const { container, rerender } = render(<Projects status="success" data={apollo} />)
+  rerender(<Projects status="pending" data={[{ id: "p9", name: "Stale guess" }]} />)
+  expect(shown()).toBe("data")
+  expect(screen.getByText("Apollo")).toBeTruthy()
+  expect(screen.queryByText("Stale guess")).toBeNull()
+  expect(container.querySelector("[data-slot=data-state]")!.getAttribute("aria-busy")).toBe("true")
+})
+
+test("placeholderData shows as content, marked busy, until the first success", () => {
+  const placeholder = { items: [{ id: "p0", name: "Cached Apollo" }], loaded: false }
+  const { container, rerender } = render(<PagedProjects status="pending" placeholderData={placeholder} />)
+  const root = container.querySelector("[data-slot=data-state]")!
+  expect(screen.getByText("Cached Apollo")).toBeTruthy()
+  expect(root.getAttribute("aria-busy")).toBe("true")
+  rerender(<PagedProjects status="success" data={{ items: apollo, loaded: true }} placeholderData={placeholder} />)
+  expect(screen.getByText("Apollo")).toBeTruthy()
+  expect(root.hasAttribute("aria-busy")).toBe(false)
+  rerender(<PagedProjects status="pending" placeholderData={placeholder} />)
+  expect(screen.getByText("Apollo")).toBeTruthy()
+  rerender(<PagedProjects status="error" placeholderData={placeholder} />)
+  expect(shown()).toBe("error")
+})
+
+test("a new array on every render renders once per render, with no state update in render", () => {
+  let parentRenders = 0
+  let childRenders = 0
+  function Parent({ status }: { status: DataStatus; tick?: number }) {
+    parentRenders++
+    const data = apollo.map((project) => ({ ...project }))
+    return (
+      <DataState status={status} data={data} isEmpty={() => false} labels={labels}>
+        {(projects) => {
+          childRenders++
+          return <ul aria-label="Projects">{projects.map((project) => project.name)}</ul>
+        }}
+      </DataState>
+    )
+  }
+  const { rerender } = render(<Parent status="success" />)
+  for (let tick = 1; tick <= 5; tick++) rerender(<Parent status="success" tick={tick} />)
+  expect(parentRenders).toBe(6)
+  expect(childRenders).toBe(parentRenders)
+  rerender(<Parent status="pending" />)
+  rerender(<Parent status="success" />)
+  expect(childRenders).toBe(parentRenders)
+  expect(shown()).toBe("data")
+
+  cleanup()
+  render(
+    <StrictMode>
+      <Parent status="success" />
+    </StrictMode>,
+  )
+  expect(shown()).toBe("data")
 })
 
 test("LoadingState is busy, with its label for screen readers only", async () => {
