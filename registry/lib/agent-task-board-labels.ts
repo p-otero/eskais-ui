@@ -110,6 +110,8 @@ interface AgentTaskBoardLabels {
     clear: string
     /** Names the row of stage toggles. */
     stage: string
+    /** The last stage toggle, for tasks without a location; agents can pass it to `filter({ stage })`. */
+    noStage: string
   }
   views: { group: string; board: string; table: string; backlog: string }
   backlog: { name: string; proposed: string; notReady: string }
@@ -169,6 +171,7 @@ const agentTaskBoardLabels: AgentTaskBoardLabels = {
     clearSearch: "Clear search",
     clear: "Clear filters",
     stage: "Stage",
+    noStage: "No stage",
   },
   views: { group: "View", board: "Board", table: "Table", backlog: "Backlog" },
   backlog: { name: "Backlog", proposed: "Proposed", notReady: "Not ready" },
@@ -300,6 +303,7 @@ const agentTaskBoardLabelsEs: AgentTaskBoardLabels = {
     clearSearch: "Borrar búsqueda",
     clear: "Quitar filtros",
     stage: "Etapa",
+    noStage: "Sin etapa",
   },
   views: { group: "Vista", board: "Tablero", table: "Tabla", backlog: "Backlog" },
   backlog: { name: "Backlog", proposed: "Propuestas", notReady: "No listas" },

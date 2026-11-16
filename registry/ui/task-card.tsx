@@ -1,7 +1,7 @@
 "use client"
 
 import { Button } from "@ui-sdk/react/button"
-import { memo, type ComponentProps } from "react"
+import { memo, type ComponentProps, type ReactNode } from "react"
 
 import { activeAttempt, attemptCount } from "@/lib/agent-task-board-model"
 import { agentDiffers, effectiveAgent, type TaskLink, type TaskStatus, type TaskView } from "@/lib/agent-task-types"
@@ -47,6 +47,8 @@ type TaskCardProps = Omit<ComponentProps<"article">, "children" | "onSelect"> &
   TaskDisplayOptions & {
     task: TaskView
     selected?: boolean
+    /** The host's controls at the end of the card, after Approve/Reject, in every mode. */
+    renderActions?: (task: TaskView) => ReactNode
   }
 
 function proposalError(error: unknown, labels: AgentTaskBoardLabels) {
@@ -71,6 +73,7 @@ function TaskCardComponent({
   statusTones,
   onOpenLink,
   stages,
+  renderActions,
   className,
   ...props
 }: TaskCardProps) {
@@ -81,6 +84,7 @@ function TaskCardComponent({
   const agentName = agent && agentSummary(agent, attempt.configured, { ...agentBadgeLabels, ...parts.agentBadge })
   const attempts = attemptCount(task)
   const pullRequest = task.links?.find((link) => link.kind === "pull-request")
+  const actions = renderActions?.(task)
 
   return (
     <article
@@ -167,6 +171,11 @@ function TaskCardComponent({
           renderError={(error) => proposalError(error, labels)}
           className="relative z-10"
         />
+      )}
+      {actions != null && actions !== false && (
+        <div data-slot="task-card-actions" className="relative z-10 flex flex-wrap items-center gap-inline">
+          {actions}
+        </div>
       )}
     </article>
   )

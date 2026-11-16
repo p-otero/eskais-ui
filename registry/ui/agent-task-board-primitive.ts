@@ -7,7 +7,7 @@ import {
   type ChangeOptions,
 } from "@ui-sdk/core"
 
-import { filterOptions, type TaskFilters } from "@/lib/agent-task-board-model"
+import { NO_STAGE, filterOptions, type TaskFilters } from "@/lib/agent-task-board-model"
 import type { AttemptView, TaskLink, TaskView, ThreadRef } from "@/lib/agent-task-types"
 
 type BoardView = "board" | "table" | "backlog"
@@ -24,6 +24,8 @@ type AgentTaskBoardOptions = {
   tasks?: TaskView[]
   /** Stage ids the `stage` filter accepts; without it, the stages the tasks' locations name. */
   stageIds?: readonly string[]
+  /** The "no stage" choice's label, which the `stage` filter takes as well as `NO_STAGE`. */
+  noStageLabel?: string
   view?: BoardView
   defaultView?: BoardView
   onViewChange?: (view: BoardView, details: ChangeDetails<ViewChangeReason>) => void
@@ -62,15 +64,23 @@ function reasonOf<Reason extends string>(options: unknown): { reason: Reason | "
 }
 
 // The agent bridge passes action arguments unchecked, so every action validates its own.
-function checkStages(value: unknown, allowed: readonly string[]): string[] | undefined {
+const sameText = (a: string, b: string) => a.trim().localeCompare(b.trim(), undefined, { sensitivity: "base" }) === 0
+
+function checkStages(value: unknown, allowed: readonly string[], noStageLabel?: string): string[] | undefined {
   const list = typeof value === "string" ? [value] : value
   if (!Array.isArray(list) || list.some((stage) => typeof stage !== "string")) {
     throw new TypeError(`Filter "stage" takes a list of stage ids, or null to clear it.`)
   }
-  for (const stage of list) {
-    if (!allowed.includes(stage)) throw new RangeError(`No stage "${stage}". Choices: ${allowed.join(", ")}.`)
+  const stages = (list as string[]).map((stage) =>
+    noStageLabel && !allowed.includes(stage) && sameText(stage, noStageLabel) ? NO_STAGE : stage,
+  )
+  for (const stage of stages) {
+    if (stage !== NO_STAGE && !allowed.includes(stage)) {
+      const none = noStageLabel ? `${NO_STAGE} ("${noStageLabel}")` : NO_STAGE
+      throw new RangeError(`No stage "${stage}". Choices: ${[...allowed, none].join(", ")}.`)
+    }
   }
-  return list.length > 0 ? [...new Set(list as string[])] : undefined
+  return stages.length > 0 ? [...new Set(stages)] : undefined
 }
 
 function stageChoices(tasks: readonly TaskView[], stageIds: readonly string[] | undefined): string[] {
@@ -82,6 +92,7 @@ function checkFilters(
   current: TaskFilters,
   tasks: readonly TaskView[],
   stageIds: readonly string[] | undefined,
+  noStageLabel?: string,
 ): TaskFilters {
   if (typeof partial !== "object" || partial === null || Array.isArray(partial)) {
     throw new TypeError(`filter takes an object with any of: ${FILTER_KEYS.join(", ")}.`)
@@ -98,7 +109,7 @@ function checkFilters(
       continue
     }
     if (filterKey === "stage") {
-      const stages = checkStages(value, stageChoices(tasks, stageIds))
+      const stages = checkStages(value, stageChoices(tasks, stageIds), noStageLabel)
       if (stages) next.stage = stages
       else delete next.stage
       continue
@@ -126,6 +137,7 @@ const agentTaskBoard = definePrimitive({
   options: {
     tasks: "list",
     stageIds: "list",
+    noStageLabel: "string",
     view: "string",
     defaultView: "string",
     onViewChange: "callback",
@@ -160,7 +172,8 @@ const agentTaskBoard = definePrimitive({
         return change("view", view as BoardView, reasonOf(options))
       },
       filter(partial: unknown, options?: ChangeOptions<FiltersChangeReason>) {
-        const next = checkFilters(partial, context.store.get().filters, tasks(), context.options().stageIds)
+        const { stageIds, noStageLabel } = context.options()
+        const next = checkFilters(partial, context.store.get().filters, tasks(), stageIds, noStageLabel)
         return change("filters", next, reasonOf(options))
       },
       selectTask(id: unknown, options?: ChangeOptions<SelectReason>) {
