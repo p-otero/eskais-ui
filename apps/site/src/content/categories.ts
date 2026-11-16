@@ -8,6 +8,7 @@ const categories = [
     items: [
       "form",
       "form-dialog",
+      "step-dialog",
       "field",
       "input",
       "textarea",

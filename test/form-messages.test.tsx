@@ -12,6 +12,7 @@ import {
   FormField,
   FormRootError,
   createFormMessages,
+  formIssueMessage,
   formMessagesEs,
   toFormErrors,
   type FormMessages,
@@ -88,6 +89,61 @@ test("an Effect-like schema with no codes: empty is required, a key message pass
   await user.clear(screen.getByRole("textbox", { name: "Handle" }))
   await user.type(screen.getByRole("textbox", { name: "Handle" }), "root")
   expect(await screen.findByText("Handles can't be root")).toBeTruthy()
+})
+
+const keyedSchema = effectLike<{ handle: string }>((value) => {
+  const handle = String(value.handle ?? "")
+  if (handle === "admin") return [{ message: 'form.handle.reserved|{"name":', path: ["handle"] }]
+  if (handle.length < 3) return [{ message: formIssueMessage("form.handle.min", { min: 3 }), path: ["handle"] }]
+  if (handle.length > 8) return [{ message: formIssueMessage("maxLength", { max: 8 }), path: ["handle"] }]
+  return []
+})
+
+const keyed: Record<string, string> = { "form.handle.min": "Al menos {min}, {field}" }
+const translateKeyed = (key: string, params: Record<string, unknown>) =>
+  keyed[key]?.replace(/\{(\w+)\}/g, (_, name: string) => String(params[name])) ?? key
+
+test("a schema message can be a key or a built-in code with JSON params", async () => {
+  expect(formIssueMessage("form.handle.min", { min: 3 })).toBe('form.handle.min|{"min":3}')
+  expect(formIssueMessage("form.handle.taken")).toBe("form.handle.taken")
+  const user = userEvent.setup()
+  render(
+    <Form
+      schema={keyedSchema}
+      defaultValues={{ handle: "" }}
+      onSubmit={ignore}
+      messages={createFormMessages(translateKeyed)}
+    >
+      <FormField name="handle" label="Handle" messages={formMessagesEs}>
+        <Input />
+      </FormField>
+      <FormActions submitLabel="Save" />
+    </Form>,
+  )
+  const handle = screen.getByRole("textbox", { name: "Handle" })
+  await user.type(handle, "ab")
+  await user.click(screen.getByRole("button", { name: "Save" }))
+  expect(await screen.findByText("Al menos 3, Handle")).toBeTruthy()
+  await user.type(handle, "cdefghij")
+  expect(await screen.findByText("Escribe como máximo 8 caracteres.")).toBeTruthy()
+  await user.clear(handle)
+  await user.type(handle, "admin")
+  expect(await screen.findByText('form.handle.reserved|{"name":')).toBeTruthy()
+})
+
+test("without messages, a keyed issue shows its key, not the params", async () => {
+  const user = userEvent.setup()
+  render(
+    <Form schema={keyedSchema} defaultValues={{ handle: "" }} onSubmit={ignore}>
+      <FormField name="handle" label="Handle">
+        <Input />
+      </FormField>
+      <FormActions submitLabel="Save" />
+    </Form>,
+  )
+  await user.type(screen.getByRole("textbox", { name: "Handle" }), "ab")
+  await user.click(screen.getByRole("button", { name: "Save" }))
+  expect(await screen.findByText("form.handle.min")).toBeTruthy()
 })
 
 async function rejectWithCodes() {

@@ -1285,6 +1285,7 @@
       "registryDependencies": [
         "@eskais/utils",
         "@eskais/button",
+        "@eskais/alert",
         "@eskais/dialog",
         "@eskais/spinner"
       ],
@@ -1293,7 +1294,8 @@
           "path": "registry/ui/confirm-dialog.tsx",
           "type": "registry:ui"
         }
-      ]
+      ],
+      "docs": "`<ConfirmDialog trigger title description confirmLabel onConfirm>`: a returned Promise keeps it open and pending, a rejection shows its message (`renderError`). `tone=\"destructive\"` requires `agentConfirm`. Children render as a callout under the description, an Alert in the dialog's tone (`destructive`, or `info` for the default tone; `calloutTone` overrides) that screen readers hear with the description. `labels={{ cancel }}` names the cancel button, \"Cancel\" by default; `cancelLabel` is deprecated."
     },
     {
       "name": "form",
@@ -1324,6 +1326,10 @@
           "type": "registry:ui"
         },
         {
+          "path": "registry/ui/form-root.tsx",
+          "type": "registry:ui"
+        },
+        {
           "path": "registry/ui/form-actions.tsx",
           "type": "registry:ui"
         },
@@ -1336,6 +1342,10 @@
           "type": "registry:ui"
         },
         {
+          "path": "registry/ui/form-instance.ts",
+          "type": "registry:ui"
+        },
+        {
           "path": "registry/ui/form-messages.ts",
           "type": "registry:ui"
         },
@@ -1344,7 +1354,7 @@
           "type": "registry:ui"
         }
       ],
-      "docs": "`<Form schema defaultValues onSubmit messages label>` with `<FormField name label description required>` around one control: Input, Textarea, NumberInput, Select, Combobox, Checkbox, Switch, RadioGroup, Slider, DatePicker, SegmentedControl or ToggleGroup bind by `name` (no `control` or `render`); `bind` or `render` for anything else, `useFormField()` inside a custom control. Give every field a default value. `onSubmit(values, { setError })` may return a Promise: the submit Button shows `loading`, fields are disabled (`disableWhilePending={false}` keeps them), a second submit is ignored. Throw a `FormServerError(message, fieldErrors)`, `{ fieldErrors, message }` or a Standard Schema issue list (`toFormErrors`) to put errors on fields and in `<FormRootError />` (an `Alert tone=\"destructive\" live`); any other error shows its message there. Focus then goes to the first invalid field, or to the root error. Messages: `messages={formMessagesEs}`, a dictionary, or a function of the issue for i18next, FormatJS or Lingui (`createFormMessages(t)` makes one from `t(key, params)`, keys `form.<code>`); `FormField messages` wins over the form's. An issue is `{ code, field, label, params, message }`; codes: `required`, `minLength`, `maxLength`, `minItems`, `maxItems`, `min`, `max` (params `min`/`max`), `email`, `url`, `pattern`, `invalid`, `server`, or a schema message that looks like a key (`form.email.taken`), or a server error's own `code`. Agents fill fields through their own parts and call the form's `submit` and `reset` when it has a `label`; `<FormActions tone=\"destructive\" confirm=\"…\">` puts `data-agent-confirm` on the submit button and hides the form's `submit` from agents."
+      "docs": "`<Form schema defaultValues onSubmit messages label>` with `<FormField name label description required>` around one control: Input, Textarea, NumberInput, Select, Combobox, Checkbox, Switch, RadioGroup, Slider, DatePicker, SegmentedControl or ToggleGroup bind by `name` (no `control` or `render`); `bind` or `render` for anything else, `useFormField()` inside a custom control. Give every field a default value. A field the schema rejects when empty (probed synchronously with the default values; Zod, Valibot and ArkType report every issue) gets a required marker, an `aria-hidden` asterisk in `text-destructive`, and its control `required`; `required` forces it, `required={false}` drops it. `requiredLabel` on the Form or field adds words for screen readers, like \"required\" in the page's language, which join the field's name; unset, screen readers announce the control's `required` state instead. `const { Form, FormField, useFormInstance, useFormWatch, useFormFieldArray } = createForm<typeof schema>()` types `name` against the schema's input; they are the same components. `onSubmit(values, { setError })` may return a Promise: the submit Button shows `loading`, fields are disabled (`disableWhilePending={false}` keeps them), a second submit is ignored. Throw a `FormServerError(message, fieldErrors)`, `{ fieldErrors, message }` or a Standard Schema issue list (`toFormErrors`) to put errors on fields and in `<FormRootError />` (an `Alert tone=\"destructive\" live`); any other error shows its message there. Focus then goes to the first invalid field, or to the root error. Messages: `messages={formMessagesEs}`, a dictionary, or a function of the issue for i18next, FormatJS or Lingui (`createFormMessages(t)` makes one from `t(key, params)`, keys `form.<code>`); `FormField messages` wins over the form's. An issue is `{ code, field, label, params, message }`; codes: `required`, `minLength`, `maxLength`, `minItems`, `maxItems`, `min`, `max` (params `min`/`max`), `email`, `url`, `pattern`, `invalid`, `server`, or a schema message that looks like a key (`form.email.taken`), or a server error's own `code`. Schemas whose issues carry no code or params (Effect Schema) write the code into the message: `formIssueMessage(\"form.name.min\", { min: 3 })` gives `form.name.min|{\"min\":3}`, read back as code `form.name.min` with `params.min`; a built-in code works the same way (`formIssueMessage(\"minLength\", { min: 3 })` gets the built-in translations). Unmatched, the key shows without its params. Inside a Form, `useFormInstance<Values>()` returns the typed react-hook-form instance (`trigger`, `setValue`, `getValues`, `control`, `formState`); its `watch` re-renders the Form, so read a live value with `useFormWatch(name)`. `useFormFieldArray(name)` is `useFieldArray` bound to the form: key rows by `field.id` and name their fields `items.${index}.title`. `form-context.ts` is internal; import only from `form`. Agents fill fields through their own parts and call the form's `submit` and `reset` when it has a `label`; `<FormActions tone=\"destructive\" confirm=\"…\">` puts `data-agent-confirm` on the submit button and hides the form's `submit` from agents. `FormActions disabled` (submit and cancel), `submitDisabled` (submit only) and `pending` (the pending look) reflect a busy state outside the form; while set, the form doesn't submit."
     },
     {
       "name": "form-dialog",
@@ -1370,7 +1380,41 @@
           "type": "registry:ui"
         }
       ],
-      "docs": "`<FormDialog trigger title description size schema defaultValues onSubmit submitLabel cancelLabel>` with `FormField`s as children; or control it with `open`/`onOpenChange`. It takes every `Form` prop (`messages`, `disableWhilePending`…) and `FormActions`' `tone`, `confirm` and `secondaryAction`. While `onSubmit` runs, Escape, outside presses and Cancel do nothing; it closes when `onSubmit` resolves and focus returns to the trigger, or to `returnFocus` (UI SDK `finalFocus`). A thrown error keeps it open with the errors on the fields and in the root error. `confirmDiscard=\"Discard changes?\"` asks before Escape, an outside press or Cancel closes it with unsaved changes (`discardLabel`, `keepEditingLabel`). `reviewStep={{ render: (values) => …, editLabel, confirmLabel }}`: submit validates and shows the review, edit returns to the fields with the values kept, confirm runs `onSubmit`; a field error from the server returns to the fields. The body scrolls between the header and the actions, and on narrow screens it is a bottom sheet."
+      "docs": "`<FormDialog trigger title description size schema defaultValues onSubmit submitLabel cancelLabel>` with `FormField`s as children; or control it with `open`/`onOpenChange(open, details)`, where `details.reason` is `submit`, `cancel`, `escape`, `outside` or `dismiss` (any other dismissal) on close and `trigger` on open, with UI SDK's own reason in `details.dialogReason`; `onOpenChangeComplete(open, details)` runs once the transition ends. After `confirmDiscard`, the reason is the one that asked. It takes every `Form` prop (`messages`, `disableWhilePending`…) and `FormActions`' `tone`, `confirm` and `secondaryAction`. While `onSubmit` runs, Escape, outside presses and Cancel do nothing; it closes when `onSubmit` resolves and focus returns to the trigger, or to `returnFocus` (UI SDK `finalFocus`). A thrown error keeps it open with the errors on the fields and in the root error. `confirmDiscard=\"Discard changes?\"` asks before Escape, an outside press or Cancel closes it with unsaved changes (`discardLabel`, `keepEditingLabel`). `reviewStep={{ render: (values) => …, editLabel, confirmLabel }}`: submit validates and shows the review, edit returns to the fields with the values kept, confirm runs `onSubmit`; a field error from the server returns to the fields. `prepare(values)` runs before the review with the submit pending and returns `{ values }` to review and submit other values, or `{ error }` (any shape `onSubmit` throws) to stay on the fields; `editable` (`false`, or a function of `{ values, error, pending }`) hides the edit button, for example after a failed delivery; `title` replaces the dialog's title while reviewing, or `title: (step) => …` with `\"form\"` or `\"review\"`. The body scrolls between the header and the actions, and on narrow screens it is a bottom sheet."
+    },
+    {
+      "name": "step-dialog",
+      "type": "registry:ui",
+      "title": "Step Dialog",
+      "description": "A multi-step form on one schema, in a Dialog or inline: a progress list with aria-current, Next validates only the current step, Back keeps values, focus moves to each step's heading, and a failed submit returns to the step with the error.",
+      "dependencies": [
+        "@ui-sdk/core@0.1.0-beta.5",
+        "@ui-sdk/react@0.1.0-beta.5",
+        "@standard-schema/spec@1.1.0",
+        "react-hook-form@7.91.0",
+        "class-variance-authority@0.7.1"
+      ],
+      "registryDependencies": [
+        "@eskais/utils",
+        "@eskais/form",
+        "@eskais/dialog",
+        "@eskais/button"
+      ],
+      "files": [
+        {
+          "path": "registry/ui/step-form.tsx",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/step-form-progress.tsx",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/step-dialog.tsx",
+          "type": "registry:ui"
+        }
+      ],
+      "docs": "`<StepDialog trigger title description schema defaultValues steps onSubmit labels>`, or `<StepForm>` inline with the same props (no dialog ones). `steps` is `{ id, title, description?, render: (form) => …, fields?, validate? }[]`: `render` returns the step's `FormField`s, `fields` lists what Next validates (the step's mounted fields by default) and `validate(values)` runs after them, returning nothing or an error in any shape `onSubmit` throws. Next and Enter validate only the current step; Back keeps every value; the last step's button submits the whole schema through `onSubmit`, with Form's error mapping. A failed validation or a server field error returns to the step that holds the field (`fields`, or the fields seen there). Focus moves to the step's heading (`h2` inline, `h3` in the dialog, `headingLevel` on StepForm) on Next and Back, and to the first invalid field after an error. The progress is an `<ol>` with `aria-current=\"step\"` on the current step, named by `labels.progress`. `step`/`defaultStep` and `onStepChange(id, { index, previous, direction })` (`next`, `back` or `error`). `labels` (`next`, `back`, `submit`, `progress`, and `cancel` in the dialog) default to English. Agents fill each step's fields by label and press Next, Back and the submit button by name. StepDialog closes when `onSubmit` resolves, ignores Escape, outside presses and Cancel while pending, and starts over each time it opens."
     },
     {
       "name": "card",
@@ -1801,7 +1845,7 @@
           "type": "registry:ui"
         }
       ],
-      "docs": "Pass `options` (`{ value, label, disabled?, description? }[]`, or groups `{ label, options }[]`) and leave out children: the trigger, list, groups and indicators render for you, and the labels are known before the list opens. `placeholder` shows while nothing is selected. `clearable=\"No team\"` adds a first choice with that label that sets the value to `null` (single selects only). Outside a Field, name it with `aria-label`. With children, the parts API works as before, and `options` still feeds the root's `items`."
+      "docs": "Pass `options` (`{ value, label, disabled?, description? }[]`, or groups `{ label, options }[]`) and leave out children: the trigger, list, groups and indicators render for you, and the labels are known before the list opens. `placeholder` shows while nothing is selected. `clearable=\"No team\"` adds a first choice with that label that sets the value to `null` (single selects only). `size=\"sm\"` gives the trigger a compact fixed height for toolbars and filters (keep `default` with a floating label), and `triggerProps` (`id`, `className`, `data-*`, `size`, which wins) go to the trigger. `SelectTrigger size` does the same with parts. Outside a Field, name it with `aria-label`. With children, the parts API works as before, and `options` still feeds the root's `items`."
     },
     {
       "name": "native-select",

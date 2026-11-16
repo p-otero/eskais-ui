@@ -98,3 +98,38 @@ test("uncontrolled clearable, agents choose by label, and it binds inside a Form
   await vi.waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1))
   expect(onSubmit.mock.lastCall?.[0]).toEqual({ team: null })
 })
+
+test("triggerProps and size reach the trigger when rendering from options", () => {
+  render(
+    <Field>
+      <FieldLabel>Team</FieldLabel>
+      <Select
+        options={teams}
+        placeholder="Choose a team"
+        size="sm"
+        triggerProps={{ id: "team-trigger", className: "w-48", "data-testid": "team" }}
+      />
+    </Field>,
+  )
+  const trigger = screen.getByRole("combobox", { name: "Team" })
+  expect(trigger.id).toBe("team-trigger")
+  expect(trigger.getAttribute("data-testid")).toBe("team")
+  expect(trigger.getAttribute("data-size")).toBe("sm")
+  expect(trigger.className).toContain("w-48")
+  expect(trigger.className).toContain("h-control-sm")
+  expect(trigger.className).not.toContain("w-full")
+})
+
+test("triggerProps.size wins over size; default size keeps the field height", () => {
+  render(
+    <>
+      <Select options={teams} aria-label="First" size="sm" triggerProps={{ size: "default" }} />
+      <Select options={teams} aria-label="Second" />
+    </>,
+  )
+  for (const name of ["First", "Second"]) {
+    const trigger = screen.getByRole("combobox", { name })
+    expect(trigger.getAttribute("data-size")).toBe("default")
+    expect(trigger.className).toContain("h-field-control")
+  }
+})

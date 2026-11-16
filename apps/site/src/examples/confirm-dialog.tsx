@@ -15,10 +15,13 @@ export default function ConfirmDialogDemo() {
       tone="destructive"
       agentConfirm="Deletes the Apollo project and its files"
       pendingAnnouncement="Deleting project"
+      labels={{ cancel: "Keep project" }}
       onConfirm={async () => {
         await wait(1200)
         if (attempts.current++ === 0) throw new Error("Couldn't delete the project. Try again.")
       }}
-    />
+    >
+      Two agents are still running on it. They stop at once.
+    </ConfirmDialog>
   )
 }

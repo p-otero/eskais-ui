@@ -10,7 +10,7 @@ import { buttonVariants } from "@/components/ui/button"
 import { contentClassName, DialogBackdrop } from "@/components/ui/dialog"
 import { Link } from "@/components/ui/link"
 import { lightbox, type LightboxIndexChangeReason } from "@/components/ui/lightbox-primitive"
-import { ThemedImage } from "@/components/ui/themed-image"
+import { ThemedImage, type ThemedImageProps } from "@/components/ui/themed-image"
 import { Toggle } from "@/components/ui/toggle"
 import { cn } from "@/lib/utils"
 
@@ -238,6 +238,6 @@ function Lightbox({
 }
 
 export { Lightbox, lightboxLabels }
-export { ThemedImage } from "@/components/ui/themed-image"
+export { ThemedImage }
 export type { LightboxItem, LightboxLabels, LightboxProps }
-export type { ThemedImageProps } from "@/components/ui/themed-image"
+export type { ThemedImageProps }

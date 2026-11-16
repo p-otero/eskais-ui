@@ -26,6 +26,7 @@ import { Select } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
 
 import { Section } from "../section"
+import { StepFormDemo } from "./step-form"
 
 const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
 
@@ -211,6 +212,7 @@ function DeploymentDialog() {
         discardLabel="Descartar"
         keepEditingLabel="Seguir editando"
         reviewStep={{
+          title: (step) => (step === "review" ? "Revisa el despliegue" : "Nuevo despliegue"),
           render: (values) => <Review values={values} />,
           editLabel: "Editar",
           confirmLabel: "Crear despliegue",
@@ -239,6 +241,7 @@ function FormSection() {
       <div lang="es" className="flex w-full flex-col gap-6">
         <DeploymentForm />
         <DeploymentDialog />
+        <StepFormDemo />
       </div>
     </Section>
   )

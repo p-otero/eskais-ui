@@ -12,7 +12,7 @@ import {
   type ReactElement,
   type ReactNode,
 } from "react"
-import { useController, type ControllerRenderProps, type FieldValues } from "react-hook-form"
+import { useController, type ControllerRenderProps, type FieldValues, type Path } from "react-hook-form"
 
 import { Checkbox } from "@/components/ui/checkbox"
 import {
@@ -77,13 +77,20 @@ function useFormField() {
   return field
 }
 
-type FormFieldProps = {
-  name: string
+type FormFieldProps<Values extends FieldValues = FieldValues> = {
+  /** A path into the form's values, like `email` or `tags.0.label`; typed by `createForm<typeof schema>()`. */
+  name: Path<Values>
   label?: ReactNode
   description?: ReactNode
   /** `in` or `on` floats the label inside the control or on its border; the Form's `labelPlacement` by default. */
   labelPlacement?: FieldLabelPlacement
+  /**
+   * Draws a required marker and sets the control's `required`. Read from the schema by default (a field it rejects
+   * when empty); `false` hides the marker.
+   */
   required?: boolean
+  /** Words screen readers hear after the label; the Form's `requiredLabel` by default. */
+  requiredLabel?: string
   disabled?: boolean
   /** Messages for this field only; they win over the form's. */
   messages?: FormMessages
@@ -110,20 +117,34 @@ function chain(own: unknown, bound: (...args: unknown[]) => void) {
   }
 }
 
-function FormField({
+function RequiredMarker({ label }: { label: string | undefined }) {
+  return (
+    <>
+      {" "}
+      <span data-slot="form-field-required" className="text-destructive">
+        <span aria-hidden="true">*</span>
+        {label === undefined ? null : <span className="sr-only">{` ${label}`}</span>}
+      </span>
+    </>
+  )
+}
+
+function FormField<Values extends FieldValues = FieldValues>({
   name,
   label,
   description,
   labelPlacement,
-  required,
+  required: requiredProp,
+  requiredLabel,
   disabled,
   messages,
   bind,
   render,
   className,
   children,
-}: FormFieldProps) {
+}: FormFieldProps<Values>) {
   const context = useFormContext("FormField")
+  const required = requiredProp ?? context.requires(name)
   const { field, fieldState } = useController({ name, control: context.form.control })
   const textLabel = typeof label === "string" ? label : undefined
 
@@ -163,7 +184,7 @@ function FormField({
     floats = floatingLabelControls.has(child.type as object)
     control = cloneElement(child, {
       name: child.props.name ?? name,
-      required: child.props.required ?? required,
+      required: child.props.required ?? (required || undefined),
       [adapter.value]: adapter.toControl ? adapter.toControl(field.value) : field.value,
       [adapter.change]: chain(child.props[adapter.change], (value) =>
         field.onChange(adapter.fromControl ? adapter.fromControl(value) : value),
@@ -174,7 +195,13 @@ function FormField({
 
   // A form's default reaches only controls that can hold a floating label; a checkbox or switch never floats.
   const placement = checkedLayout ? "top" : (labelPlacement ?? (floats ? context.labelPlacement : undefined) ?? "top")
-  const fieldLabel = label === undefined ? null : <FieldLabel>{label}</FieldLabel>
+  const fieldLabel =
+    label === undefined ? null : (
+      <FieldLabel>
+        {label}
+        {required ? <RequiredMarker label={requiredLabel ?? context.requiredLabel} /> : null}
+      </FieldLabel>
+    )
   return (
     <FormFieldContext.Provider value={state}>
       <Field

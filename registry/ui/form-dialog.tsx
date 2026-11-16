@@ -1,7 +1,8 @@
 "use client"
 
 import type { StandardSchemaV1 } from "@standard-schema/spec"
-import { useState, type ComponentProps, type ReactNode } from "react"
+import type { DialogOpenChangeReason } from "@ui-sdk/react/dialog"
+import { useRef, useState, type ComponentProps, type ReactNode } from "react"
 
 import { Button, type buttonVariants } from "@/components/ui/button"
 import { ConfirmDialog } from "@/components/ui/confirm-dialog"
@@ -27,11 +28,51 @@ import {
 import { cn } from "@/lib/utils"
 import type { VariantProps } from "class-variance-authority"
 
+/** What `prepare` may return: other values for the review and `onSubmit`, or an error in any shape `onSubmit` throws. */
+type ReviewPrepareResult<Values> = { values?: Values; error?: unknown }
+
+type ReviewState<Values> = {
+  values: Values
+  /** What the last confirm threw, until the review opens again. */
+  error: unknown
+  pending: boolean
+}
+
 type ReviewStep<Values> = {
-  /** What the person checks before confirming, from the parsed values. */
+  /** What the person checks before confirming, from the parsed (or prepared) values. */
   render: (values: Values) => ReactNode
   editLabel: ReactNode
   confirmLabel: ReactNode
+  /**
+   * Runs after validation and before the review shows, with the submit pending: fetch a price, normalize an address.
+   * Return `{ values }` to review and submit other values, or `{ error }` (or throw) to stay on the fields.
+   */
+  prepare?: (values: Values) => Promise<ReviewPrepareResult<Values> | void> | ReviewPrepareResult<Values> | void
+  /** `false` hides the edit button, for example once a delivery failed. `true` by default. */
+  editable?: boolean | ((state: ReviewState<Values>) => boolean)
+  /** The dialog's title while reviewing, or a function of the step for both. The dialog's `title` by default. */
+  title?: ReactNode | ((step: "form" | "review") => ReactNode)
+}
+
+/**
+ * Why the dialog opened or closed: `submit` once `onSubmit` resolved, `cancel` from the Cancel button, `escape`,
+ * `outside` (a press outside it), `dismiss` for any other dismissal (a back gesture, a swipe, a parent closing),
+ * `trigger` when its trigger opened it, and `imperative` when the `open` prop changed it.
+ */
+type FormDialogOpenChangeReason = "submit" | "cancel" | "dismiss" | "escape" | "outside" | "trigger" | "imperative"
+
+type FormDialogOpenChangeDetails = {
+  reason: FormDialogOpenChangeReason
+  /** UI SDK's own reason, when the Dialog reported the change. */
+  dialogReason?: DialogOpenChangeReason
+}
+
+function toReason(open: boolean, reason: DialogOpenChangeReason): FormDialogOpenChangeReason {
+  if (open) return reason === "imperative" ? "imperative" : "trigger"
+  if (reason === "escape-key") return "escape"
+  if (reason === "outside-press") return "outside"
+  if (reason === "close-press") return "cancel"
+  return "dismiss"
 }
 
 type FormDialogProps<Schema extends StandardSchemaV1> = Omit<
@@ -41,7 +82,10 @@ type FormDialogProps<Schema extends StandardSchemaV1> = Omit<
   Pick<FormActionsProps, "tone" | "confirm" | "secondaryAction"> & {
     open?: boolean
     defaultOpen?: boolean
-    onOpenChange?: (open: boolean) => void
+    /** `details.reason` says why: `submit`, `cancel`, `escape`, `outside`, `dismiss`, or `trigger` when it opens. */
+    onOpenChange?: (open: boolean, details: FormDialogOpenChangeDetails) => void
+    /** Runs once opening or closing has finished, after the transition, with the same details. */
+    onOpenChangeComplete?: (open: boolean, details: FormDialogOpenChangeDetails) => void
     /** Content of the button that opens the dialog. Omit it when opening through `open`. */
     trigger?: ReactNode
     triggerVariant?: VariantProps<typeof buttonVariants>["variant"]
@@ -70,6 +114,7 @@ function FormDialog<Schema extends StandardSchemaV1>({
   open: openProp,
   defaultOpen = false,
   onOpenChange,
+  onOpenChangeComplete,
   trigger,
   triggerVariant,
   title,
@@ -97,51 +142,77 @@ function FormDialog<Schema extends StandardSchemaV1>({
   const [pending, setPending] = useState(false)
   const [dirty, setDirty] = useState(false)
   const [asking, setAsking] = useState(false)
-  const [review, setReview] = useState<{ values: Output } | null>(null)
+  const [review, setReview] = useState<{ values: Output; error: unknown } | null>(null)
   const open = openProp ?? ownOpen
   const guarded = Boolean(confirmDiscard) && dirty
+  const lastChange = useRef<FormDialogOpenChangeDetails>({ reason: "imperative" })
+  const askedBy = useRef<FormDialogOpenChangeDetails>({ reason: "cancel" })
 
-  const setOpen = (next: boolean) => {
+  const setOpen = (next: boolean, details: FormDialogOpenChangeDetails) => {
     if (!next) {
       setReview(null)
       setAsking(false)
     }
+    lastChange.current = details
     if (openProp === undefined) setOwnOpen(next)
-    onOpenChange?.(next)
+    onOpenChange?.(next, details)
   }
 
-  const requestClose = () => {
+  const ask = (details: FormDialogOpenChangeDetails) => {
+    askedBy.current = details
+    setAsking(true)
+  }
+
+  const requestClose = (details: FormDialogOpenChangeDetails) => {
     if (pending) return
-    if (guarded) setAsking(true)
-    else setOpen(false)
+    if (guarded) ask(details)
+    else setOpen(false, details)
   }
 
   const submit: FormProps<Schema>["onSubmit"] = async (values, helpers) => {
     if (reviewStep && !review) {
-      setReview({ values })
+      const prepared = await reviewStep.prepare?.(values)
+      if (prepared && prepared.error !== undefined) throw prepared.error
+      setReview({ values: prepared?.values ?? values, error: undefined })
       return
     }
     try {
-      await onSubmit(values, helpers)
+      await onSubmit(review ? review.values : values, helpers)
     } catch (error) {
       if (Object.keys(toFormErrors(error)?.fieldErrors ?? {}).length > 0) setReview(null)
+      else setReview((current) => current && { ...current, error })
       throw error
     }
-    setOpen(false)
+    setOpen(false, { reason: "submit" })
   }
+
+  const reviewing = Boolean(review && reviewStep)
+  const editable =
+    review && typeof reviewStep?.editable === "function"
+      ? reviewStep.editable({ values: review.values, error: review.error, pending })
+      : reviewStep?.editable !== false
+  const stepTitle = reviewStep?.title
+  const shownTitle =
+    typeof stepTitle === "function"
+      ? stepTitle(reviewing ? "review" : "form")
+      : reviewing && stepTitle !== undefined
+        ? stepTitle
+        : title
 
   const actions = (
     <FormActions
       {...(tone === "destructive" ? { tone, confirm: confirm! } : { confirm })}
-      submitLabel={review && reviewStep ? reviewStep.confirmLabel : submitLabel}
+      submitLabel={reviewing ? reviewStep!.confirmLabel : submitLabel}
       pendingLabel={pendingLabel}
       cancel={cancelLabel}
-      onCancel={requestClose}
+      onCancel={() => requestClose({ reason: "cancel" })}
       secondaryAction={
-        review && reviewStep ? (
-          <Button type="button" variant="ghost" disabled={pending} onClick={() => setReview(null)}>
-            {reviewStep.editLabel}
-          </Button>
+        reviewing ? (
+          editable ? (
+            <Button type="button" variant="ghost" disabled={pending} onClick={() => setReview(null)}>
+              {reviewStep!.editLabel}
+            </Button>
+          ) : null
         ) : (
           secondaryAction
         )
@@ -155,11 +226,16 @@ function FormDialog<Schema extends StandardSchemaV1>({
       open={open}
       onOpenChange={(next, details) => {
         if (!next && pending) details.cancel()
-        else setOpen(next)
+        else setOpen(next, { reason: toReason(next, details.reason), dialogReason: details.reason })
+      }}
+      onOpenChangeComplete={(next) => {
+        const details = lastChange.current
+        lastChange.current = { reason: "imperative" }
+        onOpenChangeComplete?.(next, details)
       }}
       dismissible={!pending && !guarded}
-      onDismissAttempt={() => {
-        if (!pending && guarded) setAsking(true)
+      onDismissAttempt={(attempt) => {
+        if (!pending && guarded) ask({ reason: toReason(false, attempt.reason), dialogReason: attempt.reason })
       }}
     >
       {trigger === undefined ? null : <DialogTrigger variant={triggerVariant}>{trigger}</DialogTrigger>}
@@ -171,7 +247,7 @@ function FormDialog<Schema extends StandardSchemaV1>({
         className={cn("overflow-hidden", className)}
       >
         <DialogHeader>
-          <DialogTitle>{title}</DialogTitle>
+          <DialogTitle>{shownTitle}</DialogTitle>
           {description === undefined ? null : <DialogDescription>{description}</DialogDescription>}
         </DialogHeader>
         <Form
@@ -199,8 +275,8 @@ function FormDialog<Schema extends StandardSchemaV1>({
             onOpenChange={setAsking}
             title={confirmDiscard}
             confirmLabel={discardLabel}
-            cancelLabel={keepEditingLabel}
-            onConfirm={() => setOpen(false)}
+            labels={{ cancel: keepEditingLabel }}
+            onConfirm={() => setOpen(false, askedBy.current)}
           />
         )}
       </DialogContent>
@@ -209,4 +285,11 @@ function FormDialog<Schema extends StandardSchemaV1>({
 }
 
 export { FormDialog }
-export type { FormDialogProps, ReviewStep }
+export type {
+  FormDialogOpenChangeDetails,
+  FormDialogOpenChangeReason,
+  FormDialogProps,
+  ReviewPrepareResult,
+  ReviewState,
+  ReviewStep,
+}

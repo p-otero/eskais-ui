@@ -15,6 +15,7 @@ Eskais UI is a shadcn-style registry of React components built on Vercel UI SDK 
 - Every control has an accessible name. Style from `data-slot` and state attributes with the semantic tokens in `registry/styles/theme.css`.
 - Destructive actions carry `data-agent-confirm`.
 - Registry code (`registry/**`) must run in consumer browsers and in Node/npm/pnpm projects: no `bun`, `bun:*` or `node:*` imports.
+- Registry code passes strict consumers' type-aware lint: `bun run lint` also runs `typescript/restrict-template-expressions` on `registry/**` (`tooling/oxlint-type-aware.json`). Convert a non-string in a template literal with `String()` or a formatter.
 - No default copy in a specific language, except overridable accessible labels.
 - Every interface gets the agent test (see the ui-sdk skill, `references/agent-ready.md`).
 

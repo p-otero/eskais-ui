@@ -5,6 +5,7 @@ import { ToggleGroup as ToggleGroupPrimitive, createToggleGroupController } from
 import type { ComponentProps } from "react"
 
 import { cnState } from "@/lib/utils"
+import { Toggle, ToggleIcon, toggleVariants } from "@/components/ui/toggle"
 
 // UI SDK's ToggleGroup doesn't join a Field on its own, so it does through the field's public custom-control hook.
 function ToggleGroup<T extends string = string>({
@@ -26,5 +27,5 @@ function ToggleGroup<T extends string = string>({
 }
 
 export { createToggleGroupController, ToggleGroup }
-export { Toggle, ToggleIcon, toggleVariants } from "@/components/ui/toggle"
+export { Toggle, ToggleIcon, toggleVariants }
 export type { ToggleGroupController, ToggleGroupState, ToggleGroupValueChangeReason } from "@ui-sdk/react/toggle"

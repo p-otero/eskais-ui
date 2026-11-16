@@ -5,6 +5,8 @@ import { expect, test, vi } from "vitest"
 
 import { ConfirmDialog } from "@/components/ui/confirm-dialog"
 
+import { axeViolations } from "./axe"
+
 let approve = false
 const agent = createAgent({ allow: (step) => !step.confirm || approve })
 
@@ -95,4 +97,44 @@ test("an agent needs a person's approval to confirm a destructive action", async
   const approved = await agent.act(remove)
   expect(approved.ok, approved.error?.message).toBe(true)
   expect(onConfirm).toHaveBeenCalledTimes(1)
+})
+
+test("children render as a callout in the dialog's tone; labels.cancel names Cancel", async () => {
+  const user = userEvent.setup()
+  render(
+    <ConfirmDialog
+      trigger="Archive"
+      title="Archive Apollo?"
+      confirmLabel="Archive"
+      tone="destructive"
+      agentConfirm="Archives the project"
+      labels={{ cancel: "Keep it" }}
+      onConfirm={() => {}}
+    >
+      Three agents are still running on it.
+    </ConfirmDialog>,
+  )
+  await user.click(screen.getByRole("button", { name: "Archive" }))
+  const dialog = screen.getByRole("alertdialog", { name: "Archive Apollo?" })
+  const callout = dialog.querySelector('[data-slot="confirm-dialog-callout"]')
+  expect(callout?.textContent).toBe("Three agents are still running on it.")
+  expect(callout?.getAttribute("data-tone")).toBe("destructive")
+  expect(screen.getByRole("button", { name: "Keep it" })).toBeTruthy()
+  expect(screen.queryByRole("button", { name: "Cancel" })).toBeNull()
+  expect(await axeViolations(dialog)).toEqual([])
+})
+
+test("a default-tone callout is info; no children, no callout", async () => {
+  const user = userEvent.setup()
+  const { rerender } = render(
+    <ConfirmDialog trigger="Publish" title="Publish?" confirmLabel="Publish" onConfirm={() => {}}>
+      Readers see it at once.
+    </ConfirmDialog>,
+  )
+  await user.click(screen.getByRole("button", { name: "Publish" }))
+  const callout = screen.getByRole("alertdialog").querySelector('[data-slot="confirm-dialog-callout"]')
+  expect(callout?.getAttribute("data-tone")).toBe("info")
+  rerender(<ConfirmDialog trigger="Publish" title="Publish?" confirmLabel="Publish" onConfirm={() => {}} />)
+  expect(screen.getByRole("alertdialog").querySelector('[data-slot="confirm-dialog-callout"]')).toBeNull()
+  expect(screen.getByRole("button", { name: "Cancel" })).toBeTruthy()
 })

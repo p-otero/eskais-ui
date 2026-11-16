@@ -252,6 +252,6 @@ function Code({ className, ...props }: CodeProps) {
 }
 
 export { Code, CodeBlock }
-export { normalizeLanguage } from "@/components/ui/code-highlight"
-export type { CodeLanguage, SyntaxTone } from "@/components/ui/code-highlight"
+export { normalizeLanguage }
+export type { CodeLanguage, SyntaxTone }
 export type { CodeBlockLabels, CodeBlockProps, CodeProps, LineRange }

@@ -103,7 +103,7 @@ function OverlayCheck() {
         trigger="Open confirm"
         title="Archive project?"
         confirmLabel="Archive"
-        cancelLabel="Keep"
+        labels={{ cancel: "Keep" }}
         onConfirm={() => {}}
       />
       <UnmountedWhileOpen />

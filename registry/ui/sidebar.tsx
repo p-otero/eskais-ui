@@ -12,7 +12,13 @@ import {
   type SidebarCollapsedChangeReason,
   type SidebarController,
 } from "@/components/ui/sidebar-primitive"
-import { SidebarGroup, SidebarItem, SidebarRailContext } from "@/components/ui/sidebar-items"
+import {
+  SidebarGroup,
+  SidebarItem,
+  SidebarRailContext,
+  type SidebarGroupProps,
+  type SidebarItemProps,
+} from "@/components/ui/sidebar-items"
 import {
   defaultNarrowQuery,
   PanelIcon,
@@ -20,6 +26,7 @@ import {
   sidebarLabels,
   useNarrow,
   type SidebarLabels,
+  type SidebarTriggerProps,
 } from "@/components/ui/sidebar-trigger"
 import { cn } from "@/lib/utils"
 
@@ -136,5 +143,5 @@ function Sidebar({
 
 export { createSidebarController, Sidebar, SidebarGroup, SidebarItem, sidebarLabels, SidebarTrigger }
 export type { SidebarController, SidebarLabels, SidebarProps }
-export type { SidebarTriggerProps } from "@/components/ui/sidebar-trigger"
-export type { SidebarGroupProps, SidebarItemProps } from "@/components/ui/sidebar-items"
+export type { SidebarTriggerProps }
+export type { SidebarGroupProps, SidebarItemProps }

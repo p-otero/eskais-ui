@@ -47,8 +47,8 @@ const plural = (count: unknown, one: string, other: string) => (count === 1 ? on
 
 const formMessagesEn: FormMessageDictionary = {
   required: "This field is required.",
-  minLength: ({ params }) => `Use at least ${params.min} ${plural(params.min, "character", "characters")}.`,
-  maxLength: ({ params }) => `Use at most ${params.max} ${plural(params.max, "character", "characters")}.`,
+  minLength: ({ params }) => `Use at least ${String(params.min)} ${plural(params.min, "character", "characters")}.`,
+  maxLength: ({ params }) => `Use at most ${String(params.max)} ${plural(params.max, "character", "characters")}.`,
   minItems: "Choose at least {min}.",
   maxItems: "Choose at most {max}.",
   min: "Enter {min} or more.",
@@ -60,8 +60,9 @@ const formMessagesEn: FormMessageDictionary = {
 
 const formMessagesEs: FormMessageDictionary = {
   required: "Este campo es obligatorio.",
-  minLength: ({ params }) => `Escribe al menos ${params.min} ${plural(params.min, "carácter", "caracteres")}.`,
-  maxLength: ({ params }) => `Escribe como máximo ${params.max} ${plural(params.max, "carácter", "caracteres")}.`,
+  minLength: ({ params }) => `Escribe al menos ${String(params.min)} ${plural(params.min, "carácter", "caracteres")}.`,
+  maxLength: ({ params }) =>
+    `Escribe como máximo ${String(params.max)} ${plural(params.max, "carácter", "caracteres")}.`,
   minItems: "Elige al menos {min}.",
   maxItems: "Elige como máximo {max}.",
   min: "Introduce {min} o más.",
@@ -110,6 +111,43 @@ function createFormMessages(
 
 // A message with no spaces and at least one dot reads as a translation key the schema author chose.
 const translationKey = /^[A-Za-z_$][\w$-]*(\.[\w$-]+)+$/
+
+const builtInCodes = new Set<string>([
+  "required",
+  "minLength",
+  "maxLength",
+  "minItems",
+  "maxItems",
+  "min",
+  "max",
+  "email",
+  "url",
+  "pattern",
+  "invalid",
+])
+
+/**
+ * A schema message that carries its code: `"form.name.taken"`, or a key or built-in code with JSON params after a
+ * `|`, as `formIssueMessage` writes it. For schemas whose issues have no codes, like Effect Schema.
+ */
+function formIssueMessage(code: string, params?: Record<string, unknown>) {
+  return params === undefined || Object.keys(params).length === 0 ? code : `${code}|${JSON.stringify(params)}`
+}
+
+function codedMessage(message: string): Pick<FormIssue, "code" | "params"> | undefined {
+  const split = message.indexOf("|")
+  const code = split < 0 ? message : message.slice(0, split)
+  if (!translationKey.test(code) && !(split >= 0 && builtInCodes.has(code))) return undefined
+  if (split < 0) return { code, params: {} }
+  try {
+    const params: unknown = JSON.parse(message.slice(split + 1))
+    if (params && typeof params === "object" && !Array.isArray(params))
+      return { code, params: params as Record<string, unknown> }
+  } catch {
+    return undefined
+  }
+  return undefined
+}
 
 function isEmptyValue(value: unknown) {
   return value === undefined || value === null || value === "" || (Array.isArray(value) && value.length === 0)
@@ -173,12 +211,14 @@ function valueAt(values: unknown, path: string) {
 }
 
 /**
- * Gives a Standard Schema issue a stable code: a translation-key message as is, `required` for an empty value, the
- * known Zod and Valibot validators with their bounds, else `invalid` with the schema's message.
+ * Gives a Standard Schema issue a stable code: a coded message (`form.name.min|{"min":3}`) as its code and params,
+ * `required` for an empty value, the known Zod and Valibot validators with their bounds, else `invalid` with the
+ * schema's message.
  */
 function issueFromSchema(issue: StandardSchemaV1.Issue, values?: unknown): FormIssue {
   const field = issuePath(issue)
-  if (translationKey.test(issue.message)) return { code: issue.message, field, params: {}, message: issue.message }
+  const coded = codedMessage(issue.message)
+  if (coded) return { ...coded, field, message: coded.code }
   const value = field === "root" ? values : valueAt(values, field)
   const known =
     values !== undefined && isEmptyValue(value) && field !== "root"
@@ -249,6 +289,7 @@ function toFormErrors(error: unknown): FormErrors | undefined {
 export {
   FormServerError,
   createFormMessages,
+  formIssueMessage,
   formMessagesEn,
   formMessagesEs,
   issueFromInput,

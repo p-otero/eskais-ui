@@ -17,7 +17,17 @@ import {
 import { createDataTableController, dataTable } from "@/components/ui/data-table-primitive"
 import { DataTableEmptyRow, DataTableLoadingRows, DataTableRow } from "@/components/ui/data-table-row"
 import { Table, TableBody, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { clampPage, pageCountOf, paginate, selectionState, sortRows, toggleIds } from "@/lib/data-table-model"
+import {
+  clampPage,
+  pageCountOf,
+  paginate,
+  selectionState,
+  sortRows,
+  toggleIds,
+  type DataTableSort,
+  type SortDirection,
+  type SortValue,
+} from "@/lib/data-table-model"
 import { cn } from "@/lib/utils"
 
 const { Root: DataTableRoot } = createParts(dataTable, { root: "div" })
@@ -174,4 +184,4 @@ function DataTable<Row>({
 
 export { createDataTableController, DataTable, dataTableLabels }
 export type { DataTableColumn, DataTableLabels, DataTablePaginationProps, DataTableProps }
-export type { DataTableSort, SortDirection, SortValue } from "@/lib/data-table-model"
+export type { DataTableSort, SortDirection, SortValue }

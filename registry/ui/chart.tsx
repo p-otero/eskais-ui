@@ -3,9 +3,18 @@
 import { useId, type ComponentProps, type ReactNode } from "react"
 import { Legend, ResponsiveContainer, Tooltip } from "recharts"
 
-import { chartStyleSheet, type ChartConfig, type ChartName } from "@/lib/chart-config"
+import {
+  chartStyleSheet,
+  type ChartConfig,
+  type ChartName,
+  type ChartFormat,
+  type ChartSeriesConfig,
+} from "@/lib/chart-config"
 import { cn } from "@/lib/utils"
-import { ChartContext } from "@/components/ui/chart-context"
+import { ChartContext, useChart } from "@/components/ui/chart-context"
+import { ChartTooltipContent, type ChartTooltipContentProps } from "@/components/ui/chart-tooltip"
+import { ChartLegendContent, type ChartLegendContentProps } from "@/components/ui/chart-legend"
+import { ChartDataTable, type ChartDataTableProps } from "@/components/ui/chart-data-table"
 
 // Recharts paints grid, axis and cursor with fixed hex colors; these map them to theme tokens.
 // The focus ring stays on the keyboard-focusable surface the accessibility layer adds.
@@ -59,12 +68,12 @@ const ChartTooltip = Tooltip
 const ChartLegend = Legend
 
 export { ChartContainer, ChartLegend, ChartStyle, ChartTooltip }
-export { ChartTooltipContent } from "@/components/ui/chart-tooltip"
-export { ChartLegendContent } from "@/components/ui/chart-legend"
-export { ChartDataTable } from "@/components/ui/chart-data-table"
-export { useChart } from "@/components/ui/chart-context"
+export { ChartTooltipContent }
+export { ChartLegendContent }
+export { ChartDataTable }
+export { useChart }
 export type { ChartContainerProps }
-export type { ChartTooltipContentProps } from "@/components/ui/chart-tooltip"
-export type { ChartLegendContentProps } from "@/components/ui/chart-legend"
-export type { ChartDataTableProps } from "@/components/ui/chart-data-table"
-export type { ChartConfig, ChartFormat, ChartSeriesConfig } from "@/lib/chart-config"
+export type { ChartTooltipContentProps }
+export type { ChartLegendContentProps }
+export type { ChartDataTableProps }
+export type { ChartConfig, ChartFormat, ChartSeriesConfig }
