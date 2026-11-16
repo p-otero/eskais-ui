@@ -126,27 +126,42 @@ const builtInCodes = new Set<string>([
   "invalid",
 ])
 
+// Reserved so a coded message can't be read from prose: no schema author writes it at the start of a sentence.
+const codedPrefix = "@@form:"
+
 /**
- * A schema message that carries its code: `"form.name.taken"`, or a key or built-in code with JSON params after a
- * `|`, as `formIssueMessage` writes it. For schemas whose issues have no codes, like Effect Schema.
+ * A schema message that carries its code and params, for schemas whose issues have no codes, like Effect Schema:
+ * `@@form:<code>` or `@@form:<code>|<JSON params>`. Any code round-trips, built-in or a dotted key. A plain dotted
+ * key (`"form.name.taken"`) and the earlier `<code>|<JSON params>` still read as coded.
  */
 function formIssueMessage(code: string, params?: Record<string, unknown>) {
-  return params === undefined || Object.keys(params).length === 0 ? code : `${code}|${JSON.stringify(params)}`
+  const head = `${codedPrefix}${code}`
+  return params === undefined || Object.keys(params).length === 0 ? head : `${head}|${JSON.stringify(params)}`
 }
 
-function codedMessage(message: string): Pick<FormIssue, "code" | "params"> | undefined {
-  const split = message.indexOf("|")
-  const code = split < 0 ? message : message.slice(0, split)
-  if (!translationKey.test(code) && !(split >= 0 && builtInCodes.has(code))) return undefined
-  if (split < 0) return { code, params: {} }
+function paramsFrom(json: string): Record<string, unknown> | undefined {
   try {
-    const params: unknown = JSON.parse(message.slice(split + 1))
-    if (params && typeof params === "object" && !Array.isArray(params))
-      return { code, params: params as Record<string, unknown> }
+    const params: unknown = JSON.parse(json)
+    if (params && typeof params === "object" && !Array.isArray(params)) return params as Record<string, unknown>
   } catch {
     return undefined
   }
   return undefined
+}
+
+function codedMessage(message: string): Pick<FormIssue, "code" | "params"> | undefined {
+  const prefixed = message.startsWith(codedPrefix)
+  const body = prefixed ? message.slice(codedPrefix.length) : message
+  const split = body.indexOf("|")
+  const code = split < 0 ? body : body.slice(0, split)
+  if (prefixed) {
+    if (!code) return undefined
+    return { code, params: split < 0 ? {} : (paramsFrom(body.slice(split + 1)) ?? {}) }
+  }
+  if (!translationKey.test(code) && !(split >= 0 && builtInCodes.has(code))) return undefined
+  if (split < 0) return { code, params: {} }
+  const params = paramsFrom(body.slice(split + 1))
+  return params && { code, params }
 }
 
 function isEmptyValue(value: unknown) {
@@ -211,14 +226,14 @@ function valueAt(values: unknown, path: string) {
 }
 
 /**
- * Gives a Standard Schema issue a stable code: a coded message (`form.name.min|{"min":3}`) as its code and params,
- * `required` for an empty value, the known Zod and Valibot validators with their bounds, else `invalid` with the
- * schema's message.
+ * Gives a Standard Schema issue a stable code: a coded message (`formIssueMessage`) as its code and params, with no
+ * `message`; `required` for an empty value; the known Zod and Valibot validators with their bounds; else `invalid`
+ * with the schema's message.
  */
 function issueFromSchema(issue: StandardSchemaV1.Issue, values?: unknown): FormIssue {
   const field = issuePath(issue)
   const coded = codedMessage(issue.message)
-  if (coded) return { ...coded, field, message: coded.code }
+  if (coded) return { ...coded, field, message: undefined }
   const value = field === "root" ? values : valueAt(values, field)
   const known =
     values !== undefined && isEmptyValue(value) && field !== "root"

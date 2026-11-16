@@ -14,6 +14,7 @@ Versions follow [semver](https://semver.org). Before 1.0, a minor version can br
 
 - `useFormFieldArray` takes `keyName` like react-hook-form's `useFieldArray` (`useFormFieldArray("components", { keyName: "fieldKey" })`), typed by a third type parameter, so rows whose items carry their own `id` keep it. `createForm().useFormFieldArray` infers it too.
 - `FormDialog` `reviewStep.prepare(values, { form })` gets the form instance. Values it returns are written into the form, so Edit shows them and they are submitted; values it writes through `form` without returning any are parsed again and reviewed. Returned values win.
+- `formIssueMessage` writes a reserved `@@form:` prefix, so every code round-trips: `formIssueMessage("email")` used to come back as `invalid` with the text "email". A coded issue's `message` is now `undefined`, not the code, so a `messages` function that prefers `issue.message` no longer prints the raw code. Messages in the earlier `code|{json}` form still read.
 
 ## 0.1.0 (2026-11-16)
 
