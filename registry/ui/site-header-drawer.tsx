@@ -20,7 +20,7 @@ import {
 type SiteHeaderDrawerProps = {
   label: string
   title: string
-  items: SiteHeaderItem[]
+  items: readonly SiteHeaderItem[]
   renderLink?: SiteHeaderRenderLink
   menuLabel: string
   closeLabel: string

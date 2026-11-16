@@ -14,7 +14,7 @@ type AccessibleName =
 
 type DependencyChipsProps = Omit<ComponentProps<"ul">, "children" | "onSelect" | "aria-label" | "aria-labelledby"> &
   AccessibleName & {
-    items: DependencyChip[]
+    items: readonly DependencyChip[]
     onSelect?: (id: string) => void
     max?: number
     formatMore?: (count: number) => string

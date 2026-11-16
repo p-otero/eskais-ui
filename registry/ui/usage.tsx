@@ -168,7 +168,7 @@ type UsageTableProps = Omit<PartProps<"table">, "children"> &
     /** One summary, shown as a single value column. */
     usage?: UsageSummary
     /** Several summaries side by side, such as one per attempt; wins over `usage`. */
-    columns?: UsageColumn[]
+    columns?: readonly UsageColumn[]
     labels?: Partial<UsageLabels>
   }
 

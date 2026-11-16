@@ -106,7 +106,12 @@ function ConfirmDialog({
         </AlertDialogTrigger>
       )}
       <AlertDialogBackdrop className={backdropClassName} />
-      <AlertDialogContent className={cn(contentClassName, "max-w-md", className)} finalFocus={focus.finalFocus}>
+      <AlertDialogContent
+        ref={focus.attach}
+        className={cn(contentClassName, "max-w-md", className)}
+        // oxlint-disable-next-line react/refs -- read when UI SDK calls finalFocus on close, never during render
+        finalFocus={focus.finalFocus}
+      >
         {focus.wrap(
           <>
             <div className="flex flex-col gap-inline">

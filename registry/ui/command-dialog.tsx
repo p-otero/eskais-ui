@@ -1,6 +1,6 @@
 "use client"
 
-import { DialogShortcut as DialogShortcutPrimitive } from "@ui-sdk/react/dialog"
+import { DialogShortcut as DialogShortcutPrimitive, type DialogController } from "@ui-sdk/react/dialog"
 import type { ComponentProps, ReactNode } from "react"
 
 import { Button } from "@/components/ui/button"
@@ -14,6 +14,9 @@ import {
 } from "@/components/ui/dialog"
 import { Kbd } from "@/components/ui/kbd"
 import { cnState } from "@/lib/utils"
+
+/** What `createCommandDialogController()` returns, to pass between the Topbar's triggers and the dialog. */
+type CommandDialogController = DialogController
 
 // `shortcut="mod+k"` is opt-in: the trigger registers it only while mounted, so nothing listens by default.
 function CommandDialogTrigger({ className, ...props }: ComponentProps<typeof DialogTrigger>) {
@@ -65,4 +68,4 @@ export {
   CommandDialogTrigger,
   createCommandDialogController,
 }
-export type { CommandDialogContentProps, CommandDialogOpenButtonProps }
+export type { CommandDialogContentProps, CommandDialogController, CommandDialogOpenButtonProps }

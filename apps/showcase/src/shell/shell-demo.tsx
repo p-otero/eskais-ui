@@ -3,6 +3,7 @@ import { useState } from "react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { createCommandDialogController } from "@/components/ui/command-dialog"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -18,10 +19,11 @@ import { SkipLink } from "@/components/ui/skip-link"
 import { Tabs, TabsList, TabsPanel, TabsTab } from "@/components/ui/tabs"
 import { Topbar } from "@/components/ui/topbar"
 
-import { useGlobalSearch } from "./global-search"
+import { GlobalSearch, SearchCompactTrigger, SearchTrigger } from "./global-search"
 import { BellIcon, BotIcon, ChartIcon, FolderIcon, GearIcon, HomeIcon, RocketIcon } from "./shell-icons"
 
 const views = ["Overview", "Deployments", "Logs", "Analytics", "Agents", "Usage", "Domains", "Secrets", "Settings"]
+const initialView = views.find((view) => view === new URLSearchParams(location.search).get("view")) ?? "Overview"
 
 const projects = [
   { name: "Apollo", detail: "Deployed 2 hours ago", tone: "success", state: "Ready" },
@@ -68,16 +70,16 @@ function AccountMenu() {
 function ShellDemo() {
   const [controller] = useState(() => createSidebarController())
   const [collapsed, setCollapsed] = useState(false)
-  const search = useGlobalSearch()
+  const [search] = useState(() => createCommandDialogController())
 
   return (
     <div className="fixed inset-0 flex flex-col">
       <SkipLink>Skip to content</SkipLink>
       <Topbar
         brand={<Brand />}
-        leading={<SidebarTrigger controller={controller} collapsed={collapsed} className="narrow:hidden" />}
-        center={search.trigger}
-        centerCompact={search.compactTrigger}
+        leading={<SidebarTrigger controller={controller} collapsed={collapsed} />}
+        center={<SearchTrigger controller={search} />}
+        centerCompact={<SearchCompactTrigger controller={search} />}
         trailing={
           <>
             <Button variant="ghost" size="icon" aria-label="Notifications, 3 unread">
@@ -87,7 +89,7 @@ function ShellDemo() {
           </>
         }
       />
-      {search.dialog}
+      <GlobalSearch controller={search} />
       <div className="flex min-h-0 flex-1">
         <Sidebar
           label="Workspace"
@@ -95,7 +97,6 @@ function ShellDemo() {
           collapsed={collapsed}
           onCollapsedChange={setCollapsed}
           trigger={false}
-          className="narrow:hidden"
         >
           <SidebarGroup label="Workspace">
             <SidebarItem href="#overview" icon={<HomeIcon />} current>
@@ -120,7 +121,7 @@ function ShellDemo() {
             </SidebarItem>
           </SidebarGroup>
         </Sidebar>
-        <Tabs defaultValue="Overview" className="min-w-0 flex-1">
+        <Tabs defaultValue={initialView} className="min-w-0 flex-1">
           <PageLayout
             as="main"
             width="dense"

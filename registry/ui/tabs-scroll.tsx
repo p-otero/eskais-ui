@@ -27,6 +27,31 @@ function readEdges(element: HTMLElement): Edges {
   return rtl ? { left: toEnd, right: fromStart } : { left: fromStart, right: toEnd }
 }
 
+function prefersReducedMotion() {
+  return typeof matchMedia === "function" && matchMedia("(prefers-reduced-motion: reduce)").matches
+}
+
+// Scrolls only the list, never the page or a scrolling ancestor, so a tab an agent selects off screen doesn't
+// move the page. The list's scroll padding is the fade's width, so the tab lands clear of it. The target is
+// absolute, so a second call while a smooth scroll runs (focus and selection change together) lands in the same place.
+function revealTab(list: HTMLElement, tab: HTMLElement, smooth: boolean) {
+  if (list.scrollWidth - list.clientWidth <= 1) return
+  const style = getComputedStyle(list)
+  const bounds = list.getBoundingClientRect()
+  const box = tab.getBoundingClientRect()
+  const left = box.left - (bounds.left + (Number.parseFloat(style.scrollPaddingLeft) || 0))
+  const right = box.right - (bounds.right - (Number.parseFloat(style.scrollPaddingRight) || 0))
+  const rtl = style.direction === "rtl"
+  // A tab wider than the clear space shows its start.
+  const delta = left < 0 && right > 0 ? (rtl ? right : left) : left < 0 ? left : right > 0 ? right : 0
+  if (Math.abs(delta) < 1) return
+  list.scrollTo({ left: list.scrollLeft + delta, behavior: smooth && !prefersReducedMotion() ? "smooth" : "auto" })
+}
+
+function isTab(node: unknown): node is HTMLElement {
+  return node instanceof HTMLElement && node.getAttribute("role") === "tab"
+}
+
 function useScrollEdges() {
   const ref = useRef<HTMLDivElement>(null)
   const [edges, setEdges] = useState<Edges>({ left: false, right: false })
@@ -39,22 +64,54 @@ function useScrollEdges() {
         const next = readEdges(element)
         return next.left === previous.left && next.right === previous.right ? previous : next
       })
-    const observer = typeof ResizeObserver === "function" ? new ResizeObserver(update) : undefined
+    const revealSelected = () => {
+      const selected = element.querySelector<HTMLElement>('[role="tab"][aria-selected="true"]')
+      if (selected) revealTab(element, selected, false)
+    }
+    // Tabs change width as fonts load or labels change, so the selected tab is revealed again after each resize.
+    const observer =
+      typeof ResizeObserver === "function"
+        ? new ResizeObserver(() => {
+            update()
+            revealSelected()
+          })
+        : undefined
     observer?.observe(element)
     for (const child of element.children) observer?.observe(child)
     element.addEventListener("scroll", update, { passive: true })
     update()
+
+    const onFocus = (event: FocusEvent) => {
+      if (isTab(event.target)) revealTab(element, event.target, true)
+    }
+    const selection =
+      typeof MutationObserver === "function"
+        ? new MutationObserver((records) => {
+            for (const record of records) {
+              if (isTab(record.target) && record.target.getAttribute("aria-selected") === "true") {
+                revealTab(element, record.target, true)
+              }
+            }
+          })
+        : undefined
+    selection?.observe(element, { attributes: true, attributeFilter: ["aria-selected"], subtree: true })
+    element.addEventListener("focusin", onFocus)
+    revealSelected()
     return () => {
       observer?.disconnect()
+      selection?.disconnect()
       element.removeEventListener("scroll", update)
+      element.removeEventListener("focusin", onFocus)
     }
   }, [])
 
   const scroll = (direction: -1 | 1) => {
     const element = ref.current
     if (!element) return
-    const reduce = typeof matchMedia === "function" && matchMedia("(prefers-reduced-motion: reduce)").matches
-    element.scrollBy({ left: direction * element.clientWidth * 0.8, behavior: reduce ? "auto" : "smooth" })
+    element.scrollBy({
+      left: direction * element.clientWidth * 0.8,
+      behavior: prefersReducedMotion() ? "auto" : "smooth",
+    })
   }
 
   return { ref, edges, scroll }
@@ -107,5 +164,5 @@ function TabsScroll({ labels: labelOverrides, children }: TabsScrollProps) {
   )
 }
 
-export { readEdges, TabsScroll, tabsScrollLabels }
+export { readEdges, revealTab, TabsScroll, tabsScrollLabels }
 export type { TabsScrollLabels }

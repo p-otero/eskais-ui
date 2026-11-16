@@ -11,7 +11,7 @@ import type { Stage } from "@/components/ui/stage-track"
 type ProposalCallback = (id: string) => void | Promise<void>
 
 interface AgentTaskBoardBaseProps {
-  tasks: TaskView[]
+  tasks: readonly TaskView[]
   /** "Now" in live mode, for tests and deterministic screenshots only. */
   now?: string
   /** BCP 47; defaults to the page's `lang`. */
@@ -30,7 +30,7 @@ interface AgentTaskBoardBaseProps {
    * with `filter`, and "Clear filters" leaves it alone.
    */
   filterControls?: readonly FilterControl[]
-  columns?: ColumnConfig[]
+  columns?: readonly ColumnConfig[]
   onColumnsChange?: (columns: ColumnConfig[]) => void
   /** `"tint"` (default) marks each column with its tone: a dot, a top border and a faint wash. */
   columnAccent?: ColumnAccent
@@ -63,7 +63,7 @@ interface AgentTaskBoardBaseProps {
    * The pipeline `task.location` points into, in order. Cards show the stage as a pill, the detail as a
    * track, and the toolbar gets a row of stage toggles that filters by it.
    */
-  stages?: Stage[]
+  stages?: readonly Stage[]
   /**
    * Adds a last "No stage" toggle (`labels.filters.noStage`) for tasks without a `location`; it sets `NO_STAGE`
    * in `filters.stage`. Defaults to true when `stages` is set and some task has no location.

@@ -1,5 +1,4 @@
 import { useAsyncOptions } from "@ui-sdk/react/async-options"
-import { useState } from "react"
 
 import { Command, CommandEmpty, CommandInput, CommandItem, CommandList, CommandStatus } from "@/components/ui/command"
 import {
@@ -8,7 +7,7 @@ import {
   CommandDialogOpenButton,
   CommandDialogShortcut,
   CommandDialogTrigger,
-  createCommandDialogController,
+  type CommandDialogController,
 } from "@/components/ui/command-dialog"
 import { toast } from "@/components/ui/toast"
 
@@ -49,11 +48,10 @@ function SearchIcon() {
   )
 }
 
-function useGlobalSearch() {
-  const [controller] = useState(() => createCommandDialogController())
-  const results = useAsyncOptions(searchWorkspace, { debounce: 200, immediate: true })
-
-  const trigger = (
+// Only the triggers go in the Topbar's slots: `center` is hidden on narrow screens, and a dialog renders where it is
+// placed, so one inside that slot would open with no box. The dialog goes beside the Topbar.
+function SearchTrigger({ controller }: { controller: CommandDialogController }) {
+  return (
     <CommandDialogTrigger controller={controller} shortcut="mod+k" className="w-full max-w-sm">
       <span className="inline-flex items-center gap-2">
         <SearchIcon />
@@ -62,12 +60,19 @@ function useGlobalSearch() {
       <CommandDialogShortcut />
     </CommandDialogTrigger>
   )
-  const compactTrigger = (
+}
+
+function SearchCompactTrigger({ controller }: { controller: CommandDialogController }) {
+  return (
     <CommandDialogOpenButton controller={controller} variant="ghost" size="icon" aria-label="Search the workspace">
       <SearchIcon />
     </CommandDialogOpenButton>
   )
-  const dialog = (
+}
+
+function GlobalSearch({ controller }: { controller: CommandDialogController }) {
+  const results = useAsyncOptions(searchWorkspace, { debounce: 200, immediate: true })
+  return (
     <CommandDialog controller={controller}>
       <CommandDialogContent title="Search the workspace">
         <Command
@@ -99,7 +104,6 @@ function useGlobalSearch() {
       </CommandDialogContent>
     </CommandDialog>
   )
-  return { trigger, compactTrigger, dialog }
 }
 
-export { useGlobalSearch }
+export { GlobalSearch, SearchCompactTrigger, SearchTrigger }

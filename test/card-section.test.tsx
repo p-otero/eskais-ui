@@ -38,10 +38,11 @@ function classes(element: Element) {
   return element.className.split(/\s+/)
 }
 
-test("the header is a container: the action sits beside the title from about 20rem and wraps below it under that", () => {
+test("with an action, the header wraps: the heading grows from an 11rem basis and the action follows it", () => {
   const { container } = render(
     <Card>
       <CardHeader>
+        <CardEyebrow>Usage</CardEyebrow>
         <CardTitle>Build minutes</CardTitle>
         <CardAction>
           <Button size="sm">Export minutes</Button>
@@ -50,20 +51,30 @@ test("the header is a container: the action sits beside the title from about 20r
     </Card>,
   )
   const header = container.querySelector("[data-slot=card-header]")!
-  const action = container.querySelector("[data-slot=card-action]")!
-  expect(classes(header)).toContain("@container/card-header")
-  expect(header.className).toMatch(/grid-cols-\[minmax\(min\(8rem,100%\),1fr\)_minmax\(0,auto\)\]/)
-  // Narrow first: the action spans the row after the title, then moves beside it at the container breakpoint.
-  expect(classes(action)).toEqual(expect.arrayContaining(["col-span-full", "order-last", "flex-wrap"]))
-  expect(classes(action)).toEqual(
-    expect.arrayContaining([
-      "@min-[17rem]/card-header:col-span-1",
-      "@min-[17rem]/card-header:col-start-2",
-      "@min-[17rem]/card-header:row-start-1",
-    ]),
+  const heading = header.querySelector(":scope > [data-slot=card-heading]")!
+  expect(classes(header)).toEqual(expect.arrayContaining(["flex", "flex-wrap"]))
+  expect(classes(heading)).toEqual(expect.arrayContaining(["grow", "basis-(--card-heading-basis)", "min-w-0"]))
+  expect([...heading.children].map((child) => child.getAttribute("data-slot"))).toEqual(["card-eyebrow", "card-title"])
+  expect(header.lastElementChild?.getAttribute("data-slot")).toBe("card-action")
+  expect(classes(header.lastElementChild!)).toEqual(expect.arrayContaining(["flex-wrap", "max-w-full"]))
+})
+
+test("without an action the header is a plain column, and a Section matches a Card", () => {
+  const { container } = render(
+    <>
+      <Card>
+        <CardHeader>
+          <CardTitle>Plain</CardTitle>
+        </CardHeader>
+      </Card>
+      <Section title="Deploys" action={<Button size="sm">New</Button>} />
+    </>,
   )
-  expect(classes(action)).not.toContain("col-start-2")
-  expect(classes(header)).toContain("[&>:not([data-slot=card-action])]:@max-[17rem]/card-header:col-span-full")
+  const [plain, section] = container.querySelectorAll("[data-slot=card-header]")
+  expect(plain!.querySelector("[data-slot=card-heading]")).toBeNull()
+  expect(plain!.firstElementChild?.getAttribute("data-slot")).toBe("card-title")
+  expect(section!.querySelector(":scope > [data-slot=card-heading] > [data-slot=card-title]")).not.toBeNull()
+  expect(section!.lastElementChild?.getAttribute("data-slot")).toBe("card-action")
 })
 
 test("a card without a title has no name and no dangling reference", async () => {

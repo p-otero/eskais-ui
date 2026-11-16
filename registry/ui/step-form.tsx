@@ -26,7 +26,7 @@ type FormStep<Values extends FieldValues = FieldValues> = {
   /** The step's fields, usually `FormField`s; the form instance is there for `watch`-free logic like `getValues`. */
   render: (form: UseFormReturn<Values>) => ReactNode
   /** The fields Next validates; the step's mounted `FormField`s by default. */
-  fields?: Path<Values>[]
+  fields?: readonly Path<Values>[]
   /**
    * Runs once the step's fields are valid, before moving on. Return nothing to continue, or an error in any shape
    * `onSubmit` may throw (`{ fieldErrors, message }`, a string, a `FormServerError`) to stay.
@@ -53,7 +53,7 @@ type StepFormLabels = {
 }
 
 type StepFormProps<Schema extends StandardSchemaV1> = Omit<FormProps<Schema>, "children"> & {
-  steps: FormStep<FormValuesOf<Schema>>[]
+  steps: readonly FormStep<FormValuesOf<Schema>>[]
   /** The current step's id, controlled. */
   step?: string
   defaultStep?: string
@@ -91,7 +91,7 @@ function DefaultBody({ children }: { children?: ReactNode }) {
 }
 
 type ContentProps = {
-  steps: FormStep[]
+  steps: readonly FormStep[]
   index: number
   move: StepMove | null
   go: (target: number, direction: StepDirection) => void
@@ -260,7 +260,7 @@ function StepFormFrame<Schema extends StandardSchemaV1>({
   return (
     <Form {...form} className={cn("min-w-0", className)}>
       <StepFormContent
-        steps={steps as FormStep[]}
+        steps={steps as readonly FormStep[]}
         index={index}
         move={move}
         go={go}

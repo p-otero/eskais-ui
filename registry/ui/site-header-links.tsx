@@ -16,7 +16,7 @@ type SiteHeaderItem = {
   /** Your router's link, like `<Link to="/pricing" />`. Wins over `renderLink`. */
   render?: ReactElement<Record<string, unknown>>
   /** Child links: the item becomes a dropdown. One level deep. */
-  items?: SiteHeaderItem[]
+  items?: readonly SiteHeaderItem[]
 }
 
 type SiteHeaderRenderLink = (item: SiteHeaderItem) => ReactElement<Record<string, unknown>> | undefined
@@ -32,7 +32,7 @@ function linkTarget(item: SiteHeaderItem, renderLink: SiteHeaderRenderLink | und
 }
 
 type PanelLinksProps = Omit<ComponentProps<"ul">, "children"> & {
-  items: SiteHeaderItem[]
+  items: readonly SiteHeaderItem[]
   renderLink?: SiteHeaderRenderLink
 }
 

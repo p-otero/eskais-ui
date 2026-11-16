@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 
 import { Button } from "@/components/ui/button"
 import { ConfirmDialog } from "@/components/ui/confirm-dialog"
@@ -11,6 +11,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
+  createDialogController,
 } from "@/components/ui/dialog"
 import { Drawer, DrawerClose, DrawerContent, DrawerTitle, DrawerTrigger, DrawerBackdrop } from "@/components/ui/drawer"
 import { Input } from "@/components/ui/input"
@@ -75,6 +76,92 @@ function AutoFocused() {
   )
 }
 
+// Stands in for a modal from another library: it moves focus in a frame after mounting and closes when focus leaves.
+function ThirdPartyModal({ onClose }: { onClose: (reason: string) => void }) {
+  const ref = useRef<HTMLDialogElement>(null)
+  useEffect(() => {
+    const element = ref.current
+    if (!element) return
+    const frame = requestAnimationFrame(() => element.querySelector("input")?.focus())
+    const onFocusIn = (event: FocusEvent) => {
+      if (event.target instanceof Node && !element.contains(event.target)) onClose("focus left")
+    }
+    document.addEventListener("focusin", onFocusIn)
+    return () => {
+      cancelAnimationFrame(frame)
+      document.removeEventListener("focusin", onFocusIn)
+    }
+  }, [onClose])
+  return (
+    <dialog
+      ref={ref}
+      open
+      aria-modal="true"
+      aria-label="Third-party modal"
+      className="fixed inset-x-0 top-0 z-popover m-auto flex w-80 flex-col gap-items rounded-surface border bg-popover p-inset-surface text-popover-foreground"
+    >
+      <Input aria-label="Coupon" />
+      <Button onClick={() => onClose("button")}>Close third-party modal</Button>
+    </dialog>
+  )
+}
+
+// Closing hands off to another modal while the first one still plays its exit transition.
+function HandOff({ by }: { by: "trigger" | "controller" }) {
+  const [first] = useState(() => createDialogController())
+  const [second] = useState(() => createDialogController())
+  const suffix = by === "controller" ? " by controller" : ""
+  const [thirdParty, setThirdParty] = useState(false)
+  const [closed, setClosed] = useState("")
+  const [later, setLater] = useState(false)
+  const closeThirdParty = useCallback((reason: string) => {
+    setThirdParty(false)
+    setClosed(reason)
+  }, [])
+  return (
+    <>
+      {by === "controller" ? <Button onClick={() => first.open()}>Open handoff dialog{suffix}</Button> : null}
+      <Dialog
+        controller={first}
+        onOpenChange={(open) => {
+          if (open || !later) return
+          setLater(false)
+          setTimeout(() => setThirdParty(true), 300)
+        }}
+      >
+        {by === "trigger" ? <DialogTrigger>Open handoff dialog</DialogTrigger> : null}
+        <DialogBackdrop />
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Handoff dialog{suffix}</DialogTitle>
+          </DialogHeader>
+          <DialogFooter className="sm:flex-wrap">
+            <DialogClose onClick={() => second.open()}>Continue in a dialog{suffix}</DialogClose>
+            <DialogClose onClick={() => setThirdParty(true)}>Continue in a third-party modal{suffix}</DialogClose>
+            <Button variant="outline" onClick={() => setLater(true)}>
+              Then open a third-party modal{suffix}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      <Dialog controller={second}>
+        <DialogBackdrop />
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Second dialog{suffix}</DialogTitle>
+          </DialogHeader>
+          <Input aria-label={`Second field${suffix}`} />
+          <DialogFooter>
+            <DialogClose>Close second dialog{suffix}</DialogClose>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      {thirdParty ? <ThirdPartyModal onClose={closeThirdParty} /> : null}
+      <output data-testid={`third-party-closed${suffix.replaceAll(" ", "-")}`}>{closed}</output>
+    </>
+  )
+}
+
 function OverlayCheck() {
   return (
     <div className="flex flex-wrap gap-items p-inset-surface">
@@ -108,6 +195,8 @@ function OverlayCheck() {
       />
       <UnmountedWhileOpen />
       <AutoFocused />
+      <HandOff by="trigger" />
+      <HandOff by="controller" />
     </div>
   )
 }

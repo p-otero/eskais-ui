@@ -1,7 +1,7 @@
 "use client"
 
 import {
-  Combobox,
+  Combobox as ComboboxPrimitive,
   ComboboxClear as ComboboxClearPrimitive,
   ComboboxContent as ComboboxContentPrimitive,
   ComboboxEmpty as ComboboxEmptyPrimitive,
@@ -14,6 +14,8 @@ import {
   ComboboxSeparator as ComboboxSeparatorPrimitive,
   ComboboxTrigger as ComboboxTriggerPrimitive,
   createComboboxController,
+  type ComboboxProps as ComboboxPrimitiveProps,
+  type ListData,
 } from "@ui-sdk/react/combobox"
 import { renderElement, type PartProps } from "@ui-sdk/react/primitive"
 import type { ComponentProps } from "react"
@@ -29,6 +31,30 @@ import {
   listSeparatorClassName,
 } from "@/components/ui/select"
 import { cn, cnState } from "@/lib/utils"
+
+// Distributes over the single and multiple variants, so `onValueChange` keeps its parameter type.
+type WithoutItems<Props> = Props extends unknown ? Omit<Props, "items"> : never
+
+type ComboboxProps<T = string, Multiple extends boolean | undefined = false> = WithoutItems<
+  ComboboxPrimitiveProps<T, Multiple>
+> & {
+  /** The data to render and filter, flat or in groups. A readonly array works too. */
+  items?: readonly ListData<T>[number][]
+}
+
+// UI SDK 0.1.0-beta.5 types `items` as a mutable array, though it only reads it.
+/** UI SDK's Combobox, taking `items` as a readonly array too. */
+function Combobox<T = string, Multiple extends boolean | undefined = false>({
+  items,
+  ...props
+}: ComboboxProps<T, Multiple>) {
+  return (
+    <ComboboxPrimitive<T, Multiple>
+      {...(props as ComboboxPrimitiveProps<T, Multiple>)}
+      items={items as ListData<T> | undefined}
+    />
+  )
+}
 
 const iconButtonClassName =
   "inline-flex size-6 shrink-0 cursor-pointer items-center justify-center rounded-full text-muted-foreground outline-none hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring data-disabled:cursor-not-allowed [&_svg]:size-4"
@@ -147,4 +173,5 @@ export {
   ComboboxTrigger,
   createComboboxController,
 }
-export type { ComboboxController, ComboboxItemState, ComboboxProps, ListData } from "@ui-sdk/react/combobox"
+export type { ComboboxController, ComboboxItemState, ListData } from "@ui-sdk/react/combobox"
+export type { ComboboxProps }
