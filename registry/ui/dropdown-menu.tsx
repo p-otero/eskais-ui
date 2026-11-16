@@ -28,7 +28,7 @@ import { cnState } from "@/lib/utils"
 type ButtonLook = VariantProps<typeof buttonVariants>
 
 const menuContentClassName =
-  "z-50 m-0 flex max-h-(--available-height) min-w-48 flex-col overflow-y-auto overscroll-contain surface-floating p-inline text-sm outline-none origin-(--transform-origin) transition duration-150 data-ending-style:scale-95 data-ending-style:opacity-0 data-starting-style:scale-95 data-starting-style:opacity-0 motion-reduce:transition-opacity motion-reduce:data-ending-style:scale-100 motion-reduce:data-starting-style:scale-100"
+  "z-popover m-0 flex max-h-(--available-height) min-w-48 flex-col overflow-y-auto overscroll-contain surface-floating p-inline text-sm outline-none origin-(--transform-origin) transition duration-micro ease-standard data-ending-style:scale-95 data-ending-style:opacity-0 data-starting-style:scale-95 data-starting-style:opacity-0 motion-reduce:transition-opacity motion-reduce:data-ending-style:scale-100 motion-reduce:data-starting-style:scale-100"
 
 const menuItemClassName =
   "relative flex h-control-sm shrink-0 cursor-default items-center gap-inline rounded-control px-inset-item outline-none select-none data-highlighted:bg-accent data-highlighted:text-accent-foreground data-disabled:opacity-50 data-destructive:text-destructive data-pending:cursor-progress [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0"

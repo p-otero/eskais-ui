@@ -35,11 +35,7 @@ function PageHeader({
       )}
       <div className="flex flex-wrap items-start justify-between gap-group">
         <div className="flex min-w-0 flex-1 flex-col gap-inline">
-          <Heading
-            id={titleId}
-            data-slot="page-header-title"
-            className="text-2xl font-semibold tracking-tight text-balance"
-          >
+          <Heading id={titleId} data-slot="page-header-title" className="text-display-sm tracking-tight text-balance">
             {title}
           </Heading>
           {description !== undefined && (

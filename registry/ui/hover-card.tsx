@@ -20,7 +20,7 @@ function HoverCardTrigger({ className, ...props }: ComponentProps<typeof HoverCa
   return (
     <HoverCardTriggerPrimitive
       className={cnState(
-        "rounded-sm font-medium text-primary underline-offset-4 outline-none hover:underline focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background data-open:underline",
+        "rounded-sm font-medium text-link underline-offset-4 outline-none hover:underline focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background data-open:underline",
         className,
       )}
       {...props}

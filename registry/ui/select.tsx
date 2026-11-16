@@ -22,7 +22,7 @@ import { cnState } from "@/lib/utils"
 const triggerClassName = `${fieldSurfaceClassName} flex h-control w-full min-w-0 cursor-pointer items-center justify-between gap-inline rounded-control px-control-x text-start text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring [&>svg]:size-4 [&>svg]:shrink-0 [&>svg]:text-muted-foreground`
 
 const listPopupClassName =
-  "m-0 max-h-(--available-height) min-w-(--anchor-width) overflow-y-auto overscroll-contain surface-floating p-inline outline-none transition-opacity duration-100 data-ending-style:opacity-0 data-starting-style:opacity-0"
+  "m-0 max-h-(--available-height) min-w-(--anchor-width) overflow-y-auto overscroll-contain surface-floating p-inline outline-none transition-opacity duration-micro ease-standard data-ending-style:opacity-0 data-starting-style:opacity-0"
 
 // A tint alone misses the 3:1 a state needs, so the highlight also draws a full ring.
 const listItemClassName =

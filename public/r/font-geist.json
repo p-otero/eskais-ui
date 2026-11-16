@@ -2,17 +2,20 @@
   "$schema": "https://ui.shadcn.com/schema/registry-item.json",
   "name": "font-geist",
   "title": "Geist Variable",
-  "description": "Geist Variable as the sans-serif font, bundled from npm (@fontsource-variable/geist, OFL-1.1): no font CDN, works offline.",
+  "description": "Geist Variable as the sans-serif font and Geist Mono Variable as the monospace font (font-mono), bundled from npm (@fontsource-variable/geist and geist-mono, OFL-1.1): no font CDN, works offline.",
   "dependencies": [
-    "@fontsource-variable/geist@5.3.0"
+    "@fontsource-variable/geist@5.3.0",
+    "@fontsource-variable/geist-mono@5.3.0"
   ],
   "cssVars": {
     "theme": {
-      "font-sans": "\"Geist Variable\", ui-sans-serif, system-ui, sans-serif"
+      "font-sans": "\"Geist Variable\", ui-sans-serif, system-ui, sans-serif",
+      "font-mono": "\"Geist Mono Variable\", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace"
     }
   },
   "css": {
-    "@import \"@fontsource-variable/geist\"": {}
+    "@import \"@fontsource-variable/geist\"": {},
+    "@import \"@fontsource-variable/geist-mono\"": {}
   },
   "type": "registry:item"
 }

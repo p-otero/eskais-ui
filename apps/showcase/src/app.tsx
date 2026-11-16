@@ -269,17 +269,18 @@ function App() {
             <Badge>Default</Badge>
             <Badge variant="secondary">Secondary</Badge>
             <Badge variant="outline">Outline</Badge>
-            <Badge variant="success">Ready</Badge>
-            <Badge variant="warning">Building</Badge>
-            <Badge variant="info">Preview</Badge>
-            <Badge variant="destructive">Failed</Badge>
+            <Badge tone="neutral">Draft</Badge>
+            <Badge tone="success">Ready</Badge>
+            <Badge tone="warning">Building</Badge>
+            <Badge tone="info">Preview</Badge>
+            <Badge tone="destructive">Failed</Badge>
             <Card className="w-full max-w-sm">
               <CardHeader>
                 <CardTitle>Apollo</CardTitle>
                 <CardDescription>Last deployed 2 hours ago</CardDescription>
               </CardHeader>
               <CardContent>
-                <Badge variant="success">Ready</Badge>
+                <Badge tone="success">Ready</Badge>
               </CardContent>
               <CardFooter>
                 <Button size="sm" variant="outline">

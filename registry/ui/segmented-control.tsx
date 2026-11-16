@@ -30,7 +30,7 @@ function SegmentedControlIndicator({ className, ...props }: ComponentProps<typeo
   return (
     <SegmentedControlIndicatorPrimitive
       className={cnState(
-        "absolute top-(--segmented-control-indicator-top) left-(--segmented-control-indicator-left) -z-10 h-(--segmented-control-indicator-height) w-(--segmented-control-indicator-width) rounded-control bg-primary shadow-sm transition-all duration-200 motion-reduce:transition-none",
+        "absolute top-(--segmented-control-indicator-top) left-(--segmented-control-indicator-left) -z-10 h-(--segmented-control-indicator-height) w-(--segmented-control-indicator-width) rounded-control bg-primary shadow-sm transition-all duration-panel ease-standard motion-reduce:transition-none",
         className,
       )}
       {...props}
@@ -42,7 +42,7 @@ function SegmentedControlItem({ className, ...props }: ComponentProps<typeof Seg
   return (
     <SegmentedControlItemPrimitive
       className={cnState(
-        "inline-flex cursor-pointer items-center justify-center gap-inline rounded-control px-control-x text-sm font-medium whitespace-nowrap text-muted-foreground transition-colors outline-none select-none hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring in-data-[orientation=vertical]:h-control-sm data-checked:text-primary-foreground data-checked:hover:text-primary-foreground data-disabled:cursor-not-allowed data-disabled:hover:text-muted-foreground [&_svg]:size-4 [&_svg]:shrink-0",
+        "touch-target inline-flex cursor-pointer items-center justify-center gap-inline rounded-control px-control-x text-sm font-medium whitespace-nowrap text-muted-foreground transition-colors outline-none select-none hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring in-data-[orientation=vertical]:h-control-sm data-checked:text-primary-foreground data-checked:hover:text-primary-foreground data-disabled:cursor-not-allowed data-disabled:hover:text-muted-foreground [&_svg]:size-4 [&_svg]:shrink-0",
         className,
       )}
       {...props}

@@ -75,7 +75,7 @@ function ConfirmDialog({
       <AlertDialogBackdrop className={backdropClassName} />
       <AlertDialogContent className={cn(contentClassName, "max-w-md", className)}>
         <div className="flex flex-col gap-inline">
-          <AlertDialogTitle className="text-lg leading-none font-semibold">{title}</AlertDialogTitle>
+          <AlertDialogTitle className="text-title leading-none">{title}</AlertDialogTitle>
           {description === undefined ? null : (
             <AlertDialogDescription className="text-sm text-muted-foreground">{description}</AlertDialogDescription>
           )}

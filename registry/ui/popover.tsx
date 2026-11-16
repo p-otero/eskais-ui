@@ -19,7 +19,7 @@ import { cnState } from "@/lib/utils"
 type ButtonLook = VariantProps<typeof buttonVariants>
 
 const floatingSurfaceClassName =
-  "z-50 m-0 surface-floating outline-none origin-(--transform-origin) transition duration-150 data-ending-style:scale-95 data-ending-style:opacity-0 data-starting-style:scale-95 data-starting-style:opacity-0 motion-reduce:transition-opacity motion-reduce:data-ending-style:scale-100 motion-reduce:data-starting-style:scale-100"
+  "z-popover m-0 surface-floating outline-none origin-(--transform-origin) transition duration-micro ease-standard data-ending-style:scale-95 data-ending-style:opacity-0 data-starting-style:scale-95 data-starting-style:opacity-0 motion-reduce:transition-opacity motion-reduce:data-ending-style:scale-100 motion-reduce:data-starting-style:scale-100"
 
 const arrowClassName =
   // oxlint-disable-next-line eskais/spacing-tokens -- half the arrow's size-2.5 (rounded up), so it straddles the edge

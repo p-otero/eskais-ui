@@ -9,13 +9,14 @@ function tokens(selector: string) {
   return Object.fromEntries([...body.matchAll(/(--[\w-]+):\s*([^;]+);/g)].map(([, name, value]) => [name, value]))
 }
 
-test("board density uses the compact theme's shape and spacing, with narrower columns and no flat shadow", () => {
+test("board density uses the compact theme's shape and spacing, with narrower columns, no flat shadow and the default type scale", () => {
   const compact = {
     ...tokens('[data-theme="compact"]'),
     "--board-column-min-width": "13rem",
     "--board-column-max-width": "15rem",
   }
   delete compact["--surface-shadow"]
+  for (const name of Object.keys(compact)) if (name.startsWith("--type-")) delete compact[name]
   expect(tokens('[data-density="compact"]')).toEqual(compact)
   expect(tokens('  [data-density="auto"]')).toEqual(compact)
 })

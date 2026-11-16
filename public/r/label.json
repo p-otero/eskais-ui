@@ -14,7 +14,7 @@
   "files": [
     {
       "path": "registry/ui/label.tsx",
-      "content": "\"use client\"\n\nimport { Label as LabelPrimitive } from \"@ui-sdk/react/label\"\nimport type { ComponentProps } from \"react\"\n\nimport { cnState } from \"@/lib/utils\"\n\nfunction Label({ className, ...props }: ComponentProps<typeof LabelPrimitive>) {\n  return (\n    <LabelPrimitive\n      className={cnState(\n        \"inline-flex items-center gap-inline text-sm font-medium select-none has-data-disabled:cursor-not-allowed has-data-disabled:opacity-50\",\n        className,\n      )}\n      {...props}\n    />\n  )\n}\n\nexport { Label }\n",
+      "content": "\"use client\"\n\nimport { Label as LabelPrimitive } from \"@ui-sdk/react/label\"\nimport type { ComponentProps } from \"react\"\n\nimport { cnState } from \"@/lib/utils\"\n\nfunction Label({ className, ...props }: ComponentProps<typeof LabelPrimitive>) {\n  return (\n    <LabelPrimitive\n      className={cnState(\n        \"inline-flex items-center gap-inline text-sm font-medium select-none pointer-coarse:has-[[data-slot=checkbox],[data-slot=radio],[data-slot=switch]]:min-h-(--control-height-touch) has-data-disabled:cursor-not-allowed has-data-disabled:opacity-50\",\n        className,\n      )}\n      {...props}\n    />\n  )\n}\n\nexport { Label }\n",
       "type": "registry:ui"
     }
   ],

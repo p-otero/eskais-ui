@@ -86,7 +86,7 @@ function TaskDetailPanel({
             id={titleId}
             data-slot="task-detail-title"
             tabIndex={-1}
-            className="rounded-control text-base font-semibold outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            className="rounded-control text-title-sm outline-none focus-visible:ring-2 focus-visible:ring-ring"
           >
             {task.title}
           </Title>

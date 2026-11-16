@@ -21,7 +21,7 @@ import { cn, cnState } from "@/lib/utils"
 type ButtonLook = VariantProps<typeof buttonVariants>
 
 // The drawer drives the content's translate and the backdrop's opacity itself, so neither is styled here.
-const drawerBackdropClassName = "fixed inset-0 z-50 bg-overlay"
+const drawerBackdropClassName = "fixed inset-0 z-overlay bg-overlay"
 
 const drawerContentClassName = [
   "flex flex-col gap-group overflow-y-auto overscroll-contain border border-floating-border bg-popover/(--glass-opacity) p-inset-surface text-popover-foreground shadow-floating backdrop-floating outline-none",
@@ -82,7 +82,7 @@ function DrawerFooter({ className, render, ...props }: PartProps<"div">) {
 }
 
 function DrawerTitle({ className, ...props }: ComponentProps<typeof DrawerTitlePrimitive>) {
-  return <DrawerTitlePrimitive className={cnState("text-lg leading-none font-semibold", className)} {...props} />
+  return <DrawerTitlePrimitive className={cnState("text-title leading-none", className)} {...props} />
 }
 
 function DrawerDescription({ className, ...props }: ComponentProps<typeof DrawerDescriptionPrimitive>) {

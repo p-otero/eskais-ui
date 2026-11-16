@@ -45,7 +45,7 @@ function AccordionTrigger({ className, children, ...props }: ComponentProps<type
             strokeWidth="2"
             strokeLinecap="round"
             strokeLinejoin="round"
-            className="text-muted-foreground transition-transform duration-200 group-data-open/accordion-trigger:rotate-180 motion-reduce:transition-none"
+            className="text-muted-foreground transition-transform duration-panel ease-standard group-data-open/accordion-trigger:rotate-180 motion-reduce:transition-none"
           >
             <path d="m6 9 6 6 6-6" />
           </svg>
@@ -60,7 +60,7 @@ function AccordionPanel({ className, children, ...props }: ComponentProps<typeof
   return (
     <AccordionPanelPrimitive
       className={cnState(
-        "h-(--accordion-panel-height) text-sm transition-all duration-200 ease-out data-ending-style:h-0 data-ending-style:overflow-hidden data-starting-style:h-0 data-starting-style:overflow-hidden motion-reduce:transition-none",
+        "h-(--accordion-panel-height) text-sm transition-all duration-panel ease-standard data-ending-style:h-0 data-ending-style:overflow-hidden data-starting-style:h-0 data-starting-style:overflow-hidden motion-reduce:transition-none",
         className,
       )}
       {...props}

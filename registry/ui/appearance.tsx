@@ -10,7 +10,7 @@ type AppearanceProps<Theme extends string, Palette extends string> = {
   children?: ReactNode
 }
 
-/** Keeps `.dark`, `data-theme` and `data-palette` on `<html>` in sync with `appearance` while it's mounted. */
+/** Keeps `.dark`, `data-color-scheme`, `data-theme` and `data-palette` on `<html>` in sync with `appearance` while it's mounted. */
 function Appearance<Theme extends string, Palette extends string>({
   appearance,
   children,

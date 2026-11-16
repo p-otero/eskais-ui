@@ -1,7 +1,7 @@
 import { useId, useState } from "react"
 
 import { DependencyChips, type DependencyChip } from "@/components/ui/dependency-chips"
-import { StatusPill } from "@/components/ui/status-pill"
+import { StatusDot, StatusPill } from "@/components/ui/status-pill"
 
 import { Section } from "../section"
 
@@ -41,6 +41,24 @@ function StatusSection() {
         </StatusPill>
         <StatusPill tone="muted">Archived</StatusPill>
       </div>
+      <ul className="flex flex-wrap items-center gap-4 text-sm">
+        <li className="flex items-center gap-1.5">
+          <StatusDot tone="success" label="Online" pulse />
+          api-1
+        </li>
+        <li className="flex items-center gap-1.5">
+          <StatusDot tone="warning" label="Degraded" />
+          api-2
+        </li>
+        <li className="flex items-center gap-1.5">
+          <StatusDot tone="destructive" label="Offline" />
+          worker-1
+        </li>
+        <li className="flex items-center gap-1.5">
+          <StatusDot tone="neutral" label="Unknown" />
+          worker-2
+        </li>
+      </ul>
       <div className="flex w-full flex-col gap-2">
         <h3 id={upstreamId} className="text-sm font-medium">
           Depends on

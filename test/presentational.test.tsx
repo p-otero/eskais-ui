@@ -32,6 +32,23 @@ test("card parts expose slots and accept a render element", () => {
   expect(screen.getByRole("heading", { level: 2, name: "Usage" }).dataset.slot).toBe("card-title")
 })
 
+test("a badge tone maps to semantic tokens, and a tone passed as variant still works", () => {
+  render(
+    <>
+      <Badge tone="warning">Stale</Badge>
+      <Badge tone="neutral" variant="outline">
+        Draft
+      </Badge>
+    </>,
+  )
+  const stale = screen.getByText("Stale")
+  expect(stale.dataset.tone).toBe("warning")
+  expect(stale.className).toContain("text-warning")
+  const draft = screen.getByText("Draft")
+  expect(draft.dataset.tone).toBe("neutral")
+  expect(draft.className).toContain("bg-secondary")
+})
+
 test("badge variants map to semantic tokens", () => {
   render(
     <>
@@ -41,6 +58,7 @@ test("badge variants map to semantic tokens", () => {
   )
   const ready = screen.getByText("Ready")
   expect(ready.dataset.variant).toBe("success")
+  expect(ready.dataset.tone).toBe("success")
   expect(ready.className).toContain("text-success")
   expect(screen.getByRole("link", { name: "Builds" }).dataset.slot).toBe("badge")
 })

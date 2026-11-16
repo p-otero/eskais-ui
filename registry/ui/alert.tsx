@@ -1,9 +1,10 @@
 import { renderElement, type PartProps } from "@ui-sdk/react/primitive"
 import { cva } from "class-variance-authority"
 
+import type { Tone } from "@/lib/tone"
 import { cn } from "@/lib/utils"
 
-type AlertTone = "info" | "success" | "warning" | "destructive"
+type AlertTone = Tone
 
 const alertVariants = cva(
   // oxlint-disable-next-line eskais/spacing-tokens -- clears the absolute size-4 icon plus a 12px gap
@@ -11,6 +12,7 @@ const alertVariants = cva(
   {
     variants: {
       tone: {
+        neutral: "[&>svg]:text-muted-foreground",
         info: "border-info/50 [&>svg]:text-info [&>[data-slot=alert-title]]:text-info",
         success: "border-success/50 [&>svg]:text-success [&>[data-slot=alert-title]]:text-success",
         warning: "border-warning/50 [&>svg]:text-warning [&>[data-slot=alert-title]]:text-warning",

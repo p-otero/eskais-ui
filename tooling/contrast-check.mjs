@@ -133,6 +133,16 @@ const tokenPairs = [
   ["accent-foreground", "accent", 4.5],
   ["secondary-foreground", "secondary", 4.5],
   ["input-strong", "background", 3],
+  ["link", "background", 4.5],
+  ["link", "card", 4.5],
+  ["link", "muted", 4.5],
+  ["link-soft", "background", 4.5],
+  ["link-soft", "card", 4.5],
+  ["link-soft", "muted", 4.5],
+  ...["positive", "negative", "target", "remaining"].flatMap((series) => [
+    [`series-${series}`, "background", 3],
+    [`series-${series}`, "card", 3],
+  ]),
 ]
 
 async function checkTokens(page, scope) {

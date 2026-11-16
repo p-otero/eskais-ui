@@ -72,7 +72,7 @@ function Block({
   const Heading = `h${Math.min(level, 6)}` as "h3"
   return (
     <section className={cn("flex flex-col gap-inline", className)}>
-      <Heading className="text-xs font-medium tracking-wide text-muted-foreground uppercase">{title}</Heading>
+      <Heading className="text-meta tracking-meta text-muted-foreground uppercase">{title}</Heading>
       {children}
     </section>
   )

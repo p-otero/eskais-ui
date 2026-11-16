@@ -64,7 +64,7 @@ function NavigationMenuTrigger({
             stroke="currentColor"
             strokeWidth="2"
             strokeLinecap="round"
-            className="size-3! transition-transform duration-200 group-data-open/navigation-menu-trigger:rotate-180 motion-reduce:transition-none"
+            className="size-3! transition-transform duration-panel ease-standard group-data-open/navigation-menu-trigger:rotate-180 motion-reduce:transition-none"
           >
             <path d="m6 9 6 6 6-6" />
           </svg>
@@ -120,7 +120,7 @@ function NavigationMenuIndicator({ className, ...props }: ComponentProps<typeof 
   return (
     <NavigationMenuIndicatorPrimitive
       className={cnState(
-        "pointer-events-none absolute bottom-(--active-item-bottom) left-(--active-item-left) h-0.5 w-(--active-item-width) rounded-full bg-primary opacity-0 transition-all duration-200 data-visible:opacity-100 motion-reduce:transition-none",
+        "pointer-events-none absolute bottom-(--active-item-bottom) left-(--active-item-left) h-0.5 w-(--active-item-width) rounded-full bg-primary opacity-0 transition-all duration-panel ease-standard data-visible:opacity-100 motion-reduce:transition-none",
         className,
       )}
       {...props}

@@ -13,7 +13,7 @@ import type { ComponentProps } from "react"
 import { cnState } from "@/lib/utils"
 
 const tooltipContentClassName =
-  "z-50 m-0 max-w-xs overflow-visible rounded-control border-0 bg-primary px-inset-item py-inline text-xs text-balance text-primary-foreground shadow-floating origin-(--transform-origin) transition duration-150 data-instant:transition-none data-ending-style:scale-95 data-ending-style:opacity-0 data-starting-style:scale-95 data-starting-style:opacity-0 motion-reduce:transition-opacity motion-reduce:data-ending-style:scale-100 motion-reduce:data-starting-style:scale-100"
+  "z-popover m-0 max-w-xs overflow-visible rounded-control border-0 bg-primary px-inset-item py-inline text-xs text-balance text-primary-foreground shadow-floating origin-(--transform-origin) transition duration-micro ease-standard data-instant:transition-none data-ending-style:scale-95 data-ending-style:opacity-0 data-starting-style:scale-95 data-starting-style:opacity-0 motion-reduce:transition-opacity motion-reduce:data-ending-style:scale-100 motion-reduce:data-starting-style:scale-100"
 
 const arrowClassName =
   // oxlint-disable-next-line eskais/spacing-tokens -- half the arrow's size-2.5 (rounded down), so it sits just inside the bubble's edge

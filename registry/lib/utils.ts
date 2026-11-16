@@ -1,8 +1,8 @@
 import { clsx, type ClassValue } from "clsx"
 import { extendTailwindMerge } from "tailwind-merge"
 
-// The theme's spacing tokens, so a consumer's `gap-4` or `h-10` replaces `gap-items` or `h-control` instead of
-// both landing in the class list.
+// The theme's tokens, so a consumer's `gap-4` or `text-lg` replaces `gap-items` or `text-title` instead of both
+// landing in the class list. Unknown `text-*` values would otherwise count as colours and drop `text-muted-foreground`.
 const twMerge = extendTailwindMerge({
   extend: {
     theme: {
@@ -21,6 +21,13 @@ const twMerge = extendTailwindMerge({
         "control-x",
         "control-inset",
       ],
+      text: ["meta", "caption", "body-sm", "body", "title-sm", "title", "display-sm", "display"],
+      tracking: ["meta", "tight"],
+      ease: ["standard"],
+    },
+    classGroups: {
+      z: [{ z: ["sticky", "overlay", "popover", "toast"] }],
+      duration: [{ duration: ["micro", "panel", "dialog"] }],
     },
   },
 })

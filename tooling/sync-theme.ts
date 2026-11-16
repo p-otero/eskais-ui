@@ -44,6 +44,8 @@ const item = (name: string) => {
 }
 
 const theme = tree(read("theme.css"))
+// The dark variant comes from `shadcn init`; the others ship with the theme as statements.
+const customVariants = [...read("theme.css").matchAll(/^@custom-variant (?!dark\b)[^;{]+(?=;)/gm)].map(([rule]) => rule)
 const derivedLight = ":root, [data-palette]"
 const derivedDark = ".dark, .dark [data-palette], [data-palette].dark"
 function vars(selector: string): CssVars {
@@ -65,6 +67,7 @@ item("theme").cssVars = {
   dark: { ...vars(".dark"), ...vars(derivedDark) },
 }
 item("theme").css = {
+  ...Object.fromEntries(customVariants.map((rule) => [rule, {}])),
   ":where(:root)": prefixed(":where(:root)"),
   "[data-palette]": prefixed(derivedLight),
   ".dark [data-palette], [data-palette].dark": prefixed(derivedDark),
@@ -73,6 +76,7 @@ item("theme").css = {
       ["@utility ", "@supports ", "@media ", "[data-elevation"].some((prefix) => selector.startsWith(prefix)),
     ),
   ),
+  "@layer components": theme["@layer components"] ?? {},
   // Apps that skip `shadcn init` have no `* { border-color }` rule, so borders fall back to currentColor.
   "@layer base": theme["@layer base"] ?? {},
 }

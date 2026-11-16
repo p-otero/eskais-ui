@@ -33,11 +33,7 @@ function StatValue({ value, format, locale, labels, className, render, children,
       "data-kind": numeric ? "number" : "text",
       title: !numeric && typeof children === "string" ? children : undefined,
       // Text such as "2 minutes ago" would wrap at display size, so it stays on one line, smaller.
-      className: cn(
-        "font-semibold tabular-nums",
-        numeric ? "text-2xl leading-none" : "truncate text-lg leading-snug",
-        className,
-      ),
+      className: cn("tabular-nums", numeric ? "text-display-sm leading-none" : "truncate text-title", className),
       ...props,
       children: content,
     },

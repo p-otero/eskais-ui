@@ -140,7 +140,7 @@ function Sidebar({
       }}
       className={cn(
         surfaceClassName,
-        "group/sidebar h-full w-(--sidebar-width) shrink-0 overflow-hidden border-e bg-muted/(--glass-opacity) p-items backdrop-surface transition-all duration-200 data-collapsed:w-(--sidebar-rail-width) motion-reduce:transition-none",
+        "group/sidebar h-full w-(--sidebar-width) shrink-0 overflow-hidden border-e bg-muted/(--glass-opacity) p-items backdrop-surface transition-all duration-panel ease-standard data-collapsed:w-(--sidebar-rail-width) motion-reduce:transition-none",
         className,
       )}
     >

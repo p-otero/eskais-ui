@@ -37,7 +37,7 @@ function Floating({ side = "bottom", align = "center", strategy = "sticky", clas
       data-align={align}
       data-strategy={strategy}
       className={cn(
-        "group/floating pointer-events-none z-40 flex *:pointer-events-auto",
+        "group/floating pointer-events-none z-sticky flex *:pointer-events-auto",
         strategy,
         sideClassName[side],
         alignClassName[align],

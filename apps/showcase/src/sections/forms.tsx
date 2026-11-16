@@ -26,6 +26,7 @@ const plans = [
 ]
 
 const alerts = [
+  { tone: "neutral", title: "Maintenance window", description: "Deploys pause on Sunday from 02:00 to 03:00 UTC." },
   { tone: "info", title: "Builds are queued", description: "Three builds run ahead of yours." },
   { tone: "success", title: "Deployed", description: "Apollo is live on the production domain." },
   { tone: "warning", title: "Quota almost used", description: "New runs pause when the month's quota runs out." },
@@ -120,6 +121,11 @@ function Controls() {
         </Progress>
         <Meter value={68}>
           <MeterLabel>Storage used</MeterLabel>
+          <MeterValue />
+          <MeterTrack />
+        </Meter>
+        <Meter value={92} tone="warning">
+          <MeterLabel>Build minutes used</MeterLabel>
           <MeterValue />
           <MeterTrack />
         </Meter>

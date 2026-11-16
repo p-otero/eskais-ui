@@ -16,6 +16,7 @@ const repo = resolve(import.meta.dirname, "..")
 const registryDir = join(repo, "public", "r")
 const items = [
   "utils",
+  "tone",
   "theme",
   "theme-compact",
   "theme-glass",
@@ -316,6 +317,7 @@ import { Dialog, DialogContent, DialogTitle, DialogTrigger } from "@/components/
 import { Field, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { SearchField } from "@/components/ui/search-field"
+import { StatusDot } from "@/components/ui/status-pill"
 import type { TaskView } from "@/lib/agent-task-types"
 import "./index.css"
 
@@ -348,9 +350,11 @@ function App() {
     <Appearance appearance={appearance}>
     <AgentTaskBoard tasks={tasks} mode="snapshot" generatedAt="2026-11-15T18:42:00Z" timeZone="UTC" />
     <Card data-theme="glass">
-      <CardHeader><CardTitle>Consumer</CardTitle></CardHeader>
+      <CardHeader><CardTitle className="narrow:text-title">Consumer</CardTitle></CardHeader>
       <CardContent>
         <Badge variant="success">Ready</Badge>
+        <Badge tone="warning">Stale</Badge>
+        <StatusDot tone="success" label="Online" pulse />
         <Button onClick={() => Promise.resolve()}>Save</Button>
         <Field><FieldLabel>Name</FieldLabel><Input /></Field>
         <SearchField label="Search" onSearch={() => {}} />
@@ -383,6 +387,9 @@ createRoot(document.getElementById("root")!).render(<App />)
     '[data-palette="blue"]',
     "oklch(from var(--brand)",
     "Geist Variable",
+    "Geist Mono Variable",
+    ".text-title{",
+    ".narrow\\:text-title{",
   ]) {
     if (!css.includes(expected) && !css.includes(expected.replaceAll('"', ""))) {
       throw new Error(`Built CSS is missing ${expected}`)
@@ -390,6 +397,9 @@ createRoot(document.getElementById("root")!).render(<App />)
   }
   if (!readdirSync(assets).some((file) => /^geist-latin-wght-normal.*\.woff2$/.test(file))) {
     throw new Error("The build doesn't ship the Geist woff2 files")
+  }
+  if (!readdirSync(assets).some((file) => /^geist-mono-latin-wght-normal.*\.woff2$/.test(file))) {
+    throw new Error("The build doesn't ship the Geist Mono woff2 files")
   }
   await checkInBrowser(join(app, "dist"))
   console.log(`Consumer check passed with ${pm} in ${app}`)

@@ -121,11 +121,13 @@ async function check(browser, file, { cards, select, detail }) {
   await page.getByRole("region", { name: "Agent tasks" }).waitFor()
   await page.waitForFunction((count) => document.querySelectorAll('[data-slot="task-card"]').length === count, cards)
   const rendered = await page.evaluate(() => performance.now())
-  const fontLoaded = await page.evaluate(async () => {
+  const loadedFonts = await page.evaluate(async () => {
     await document.fonts.ready
-    return [...document.fonts].some((font) => font.family.includes("Geist") && font.status === "loaded")
+    return [...document.fonts].filter((font) => font.status === "loaded").map((font) => font.family.replaceAll('"', ""))
   })
-  if (!fontLoaded) errors.push("The embedded Geist font didn't load")
+  for (const family of ["Geist Variable", "Geist Mono Variable"]) {
+    if (!loadedFonts.includes(family)) errors.push(`The embedded ${family} font didn't load`)
+  }
   const started = Date.now()
   await page.getByRole("button", { name: select }).click()
   await page.getByRole("dialog", { name: detail }).waitFor()

@@ -1,6 +1,7 @@
 @layer ui-sdk;
 @import "tailwindcss";
 @import "@fontsource-variable/geist";
+@import "@fontsource-variable/geist-mono";
 @import "../../../registry/styles/theme.css";
 @import "../../../registry/styles/theme-compact.css";
 @import "../../../registry/styles/theme-glass.css";

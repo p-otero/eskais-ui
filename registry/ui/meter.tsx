@@ -9,11 +9,11 @@ import {
 } from "@ui-sdk/react/meter"
 import type { ComponentProps } from "react"
 
-import { gaugeClassNames } from "@/components/ui/progress"
+import { gaugeClassNames, type GaugeToneProps } from "@/components/ui/progress"
 import { cnState } from "@/lib/utils"
 
-function Meter({ className, ...props }: ComponentProps<typeof MeterPrimitive>) {
-  return <MeterPrimitive className={cnState(gaugeClassNames.root, className)} {...props} />
+function Meter({ className, tone, ...props }: ComponentProps<typeof MeterPrimitive> & GaugeToneProps) {
+  return <MeterPrimitive data-tone={tone} className={cnState(gaugeClassNames.root, className)} {...props} />
 }
 
 function MeterLabel({ className, ...props }: ComponentProps<typeof MeterLabelPrimitive>) {

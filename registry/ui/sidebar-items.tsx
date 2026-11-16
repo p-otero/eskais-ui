@@ -42,7 +42,7 @@ type SidebarItemProps = Omit<ComponentProps<"a">, "children"> & {
 }
 
 const itemClassName =
-  "flex h-control w-full min-w-0 items-center gap-inline rounded-control px-inset-item text-sm font-medium text-foreground outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:ring-2 focus-visible:ring-ring aria-[current=page]:bg-primary aria-[current=page]:text-primary-foreground group-data-collapsed/sidebar:justify-center group-data-collapsed/sidebar:px-0 [&_svg]:size-4 [&_svg]:shrink-0"
+  "flex h-control w-full min-w-0 pointer-coarse:h-(--control-height-touch) items-center gap-inline rounded-control px-inset-item text-sm font-medium text-foreground outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:ring-2 focus-visible:ring-ring aria-[current=page]:bg-primary aria-[current=page]:text-primary-foreground group-data-collapsed/sidebar:justify-center group-data-collapsed/sidebar:px-0 [&_svg]:size-4 [&_svg]:shrink-0"
 
 function SidebarItem({ icon, current = false, badge, render, className, children, ...props }: SidebarItemProps) {
   const rail = use(SidebarRailContext)

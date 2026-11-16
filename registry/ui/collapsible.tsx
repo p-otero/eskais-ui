@@ -50,7 +50,7 @@ function CollapsiblePanel({ className, ...props }: ComponentProps<typeof Collaps
   return (
     <CollapsiblePanelPrimitive
       className={cnState(
-        "h-(--collapsible-panel-height) transition-all duration-200 ease-out data-ending-style:h-0 data-ending-style:overflow-hidden data-starting-style:h-0 data-starting-style:overflow-hidden",
+        "h-(--collapsible-panel-height) transition-all duration-panel ease-standard data-ending-style:h-0 data-ending-style:overflow-hidden data-starting-style:h-0 data-starting-style:overflow-hidden",
         className,
       )}
       {...props}

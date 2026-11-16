@@ -17,7 +17,7 @@ const EmptyHeader = part("empty-header", "flex max-w-sm flex-col items-center ga
 const EmptyTitle = part("empty-title", "text-lg font-medium")
 const EmptyDescription = part(
   "empty-description",
-  "text-sm text-muted-foreground [&>a]:underline [&>a]:underline-offset-4 [&>a:hover]:text-foreground",
+  "text-sm text-muted-foreground [&>a]:text-link [&>a]:underline [&>a]:underline-offset-4 [&>a:hover]:decoration-2",
 )
 const EmptyContent = part("empty-content", "flex w-full max-w-sm flex-col items-center gap-group text-sm text-balance")
 

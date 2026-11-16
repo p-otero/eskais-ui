@@ -60,6 +60,119 @@ Two levels: surfaces (`shadow-surface`, `rounded-surface`, `backdrop-surface`) a
 2. To override the radius, use the parts (`rounded-lg border border-floating-border bg-floating shadow-floating backdrop-floating`) rather than `surface-floating` plus `rounded-*`: utility order decides which radius wins.
 3. `data-elevation="flat"` on `<html>` or any ancestor drops the floating shadow, backdrop and translucency, also inside a glass scope.
 
+## Text colours
+
+| Token         | Utility          | Role                                                   | Light                                       | Dark                                               |
+| ------------- | ---------------- | ------------------------------------------------------ | ------------------------------------------- | -------------------------------------------------- |
+| `--link`      | `text-link`      | inline links, Button `variant="link"`, link-like chips | `--brand`, lightness capped at 0.5          | `--brand` mirrored like `--primary`, at least 0.74 |
+| `--link-soft` | `text-link-soft` | quieter links (wikilinks, references), an editor caret | `--brand` at 55% chroma, lightness 0.42–0.5 | the same, lightness 0.74–0.82                      |
+
+1. Both reach 4.5:1 on `background`, `card` and `muted` in every palette and mode; `bun run test:browser` checks it. A custom `--brand` keeps that, since the lightness is clamped.
+2. `--accent` is a surface (hover and selected fills) with `accent-foreground` on it. Never use `text-accent` or `--accent` as a text colour.
+3. Pair a link colour with an underline (at rest or on hover) so it doesn't rely on colour alone.
+
+## Dark mode
+
+`.dark` on `<html>` (set by `createAppearance`) switches the tokens. Before any script runs, `@media (prefers-color-scheme: dark)` applies the same tokens to `:root:where(:not(.light, [data-color-scheme="light"]))`, so a server-rendered or script-free page follows the system.
+
+1. An explicit light choice opts out: `createAppearance().apply()` (and UI SDK's `Preferences`) write `data-color-scheme` with the choice (`system`, `light`, `dark`) on `<html>`. A server that knows the choice can render `<html data-color-scheme="light">` or `class="light"`.
+2. The fallback repeats the `.dark` declarations at the same specificity; a test fails if the two drift apart. Change both together.
+3. The theme's `dark:` variant follows the same rule. Apps whose `dark:` variant comes from `shadcn init` (`&:is(.dark *)`) only follow `.dark`; the registry components use tokens, not `dark:`, so they work either way.
+
+## Chart series
+
+Categorical series use `--chart-1` to `--chart-5`. A series with a meaning uses a series token instead:
+
+| Token                | Utility (`bg-`, `fill-`, `stroke-`, `text-`) | Role                               | From                                    |
+| -------------------- | -------------------------------------------- | ---------------------------------- | --------------------------------------- |
+| `--series-positive`  | `series-positive`                            | gains, done, within budget         | `--success`                             |
+| `--series-negative`  | `series-negative`                            | losses, failures, over budget      | `--destructive`                         |
+| `--series-target`    | `series-target`                              | a goal, forecast or reference line | `--foreground` 80% over `--background`  |
+| `--series-remaining` | `series-remaining`                           | what is left: a track, a burn-down | `--muted-foreground` 70% over `--muted` |
+
+Each reaches 3:1 on `background` and `card` in both modes and every palette (`bun run test:browser` checks it). In a chart config, pass `color: "var(--series-positive)"`. Still add a legend or labels, and dash a target line, so meaning never rests on colour alone.
+
+## Tone
+
+One vocabulary says what a status means: `Tone` from `@/lib/tone` (`@eskais/tone`).
+
+| Tone          | Meaning                              | Colour tokens                              |
+| ------------- | ------------------------------------ | ------------------------------------------ |
+| `neutral`     | no judgement: draft, queued, unknown | `secondary` fill, `muted-foreground` marks |
+| `info`        | something to know, in progress       | `info`                                     |
+| `success`     | done, healthy, passed                | `success`                                  |
+| `warning`     | needs attention soon                 | `warning`                                  |
+| `destructive` | failed, blocked, irreversible        | `destructive`                              |
+
+| Component          | Prop                     | Default          | Notes                                                                                                                                        |
+| ------------------ | ------------------------ | ---------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| `Badge`            | `tone`                   | none (`variant`) | `variant` (`default`, `secondary`, `outline`) is the look of an untoned badge; tone values passed as `variant` still work and are deprecated |
+| `Alert`            | `tone`                   | `info`           |                                                                                                                                              |
+| `StatusPill`       | `tone`                   | `neutral`        | also `muted`, for an inactive state                                                                                                          |
+| `StatusDot`        | `tone`, `label`, `pulse` | `neutral`        | a dot with a screen-reader `label`; the pulse stops under reduced motion                                                                     |
+| `Progress`/`Meter` | `tone` on the root       | none (`primary`) | colours the indicator                                                                                                                        |
+| `Toast`            | `tone`, or from the type | from `type`      | `toastTone(type)`: `error` is `destructive`, `default` and `loading` are `neutral`                                                           |
+
+Never add a component-specific word for these (`error`, `danger`, `positive`); map it to a tone.
+
+## Typography
+
+Text is sized by role. Each `text-*` step sets size, line height and weight together; compact tightens them.
+
+| Utility           | Role                                                        | Default (size/line/weight) | Compact (size/line) |
+| ----------------- | ----------------------------------------------------------- | -------------------------- | ------------------- |
+| `text-meta`       | eyebrows, kickers, overlines; pair with `tracking-meta`     | 11/14/500                  | 11/14               |
+| `text-caption`    | hints, timestamps, table footnotes                          | 12/16/400                  | 11.5/15             |
+| `text-body-sm`    | secondary text, descriptions in dense UI                    | 13/18/400                  | 12/16               |
+| `text-body`       | default UI and reading text                                 | 14/20/400                  | 13/18               |
+| `text-title-sm`   | card, panel and list-group titles                           | 15/20/600                  | 14/18               |
+| `text-title`      | dialog, drawer and section titles                           | 18/24/600                  | 16/22               |
+| `text-display-sm` | page titles, stat values                                    | 24/28/650                  | 20/24               |
+| `text-display`    | hero numbers, empty-state headlines                         | 28/32/700                  | 24/28               |
+| `tracking-meta`   | 0.12em, for `text-meta`; uppercase is the caller's choice   |                            |                     |
+| `tracking-tight`  | -0.012em, for titles and display text                       |                            |                     |
+| `font-mono`       | ids, hashes, code, keyboard shortcuts (Geist Mono Variable) |                            |                     |
+
+Sizes are in rem, from `--type-<step>-size` and `--type-<step>-leading`. Override the weight with `font-*` and the line height with `leading-*` (a title on one line inside a tight header keeps `leading-none`). `font-geist` installs Geist and Geist Mono.
+
+## Layers and motion
+
+| Utility           | Value                        | Role                                                     |
+| ----------------- | ---------------------------- | -------------------------------------------------------- |
+| `z-sticky`        | 20                           | sticky headers, a `Floating` bar                         |
+| `z-overlay`       | 40                           | dialog and drawer backdrops and content                  |
+| `z-popover`       | 50                           | popovers, menus, list popups, tooltips (above dialogs)   |
+| `z-toast`         | 60                           | the toast region, above everything else                  |
+| `duration-micro`  | 140ms                        | hover and press feedback, popovers, menus, tooltips      |
+| `duration-panel`  | 180ms                        | panels that resize or slide: accordion, sidebar, toasts  |
+| `duration-dialog` | 200ms                        | dialogs and their backdrop                               |
+| `ease-standard`   | `cubic-bezier(0.2, 0, 0, 1)` | every token-timed transition: quick start, gentle settle |
+
+1. In `registry/**`, never write `z-50`, `duration-150` or another number for these: pick the role. A local `z-10` that lifts one part above its sibling (a stretched link) is fine.
+2. Popovers, menus and toasts use the browser's top layer where it exists, so the z-index orders them only where it doesn't and against page content.
+3. `prefers-reduced-motion: reduce` collapses every transition and animation in `@layer base`; components add `motion-reduce:` only to swap a movement for a fade.
+
+## Touch targets
+
+On a coarse pointer (`@media (pointer: coarse)`), controls reach a hit area of at least `--control-height-touch` (2.75rem, 44px) without changing how they look on a desktop.
+
+| Mechanism                                       | Used by                                                                                           |
+| ----------------------------------------------- | ------------------------------------------------------------------------------------------------- |
+| `touch-target` class: a centered `::before`     | Button (all sizes, icon too), Toggle, tabs, segmented control items, checkbox, radio, switch      |
+| `pointer-coarse:h-(--control-height-touch)`     | sidebar items, which stack edge to edge                                                           |
+| `pointer-coarse:min-h-(--control-height-touch)` | a `Label` or `Field` row that holds a checkbox, radio or switch, so stacked choices don't overlap |
+
+1. Add `touch-target` to any new operable control smaller than 44px. It sets `position: relative` in `@layer components`, so an `absolute` or `fixed` utility still wins; don't put it on an element that uses its own `::before`.
+2. The hit area grows into the surrounding space. Where controls stack closer than 44px, grow the row on coarse pointers instead (`pointer-coarse:` variant) so neighbouring hit areas don't overlap.
+
+## Breakpoint
+
+`narrow:` is a variant for viewports 760px wide and below (`@custom-variant narrow (@media (width <= 47.5rem))`, shipped with `@eskais/theme`). Use it for layout that must change on a phone-sized screen: stack a row, hide a secondary column, let a dialog fill the width.
+
+1. It is about the viewport width, not density. The `compact` _theme_ (`data-theme="compact"`) tightens sizes and spacing at any width; `narrow:` never changes tokens. Combine them freely.
+2. Prefer container queries (`@container`, `@md:`) for a component that lives in panels of different widths; `narrow:` is for page layout.
+3. It is a max-width variant, so write the wide layout first and override it: `flex-row narrow:flex-col`.
+
 ## Comments
 
 - Don't narrate what the code does; rename and restructure until the intent is obvious.

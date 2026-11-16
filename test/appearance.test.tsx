@@ -30,6 +30,7 @@ afterEach(() => {
   html.classList.remove("dark")
   html.removeAttribute("data-theme")
   html.removeAttribute("data-palette")
+  html.removeAttribute("data-color-scheme")
 })
 
 test("system follows the browser's color scheme as it changes", () => {
@@ -78,4 +79,16 @@ test("apply() writes the choice synchronously, before anything renders", () => {
   createAppearance({ theme: "glass" }).apply()
   expect(dark()).toBe(true)
   expect(html.getAttribute("data-theme")).toBe("glass")
+})
+
+test("apply() marks an explicit light choice, which opts out of the CSS dark fallback", () => {
+  prefersDark(true)
+  const appearance = createAppearance({ colorScheme: "light" })
+  appearance.apply()
+  expect(dark()).toBe(false)
+  expect(html.getAttribute("data-color-scheme")).toBe("light")
+  act(() => void appearance.colorScheme.set("system"))
+  appearance.apply()
+  expect(dark()).toBe(true)
+  expect(html.getAttribute("data-color-scheme")).toBe("system")
 })

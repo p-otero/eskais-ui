@@ -52,7 +52,7 @@ function AgentsSection() {
             mode="fork"
             sourceThread={fallback.sourceThread}
             renderThreadLink={(thread) => (
-              <a className="underline underline-offset-2" href={thread.href ?? `#${thread.id}`}>
+              <a className="text-link underline underline-offset-2" href={thread.href ?? `#${thread.id}`}>
                 {thread.title ?? thread.id}
               </a>
             )}
