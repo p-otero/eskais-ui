@@ -40,8 +40,6 @@
   --floating-radius: calc(min(var(--control-radius), var(--control-height-sm) / 2) + var(--gap-inline));
   --floating-offset: 1rem;
   --floating-opacity: 85%;
-  /* Dialogs and drawers stay nearly opaque: a translucent fill over the dimmed backdrop reads grey. */
-  --dialog-opacity: max(92%, var(--glass-opacity));
   --floating-backdrop: blur(16px) saturate(1.5);
   --floating-shadow:
     0 1px 2px -1px oklch(0 0 0 / 0.06), 0 4px 10px -2px oklch(0 0 0 / 0.06), 0 16px 36px -8px oklch(0 0 0 / 0.14);

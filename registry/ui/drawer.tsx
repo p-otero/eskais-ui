@@ -24,7 +24,7 @@ type ButtonLook = VariantProps<typeof buttonVariants>
 const drawerBackdropClassName = "fixed inset-0 z-overlay bg-overlay"
 
 const drawerContentClassName = [
-  "flex flex-col gap-group overflow-y-auto overscroll-contain border border-floating-border bg-popover/(--dialog-opacity) p-inset-surface wrap-anywhere text-popover-foreground shadow-floating backdrop-floating outline-none",
+  "flex flex-col gap-group overflow-y-auto overscroll-contain border border-floating-border bg-popover p-inset-surface wrap-anywhere text-popover-foreground shadow-floating outline-none",
   "data-[side=bottom]:mx-auto data-[side=bottom]:max-h-[calc(100%-2rem)] data-[side=bottom]:w-full data-[side=bottom]:max-w-2xl data-[side=bottom]:rounded-t-surface data-[side=bottom]:border-b-0",
   "data-[side=top]:mx-auto data-[side=top]:max-h-[calc(100%-2rem)] data-[side=top]:w-full data-[side=top]:max-w-2xl data-[side=top]:rounded-b-surface data-[side=top]:border-t-0",
   "data-[side=right]:h-full data-[side=right]:w-[calc(100%-2rem)] data-[side=right]:max-w-sm data-[side=right]:rounded-l-surface data-[side=right]:border-r-0",

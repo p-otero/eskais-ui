@@ -131,4 +131,4 @@ Todas tienen valor en `agentTaskBoardLabels` (inglés) y en `agentTaskBoardLabel
 
 `DialogContent` acepta `size`: `sm` (24 rem), `md` (32 rem, por defecto), `lg` (48 rem), `xl` (72 rem) o `full` (el contenedor menos `--floating-offset`). `DialogBody` es la parte que se desplaza; `DialogHeader` y `DialogFooter` no encogen y quedan a la vista. El texto largo sin espacios no ensancha el diálogo (`min-w-0`, `overflow-wrap: anywhere`). En `narrow:` es una hoja inferior a todo el ancho, salvo con `sheet={false}`. Sin unidades de viewport: anchos y altos en `%` sobre su bloque contenedor (`--dialog-width`, `--dialog-max-height`, `--sheet-max-height`).
 
-Diálogos y cajones rellenan con `--dialog-opacity`, al menos un 92 % incluso con cristal, para que el texto de color pase 4.5:1 sobre el fondo atenuado.
+Diálogos y cajones son superficies de lectura opacas en todos los temas, también con cristal, para que el texto pase 4.5:1 sobre el fondo atenuado. El cristal queda para el cromo: popovers, menús, toasts, sidebar y tarjetas.
