@@ -6,16 +6,18 @@ type AgentTaskBoardEmptyProps = {
   labels: AgentTaskBoardLabels
   /** True when tasks exist but none match the filters. */
   filtered: boolean
+  /** Hides "Clear filters" when only filters without a control are set. */
+  canClear?: boolean
   onClear: () => void
 }
 
-function AgentTaskBoardEmpty({ labels, filtered, onClear }: AgentTaskBoardEmptyProps) {
+function AgentTaskBoardEmpty({ labels, filtered, canClear = true, onClear }: AgentTaskBoardEmptyProps) {
   return (
     <Empty data-slot="agent-task-board-empty">
       <EmptyHeader>
         <EmptyDescription>{filtered ? labels.empty.filtered : labels.empty.board}</EmptyDescription>
       </EmptyHeader>
-      {filtered && (
+      {filtered && canClear && (
         <Button variant="outline" onClick={onClear}>
           {labels.filters.clear}
         </Button>

@@ -276,6 +276,57 @@ describe("stage filter", () => {
   })
 })
 
+describe("filter controls", () => {
+  test("filterControls hides the project filter, which still applies from filters and to agents", async () => {
+    const tasks = sampleTasks.map((task, index) => ({ ...task, project: index % 2 === 0 ? "docs" : "app" }))
+    const onFiltersChange = vi.fn()
+    const { unmount } = renderBoard({ tasks })
+    await tick()
+    expect(within(screen.getByRole("group", { name: "Filters" })).getByText("Project")).toBeTruthy()
+    unmount()
+
+    renderBoard({
+      tasks,
+      filterControls: ["query", "profile", "model", "stage"],
+      defaultFilters: { project: "docs" },
+      onFiltersChange,
+    })
+    await tick()
+    const filters = screen.getByRole("group", { name: "Filters" })
+    expect(within(filters).queryByText("Project")).toBeNull()
+    expect(within(filters).getByText("Profile")).toBeTruthy()
+    const docs = tasks.filter((task) => task.project === "docs").map((task) => task.id)
+    expect(visibleIds().toSorted()).toEqual(docs.toSorted())
+    expect(screen.queryByRole("button", { name: "Clear filters" })).toBeNull()
+    expect(onPage().map((entry) => entry.label)).not.toContain("Project")
+
+    await user().click(within(screen.getByRole("group", { name: "Stage" })).getByRole("button", { name: /^No stage/ }))
+    expect(onFiltersChange).toHaveBeenLastCalledWith({ project: "docs", stage: [NO_STAGE] })
+    await user().click(screen.getByRole("button", { name: "Clear filters" }))
+    expect(onFiltersChange).toHaveBeenLastCalledWith({ project: "docs" })
+
+    const result = await agent.act({ steps: [{ ref: "Agent tasks", action: "filter", args: [{ project: "app" }] }] })
+    expect(result.ok, result.error?.message).toBe(true)
+    expect(onFiltersChange).toHaveBeenLastCalledWith({ project: "app" })
+    expect(visibleIds().toSorted()).toEqual(
+      tasks
+        .filter((task) => task.project === "app")
+        .map((task) => task.id)
+        .toSorted(),
+    )
+  })
+
+  test("with no controls, the toolbar keeps only the views; a host filter that matches nothing offers no clear", async () => {
+    renderBoard({ filterControls: [], defaultFilters: { query: "no such task" } })
+    await tick()
+    expect(screen.queryByRole("group", { name: "Filters" })).toBeNull()
+    expect(screen.queryByRole("group", { name: "Stage" })).toBeNull()
+    expect(screen.getByRole("radiogroup", { name: "View" })).toBeTruthy()
+    expect(screen.getByText("No tasks match these filters.")).toBeTruthy()
+    expect(screen.queryByRole("button", { name: "Clear filters" })).toBeNull()
+  })
+})
+
 describe("backlog", () => {
   test("the third view lists proposals and tasks that aren't ready, grouped with counts", async () => {
     const onApproveProposal = vi.fn()

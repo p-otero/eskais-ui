@@ -10,6 +10,9 @@ interface TaskFilters {
   stage?: string[]
 }
 
+/** A built-in filter control of the board's toolbar, named by the filter it sets. */
+type FilterControl = keyof TaskFilters
+
 interface ColumnConfig {
   status: TaskStatus
   hidden?: boolean
@@ -45,6 +48,8 @@ interface BoardSummary {
 /** The stage filter's id for tasks without a `location`. */
 const NO_STAGE = "__none__"
 
+const FILTER_CONTROLS: readonly FilterControl[] = ["query", "project", "profile", "model", "stage"]
+
 const TASK_STATUSES: readonly TaskStatus[] = ["proposed", "todo", "working", "review", "blocked", "done", "cancelled"]
 const HIDDEN_BY_DEFAULT: ReadonlySet<TaskStatus> = new Set(["cancelled"])
 const UNKNOWN: Quantity = { value: null, quality: "unknown" }
@@ -64,6 +69,14 @@ function filterTasks(tasks: readonly TaskView[], filters: TaskFilters = {}): Tas
       (!filters.stage?.length || filters.stage.includes(task.location?.stage ?? NO_STAGE)) &&
       (!query || [task.id, task.title, task.goal].some((text) => text?.toLowerCase().includes(query))),
   )
+}
+
+/** The filters among `keys` that are set. */
+function activeFilters(filters: TaskFilters, keys: readonly FilterControl[] = FILTER_CONTROLS): FilterControl[] {
+  return keys.filter((key) => {
+    const value = filters[key]
+    return Array.isArray(value) ? value.length > 0 : Boolean(value)
+  })
 }
 
 /** Proposals and the to-do tasks that aren't ready yet: what isn't on its way. */
@@ -202,9 +215,11 @@ function summarize(tasks: readonly TaskView[]): BoardSummary {
 }
 
 export {
+  FILTER_CONTROLS,
   NO_STAGE,
   TASK_STATUSES,
   activeAttempt,
+  activeFilters,
   attemptCount,
   backlogGroups,
   columnOrder,
@@ -219,4 +234,13 @@ export {
   summarize,
   taskCost,
 }
-export type { BoardSummary, ColumnConfig, FilterOptions, SortDirection, SortKey, StatusColumn, TaskFilters }
+export type {
+  BoardSummary,
+  ColumnConfig,
+  FilterControl,
+  FilterOptions,
+  SortDirection,
+  SortKey,
+  StatusColumn,
+  TaskFilters,
+}

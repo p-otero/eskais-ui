@@ -1,6 +1,6 @@
 import type { ReactNode } from "react"
 
-import type { ColumnConfig, TaskFilters } from "@/lib/agent-task-board-model"
+import type { ColumnConfig, FilterControl, TaskFilters } from "@/lib/agent-task-board-model"
 import type { TaskLink, TaskStatus, TaskView, ThreadRef } from "@/lib/agent-task-types"
 import type { Tone } from "@/lib/tone"
 import type { AgentAvatars } from "@/components/ui/agent-avatar"
@@ -24,6 +24,12 @@ interface AgentTaskBoardBaseProps {
   filters?: TaskFilters
   defaultFilters?: TaskFilters
   onFiltersChange?: (filters: TaskFilters) => void
+  /**
+   * The built-in filter controls that show, all that apply by default. Hide one the host already renders, such as
+   * its own project picker: its filter still applies from `filters` or `defaultFilters`, agents can still set it
+   * with `filter`, and "Clear filters" leaves it alone.
+   */
+  filterControls?: readonly FilterControl[]
   columns?: ColumnConfig[]
   onColumnsChange?: (columns: ColumnConfig[]) => void
   /** `"tint"` (default) marks each column with its tone: a dot, a top border and a faint wash. */

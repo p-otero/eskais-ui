@@ -1,6 +1,12 @@
 "use client"
 
-import { NO_STAGE, type FilterOptions, type TaskFilters } from "@/lib/agent-task-board-model"
+import {
+  NO_STAGE,
+  activeFilters,
+  type FilterControl,
+  type FilterOptions,
+  type TaskFilters,
+} from "@/lib/agent-task-board-model"
 import { formatInstant } from "@/lib/time"
 import type { AgentTaskBoardController, BoardView } from "@/components/ui/agent-task-board-primitive"
 import type { AgentTaskBoardLabels } from "@/components/ui/agent-task-labels"
@@ -77,9 +83,12 @@ type AgentTaskBoardToolbarProps = {
   stageCounts?: Readonly<Record<string, number>>
   /** Adds the "No stage" toggle. */
   noStage?: boolean
+  /** The filter controls that show; "Clear filters" clears only these. */
+  controls: readonly FilterControl[]
 }
 
-const CLEARED = { project: null, profile: null, model: null, query: null, stage: null }
+const clearedFilters = (controls: readonly FilterControl[]) =>
+  Object.fromEntries(controls.map((key) => [key, null])) as Record<FilterControl, null>
 
 function AgentTaskBoardToolbar({
   options,
@@ -93,9 +102,13 @@ function AgentTaskBoardToolbar({
   stages,
   stageCounts,
   noStage,
+  controls,
 }: AgentTaskBoardToolbarProps) {
-  const filtered = Object.values(filters).some((value) => (Array.isArray(value) ? value.length > 0 : Boolean(value)))
-  const choices = (["project", "profile", "model"] as const).filter((name) => options[choiceSources[name]].length > 0)
+  const filtered = activeFilters(filters, controls).length > 0
+  const choices = (["project", "profile", "model"] as const).filter(
+    (name) => controls.includes(name) && options[choiceSources[name]].length > 0,
+  )
+  const search = controls.includes("query")
   return (
     <div data-slot="agent-task-board-toolbar" className="@container/agent-task-board-toolbar flex flex-col gap-items">
       <div className="flex flex-wrap items-center justify-between gap-items">
@@ -130,34 +143,41 @@ function AgentTaskBoardToolbar({
           <SegmentedControlItem value="backlog">{labels.views.backlog}</SegmentedControlItem>
         </SegmentedControl>
       </div>
-      <div className="flex">
-        <fieldset aria-label={labels.filters.group} className="flex min-w-0 flex-1 flex-wrap items-end gap-items">
-          <SearchField
-            label={labels.filters.search}
-            clearLabel={labels.filters.clearSearch}
-            placeholder={labels.filters.searchPlaceholder}
-            value={filters.query ?? ""}
-            onValueChange={(value) => controller.filter({ query: value || null }, { reason: "input-change" })}
-            className="min-w-56 flex-2"
-          />
-          {choices.map((name) => (
-            <FilterSelect
-              key={name}
-              name={name}
-              options={options}
-              filters={filters}
-              labels={labels}
-              controller={controller}
-            />
-          ))}
-          {filtered && (
-            <Button variant="ghost" onClick={() => controller.filter(CLEARED, { reason: "clear-press" })}>
-              {labels.filters.clear}
-            </Button>
-          )}
-        </fieldset>
-      </div>
-      {stages && stages.length > 0 && (
+      {(search || choices.length > 0) && (
+        <div className="flex">
+          <fieldset aria-label={labels.filters.group} className="flex min-w-0 flex-1 flex-wrap items-end gap-items">
+            {search && (
+              <SearchField
+                label={labels.filters.search}
+                clearLabel={labels.filters.clearSearch}
+                placeholder={labels.filters.searchPlaceholder}
+                value={filters.query ?? ""}
+                onValueChange={(value) => controller.filter({ query: value || null }, { reason: "input-change" })}
+                className="min-w-56 flex-2"
+              />
+            )}
+            {choices.map((name) => (
+              <FilterSelect
+                key={name}
+                name={name}
+                options={options}
+                filters={filters}
+                labels={labels}
+                controller={controller}
+              />
+            ))}
+            {filtered && (
+              <Button
+                variant="ghost"
+                onClick={() => controller.filter(clearedFilters(controls), { reason: "clear-press" })}
+              >
+                {labels.filters.clear}
+              </Button>
+            )}
+          </fieldset>
+        </div>
+      )}
+      {controls.includes("stage") && stages && stages.length > 0 && (
         <StageFilter
           aria-label={labels.filters.stage}
           stages={stages}
@@ -175,5 +195,5 @@ function AgentTaskBoardToolbar({
   )
 }
 
-export { AgentTaskBoardToolbar }
+export { AgentTaskBoardToolbar, clearedFilters }
 export type { AgentTaskBoardToolbarProps }

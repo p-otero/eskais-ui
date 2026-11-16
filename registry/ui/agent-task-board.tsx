@@ -3,7 +3,9 @@
 import { useCallback, useMemo, useState, type ReactNode } from "react"
 
 import {
+  FILTER_CONTROLS,
   NO_STAGE,
+  activeFilters,
   countByStage,
   filterOptions,
   filterTasks,
@@ -25,7 +27,7 @@ import { AgentTaskBoardDetail } from "@/components/ui/agent-task-board-detail"
 import { AgentTaskBoardEmpty } from "@/components/ui/agent-task-board-empty"
 import { AgentTaskBoardSummary } from "@/components/ui/agent-task-board-summary"
 import { AgentTaskBoardTable } from "@/components/ui/agent-task-board-table"
-import { AgentTaskBoardToolbar } from "@/components/ui/agent-task-board-toolbar"
+import { AgentTaskBoardToolbar, clearedFilters } from "@/components/ui/agent-task-board-toolbar"
 import { agentTaskBoardLabels, agentTaskBoardLabelsEs, resolveLabels } from "@/components/ui/agent-task-labels"
 import { useNow } from "@/components/ui/relative-time"
 import type { TaskDisplayOptions } from "@/components/ui/task-card"
@@ -34,7 +36,6 @@ import { useBoardFocus } from "@/components/ui/use-board-focus"
 
 const NO_FILTERS: TaskFilters = {}
 const NO_COLUMNS: ColumnConfig[] = []
-const CLEARED = { project: null, profile: null, model: null, query: null, stage: null }
 
 function useControllable<T>(value: T | undefined, initial: T) {
   const [own, setOwn] = useState(initial)
@@ -50,7 +51,7 @@ function AgentTaskBoard(props: AgentTaskBoardProps) {
   const { onApproveProposal, onRejectProposal, renderThreadLink, onOpenThread } = props
   const { detailPresentation = "dialog", density = "auto", agentAvatars, columnAccent = "tint" } = props
   const { renderLink, onOpenLink, renderAttachments, renderLocation, stages } = props
-  const { renderBacklogActions, renderCardActions } = props
+  const { renderBacklogActions, renderCardActions, filterControls = FILTER_CONTROLS } = props
   const tones = useMemo(() => ({ ...taskStatusAccentTones, ...props.columnTones }), [props.columnTones])
   const labels = useMemo(() => resolveLabels(props.labels), [props.labels])
   const now = useNow({ now: mode === "snapshot" ? generatedAt : props.now })
@@ -133,11 +134,18 @@ function AgentTaskBoard(props: AgentTaskBoardProps) {
     ],
   )
 
-  const clearFilters = () => controller.filter(CLEARED, { reason: "clear-press" })
+  const clearFilters = () => controller.filter(clearedFilters(filterControls), { reason: "clear-press" })
 
   let content: ReactNode
   if (filtered.length === 0) {
-    content = <AgentTaskBoardEmpty labels={labels} filtered={tasks.length > 0} onClear={clearFilters} />
+    content = (
+      <AgentTaskBoardEmpty
+        labels={labels}
+        filtered={tasks.length > 0}
+        canClear={activeFilters(filters, filterControls).length > 0}
+        onClear={clearFilters}
+      />
+    )
   } else if (view === "table") {
     content = <AgentTaskBoardTable tasks={filtered} selectedTaskId={selectedId} display={display} />
   } else if (view === "backlog") {
@@ -216,6 +224,7 @@ function AgentTaskBoard(props: AgentTaskBoardProps) {
                 stages={stages}
                 stageCounts={stageCounts}
                 noStage={noStage}
+                controls={filterControls}
               />
               <AgentTaskBoardSummary
                 summary={summary}

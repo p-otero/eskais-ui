@@ -24,6 +24,7 @@ interface AgentTaskBoardProps {
   filters?: TaskFilters
   defaultFilters?: TaskFilters
   onFiltersChange?: (filters: TaskFilters) => void
+  filterControls?: Array<"query" | "project" | "profile" | "model" | "stage"> // controles de filtro visibles; por defecto, todos los que aplican
 
   columns?: { status: TaskView["status"]; hidden?: boolean; collapsed?: boolean }[]
   onColumnsChange?: (columns: NonNullable<AgentTaskBoardProps["columns"]>) => void
@@ -131,6 +132,7 @@ interface TaskView {
   - Las horas absolutas muestran la abreviatura de la zona cuando no coincide con la del navegador.
   - Todo tiempo relativo lleva la fecha absoluta en `title` o en un tooltip.
   - Se implementa con `Date` + `Intl`, sin Temporal, en una única utilidad interna.
+- **Controles de filtro** (`filterControls`, por defecto todos): elige qué controles de la barra se muestran, por ejemplo sin `"project"` cuando el host ya pinta su propio selector de proyecto. Un filtro sin control sigue aplicándose si llega en `filters` o `defaultFilters`, la acción `filter` de los agentes acepta todas las claves, y "Clear filters" (en la barra y en el vacío) solo quita los de los controles visibles; si solo hay filtros ocultos, no aparece. Sin `"query"` ni selectores, la barra se queda con las vistas; sin `"stage"`, no hay fila de etapas.
 - **Filtro `model`**: compara con `executed.model`, o con `configured.model` cuando falta el ejecutado. Una tarea coincide si alguno de sus intentos corrió con ese modelo; así, las tareas que cambiaron de modelo por cuota aparecen bajo el que corrió de verdad.
 - **Vista de tabla**: ordenable por columnas (`aria-sort`) y de solo lectura.
 - **Valores**:
