@@ -55,16 +55,18 @@ function Card({ className, render, children, surface = "card", ...props }: CardP
   )
 }
 
+// The header is a container: under 17rem of content (a card of about 20rem) the action wraps below the title,
+// so it can never squeeze the title to nothing; beside it, the title keeps at least 8rem.
 const CardHeader = part(
   "card-header",
-  "grid auto-rows-min items-start gap-x-group gap-y-inline px-inset-surface has-[>[data-slot=card-action]]:grid-cols-[minmax(0,1fr)_auto] [&>:not([data-slot=card-action])]:col-start-1",
+  "@container/card-header grid auto-rows-min items-start gap-x-group gap-y-inline px-inset-surface has-[>[data-slot=card-action]]:grid-cols-[minmax(min(8rem,100%),1fr)_minmax(0,auto)] [&>:not([data-slot=card-action])]:col-start-1 [&>:not([data-slot=card-action])]:@max-[17rem]/card-header:col-span-full",
 )
 
 const CardEyebrow = part("card-eyebrow", "text-meta tracking-meta text-muted-foreground uppercase")
 
 const CardAction = part(
   "card-action",
-  "col-start-2 row-span-2 row-start-1 flex items-center gap-items self-start justify-self-end",
+  "order-last col-span-full flex min-w-0 flex-wrap items-center gap-items self-start justify-self-start @min-[17rem]/card-header:order-none @min-[17rem]/card-header:col-span-1 @min-[17rem]/card-header:col-start-2 @min-[17rem]/card-header:row-span-2 @min-[17rem]/card-header:row-start-1 @min-[17rem]/card-header:justify-end @min-[17rem]/card-header:justify-self-end",
 )
 
 type CardTitleProps = PartProps<"div"> & {

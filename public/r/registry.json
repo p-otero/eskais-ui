@@ -1302,7 +1302,7 @@
           "type": "registry:ui"
         }
       ],
-      "docs": "A `Card` renders `<section>`; once it holds a `CardTitle` it gets `aria-labelledby` pointing at the title, so it is a named region. Give the title `headingLevel` to make it a heading. `CardEyebrow` sits above the title, `CardAction` at the top end of `CardHeader`. `surface` is `card` (default), `dashed` or `none`. To keep a card out of the landmarks (a card per list item), pass `render={<div />}` or `render={<li />}`."
+      "docs": "A `Card` renders `<section>`; once it holds a `CardTitle` it gets `aria-labelledby` pointing at the title, so it is a named region. Give the title `headingLevel` to make it a heading. `CardEyebrow` sits above the title, `CardAction` at the top end of `CardHeader`. The header is a container (`@container/card-header`): the action sits beside the title, which keeps at least 8rem, once the header has 17rem of content (a card of about 20rem), and wraps below the title, start-aligned, in a narrower card. Its buttons wrap among themselves rather than overflow. `surface` is `card` (default), `dashed` or `none`. To keep a card out of the landmarks (a card per list item), pass `render={<div />}` or `render={<li />}`."
     },
     {
       "name": "section",
