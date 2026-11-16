@@ -89,14 +89,18 @@ function DialogHeader({ className, render, ...props }: PartProps<"div">) {
   )
 }
 
-/** The part that scrolls, so the header and footer around it stay in view. */
+/**
+ * The part that scrolls, so the header and footer around it stay in view. It is positioned so the visually hidden
+ * inputs inside Select, Checkbox and other controls are clipped by it, instead of overflowing the dialog and scrolling
+ * the header away when a field takes focus.
+ */
 function DialogBody({ className, render, ...props }: PartProps<"div">) {
   return renderElement(
     "div",
     {
       "data-slot": "dialog-body",
       className: cn(
-        "-mx-inset-surface flex min-h-0 min-w-0 flex-1 flex-col gap-group overflow-y-auto overscroll-contain px-inset-surface",
+        "relative -mx-inset-surface flex min-h-0 min-w-0 flex-1 flex-col gap-group overflow-y-auto overscroll-contain px-inset-surface",
         className,
       ),
       ...props,

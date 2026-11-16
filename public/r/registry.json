@@ -902,7 +902,7 @@
       "name": "field",
       "type": "registry:ui",
       "title": "Field",
-      "description": "UI SDK Field parts: label, description and validation errors wired to the control.",
+      "description": "UI SDK Field parts: label, description and validation errors wired to the control; FieldSet with a legend that names the group.",
       "dependencies": [
         "@ui-sdk/core@0.1.0-beta.5",
         "@ui-sdk/react@0.1.0-beta.5"
@@ -1003,6 +1003,83 @@
           "type": "registry:ui"
         }
       ]
+    },
+    {
+      "name": "form",
+      "type": "registry:ui",
+      "title": "Form",
+      "description": "Forms on react-hook-form with a Standard Schema (Zod, Valibot, Effect): FormField binds one registry control by name, pending submit, server errors mapped to fields, a live root error, focus on the first invalid field, and messages in any language or i18n library.",
+      "dependencies": [
+        "@ui-sdk/core@0.1.0-beta.5",
+        "@ui-sdk/react@0.1.0-beta.5",
+        "react-hook-form@7.91.0",
+        "@hookform/resolvers@7.0.2",
+        "@standard-schema/spec@1.1.0"
+      ],
+      "registryDependencies": [
+        "@eskais/utils",
+        "@eskais/theme",
+        "@eskais/field",
+        "@eskais/input",
+        "@eskais/textarea",
+        "@eskais/checkbox",
+        "@eskais/switch",
+        "@eskais/button",
+        "@eskais/alert"
+      ],
+      "files": [
+        {
+          "path": "registry/ui/form.tsx",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/form-actions.tsx",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/form-context.ts",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/form-field.tsx",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/form-messages.ts",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/form-primitive.ts",
+          "type": "registry:ui"
+        }
+      ],
+      "docs": "`<Form schema defaultValues onSubmit messages label>` with `<FormField name label description required>` around one control: Input, Textarea, NumberInput, Select, Combobox, Checkbox, Switch, RadioGroup, Slider, DatePicker, SegmentedControl or ToggleGroup bind by `name` (no `control` or `render`); `bind` or `render` for anything else, `useFormField()` inside a custom control. Give every field a default value. `onSubmit(values, { setError })` may return a Promise: the submit Button shows `loading`, fields are disabled (`disableWhilePending={false}` keeps them), a second submit is ignored. Throw a `FormServerError(message, fieldErrors)`, `{ fieldErrors, message }` or a Standard Schema issue list (`toFormErrors`) to put errors on fields and in `<FormRootError />` (an `Alert tone=\"destructive\" live`); any other error shows its message there. Focus then goes to the first invalid field, or to the root error. Messages: `messages={formMessagesEs}`, a dictionary, or a function of the issue for i18next, FormatJS or Lingui (`createFormMessages(t)` makes one from `t(key, params)`, keys `form.<code>`); `FormField messages` wins over the form's. An issue is `{ code, field, label, params, message }`; codes: `required`, `minLength`, `maxLength`, `minItems`, `maxItems`, `min`, `max` (params `min`/`max`), `email`, `url`, `pattern`, `invalid`, `server`, or a schema message that looks like a key (`form.email.taken`), or a server error's own `code`. Agents fill fields through their own parts and call the form's `submit` and `reset` when it has a `label`; `<FormActions tone=\"destructive\" confirm=\"…\">` puts `data-agent-confirm` on the submit button and hides the form's `submit` from agents."
+    },
+    {
+      "name": "form-dialog",
+      "type": "registry:ui",
+      "title": "Form Dialog",
+      "description": "A Form inside a Dialog: a scrolling body with a sticky footer, Escape and outside presses blocked while pending, closes on success and returns focus, asks before discarding unsaved changes, and an optional review step before submitting.",
+      "dependencies": [
+        "@ui-sdk/core@0.1.0-beta.5",
+        "@ui-sdk/react@0.1.0-beta.5",
+        "@standard-schema/spec@1.1.0",
+        "class-variance-authority@0.7.1"
+      ],
+      "registryDependencies": [
+        "@eskais/utils",
+        "@eskais/form",
+        "@eskais/dialog",
+        "@eskais/confirm-dialog",
+        "@eskais/button"
+      ],
+      "files": [
+        {
+          "path": "registry/ui/form-dialog.tsx",
+          "type": "registry:ui"
+        }
+      ],
+      "docs": "`<FormDialog trigger title description size schema defaultValues onSubmit submitLabel cancelLabel>` with `FormField`s as children; or control it with `open`/`onOpenChange`. It takes every `Form` prop (`messages`, `disableWhilePending`…) and `FormActions`' `tone`, `confirm` and `secondaryAction`. While `onSubmit` runs, Escape, outside presses and Cancel do nothing; it closes when `onSubmit` resolves and focus returns to the trigger, or to `returnFocus` (UI SDK `finalFocus`). A thrown error keeps it open with the errors on the fields and in the root error. `confirmDiscard=\"Discard changes?\"` asks before Escape, an outside press or Cancel closes it with unsaved changes (`discardLabel`, `keepEditingLabel`). `reviewStep={{ render: (values) => …, editLabel, confirmLabel }}`: submit validates and shows the review, edit returns to the fields with the values kept, confirm runs `onSubmit`; a field error from the server returns to the fields. The body scrolls between the header and the actions, and on narrow screens it is a bottom sheet."
     },
     {
       "name": "card",
@@ -1406,7 +1483,7 @@
       "name": "select",
       "type": "registry:ui",
       "title": "Select",
-      "description": "UI SDK Select: trigger, popup list, items with a check indicator, groups and separators. Works inside Field; agents choose by label.",
+      "description": "UI SDK Select: trigger, popup list, items with a check indicator, groups and separators, or `options` as data with a clearable none choice. Works inside Field; agents choose by label.",
       "dependencies": [
         "@ui-sdk/core@0.1.0-beta.5",
         "@ui-sdk/react@0.1.0-beta.5"
@@ -1422,7 +1499,34 @@
           "path": "registry/ui/select.tsx",
           "type": "registry:ui"
         }
-      ]
+      ],
+      "docs": "Pass `options` (`{ value, label, disabled?, description? }[]`, or groups `{ label, options }[]`) and leave out children: the trigger, list, groups and indicators render for you, and the labels are known before the list opens. `placeholder` shows while nothing is selected. `clearable=\"No team\"` adds a first choice with that label that sets the value to `null` (single selects only). Outside a Field, name it with `aria-label`. With children, the parts API works as before, and `options` still feeds the root's `items`."
+    },
+    {
+      "name": "native-select",
+      "type": "registry:ui",
+      "title": "Native Select",
+      "description": "A styled native <select> for mobile-heavy forms, with the same options shape as Select, a placeholder and a clearable none choice. A small primitive reports it to agents, which a bare <select> is not.",
+      "dependencies": [
+        "@ui-sdk/core@0.1.0-beta.5",
+        "@ui-sdk/react@0.1.0-beta.5"
+      ],
+      "registryDependencies": [
+        "@eskais/utils",
+        "@eskais/theme",
+        "@eskais/input"
+      ],
+      "files": [
+        {
+          "path": "registry/ui/native-select.tsx",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/native-select-primitive.ts",
+          "type": "registry:ui"
+        }
+      ],
+      "docs": "`<NativeSelect options placeholder clearable value onValueChange name required>` inside a `Field`: the platform's own picker, which suits touch screens and long lists better than a popup. `options` takes Select's shape (`{ value, label, disabled? }` and groups `{ label, options }`, rendered as `<optgroup>`); values are strings, and `null` means nothing chosen. Native `required` and form submission work as usual. UI SDK ships no part for a native select, and its agent bridge lists only UI SDK parts, so a bare `<select>` or a `FieldControl` is invisible to agents. NativeSelect renders through its own primitive (`native-select`, `closed`) that lists its choices and takes `setValue` by label or value; an unknown choice is refused with the real ones. Inside a `FormField` it binds like Select."
     },
     {
       "name": "combobox",
@@ -2516,6 +2620,29 @@
           "type": "registry:ui"
         }
       ]
+    },
+    {
+      "name": "date-time-picker",
+      "type": "registry:ui",
+      "title": "Date Time Picker",
+      "description": "A date from the calendar and a time of day as one local \"YYYY-MM-DDTHH:mm\" value, composed from UI SDK DatePicker and TimeInput, with min/max, a time zone suffix and locale formatting.",
+      "dependencies": [
+        "@ui-sdk/core@0.1.0-beta.5",
+        "@ui-sdk/react@0.1.0-beta.5"
+      ],
+      "registryDependencies": [
+        "@eskais/utils",
+        "@eskais/theme",
+        "@eskais/date-picker",
+        "@eskais/input"
+      ],
+      "files": [
+        {
+          "path": "registry/ui/date-time-picker.tsx",
+          "type": "registry:ui"
+        }
+      ],
+      "docs": "`<DateTimePicker value onValueChange min max locale timeZone labels>` inside a `Field`: the field's label names the date and `labels.time` (\"Time\" by default) names the time, which sits in its own inner Field so the two never share an id or a name. Keep the time's label free of the date label's words (agents match labels by their words, so \"Departure\" and \"Departure time\" collide). The value is a local `\"2026-11-02T14:30\"`; `onValueChange` runs once both parts are set, and with `null` when either is cleared. `min`/`max` take the same shape: the date picker stops at their dates, and the time input at their times on those days. `timeZone` shows the zone's short name after the time, describes the time input and sets the calendar's today; the value stays local. `locale` sets the date format and the clock (`hourCycle` overrides it). `name` submits the combined value. Inside a `FormField` it binds like any other control. `TimeInput` is exported, styled, for a time on its own."
     },
     {
       "name": "carousel",

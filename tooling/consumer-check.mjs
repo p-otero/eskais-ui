@@ -32,6 +32,8 @@ const allItems = [
   "search-field",
   "dialog",
   "confirm-dialog",
+  "form",
+  "form-dialog",
   "card",
   "section",
   "badge",
@@ -51,6 +53,7 @@ const allItems = [
   "dropdown-menu",
   "toast",
   "select",
+  "native-select",
   "combobox",
   "segmented-control",
   "checkbox",
@@ -94,6 +97,7 @@ const allItems = [
   "command",
   "calendar",
   "date-picker",
+  "date-time-picker",
   "carousel",
   "resizable",
   "sidebar",
@@ -375,6 +379,9 @@ import { ConfirmDialog } from "@/components/ui/confirm-dialog"
 import { DataState } from "@/components/ui/data-state"
 import { Dialog, DialogContent, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Field, FieldLabel } from "@/components/ui/field"
+import { Form, FormActions, FormField, FormRootError, formMessagesEs } from "@/components/ui/form"
+import { FormDialog } from "@/components/ui/form-dialog"
+import type { StandardSchemaV1 } from "@standard-schema/spec"
 import { Input } from "@/components/ui/input"
 import { PageHeader } from "@/components/ui/page-header"
 import { PageLayout } from "@/components/ui/page-layout"
@@ -411,6 +418,14 @@ const tasks: TaskView[] = [
   },
 ]
 
+const profileSchema: StandardSchemaV1<{ name: string }> = {
+  "~standard": {
+    version: 1,
+    vendor: "consumer",
+    validate: (value) => ({ value: value as { name: string } }),
+  },
+}
+
 const appearance = createAppearance({ theme: "compact" })
 appearance.apply()
 
@@ -435,8 +450,16 @@ function App() {
         <Button loading>Saving</Button>
         <Field><FieldLabel>Name</FieldLabel><Input /></Field>
         <SearchField label="Search" onSearch={() => {}} />
+        <Form schema={profileSchema} defaultValues={{ name: "" }} onSubmit={() => {}} messages={formMessagesEs} label="Profile">
+          <FormField name="name" label="Display name"><Input /></FormField>
+          <FormRootError />
+          <FormActions submitLabel="Save profile" />
+        </Form>
         <MarkdownEditor label="Notes" defaultValue={"# Notes\\n\\n**Bold** and [[link]]\\n"} codeLanguages={markdownCodeLanguages} />
         <MarkdownView markdown="- [x] done" />
+        <FormDialog schema={profileSchema} defaultValues={{ name: "" }} onSubmit={() => {}} trigger="Edit profile" title="Profile" submitLabel="Save" cancelLabel="Cancel" confirmDiscard="Discard changes?" reviewStep={{ render: (values) => <p>{values.name}</p>, editLabel: "Edit", confirmLabel: "Confirm" }}>
+          <FormField name="name" label="Profile name"><Input /></FormField>
+        </FormDialog>
         <Dialog><DialogTrigger>Open</DialogTrigger><DialogContent><DialogTitle>Hi</DialogTitle></DialogContent></Dialog>
         <ConfirmDialog trigger="Delete" title="Delete?" confirmLabel="Delete" tone="destructive" agentConfirm="Deletes it" onConfirm={() => {}} />
       </CardContent>
