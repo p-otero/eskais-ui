@@ -1,7 +1,7 @@
 // Installs registry items into fresh Vite apps with npm or pnpm (no Bun), builds them and checks them in Chrome.
-// Usage: node tooling/consumer-check.mjs [npm|pnpm] [fresh|init|aliases…] (default: all scenarios). `fresh` starts from
-// `@import "tailwindcss"` with every item; `init` from the stylesheet `shadcn init` writes (tooling/fixtures) with
-// the theme items only; `aliases` uses `~/` aliases with items that ship registry:lib files.
+// Usage: node tooling/consumer-check.mjs [npm|pnpm] [fresh|init|aliases|imports…] (default: all). `fresh`: every item
+// on `@import "tailwindcss"`; `init`: the theme items on the stylesheet `shadcn init` writes (tooling/fixtures);
+// `aliases`: `~/` aliases; `imports`: `#ui/*` through package.json `imports` instead of tsconfig paths.
 import { spawn } from "node:child_process"
 import { createReadStream, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, writeFileSync } from "node:fs"
 import { createServer } from "node:http"
@@ -19,6 +19,7 @@ const registryDir = join(repo, "public", "r")
 const allItems = [
   "utils",
   "tone",
+  "test-utils",
   "theme",
   "theme-compact",
   "theme-glass",
@@ -132,6 +133,7 @@ const versions = {
   playwright: "1.65.0",
   "tw-animate-css": "1.4.0",
   cn: "0.5.2",
+  prettier: "3.9.10",
 }
 const devDependencies = [
   "@types/react",
@@ -339,6 +341,30 @@ async function checkEverything(page) {
     throw new Error(`The spacing roles didn't resolve: ${JSON.stringify(result.spacing)}`)
 }
 
+// The rules directly inside a block, given the text after its `{`. shadcn indents nested rules like top-level ones.
+function childRules(block) {
+  const rules = []
+  let depth = 0
+  let text = ""
+  for (const char of block) {
+    if (char === "{") {
+      if (depth === 0) rules.push({ selector: text.trim().replaceAll(/\s+/g, " "), body: "" })
+      else text += char
+      if (depth === 0) text = ""
+      depth++
+    } else if (char === "}") {
+      depth--
+      if (depth < 0) break
+      if (depth === 0) {
+        rules.at(-1).body = text.trim().replaceAll(/\s+/g, " ")
+        text = ""
+      } else text += char
+    } else if (char === ";" && depth === 0) text = ""
+    else text += char
+  }
+  return rules
+}
+
 // The global stylesheet after `shadcn add`, before Tailwind compiles it.
 function checkStylesheet(css) {
   const darkVariants = css.match(/^@custom-variant dark\b.*$/gm) ?? []
@@ -352,11 +378,9 @@ function checkStylesheet(css) {
     throw new Error("shadcn's radius scale is left beside the theme's")
   const bases = [...css.matchAll(/^@layer base \{$/gm)]
   if (bases.length !== 1) throw new Error(`Expected one @layer base, found ${bases.length}`)
-  const base = css.slice(bases[0].index, css.indexOf("\n}", bases[0].index))
-  const rules = [...base.matchAll(/^ {2}([^\s@][^{]*?)\s*\{([^{}]*)\}/gm)].map(([, selector, body]) => ({
-    selector,
-    body: body.trim().replaceAll(/\s+/g, " "),
-  }))
+  const rules = childRules(css.slice(bases[0].index + bases[0][0].length)).filter(
+    ({ selector }) => !selector.startsWith("@"),
+  )
   const selectors = rules.map(({ selector }) => selector)
   if (new Set(selectors).size !== selectors.length) throw new Error(`Duplicated base rules: ${selectors.join(" | ")}`)
   const expected = { "*": "@apply border-border outline-ring/50;", body: "@apply bg-background text-foreground;" }
@@ -521,6 +545,28 @@ function App() {
 createRoot(document.getElementById("root")!).render(<App />)
 `
 
+// A few items with registry:lib files, imported through package.json subpath imports.
+const importsMain = `import { createRoot } from "react-dom/client"
+import { Alert, AlertTitle } from "@/components/ui/alert"
+import { Badge } from "@/components/ui/badge"
+import { ToastStack } from "@/components/ui/toast"
+import { cn } from "@/lib/utils"
+import "./index.css"
+${probes}
+function App() {
+  return (
+    <main className="flex flex-col gap-items p-inset-surface">
+      <Badge tone="violet">Design</Badge>
+      <Alert tone="info"><AlertTitle>Queued</AlertTitle></Alert>
+      <ToastStack labels={{ close: "Dismiss" }} />
+      <Probes />
+    </main>
+  )
+}
+
+createRoot(document.getElementById("root")!).render(<App />)
+`
+
 const scenarios = {
   fresh: {
     css: `@layer ui-sdk;\n@import "tailwindcss";\n`,
@@ -549,8 +595,11 @@ const scenarios = {
     css: `@layer ui-sdk;\n${readFileSync(join(repo, "tooling", "fixtures", "shadcn-init-neutral.css"), "utf8")}\n`,
     seed: { "src/lib/utils.ts": 'export { cn } from "cn"\n' },
     dependencies: ["tw-animate-css", "cn"],
+    devDependencies: ["prettier"],
     items: ["theme", "theme-glass", "font-geist", "tone"],
     addTwice: true,
+    // Then the consumer's formatter rewrites the stylesheet, and another add must still find every rule.
+    format: true,
     main: themeOnlyMain,
     builtCss: ["--brand", "oklch(from var(--brand)", "Geist Variable", ".text-title{"],
     fonts: true,
@@ -575,12 +624,36 @@ const scenarios = {
       "src/components/ui/agent-task-board-primitive.ts",
     ],
   },
+  imports: {
+    css: `@layer ui-sdk;
+@import "tailwindcss";
+`,
+    // Subpath imports in package.json instead of tsconfig paths and a Vite alias: TypeScript, Vite and shadcn read them.
+    imports: {
+      "#components/*": "./src/components/*",
+      "#ui/*": "./src/components/ui/*",
+      "#lib/*": "./src/lib/*",
+      "#hooks/*": "./src/hooks/*",
+    },
+    aliases: { components: "#components", ui: "#ui", utils: "#lib/utils", lib: "#lib", hooks: "#hooks" },
+    // shadcn writes these imports with their .ts and .tsx extensions, as Node resolves subpath imports.
+    rewrite: (source) =>
+      source
+        .replaceAll(/from "@\/components\/ui\/([\w-]+)"/g, 'from "#ui/$1.tsx"')
+        .replaceAll(/from "@\/lib\/([\w-]+)"/g, 'from "#lib/$1.ts"'),
+    items: ["theme", "badge", "alert", "toast"],
+    main: importsMain,
+    builtCss: ["--brand", ".text-title{"],
+    check: async () => {},
+    literals: ["@", "#components", "#ui", "#lib"],
+    files: ["src/lib/utils.ts", "src/lib/tone.ts", "src/components/ui/badge.tsx", "src/components/ui/toast.tsx"],
+  },
 }
 
 // Where shadcn put the files and what the imports point at, for a scenario with its own aliases.
 function checkPlacement(app, scenario) {
   for (const file of scenario.files) if (!existsSync(join(app, file))) throw new Error(`shadcn didn't write ${file}`)
-  for (const literal of ["@", scenario.alias]) {
+  for (const literal of scenario.literals ?? ["@", scenario.alias]) {
     if (existsSync(join(app, literal))) throw new Error(`shadcn wrote files into a literal "${literal}" folder`)
   }
   const sources = readdirSync(join(app, "src"), { recursive: true, withFileTypes: true })
@@ -623,7 +696,8 @@ async function runScenario(name, scenario) {
     private: true,
     type: "module",
     dependencies: pick(["react", "react-dom", ...(scenario.dependencies ?? [])]),
-    devDependencies: pick(devDependencies),
+    devDependencies: pick([...devDependencies, ...(scenario.devDependencies ?? [])]),
+    ...(scenario.imports && { imports: scenario.imports }),
   })
   write("tsconfig.json", {
     compilerOptions: {
@@ -637,7 +711,7 @@ async function runScenario(name, scenario) {
       skipLibCheck: true,
       noEmit: true,
       types: ["vite/client"],
-      paths: { [`${alias}/*`]: ["./src/*"] },
+      ...(scenario.imports ? { allowImportingTsExtensions: true } : { paths: { [`${alias}/*`]: ["./src/*"] } }),
     },
     include: ["src"],
   })
@@ -650,7 +724,7 @@ import { defineConfig } from "vite"
 
 export default defineConfig({
   plugins: [react(), tailwindcss()],
-  resolve: { alias: { "${alias}": fileURLToPath(new URL("./src", import.meta.url)) } },
+  ${scenario.imports ? "" : `resolve: { alias: { "${alias}": fileURLToPath(new URL("./src", import.meta.url)) } },`}
 })
 `,
   )
@@ -666,7 +740,7 @@ export default defineConfig({
     rsc: false,
     tsx: true,
     tailwind: { config: "", css: "src/index.css", baseColor: "neutral", cssVariables: true },
-    aliases: {
+    aliases: scenario.aliases ?? {
       components: `${alias}/components`,
       ui: `${alias}/components/ui`,
       utils: `${alias}/lib/utils`,
@@ -681,16 +755,26 @@ export default defineConfig({
   await run(pm, ["install"])
   const add = () => exec(["shadcn", "add", ...scenario.items.map((item) => `@eskais/${item}`), "--yes", "--overwrite"])
   await add()
-  const stylesheet = readFileSync(join(app, "src", "index.css"), "utf8")
-  checkStylesheet(stylesheet)
-  if (scenario.addTwice) {
+  const readStylesheet = () => readFileSync(join(app, "src", "index.css"), "utf8")
+  checkStylesheet(readStylesheet())
+  const addAgain = async (message, format = async () => {}) => {
+    const before = readStylesheet()
     await add()
-    if (readFileSync(join(app, "src", "index.css"), "utf8") !== stylesheet)
-      throw new Error("Adding the same items again changed the stylesheet")
+    await format()
+    if (readStylesheet() === before) return
+    writeFileSync(join(app, "src", "index.before.css"), before)
+    throw new Error(`${message} (before: src/index.before.css in ${app})`)
+  }
+  if (scenario.addTwice) await addAgain("Adding the same items again changed the stylesheet")
+  if (scenario.format) {
+    const prettier = () => exec(["prettier", "--write", "src/index.css"])
+    await prettier()
+    // shadcn writes back every declaration it owns unformatted, so the file only matches once formatted again.
+    await addAgain("Adding the items to a formatted stylesheet added rules", prettier)
   }
 
   if (scenario.files) checkPlacement(app, scenario)
-  write("src/main.tsx", scenario.main.replaceAll('from "@/', `from "${alias}/`))
+  write("src/main.tsx", scenario.rewrite?.(scenario.main) ?? scenario.main.replaceAll('from "@/', `from "${alias}/`))
   await exec(["tsc", "--noEmit"])
   await exec(["vite", "build"])
   const assets = join(app, "dist", "assets")

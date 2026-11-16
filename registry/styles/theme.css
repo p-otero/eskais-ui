@@ -3,7 +3,10 @@
     @slot;
   }
   @media (prefers-color-scheme: dark) {
-    &:where(:root:not(.light, [data-color-scheme="light"]), :root:not(.light, [data-color-scheme="light"]) *) {
+    &:where(:root:not(.light, [data-color-scheme="light"])) {
+      @slot;
+    }
+    &:where(:root:not(.light, [data-color-scheme="light"]) *) {
       @slot;
     }
   }
@@ -359,11 +362,13 @@
 }
 
 /* Translucency is only legible behind a blur. */
-@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
-  :root,
-  [data-theme],
-  [data-elevation] {
-    --floating-opacity: 100% !important;
+@supports not (backdrop-filter: blur(1px)) {
+  @supports not (-webkit-backdrop-filter: blur(1px)) {
+    :root,
+    [data-theme],
+    [data-elevation] {
+      --floating-opacity: 100% !important;
+    }
   }
 }
 

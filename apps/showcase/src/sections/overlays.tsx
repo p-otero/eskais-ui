@@ -103,6 +103,16 @@ function TaskActions() {
   )
 }
 
+function showToastTypes() {
+  const stay = { duration: Number.POSITIVE_INFINITY }
+  toast("Run queued", { ...stay, description: "Starts in about a minute" })
+  toast.loading("Uploading the attempt log", stay)
+  toast.info("Rebuilding the index", { ...stay, description: "About two minutes left" })
+  toast.success("Task archived", { ...stay, description: "Index the docs" })
+  toast.warning("Quota at 90%", { ...stay, description: "Runs pause at 100%" })
+  toast.error("Deploy failed", { ...stay, description: "The build step exited with code 1" })
+}
+
 function OverlaysSection() {
   return (
     <Section
@@ -142,7 +152,10 @@ function OverlaysSection() {
       <Button variant="secondary" onClick={() => toast("Run queued", { description: "Starts in about a minute" })}>
         Show toast
       </Button>
-      <ToastStack />
+      <Button variant="secondary" onClick={showToastTypes}>
+        Show toast types
+      </Button>
+      <ToastStack maxVisible={6} />
     </Section>
   )
 }

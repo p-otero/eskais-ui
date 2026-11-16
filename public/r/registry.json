@@ -32,6 +32,22 @@
       ]
     },
     {
+      "name": "test-utils",
+      "type": "registry:lib",
+      "title": "Test utils",
+      "description": "Testing Library helpers that skip UI SDK's live regions: getToast, queryToast, queryToasts, queryAlerts, queryStatuses, isAnnouncer, ignoreAnnouncer, readAnnouncements and resetAnnouncer.",
+      "docs": "For tests only. UI SDK announces through two hidden live regions in <body> (`role=\"status\"` and `role=\"alert\"`, marked `data-ui-sdk-announcer`) that keep the last text they announced, so `getByRole(\"alert\")` and `getByText` can find them after a toast has closed. Find toasts with `getToast(text)` or `[data-slot=\"toast\"]`, query inside `within(screen.getByRole(\"region\", { name: \"Notifications\" }))`, pass `{ ignore: ignoreAnnouncer }` to text queries, and call `resetAnnouncer()` in `afterEach`.",
+      "devDependencies": [
+        "@testing-library/dom@10.4.2"
+      ],
+      "files": [
+        {
+          "path": "registry/lib/test-utils.ts",
+          "type": "registry:lib"
+        }
+      ]
+    },
+    {
       "name": "theme",
       "type": "registry:theme",
       "title": "Theme",
@@ -46,7 +62,10 @@
             "@slot": {}
           },
           "@media (prefers-color-scheme: dark)": {
-            "&:where(:root:not(.light, [data-color-scheme=\"light\"]), :root:not(.light, [data-color-scheme=\"light\"]) *)": {
+            "&:where(:root:not(.light, [data-color-scheme=\"light\"]))": {
+              "@slot": {}
+            },
+            "&:where(:root:not(.light, [data-color-scheme=\"light\"]) *)": {
               "@slot": {}
             }
           }
@@ -166,7 +185,39 @@
           "--neutral-border": "oklch(0.86 var(--neutral-chroma) var(--neutral-hue))",
           "--skeleton": "color-mix(in oklab, var(--foreground) 10%, transparent)"
         },
-        ".dark [data-palette], [data-palette].dark": {
+        ".dark [data-palette]": {
+          "--background": "oklch(0.145 var(--neutral-chroma) var(--neutral-hue))",
+          "--foreground": "oklch(0.985 var(--neutral-chroma) var(--neutral-hue))",
+          "--card": "oklch(0.205 var(--neutral-chroma) var(--neutral-hue))",
+          "--card-foreground": "oklch(0.985 var(--neutral-chroma) var(--neutral-hue))",
+          "--popover": "oklch(0.205 var(--neutral-chroma) var(--neutral-hue))",
+          "--popover-foreground": "oklch(0.985 var(--neutral-chroma) var(--neutral-hue))",
+          "--primary": "oklch(from var(--brand) max(l, 1.127 - l, 0.72) c h)",
+          "--primary-foreground": "color( from var(--primary) xyz-d65 calc( 0.95047 * clamp(min(0.008615, max(0, (y - 0.179) * 0.2)), (0.179 - y) * 1e6, max(0.955672, 1 - (0.179 - y) * 4.5)) ) clamp(min(0.008615, max(0, (y - 0.179) * 0.2)), (0.179 - y) * 1e6, max(0.955672, 1 - (0.179 - y) * 4.5)) calc( 1.08883 * clamp(min(0.008615, max(0, (y - 0.179) * 0.2)), (0.179 - y) * 1e6, max(0.955672, 1 - (0.179 - y) * 4.5)) ) )",
+          "--secondary": "oklch(0.269 var(--neutral-chroma) var(--neutral-hue))",
+          "--secondary-foreground": "oklch(0.985 var(--neutral-chroma) var(--neutral-hue))",
+          "--muted": "oklch(0.269 var(--neutral-chroma) var(--neutral-hue))",
+          "--muted-foreground": "oklch(0.76 var(--neutral-chroma) var(--neutral-hue))",
+          "--accent": "oklch(from var(--brand) 0.269 min(c, 0.04) h)",
+          "--accent-foreground": "oklch(0.985 var(--neutral-chroma) var(--neutral-hue))",
+          "--link": "oklch(from var(--link-brand) max(l, 1.127 - l, 0.74) c h)",
+          "--link-soft": "oklch(from var(--link-brand) clamp(0.74, max(l, 1.127 - l), 0.82) calc(c * 0.55) h)",
+          "--border": "oklch(1 var(--neutral-chroma) var(--neutral-hue) / 10%)",
+          "--input": "oklch(1 var(--neutral-chroma) var(--neutral-hue) / 15%)",
+          "--input-strong": "oklch(0.55 var(--neutral-chroma) var(--neutral-hue))",
+          "--field": "oklch(1 var(--neutral-chroma) var(--neutral-hue) / 5%)",
+          "--floating-border": "oklch(1 var(--neutral-chroma) var(--neutral-hue) / 12%)",
+          "--ring": "oklch(from var(--primary) min(l, 0.708) c h)",
+          "--series-positive": "var(--success)",
+          "--series-negative": "var(--destructive)",
+          "--series-target": "color-mix(in oklab, var(--foreground) 80%, var(--background))",
+          "--series-remaining": "color-mix(in oklab, var(--muted-foreground) 70%, var(--muted))",
+          "--neutral-soft": "oklch(0.3 var(--neutral-chroma) var(--neutral-hue))",
+          "--neutral-soft-foreground": "oklch(0.9 var(--neutral-chroma) var(--neutral-hue))",
+          "--neutral-border": "oklch(0.42 var(--neutral-chroma) var(--neutral-hue))",
+          "--skeleton": "color-mix(in oklab, var(--foreground) 14%, transparent)"
+        },
+        "[data-palette].dark": {
           "--background": "oklch(0.145 var(--neutral-chroma) var(--neutral-hue))",
           "--foreground": "oklch(0.985 var(--neutral-chroma) var(--neutral-hue))",
           "--card": "oklch(0.205 var(--neutral-chroma) var(--neutral-hue))",
@@ -231,9 +282,71 @@
             "--chart-2": "#d95926",
             "--chart-3": "#199e70",
             "--chart-4": "oklch(0.8 0.11 305)",
-            "--chart-5": "oklch(0.86 0.14 90)"
+            "--chart-5": "oklch(0.86 0.14 90)",
+            "--background": "oklch(0.145 var(--neutral-chroma) var(--neutral-hue))",
+            "--foreground": "oklch(0.985 var(--neutral-chroma) var(--neutral-hue))",
+            "--card": "oklch(0.205 var(--neutral-chroma) var(--neutral-hue))",
+            "--card-foreground": "oklch(0.985 var(--neutral-chroma) var(--neutral-hue))",
+            "--popover": "oklch(0.205 var(--neutral-chroma) var(--neutral-hue))",
+            "--popover-foreground": "oklch(0.985 var(--neutral-chroma) var(--neutral-hue))",
+            "--primary": "oklch(from var(--brand) max(l, 1.127 - l, 0.72) c h)",
+            "--primary-foreground": "color( from var(--primary) xyz-d65 calc( 0.95047 * clamp(min(0.008615, max(0, (y - 0.179) * 0.2)), (0.179 - y) * 1e6, max(0.955672, 1 - (0.179 - y) * 4.5)) ) clamp(min(0.008615, max(0, (y - 0.179) * 0.2)), (0.179 - y) * 1e6, max(0.955672, 1 - (0.179 - y) * 4.5)) calc( 1.08883 * clamp(min(0.008615, max(0, (y - 0.179) * 0.2)), (0.179 - y) * 1e6, max(0.955672, 1 - (0.179 - y) * 4.5)) ) )",
+            "--secondary": "oklch(0.269 var(--neutral-chroma) var(--neutral-hue))",
+            "--secondary-foreground": "oklch(0.985 var(--neutral-chroma) var(--neutral-hue))",
+            "--muted": "oklch(0.269 var(--neutral-chroma) var(--neutral-hue))",
+            "--muted-foreground": "oklch(0.76 var(--neutral-chroma) var(--neutral-hue))",
+            "--accent": "oklch(from var(--brand) 0.269 min(c, 0.04) h)",
+            "--accent-foreground": "oklch(0.985 var(--neutral-chroma) var(--neutral-hue))",
+            "--link": "oklch(from var(--link-brand) max(l, 1.127 - l, 0.74) c h)",
+            "--link-soft": "oklch(from var(--link-brand) clamp(0.74, max(l, 1.127 - l), 0.82) calc(c * 0.55) h)",
+            "--border": "oklch(1 var(--neutral-chroma) var(--neutral-hue) / 10%)",
+            "--input": "oklch(1 var(--neutral-chroma) var(--neutral-hue) / 15%)",
+            "--input-strong": "oklch(0.55 var(--neutral-chroma) var(--neutral-hue))",
+            "--field": "oklch(1 var(--neutral-chroma) var(--neutral-hue) / 5%)",
+            "--floating-border": "oklch(1 var(--neutral-chroma) var(--neutral-hue) / 12%)",
+            "--ring": "oklch(from var(--primary) min(l, 0.708) c h)",
+            "--series-positive": "var(--success)",
+            "--series-negative": "var(--destructive)",
+            "--series-target": "color-mix(in oklab, var(--foreground) 80%, var(--background))",
+            "--series-remaining": "color-mix(in oklab, var(--muted-foreground) 70%, var(--muted))",
+            "--neutral-soft": "oklch(0.3 var(--neutral-chroma) var(--neutral-hue))",
+            "--neutral-soft-foreground": "oklch(0.9 var(--neutral-chroma) var(--neutral-hue))",
+            "--neutral-border": "oklch(0.42 var(--neutral-chroma) var(--neutral-hue))",
+            "--skeleton": "color-mix(in oklab, var(--foreground) 14%, transparent)"
           },
-          ":root:where(:not(.light, [data-color-scheme=\"light\"])), :root:where(:not(.light, [data-color-scheme=\"light\"])) [data-palette], :root[data-palette]:where(:not(.light, [data-color-scheme=\"light\"]))": {
+          ":root:where(:not(.light, [data-color-scheme=\"light\"])) [data-palette]": {
+            "--background": "oklch(0.145 var(--neutral-chroma) var(--neutral-hue))",
+            "--foreground": "oklch(0.985 var(--neutral-chroma) var(--neutral-hue))",
+            "--card": "oklch(0.205 var(--neutral-chroma) var(--neutral-hue))",
+            "--card-foreground": "oklch(0.985 var(--neutral-chroma) var(--neutral-hue))",
+            "--popover": "oklch(0.205 var(--neutral-chroma) var(--neutral-hue))",
+            "--popover-foreground": "oklch(0.985 var(--neutral-chroma) var(--neutral-hue))",
+            "--primary": "oklch(from var(--brand) max(l, 1.127 - l, 0.72) c h)",
+            "--primary-foreground": "color( from var(--primary) xyz-d65 calc( 0.95047 * clamp(min(0.008615, max(0, (y - 0.179) * 0.2)), (0.179 - y) * 1e6, max(0.955672, 1 - (0.179 - y) * 4.5)) ) clamp(min(0.008615, max(0, (y - 0.179) * 0.2)), (0.179 - y) * 1e6, max(0.955672, 1 - (0.179 - y) * 4.5)) calc( 1.08883 * clamp(min(0.008615, max(0, (y - 0.179) * 0.2)), (0.179 - y) * 1e6, max(0.955672, 1 - (0.179 - y) * 4.5)) ) )",
+            "--secondary": "oklch(0.269 var(--neutral-chroma) var(--neutral-hue))",
+            "--secondary-foreground": "oklch(0.985 var(--neutral-chroma) var(--neutral-hue))",
+            "--muted": "oklch(0.269 var(--neutral-chroma) var(--neutral-hue))",
+            "--muted-foreground": "oklch(0.76 var(--neutral-chroma) var(--neutral-hue))",
+            "--accent": "oklch(from var(--brand) 0.269 min(c, 0.04) h)",
+            "--accent-foreground": "oklch(0.985 var(--neutral-chroma) var(--neutral-hue))",
+            "--link": "oklch(from var(--link-brand) max(l, 1.127 - l, 0.74) c h)",
+            "--link-soft": "oklch(from var(--link-brand) clamp(0.74, max(l, 1.127 - l), 0.82) calc(c * 0.55) h)",
+            "--border": "oklch(1 var(--neutral-chroma) var(--neutral-hue) / 10%)",
+            "--input": "oklch(1 var(--neutral-chroma) var(--neutral-hue) / 15%)",
+            "--input-strong": "oklch(0.55 var(--neutral-chroma) var(--neutral-hue))",
+            "--field": "oklch(1 var(--neutral-chroma) var(--neutral-hue) / 5%)",
+            "--floating-border": "oklch(1 var(--neutral-chroma) var(--neutral-hue) / 12%)",
+            "--ring": "oklch(from var(--primary) min(l, 0.708) c h)",
+            "--series-positive": "var(--success)",
+            "--series-negative": "var(--destructive)",
+            "--series-target": "color-mix(in oklab, var(--foreground) 80%, var(--background))",
+            "--series-remaining": "color-mix(in oklab, var(--muted-foreground) 70%, var(--muted))",
+            "--neutral-soft": "oklch(0.3 var(--neutral-chroma) var(--neutral-hue))",
+            "--neutral-soft-foreground": "oklch(0.9 var(--neutral-chroma) var(--neutral-hue))",
+            "--neutral-border": "oklch(0.42 var(--neutral-chroma) var(--neutral-hue))",
+            "--skeleton": "color-mix(in oklab, var(--foreground) 14%, transparent)"
+          },
+          ":root[data-palette]:where(:not(.light, [data-color-scheme=\"light\"]))": {
             "--background": "oklch(0.145 var(--neutral-chroma) var(--neutral-hue))",
             "--foreground": "oklch(0.985 var(--neutral-chroma) var(--neutral-hue))",
             "--card": "oklch(0.205 var(--neutral-chroma) var(--neutral-hue))",
@@ -266,31 +379,80 @@
             "--skeleton": "color-mix(in oklab, var(--foreground) 14%, transparent)"
           }
         },
-        "[data-elevation=\"flat\"], [data-elevation=\"flat\"] [data-theme], [data-elevation=\"flat\"][data-theme]": {
+        "[data-elevation=\"flat\"]": {
           "--floating-shadow": "0 0 #0000",
           "--floating-backdrop": "none",
           "--floating-opacity": "100%"
         },
-        "@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px)))": {
-          ":root, [data-theme], [data-elevation]": {
-            "--floating-opacity": "100% !important"
+        "[data-elevation=\"flat\"] [data-theme]": {
+          "--floating-shadow": "0 0 #0000",
+          "--floating-backdrop": "none",
+          "--floating-opacity": "100%"
+        },
+        "[data-elevation=\"flat\"][data-theme]": {
+          "--floating-shadow": "0 0 #0000",
+          "--floating-backdrop": "none",
+          "--floating-opacity": "100%"
+        },
+        "@supports not (backdrop-filter: blur(1px))": {
+          "@supports not (-webkit-backdrop-filter: blur(1px))": {
+            ":root": {
+              "--floating-opacity": "100% !important"
+            },
+            "[data-theme]": {
+              "--floating-opacity": "100% !important"
+            },
+            "[data-elevation]": {
+              "--floating-opacity": "100% !important"
+            }
           }
         },
         "@media (prefers-reduced-transparency: reduce)": {
-          ":root, [data-theme], [data-elevation]": {
+          ":root": {
+            "--floating-opacity": "100% !important",
+            "--floating-backdrop": "none !important"
+          },
+          "[data-theme]": {
+            "--floating-opacity": "100% !important",
+            "--floating-backdrop": "none !important"
+          },
+          "[data-elevation]": {
             "--floating-opacity": "100% !important",
             "--floating-backdrop": "none !important"
           }
         },
         "@supports not (color: oklch(from red l c h))": {
-          ":root, [data-palette]": {
+          ":root": {
             "--primary-foreground": "oklch(0.985 0 0)",
             "--accent": "oklch(0.97 0 0)",
             "--ring": "oklch(0.556 0 0)",
             "--link": "oklch(0.5 0.2 260)",
             "--link-soft": "oklch(0.5 0.11 260)"
           },
-          ".dark, .dark [data-palette], [data-palette].dark": {
+          "[data-palette]": {
+            "--primary-foreground": "oklch(0.985 0 0)",
+            "--accent": "oklch(0.97 0 0)",
+            "--ring": "oklch(0.556 0 0)",
+            "--link": "oklch(0.5 0.2 260)",
+            "--link-soft": "oklch(0.5 0.11 260)"
+          },
+          ".dark": {
+            "--primary": "oklch(0.922 0 0)",
+            "--primary-foreground": "oklch(0.205 0 0)",
+            "--accent": "oklch(0.269 0 0)",
+            "--ring": "oklch(0.708 0 0)",
+            "--link": "oklch(0.8 0.1 260)",
+            "--link-soft": "oklch(0.8 0.06 260)"
+          },
+          ".dark [data-palette]": {
+            "--primary": "oklch(0.922 0 0)",
+            "--primary-foreground": "oklch(0.205 0 0)",
+            "--accent": "oklch(0.269 0 0)",
+            "--ring": "oklch(0.708 0 0)",
+            "--link": "oklch(0.8 0.1 260)",
+            "--link-soft": "oklch(0.8 0.06 260)"
+          },
+          "[data-palette].dark": {
             "--primary": "oklch(0.922 0 0)",
             "--primary-foreground": "oklch(0.205 0 0)",
             "--accent": "oklch(0.269 0 0)",
@@ -299,7 +461,23 @@
             "--link-soft": "oklch(0.8 0.06 260)"
           },
           "@media (prefers-color-scheme: dark)": {
-            ":root:where(:not(.light, [data-color-scheme=\"light\"])), :root:where(:not(.light, [data-color-scheme=\"light\"])) [data-palette], :root[data-palette]:where(:not(.light, [data-color-scheme=\"light\"]))": {
+            ":root:where(:not(.light, [data-color-scheme=\"light\"]))": {
+              "--primary": "oklch(0.922 0 0)",
+              "--primary-foreground": "oklch(0.205 0 0)",
+              "--accent": "oklch(0.269 0 0)",
+              "--ring": "oklch(0.708 0 0)",
+              "--link": "oklch(0.8 0.1 260)",
+              "--link-soft": "oklch(0.8 0.06 260)"
+            },
+            ":root:where(:not(.light, [data-color-scheme=\"light\"])) [data-palette]": {
+              "--primary": "oklch(0.922 0 0)",
+              "--primary-foreground": "oklch(0.205 0 0)",
+              "--accent": "oklch(0.269 0 0)",
+              "--ring": "oklch(0.708 0 0)",
+              "--link": "oklch(0.8 0.1 260)",
+              "--link-soft": "oklch(0.8 0.06 260)"
+            },
+            ":root[data-palette]:where(:not(.light, [data-color-scheme=\"light\"]))": {
               "--primary": "oklch(0.922 0 0)",
               "--primary-foreground": "oklch(0.205 0 0)",
               "--accent": "oklch(0.269 0 0)",
@@ -372,11 +550,30 @@
           "body": {
             "@apply bg-background text-foreground": {}
           },
-          "[data-slot=\"button\"]:not([data-pending]) [data-show=\"pending\"], [data-slot=\"button\"][data-pending] [data-show=\"idle\"], [data-slot=\"alert-dialog-close\"]:not([data-pending]) [data-show=\"pending\"], [data-slot=\"alert-dialog-close\"][data-pending] [data-show=\"idle\"]": {
+          "[data-slot=\"button\"]:not([data-pending]) [data-show=\"pending\"]": {
+            "display": "none"
+          },
+          "[data-slot=\"button\"][data-pending] [data-show=\"idle\"]": {
+            "display": "none"
+          },
+          "[data-slot=\"alert-dialog-close\"]:not([data-pending]) [data-show=\"pending\"]": {
+            "display": "none"
+          },
+          "[data-slot=\"alert-dialog-close\"][data-pending] [data-show=\"idle\"]": {
             "display": "none"
           },
           "@media (prefers-reduced-motion: reduce)": {
-            "*, ::before, ::after": {
+            "*": {
+              "transition-duration": "0.01ms !important",
+              "animation-duration": "0.01ms !important",
+              "animation-iteration-count": "1 !important"
+            },
+            "::before": {
+              "transition-duration": "0.01ms !important",
+              "animation-duration": "0.01ms !important",
+              "animation-iteration-count": "1 !important"
+            },
+            "::after": {
               "transition-duration": "0.01ms !important",
               "animation-duration": "0.01ms !important",
               "animation-iteration-count": "1 !important"
@@ -743,9 +940,11 @@
           "--floating-backdrop": "blur(calc(var(--glass-blur) * 1.5)) saturate(var(--glass-saturation))",
           "--floating-shadow": "inset 0 1px 0 oklch(1 0 0 / 0.3), 0 4px 12px -4px oklch(0 0 0 / 0.15), 0 24px 64px -16px oklch(0 0 0 / 0.45)"
         },
-        "@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px)))": {
-          "[data-theme=\"glass\"]": {
-            "--glass-opacity": "100% !important"
+        "@supports not (backdrop-filter: blur(1px))": {
+          "@supports not (-webkit-backdrop-filter: blur(1px))": {
+            "[data-theme=\"glass\"]": {
+              "--glass-opacity": "100% !important"
+            }
           }
         },
         "@media (prefers-reduced-transparency: reduce)": {
@@ -1468,7 +1667,7 @@
       "name": "toast",
       "type": "registry:ui",
       "title": "Toast",
-      "description": "UI SDK toasts: ToastStack renders a styled, announced region; toast() and createToaster() add toasts with actions, cancel and timed dismissal.",
+      "description": "UI SDK toasts: ToastStack renders a styled, announced region with a tone icon per type; toast() and createToaster() add toasts with actions, cancel and timed dismissal.",
       "dependencies": [
         "@ui-sdk/core@0.1.0-beta.5",
         "@ui-sdk/react@0.1.0-beta.5",
@@ -1478,14 +1677,16 @@
         "@eskais/utils",
         "@eskais/tone",
         "@eskais/theme",
-        "@eskais/button"
+        "@eskais/button",
+        "@eskais/spinner"
       ],
       "files": [
         {
           "path": "registry/ui/toast.tsx",
           "type": "registry:ui"
         }
-      ]
+      ],
+      "docs": "Place `<ToastStack />` once. Its close buttons are named `Dismiss`: pass `labels={{ close: \"…\" }}` in the page's language. Each type shows a decorative icon in its tone colour (a spinner while loading, none for `default`); the text still has to say what happened. Only the toasts take pointer events, and timers pause on focus or a pointer resting `hoverDelay` ms (300). In tests, find toasts with `[data-slot=\"toast\"]` or `@eskais/test-utils`, not page-wide text: UI SDK copies each toast into a live region that outlives it."
     },
     {
       "name": "select",

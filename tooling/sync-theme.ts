@@ -40,6 +40,42 @@ function tree(css: string): CssTree {
   return parse()
 }
 
+function topLevelSelectors(selector: string) {
+  const parts: string[] = []
+  let depth = 0
+  let start = 0
+  for (let index = 0; index < selector.length; index++) {
+    const char = selector[index]
+    if (char === "(" || char === "[") depth++
+    else if (char === ")" || char === "]") depth--
+    else if (char === "," && depth === 0) {
+      parts.push(selector.slice(start, index).trim())
+      start = index + 1
+    }
+  }
+  return [...parts, selector.slice(start).trim()]
+}
+
+// shadcn finds the rule to merge into by comparing selector strings, and formatters (Prettier, Biome, oxfmt) put each
+// selector of a list on its own line, so a list never matches again and a second add appends a duplicate. One rule
+// per selector keeps every selector's specificity.
+function oneSelectorPerRule(node: CssTree): CssTree {
+  const result: CssTree = {}
+  for (const [key, value] of Object.entries(node)) {
+    if (typeof value === "string") {
+      result[key] = value
+      continue
+    }
+    const body = oneSelectorPerRule(value)
+    const selectors = key.startsWith("@") ? [key] : topLevelSelectors(key)
+    for (const selector of selectors) {
+      const existing = result[selector]
+      result[selector] = typeof existing === "object" ? { ...existing, ...body } : body
+    }
+  }
+  return result
+}
+
 const registry = JSON.parse(readFileSync(registryPath, "utf8")) as { items: Item[] }
 const item = (name: string) => {
   const found = registry.items.find((entry) => entry.name === name)
@@ -88,7 +124,7 @@ const dark = split({ ...vars(".dark"), ...vars(derivedDark) })
 
 // shadcn writes cssVars to :root and .dark only; the palette scopes that repeat the derivation go in `css`.
 item("theme").cssVars = { theme: themeVars, light: light.cssVars, dark: dark.cssVars }
-item("theme").css = {
+item("theme").css = oneSelectorPerRule({
   ...customVariants,
   ":root": light.css,
   ".dark": dark.css,
@@ -103,9 +139,9 @@ item("theme").css = {
   "@layer components": theme["@layer components"] ?? {},
   // Apps that skip `shadcn init` have no `* { border-color }` rule, so borders fall back to currentColor.
   "@layer base": theme["@layer base"] ?? {},
-}
-item("palettes").css = tree(read("palettes.css"))
-item("theme-compact").css = tree(read("theme-compact.css"))
-item("theme-glass").css = tree(read("theme-glass.css"))
+})
+item("palettes").css = oneSelectorPerRule(tree(read("palettes.css")))
+item("theme-compact").css = oneSelectorPerRule(tree(read("theme-compact.css")))
+item("theme-glass").css = oneSelectorPerRule(tree(read("theme-glass.css")))
 
 writeFileSync(registryPath, `${JSON.stringify(registry, null, 2)}\n`)

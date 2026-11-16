@@ -48,7 +48,8 @@ Spacing is chosen by role. The values change with the theme (compact is tighter)
 1. Only a colour with its own `--color-x` in `@theme inline` goes to `cssVars`; sync-theme moves seeds, shapes, shadows and colours computed with `var()`, `color()` or `color-mix()` to `css` rules on `:root` and `.dark`. A test fails otherwise.
 2. `@theme inline` defines the whole radius scale, `sm` to `4xl`, so it replaces the one `shadcn init` writes.
 3. The base rules use the `@apply` lists `shadcn init` writes; shadcn merges an item's `@apply` into an existing one.
-4. `node tooling/consumer-check.mjs` installs the theme into the stylesheet `shadcn init` writes (`tooling/fixtures`) and fails on a self-reference, a leftover radius, a duplicated base rule or a second `add` that changes the file.
+4. `node tooling/consumer-check.mjs` installs the theme into the stylesheet `shadcn init` writes (`tooling/fixtures`) and fails on a self-reference, a leftover radius, a duplicated base rule or a second `add` that changes the file, also after Prettier has formatted it.
+5. shadcn merges a rule by its exact selector or at-rule params, and formatters put each selector of a list on its own line and wrap past 80 columns. So sync-theme writes one rule per selector, and every key in an item's `css` fits in 80 columns at four spaces per level; a test fails otherwise. Write a long `@supports not (a or b)` as two nested `@supports not`.
 
 ## Elevation
 
@@ -124,7 +125,7 @@ Every tone also has soft tokens, for chips and tinted surfaces: `--{tone}-soft` 
 | `StatusPill`       | `tone`                   | `neutral`        | also `muted`, for an inactive state                                                                                                          |
 | `StatusDot`        | `tone`, `label`, `pulse` | `neutral`        | a dot with a screen-reader `label`; the pulse stops under reduced motion                                                                     |
 | `Progress`/`Meter` | `tone` on the root       | none (`primary`) | colours the indicator                                                                                                                        |
-| `Toast`            | `tone`, or from the type | from `type`      | `toastTone(type)`: `error` is `destructive`, `default` and `loading` are `neutral`                                                           |
+| `Toast`            | `tone`, or from the type | from `type`      | `toastTone(type)`: `error` is `destructive`, `default` and `loading` are `neutral`; `ToastIcon` draws the tone (a spinner for `loading`)     |
 
 Never add a component-specific word for these (`error`, `danger`, `positive`); map it to a tone.
 

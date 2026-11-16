@@ -12,24 +12,84 @@ import {
 } from "@ui-sdk/react/toast"
 import type { ToastType } from "@ui-sdk/react/toast"
 import type { VariantProps } from "class-variance-authority"
-import type { ComponentProps } from "react"
+import { useCallback } from "react"
+import type { ComponentProps, Ref } from "react"
 
 import { buttonVariants } from "@/components/ui/button"
+import { Spinner } from "@/components/ui/spinner"
 import type { Tone } from "@/lib/tone"
 import { cn, cnState } from "@/lib/utils"
 
 type ButtonLook = VariantProps<typeof buttonVariants>
 
 // The region is a manual popover in the top layer, so the UA popover box (inset, margin, border, canvas) is reset.
+// It takes no pointer events, so only the toasts cover the page beneath.
 const toastRegionClassName =
   // oxlint-disable-next-line eskais/spacing-tokens -- the offset from the viewport edge pairs with w-[calc(100%-2rem)]
-  "fixed inset-auto z-toast m-4 w-[calc(100%-2rem)] max-w-88 overflow-visible border-0 bg-transparent p-0 data-[side=bottom]:bottom-0 data-[side=top]:top-0 data-[align=end]:end-0 data-[align=start]:start-0 data-[align=center]:left-1/2 data-[align=center]:mx-0 data-[align=center]:-translate-x-1/2 [&>[data-slot=toast-list]]:m-0 [&>[data-slot=toast-list]]:flex [&>[data-slot=toast-list]]:list-none [&>[data-slot=toast-list]]:flex-col [&>[data-slot=toast-list]]:gap-items [&>[data-slot=toast-list]]:p-0 data-[side=bottom]:[&>[data-slot=toast-list]]:flex-col-reverse"
+  "pointer-events-none fixed inset-auto z-toast m-4 w-[calc(100%-2rem)] max-w-88 overflow-visible border-0 bg-transparent p-0 data-[side=bottom]:bottom-0 data-[side=top]:top-0 data-[align=end]:end-0 data-[align=start]:start-0 data-[align=center]:left-1/2 data-[align=center]:mx-0 data-[align=center]:-translate-x-1/2 [&>[data-slot=toast-list]]:m-0 [&>[data-slot=toast-list]]:flex [&>[data-slot=toast-list]]:list-none [&>[data-slot=toast-list]]:flex-col [&>[data-slot=toast-list]]:gap-items [&>[data-slot=toast-list]]:p-0 data-[side=bottom]:[&>[data-slot=toast-list]]:flex-col-reverse"
 
 const toastClassName =
-  "flex flex-wrap items-center gap-x-items gap-y-inline surface-floating px-inset-surface py-group text-sm outline-none select-none translate-x-(--toast-swipe-x) translate-y-(--toast-swipe-y) transition duration-panel ease-standard focus-visible:ring-2 focus-visible:ring-ring data-swiping:transition-none data-ending-style:opacity-0 data-starting-style:scale-95 data-starting-style:opacity-0 motion-reduce:transition-opacity motion-reduce:data-starting-style:scale-100"
+  // oxlint-disable-next-line shadcn/no-arbitrary-values -- with an icon, the description starts under the title: the size-4 icon plus the gap-items column gap
+  "has-[>[data-slot=toast-icon]]:[&>[data-slot=toast-description]]:ps-[calc(--spacing(4)+var(--gap-items))] pointer-events-auto flex flex-wrap items-center gap-x-items gap-y-inline surface-floating px-inset-surface py-group text-sm outline-none select-none translate-x-(--toast-swipe-x) translate-y-(--toast-swipe-y) transition duration-panel ease-standard focus-visible:ring-2 focus-visible:ring-ring data-swiping:transition-none data-ending-style:opacity-0 data-starting-style:scale-95 data-starting-style:opacity-0 motion-reduce:transition-opacity motion-reduce:data-starting-style:scale-100"
 
-function ToastRegion({ className, ...props }: ComponentProps<typeof ToastRegionPrimitive>) {
-  return <ToastRegionPrimitive className={cnState(toastRegionClassName, className)} {...props} />
+type ToastRegionProps = ComponentProps<typeof ToastRegionPrimitive> & {
+  /** How long the pointer has to rest on the toasts, in ms, before their timers pause. Focus pauses them at once. */
+  hoverDelay?: number
+}
+
+// UI SDK pauses the timers on the region's first pointerenter, so a pointer passing over on its way to the page would
+// hold the toasts. A capture listener on the region runs before UI SDK's own one: it holds the enter back and replays
+// it once the pointer has rested, and drops the matching leave when the enter never got through. Enter and leave don't
+// bubble, but a toast's own pass through the region's capture phase, so only the region's are handled.
+function delayHover(region: HTMLElement, delay: number) {
+  let timer: ReturnType<typeof setTimeout> | undefined
+  let entered = false
+  let replaying = false
+  const enter = (event: PointerEvent) => {
+    if (replaying || event.target !== region || event.pointerType === "touch") return
+    event.stopImmediatePropagation()
+    clearTimeout(timer)
+    timer = setTimeout(() => {
+      entered = true
+      replaying = true
+      region.dispatchEvent(new PointerEvent("pointerenter", { pointerType: event.pointerType }))
+      replaying = false
+    }, delay)
+  }
+  const leave = (event: PointerEvent) => {
+    if (event.target !== region || event.pointerType === "touch") return
+    clearTimeout(timer)
+    if (!entered) event.stopImmediatePropagation()
+    entered = false
+  }
+  region.addEventListener("pointerenter", enter, { capture: true })
+  region.addEventListener("pointerleave", leave, { capture: true })
+  return () => {
+    clearTimeout(timer)
+    region.removeEventListener("pointerenter", enter, { capture: true })
+    region.removeEventListener("pointerleave", leave, { capture: true })
+  }
+}
+
+function assignRef<T>(ref: Ref<T> | undefined, value: T | null) {
+  if (typeof ref === "function") return ref(value)
+  if (ref) ref.current = value
+}
+
+function ToastRegion({ className, hoverDelay = 300, ref, ...props }: ToastRegionProps) {
+  const regionRef = useCallback(
+    (node: HTMLElement | null) => {
+      const cleanup = assignRef(ref, node)
+      const stopDelaying = node ? delayHover(node, hoverDelay) : undefined
+      return () => {
+        stopDelaying?.()
+        if (typeof cleanup === "function") cleanup()
+        else assignRef(ref, null)
+      }
+    },
+    [hoverDelay, ref],
+  )
+  return <ToastRegionPrimitive ref={regionRef} className={cnState(toastRegionClassName, className)} {...props} />
 }
 
 const toastTypeTones = {
@@ -112,17 +172,83 @@ function CloseIcon() {
   )
 }
 
-type ToastStackProps = Omit<ComponentProps<typeof ToastRegionPrimitive>, "children"> & {
-  /** Accessible name of each toast's close button. */
+const toneIconPaths = {
+  info: "M12 16v-4M12 8h.01",
+  success: "m8.5 12 2.5 2.5 4.5-5",
+  warning: "M12 9v4M12 17h.01M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z",
+  destructive: "M12 8v4M12 16h.01",
+} satisfies Partial<Record<Tone, string>>
+
+const toneIconClassNames = {
+  info: "text-info",
+  success: "text-success",
+  warning: "text-warning",
+  destructive: "text-destructive",
+} satisfies Record<keyof typeof toneIconPaths, string>
+
+type ToastIconProps = Omit<ComponentProps<"span">, "children"> & {
+  /** The toast's type: `loading` shows a spinner, and the others the icon of their tone. */
+  type?: ToastType
+  /** Overrides the tone of the type. `neutral` and `violet` have no icon. */
+  tone?: Tone
+}
+
+/** A decorative mark in the tone's colour. The toast's text still says what happened. */
+function ToastIcon({ type = "default", tone, className, ...props }: ToastIconProps) {
+  const resolved = tone ?? toastTone(type)
+  const loading = type === "loading" && tone === undefined
+  if (!loading && !(resolved in toneIconPaths)) return null
+  const key = resolved as keyof typeof toneIconPaths
+  return (
+    <span
+      data-slot="toast-icon"
+      data-tone={loading ? "loading" : resolved}
+      aria-hidden="true"
+      className={cn("flex shrink-0", loading ? "text-muted-foreground" : toneIconClassNames[key], className)}
+      {...props}
+    >
+      {loading ? (
+        <Spinner size="md" />
+      ) : (
+        <svg
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          className="size-4"
+        >
+          {key !== "warning" && <circle cx="12" cy="12" r="10" />}
+          <path d={toneIconPaths[key]} />
+        </svg>
+      )}
+    </span>
+  )
+}
+
+type ToastStackLabels = {
+  /** The accessible name of each toast's close button. */
+  close: string
+}
+
+const toastStackLabels: ToastStackLabels = { close: "Dismiss" }
+
+type ToastStackProps = Omit<ToastRegionProps, "children"> & {
+  /** Accessible names, in the page's language. */
+  labels?: Partial<ToastStackLabels>
+  /** @deprecated Use `labels.close`. */
   closeLabel?: string
 }
 
 // data-agent-hidden by default: an empty region has no name, which leaves agents an unnamed entry.
-function ToastStack({ closeLabel = "Dismiss", ...props }: ToastStackProps) {
+function ToastStack({ labels, closeLabel, ...props }: ToastStackProps) {
+  const close = labels?.close ?? closeLabel ?? toastStackLabels.close
   return (
     <ToastRegion data-agent-hidden {...props}>
       {(item) => (
         <Toast>
+          <ToastIcon type={item.type} />
           <ToastTitle />
           <ToastDescription />
           <ToastAction />
@@ -132,7 +258,7 @@ function ToastStack({ closeLabel = "Dismiss", ...props }: ToastStackProps) {
             </ToastClose>
           ) : (
             item.dismissible !== false && (
-              <ToastClose aria-label={closeLabel} className="size-control-sm px-0">
+              <ToastClose aria-label={close} className="size-control-sm px-0">
                 <CloseIcon />
               </ToastClose>
             )
@@ -148,6 +274,7 @@ export {
   ToastAction,
   ToastClose,
   ToastDescription,
+  ToastIcon,
   ToastRegion,
   ToastStack,
   ToastTitle,
@@ -155,4 +282,4 @@ export {
   toast,
   toastTone,
 }
-export type { ToastProps, ToastStackProps }
+export type { ToastIconProps, ToastProps, ToastRegionProps, ToastStackLabels, ToastStackProps }

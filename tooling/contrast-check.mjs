@@ -172,6 +172,8 @@ const tokenPairs = [
     [`${tone}-border`, "background", 1.4],
     [`${tone}-border`, "card", 1.4],
   ]),
+  // Toast tone icons, drawn in the solid tone over the popover fill.
+  ...["info", "success", "warning", "destructive"].map((tone) => [tone, "popover", 3]),
   ["violet-foreground", "violet", 4.5],
   ["violet", "background", 4.5],
   ["violet", "card", 4.5],
@@ -266,6 +268,15 @@ await withShowcase(async (page) => {
         const scope = palette ? `${palette} ${theme}/${mode}` : `${theme}/${mode}`
         await checkTokens(page, scope)
         await check(page, scope, "body")
+        await page.getByRole("button", { name: "Show toast types" }).click()
+        await page.locator('[data-slot="toast"][data-type="error"]').waitFor()
+        await page.waitForTimeout(250)
+        await check(page, `${scope} toasts`, '[data-slot="toast-region"]')
+        // All at once: a toast that starts closing moves the others, so one-by-one clicks race the layout.
+        await page.evaluate(() => {
+          for (const close of document.querySelectorAll('[data-slot="toast"] [aria-label="Dismiss"]')) close.click()
+        })
+        await page.locator('[data-slot="toast"]').first().waitFor({ state: "detached" })
         for (const popup of popups) {
           await popup.open(page).click()
           await page.locator(popup.selector).first().waitFor()
