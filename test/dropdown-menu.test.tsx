@@ -60,7 +60,7 @@ test("the trigger looks like a button and opens a menu that the arrow keys move 
   trigger.focus()
   await user.keyboard("{Enter}")
   const menu = screen.getByRole("menu")
-  expect(menu.className).toContain("bg-popover/(--glass-opacity)")
+  expect(menu.className).toContain("surface-floating")
   const retry = screen.getByRole("menuitem", { name: /Retry/ })
   expect(document.activeElement).toBe(retry)
 

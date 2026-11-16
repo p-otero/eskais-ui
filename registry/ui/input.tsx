@@ -10,7 +10,7 @@ import type { ComponentProps } from "react"
 import { cnState } from "@/lib/utils"
 
 const fieldSurfaceClassName =
-  "border border-input bg-background/(--glass-opacity) shadow-xs transition-colors aria-invalid:border-destructive data-disabled:cursor-not-allowed data-disabled:opacity-50"
+  "border border-input bg-field/(--glass-opacity) shadow-xs transition-colors hover:border-input-strong/50 aria-invalid:border-destructive data-disabled:cursor-not-allowed data-disabled:opacity-50"
 
 function Input({ className, ...props }: ComponentProps<typeof InputPrimitive>) {
   return (

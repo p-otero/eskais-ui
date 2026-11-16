@@ -23,7 +23,7 @@ function Radio({ className, ...props }: ComponentProps<typeof RadioPrimitive>) {
   return (
     <RadioPrimitive
       className={cnState(
-        "inline-flex size-4 shrink-0 cursor-pointer items-center justify-center rounded-full border border-input bg-background/(--glass-opacity) text-primary shadow-xs transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background aria-invalid:border-destructive data-checked:border-primary data-disabled:cursor-not-allowed data-disabled:opacity-50",
+        "inline-flex size-4 shrink-0 cursor-pointer items-center justify-center rounded-full border border-input-strong bg-background/(--glass-opacity) text-primary shadow-xs transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background aria-invalid:border-destructive data-checked:border-primary data-disabled:cursor-not-allowed data-disabled:opacity-50",
         className,
       )}
       {...props}

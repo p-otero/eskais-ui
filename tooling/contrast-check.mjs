@@ -132,7 +132,7 @@ const tokenPairs = [
   ["muted-foreground", "background", 4.5],
   ["accent-foreground", "accent", 4.5],
   ["secondary-foreground", "secondary", 4.5],
-  ["input", "background", 3],
+  ["input-strong", "background", 3],
 ]
 
 async function checkTokens(page, scope) {

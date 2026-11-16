@@ -27,7 +27,7 @@ type ChartTooltipContentProps = ChartFormatOptions & {
 }
 
 const tooltipSurfaceClassName =
-  "grid min-w-32 items-start gap-inline rounded-lg border bg-popover/(--glass-opacity) px-inset-item py-inset-item text-xs text-popover-foreground shadow-surface backdrop-surface"
+  "grid min-w-32 items-start gap-inline rounded-lg border border-floating-border bg-floating px-inset-item py-inset-item text-xs text-popover-foreground shadow-floating backdrop-floating"
 
 const indicatorClassName =
   "shrink-0 rounded-xs border-(--indicator-color) bg-(--indicator-color) data-[indicator=dot]:size-2.5 data-[indicator=line]:w-1 data-[indicator=dashed]:w-0 data-[indicator=dashed]:border-2 data-[indicator=dashed]:border-dashed data-[indicator=dashed]:bg-transparent"

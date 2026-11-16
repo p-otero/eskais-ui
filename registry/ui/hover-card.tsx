@@ -14,7 +14,7 @@ import { cnState } from "@/lib/utils"
 
 const arrowClassName =
   // oxlint-disable-next-line eskais/spacing-tokens -- half the arrow's size-2.5 (rounded up), so it straddles the edge
-  "absolute size-2.5 rotate-45 border bg-popover data-[side=bottom]:-top-1.5 data-[side=bottom]:left-(--arrow-offset) data-[side=bottom]:-translate-x-1/2 data-[side=bottom]:border-e-0 data-[side=bottom]:border-b-0 data-[side=top]:-bottom-1.5 data-[side=top]:left-(--arrow-offset) data-[side=top]:-translate-x-1/2 data-[side=top]:border-s-0 data-[side=top]:border-t-0 data-[side=left]:-right-1.5 data-[side=left]:top-(--arrow-offset) data-[side=left]:-translate-y-1/2 data-[side=left]:border-b-0 data-[side=left]:border-s-0 data-[side=right]:-left-1.5 data-[side=right]:top-(--arrow-offset) data-[side=right]:-translate-y-1/2 data-[side=right]:border-e-0 data-[side=right]:border-t-0"
+  "absolute size-2.5 rotate-45 border border-floating-border bg-popover data-[side=bottom]:-top-1.5 data-[side=bottom]:left-(--arrow-offset) data-[side=bottom]:-translate-x-1/2 data-[side=bottom]:border-e-0 data-[side=bottom]:border-b-0 data-[side=top]:-bottom-1.5 data-[side=top]:left-(--arrow-offset) data-[side=top]:-translate-x-1/2 data-[side=top]:border-s-0 data-[side=top]:border-t-0 data-[side=left]:-right-1.5 data-[side=left]:top-(--arrow-offset) data-[side=left]:-translate-y-1/2 data-[side=left]:border-b-0 data-[side=left]:border-s-0 data-[side=right]:-left-1.5 data-[side=right]:top-(--arrow-offset) data-[side=right]:-translate-y-1/2 data-[side=right]:border-e-0 data-[side=right]:border-t-0"
 
 function HoverCardTrigger({ className, ...props }: ComponentProps<typeof HoverCardTriggerPrimitive>) {
   return (

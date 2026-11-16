@@ -52,6 +52,7 @@ Eskais UI components are UI SDK parts styled with Tailwind v4 and semantic token
 | A whole board of agent tasks       | `AgentTaskBoard` with `tasks` and `mode`; see below                                                                                                                                                                                                  |
 | One agent task, compact            | `TaskCard` (selects through a stretched button; chips and proposal buttons stay their own tab stops)                                                                                                                                                 |
 | One agent task, in full            | `TaskDetailDialog` (modal, or `presentation="drawer"`) or `TaskDetailPanel` (non-modal); Escape and a close button call `onClose`                                                                                                                    |
+| A bar pinned to an edge            | `Floating side align strategy` (`sticky` default, `fixed`, `absolute`) + `FloatingContent`; put a `FilterBar` or other UI SDK controls inside. Sticky bars go last in their scroll container                                                         |
 | Dates, layout or data table        | `Calendar`/`DatePicker` (ISO, `locale`, `timeZone`), `Carousel`, `Resizable`, `Sidebar` (rail, drawer), `DataTable` (typed columns, `renderPagination`), `PageHeader`, `FilterBar` (a Toolbar)                                                       |
 | Menus, site navigation, paging, ⌘K | `ContextMenu`, `Menubar`, `NavigationMenu`, `Breadcrumb`, `Pagination page pageCount onPageChange labels`, `CommandDialog` + `Command` (pass `shortcut="mod+k"` to the trigger to opt in); `Accordion`, `HoverCard` for disclosure and link previews |
 | A chart                            | `ChartContainer config aria-labelledby` + Recharts (`accessibilityLayer`), `ChartTooltip`/`ChartLegend` + `…Content`, `ChartDataTable`. every series meets 3:1 on the card, aqua (`--chart-3`) only just, so still add a legend or value labels      |
@@ -68,6 +69,10 @@ Eskais UI components are UI SDK parts styled with Tailwind v4 and semantic token
 - **Density.** `density="auto"` (default) applies compact shape and spacing while the board is 75rem wide or less; `"compact"` always, `"comfortable"` never. It needs `@eskais/theme-compact`.
 - **State.** `view`, `filters`, `columns` and `selectedTaskId` are each controlled or uncontrolled (`defaultView`, `defaultFilters`, `defaultSelectedTaskId`). Cancelled tasks are hidden until `columns` shows them.
 - **Static.** It works as one HTML file with no network: `node tooling/static-board.mjs` builds and checks one.
+
+## Elevation
+
+Surfaces (cards, columns, panels) use `shadow-surface`. Anything that floats (popover, menu, list popup, toast, dialog, a `Floating` bar) uses the floating level: `surface-floating`, or its parts `shadow-floating`, `rounded-floating`, `bg-floating`, `backdrop-floating`, `border-floating-border`. Tokens: `--floating-shadow`, `--floating-radius`, `--floating-backdrop`, `--floating-opacity`, `--floating-border`, `--floating-offset` (see AGENTS.md "Elevation"). The fill is translucent and blurred by default, opaque without `backdrop-filter` or with reduced transparency. `data-elevation="flat"` on any ancestor removes the depth. Never use viewport-height units (`vh`, `dvh`, `h-screen`) to place floating UI; it takes its position from its container.
 
 ## Separate the layers
 
@@ -86,7 +91,8 @@ Eskais UI components are UI SDK parts styled with Tailwind v4 and semantic token
 
 ## Style
 
-- Use the variants (`variant`, `size`) and the semantic tokens: `background`, `foreground`, `primary`, `secondary`, `muted`, `accent`, `destructive`, `success`, `warning`, `info`, `border`, `input`, `ring`, `overlay`.
+- Use the variants (`variant`, `size`) and the semantic tokens: `background`, `foreground`, `primary`, `secondary`, `muted`, `accent`, `destructive`, `success`, `warning`, `info`, `border`, `input`, `input-strong`, `field`, `ring`, `overlay`.
+- Text fields take a soft `border-input` edge on a `bg-field` fill; checkboxes, radios and switch tracks, which nothing else identifies, take `input-strong` (3:1).
 - Style state with UI SDK attributes: `data-pending`, `data-disabled`, `data-open`, `data-starting-style`, `data-ending-style`.
 - Use the shape and density tokens instead of fixed sizes: `rounded-control`, `rounded-choice` (checkbox, textarea), `rounded-surface`, `h-control` (`-sm`, `-lg`), `shadow-surface`, and the spacing roles below. Surfaces that may turn glassy use `bg-<color>/(--glass-opacity)` and `backdrop-surface`.
 - Theme and color scheme are app-level: `createAppearance({ colorScheme: "system" })` and `<Appearance appearance={…}>` from `@eskais/appearance` keep `.dark` and `data-theme` on `<html>` in sync; call `appearance.apply()` before the first render. Don't add a theme prop to a component.

@@ -73,7 +73,7 @@ test("Enter opens a menu, arrows switch menus while open, Escape closes and retu
   const file = screen.getByRole("menuitem", { name: "File" })
   file.focus()
   await user.keyboard("{Enter}")
-  expect(screen.getByRole("menu").className).toContain("bg-popover/(--glass-opacity)")
+  expect(screen.getByRole("menu").className).toContain("surface-floating")
   expect(document.activeElement).toBe(screen.getByRole("menuitem", { name: /New task/ }))
   await user.keyboard("{ArrowRight}")
   expect(document.activeElement).toBe(screen.getByRole("menuitemcheckbox", { name: "Show cancelled" }))

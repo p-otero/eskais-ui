@@ -14,7 +14,7 @@ function Switch({ className, children, ...props }: ComponentProps<typeof SwitchP
   return (
     <SwitchPrimitive
       className={cnState(
-        "inline-flex h-5 w-9 shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent bg-input shadow-xs transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background aria-invalid:ring-2 aria-invalid:ring-destructive data-checked:bg-primary data-disabled:cursor-not-allowed data-disabled:opacity-50",
+        "inline-flex h-5 w-9 shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent bg-input-strong shadow-xs transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background aria-invalid:ring-2 aria-invalid:ring-destructive data-checked:bg-primary data-disabled:cursor-not-allowed data-disabled:opacity-50",
         className,
       )}
       {...props}

@@ -22,7 +22,10 @@ function tree(css: string): CssTree {
         break
       } else if (char === ";") {
         const colon = buffer.indexOf(":")
-        node[buffer.slice(0, colon).trim()] = buffer.slice(colon + 1).trim()
+        node[buffer.slice(0, colon).trim()] = buffer
+          .slice(colon + 1)
+          .trim()
+          .replaceAll(/\s+/g, " ")
         buffer = ""
       } else {
         buffer += char
@@ -66,7 +69,9 @@ item("theme").css = {
   "[data-palette]": prefixed(derivedLight),
   ".dark [data-palette], [data-palette].dark": prefixed(derivedDark),
   ...Object.fromEntries(
-    Object.entries(theme).filter(([selector]) => selector.startsWith("@utility ") || selector.startsWith("@supports ")),
+    Object.entries(theme).filter(([selector]) =>
+      ["@utility ", "@supports ", "@media ", "[data-elevation"].some((prefix) => selector.startsWith(prefix)),
+    ),
   ),
   // Apps that skip `shadcn init` have no `* { border-color }` rule, so borders fall back to currentColor.
   "@layer base": theme["@layer base"] ?? {},

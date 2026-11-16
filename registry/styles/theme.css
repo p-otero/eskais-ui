@@ -8,7 +8,7 @@
   --control-height-lg: 2.5rem;
   --control-padding: 0.875rem;
   --choice-radius: calc(var(--radius) / 2);
-  --surface-radius: calc(var(--radius) * 2);
+  --surface-radius: calc(var(--radius) * 1.25);
   --surface-padding: 1.5rem;
   --gap-inline: 0.375rem;
   --gap-items: 0.5rem;
@@ -23,6 +23,14 @@
   --glass-opacity: 100%;
   --glass-blur: 0px;
   --glass-saturation: 1;
+  /* Floating UI (popovers, menus, dialogs, toasts, a Floating bar) sits one level above surfaces. The radius is an
+     item's radius plus the popup's padding, so a pill item stays concentric with its menu. */
+  --floating-radius: calc(min(var(--control-radius), var(--control-height-sm) / 2) + var(--gap-inline));
+  --floating-offset: 1rem;
+  --floating-opacity: 85%;
+  --floating-backdrop: blur(16px) saturate(1.5);
+  --floating-shadow:
+    0 1px 2px -1px oklch(0 0 0 / 0.06), 0 4px 10px -2px oklch(0 0 0 / 0.06), 0 16px 36px -8px oklch(0 0 0 / 0.14);
   --board-column-min-width: 16rem;
   --board-column-max-width: 22rem;
   --board-column-max-height: 40rem;
@@ -66,6 +74,9 @@
   --info: oklch(0.707 0.165 254.624);
   --info-foreground: oklch(0.145 0 0);
   --overlay: oklch(0 0 0 / 0.7);
+  --floating-shadow:
+    inset 0 1px 0 oklch(1 0 0 / 0.05), 0 1px 2px oklch(0 0 0 / 0.3), 0 8px 20px -4px oklch(0 0 0 / 0.4),
+    0 24px 48px -12px oklch(0 0 0 / 0.55);
   --chart-1: #3987e5;
   --chart-2: #d95926;
   --chart-3: #199e70;
@@ -105,7 +116,12 @@
   --accent: oklch(from var(--brand) 0.97 min(c, 0.03) h);
   --accent-foreground: oklch(0.205 var(--neutral-chroma) var(--neutral-hue));
   --border: oklch(0.922 var(--neutral-chroma) var(--neutral-hue));
-  --input: oklch(0.6 var(--neutral-chroma) var(--neutral-hue));
+  /* A text field's soft edge: under 3:1, which WCAG 1.4.11 allows because the fill, placeholder and label
+     identify the field. Checkboxes, radios and switch tracks have nothing else, so they use --input-strong. */
+  --input: oklch(0.88 var(--neutral-chroma) var(--neutral-hue));
+  --input-strong: oklch(0.6 var(--neutral-chroma) var(--neutral-hue));
+  --field: oklch(0.985 var(--neutral-chroma) var(--neutral-hue));
+  --floating-border: oklch(0.145 var(--neutral-chroma) var(--neutral-hue) / 10%);
   --ring: oklch(from var(--brand) max(l, 0.556) c h);
 }
 
@@ -140,8 +156,39 @@
   --accent: oklch(from var(--brand) 0.269 min(c, 0.04) h);
   --accent-foreground: oklch(0.985 var(--neutral-chroma) var(--neutral-hue));
   --border: oklch(1 var(--neutral-chroma) var(--neutral-hue) / 10%);
-  --input: oklch(0.55 var(--neutral-chroma) var(--neutral-hue));
+  --input: oklch(1 var(--neutral-chroma) var(--neutral-hue) / 15%);
+  --input-strong: oklch(0.55 var(--neutral-chroma) var(--neutral-hue));
+  --field: oklch(1 var(--neutral-chroma) var(--neutral-hue) / 5%);
+  --floating-border: oklch(1 var(--neutral-chroma) var(--neutral-hue) / 12%);
   --ring: oklch(from var(--primary) min(l, 0.708) c h);
+}
+
+/* A flat look: floating UI keeps its border but loses depth and translucency. The second selector outranks a
+   theme scope (glass) inside the flat one. */
+[data-elevation="flat"],
+[data-elevation="flat"] [data-theme],
+[data-elevation="flat"][data-theme] {
+  --floating-shadow: 0 0 #0000;
+  --floating-backdrop: none;
+  --floating-opacity: 100%;
+}
+
+/* Translucency is only legible behind a blur. */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  :root,
+  [data-theme],
+  [data-elevation] {
+    --floating-opacity: 100% !important;
+  }
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  :root,
+  [data-theme],
+  [data-elevation] {
+    --floating-opacity: 100% !important;
+    --floating-backdrop: none !important;
+  }
 }
 
 /* Custom properties can't fall back, so browsers without relative colours (Safari before 18) get the neutral
@@ -190,6 +237,9 @@
   --color-info-foreground: var(--info-foreground);
   --color-border: var(--border);
   --color-input: var(--input);
+  --color-input-strong: var(--input-strong);
+  --color-field: var(--field);
+  --color-floating-border: var(--floating-border);
   --color-ring: var(--ring);
   --color-overlay: var(--overlay);
   --color-chart-1: var(--chart-1);
@@ -205,6 +255,7 @@
   /* Capped at 30% of the box, so a small checkbox never rounds into a circle that reads as a radio. */
   --radius-choice: min(var(--choice-radius), 30%);
   --radius-surface: var(--surface-radius);
+  --radius-floating: var(--floating-radius);
   --spacing-control: var(--control-height);
   --spacing-control-sm: var(--control-height-sm);
   --spacing-control-lg: var(--control-height-lg);
@@ -216,15 +267,41 @@
   --spacing-section: var(--gap-section);
   --spacing-inset-surface: var(--surface-padding);
   --spacing-surface: var(--surface-padding);
+  --spacing-floating: var(--floating-offset);
   /* Inline, so it computes from the heights in scope where it's used: the rim of a control-height bar around
      control-sm items, like a tab list or a segmented control. */
   --spacing-control-inset: calc((var(--control-height) - var(--control-height-sm)) / 2);
   --shadow-surface: var(--surface-shadow);
+  --shadow-floating: var(--floating-shadow);
 }
 
 @utility backdrop-surface {
   -webkit-backdrop-filter: var(--surface-backdrop);
   backdrop-filter: var(--surface-backdrop);
+}
+
+@utility backdrop-floating {
+  -webkit-backdrop-filter: var(--floating-backdrop);
+  backdrop-filter: var(--floating-backdrop);
+}
+
+/* Inline, so the popover colour comes from the scope it's used in (a nested palette or .dark). */
+@utility bg-floating {
+  background-color: color-mix(in oklab, var(--popover) var(--floating-opacity), transparent);
+}
+
+/* The shadow goes through --tw-shadow so a focus ring (ring-*) adds to it instead of replacing it. */
+@utility surface-floating {
+  border: 1px solid var(--floating-border);
+  border-radius: var(--floating-radius);
+  background-color: color-mix(in oklab, var(--popover) var(--floating-opacity), transparent);
+  color: var(--popover-foreground);
+  --tw-shadow: var(--floating-shadow);
+  box-shadow:
+    var(--tw-inset-shadow, 0 0 #0000), var(--tw-inset-ring-shadow, 0 0 #0000), var(--tw-ring-offset-shadow, 0 0 #0000),
+    var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);
+  -webkit-backdrop-filter: var(--floating-backdrop);
+  backdrop-filter: var(--floating-backdrop);
 }
 
 /* Skips rendering off-screen content; the intrinsic height keeps the scrollbar stable meanwhile. */

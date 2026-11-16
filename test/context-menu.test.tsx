@@ -53,7 +53,7 @@ test("the area takes focus, and the context-menu key opens a menu the arrow keys
   pressContextMenuKey(area)
   await settle()
   const menu = screen.getByRole("menu")
-  expect(menu.className).toContain("bg-popover/(--glass-opacity)")
+  expect(menu.className).toContain("surface-floating")
   expect(document.activeElement).toBe(screen.getByRole("menuitem", { name: "Copy task id" }))
   await user.keyboard("{ArrowDown}")
   expect(document.activeElement).toBe(screen.getByRole("menuitem", { name: "Duplicate" }))

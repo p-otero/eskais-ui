@@ -80,7 +80,7 @@ function DatePickerContent({ className, ...props }: ComponentProps<typeof DatePi
   return (
     <DatePickerContentPrimitive
       className={cnState(
-        "z-50 m-0 flex flex-col gap-items rounded-surface border bg-popover/(--glass-opacity) p-items text-popover-foreground shadow-surface backdrop-surface outline-none origin-(--transform-origin) transition duration-150 data-ending-style:scale-95 data-ending-style:opacity-0 data-starting-style:scale-95 data-starting-style:opacity-0 motion-reduce:transition-opacity motion-reduce:data-ending-style:scale-100 motion-reduce:data-starting-style:scale-100 data-[presentation=sheet]:rounded-b-none",
+        "z-50 m-0 flex flex-col gap-items surface-floating p-items outline-none origin-(--transform-origin) transition duration-150 data-ending-style:scale-95 data-ending-style:opacity-0 data-starting-style:scale-95 data-starting-style:opacity-0 motion-reduce:transition-opacity motion-reduce:data-ending-style:scale-100 motion-reduce:data-starting-style:scale-100 data-[presentation=sheet]:rounded-b-none",
         className,
       )}
       {...props}

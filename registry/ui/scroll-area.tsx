@@ -34,8 +34,8 @@ function ScrollAreaScrollbar({ className, ...props }: ComponentProps<typeof Scro
   return (
     <ScrollAreaScrollbarPrimitive
       className={cnState(
-        // oxlint-disable-next-line eskais/spacing-tokens -- the thumb's inset inside the size-2.5 track: geometry, not spacing
-        "flex touch-none p-0.5 opacity-0 transition-opacity select-none data-visible:opacity-100 data-[orientation=horizontal]:h-2.5 data-[orientation=horizontal]:flex-col data-[orientation=vertical]:w-2.5",
+        // oxlint-disable-next-line eskais/spacing-tokens -- the thumb's inset inside the size-2 track: geometry, not spacing
+        "group/scrollbar flex touch-none p-0.5 opacity-0 transition-opacity select-none data-visible:opacity-100 data-[orientation=horizontal]:h-2 data-[orientation=horizontal]:flex-col data-[orientation=vertical]:w-2",
         className,
       )}
       {...props}
@@ -46,7 +46,10 @@ function ScrollAreaScrollbar({ className, ...props }: ComponentProps<typeof Scro
 function ScrollAreaThumb({ className, ...props }: ComponentProps<typeof ScrollAreaThumbPrimitive>) {
   return (
     <ScrollAreaThumbPrimitive
-      className={cnState("relative flex-1 rounded-full bg-input data-dragging:bg-muted-foreground", className)}
+      className={cnState(
+        "relative flex-1 rounded-full bg-muted-foreground/25 transition-colors group-hover/scrollbar:bg-muted-foreground/50 data-dragging:bg-muted-foreground/70",
+        className,
+      )}
       {...props}
     />
   )

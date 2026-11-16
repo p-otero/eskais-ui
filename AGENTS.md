@@ -41,6 +41,25 @@ Spacing is chosen by role. The values change with the theme (compact is tighter)
 3. Choose by relationship, not by look: parts of the same thing use `gap-inline` (inside one control or row) or `gap-items` (siblings); distinct groups use `gap-group`; separate surfaces use `gap-section`.
 4. Sizes (`size-*`, `h-*`, `w-*`) are not spacing. Leave them, but prefer the tokens (`h-control`, `size-control-sm`).
 
+## Elevation
+
+Two levels: surfaces (`shadow-surface`, `rounded-surface`, `backdrop-surface`) and floating UI.
+
+| Token                 | Utility                                      | Default                                                          | Compact / glass / dark                                |
+| --------------------- | -------------------------------------------- | ---------------------------------------------------------------- | ----------------------------------------------------- |
+| `--floating-shadow`   | `shadow-floating`                            | three layers, up to `0 16px 36px -8px` at 14%                    | dark: deeper, with a 5% top highlight; glass: its own |
+| `--floating-radius`   | `rounded-floating`                           | a `-sm` item's radius plus `gap-inline` (22px), concentric       | compact: 0.75rem                                      |
+| `--floating-backdrop` | `backdrop-floating`                          | `blur(16px) saturate(1.5)`                                       | glass: 1.5 × `--glass-blur`                           |
+| `--floating-opacity`  | `bg-floating` (popover colour at this alpha) | 85%; 100% without `backdrop-filter` or with reduced transparency | glass: `--glass-opacity` + 15%                        |
+| `--floating-border`   | `border-floating-border`                     | foreground at 10% (light), white at 12% (dark)                   |                                                       |
+| `--floating-offset`   | `bottom-floating`, `p-floating`…             | 1rem: a `Floating` bar's distance from its container's edge      | compact: 0.75rem                                      |
+
+`surface-floating` combines them (border, radius, popover fill, shadow, backdrop, popover text colour); popovers, menus, select and combobox lists, date picker, hover card, navigation menu and toasts use it. Dialogs and drawers take the shadow, border and radius but stay opaque (`bg-popover/(--glass-opacity)`), since a translucent fill over the dimmed backdrop reads grey. Tooltips take `shadow-floating`.
+
+1. Anything that floats above the page uses this level; in-page surfaces (cards, board columns, panels) stay on `shadow-surface`.
+2. To override the radius, use the parts (`rounded-lg border border-floating-border bg-floating shadow-floating backdrop-floating`) rather than `surface-floating` plus `rounded-*`: utility order decides which radius wins.
+3. `data-elevation="flat"` on `<html>` or any ancestor drops the floating shadow, backdrop and translucency, also inside a glass scope.
+
 ## Comments
 
 - Don't narrate what the code does; rename and restructure until the intent is obvious.

@@ -59,7 +59,7 @@ test("is a named navigation whose triggers disclose panels of links", async () =
   await user.click(agents)
   expect(agents.getAttribute("aria-expanded")).toBe("true")
   const planner = screen.getByRole("link", { name: "Planner" })
-  expect(planner.closest('[data-slot="navigation-menu-content"]')?.className).toContain("bg-popover/(--glass-opacity)")
+  expect(planner.closest('[data-slot="navigation-menu-content"]')?.className).toContain("surface-floating")
 })
 
 test("keyboard: Enter opens, arrows move between triggers, Escape closes and returns focus", async () => {

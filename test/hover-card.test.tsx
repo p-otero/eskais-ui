@@ -38,7 +38,7 @@ test("the trigger stays a link and focus opens the preview on a glass-ready surf
   expect(document.activeElement).toBe(link)
   await settle(20)
   const card = screen.getByText("Planner agent").closest('[data-slot="hover-card-content"]')
-  expect(card?.className).toContain("bg-popover/(--glass-opacity)")
+  expect(card?.className).toContain("surface-floating")
   expect(link.dataset.open).toBe("")
 })
 

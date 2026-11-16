@@ -117,7 +117,7 @@ function CarouselIndicator({ className, page, label = slideLabel, ...props }: Ca
     >
       <span
         aria-hidden="true"
-        className="size-2 rounded-full bg-input transition-colors group-data-selected/indicator:bg-primary"
+        className="size-2 rounded-full bg-input-strong transition-colors group-data-selected/indicator:bg-primary"
       />
     </CarouselIndicatorPrimitive>
   )

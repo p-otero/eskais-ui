@@ -67,7 +67,7 @@ function SliderThumb({ className, ...props }: ComponentProps<typeof SliderThumbP
   return (
     <SliderThumbPrimitive
       className={cnState(
-        "size-4 rounded-full border border-input bg-background shadow-sm transition-shadow has-focus-visible:ring-2 has-focus-visible:ring-ring data-dragging:ring-2 data-dragging:ring-ring",
+        "size-4 rounded-full border border-input-strong bg-background shadow-sm transition-shadow has-focus-visible:ring-2 has-focus-visible:ring-ring data-dragging:ring-2 data-dragging:ring-ring",
         className,
       )}
       {...props}

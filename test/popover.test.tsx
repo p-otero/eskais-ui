@@ -46,7 +46,7 @@ test("opens named and described with focus inside, and Escape returns focus to t
   await user.click(trigger)
   const popover = screen.getByRole("dialog", { name: "Attempt 2" })
   expect(popover.getAttribute("aria-describedby")).toBeTruthy()
-  expect(popover.className).toContain("bg-popover/(--glass-opacity)")
+  expect(popover.className).toContain("surface-floating")
   expect(trigger.dataset.open).toBe("")
   expect(popover.contains(document.activeElement)).toBe(true)
 

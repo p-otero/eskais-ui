@@ -23,7 +23,7 @@ const backdropClassName =
   "fixed inset-0 z-50 bg-overlay transition-opacity duration-150 data-ending-style:opacity-0 data-starting-style:opacity-0"
 
 const contentClassName =
-  "fixed inset-0 z-50 m-auto flex h-fit max-h-[calc(100%-2rem)] w-[calc(100%-2rem)] max-w-lg flex-col gap-group overflow-y-auto overscroll-contain rounded-surface border bg-popover/(--glass-opacity) p-inset-surface text-popover-foreground shadow-xl backdrop-surface outline-none transition duration-150 data-ending-style:scale-95 data-ending-style:opacity-0 data-starting-style:scale-95 data-starting-style:opacity-0"
+  "fixed inset-0 z-50 m-auto flex h-fit max-h-[calc(100%-2rem)] w-[calc(100%-2rem)] max-w-lg flex-col gap-group overflow-y-auto overscroll-contain rounded-floating border border-floating-border bg-popover/(--glass-opacity) p-inset-surface text-popover-foreground shadow-floating backdrop-floating outline-none transition duration-150 data-ending-style:scale-95 data-ending-style:opacity-0 data-starting-style:scale-95 data-starting-style:opacity-0"
 
 function DialogTrigger({
   className,

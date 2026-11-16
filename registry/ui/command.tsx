@@ -25,7 +25,7 @@ function Command({ className, ...props }: ComponentProps<typeof CommandPrimitive
   return (
     <CommandPrimitive
       className={cnState(
-        "flex w-full flex-col overflow-hidden rounded-surface bg-popover/(--glass-opacity) text-popover-foreground",
+        "flex w-full flex-col overflow-hidden rounded-surface bg-popover/(--glass-opacity) text-popover-foreground in-data-[slot=dialog-content]:rounded-none in-data-[slot=dialog-content]:bg-transparent",
         className,
       )}
       {...props}
