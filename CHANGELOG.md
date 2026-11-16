@@ -6,6 +6,7 @@ Versions follow [semver](https://semver.org). Before 1.0, a minor version can br
 
 ### Added
 
+- Fast links: `Link`, `ButtonLink` and `NavigationMenuLink` follow a same-origin link on a primary mouse press instead of on release, with `@fast-link/core` 0.0.2 (through `onFollow`, or `location.assign`). `fast={false}` opts a link out and `data-no-fast-link` on any ancestor a region or the app; `FastLinkRegion` and `useFastLink` cover plain anchors. A `render`ed router link or a link with its own `onClick` stays on click unless it has `onFollow`.
 - AgentTaskBoard: `filterControls` chooses which built-in filter controls show, so a host picker can replace one; hidden filters still apply and agents can still set them, and "Clear filters" leaves them alone.
 - AgentTaskBoard: a "No stage" toggle ends the stage filter (`stageFilterNone`, `labels.filters.noStage`) and matches tasks without a location through the exported `NO_STAGE`, which `filter({ stage })` also takes by its label; `StageFilter` takes `noStage`, and `countByStage` counts those tasks under `NO_STAGE`.
 - AgentTaskBoard: `renderBacklogActions(task)` adds host controls to each backlog row after Approve/Reject, in snapshot mode too, and `renderCardActions(task)` to each card; `TaskCard` takes `renderActions`.
