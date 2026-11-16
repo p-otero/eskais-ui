@@ -5,6 +5,7 @@ import { createParts } from "@ui-sdk/react/primitive"
 import { useEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from "react"
 import { useForm, type DefaultValues, type FieldValues, type Path, type UseFormReturn } from "react-hook-form"
 
+import type { FieldLabelPlacement } from "@/components/ui/field"
 import { FormContext, issueResolver, toFieldError, type FormContextValue } from "@/components/ui/form-context"
 import { toFormErrors, type FormErrorInput, type FormMessages } from "@/components/ui/form-messages"
 import { formRoot } from "@/components/ui/form-primitive"
@@ -32,6 +33,8 @@ type FormProps<Schema extends StandardSchemaV1> = {
   ) => unknown
   /** A dictionary (`formMessagesEs`) or a function of the issue, for any i18n library; English by default. */
   messages?: FormMessages
+  /** Where each FormField's label sits by default: `top`, or `in`/`on` for its text controls (see Field). */
+  labelPlacement?: FieldLabelPlacement
   /** Fields are disabled while `onSubmit` runs; `false` keeps them editable. */
   disableWhilePending?: boolean
   /** The form's accessible name. Without it (or `aria-labelledby`), agents use its fields and buttons only. */
@@ -63,6 +66,7 @@ function Form<Schema extends StandardSchemaV1>({
   defaultValues,
   onSubmit,
   messages,
+  labelPlacement,
   disableWhilePending = true,
   label,
   "aria-labelledby": labelledBy,
@@ -158,6 +162,7 @@ function Form<Schema extends StandardSchemaV1>({
     () => ({
       form: form as unknown as UseFormReturn<FieldValues>,
       messages,
+      labelPlacement,
       pending,
       disabled,
       fields,
@@ -166,7 +171,7 @@ function Form<Schema extends StandardSchemaV1>({
       },
       setConfirm,
     }),
-    [form, messages, pending, disabled, fields],
+    [form, messages, labelPlacement, pending, disabled, fields],
   )
 
   return (

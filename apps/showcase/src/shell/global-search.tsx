@@ -5,6 +5,7 @@ import { Command, CommandEmpty, CommandInput, CommandItem, CommandList, CommandS
 import {
   CommandDialog,
   CommandDialogContent,
+  CommandDialogOpenButton,
   CommandDialogShortcut,
   CommandDialogTrigger,
   createCommandDialogController,
@@ -62,9 +63,9 @@ function useGlobalSearch() {
     </CommandDialogTrigger>
   )
   const compactTrigger = (
-    <CommandDialogTrigger controller={controller} variant="ghost" size="icon" aria-label="Search the workspace">
+    <CommandDialogOpenButton controller={controller} variant="ghost" size="icon" aria-label="Search the workspace">
       <SearchIcon />
-    </CommandDialogTrigger>
+    </CommandDialogOpenButton>
   )
   const dialog = (
     <CommandDialog controller={controller}>

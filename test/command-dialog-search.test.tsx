@@ -9,6 +9,7 @@ import { Command, CommandEmpty, CommandInput, CommandItem, CommandList, CommandS
 import {
   CommandDialog,
   CommandDialogContent,
+  CommandDialogOpenButton,
   CommandDialogShortcut,
   CommandDialogTrigger,
   createCommandDialogController,
@@ -77,7 +78,7 @@ function GlobalSearch({
           </Command>
         </CommandDialogContent>
       </CommandDialog>
-      <CommandDialogTrigger controller={controller} variant="ghost" size="icon" aria-label="Search" />
+      <CommandDialogOpenButton controller={controller} variant="ghost" size="icon" aria-label="Search" />
     </main>
   )
 }
@@ -113,7 +114,7 @@ test("global search: mod+K opens it, results load as you type, Enter runs one an
   expect(document.activeElement).toBe(trigger)
 })
 
-test("a second trigger on the same controller, like a narrow-screen icon, gets the focus back itself", async () => {
+test("a second way in, like a narrow-screen icon, opens the same dialog and gets the focus back", async () => {
   const user = userEvent.setup()
   render(<GlobalSearch onAction={vi.fn()} />)
   const compact = screen.getByRole("button", { name: "Search" })
@@ -125,32 +126,26 @@ test("a second trigger on the same controller, like a narrow-screen icon, gets t
   expect(document.activeElement).toBe(compact)
 })
 
-test("an agent opens the search from the trigger inside the dialog root and queries it by name", async () => {
+test("with a second way in, the dialog keeps its trigger's name as its agent label", async () => {
   render(<GlobalSearch onAction={vi.fn()} />)
   await settle()
   const components = agent.snapshot().filter((entry) => !entry.offPage && entry.component !== "more")
-  // With two triggers the dialog takes no single label; agents reach it by either trigger's name.
-  for (const entry of components) {
-    expect(entry.label ?? entry.buttons?.join(", "), `${entry.component} ${entry.ref} has no name`).toBeTruthy()
-  }
-  const dialog = components.find((entry) => entry.component === "dialog")
-  expect(dialog?.buttons).toEqual(["Search the workspace", "Search"])
-  const opened = await act(() =>
-    agent.act({ steps: [{ ref: dialog?.ref ?? "", action: "press", args: ["Search the workspace"] }] }),
-  )
+  for (const entry of components) expect(entry.label, `${entry.component} ${entry.ref} has no name`).toBeTruthy()
+  expect(components.find((entry) => entry.component === "dialog")?.label).toBe("Search the workspace")
+  expect(components.map((entry) => entry.label)).not.toContain("Search")
+})
+
+test("an agent opens the search by its name and queries it", async () => {
+  render(<GlobalSearch onAction={vi.fn()} />)
+  await settle()
+  const opened = await act(() => agent.act({ steps: [{ ref: "Search the workspace", action: "open" }] }))
   expect(opened.ok, opened.error?.message).toBe(true)
   await settle()
+  expect(screen.getByRole("dialog", { name: "Search the workspace" })).toBeTruthy()
   const searched = await act(() =>
     agent.act({ steps: [{ ref: "Search the workspace", action: "setQuery", args: ["apo"] }] }),
   )
   expect(searched.ok, searched.error?.message).toBe(true)
   await settle(60)
   expect(screen.getAllByRole("option").map((option) => option.textContent)).toEqual(["Apollo"])
-})
-
-// UI SDK 0.1.0-beta.5 drops a dialog's label once a second trigger joins it through the controller.
-test.fails("the dialog keeps its trigger's name as its label with a second trigger", async () => {
-  render(<GlobalSearch onAction={vi.fn()} />)
-  await settle()
-  expect(agent.snapshot().find((entry) => entry.component === "dialog")?.label).toBe("Search the workspace")
 })

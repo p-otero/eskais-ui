@@ -14,6 +14,26 @@
 /* A viewport width, unrelated to the compact density theme: narrow: applies at 760px and below. */
 @custom-variant narrow (@media (width <= 47.5rem));
 
+/* A FieldLabel inside its control (labelPlacement="in") floats up while the control is focused, holds a value or
+   has its popup open. Inputs float on :placeholder-shown, so the controls give them a blank placeholder. */
+@custom-variant field-floated {
+  :focus-within > & {
+    @slot;
+  }
+  :has([data-filled], [data-open]) > & {
+    @slot;
+  }
+  :has(input[placeholder]:not(:placeholder-shown)) > & {
+    @slot;
+  }
+  :has([data-slot="select-trigger"]:not([data-placeholder])) > & {
+    @slot;
+  }
+  :has(option:checked:not([value=""])) > & {
+    @slot;
+  }
+}
+
 /* Zero specificity, so a data-theme scope always overrides these. */
 :where(:root) {
   --control-radius: calc(var(--radius) * 2);
@@ -22,6 +42,12 @@
   --control-height-lg: 2.5rem;
   --control-height-touch: 2.75rem;
   --control-padding: 0.875rem;
+  /* labelPlacement="in": the room a floated label takes above the text, and where the floated label sits. */
+  --field-label-offset: 1rem;
+  --field-label-float-y: 0.3125rem;
+  --field-label-scale: 0.8125;
+  /* labelPlacement="on": what the label cuts the border with. Surfaces set it to their own fill. */
+  --field-label-surface: var(--background);
   --choice-radius: calc(var(--radius) / 2);
   --surface-radius: calc(var(--radius) * 1.25);
   --surface-padding: 1.5rem;
@@ -564,6 +590,8 @@
   --spacing-control-sm: var(--control-height-sm);
   --spacing-control-lg: var(--control-height-lg);
   --spacing-control-x: var(--control-padding);
+  /* A Field with labelPlacement="in" makes its text controls taller through --field-control-height. */
+  --spacing-field-control: var(--field-control-height, var(--control-height));
   /* Spacing roles; any spacing utility takes them (gap-items, p-inline, -mx-inline). See AGENTS.md "Spacing". */
   --spacing-inline: var(--gap-inline);
   --spacing-items: var(--gap-items);
@@ -609,6 +637,7 @@
   border-radius: var(--floating-radius);
   background-color: color-mix(in oklab, var(--popover) var(--floating-opacity), transparent);
   color: var(--popover-foreground);
+  --field-label-surface: color-mix(in oklab, var(--popover) var(--floating-opacity), var(--background));
   --tw-shadow: var(--floating-shadow);
   box-shadow:
     var(--tw-inset-shadow, 0 0 #0000), var(--tw-inset-ring-shadow, 0 0 #0000), var(--tw-ring-offset-shadow, 0 0 #0000),
@@ -669,6 +698,16 @@
   background-image:
     radial-gradient(48rem 32rem at 12% -6rem, color-mix(in oklab, var(--link-brand) 14%, transparent), transparent),
     radial-gradient(40rem 28rem at 92% 4rem, color-mix(in oklab, var(--violet) 12%, transparent), transparent);
+}
+
+/* What a labelPlacement="on" label cuts the border with: the fill of the surface the field sits on. A glass card
+   is approximated over the page background. */
+@utility field-label-surface-card {
+  --field-label-surface: color-mix(in oklab, var(--card) var(--glass-opacity), var(--background));
+}
+
+@utility field-label-surface-popover {
+  --field-label-surface: var(--popover);
 }
 
 @utility text-vertical {

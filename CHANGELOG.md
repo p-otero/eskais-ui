@@ -39,6 +39,8 @@ Versions follow [semver](https://semver.org). Before 1.0, a minor version can br
 - `AgentTaskBoard`: `columnAccent` and `columnTones` colour each column with the shared tones (`taskStatusAccentTones`); `TaskView.links` with `renderLink`, `onOpenLink` and an `openLink` agent action; `renderAttachments` and `renderLocation` slots in the detail.
 - `TaskLinks` and `PullRequestLink` (`task-links`), `AcceptanceList evidence="disclosure"`, `UsageGrid variant="compact"`, and a `tone` on `BoardColumn` and `TaskStatusIcon`.
 - Soft tone tokens `--{tone}-soft`, `--{tone}-soft-foreground` and `--{tone}-border` for `neutral`, `info`, `success`, `warning`, `destructive` and the new `violet`, a decorative category tone (also `--violet` and `--violet-foreground`) in the `Tone` type and every toned component. Badge, StatusPill, list item icon tiles and the alert and toast edges use them instead of `bg-*/10` and `border-*/30`. `--skeleton` (`bg-skeleton`) fills `Skeleton`. The contrast check covers them in both modes and every palette.
+- Floating labels: `Field labelPlacement` (`top`, `in`, `on`), with `Form` and `FormField` passing it through. `in` floats the label inside the control, `on` sets it on the border over `--field-label-surface`. The theme adds the `field-floated` variant, `h-field-control` and the `field-label-surface-card`/`-popover` utilities.
+- `CommandDialogOpenButton`: a second way to open a `CommandDialog`, like a `Topbar`'s `centerCompact` icon, that opens through the controller and is hidden from agents, so the dialog keeps its agent label.
 
 ### Changed
 

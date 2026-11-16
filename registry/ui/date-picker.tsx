@@ -13,6 +13,7 @@ import type { ComponentProps } from "react"
 
 import { buttonVariants } from "@/components/ui/button"
 import { CalendarMonths, type CalendarLabels } from "@/components/ui/calendar"
+import { floatingLabelControls, useFloatingPlaceholder } from "@/components/ui/field"
 import { fieldSurfaceClassName } from "@/components/ui/input"
 import { cn, cnState } from "@/lib/utils"
 
@@ -25,9 +26,10 @@ type DatePickerLabels = CalendarLabels & {
 
 const defaultLabels = { start: "Start date", end: "End date", clear: "Clear date" }
 
-function DatePickerInput({ className, ...props }: ComponentProps<typeof DatePickerInputPrimitive>) {
+function DatePickerInput({ className, placeholder, ...props }: ComponentProps<typeof DatePickerInputPrimitive>) {
   return (
     <DatePickerInputPrimitive
+      placeholder={useFloatingPlaceholder(placeholder)}
       className={cnState(
         "h-full w-full min-w-0 bg-transparent text-sm tabular-nums outline-none placeholder:text-muted-foreground data-disabled:cursor-not-allowed",
         className,
@@ -114,7 +116,7 @@ function DatePicker({
         <>
           <div
             data-slot="date-picker-group"
-            className={`${fieldSurfaceClassName} flex h-control w-full items-center gap-inline rounded-control px-control-x text-sm has-[input:focus-visible]:ring-2 has-[input:focus-visible]:ring-ring has-aria-invalid:border-destructive`}
+            className={`${fieldSurfaceClassName} flex h-field-control w-full items-center gap-inline rounded-control px-control-x text-sm has-[input:focus-visible]:ring-2 has-[input:focus-visible]:ring-ring has-aria-invalid:border-destructive`}
           >
             <DatePickerInput aria-label={range ? text.start : label} placeholder={placeholder} />
             {range && (
@@ -137,6 +139,8 @@ function DatePicker({
     </DatePickerPrimitive>
   )
 }
+
+floatingLabelControls.add(DatePicker)
 
 export {
   createDatePickerController,

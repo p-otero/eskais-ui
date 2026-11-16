@@ -14,6 +14,6 @@
       "type": "registry:ui"
     }
   ],
-  "docs": "`<Topbar brand={…} leading={<SidebarTrigger controller={sidebar} collapsed={collapsed} />} center={<CommandDialogTrigger controller={search} shortcut=\"mod+k\">Search</CommandDialogTrigger>} centerCompact={<CommandDialogTrigger controller={search} variant=\"ghost\" size=\"icon\" aria-label=\"Search\">…</CommandDialogTrigger>} trailing={<UserMenu />} />`. It renders `<header>`, which is the page's banner when it isn't inside `<main>` or a section. It sticks to the top of its scroll container; in a shell that owns the scroll (`fixed inset-0 flex flex-col`, the content `overflow-y-auto`), it simply sits first.",
+  "docs": "`<Topbar brand={…} leading={<SidebarTrigger controller={sidebar} collapsed={collapsed} />} center={<CommandDialogTrigger controller={search} shortcut=\"mod+k\">Search</CommandDialogTrigger>} centerCompact={<CommandDialogOpenButton controller={search} variant=\"ghost\" size=\"icon\" aria-label=\"Search\">…</CommandDialogOpenButton>} trailing={<UserMenu />} />`. It renders `<header>`, which is the page's banner when it isn't inside `<main>` or a section. It sticks to the top of its scroll container; in a shell that owns the scroll (`fixed inset-0 flex flex-col`, the content `overflow-y-auto`), it simply sits first.",
   "type": "registry:ui"
 }

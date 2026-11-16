@@ -10,6 +10,7 @@ import { TimeInput as TimeInputPrimitive } from "@ui-sdk/react/time-input"
 import { useState, type ComponentProps } from "react"
 
 import { DatePicker, type DatePickerLabels } from "@/components/ui/date-picker"
+import { floatingLabelControls } from "@/components/ui/field"
 import { fieldSurfaceClassName } from "@/components/ui/input"
 import { cn, cnState } from "@/lib/utils"
 
@@ -60,7 +61,7 @@ function TimeInput({ className, ...props }: ComponentProps<typeof TimeInputPrimi
   return (
     <TimeInputPrimitive
       className={cnState(
-        `${fieldSurfaceClassName} inline-flex h-control w-fit shrink-0 items-center rounded-control px-control-x text-sm tabular-nums has-focus-visible:ring-2 has-focus-visible:ring-ring aria-invalid:border-destructive data-invalid:border-destructive [&_[data-slot=time-input-segment]]:rounded-sm [&_[data-slot=time-input-segment]]:outline-none [&_[data-slot=time-input-segment][data-empty]]:text-muted-foreground [&_[data-slot=time-input-segment]:focus]:bg-accent [&_[data-slot=time-input-segment]:focus]:text-accent-foreground`,
+        `${fieldSurfaceClassName} inline-flex h-field-control w-fit shrink-0 items-center rounded-control px-control-x text-sm tabular-nums has-focus-visible:ring-2 has-focus-visible:ring-ring aria-invalid:border-destructive data-invalid:border-destructive [&_[data-slot=time-input-segment]]:rounded-sm [&_[data-slot=time-input-segment]]:outline-none [&_[data-slot=time-input-segment][data-empty]]:text-muted-foreground [&_[data-slot=time-input-segment]:focus]:bg-accent [&_[data-slot=time-input-segment]:focus]:text-accent-foreground`,
         className,
       )}
       {...props}
@@ -146,6 +147,8 @@ function DateTimePicker({
     </div>
   )
 }
+
+floatingLabelControls.add(DateTimePicker)
 
 export { DateTimePicker, TimeInput }
 export type { DateTimePickerLabels, DateTimePickerProps }
