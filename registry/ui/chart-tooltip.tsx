@@ -96,7 +96,7 @@ function ChartTooltipContent({
                       data-indicator={indicator}
                       aria-hidden="true"
                       style={{ "--indicator-color": indicatorColor } as CSSProperties}
-                      // oxlint-disable-next-line eskais/spacing-tokens -- centres the dashed bar on the label's line
+                      // oxlint-disable-next-line p-otero/spacing-tokens -- centres the dashed bar on the label's line
                       className={cn(indicatorClassName, nested && indicator === "dashed" && "my-0.5")}
                     />
                   ) : null}

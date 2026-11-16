@@ -34,7 +34,7 @@ const menuContentClassName =
 const menuItemClassName =
   "relative flex h-control-sm shrink-0 cursor-default items-center gap-inline rounded-control px-inset-item outline-none select-none data-highlighted:bg-accent data-highlighted:text-accent-foreground data-disabled:opacity-50 data-destructive:text-destructive data-pending:cursor-progress [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0"
 
-// oxlint-disable-next-line eskais/spacing-tokens -- clears the absolute size-4 indicator: its start inset, its size and a gap
+// oxlint-disable-next-line p-otero/spacing-tokens -- clears the absolute size-4 indicator: its start inset, its size and a gap
 const checkableItemClassName = `${menuItemClassName} ps-8`
 
 function DropdownMenuTrigger({

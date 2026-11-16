@@ -2,7 +2,7 @@
 
 import type { ChangeDetails } from "@ui-sdk/core"
 import { createParts } from "@ui-sdk/react/primitive"
-import { useEffect, useState, type ReactNode } from "react"
+import { useState, type ReactNode } from "react"
 import { PanelLeftIcon, XIcon } from "lucide-react"
 
 import { buttonVariants } from "@/components/ui/button"
@@ -78,14 +78,10 @@ function Sidebar({
   const narrow = useNarrow(narrowQuery)
   const [ownCollapsed, setOwnCollapsed] = useState(defaultCollapsed)
   const [ownDrawerOpen, setOwnDrawerOpen] = useState(false)
-  const sharedDrawerOpen = useSidebarDrawerOpen(controller)
+  const sharedDrawerOpen = useSidebarDrawerOpen(controller, narrowQuery)
   const drawerOpen = controller ? sharedDrawerOpen : ownDrawerOpen
   const setDrawerOpen = (open: boolean) =>
     controller ? setSidebarDrawerOpen(controller, open) : setOwnDrawerOpen(open)
-  // Leaving narrow screens with the drawer open would reopen it on the way back.
-  useEffect(() => {
-    if (!narrow && controller) setSidebarDrawerOpen(controller, false)
-  }, [narrow, controller])
   const collapsed = collapsible && !narrow && (collapsedProp ?? ownCollapsed)
 
   const body = <div className="flex min-h-0 flex-1 flex-col gap-group overflow-y-auto">{children}</div>

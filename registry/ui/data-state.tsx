@@ -1,11 +1,12 @@
 "use client"
 
-import { useEffect, useRef, type ReactNode } from "react"
+import type { ReactNode } from "react"
 
 import { Empty, EmptyDescription, EmptyHeader, EmptyTitle, type EmptySize } from "@/components/ui/empty"
 import { ErrorState } from "@/components/ui/error-state"
 import { LoadingState } from "@/components/ui/loading-state"
 import { Spinner } from "@/components/ui/spinner"
+import { useLastSuccess } from "@/components/ui/use-last-success"
 import { cn } from "@/lib/utils"
 
 type DataStatus = "pending" | "error" | "success"
@@ -59,17 +60,6 @@ function defaultIsEmpty(data: unknown) {
 function messageOf(error: unknown) {
   if (error instanceof Error) return error.message
   return error === undefined || error === null ? undefined : String(error)
-}
-
-// A ref written after commit, not state set during render: that rendered twice for every new `data` array,
-// and a render that never commits must not change what counts as the last result.
-function useLastSuccess<T>(status: DataStatus, data: T | undefined) {
-  const last = useRef<{ data: T }>(undefined)
-  useEffect(() => {
-    if (status === "success" && data !== undefined) last.current = { data }
-  }, [status, data])
-  // oxlint-disable-next-line react/refs -- read only on renders the props cause; a change to it needs no render of its own
-  return last.current?.data
 }
 
 function DataState<T, E = unknown>(props: DataStateProps<T, E>) {

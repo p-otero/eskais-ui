@@ -1,7 +1,7 @@
 "use client"
 
 import type { StandardSchemaV1 } from "@standard-schema/spec"
-import { useEffect, useId, useLayoutEffect, useRef, useState, type ComponentType, type ReactNode } from "react"
+import { useId, useRef, useState, type ComponentType, type ReactNode } from "react"
 import type { FieldValues, Path, UseFormReturn } from "react-hook-form"
 
 import { Button } from "@/components/ui/button"
@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/form"
 import { useFormContext } from "@/components/ui/form-context"
 import { StepFormProgress } from "@/components/ui/step-form-progress"
+import { useHeadingFocus, useSeenFields, useSubmitInterceptor } from "@/components/ui/use-step-form"
 import { cn } from "@/lib/utils"
 
 type FormStep<Values extends FieldValues = FieldValues> = {
@@ -129,12 +130,8 @@ function StepFormContent({
   const [validating, setValidating] = useState(false)
   const Heading = `h${headingLevel}` as const
 
-  useEffect(() => {
-    seen.current.set(step.id, [...context.fields.keys()])
-  })
-  useEffect(() => {
-    if (move?.direction === "next" || move?.direction === "back") heading.current?.focus()
-  }, [move])
+  useSeenFields(seen, step.id, context.fields)
+  useHeadingFocus(move, heading)
 
   const stepOf = (paths: string[]) => {
     const found = steps.findIndex((candidate) => {
@@ -150,8 +147,7 @@ function StepFormContent({
   const next = async () => {
     form.clearErrors("root")
     const names = step.fields ?? [...context.fields.keys()]
-    setValidating(true)
-    try {
+    const validate = async () => {
       if (names.length > 0 && !(await form.trigger(names))) return context.requestFocus()
       const problem = await step.validate?.(form.getValues())
       if (problem !== undefined && problem !== null) {
@@ -159,24 +155,21 @@ function StepFormContent({
         return context.requestFocus()
       }
       go(index + 1, "next")
-    } finally {
-      setValidating(false)
     }
+    setValidating(true)
+    // A promise's finally, not a try/finally block: React Compiler 1.0 can't compile a component that has one.
+    return validate().finally(() => setValidating(false))
   }
 
-  const { setInterceptor } = context
-  useLayoutEffect(() => {
-    setInterceptor({
-      beforeSubmit: async () => {
-        if (last) return true
-        await next()
-        return false
-      },
-      onInvalid: (errors) => go(stepOf(errorPaths(errors)), "error"),
-      onError: (error) => go(stepOf(Object.keys(toFormErrors(error)?.fieldErrors ?? {})), "error"),
-    })
+  useSubmitInterceptor(context.setInterceptor, {
+    beforeSubmit: async () => {
+      if (last) return true
+      await next()
+      return false
+    },
+    onInvalid: (errors) => go(stepOf(errorPaths(errors)), "error"),
+    onError: (error) => go(stepOf(Object.keys(toFormErrors(error)?.fieldErrors ?? {})), "error"),
   })
-  useLayoutEffect(() => () => setInterceptor(null), [setInterceptor])
 
   return (
     <>

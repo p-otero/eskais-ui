@@ -259,7 +259,7 @@ Surfaces (cards, columns, panels) use `shadow-surface`. Anything that floats (po
 - Colour: set the seeds `--brand`, `--link-brand` (links and the caret, a blue by default), `--neutral-hue`, `--neutral-chroma` (and `--radius`) in `:root`; primary, its foreground, ring, accent and greys derive from them in light and dark. Or use a preset from `@eskais/palettes` with `data-palette="blue"` (`neutral`, `violet`, `green`, `orange`) on any element, or `createAppearance({ palette })`. To take over one colour, set that token in `:root` or `.dark`. Keep a custom brand at 4.5:1 on the background.
 - Themes are attribute scopes, not separate components: `data-theme="compact"` or `data-theme="glass"` on any element, nested freely. A theme only sets tokens; never branch on the theme in a component.
 - Pass layout classes (margin, width, grid placement) through `className`. To change how a component looks, edit its file in `components/ui/`, which you own.
-- Optional: `npx shadcn add @eskais/lint-rules` adds an oxlint config with `@shadcn/lint` rules (`no-restyle`, `no-raw-colors`…). Extend it from `.oxlintrc.json`.
+- Optional: `npx shadcn add @eskais/lint-rules` adds an oxlint config with the `react` and `ui-tailwind` presets of `@p-otero/oxlint-rules` (hooks, React Compiler checks, `p-otero/spacing-tokens`) and the `@shadcn/lint` rules (`no-restyle`, `no-raw-colors`…). Extend it from `.oxlintrc.json`.
 
 ## Spacing
 
@@ -280,7 +280,7 @@ Pick spacing by the relationship between the things it separates, never by a num
 - `inline`, `items`, `group`, `section` and `inset-surface` work with any spacing utility (`p-inline`, `pb-group`, `-mx-inline`). The chip and item insets are `px-`/`py-` only; otherwise use the variable, as in `-mx-(--item-padding-x)`.
 - Components never set their own outer margin; the parent spaces children with `gap-*`. Pass margin through `className` only when composing.
 - Sizes (`size-*`, `h-*`, `w-*`) aren't spacing; prefer `h-control` and friends.
-- In the registry, `eskais/spacing-tokens` rejects numeric spacing (`gap-2`, `md:px-1`). The exceptions are `0`, `px`, and a disable comment that gives the reason.
+- In the registry, `p-otero/spacing-tokens` rejects numeric spacing (`gap-2`, `md:px-1`). The exceptions are `0`, `px`, and a disable comment that gives the reason.
 
 ## Tone
 

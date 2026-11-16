@@ -9,7 +9,7 @@ import {
   ColorPickerSwatch,
 } from "@ui-sdk/react/color-picker"
 import { usePreference } from "@ui-sdk/react/preferences"
-import { useEffect, useId, useState } from "react"
+import { useId, useState } from "react"
 
 import type { AppearanceState } from "@/components/ui/appearance"
 import { Button } from "@/components/ui/button"
@@ -18,59 +18,13 @@ import { SegmentedControl, SegmentedControlIndicator, SegmentedControlItem } fro
 import { Slider, SliderControl, SliderIndicator, SliderThumb, SliderTrack, SliderValue } from "@/components/ui/slider"
 import { StatusPill } from "@/components/ui/status-pill"
 
-import { contrastRatio, themeSnippet, type Seeds } from "./theme-snippet"
-
-type Overrides = { brand?: string; linkBrand?: string; tint?: number; radius?: number }
+import { applyOverrides, measure, useThemeMeasurements, type Overrides } from "./hooks/use-theme-measurements"
+import { themeSnippet } from "./theme-snippet"
 
 const CUSTOM = "custom"
 
 const thumb =
   "size-4 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-background bg-(--color-picker-color) shadow-sm ring-1 ring-foreground/50 outline-none focus-visible:ring-3 focus-visible:ring-ring"
-
-// The build minifies oklch(0.5 0.2 262) to oklch(50% .2 262); write it back the way the theme does.
-const plainOklch = (color: string) =>
-  color
-    .replace(/oklch\(\s*([\d.]+)%/, (_, lightness: string) => `oklch(${Number(lightness) / 100}`)
-    .replaceAll(/(?<![\d.])\.(\d)/g, "0.$1")
-
-function readSeeds(): Seeds {
-  const style = getComputedStyle(document.documentElement)
-  const read = (name: string) => style.getPropertyValue(name).trim()
-  return {
-    brand: plainOklch(read("--brand")),
-    linkBrand: plainOklch(read("--link-brand")),
-    neutralHue: Number(read("--neutral-hue")) || 0,
-    neutralChroma: Number(read("--neutral-chroma")) || 0,
-    radius: Number.parseFloat(read("--radius")) || 0,
-  }
-}
-
-const hueOf = (color: string) => Number(/oklch\(\s*[\d.]+%?\s+[\d.]+\s+([\d.]+)/.exec(color)?.[1] ?? 0)
-
-function applyOverrides(overrides: Overrides) {
-  const root = document.documentElement.style
-  const set = (name: string, value: string | undefined) =>
-    value === undefined ? root.removeProperty(name) : root.setProperty(name, value)
-  set("--brand", overrides.brand)
-  set("--link-brand", overrides.linkBrand)
-  set("--neutral-chroma", overrides.tint === undefined ? undefined : String(overrides.tint))
-  set("--neutral-hue", overrides.tint === undefined ? undefined : String(hueOf(overrides.brand ?? readSeeds().brand)))
-  set("--radius", overrides.radius === undefined ? undefined : `${overrides.radius}rem`)
-}
-
-function measure() {
-  return {
-    seeds: readSeeds(),
-    primary: contrastRatio("var(--primary-foreground)", "var(--primary)"),
-    text: contrastRatio("var(--foreground)", "var(--background)"),
-    link: contrastRatio("var(--link)", "var(--muted)"),
-  }
-}
-
-type Measured = ReturnType<typeof measure>
-
-// A frame later, so <Appearance> has written the new class and attributes to <html> before they're read.
-const remeasure = (set: (measured: Measured) => void) => requestAnimationFrame(() => set(measure()))
 
 function ContrastRow({ label, ratio }: { label: string; ratio: number | null }) {
   const pass = ratio !== null && ratio >= 4.5
@@ -129,22 +83,9 @@ function ThemeEditor<Theme extends string, Palette extends string>({
 }) {
   const { value: palette } = usePreference(appearance.palette)
   const [overrides, setOverrides] = useState<Overrides>({})
-  const [{ seeds, primary, text, link }, setMeasured] = useState(measure)
+  const [{ seeds, primary, text, link }, setMeasured] = useThemeMeasurements(appearance)
   const [copied, setCopied] = useState("")
   const snippetId = useId()
-
-  useEffect(() => {
-    const frame = remeasure(setMeasured)
-    const stops = [
-      appearance.colorScheme.subscribe(() => remeasure(setMeasured)),
-      appearance.palette.subscribe(() => remeasure(setMeasured)),
-    ]
-    return () => {
-      cancelAnimationFrame(frame)
-      for (const stop of stops) stop()
-      applyOverrides({})
-    }
-  }, [appearance])
 
   const customised = Object.keys(overrides).length > 0
   const snippet = themeSnippet(seeds)

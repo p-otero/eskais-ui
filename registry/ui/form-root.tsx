@@ -2,7 +2,7 @@
 
 import type { StandardSchemaV1 } from "@standard-schema/spec"
 import { createParts } from "@ui-sdk/react/primitive"
-import { useEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from "react"
+import { useMemo, useRef, useState, type FormEvent, type ReactNode } from "react"
 import { useForm, type DefaultValues, type FieldValues, type Path, type UseFormReturn } from "react-hook-form"
 
 import { FieldLabelPlacementDefault, type FieldLabelPlacement } from "@/components/ui/field"
@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/form-context"
 import { toFormErrors, type FormErrorInput, type FormMessages } from "@/components/ui/form-messages"
 import { formRoot } from "@/components/ui/form-primitive"
+import { useFocusRequest, useReportChange, useRestoreFocusAfterPending } from "@/components/ui/use-form-sync"
 import { cn } from "@/lib/utils"
 
 const { Root: FormRoot } = createParts(formRoot, { root: "form" })
@@ -93,6 +94,15 @@ function applyFormError(form: UseFormReturn<FieldValues>, fields: Map<string, un
   else if (unmapped.length) setFormError(form, "root", unmapped.join("\n"))
 }
 
+// The try/finally lives outside the component: React Compiler 1.0 can't compile a component that holds one.
+async function settle<T>(task: () => T | Promise<T>, cleanup: () => void): Promise<T> {
+  try {
+    return await task()
+  } finally {
+    cleanup()
+  }
+}
+
 function Form<Schema extends StandardSchemaV1>({
   schema,
   defaultValues,
@@ -126,19 +136,12 @@ function Form<Schema extends StandardSchemaV1>({
   const [fields] = useState(() => new Map<string, string | undefined>())
   const dirty = form.formState.isDirty
 
-  useEffect(() => onPendingChange?.(pending), [pending, onPendingChange])
-  // Disabling the fields drops focus to the body; give it back once they are enabled again.
-  useEffect(() => {
-    const previous = restoreFocus.current
-    if (pending || !(previous instanceof HTMLElement)) return
-    restoreFocus.current = null
-    if (document.activeElement === document.body || document.activeElement === null) previous.focus()
-  }, [pending])
-  useEffect(() => onDirtyChange?.(dirty), [dirty, onDirtyChange])
-  useEffect(() => {
-    if (focusRequest === 0 || !element.current) return
-    focusTarget(element.current, rootElement.current)?.focus()
-  }, [focusRequest])
+  useReportChange(pending, onPendingChange)
+  useRestoreFocusAfterPending(pending, restoreFocus)
+  useReportChange(dirty, onDirtyChange)
+  useFocusRequest(focusRequest, () => {
+    if (element.current) focusTarget(element.current, rootElement.current)?.focus()
+  })
 
   const untyped = form as unknown as UseFormReturn<FieldValues>
   const setError: FormSubmitHelpers<Values>["setError"] = (name, error) => setFormError(untyped, name, error)
@@ -148,43 +151,52 @@ function Form<Schema extends StandardSchemaV1>({
     event.stopPropagation()
     if (running.current || blocked.current) return
     const intercept = interceptor.current
-    running.current = true
-    try {
-      if (intercept?.beforeSubmit && !(await intercept.beforeSubmit())) return
-    } finally {
-      running.current = false
+    const beforeSubmit = intercept?.beforeSubmit
+    if (beforeSubmit) {
+      running.current = true
+      const proceed = await settle(beforeSubmit, () => {
+        running.current = false
+      })
+      if (!proceed) return
     }
     running.current = true
     restoreFocus.current = document.activeElement
     let failed = false
+    const fail = (error: unknown) => {
+      failed = true
+      intercept?.onError?.(error)
+      applyFormError(untyped, fields, error)
+    }
     form.clearErrors("root")
     const submit = form.handleSubmit(
       async (values) => {
         setPending(true)
-        try {
-          await onSubmit(values as StandardSchemaV1.InferOutput<Schema>, { setError, form })
-        } catch (error) {
-          failed = true
-          intercept?.onError?.(error)
-          applyFormError(untyped, fields, error)
-        } finally {
-          setPending(false)
-        }
+        await settle(
+          async () => {
+            try {
+              await onSubmit(values as StandardSchemaV1.InferOutput<Schema>, { setError, form })
+            } catch (error) {
+              fail(error)
+            }
+          },
+          () => setPending(false),
+        )
       },
       (errors) => {
         failed = true
         intercept?.onInvalid?.(errors)
       },
     )
-    try {
-      await submit(event)
-    } finally {
-      running.current = false
-      if (failed) {
-        restoreFocus.current = null
-        setFocusRequest((count) => count + 1)
-      }
-    }
+    await settle(
+      () => submit(event),
+      () => {
+        running.current = false
+        if (failed) {
+          restoreFocus.current = null
+          setFocusRequest((count) => count + 1)
+        }
+      },
+    )
   }
 
   const disabled = pending && disableWhilePending

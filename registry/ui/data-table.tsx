@@ -1,7 +1,7 @@
 "use client"
 
 import { createParts } from "@ui-sdk/react/primitive"
-import { useEffect, useRef, useState } from "react"
+import { useRef, useState } from "react"
 
 import {
   DataTableCheckbox,
@@ -61,11 +61,11 @@ function DataTable<Row>({
   const [sort, setSort] = useMirror(state.sort, state.defaultSort ?? null)
   const [selection, setSelection] = useMirror(state.selection, state.defaultSelection ?? [])
   const [requestedPage, setPage] = useMirror(state.page, state.defaultPage ?? 1)
-  // Agent steps run back to back without a render in between, so toggles read the latest selection, not the rendered one.
-  const latestSelection = useRef(selection)
-  useEffect(() => {
-    latestSelection.current = selection
-  })
+  // Agent steps run back to back without a render in between, so a toggle builds on the selection the previous step
+  // chose until a render shows a newer one.
+  const chosen = useRef<{ shown: typeof selection; next: typeof selection } | null>(null)
+  const latestSelection = () =>
+    chosen.current !== null && chosen.current.shown === selection ? chosen.current.next : selection
 
   const sortColumn = columns.find((column) => column.id === sort?.columnId)
   const sorted = sortRows(rows, sort, sortColumn?.sortValue)
@@ -103,7 +103,7 @@ function DataTable<Row>({
       onSelectionChange={(next, details) => {
         state.onSelectionChange?.(next, details)
         if (details.canceled) return
-        latestSelection.current = next
+        chosen.current = { shown: selection, next }
         setSelection(next)
       }}
       page={page}
@@ -123,7 +123,7 @@ function DataTable<Row>({
                   disabled={loading || visibleIds.length === 0}
                   checked={pageSelection === "some" ? "indeterminate" : pageSelection === "all"}
                   onChange={(checked, event) =>
-                    controller.setSelection(toggleIds(latestSelection.current, visibleIds, checked), {
+                    controller.setSelection(toggleIds(latestSelection(), visibleIds, checked), {
                       reason: "select-all",
                       event,
                     })
@@ -162,7 +162,7 @@ function DataTable<Row>({
                           label: labels.selectRow(getRowLabel(row)),
                           selected: selected.has(id),
                           onChange: (checked, event) =>
-                            controller.setSelection(toggleIds(latestSelection.current, [id], checked), {
+                            controller.setSelection(toggleIds(latestSelection(), [id], checked), {
                               reason: "press",
                               event,
                             }),

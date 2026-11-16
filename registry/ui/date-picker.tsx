@@ -43,7 +43,7 @@ function DatePickerInput({ className, placeholder, ...props }: ComponentProps<ty
 function DatePickerTrigger({ className, children, ...props }: ComponentProps<typeof DatePickerTriggerPrimitive>) {
   return (
     <DatePickerTriggerPrimitive
-      // oxlint-disable-next-line eskais/spacing-tokens -- pulls the icon button into the padding so its glyph lines up with the text inset
+      // oxlint-disable-next-line p-otero/spacing-tokens -- pulls the icon button into the padding so its glyph lines up with the text inset
       className={cnState(cn(buttonVariants({ variant: "ghost", size: "icon" }), "-me-2 size-control-sm"), className)}
       {...props}
     >

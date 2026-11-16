@@ -38,7 +38,7 @@ Spacing is chosen by role. The values change with the theme (compact is tighter)
 
 `inline`, `items`, `group`, `section`, `inset-surface` and `control-inset` are Tailwind spacing values, so every spacing utility takes them: `p-inline` pads a menu's popup like parts of one control, `pb-group` separates an accordion panel, `-mx-inline` lets a menu separator bleed through that padding. The chip and item insets exist only as `px-`/`py-`; for a negative bleed or an offset tied to them, use the variable: `-mx-(--item-padding-x)`, `start-(--item-padding-x)`.
 
-1. In `registry/**`, spacing (padding, margin, gap, `space-x/y`, inset offsets used as spacing) uses only role tokens. Allowed: `0`, `px` and 1px optical nudges. Anything else needs `// oxlint-disable-next-line eskais/spacing-tokens -- <reason>`. `eskais/spacing-tokens` enforces this.
+1. In `registry/**`, spacing (padding, margin, gap, `space-x/y`, inset offsets used as spacing) uses only role tokens. Allowed: `0`, `px` and 1px optical nudges. Anything else needs `// oxlint-disable-next-line p-otero/spacing-tokens -- <reason>`. `p-otero/spacing-tokens` enforces this.
 2. A component never sets outer margin. The parent spaces its children with `gap-*`.
 3. Choose by relationship, not by look: parts of the same thing use `gap-inline` (inside one control or row) or `gap-items` (siblings); distinct groups use `gap-group`; separate surfaces use `gap-section`.
 4. Sizes (`size-*`, `h-*`, `w-*`) are not spacing. Leave them, but prefer the tokens (`h-control`, `size-control-sm`).
@@ -198,23 +198,37 @@ Icons come from `lucide-react`, imported by name the way shadcn does: `import { 
 3. Size comes from the parent (`[&_svg]:size-4` in Button, Badge, menu items, inputs) or a `size-*` class: `size-3.5` beside `text-body-sm`, `size-4` beside `text-body`, `size-5` beside a title. Classes override lucide's `size` prop (24 by default, so an unsized icon is 24px). Keep lucide's stroke of 2; a tick in a small indicator (checkbox, select) takes `strokeWidth={2.5}` or `3`.
 4. Colour is `currentColor`: set a text colour (`text-muted-foreground`, `text-success`). Mirror direction icons in right-to-left with `rtl:-scale-x-100` or `rtl:rotate-180`.
 
+## Lint
+
+`.oxlintrc.json` extends the `base`, `react`, `react-agents` and `ui-tailwind` presets of [`@p-otero/oxlint-rules`](https://github.com/p-otero/oxlint-rules) (pinned to a commit) and adds `@shadcn/lint` and the local `eskais` plugin (`tooling/oxlint-plugin-eskais`, only `eskais/no-inline-icons`). Rules from that package are `p-otero/<rule>`.
+
+1. Every suppression says why: `// oxlint-disable-next-line <rule> -- <reason>` (`p-otero/require-suppression-reason`).
+2. Effects live in hook modules: a `use-*.ts` file next to the component (`registry/ui/use-board-focus.ts`) or a `hooks/` folder (`p-otero/no-effect-outside-hooks`). Before writing one, derive during render, act in the event handler, read a subscription with `useSyncExternalStore`, or read the latest props in an Effect with `useEffectEvent`. A new hook file in `registry/ui` joins its item's `files` in `registry.json`.
+3. `p-otero/spacing-tokens` runs on `registry/**` only, with the roles in "Spacing" below.
+4. The component-shape rules (`one-public-component`, `component-name-matches-file`, `max-component-lines`, `no-large-private-component`) are off: a registry file exports a component's parts together (`Card`, `CardHeader`, `CardTitle`…), as shadcn does, and the showcase and site name their demos `…Demo`.
+5. `max-lines` (400) is off for tests, tooling scripts, site content and `*-labels.ts` dictionaries.
+6. React Compiler: `bun run test:compiler` builds the showcase with `babel-plugin-react-compiler` (`apps/showcase/react-compiler.ts`) and runs the overlay, fast-link, shell and contrast checks on it. The build fails when a registry component or hook hits a compiler diagnostic not listed in `allowed` there. React Compiler 1.0 can't compile a `try … finally`, a conditional inside `try`, or a default parameter built from `||`/`&&`, so keep those out of components and hooks.
+
+The `lint-rules` item ships consumers the `react` and `ui-tailwind` presets with `@shadcn/lint`, the component-shape rules off and spacing tokens as warnings.
+
 ## Comments
 
 - Don't narrate what the code does; rename and restructure until the intent is obvious.
 - Comment only non-obvious rationale: upstream bugs or workarounds, platform or protocol constraints, security or performance reasoning.
-- No commented-out code. No TODO without a linked issue. `eskais/no-low-value-comments` enforces this.
+- No commented-out code. No TODO without a linked issue. `p-otero/no-low-value-comments` enforces this.
 
 ## Commands
 
-| Task           | Command                                                  |
-| -------------- | -------------------------------------------------------- |
-| Lint           | `bun run lint`                                           |
-| Format         | `bun run format`                                         |
-| Typecheck      | `bun run typecheck`                                      |
-| Tests          | `bun run test`                                           |
-| Registry       | `bun run registry:build`, then commit `public/r`         |
-| Everything     | `bun run verify`                                         |
-| Showcase       | `bun run dev`                                            |
-| Clean consumer | `node tooling/consumer-check.mjs npm` (or `pnpm`)        |
-| Contrast (CI)  | `bun run test:browser`: axe and pixel contrast in Chrome |
-| Contrast glass | `bun run test:browser:glass`: by hand, not in CI         |
+| Task           | Command                                                          |
+| -------------- | ---------------------------------------------------------------- |
+| Lint           | `bun run lint`                                                   |
+| Format         | `bun run format`                                                 |
+| Typecheck      | `bun run typecheck`                                              |
+| Tests          | `bun run test`                                                   |
+| Registry       | `bun run registry:build`, then commit `public/r`                 |
+| Everything     | `bun run verify`                                                 |
+| Showcase       | `bun run dev`                                                    |
+| Clean consumer | `node tooling/consumer-check.mjs npm` (or `pnpm`)                |
+| Contrast (CI)  | `bun run test:browser`: axe and pixel contrast in Chrome         |
+| Contrast glass | `bun run test:browser:glass`: by hand, not in CI                 |
+| React Compiler | `bun run test:compiler`: compiler build, then the browser checks |

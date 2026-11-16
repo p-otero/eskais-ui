@@ -6,7 +6,6 @@ import {
   createContext,
   isValidElement,
   useContext,
-  useEffect,
   useMemo,
   type ComponentType,
   type ReactElement,
@@ -28,6 +27,7 @@ import type { FormMessages } from "@/components/ui/form-messages"
 import { Input } from "@/components/ui/input"
 import { Switch } from "@/components/ui/switch"
 import { Textarea } from "@/components/ui/textarea"
+import { useFieldRegistration } from "@/components/ui/use-form-sync"
 import { cn } from "@/lib/utils"
 
 /** How a control takes its value: the prop names, and how the form's value maps to the control and back. */
@@ -148,12 +148,7 @@ function FormField<Values extends FieldValues = FieldValues>({
   const { field, fieldState } = useController({ name, control: context.form.control })
   const textLabel = typeof label === "string" ? label : undefined
 
-  useEffect(() => {
-    context.fields.set(name, textLabel)
-    return () => {
-      context.fields.delete(name)
-    }
-  }, [context.fields, name, textLabel])
+  useFieldRegistration(context.fields, name, textLabel)
 
   const error = fieldState.error
   const message = error ? errorText(error, name, textLabel, messages, context.messages) : undefined

@@ -3,7 +3,8 @@
 import type { ChangeDetails } from "@ui-sdk/core"
 import { Button } from "@ui-sdk/react/button"
 import { usePart, usePrimitive, type PartProps } from "@ui-sdk/react/primitive"
-import { useEffect, useMemo, useRef, useState } from "react"
+import { useMemo, useRef, useState } from "react"
+import { flushSync } from "react-dom"
 
 import {
   AttachmentThumb,
@@ -67,7 +68,6 @@ function AttachmentStrip({
   const list = useRef<HTMLUListElement>(null)
   const [expanded, setExpanded] = useState(false)
   const [viewer, setViewer] = useState({ open: false, index: 0, id: "" })
-  const revealed = useRef(false)
   const images = useMemo<LightboxItem[]>(
     () =>
       attachments
@@ -90,13 +90,6 @@ function AttachmentStrip({
 
   const hidden = max !== undefined && !expanded ? Math.max(attachments.length - max, 0) : 0
   const shown = hidden > 0 ? attachments.slice(0, max) : attachments
-
-  useEffect(() => {
-    if (!expanded || !revealed.current || max === undefined) return
-    revealed.current = false
-    const first = attachments[max]
-    list.current?.querySelector<HTMLElement>(`[data-attachment-id="${CSS.escape(first?.id ?? "")}"]`)?.focus()
-  }, [expanded, attachments, max])
 
   const children = (
     <>
@@ -128,8 +121,11 @@ function AttachmentStrip({
               data-slot="attachment-more"
               aria-label={labels.more(hidden)}
               onClick={() => {
-                revealed.current = true
-                setExpanded(true)
+                flushSync(() => setExpanded(true))
+                const first = attachments[max ?? 0]
+                list.current
+                  ?.querySelector<HTMLElement>(`[data-attachment-id="${CSS.escape(first?.id ?? "")}"]`)
+                  ?.focus()
               }}
               className={cn(
                 "touch-target flex shrink-0 cursor-pointer items-center justify-center rounded-lg border border-dashed bg-muted/(--glass-opacity) px-inset-item text-body-sm font-medium text-muted-foreground tabular-nums transition-colors hover:bg-accent hover:text-accent-foreground",

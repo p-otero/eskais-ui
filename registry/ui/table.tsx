@@ -14,7 +14,7 @@ function Table({ className, containerClassName, render, ...props }: TableProps) 
   const label = props["aria-label"]
   const labelledBy = props["aria-labelledby"]
   return (
-    // oxlint-disable-next-line eskais/spacing-tokens -- room for the h-2.5 horizontal scrollbar so it never covers the last row
+    // oxlint-disable-next-line p-otero/spacing-tokens -- room for the h-2.5 horizontal scrollbar so it never covers the last row
     <ScrollArea type="auto" className={cn("w-full data-overflow-x:pb-3", containerClassName)}>
       <ScrollAreaViewport
         role={label || labelledBy ? "group" : undefined}

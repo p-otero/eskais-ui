@@ -3,7 +3,7 @@
 import { syntaxTree } from "@codemirror/language"
 import type { EditorView } from "@codemirror/view"
 import type { SyntaxNode } from "@lezer/common"
-import { useLayoutEffect, useState, useSyncExternalStore } from "react"
+import { useState, useSyncExternalStore } from "react"
 import { createPortal } from "react-dom"
 
 import { Button } from "@/components/ui/button"
@@ -12,6 +12,7 @@ import type { MarkdownEditorLabels } from "@/components/ui/markdown-editor-label
 import type { PortalEntry, PortalStore } from "@/components/ui/markdown-editor-widgets"
 import { MarkdownView, type MarkdownViewProps } from "@/components/ui/markdown-view"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { useRequestMeasure } from "@/components/ui/use-markdown-editor"
 
 type ViewOptions = Pick<MarkdownViewProps, "resolveWikilink" | "taskLabel">
 
@@ -79,7 +80,7 @@ function CodeLanguage({
 }
 
 function TableBlock({ entry, options }: { entry: Extract<PortalEntry, { kind: "table" }>; options: ViewOptions }) {
-  useLayoutEffect(() => entry.view.requestMeasure())
+  useRequestMeasure(entry.view)
   return (
     <div className="cursor-text overflow-x-auto">
       <MarkdownView markdown={entry.source} sourcePositions {...options} />

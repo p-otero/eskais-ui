@@ -1,12 +1,13 @@
 "use client"
 
-import { useEffect, type ReactNode } from "react"
+import type { ReactNode } from "react"
 import { useFormState } from "react-hook-form"
 import { CircleExclamationPointIcon } from "lucide-react"
 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
 import { errorText, useFormContext, type IssueError } from "@/components/ui/form-context"
+import { useFormFlag } from "@/components/ui/use-form-sync"
 import { cn } from "@/lib/utils"
 
 type FormRootErrorProps = {
@@ -93,15 +94,9 @@ function FormActions({
   const context = useFormContext("FormActions")
   const destructive = tone === "destructive"
   const { setConfirm, setBlocked } = context
-  useEffect(() => {
-    setConfirm(destructive)
-    return () => setConfirm(false)
-  }, [destructive, setConfirm])
+  useFormFlag(setConfirm, destructive)
   const blocked = disabled || submitDisabled || forcedPending
-  useEffect(() => {
-    setBlocked(blocked)
-    return () => setBlocked(false)
-  }, [blocked, setBlocked])
+  useFormFlag(setBlocked, blocked)
   const pending = context.pending || forcedPending
 
   return (

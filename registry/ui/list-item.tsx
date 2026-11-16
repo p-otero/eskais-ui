@@ -3,7 +3,7 @@
 import { Button } from "@ui-sdk/react/button"
 import { ListboxItem } from "@ui-sdk/react/listbox"
 import { renderElement, type PartProps } from "@ui-sdk/react/primitive"
-import { createElement, useEffect, useLayoutEffect, useState, type ReactElement, type ReactNode } from "react"
+import { createElement, useState, type ReactElement, type ReactNode } from "react"
 
 import {
   useListContext,
@@ -14,6 +14,7 @@ import {
   type ListProps,
 } from "@/components/ui/list"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
+import { useListItemRegistration, useTruncated } from "@/components/ui/use-list-item"
 import type { Tone } from "@/lib/tone"
 import { cn } from "@/lib/utils"
 
@@ -52,19 +53,6 @@ function IconTile({ tone = "neutral", className, render, ...props }: PartProps<"
     },
     render,
   )
-}
-
-function useTruncated(node: HTMLElement | null) {
-  const [truncated, setTruncated] = useState(false)
-  useEffect(() => {
-    if (!node || typeof ResizeObserver === "undefined") return
-    const measure = () => setTruncated(node.scrollHeight - node.clientHeight > 1)
-    const observer = new ResizeObserver(measure)
-    observer.observe(node)
-    measure()
-    return () => observer.disconnect()
-  }, [node])
-  return truncated
 }
 
 function ListItemTitle({ className, render, ...props }: PartProps<"span">) {
@@ -147,31 +135,19 @@ function ListItem({
   const [titleNode, setTitleNode] = useState<HTMLElement | null>(null)
   const truncated = useTruncated(titleNode)
   const [primary, setPrimary] = useState<HTMLElement | null>(null)
-  const register = context?.register
 
-  useLayoutEffect(() => {
-    if (!register || option) return
-    return register(id, {
-      label: title,
-      activate: () => {
-        if (href) {
-          if (!primary) return false
-          // Marks the click as already selected, so the link only follows itself.
-          primary.dataset.selecting = ""
-          primary.click()
-          return true
-        }
-        if (!onSelect) return false
-        onSelect()
-        return true
-      },
-    })
-  }, [register, option, id, title, href, onSelect, primary])
-
-  useLayoutEffect(() => {
-    if (!register || !option) return
-    return register(id, { label: title, activate: () => false })
-  }, [register, option, id, title])
+  useListItemRegistration(context?.register, id, title, option, () => {
+    if (href) {
+      if (!primary) return false
+      // Marks the click as already selected, so the link only follows itself.
+      primary.setAttribute("data-selecting", "")
+      primary.click()
+      return true
+    }
+    if (!onSelect) return false
+    onSelect()
+    return true
+  })
 
   const titleText = (
     <ListItemTitle ref={setTitleNode} title={option && truncated ? title : undefined}>

@@ -24,6 +24,7 @@
     "registry:validate": "shadcn registry validate",
     "test:browser": "bun run build:showcase && node tooling/overlay-check.mjs && node tooling/fast-link-check.mjs && node tooling/shell-check.mjs && node tooling/contrast-check.mjs && node tooling/contrast-check.mjs default --palettes=blue,violet,green,orange",
     "test:browser:glass": "bun run build:showcase && node tooling/contrast-check.mjs glass",
+    "test:compiler": "REACT_COMPILER=1 bun run build:showcase && node tooling/overlay-check.mjs && node tooling/fast-link-check.mjs && node tooling/shell-check.mjs && node tooling/contrast-check.mjs",
     "screenshots": "bun run build:showcase && node tooling/screenshots.mjs screenshots",
     "verify": "bun run lint && bun run format:check && bun run typecheck && bun run test && bun run registry:build"
   },
@@ -57,6 +58,7 @@
   "devDependencies": {
     "@fontsource-variable/geist": "5.3.0",
     "@fontsource-variable/geist-mono": "5.3.0",
+    "@p-otero/oxlint-rules": "github:p-otero/oxlint-rules#835a22baa11bdd98e5e2d5818de71dc84e66849d",
     "@shadcn/lint": "0.2.5",
     "@testing-library/dom": "10.4.2",
     "@testing-library/react": "16.3.3",

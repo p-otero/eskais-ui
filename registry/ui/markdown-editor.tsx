@@ -1,11 +1,9 @@
 "use client"
 
-import { EditorView } from "@codemirror/view"
 import { createParts } from "@ui-sdk/react/primitive"
-import type { TextEditorAdapter } from "@ui-sdk/react/trigger-menu"
-import { useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from "react"
+import { useId, useMemo, useState } from "react"
 
-import { createAdapterBridge, setMenuOpen } from "@/components/ui/markdown-editor-adapter"
+import { setMenuOpen } from "@/components/ui/markdown-editor-adapter"
 import {
   insertAtCaret,
   insertAtSelection,
@@ -27,18 +25,13 @@ import {
 } from "@/components/ui/markdown-editor-menus"
 import { MarkdownEditorPortals } from "@/components/ui/markdown-editor-portals"
 import { markdownDocument, markdownEditor, type MarkdownEditorHandle } from "@/components/ui/markdown-editor-primitive"
-import {
-  createEditorState,
-  reconfigure,
-  toggleTaskOnLine,
-  type CodeLanguages,
-  type EditorSettings,
-} from "@/components/ui/markdown-editor-state"
-import { useMarkdownSync, type MarkdownConflict } from "@/components/ui/markdown-editor-sync"
+import { toggleTaskOnLine, type CodeLanguages, type EditorSettings } from "@/components/ui/markdown-editor-state"
+import type { MarkdownConflict } from "@/components/ui/markdown-editor-sync"
 import { MarkdownEditorToolbar } from "@/components/ui/markdown-editor-toolbar"
 import { PortalStore } from "@/components/ui/markdown-editor-widgets"
 import type { WikilinkResolver } from "@/components/ui/markdown-syntax"
 import { fieldSurfaceClassName } from "@/components/ui/input"
+import { useMarkdownEditorView } from "@/components/ui/use-markdown-editor"
 import { cn } from "@/lib/utils"
 
 const { Root: EditorRoot } = createParts(markdownEditor, { root: "div" })
@@ -75,18 +68,14 @@ type MarkdownEditorProps = {
 }
 
 function MarkdownEditor(props: MarkdownEditorProps) {
-  const { label, value, readOnly = false, placeholder, resolveWikilink, cspNonce, toolbar = true, className } = props
+  const { label, readOnly = false, placeholder, resolveWikilink, cspNonce, toolbar = true, className } = props
   const labels = useMemo(() => ({ ...markdownEditorLabelsEn, ...props.labels }), [props.labels])
   const slashCommands = useMemo(
     () => props.slashCommands ?? markdownSlashCommands(labels),
     [props.slashCommands, labels],
   )
   const hintId = useId()
-  const hostRef = useRef<HTMLDivElement>(null)
-  const latest = useRef(props)
   const [portals] = useState(() => new PortalStore())
-  const [view, setView] = useState<EditorView>()
-  const [adapter, setAdapter] = useState<TextEditorAdapter>()
 
   const settings = useMemo<EditorSettings>(
     () => ({
@@ -99,49 +88,7 @@ function MarkdownEditor(props: MarkdownEditorProps) {
     }),
     [label, hintId, readOnly, placeholder, cspNonce, resolveWikilink, labels.task, portals],
   )
-  const settingsRef = useRef(settings)
-  const sync = useMarkdownSync(latest)
-
-  useLayoutEffect(() => {
-    latest.current = props
-    settingsRef.current = settings
-  })
-
-  useEffect(() => {
-    const host = hostRef.current
-    if (!host) return
-    const bridge = createAdapterBridge()
-    const hooks = {
-      bridge: bridge.extension,
-      onUpdate: sync.onUpdate,
-      openWikilink: (slug: string) => latest.current.onOpenWikilink?.(slug),
-    }
-    const initial = latest.current.value ?? latest.current.defaultValue ?? ""
-    const languages = latest.current.codeLanguages
-    const editor = new EditorView({
-      state: createEditorState(initial, settingsRef.current, hooks, languages),
-      parent: host,
-    })
-    const detach = sync.attach(editor, initial, (markdown) =>
-      editor.setState(createEditorState(markdown, settingsRef.current, hooks, languages)),
-    )
-    const attached = bridge.attach(editor)
-    setView(editor)
-    setAdapter(attached.adapter)
-    return () => {
-      detach()
-      attached.detach()
-      editor.destroy()
-    }
-  }, [sync])
-
-  useEffect(() => {
-    if (view) reconfigure(view, settings)
-  }, [view, settings])
-
-  useEffect(() => {
-    if (view && value !== undefined) sync.receive(value)
-  }, [view, value, sync])
+  const { hostRef, view, adapter, sync } = useMarkdownEditorView(props, settings)
 
   const handle = useMemo<MarkdownEditorHandle | undefined>(() => {
     if (!view) return undefined

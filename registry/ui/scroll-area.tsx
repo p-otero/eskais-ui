@@ -34,7 +34,7 @@ function ScrollAreaScrollbar({ className, ...props }: ComponentProps<typeof Scro
   return (
     <ScrollAreaScrollbarPrimitive
       className={cnState(
-        // oxlint-disable-next-line eskais/spacing-tokens -- the thumb's inset inside the size-2 track: geometry, not spacing
+        // oxlint-disable-next-line p-otero/spacing-tokens -- the thumb's inset inside the size-2 track: geometry, not spacing
         "group/scrollbar flex touch-none p-0.5 opacity-0 transition-opacity select-none data-visible:opacity-100 data-[orientation=horizontal]:h-2 data-[orientation=horizontal]:flex-col data-[orientation=vertical]:w-2",
         className,
       )}

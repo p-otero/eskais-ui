@@ -2,13 +2,12 @@
 
 import { renderElement, type PartProps } from "@ui-sdk/react/primitive"
 import { cva } from "class-variance-authority"
-import { Children, createContext, isValidElement, use, useId, useLayoutEffect, useState } from "react"
+import { Children, isValidElement, useId, useState } from "react"
 
+import { CardTitleContext, useCardTitleRegistration } from "@/components/ui/use-card-title"
 import { cn } from "@/lib/utils"
 
 type HeadingLevel = 1 | 2 | 3 | 4 | 5 | 6
-
-const CardTitleContext = createContext<((id: string | undefined) => void) | null>(null)
 
 function part(slot: string, base: string) {
   return function CardPart({ className, render, ...props }: PartProps<"div">) {
@@ -105,11 +104,7 @@ function CardTitle({ className, render, headingLevel, id, ...props }: CardTitleP
   const generatedId = useId()
   const renderedId = isValidElement<{ id?: string }>(render) ? render.props.id : undefined
   const titleId = renderedId ?? id ?? generatedId
-  const register = use(CardTitleContext)
-  useLayoutEffect(() => {
-    register?.(titleId)
-    return () => register?.(undefined)
-  }, [register, titleId])
+  useCardTitleRegistration(titleId)
   return renderElement(
     headingLevel === undefined ? "div" : `h${headingLevel}`,
     {

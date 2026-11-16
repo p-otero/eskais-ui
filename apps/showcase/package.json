@@ -35,8 +35,11 @@
     "zod": "4.6.7"
   },
   "devDependencies": {
+    "@babel/core": "7.29.0",
+    "@rolldown/plugin-babel": "0.3.0",
     "@tailwindcss/vite": "4.3.5",
     "@vitejs/plugin-react": "6.3.0",
+    "babel-plugin-react-compiler": "1.0.0",
     "tailwindcss": "4.3.5",
     "vite": "8.3.8"
   }

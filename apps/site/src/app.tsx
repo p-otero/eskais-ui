@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect } from "react"
+import { lazy, Suspense } from "react"
 
 import { Appearance } from "@/components/ui/appearance"
 import { SkipLink } from "@/components/ui/skip-link"
@@ -8,7 +8,7 @@ import { ToastStack } from "@/components/ui/toast"
 import { AgentApproval } from "./agent"
 import { appearance } from "./appearance"
 import { SiteHeader } from "./header"
-import { routes } from "./routes"
+import { useDocumentTitle } from "./hooks/use-document-title"
 import { useRoute } from "./router"
 
 const Landing = lazy(() => import("./landing/landing").then((module) => ({ default: module.Landing })))
@@ -21,13 +21,6 @@ function Loading() {
       <Spinner label="Loading page" />
     </div>
   )
-}
-
-function useDocumentTitle(route: string) {
-  useEffect(() => {
-    const match = routes.find((candidate) => candidate.path === route)
-    if (match) document.title = match.title
-  }, [route])
 }
 
 function Page({ route }: { route: string }) {

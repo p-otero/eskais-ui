@@ -1,7 +1,17 @@
 {
   "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "extends": [
+    "./node_modules/@p-otero/oxlint-rules/presets/base.json",
+    "./node_modules/@p-otero/oxlint-rules/presets/react.json",
+    "./node_modules/@p-otero/oxlint-rules/presets/react-agents.json",
+    "./node_modules/@p-otero/oxlint-rules/presets/ui-tailwind.json"
+  ],
   "plugins": ["typescript", "react", "jsx-a11y", "import", "unicorn", "oxc", "vitest"],
-  "jsPlugins": ["@shadcn/lint", "./tooling/oxlint-plugin-eskais/index.js"],
+  "jsPlugins": [
+    "./node_modules/@p-otero/oxlint-rules/dist/plugin.js",
+    "@shadcn/lint",
+    "./tooling/oxlint-plugin-eskais/index.js"
+  ],
   "categories": {
     "correctness": "error",
     "suspicious": "warn",
@@ -46,7 +56,6 @@
         ]
       }
     ],
-    "eskais/no-low-value-comments": "warn",
     "shadcn/no-raw-colors": "error",
     "shadcn/no-arbitrary-values": [
       "error",
@@ -82,6 +91,17 @@
       {
         "allow": ["**/*.css"]
       }
+    ],
+    "p-otero/one-public-component": "off",
+    "p-otero/component-name-matches-file": "off",
+    "p-otero/max-component-lines": "off",
+    "p-otero/no-large-private-component": "off",
+    "p-otero/spacing-tokens": "off",
+    "p-otero/no-effect-outside-hooks": [
+      "error",
+      {
+        "allow": ["**/hooks/**", "**/use-*.ts"]
+      }
     ]
   },
   "overrides": [
@@ -107,7 +127,24 @@
             ]
           }
         ],
-        "eskais/spacing-tokens": "error",
+        "p-otero/spacing-tokens": [
+          "error",
+          {
+            "roles": [
+              "gap-inline",
+              "gap-items",
+              "gap-group",
+              "gap-section",
+              "px-inset-chip",
+              "py-inset-chip",
+              "px-inset-item",
+              "py-inset-item",
+              "px-control-x",
+              "p-inset-surface",
+              "p-control-inset"
+            ]
+          }
+        ],
         "eskais/no-inline-icons": "error"
       }
     },
@@ -132,6 +169,12 @@
       ],
       "rules": {
         "no-await-in-loop": "off"
+      }
+    },
+    {
+      "files": ["test/**", "tooling/**", "apps/site/src/content/**", "registry/**/*-labels.ts"],
+      "rules": {
+        "max-lines": "off"
       }
     }
   ]
