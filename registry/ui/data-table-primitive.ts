@@ -21,8 +21,8 @@ type DataTableOptions = {
   sort?: DataTableSort | null
   defaultSort?: DataTableSort | null
   onSortChange?: (sort: DataTableSort | null, details: ChangeDetails<DataTableSortChangeReason>) => void
-  selection?: string[]
-  defaultSelection?: string[]
+  selection?: readonly string[]
+  defaultSelection?: readonly string[]
   onSelectionChange?: (selection: string[], details: ChangeDetails<DataTableSelectionChangeReason>) => void
   page?: number
   defaultPage?: number

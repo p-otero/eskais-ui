@@ -2,7 +2,7 @@
 
 import type { ChangeDetails } from "@ui-sdk/core"
 import { createParts } from "@ui-sdk/react/primitive"
-import { useState, type ReactNode } from "react"
+import { useEffect, useState, type ReactNode } from "react"
 import { PanelLeftIcon, XIcon } from "lucide-react"
 
 import { buttonVariants } from "@/components/ui/button"
@@ -22,9 +22,11 @@ import {
 } from "@/components/ui/sidebar-items"
 import {
   defaultNarrowQuery,
+  setSidebarDrawerOpen,
   SidebarTrigger,
   sidebarLabels,
   useNarrow,
+  useSidebarDrawerOpen,
   type SidebarLabels,
   type SidebarTriggerProps,
 } from "@/components/ui/sidebar-trigger"
@@ -38,8 +40,13 @@ type SidebarProps = {
   defaultCollapsed?: boolean
   onCollapsedChange?: (collapsed: boolean, details: ChangeDetails<SidebarCollapsedChangeReason>) => void
   collapsible?: boolean
-  /** Hides the toggle in the header when a SidebarTrigger elsewhere, like in a Topbar, takes its place. */
+  /**
+   * `false` when a SidebarTrigger elsewhere, like in a Topbar's `leading`, takes the place of the sidebar's own
+   * buttons: the collapse toggle in its header and, on narrow screens, the drawer button.
+   */
   trigger?: boolean
+  /** Whether the sidebar renders its drawer button on narrow screens. Follows `trigger` by default. */
+  narrowTrigger?: boolean
   controller?: SidebarController
   narrowQuery?: string
   header?: ReactNode
@@ -60,6 +67,7 @@ function Sidebar({
   controller,
   narrowQuery = defaultNarrowQuery,
   trigger = true,
+  narrowTrigger = trigger,
   header,
   footer,
   labels: labelOverrides,
@@ -69,7 +77,15 @@ function Sidebar({
   const labels = { ...sidebarLabels, ...labelOverrides }
   const narrow = useNarrow(narrowQuery)
   const [ownCollapsed, setOwnCollapsed] = useState(defaultCollapsed)
-  const [drawerOpen, setDrawerOpen] = useState(false)
+  const [ownDrawerOpen, setOwnDrawerOpen] = useState(false)
+  const sharedDrawerOpen = useSidebarDrawerOpen(controller)
+  const drawerOpen = controller ? sharedDrawerOpen : ownDrawerOpen
+  const setDrawerOpen = (open: boolean) =>
+    controller ? setSidebarDrawerOpen(controller, open) : setOwnDrawerOpen(open)
+  // Leaving narrow screens with the drawer open would reopen it on the way back.
+  useEffect(() => {
+    if (!narrow && controller) setSidebarDrawerOpen(controller, false)
+  }, [narrow, controller])
   const collapsed = collapsible && !narrow && (collapsedProp ?? ownCollapsed)
 
   const body = <div className="flex min-h-0 flex-1 flex-col gap-group overflow-y-auto">{children}</div>
@@ -77,9 +93,11 @@ function Sidebar({
   if (narrow) {
     return (
       <Drawer side="start" open={drawerOpen} onOpenChange={setDrawerOpen}>
-        <DrawerTrigger variant="ghost" size="icon" aria-label={labels.open} className={className}>
-          <PanelLeftIcon />
-        </DrawerTrigger>
+        {narrowTrigger && (
+          <DrawerTrigger variant="ghost" size="icon" aria-label={labels.open} className={className}>
+            <PanelLeftIcon />
+          </DrawerTrigger>
+        )}
         <DrawerBackdrop />
         <DrawerContent
           className="gap-group p-items"

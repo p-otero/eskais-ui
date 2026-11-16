@@ -29,10 +29,14 @@ type MobileNavItem = {
 type MobileNavProps = Omit<ComponentProps<"nav">, "children" | "defaultValue"> & {
   /** Names the `<nav>` landmark. */
   label: string
-  /** Up to five. Past five, or with `overflow`, the fifth slot becomes More. */
-  items: MobileNavItem[]
-  /** Links that open from More, above the bar. */
-  overflow?: MobileNavItem[]
+  /**
+   * The routes in the bar. The bar has five slots: up to five routes fill them when there is no `overflow`. With
+   * `overflow`, or more than five routes, the first four stay in the bar and the fifth slot is More, which opens the
+   * rest of `items` and then `overflow`.
+   */
+  items: readonly MobileNavItem[]
+  /** Links that only open from More, above the bar. */
+  overflow?: readonly MobileNavItem[]
   moreLabel?: string
   moreIcon?: ReactNode
   renderLink?: (item: MobileNavItem) => ReactElement<Record<string, unknown>> | undefined
@@ -42,13 +46,18 @@ type MobileNavProps = Omit<ComponentProps<"nav">, "children" | "defaultValue"> &
 
 const maxSlots = 5
 
+// Each slot is a container, so a label in a narrow slot steps down to the meta size before it wraps to a second line.
 const slotClassName =
-  "group/mobile-nav-item relative flex h-(--mobile-nav-height) min-w-0 flex-1 cursor-pointer flex-col items-center justify-center gap-px rounded-control px-inline py-0 text-caption data-has-icon:flex-col data-has-icon:items-center font-medium whitespace-nowrap text-muted-foreground outline-none transition-colors hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset data-current:text-foreground data-open:text-foreground"
+  "@container/mobile-nav-item group/mobile-nav-item relative flex h-(--mobile-nav-height) min-w-0 flex-1 cursor-pointer flex-col items-center justify-center gap-px rounded-control px-px py-0 text-caption data-has-icon:flex-col data-has-icon:items-center font-medium text-muted-foreground outline-none transition-colors hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset data-current:text-foreground data-open:text-foreground"
+
+// Never truncated: two short lines at most, the height of one caption line each, so they fit the bar beside the icon.
+const labelClassName =
+  "max-w-full text-center leading-none text-balance wrap-break-word @max-[4.5rem]/mobile-nav-item:text-meta @max-[4.5rem]/mobile-nav-item:leading-none"
 
 const iconClassName =
   "relative inline-flex h-control-sm w-full max-w-14 items-center justify-center rounded-full transition-colors group-data-current/mobile-nav-item:bg-accent group-data-current/mobile-nav-item:text-accent-foreground group-data-open/mobile-nav-item:bg-accent [&_svg]:size-5 [&_svg]:shrink-0"
 
-const noOverflow: MobileNavItem[] = []
+const noOverflow: readonly MobileNavItem[] = []
 const dots = <EllipsisIcon />
 
 // oxlint-disable-next-line shadcn/no-arbitrary-values -- keeps the links above the home indicator
@@ -81,7 +90,9 @@ function Slot({ item, renderLink }: { item: MobileNavItem; renderLink: MobileNav
         <span className={iconClassName}>
           <NavigationMenuLinkIcon>{item.icon}</NavigationMenuLinkIcon>
         </span>
-        <span className="max-w-full truncate">{item.label}</span>
+        <span data-slot="mobile-nav-label" className={labelClassName}>
+          {item.label}
+        </span>
         {item.badge !== undefined && <Badge>{item.badge}</Badge>}
       </NavigationMenuLink>
     </NavigationMenuItem>
@@ -130,7 +141,9 @@ function MobileNav({
               )}
             >
               <span className={iconClassName}>{moreIcon}</span>
-              <span className="max-w-full truncate">{moreLabel}</span>
+              <span data-slot="mobile-nav-label" className={labelClassName}>
+                {moreLabel}
+              </span>
             </NavigationMenuTrigger>
             <NavigationMenuContent side="top" align="end" sideOffset={8} collisionPadding={8}>
               <ul className="m-0 flex w-56 list-none flex-col gap-px p-0">

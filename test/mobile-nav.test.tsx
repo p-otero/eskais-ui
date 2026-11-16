@@ -101,3 +101,47 @@ test("an agent finds every control by name and opens More", async () => {
   expect(result.ok, result.error?.message).toBe(true)
   expect(screen.getByRole("link", { name: "Settings" })).toBeTruthy()
 })
+
+const five: MobileNavItem[] = [...items, { label: "Wellness", href: "#wellness", icon: <Icon /> }]
+
+test("five routes and no overflow fill all five slots, without More", () => {
+  render(<MobileNav label="Primary" always items={five} />)
+  const nav = screen.getByRole("navigation", { name: "Primary" })
+  expect(
+    within(nav)
+      .getAllByRole("link")
+      .map((link) => link.textContent),
+  ).toEqual(["Home", "Inbox, 3", "Projects", "Agents", "Wellness"])
+  expect(within(nav).queryByRole("button", { name: "More" })).toBeNull()
+})
+
+test("five routes with overflow keep four in the bar, and More opens the fifth before the overflow", async () => {
+  const user = userEvent.setup()
+  render(
+    <MobileNav
+      label="Primary"
+      always
+      items={five}
+      overflow={[{ label: "Settings", href: "#settings", icon: <Icon /> }]}
+    />,
+  )
+  const nav = screen.getByRole("navigation", { name: "Primary" })
+  expect(within(nav).getAllByRole("link")).toHaveLength(4)
+  await user.click(within(nav).getByRole("button", { name: "More" }))
+  await settle()
+  const links = within(nav)
+    .getAllByRole("link")
+    .map((link) => link.textContent)
+  expect(links.slice(4)).toEqual(["Wellness", "Settings"])
+})
+
+test("labels never truncate: they step down to the meta size and wrap instead", () => {
+  render(<MobileNav label="Primary" always items={five} />)
+  const labels = document.querySelectorAll("[data-slot=mobile-nav-label]")
+  expect(labels).toHaveLength(5)
+  for (const label of labels) {
+    expect(label.className).not.toContain("truncate")
+    expect(label.className).toContain("wrap-break-word")
+    expect(label.className).toContain("@max-[4.5rem]/mobile-nav-item:text-meta")
+  }
+})

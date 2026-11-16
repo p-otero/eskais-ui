@@ -7,9 +7,12 @@ type TopbarProps = Omit<ComponentProps<"header">, "children"> & {
   brand?: ReactNode
   /** A SidebarTrigger or a Breadcrumb. */
   leading?: ReactNode
-  /** Search or a command palette trigger, centred. */
+  /**
+   * Search or a command palette trigger, centred. Hidden on narrow screens when `centerCompact` is set, so put only
+   * triggers here: a dialog renders where it is placed, so render it beside the Topbar, bound by its controller.
+   */
   center?: ReactNode
-  /** Shown instead of `center` on narrow screens, usually an icon Button that opens the same thing. */
+  /** Shown instead of `center` on narrow screens, usually an icon Button that opens the same dialog through its controller. */
   centerCompact?: ReactNode
   /** Notifications, appearance and the user menu. */
   trailing?: ReactNode

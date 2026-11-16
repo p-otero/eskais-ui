@@ -5,7 +5,7 @@ import { createParts } from "@ui-sdk/react/primitive"
 import { useEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from "react"
 import { useForm, type DefaultValues, type FieldValues, type Path, type UseFormReturn } from "react-hook-form"
 
-import type { FieldLabelPlacement } from "@/components/ui/field"
+import { FieldLabelPlacementDefault, type FieldLabelPlacement } from "@/components/ui/field"
 import {
   FormContext,
   issueResolver,
@@ -234,7 +234,7 @@ function Form<Schema extends StandardSchemaV1>({
         }}
         className={cn("flex min-w-0 flex-col gap-group", className)}
       >
-        {children}
+        <FieldLabelPlacementDefault value={labelPlacement}>{children}</FieldLabelPlacementDefault>
       </FormRoot>
     </FormContext.Provider>
   )

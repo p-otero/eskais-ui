@@ -14,6 +14,11 @@ async function count(page) {
   return Number((await page.getByTestId("counter").textContent()).replace(/\D/g, ""))
 }
 
+// Runs the steps one after another: each drives the same page.
+function inTurn(items, step) {
+  return items.reduce((previous, item) => previous.then(() => step(item)), Promise.resolve())
+}
+
 async function focusedName(page) {
   return page.evaluate(() => document.activeElement?.getAttribute("aria-label") ?? document.activeElement?.textContent)
 }
@@ -85,6 +90,66 @@ await withShowcase(async (page) => {
   await page.waitForTimeout(1600)
   const returned = await focusedName(page)
   check("closing after autoFocus returns focus to the opener", returned === "Open autofocus dialog", returned)
+
+  await inTurn(["", " by controller"], async (suffix) => {
+    const opener = page.getByRole("button", { name: `Open handoff dialog${suffix}`, exact: true })
+    const handoff = page.getByRole("dialog", { name: `Handoff dialog${suffix}`, exact: true })
+    const thirdParty = page.getByRole("dialog", { name: "Third-party modal" })
+    const closedBy = page.getByTestId(`third-party-closed${suffix.replaceAll(" ", "-")}`)
+    const named = (name) => page.getByRole("button", { name: `${name}${suffix}`, exact: true })
+
+    await opener.click()
+    await handoff.waitFor()
+    await page.waitForTimeout(1600)
+    await named("Continue in a dialog").click()
+    await page.getByRole("dialog", { name: `Second dialog${suffix}`, exact: true }).waitFor()
+    await page.waitForTimeout(1600)
+    const inSecond = await focusedName(page)
+    check(
+      `${suffix || "by trigger"}: a dialog opened while another closes keeps focus once that one has closed`,
+      inSecond === `Second field${suffix}`,
+      inSecond,
+    )
+    await page.keyboard.press("Escape")
+    await page.waitForTimeout(1600)
+
+    const ways = [
+      {
+        label: "a third-party modal opened from its close button",
+        open: () => named("Continue in a third-party modal").click(),
+      },
+      {
+        label: "a third-party modal opened 300ms into a close by Escape",
+        open: async () => {
+          await named("Then open a third-party modal").click()
+          await page.keyboard.press("Escape")
+        },
+      },
+      {
+        label: "a third-party modal opened 300ms into a close by an outside press",
+        open: async () => {
+          await named("Then open a third-party modal").click()
+          await page.mouse.click(10, 10)
+        },
+      },
+    ]
+    await inTurn(ways, async (way) => {
+      await opener.click()
+      await handoff.waitFor()
+      await page.waitForTimeout(1600)
+      await way.open()
+      await page.waitForTimeout(1800)
+      const open = await thirdParty.count()
+      const on = await focusedName(page)
+      check(
+        `${suffix || "by trigger"}: ${way.label} keeps focus and stays open`,
+        open === 1 && on === "Coupon",
+        `open ${open}, closed by "${await closedBy.textContent()}", focus on ${on}`,
+      )
+      if (open) await page.getByRole("button", { name: "Close third-party modal" }).click()
+      await page.waitForTimeout(200)
+    })
+  })
 })
 
 if (failures.length > 0) {

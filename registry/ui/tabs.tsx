@@ -28,16 +28,18 @@ const tabsListClassName =
 
 // A scrolling list clips on both axes, so a tab's focus ring drops its offset to fit inside the list's rim.
 // The fades are masks over the list itself, so they work on any surface; each side's width is 0 until it overflows.
+// The scroll padding is the fade's width, so a tab TabsScroll reveals lands clear of it.
 const scrollClassName = [
-  "max-w-full overflow-x-auto overscroll-x-contain scroll-px-section [scrollbar-width:none] [&::-webkit-scrollbar]:hidden [&_[data-slot=tabs-tab]]:focus-visible:ring-offset-0",
-  "[--fade-left:0px] [--fade-right:0px] group-data-overflow-left/tabs-scroll:[--fade-left:2.5rem] group-data-overflow-right/tabs-scroll:[--fade-right:2.5rem]",
+  "max-w-full overflow-x-auto overscroll-x-contain [--tabs-fade:2.5rem] scroll-px-(--tabs-fade) [scrollbar-width:none] [&::-webkit-scrollbar]:hidden [&_[data-slot=tabs-tab]]:focus-visible:ring-offset-0",
+  "[--fade-left:0px] [--fade-right:0px] group-data-overflow-left/tabs-scroll:[--fade-left:var(--tabs-fade)] group-data-overflow-right/tabs-scroll:[--fade-right:var(--tabs-fade)]",
   "[mask-image:linear-gradient(to_right,transparent,black_var(--fade-left),black_calc(100%-var(--fade-right)),transparent)]",
 ].join(" ")
 
 type TabsListProps = ComponentProps<typeof TabsListPrimitive> & {
   /**
    * `"auto"` (default) lets a horizontal list scroll when its tabs don't fit, with edge fades and, on fine pointers,
-   * scroll buttons. `false` keeps it a plain list that never scrolls.
+   * scroll buttons; the selected or focused tab scrolls into view clear of the fades. `false` keeps it a plain list
+   * that never scrolls.
    */
   scrollable?: "auto" | false
   scrollLabels?: Partial<TabsScrollLabels>

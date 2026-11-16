@@ -38,7 +38,7 @@ type SiteHeaderProps = Omit<ComponentProps<"header">, "children"> & {
   label: string
   /** Usually a link to the home page with the logo. */
   brand?: ReactNode
-  items: SiteHeaderItem[]
+  items: readonly SiteHeaderItem[]
   /** Calls to action at the end, like a Button to sign in. */
   actions?: ReactNode
   /** Turns every link into your router's, like `(item) => <Link to={item.href} />`. */
@@ -108,7 +108,7 @@ function BarItem({ item, renderLink }: { item: SiteHeaderItem; renderLink?: Site
   )
 }
 
-function MorePanel({ items, renderLink }: { items: SiteHeaderItem[]; renderLink?: SiteHeaderRenderLink }) {
+function MorePanel({ items, renderLink }: { items: readonly SiteHeaderItem[]; renderLink?: SiteHeaderRenderLink }) {
   const links = items.filter((item) => !item.items)
   const groups = items.filter((item) => item.items)
   return (

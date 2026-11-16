@@ -13,8 +13,8 @@ import { cn } from "@/lib/utils"
 const { Root: NativeSelectRoot } = createParts(nativeSelect, { root: "select" })
 
 type NativeSelectOption = { value: string; label: string; disabled?: boolean; description?: ReactNode }
-type NativeSelectOptionGroup = { label: string; options: NativeSelectOption[] }
-type NativeSelectOptionList = (NativeSelectOption | NativeSelectOptionGroup)[]
+type NativeSelectOptionGroup = { label: string; options: readonly NativeSelectOption[] }
+type NativeSelectOptionList = readonly (NativeSelectOption | NativeSelectOptionGroup)[]
 
 type NativeSelectProps = Omit<
   ComponentProps<"select">,

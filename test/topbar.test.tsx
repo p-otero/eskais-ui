@@ -69,7 +69,7 @@ test("SidebarTrigger toggles the sidebar through its controller and names the ne
   expect(nav.hasAttribute("data-collapsed")).toBe(false)
 })
 
-test("without the state it is a plain Toggle sidebar button, and it steps aside on narrow screens", async () => {
+test("without the state it is a plain Toggle sidebar button, and on narrow screens it becomes the drawer button", async () => {
   const user = userEvent.setup()
   const { unmount } = render(<Shell known={false} />)
   await settle()
@@ -101,4 +101,61 @@ test("an agent presses the trigger by name", async () => {
   const result = await act(() => agent.act({ steps: [{ ref: "Collapse sidebar", action: "press" }] }))
   expect(result.ok, result.error?.message).toBe(true)
   expect(screen.getByRole("navigation", { name: "Main" }).hasAttribute("data-collapsed")).toBe(true)
+})
+
+function stubNarrow() {
+  vi.stubGlobal("matchMedia", (query: string) => ({
+    matches: true,
+    media: query,
+    addEventListener: () => {},
+    removeEventListener: () => {},
+  }))
+}
+
+test("on narrow screens the Topbar's SidebarTrigger opens the sidebar's drawer, and the sidebar drops its own button", async () => {
+  stubNarrow()
+  const user = userEvent.setup()
+  render(<Shell />)
+  await settle()
+  const trigger = screen.getByRole("button", { name: "Open navigation" })
+  expect(screen.getByRole("banner").contains(trigger)).toBe(true)
+  expect(screen.getAllByRole("button", { name: "Open navigation" })).toHaveLength(1)
+  expect(trigger.getAttribute("aria-expanded")).toBe("false")
+  expect(trigger.getAttribute("aria-haspopup")).toBe("dialog")
+  await user.click(trigger)
+  await settle()
+  const drawer = screen.getByRole("dialog", { name: "Main" })
+  expect(drawer.querySelector('nav[aria-label="Main"]')).not.toBeNull()
+  expect(trigger.getAttribute("aria-expanded")).toBe("true")
+  await user.click(screen.getByRole("button", { name: "Close navigation" }))
+  await settle()
+  expect(screen.queryByRole("dialog")).toBeNull()
+  expect(document.activeElement).toBe(trigger)
+})
+
+test("narrowTrigger keeps the sidebar's own drawer button even when the Topbar has a trigger", async () => {
+  stubNarrow()
+  const [controller] = [createSidebarController()]
+  render(
+    <>
+      <Topbar leading={<SidebarTrigger controller={controller} />} />
+      <Sidebar label="Main" controller={controller} trigger={false} narrowTrigger>
+        <SidebarGroup label="Workspace">
+          <SidebarItem href="#/">Overview</SidebarItem>
+        </SidebarGroup>
+      </Sidebar>
+    </>,
+  )
+  await settle()
+  expect(screen.getAllByRole("button", { name: "Open navigation" })).toHaveLength(2)
+})
+
+test("an agent opens the narrow drawer from the Topbar trigger by name", async () => {
+  stubNarrow()
+  render(<Shell />)
+  await settle()
+  const result = await act(() => agent.act({ steps: [{ ref: "Open navigation", action: "press" }] }))
+  expect(result.ok, result.error?.message).toBe(true)
+  await settle()
+  expect(screen.getByRole("dialog", { name: "Main" })).toBeTruthy()
 })

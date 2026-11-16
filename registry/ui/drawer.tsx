@@ -13,7 +13,7 @@ import {
 } from "@ui-sdk/react/drawer"
 import { renderElement, type PartProps } from "@ui-sdk/react/primitive"
 import type { VariantProps } from "class-variance-authority"
-import type { ComponentProps } from "react"
+import type { ComponentProps, Ref } from "react"
 
 import { buttonVariants } from "@/components/ui/button"
 import { useFocusReturn } from "@/components/ui/dialog"
@@ -46,11 +46,19 @@ function DrawerBackdrop({ className, ...props }: ComponentProps<typeof DrawerBac
   return <DrawerBackdropPrimitive className={cnState(drawerBackdropClassName, className)} {...props} />
 }
 
-function DrawerContent({ className, finalFocus, children, ...props }: ComponentProps<typeof DrawerContentPrimitive>) {
-  const focus = useFocusReturn(finalFocus)
+function DrawerContent({
+  className,
+  finalFocus,
+  ref,
+  children,
+  ...props
+}: ComponentProps<typeof DrawerContentPrimitive>) {
+  const focus = useFocusReturn(finalFocus, ref as Ref<HTMLElement> | undefined)
   return (
     <DrawerContentPrimitive
+      ref={focus.attach}
       className={cnState(drawerContentClassName, className)}
+      // oxlint-disable-next-line react/refs -- read when UI SDK calls finalFocus on close, never during render
       finalFocus={focus.finalFocus}
       {...props}
     >

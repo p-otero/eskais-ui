@@ -21,7 +21,7 @@ type OpenThreadReason = "item-press" | "link-press" | "imperative"
 type OpenLinkReason = "link-press" | "imperative"
 
 type AgentTaskBoardOptions = {
-  tasks?: TaskView[]
+  tasks?: readonly TaskView[]
   /** Stage ids the `stage` filter accepts; without it, the stages the tasks' locations name. */
   stageIds?: readonly string[]
   /** The "no stage" choice's label, which the `stage` filter takes as well as `NO_STAGE`. */

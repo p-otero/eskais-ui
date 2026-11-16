@@ -179,3 +179,43 @@ test("the floating label states live in the theme's field-floated variant and re
   ])
     expect(theme).toContain(condition)
 })
+
+test("a plain Field inside a Form takes the form's placement, unless it sets its own or holds a checkbox", () => {
+  render(
+    <Form
+      label="Ticket"
+      labelPlacement="on"
+      schema={schema}
+      defaultValues={{ email: "", team: null, notes: "", terms: false }}
+      onSubmit={() => undefined}
+    >
+      <Field>
+        <FieldLabel>Summary</FieldLabel>
+        <Textarea readOnly defaultValue="Read-only text" />
+      </Field>
+      <Field labelPlacement="top">
+        <FieldLabel>Reference</FieldLabel>
+        <Input readOnly defaultValue="T-12" />
+      </Field>
+      <Field>
+        <Checkbox>
+          <CheckboxIndicator />
+        </Checkbox>
+        <FieldLabel>Urgent</FieldLabel>
+      </Field>
+    </Form>,
+  )
+  expect(placementOf("Summary")).toBe("on")
+  expect(placementOf("Reference")).toBe("top")
+  expect(placementOf("Urgent")).toBe("top")
+})
+
+test("outside a Form a plain Field stays on top", () => {
+  render(
+    <Field>
+      <FieldLabel>Summary</FieldLabel>
+      <Textarea />
+    </Field>,
+  )
+  expect(placementOf("Summary")).toBe("top")
+})

@@ -4,7 +4,7 @@ import { createAgent } from "@ui-sdk/react/agent"
 import { afterEach, beforeEach, expect, test, vi } from "vitest"
 
 import { Tabs, TabsList, TabsPanel, TabsTab } from "@/components/ui/tabs"
-import { readEdges } from "@/components/ui/tabs-scroll"
+import { readEdges, revealTab } from "@/components/ui/tabs-scroll"
 
 import { axeViolations, settle } from "./overlay-helpers"
 
@@ -123,4 +123,76 @@ test("an agent sees only the tablist and selects a tab by name", async () => {
   )
   expect(result.ok, result.error?.message).toBe(true)
   expect(screen.getByRole("tab", { name: "Domains" }).getAttribute("aria-selected")).toBe("true")
+})
+
+function rect(left: number, right: number) {
+  return { left, right, top: 0, bottom: 32, width: right - left, height: 32, x: left, y: 0, toJSON: () => ({}) }
+}
+
+function revealFixture(direction: "ltr" | "rtl" = "ltr") {
+  const list = document.createElement("div")
+  list.style.scrollPaddingLeft = "40px"
+  list.style.scrollPaddingRight = "40px"
+  list.style.direction = direction
+  list.dataset.slot = "tabs-list"
+  const tab = document.createElement("button")
+  tab.setAttribute("role", "tab")
+  list.append(tab)
+  document.body.append(list)
+  vi.spyOn(list, "getBoundingClientRect").mockReturnValue(rect(0, 300) as DOMRect)
+  const scrollTo = vi.fn()
+  list.scrollTo = scrollTo as unknown as HTMLElement["scrollTo"]
+  const place = (left: number, right: number) =>
+    vi.spyOn(tab, "getBoundingClientRect").mockReturnValue(rect(left, right) as DOMRect)
+  return { list, tab, scrollTo, place }
+}
+
+test("revealTab scrolls a tab under the end fade clear of it, by the list's scroll padding", () => {
+  const { list, tab, scrollTo, place } = revealFixture()
+  scrollLeft = 100
+  place(250, 330)
+  revealTab(list, tab, true)
+  expect(scrollTo).toHaveBeenCalledWith({ left: 100 + 70, behavior: "smooth" })
+  place(10, 90)
+  revealTab(list, tab, true)
+  expect(scrollTo).toHaveBeenLastCalledWith({ left: 100 - 30, behavior: "smooth" })
+  scrollTo.mockClear()
+  place(60, 200)
+  revealTab(list, tab, true)
+  expect(scrollTo).not.toHaveBeenCalled()
+  list.remove()
+})
+
+test("revealTab jumps without animating under reduced motion, and a wide tab shows its start in rtl", () => {
+  vi.stubGlobal("matchMedia", (query: string) => ({
+    matches: query.includes("reduce"),
+    media: query,
+    addEventListener: () => {},
+    removeEventListener: () => {},
+  }))
+  const { list, tab, scrollTo, place } = revealFixture("rtl")
+  scrollLeft = -100
+  place(-20, 320)
+  revealTab(list, tab, true)
+  expect(scrollTo).toHaveBeenCalledWith({ left: -100 + 60, behavior: "auto" })
+  list.remove()
+  vi.unstubAllGlobals()
+})
+
+test("a tab an agent selects is revealed", async () => {
+  const scrollTo = vi.fn()
+  HTMLElement.prototype.scrollTo = scrollTo as unknown as HTMLElement["scrollTo"]
+  render(<Views />)
+  await settle()
+  const list = screen.getByRole("tablist", { name: "Project views" })
+  vi.spyOn(list, "getBoundingClientRect").mockReturnValue(rect(0, 300) as DOMRect)
+  const secrets = screen.getByRole("tab", { name: "Secrets" })
+  vi.spyOn(secrets, "getBoundingClientRect").mockReturnValue(rect(700, 790) as DOMRect)
+  const result = await act(() =>
+    agent.act({ steps: [{ ref: "Project views", action: "setValue", args: ["Secrets"] }] }),
+  )
+  expect(result.ok, result.error?.message).toBe(true)
+  await settle()
+  expect(secrets.getAttribute("aria-selected")).toBe("true")
+  expect(scrollTo).toHaveBeenCalledWith(expect.objectContaining({ left: 490 }))
 })

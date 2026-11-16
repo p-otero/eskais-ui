@@ -7,7 +7,7 @@ type ProposalReason = "item-press" | "imperative"
 type ProposalAction = (id: string, details: ChangeDetails<ProposalReason>) => void | Promise<void>
 
 type AgentTaskProposalsOptions = {
-  tasks?: TaskView[]
+  tasks?: readonly TaskView[]
   mode?: BoardMode
   agentApproval?: AgentApproval
   /** Required with `agentApproval` "confirm": what an agent asks a person before it approves or rejects. */

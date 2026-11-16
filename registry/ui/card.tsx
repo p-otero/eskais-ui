@@ -2,7 +2,7 @@
 
 import { renderElement, type PartProps } from "@ui-sdk/react/primitive"
 import { cva } from "class-variance-authority"
-import { createContext, isValidElement, use, useId, useLayoutEffect, useState } from "react"
+import { Children, createContext, isValidElement, use, useId, useLayoutEffect, useState } from "react"
 
 import { cn } from "@/lib/utils"
 
@@ -55,19 +55,46 @@ function Card({ className, render, children, surface = "card", ...props }: CardP
   )
 }
 
-// The header is a container: under 17rem of content (a card of about 20rem) the action wraps below the title,
-// so it can never squeeze the title to nothing; beside it, the title keeps at least 8rem.
-const CardHeader = part(
-  "card-header",
-  "@container/card-header grid auto-rows-min items-start gap-x-group gap-y-inline px-inset-surface has-[>[data-slot=card-action]]:grid-cols-[minmax(min(8rem,100%),1fr)_minmax(0,auto)] [&>:not([data-slot=card-action])]:col-start-1 [&>:not([data-slot=card-action])]:@max-[17rem]/card-header:col-span-full",
-)
-
 const CardEyebrow = part("card-eyebrow", "text-meta tracking-meta text-muted-foreground uppercase")
 
-const CardAction = part(
-  "card-action",
-  "order-last col-span-full flex min-w-0 flex-wrap items-center gap-items self-start justify-self-start @min-[17rem]/card-header:order-none @min-[17rem]/card-header:col-span-1 @min-[17rem]/card-header:col-start-2 @min-[17rem]/card-header:row-span-2 @min-[17rem]/card-header:row-start-1 @min-[17rem]/card-header:justify-end @min-[17rem]/card-header:justify-self-end",
-)
+const CardAction = part("card-action", "flex max-w-full min-w-0 flex-wrap items-center gap-items")
+
+// With an action, the header is a wrapping row: the heading (eyebrow, title, description) grows from a basis of
+// --card-heading-basis, so the action wraps below it as soon as the heading would get narrower than that, whatever
+// the action's width. A CardAction must be a direct child.
+function CardHeader({ className, render, children, ...props }: PartProps<"div">) {
+  const parts = typeof children === "function" ? [] : Children.toArray(children)
+  const actions = parts.filter((child) => isValidElement(child) && child.type === CardAction)
+  if (actions.length === 0) {
+    return renderElement(
+      "div",
+      {
+        "data-slot": "card-header",
+        className: cn("flex flex-col gap-inline px-inset-surface", className),
+        children,
+        ...props,
+      },
+      render,
+    )
+  }
+  return renderElement(
+    "div",
+    {
+      "data-slot": "card-header",
+      className: cn("flex flex-wrap items-start gap-x-group gap-y-items px-inset-surface", className),
+      children: (
+        <>
+          <div data-slot="card-heading" className="flex min-w-0 grow basis-(--card-heading-basis) flex-col gap-inline">
+            {parts.filter((child) => !actions.includes(child))}
+          </div>
+          {actions}
+        </>
+      ),
+      ...props,
+    },
+    render,
+  )
+}
 
 type CardTitleProps = PartProps<"div"> & {
   /** Renders an `h1`–`h6`. Without it the title is a `div` that still names the card. */

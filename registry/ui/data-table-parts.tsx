@@ -156,8 +156,8 @@ type DataTableProps<Row> = {
   defaultSort?: DataTableSort | null
   onSortChange?: (sort: DataTableSort | null, details: ChangeDetails<DataTableSortChangeReason>) => void
   selectable?: boolean
-  selection?: string[]
-  defaultSelection?: string[]
+  selection?: readonly string[]
+  defaultSelection?: readonly string[]
   onSelectionChange?: (selection: string[], details: ChangeDetails<DataTableSelectionChangeReason>) => void
   pageSize?: number
   page?: number

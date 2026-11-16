@@ -13,7 +13,7 @@ import { useNow } from "@/components/ui/relative-time"
 
 type AttemptTimelineProps = Omit<ComponentProps<typeof Timeline>, "children"> &
   Partial<Omit<AttemptEventOptions, "labels" | "now" | "usageOpen">> & {
-    attempts: AttemptView[]
+    attempts: readonly AttemptView[]
     labels?: Partial<AttemptTimelineLabels>
     /** "Now" for every relative time; one shared clock when left out. */
     now?: Instant

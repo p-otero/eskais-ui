@@ -9,7 +9,7 @@ import {
   FieldLegend as FieldLegendPrimitive,
   FieldSet as FieldSetPrimitive,
 } from "@ui-sdk/react/field"
-import { createContext, useContext, type ComponentProps, type ReactNode } from "react"
+import { Children, createContext, isValidElement, useContext, type ComponentProps, type ReactNode } from "react"
 
 import { cnState } from "@/lib/utils"
 
@@ -17,6 +17,12 @@ import { cnState } from "@/lib/utils"
 type FieldLabelPlacement = "top" | "in" | "on"
 
 const FieldLabelPlacementContext = createContext<FieldLabelPlacement>("top")
+
+/**
+ * A default placement for the Fields inside, like a Form's `labelPlacement`. A Field that sets its own wins, and one
+ * that holds no control able to float its label (a checkbox, a switch) keeps it on top.
+ */
+const FieldLabelPlacementDefault = createContext<FieldLabelPlacement | undefined>(undefined)
 
 /** The label placement of the Field around a control; controls give `in` a blank placeholder to float on. */
 function useFieldLabelPlacement() {
@@ -80,15 +86,25 @@ const labelPlacementClassName: Record<FieldLabelPlacement, string> = {
 
 type FieldProps = ComponentProps<typeof FieldPrimitive> & {
   /**
-   * `top` (default) puts the label above the control. `in` puts it inside, like a placeholder, and floats it up on
-   * focus or once there's a value; a placeholder then shows only while focused. `on` sets it on the control's border,
-   * over `--field-label-surface`. `in` and `on` suit text controls: Input, InputGroup, Textarea, Select, NativeSelect,
-   * NumberInput, DatePicker, DateTimePicker and Combobox.
+   * `top` (default) above the control; `in` inside it, floating up on focus or with a value (a placeholder shows only
+   * while focused); `on` on its border, over `--field-label-surface`. `in` and `on` suit text controls (Input,
+   * Textarea, Select, NativeSelect, NumberInput, DatePicker, Combobox…). Unset inside a Form, a Field holding one of
+   * those takes the Form's `labelPlacement`.
    */
   labelPlacement?: FieldLabelPlacement
 }
 
-function Field({ className, labelPlacement = "top", ...props }: FieldProps) {
+function holdsFloatingControl(children: unknown) {
+  if (typeof children === "function") return false
+  return Children.toArray(children as ReactNode).some(
+    (child) => isValidElement(child) && floatingLabelControls.has(child.type as object),
+  )
+}
+
+function Field({ className, labelPlacement: ownPlacement, ...props }: FieldProps) {
+  const inherited = useContext(FieldLabelPlacementDefault)
+  const labelPlacement =
+    ownPlacement ?? (inherited !== undefined && holdsFloatingControl(props.children) ? inherited : "top")
   return (
     <FieldLabelPlacementContext value={labelPlacement}>
       <FieldPrimitive
@@ -158,6 +174,7 @@ export {
   FieldError,
   FieldGroup,
   FieldLabel,
+  FieldLabelPlacementDefault,
   FieldLegend,
   FieldSet,
   floatingLabelControls,

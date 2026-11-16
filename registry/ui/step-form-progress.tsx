@@ -18,7 +18,7 @@ const titleClassName: Record<StepState, string> = {
 }
 
 type StepFormProgressProps = {
-  steps: { id: string; title: ReactNode }[]
+  steps: readonly { id: string; title: ReactNode }[]
   current: number
   /** Names the list for screen readers, in the page's language. */
   label: string

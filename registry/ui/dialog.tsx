@@ -12,7 +12,15 @@ import {
 } from "@ui-sdk/react/dialog"
 import { renderElement, type PartProps } from "@ui-sdk/react/primitive"
 import { cva, type VariantProps } from "class-variance-authority"
-import { useLayoutEffect, useRef, type ComponentProps, type ReactNode, type RefObject } from "react"
+import {
+  useCallback,
+  useLayoutEffect,
+  useRef,
+  type ComponentProps,
+  type ReactNode,
+  type Ref,
+  type RefObject,
+} from "react"
 
 import { buttonVariants } from "@/components/ui/button"
 import { cn, cnState } from "@/lib/utils"
@@ -71,12 +79,29 @@ type DialogContentProps = ComponentProps<typeof DialogContentPrimitive> & {
   sheet?: boolean
 }
 
-type FocusMemory = { opener: HTMLElement | null; movedBeforeOpen: boolean }
+type FocusMemory = { opener: HTMLElement | null; movedBeforeOpen: boolean; content?: HTMLElement | null }
 type FinalFocus = ComponentProps<typeof DialogContentPrimitive>["finalFocus"]
 
 function focusedElement() {
   const active = document.activeElement
   return active instanceof HTMLElement && active !== document.body ? active : null
+}
+
+function openModals() {
+  const modals = [...document.querySelectorAll('[aria-modal="true"]')]
+  try {
+    modals.push(...document.querySelectorAll("dialog:modal"))
+  } catch {
+    // Engines without :modal (jsdom) still see modals by aria-modal.
+  }
+  return modals.filter((modal) => !modal.hasAttribute("data-ending-style"))
+}
+
+// A closing dialog gives focus back only from inside itself, or from <body> when no other modal is open. Another
+// modal opened meanwhile (one of ours or another library's, which may move focus in a frame later) keeps it.
+function mayReturnFocus(own: Element | null, active: Element | null = focusedElement()) {
+  if (active) return own?.contains(active) ?? false
+  return !openModals().some((modal) => modal !== own && !own?.contains(modal))
 }
 
 // Mounts before the content's children, so its layout effect runs before React's `autoFocus` inside them, and
@@ -87,13 +112,13 @@ function FocusOpener({ memoryRef, restore }: { memoryRef: RefObject<FocusMemory>
   useLayoutEffect(() => {
     if (!recorded.current) {
       recorded.current = true
-      memoryRef.current = { opener: focusedElement(), movedBeforeOpen: false }
+      memoryRef.current = { ...memoryRef.current, opener: focusedElement(), movedBeforeOpen: false }
     }
     return () => {
       const inside = document.activeElement
       const { opener } = memoryRef.current
       queueMicrotask(() => {
-        if (!restore || !opener?.isConnected || inside?.isConnected || focusedElement()) return
+        if (!restore || !opener?.isConnected || inside?.isConnected || !mayReturnFocus(null)) return
         opener.focus({ preventScroll: true })
       })
     }
@@ -123,33 +148,70 @@ function withFocusMarkers(content: ReactNode, memoryRef: RefObject<FocusMemory>,
   )
 }
 
+function assignRef(ref: Ref<HTMLElement> | undefined, element: HTMLElement | null) {
+  if (typeof ref === "function") return ref(element)
+  if (ref) ref.current = element
+  return undefined
+}
+
+function resolveFocusTarget(target: Exclude<FinalFocus, "none">) {
+  if (target === undefined || target === "trigger") return null
+  if (typeof target === "function") return target()
+  if (typeof target === "string") return document.querySelector<HTMLElement>(target)
+  return target
+}
+
 /**
  * Keeps focus return working when UI SDK can't see the opener: the content unmounts while open
- * (`{open && <Dialog open />}`), or a React `autoFocus` field took focus first. Pass the content's
- * `finalFocus`, and wrap its children.
+ * (`{open && <Dialog open />}`), or a React `autoFocus` field took focus first. It never takes focus from another
+ * modal opened while this one closes. Pass the content's `finalFocus` and `ref`, give the content the returned
+ * `finalFocus` and `attach` (as its ref), and wrap its children.
  */
-function useFocusReturn(finalFocus: FinalFocus) {
+function useFocusReturn(finalFocus: FinalFocus, forwarded?: Ref<HTMLElement>) {
   const memoryRef = useRef<FocusMemory>({ opener: null, movedBeforeOpen: false })
   const restore = finalFocus !== "none"
   const returnTo = () => {
     const { opener, movedBeforeOpen } = memoryRef.current
     return movedBeforeOpen && opener?.isConnected ? opener : null
   }
+  // Returning the focused element leaves focus where it is; null would send UI SDK down its fallback chain.
+  const guarded = () => {
+    if (!mayReturnFocus(memoryRef.current.content ?? null))
+      return focusedElement() ?? (document.activeElement as HTMLElement | null)
+    return finalFocus === undefined ? returnTo() : resolveFocusTarget(finalFocus as Exclude<FinalFocus, "none">)
+  }
   function wrap<State>(children: ReactNode | ((state: State) => ReactNode)) {
     return typeof children === "function"
       ? (state: State) => withFocusMarkers(children(state), memoryRef, restore)
       : withFocusMarkers(children, memoryRef, restore)
   }
-  return { finalFocus: finalFocus ?? returnTo, wrap }
+  const attach = useCallback(
+    (element: HTMLElement | null) => {
+      memoryRef.current.content = element
+      return assignRef(forwarded, element)
+    },
+    [forwarded],
+  )
+  return { finalFocus: restore ? guarded : finalFocus, wrap, attach }
 }
 
-function DialogContent({ className, size = "md", sheet = true, finalFocus, children, ...props }: DialogContentProps) {
-  const focus = useFocusReturn(finalFocus)
+function DialogContent({
+  className,
+  size = "md",
+  sheet = true,
+  finalFocus,
+  ref,
+  children,
+  ...props
+}: DialogContentProps) {
+  const focus = useFocusReturn(finalFocus, ref as Ref<HTMLElement> | undefined)
   return (
     <DialogContentPrimitive
+      ref={focus.attach}
       data-size={size}
       data-sheet={sheet ? "" : undefined}
       className={cnState(dialogContentVariants({ size, sheet }), className)}
+      // oxlint-disable-next-line react/refs -- read when UI SDK calls finalFocus on close, never during render
       finalFocus={focus.finalFocus}
       {...props}
     >
