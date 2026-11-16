@@ -49,6 +49,7 @@ function AgentTaskBoard(props: AgentTaskBoardProps) {
   const { onApproveProposal, onRejectProposal, renderThreadLink, onOpenThread } = props
   const { detailPresentation = "dialog", density = "auto", agentAvatars, columnAccent = "tint" } = props
   const { renderLink, onOpenLink, renderAttachments, renderLocation, stages } = props
+  const { renderBacklogActions, renderCardActions } = props
   const tones = useMemo(() => ({ ...taskStatusAccentTones, ...props.columnTones }), [props.columnTones])
   const labels = useMemo(() => resolveLabels(props.labels), [props.labels])
   const now = useNow({ now: mode === "snapshot" ? generatedAt : props.now })
@@ -137,7 +138,14 @@ function AgentTaskBoard(props: AgentTaskBoardProps) {
   } else if (view === "table") {
     content = <AgentTaskBoardTable tasks={filtered} selectedTaskId={selectedId} display={display} />
   } else if (view === "backlog") {
-    content = <AgentTaskBoardBacklog tasks={filtered} selectedTaskId={selectedId} display={display} />
+    content = (
+      <AgentTaskBoardBacklog
+        tasks={filtered}
+        selectedTaskId={selectedId}
+        display={display}
+        renderActions={renderBacklogActions}
+      />
+    )
   } else {
     content = (
       <AgentTaskBoardColumns
@@ -145,6 +153,7 @@ function AgentTaskBoard(props: AgentTaskBoardProps) {
         selectedTaskId={selectedId}
         display={display}
         tones={columnAccent === "tint" ? tones : undefined}
+        renderCardActions={renderCardActions}
         onCollapsedChange={(status, collapsed) => {
           const next = withColumn(columns, status, { collapsed })
           setColumns(next)

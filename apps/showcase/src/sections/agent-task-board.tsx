@@ -1,7 +1,8 @@
-import { useRef, useState } from "react"
+import { useCallback, useRef, useState } from "react"
 
 import { AgentTaskBoard } from "@/components/ui/agent-task-board"
 import type { DetailPresentation } from "@/components/ui/agent-task-board-props"
+import { Button } from "@/components/ui/button"
 import { Field, FieldLabel } from "@/components/ui/field"
 import { SegmentedControl, SegmentedControlIndicator, SegmentedControlItem } from "@/components/ui/segmented-control"
 import type { TaskLink, TaskStatus, TaskView } from "@/lib/agent-task-types"
@@ -37,6 +38,24 @@ function AgentTaskBoardSection() {
     setLog(`Rejected ${id}.`)
   }
 
+  const copyCommand = useCallback(
+    (task: TaskView) => (
+      <Button
+        variant="ghost"
+        size="sm"
+        aria-label={`Copy command for ${task.id}`}
+        title={`Copy command for ${task.id}`}
+        onClick={() => {
+          void navigator.clipboard?.writeText(`agent run ${task.id}`).catch(() => undefined)
+          setLog(`Copied the command for ${task.id}.`)
+        }}
+      >
+        Copy command
+      </Button>
+    ),
+    [],
+  )
+
   const shared = {
     tasks,
     timeZone: "UTC",
@@ -46,12 +65,13 @@ function AgentTaskBoardSection() {
     stages: sampleStages,
     onApproveProposal: approve,
     onRejectProposal: reject,
+    renderBacklogActions: copyCommand,
   }
 
   return (
     <Section
       title="AgentTaskBoard"
-      description="The full board for agent tasks: filters and stages, board, table or backlog, summary, collapsible columns, attachments, and the detail as a dialog, drawer or side panel. Live mode decides proposals; snapshot mode is read-only."
+      description="The full board for agent tasks: filters and stages, board, table or backlog (each row with a host action), summary, collapsible columns, attachments, and the detail as a dialog, drawer or side panel. Live mode decides proposals; snapshot mode is read-only."
     >
       <div className="flex w-full flex-col gap-4">
         <div className="flex flex-wrap items-end gap-4">

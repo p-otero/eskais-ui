@@ -6,6 +6,7 @@ Versions follow [semver](https://semver.org). Before 1.0, a minor version can br
 
 ### Added
 
+- AgentTaskBoard: `renderBacklogActions(task)` adds host controls to each backlog row after Approve/Reject, in snapshot mode too, and `renderCardActions(task)` to each card; `TaskCard` takes `renderActions`.
 - Registry items: `utils`, `theme`, `button`, `field`, `input`, `search-field`, `dialog`, `confirm-dialog`, `card`, `badge`, `lint-rules`.
 - `search-field` primitive built with `definePrimitive`, with a `submit` agent action.
 - `confirm-dialog` with async confirm, inline errors and required `agentConfirm` for destructive actions.

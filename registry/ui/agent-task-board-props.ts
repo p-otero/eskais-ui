@@ -46,6 +46,14 @@ interface AgentTaskBoardBaseProps {
   /** Replaces the stage track of `task.location` in the detail's side column. */
   renderLocation?: (task: TaskView) => ReactNode
   /**
+   * The host's controls for one task, such as a copy-command button, at the end of its backlog row after
+   * Approve/Reject. Shows in snapshot mode too. Use UI SDK parts (the registry's `Button`) with a name that
+   * says which task they act on, so agents can press them.
+   */
+  renderBacklogActions?: (task: TaskView) => ReactNode
+  /** The same at the end of a board card, after Approve/Reject. Keep it stable (`useCallback`): cards are memoized. */
+  renderCardActions?: (task: TaskView) => ReactNode
+  /**
    * The pipeline `task.location` points into, in order. Cards show the stage as a pill, the detail as a
    * track, and the toolbar gets a row of stage toggles that filters by it.
    */

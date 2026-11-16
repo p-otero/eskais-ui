@@ -6,7 +6,9 @@ import { describe, expect, test, vi } from "vitest"
 
 import { AgentTaskBoard, agentTaskBoardLabelsEs, type AgentTaskBoardProps } from "@/components/ui/agent-task-board"
 import { agentTaskBoard } from "@/components/ui/agent-task-board-primitive"
+import { Button } from "@/components/ui/button"
 import { backlogGroups, countByStage, filterTasks } from "@/lib/agent-task-board-model"
+import type { TaskView } from "@/lib/agent-task-types"
 
 import { axeViolations } from "./axe"
 import { GENERATED_AT, generateTasks, sampleStages, sampleTasks } from "./fixtures/agent-tasks"
@@ -161,6 +163,30 @@ describe("detail", () => {
   })
 })
 
+describe("card actions", () => {
+  test("renderCardActions ends each card, above its stretched button, and an agent presses it", async () => {
+    const copied = vi.fn()
+    renderBoard({
+      renderCardActions: (task) =>
+        task.status === "working" ? (
+          <Button variant="outline" size="sm" onClick={() => copied(task.id)}>
+            {`Copy command for ${task.id}`}
+          </Button>
+        ) : null,
+    })
+    await tick()
+    const card = cardOf("T-014")!
+    expect(card.lastElementChild?.getAttribute("data-slot")).toBe("task-card-actions")
+    expect(cardOf("T-015")?.querySelector('[data-slot="task-card-actions"]')).toBeNull()
+    await user().click(within(card).getByRole("button", { name: "Copy command for T-014" }))
+    expect(copied).toHaveBeenCalledWith("T-014")
+    expect(detail()).toBeNull()
+    const result = await agent.act({ steps: [{ ref: "Copy command for T-014", action: "press" }] })
+    expect(result.ok, result.error?.message).toBe(true)
+    expect(copied).toHaveBeenCalledTimes(2)
+  })
+})
+
 describe("stage filter", () => {
   test("a row of stage toggles with counts filters the board", async () => {
     renderBoard()
@@ -231,6 +257,46 @@ describe("backlog", () => {
     expect(screen.getByText("Nothing in the backlog.")).toBeTruthy()
   })
 
+  test("host actions follow Approve/Reject in each row, also in snapshot mode", async () => {
+    const copied = vi.fn()
+    const renderBacklogActions = (task: TaskView) => (
+      <Button variant="ghost" size="sm" onClick={() => copied(task.id)}>
+        {`Copy command for ${task.id}`}
+      </Button>
+    )
+    const { unmount } = renderBoard({
+      defaultView: "backlog",
+      mode: "live",
+      now: GENERATED_AT,
+      onApproveProposal: vi.fn(),
+      renderBacklogActions,
+    })
+    await tick()
+    const proposal = document.querySelector<HTMLElement>('[data-slot="list-item"][data-item-id="T-011"]')!
+    const actions = proposal.querySelector('[data-slot="list-item-actions"]')!
+    const names = within(actions as HTMLElement)
+      .getAllByRole("button")
+      .map((button) => button.getAttribute("aria-label") ?? button.textContent)
+    expect(names.at(-1)).toBe("Copy command for T-011")
+    expect(names).toContain("Approve proposal T-011")
+    await user().click(within(proposal).getByRole("button", { name: "Copy command for T-011" }))
+    expect(copied).toHaveBeenCalledWith("T-011")
+    expect(detail()).toBeNull()
+    unmount()
+
+    renderBoard({ defaultView: "backlog", renderBacklogActions })
+    await tick()
+    expect(screen.queryByRole("button", { name: /Approve proposal/ })).toBeNull()
+    expect(screen.getByRole("button", { name: "Copy command for T-013" })).toBeTruthy()
+    expect(await axeViolations(screen.getByRole("group", { name: "Backlog" }))).toEqual([])
+  })
+
+  test("without host actions or live proposals, a row has no actions slot", async () => {
+    renderBoard({ defaultView: "backlog", renderBacklogActions: () => null })
+    await tick()
+    expect(document.querySelector('[data-slot="list-item-actions"]')).toBeNull()
+  })
+
   test("Spanish labels", async () => {
     renderBoard({ defaultView: "backlog", labels: agentTaskBoardLabelsEs })
     await tick()
@@ -284,6 +350,27 @@ describe("agents", () => {
     })
     expect(opened.ok, opened.error?.message).toBe(true)
     expect(await screen.findByRole("button", { name: "Close viewer" })).toBeTruthy()
+  })
+
+  test("an agent presses a host action inside a backlog row by its name", async () => {
+    const copied = vi.fn()
+    renderBoard({
+      defaultView: "backlog",
+      renderBacklogActions: (task) => (
+        <Button variant="ghost" size="sm" onClick={() => copied(task.id)}>
+          {`Copy command for ${task.id}`}
+        </Button>
+      ),
+    })
+    await tick()
+    // The row's own button reads the action in its row text, so the name alone is ambiguous: the documented
+    // flow is to take the ref from the snapshot.
+    const copy = onPage().find((entry) => entry.label === "Copy command for T-013")
+    expect(copy?.actions).toContain("press")
+    const result = await agent.act({ steps: [{ ref: copy!.ref, action: "press" }] })
+    expect(result.ok, result.error?.message).toBe(true)
+    expect(copied).toHaveBeenCalledWith("T-013")
+    expect(detail()).toBeNull()
   })
 
   test("an agent selects a backlog row through the list", async () => {
