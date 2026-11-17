@@ -3363,7 +3363,7 @@
           "type": "registry:ui"
         }
       ],
-      "docs": "Rows are one tab stop: arrows or j/k move, Home/End and PageUp/PageDown jump, Enter calls `onRowOpen(row)`, and with `selectable` Space or x toggles the focused row; a checkbox or button inside a row keeps its own keys. Past 200 rows (`virtualize=\"auto\"`, `estimateSize`, default 41) only the rows in view render, in `tbody` between gap rows, with `aria-rowcount` and `aria-rowindex`, a sticky header and find in page through hidden stubs. Bound its height (`className=\"max-h-96\"`) so it scrolls inside; otherwise it scrolls with the page. A column takes `wrap` (its cells wrap onto more lines instead of truncating), `cellClassName` (classes on every body cell, such as a width) and `headerClassName` (classes on its header cell). `manual` hands sorting and paging to a server: `rows` is the current page as given, sort and page changes are only reported (`onSortChange`, `onPageChange`), `pageCount` or `total` with `pageSize` sets the pages, and a column with `sortField` sorts without a `sortValue`. `busy` keeps the rows while marking the table `aria-busy`; `secondarySorts` shows the place of each sort after the first."
+      "docs": "Rows are one tab stop: arrows or j/k move, Home/End and PageUp/PageDown jump, Enter calls `onRowOpen(row)`, and with `selectable` Space or x toggles the focused row; a checkbox or button inside a row keeps its own keys. Past 200 rows (`virtualize=\"auto\"`, `estimateSize`, default 41) only the rows in view render, in `tbody` between gap rows, with `aria-rowcount` and `aria-rowindex`, a sticky header and find in page through hidden stubs. Bound its height (`className=\"max-h-96\"`) so it scrolls inside; otherwise it scrolls with the page. A column takes `wrap` (its cells wrap onto more lines instead of truncating), `cellClassName` (classes on every body cell, such as a width) and `headerClassName` (classes on its header cell). `manual` hands sorting and paging to a server: `rows` is the current page as given, sort and page changes are only reported (`onSortChange`, `onPageChange`), `pageCount` or `total` with `pageSize` sets the pages, and a column with `sortField` sorts without a `sortValue`. `busy` keeps the rows while marking the table `aria-busy`; `secondarySorts` shows the place of each sort after the first. `ServerDataTable` (from `server-data-table`) builds on it."
     },
     {
       "name": "skip-link",
@@ -3559,7 +3559,7 @@
       "type": "registry:lib",
       "title": "Filter Schema",
       "description": "Typed filters declared once: defineFilters with text, options, boolean, number, date, dateRange and remoteOption fields, FilterValues inferred from it, a canonical AST, serializers for query params, JSON, RSQL, OData, Spring Filter, GraphQL where and q-only search, and a URL codec that round-trips readable params.",
-      "docs": "`defineFilters({ status: { kind: \"options\", label, options, multiple: true }, … })` is the whitelist: keys and wire `field` names must be identifiers, and nothing a person types becomes a field name. `FilterValues<typeof schema>` types the values. `toFilterAst(schema, values)` joins the active ones into a `FilterNode` (`and`, `or`, `not`, `{ field, op, value }`); text fields send `{ param: \"q\" }` by default (read with `searchTerms`) or match `{ fields, op: \"contains\" }`, joined by `or`. A date range's end is inclusive: `lte` the last day, or `end: \"next-day\"` for `lt` the day after when the backend stores date-times. `$where` adds an expression with groups, checked against `schemaFields(schema)`. Serializers, each its own module: `queryParams(ast, { style: \"suffix\" | \"dto\" | \"bracket\" })` (and only), `jsonAst` (POST body), `rsql`, `odata` (`$filter`), `springFilter` (turkraft), `graphqlWhere` (`dialect: \"hasura\" | \"prisma\"`) and `searchOnly`. Each escapes per its grammar and throws a `FilterSerializeError` for what it can't write safely, like a wildcard inside a text match. Dates are ISO 8601 by default (`dates: \"iso\" | \"iso-date\" | \"epoch-ms\" | fn`), from strings, `Date` or Temporal values. `matchesFilter(ast, item)` evaluates a filter in memory. `createUrlCodec(schema, { prefix, format, defaults })` keeps schema values, not the wire format, in readable params (`?status=open,closed&created=2026-01-01..2026-02-01&page=2&sort=name.asc`), one encoded `f` param when `$where` has groups, and drops anything a tampered URL puts there that doesn't fit.",
+      "docs": "`defineFilters({ status: { kind: \"options\", label, options, multiple: true }, … })` is the whitelist: keys and wire `field` names must be identifiers, and nothing a person types becomes a field name. `FilterValues<typeof schema>` types the values. `toFilterAst(schema, values)` joins the active ones into a `FilterNode` (`and`, `or`, `not`, `{ field, op, value }`); text fields send `{ param: \"q\" }` by default (read with `searchTerms`) or match `{ fields, op: \"contains\" }`, joined by `or`. A date range's end is inclusive: `lte` the last day, or `end: \"next-day\"` for `lt` the day after when the backend stores date-times. `$where` adds an expression with groups, checked against `schemaFields(schema)`. Serializers, each its own module: `queryParams(ast, { style: \"suffix\" | \"dto\" | \"bracket\" })` (and only), `jsonAst` (POST body), `rsql`, `odata` (`$filter`), `springFilter` (turkraft), `graphqlWhere` (`dialect: \"hasura\" | \"prisma\"`) and `searchOnly`. Each escapes per its grammar and throws a `FilterSerializeError` for what it can't write safely, like a wildcard inside a text match. Dates are ISO 8601 by default (`dates: \"iso\" | \"iso-date\" | \"epoch-ms\" | fn`), from strings, `Date` or Temporal values. `matchesFilter(ast, item)` evaluates a filter in memory. `createUrlCodec(schema, { prefix, format, defaults })` keeps schema values, not the wire format, in readable params (`?status=open,closed&created=2026-01-01..2026-02-01&page=2&sort=name.asc`), one encoded `f` param when `$where` has groups, and drops anything a tampered URL puts there that doesn't fit. `parseFilterInput(field, input)` reads loose input (option labels, `\"yes\"`, `\">= 10\"`, `\"2026-01-01..2026-01-31\"`) into a field's value and `findFilterKey(schema, name)` finds a field by key or label, for agents and command palettes.",
       "registryDependencies": [
         "@eskais/page-source"
       ],
@@ -3594,6 +3594,10 @@
         },
         {
           "path": "registry/lib/filter-url.ts",
+          "type": "registry:lib"
+        },
+        {
+          "path": "registry/lib/filter-input.ts",
           "type": "registry:lib"
         }
       ]
@@ -3630,6 +3634,78 @@
         },
         {
           "path": "registry/ui/use-server-data.ts",
+          "type": "registry:ui"
+        }
+      ]
+    },
+    {
+      "name": "server-data-table",
+      "type": "registry:ui",
+      "title": "Server Data Table",
+      "description": "A DataTable over a PageSource: the server filters, sorts and pages; page numbers, previous and next, or load more follow what the source gives; DataState covers loading, error with retry and empty; a polite status says \"Showing 21–40 of 312\" after each load; filters, sort and page can live in the URL.",
+      "docs": "`<ServerDataTable label source columns filters labels={{ errorTitle, retry, emptyTitle }} />`. Columns are DataTable columns; `sortField` sorts one on the server, and `sortMode=\"multi\"` adds a column with Shift+click. `navigation=\"auto\"` shows page numbers with an exact total (or the source's `fetchTotal`), previous and next with an estimate or only `hasMore`, and load more for a cursor; `\"infinite\"` also loads when the end scrolls into view, beside the button. `pageSize` (25) and `pageSizes` (`[10, 25, 50, 100]`, capped by the source's `maxPageSize`) show a page size select. `filters` takes a `defineFilters` schema, `filterUi` picks the built-in filter UI (`\"search\"`, a `FilterSearch`, by default when the schema has a text field), and `toolbar` composes your own from the parts. `urlState={hashUrlState()}` (or `historyUrlState()`, or `{ adapter, prefix, history, format }`) keeps filters, sort and page in readable params, and Back and Forward move through them. While a page loads its predecessor stays, marked `aria-busy`; it never shows empty while loading or after an error. The status says \"Loading…\" only once a load has taken 400 ms, and focus stays on the control pressed. Agents sort and page through the table (`sortBy`, `setPage`) and filter through the \"{label} filters\" group: `filter(\"Status\", [\"Open\"])`, `clearFilters()`. Visible copy has no default: `errorTitle`, `retry` and `emptyTitle` are required; control names default to English (`labels.pageSize`, `loadMore`, `range`…). Pass `controller` from `usePageController` to drive it from outside.",
+      "dependencies": [
+        "@ui-sdk/core@0.1.0-beta.5",
+        "@ui-sdk/react@0.1.0-beta.5"
+      ],
+      "registryDependencies": [
+        "@eskais/utils",
+        "@eskais/theme",
+        "@eskais/button",
+        "@eskais/select",
+        "@eskais/pagination",
+        "@eskais/data-table",
+        "@eskais/states",
+        "@eskais/filter-search",
+        "@eskais/server-data",
+        "@eskais/url-state",
+        "@eskais/filter-schema",
+        "@eskais/page-source"
+      ],
+      "files": [
+        {
+          "path": "registry/ui/server-data-table.tsx",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/server-data-table-parts.tsx",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/use-server-table.ts",
+          "type": "registry:ui"
+        }
+      ]
+    },
+    {
+      "name": "filter-search",
+      "type": "registry:ui",
+      "title": "Filter Search",
+      "description": "The search box of a filter schema: shows the text at once and commits it after the page controller's 250 ms debounce, Enter commits, Escape clears. FilterScope gives filter UIs their schema and controller and lets agents filter by a field's label.",
+      "docs": "Inside a `ServerDataTable` (its `toolbar`, or `filterUi=\"search\"`) it finds the schema and controller by itself; elsewhere wrap filter UIs in `<FilterScope schema controller label>` or pass `schema` and `controller`. It edits the schema's first text field and takes its `label` unless you pass one. An agent's `setValue` commits without the debounce. `FilterScope` is a group named by `label` with agent actions `filter(field, value)`, where the field is a key or a label and the value loose input (option labels or values, `\"yes\"`, `\">= 10\"`, `\"2026-01-01..2026-01-31\"`, read by `parseFilterInput`), and `clearFilters()`. `useFilterScope(props)` returns the schema, controller and state for a filter UI of your own.",
+      "dependencies": [
+        "@ui-sdk/core@0.1.0-beta.5",
+        "@ui-sdk/react@0.1.0-beta.5",
+        "lucide-react@1.68.0"
+      ],
+      "registryDependencies": [
+        "@eskais/utils",
+        "@eskais/theme",
+        "@eskais/input",
+        "@eskais/filter-schema",
+        "@eskais/page-source"
+      ],
+      "files": [
+        {
+          "path": "registry/ui/filter-search.tsx",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/filter-scope.tsx",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/server-filters-primitive.ts",
           "type": "registry:ui"
         }
       ]

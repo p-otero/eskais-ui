@@ -751,6 +751,24 @@ const itemNotes: Record<string, ItemNotes> = {
     usage: "Opt in when people write fenced code: the languages load lazily, per fence.",
     related: ["markdown-editor"],
   },
+  "server-data-table": {
+    usage:
+      "Wrap your endpoint in a PageSource, declare the filters once, and the table pages, sorts, filters and keeps it in the URL.",
+    a11y: [
+      'A polite status says what is shown after each load ("Showing 21–40 of 312"), and "Loading…" only once a load has taken 400 ms.',
+      "Focus stays on the control you pressed; new rows never take it. Row navigation starts again at the first row without moving focus.",
+      "While a page loads the table keeps its rows and is marked aria-busy; it never says empty while loading or after an error.",
+    ],
+    agent:
+      'Agents sort and page through the table\'s own actions (sortBy, setPage) and filter through the filters group: filter("Status", ["Open"]), clearFilters(). Every control is a named UI SDK part.',
+    related: ["data-table", "filter-search", "server-data", "page-source", "filter-schema"],
+  },
+  "filter-search": {
+    usage: "Put it in a ServerDataTable toolbar, or in a FilterScope beside any view on a page controller.",
+    a11y: ["A search landmark named by the field's label; Escape clears only when there is text."],
+    agent: "Agents set the search by its label, and it commits at once; FilterScope adds filter(field, value).",
+    related: ["server-data-table", "filter-bar", "search-field"],
+  },
   "server-data": {
     usage:
       "Reach for the hooks when you build your own screen on a PageSource; the server table, list and combobox already use them.",
