@@ -3888,6 +3888,7 @@
       "type": "registry:ui",
       "title": "Link",
       "description": "Text link with inline, nav, muted, standalone and plain variants: underlined at rest or on hover so it never relies on colour, external and new-tab handling, aria-current, render for router links, an opt-in onFollow that routes plain clicks and gives agents a follow action, and fast navigation on a primary mouse press (fast={false} or data-no-fast-link to opt out); FastLinkRegion and useFastLink do the same for plain anchors.",
+      "docs": "Same-origin links follow on a primary mouse press (`pointerdown`), for navigation only: `fast={false}` opts a link out, `data-no-fast-link` on an ancestor a region or the app. Hash routers work too: an `href` that starts with `#/` follows on press, through `onFollow` or by setting `location.hash`, while any other `#…` href is an in-page anchor and stays native. Set another prefix with `data-fast-link-hash-prefix` on an ancestor (`<body data-fast-link-hash-prefix=\"#!/\">`) or `FastLinkRegion hashPrefix`; an empty value makes every `#…` href an anchor.",
       "dependencies": [
         "@ui-sdk/core@0.1.0-beta.5",
         "@ui-sdk/react@0.1.0-beta.5",

@@ -14,7 +14,7 @@ Eskais UI is a shadcn-style registry of React components built on Vercel UI SDK 
 - Import UI SDK from its public entries (`@ui-sdk/react/dialog`), never `internal/*`.
 - Every control has an accessible name. Style from `data-slot` and state attributes with the semantic tokens in `registry/styles/theme.css`.
 - Destructive actions carry `data-agent-confirm`.
-- Links follow on mouse press (`@fast-link/core`, through `Link`, `NavigationMenuLink` or `FastLinkRegion`), for navigation only: a press can't be cancelled by moving away (WCAG 2.5.2), so actions stay on `Button`s and menu items, and a link that confirms or changes something gets `fast={false}`. `data-no-fast-link` on an ancestor (`<body>` for the whole app) opts out.
+- Links follow on mouse press (`@fast-link/core`, through `Link`, `NavigationMenuLink` or `FastLinkRegion`), for navigation only: a press can't be cancelled by moving away (WCAG 2.5.2), so actions stay on `Button`s and menu items, and a link that confirms or changes something gets `fast={false}`. `data-no-fast-link` on an ancestor (`<body>` for the whole app) opts out. A `#/…` href is a hash route and follows on press (`location.hash` or `onFollow`); other `#…` hrefs are in-page anchors and stay native (`data-fast-link-hash-prefix` changes the prefix).
 - Registry code (`registry/**`) must run in consumer browsers and in Node/npm/pnpm projects: no `bun`, `bun:*` or `node:*` imports.
 - Registry code passes strict consumers' type-aware lint: `bun run lint` also runs `typescript/restrict-template-expressions` on `registry/**` (`tooling/oxlint-type-aware.json`). Convert a non-string in a template literal with `String()` or a formatter.
 - No default copy in a specific language, except overridable accessible labels.
