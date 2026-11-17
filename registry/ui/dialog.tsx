@@ -14,7 +14,8 @@ import { renderElement, type PartProps } from "@ui-sdk/react/primitive"
 import { cva, type VariantProps } from "class-variance-authority"
 import { useCallback, useRef, type ComponentProps, type ReactNode, type Ref, type RefObject } from "react"
 
-import { buttonVariants } from "@/components/ui/button"
+import { buttonVariants, type ButtonLookProps } from "@/components/ui/button"
+import { ControlTooltip } from "@/components/ui/tooltip"
 import {
   focusedElement,
   mayReturnFocus,
@@ -23,8 +24,6 @@ import {
   type FocusMemory,
 } from "@/components/ui/use-dialog-focus"
 import { cn, cnState } from "@/lib/utils"
-
-type ButtonLook = VariantProps<typeof buttonVariants>
 
 // While they animate out, the backdrop and content let presses through, so the first click on the page counts.
 const backdropClassName =
@@ -62,9 +61,14 @@ function DialogTrigger({
   className,
   variant = "outline",
   size,
+  tooltip,
   ...props
-}: ComponentProps<typeof DialogTriggerPrimitive> & ButtonLook) {
-  return <DialogTriggerPrimitive className={cnState(buttonVariants({ variant, size }), className)} {...props} />
+}: Omit<ComponentProps<typeof DialogTriggerPrimitive>, "aria-label"> & ButtonLookProps) {
+  return (
+    <ControlTooltip label={props["aria-label"]} tooltip={tooltip} iconOnly={size === "icon"}>
+      <DialogTriggerPrimitive className={cnState(buttonVariants({ variant, size }), className)} {...props} />
+    </ControlTooltip>
+  )
 }
 
 function DialogBackdrop({ className, ...props }: ComponentProps<typeof DialogBackdropPrimitive>) {
@@ -228,9 +232,14 @@ function DialogClose({
   className,
   variant = "outline",
   size,
+  tooltip,
   ...props
-}: ComponentProps<typeof DialogClosePrimitive> & ButtonLook) {
-  return <DialogClosePrimitive className={cnState(buttonVariants({ variant, size }), className)} {...props} />
+}: Omit<ComponentProps<typeof DialogClosePrimitive>, "aria-label"> & ButtonLookProps) {
+  return (
+    <ControlTooltip label={props["aria-label"]} tooltip={tooltip} iconOnly={size === "icon"}>
+      <DialogClosePrimitive className={cnState(buttonVariants({ variant, size }), className)} {...props} />
+    </ControlTooltip>
+  )
 }
 
 export {

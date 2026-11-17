@@ -11,7 +11,6 @@ import {
   toast,
 } from "@ui-sdk/react/toast"
 import type { ToastType } from "@ui-sdk/react/toast"
-import type { VariantProps } from "class-variance-authority"
 import { useCallback } from "react"
 import type { ComponentProps, Ref } from "react"
 import {
@@ -23,12 +22,11 @@ import {
   type LucideIcon,
 } from "lucide-react"
 
-import { buttonVariants } from "@/components/ui/button"
+import { buttonVariants, type ButtonLookProps } from "@/components/ui/button"
+import { ControlTooltip } from "@/components/ui/tooltip"
 import { Spinner } from "@/components/ui/spinner"
 import type { Tone } from "@/lib/tone"
 import { cn, cnState } from "@/lib/utils"
-
-type ButtonLook = VariantProps<typeof buttonVariants>
 
 // The region is a manual popover in the top layer, so the UA popover box (inset, margin, border, canvas) is reset.
 // It takes no pointer events, so only the toasts cover the page beneath.
@@ -158,18 +156,28 @@ function ToastAction({
   className,
   variant = "default",
   size = "sm",
+  tooltip,
   ...props
-}: ComponentProps<typeof ToastActionPrimitive> & ButtonLook) {
-  return <ToastActionPrimitive className={cnState(buttonVariants({ variant, size }), className)} {...props} />
+}: Omit<ComponentProps<typeof ToastActionPrimitive>, "aria-label"> & ButtonLookProps) {
+  return (
+    <ControlTooltip label={props["aria-label"]} tooltip={tooltip} iconOnly={size === "icon"}>
+      <ToastActionPrimitive className={cnState(buttonVariants({ variant, size }), className)} {...props} />
+    </ControlTooltip>
+  )
 }
 
 function ToastClose({
   className,
   variant = "ghost",
   size = "sm",
+  tooltip,
   ...props
-}: ComponentProps<typeof ToastClosePrimitive> & ButtonLook) {
-  return <ToastClosePrimitive className={cnState(buttonVariants({ variant, size }), className)} {...props} />
+}: Omit<ComponentProps<typeof ToastClosePrimitive>, "aria-label"> & ButtonLookProps) {
+  return (
+    <ControlTooltip label={props["aria-label"]} tooltip={tooltip} iconOnly={size === "icon"}>
+      <ToastClosePrimitive className={cnState(buttonVariants({ variant, size }), className)} {...props} />
+    </ControlTooltip>
+  )
 }
 
 const toneIcons = {
@@ -244,7 +252,7 @@ function ToastStack({ labels, closeLabel, ...props }: ToastStackProps) {
             </ToastClose>
           ) : (
             item.dismissible !== false && (
-              <ToastClose aria-label={close} className="size-control-sm px-0">
+              <ToastClose size="icon" aria-label={close} className="size-control-sm">
                 <XIcon />
               </ToastClose>
             )

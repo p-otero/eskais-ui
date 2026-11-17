@@ -12,14 +12,12 @@ import {
   createDrawerController,
 } from "@ui-sdk/react/drawer"
 import { renderElement, type PartProps } from "@ui-sdk/react/primitive"
-import type { VariantProps } from "class-variance-authority"
 import type { ComponentProps, Ref } from "react"
 
-import { buttonVariants } from "@/components/ui/button"
+import { buttonVariants, type ButtonLookProps } from "@/components/ui/button"
+import { ControlTooltip } from "@/components/ui/tooltip"
 import { useFocusReturn } from "@/components/ui/dialog"
 import { cn, cnState } from "@/lib/utils"
-
-type ButtonLook = VariantProps<typeof buttonVariants>
 
 // The drawer drives the content's translate and the backdrop's opacity itself, so neither is styled here.
 // While it animates out, presses go through to the page underneath.
@@ -37,9 +35,14 @@ function DrawerTrigger({
   className,
   variant = "outline",
   size,
+  tooltip,
   ...props
-}: ComponentProps<typeof DrawerTriggerPrimitive> & ButtonLook) {
-  return <DrawerTriggerPrimitive className={cnState(buttonVariants({ variant, size }), className)} {...props} />
+}: Omit<ComponentProps<typeof DrawerTriggerPrimitive>, "aria-label"> & ButtonLookProps) {
+  return (
+    <ControlTooltip label={props["aria-label"]} tooltip={tooltip} iconOnly={size === "icon"}>
+      <DrawerTriggerPrimitive className={cnState(buttonVariants({ variant, size }), className)} {...props} />
+    </ControlTooltip>
+  )
 }
 
 function DrawerBackdrop({ className, ...props }: ComponentProps<typeof DrawerBackdropPrimitive>) {
@@ -111,9 +114,14 @@ function DrawerClose({
   className,
   variant = "outline",
   size,
+  tooltip,
   ...props
-}: ComponentProps<typeof DrawerClosePrimitive> & ButtonLook) {
-  return <DrawerClosePrimitive className={cnState(buttonVariants({ variant, size }), className)} {...props} />
+}: Omit<ComponentProps<typeof DrawerClosePrimitive>, "aria-label"> & ButtonLookProps) {
+  return (
+    <ControlTooltip label={props["aria-label"]} tooltip={tooltip} iconOnly={size === "icon"}>
+      <DrawerClosePrimitive className={cnState(buttonVariants({ variant, size }), className)} {...props} />
+    </ControlTooltip>
+  )
 }
 
 export {

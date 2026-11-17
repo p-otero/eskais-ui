@@ -25,9 +25,10 @@ const itemNotes: Record<string, ItemNotes> = {
     a11y: [
       "A real <button> from UI SDK: Enter and Space, focus ring, disabled that can stay focusable.",
       "While pending it sets aria-busy, ignores presses and keeps focus; pendingAnnouncement is read after a second.",
-      'size="icon" requires aria-label at the type level.',
+      'size="icon" requires aria-label at the type level, and shows it in a tooltip that labels the button, so the name is heard once.',
     ],
-    agent: "Agents press it by its text. With data-agent-confirm, the press waits for your allow callback.",
+    agent:
+      "Agents press it by its text, or an icon button by its aria-label; its tooltip stays out of the snapshot. With data-agent-confirm, the press waits for your allow callback.",
     related: ["spinner", "confirm-dialog", "toggle"],
   },
   kbd: {
@@ -246,8 +247,9 @@ const itemNotes: Record<string, ItemNotes> = {
     a11y: [
       "Names or describes its trigger; opens on hover and focus, never holds interactive content.",
       "Escape dismisses it without moving focus.",
+      "A touch screen never opens it, so it never covers the finger or hides what a tap does.",
     ],
-    related: ["popover", "kbd"],
+    related: ["popover", "kbd", "button"],
   },
   "hover-card": {
     a11y: ["A link that previews where it goes: the link still works without the card."],

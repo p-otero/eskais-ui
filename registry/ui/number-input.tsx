@@ -15,6 +15,7 @@ import { MinusIcon, PlusIcon } from "lucide-react"
 
 import { floatingLabelControls, useFloatingPlaceholder } from "@/components/ui/field"
 import { fieldSurfaceClassName } from "@/components/ui/input"
+import { ControlTooltip, type ControlTooltipOption } from "@/components/ui/tooltip"
 import { cnState } from "@/lib/utils"
 
 function NumberInput({ className, ...props }: ComponentProps<typeof NumberInputPrimitive>) {
@@ -49,19 +50,43 @@ function NumberInputControl({ className, placeholder, ...props }: ComponentProps
 const stepButtonClassName =
   "inline-flex h-full w-control shrink-0 cursor-pointer items-center justify-center text-muted-foreground transition-colors outline-none hover:bg-accent hover:text-accent-foreground data-disabled:cursor-not-allowed data-disabled:opacity-50 data-disabled:hover:bg-transparent [&_svg]:size-4"
 
-function NumberInputDecrement({ className, children, ...props }: ComponentProps<typeof NumberInputDecrementPrimitive>) {
+function NumberInputDecrement({
+  className,
+  children,
+  "aria-label": ariaLabel = "Decrease",
+  tooltip,
+  ...props
+}: ComponentProps<typeof NumberInputDecrementPrimitive> & { tooltip?: ControlTooltipOption }) {
   return (
-    <NumberInputDecrementPrimitive aria-label="Decrease" className={cnState(stepButtonClassName, className)} {...props}>
-      {children ?? <MinusIcon />}
-    </NumberInputDecrementPrimitive>
+    <ControlTooltip label={ariaLabel} tooltip={tooltip} iconOnly={children === undefined}>
+      <NumberInputDecrementPrimitive
+        aria-label={ariaLabel}
+        className={cnState(stepButtonClassName, className)}
+        {...props}
+      >
+        {children ?? <MinusIcon />}
+      </NumberInputDecrementPrimitive>
+    </ControlTooltip>
   )
 }
 
-function NumberInputIncrement({ className, children, ...props }: ComponentProps<typeof NumberInputIncrementPrimitive>) {
+function NumberInputIncrement({
+  className,
+  children,
+  "aria-label": ariaLabel = "Increase",
+  tooltip,
+  ...props
+}: ComponentProps<typeof NumberInputIncrementPrimitive> & { tooltip?: ControlTooltipOption }) {
   return (
-    <NumberInputIncrementPrimitive aria-label="Increase" className={cnState(stepButtonClassName, className)} {...props}>
-      {children ?? <PlusIcon />}
-    </NumberInputIncrementPrimitive>
+    <ControlTooltip label={ariaLabel} tooltip={tooltip} iconOnly={children === undefined}>
+      <NumberInputIncrementPrimitive
+        aria-label={ariaLabel}
+        className={cnState(stepButtonClassName, className)}
+        {...props}
+      >
+        {children ?? <PlusIcon />}
+      </NumberInputIncrementPrimitive>
+    </ControlTooltip>
   )
 }
 

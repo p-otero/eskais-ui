@@ -17,6 +17,7 @@ import type { ComponentProps } from "react"
 import { ChevronLeftIcon, ChevronRightIcon } from "lucide-react"
 
 import { buttonVariants } from "@/components/ui/button"
+import { ControlTooltip, type ControlTooltipOption } from "@/components/ui/tooltip"
 import { cnState } from "@/lib/utils"
 
 type PaginationLabels = {
@@ -97,19 +98,33 @@ function PaginationLink({ className, ...props }: ComponentProps<typeof Paginatio
   )
 }
 
-function PaginationPrevious({ className, children, ...props }: ComponentProps<typeof PaginationPreviousPrimitive>) {
+function PaginationPrevious({
+  className,
+  children,
+  tooltip,
+  ...props
+}: ComponentProps<typeof PaginationPreviousPrimitive> & { tooltip?: ControlTooltipOption }) {
   return (
-    <PaginationPreviousPrimitive className={cnState(stepClassName, className)} {...props}>
-      {children ?? <Chevron direction="previous" />}
-    </PaginationPreviousPrimitive>
+    <ControlTooltip label={props["aria-label"]} tooltip={tooltip} iconOnly={children === undefined}>
+      <PaginationPreviousPrimitive className={cnState(stepClassName, className)} {...props}>
+        {children ?? <Chevron direction="previous" />}
+      </PaginationPreviousPrimitive>
+    </ControlTooltip>
   )
 }
 
-function PaginationNext({ className, children, ...props }: ComponentProps<typeof PaginationNextPrimitive>) {
+function PaginationNext({
+  className,
+  children,
+  tooltip,
+  ...props
+}: ComponentProps<typeof PaginationNextPrimitive> & { tooltip?: ControlTooltipOption }) {
   return (
-    <PaginationNextPrimitive className={cnState(stepClassName, className)} {...props}>
-      {children ?? <Chevron direction="next" />}
-    </PaginationNextPrimitive>
+    <ControlTooltip label={props["aria-label"]} tooltip={tooltip} iconOnly={children === undefined}>
+      <PaginationNextPrimitive className={cnState(stepClassName, className)} {...props}>
+        {children ?? <Chevron direction="next" />}
+      </PaginationNextPrimitive>
+    </ControlTooltip>
   )
 }
 

@@ -197,19 +197,20 @@ Icons come from `lucide-react`, imported by name the way shadcn does: `import { 
 2. Lucide hides an icon from assistive tech (and so from agents) unless it gets an `aria-*`, `role` or `title` prop. A decorative icon needs nothing. A meaningful one, with no text beside it, uses `<Icon icon={XIcon} label="…" />` from `icon`.
 3. Size comes from the parent (`[&_svg]:size-4` in Button, Badge, menu items, inputs) or a `size-*` class: `size-3.5` beside `text-body-sm`, `size-4` beside `text-body`, `size-5` beside a title. Classes override lucide's `size` prop (24 by default, so an unsized icon is 24px). Keep lucide's stroke of 2; a tick in a small indicator (checkbox, select) takes `strokeWidth={2.5}` or `3`.
 4. Colour is `currentColor`: set a text colour (`text-muted-foreground`, `text-success`). Mirror direction icons in right-to-left with `rtl:-scale-x-100` or `rtl:rotate-180`.
+5. An icon-only control shows its name in a tooltip. Use `Button`/`Toggle` (or a button-like trigger) with `size="icon"` and an `aria-label`; any other icon-only control goes inside `ControlTooltip label` from `tooltip`. `tooltip={false}` only when a visible label sits beside it. `eskais/icon-button-needs-label` flags an icon-only `Button` or `Toggle` without both.
 
 ## Lint
 
-`.oxlintrc.json` extends the `base`, `react`, `react-agents` and `ui-tailwind` presets of [`@p-otero/oxlint-rules`](https://github.com/p-otero/oxlint-rules) (pinned to a commit) and adds `@shadcn/lint` and the local `eskais` plugin (`tooling/oxlint-plugin-eskais`, only `eskais/no-inline-icons`). Rules from that package are `p-otero/<rule>`.
+`.oxlintrc.json` extends the `base`, `react`, `react-agents` and `ui-tailwind` presets of [`@p-otero/oxlint-rules`](https://github.com/p-otero/oxlint-rules) (pinned to a commit) and adds `@shadcn/lint` and the local `eskais` plugin (`tooling/oxlint-plugin-eskais`: `eskais/no-inline-icons` on `registry/**` and `eskais/icon-button-needs-label` everywhere). Rules from that package are `p-otero/<rule>`.
 
 1. Every suppression says why: `// oxlint-disable-next-line <rule> -- <reason>` (`p-otero/require-suppression-reason`).
 2. Effects live in hook modules: a `use-*.ts` file next to the component (`registry/ui/use-board-focus.ts`) or a `hooks/` folder (`p-otero/no-effect-outside-hooks`). Before writing one, derive during render, act in the event handler, read a subscription with `useSyncExternalStore`, or read the latest props in an Effect with `useEffectEvent`. A new hook file in `registry/ui` joins its item's `files` in `registry.json`.
 3. `p-otero/spacing-tokens` runs on `registry/**` only, with the roles in "Spacing" below.
 4. The component-shape rules (`one-public-component`, `component-name-matches-file`, `max-component-lines`, `no-large-private-component`) are off: a registry file exports a component's parts together (`Card`, `CardHeader`, `CardTitle`…), as shadcn does, and the showcase and site name their demos `…Demo`.
 5. `max-lines` (400) is off for tests, tooling scripts, site content and `*-labels.ts` dictionaries.
-6. React Compiler: `bun run test:compiler` builds the showcase with `babel-plugin-react-compiler` (`apps/showcase/react-compiler.ts`) and runs the overlay, fast-link, shell and contrast checks on it. The build fails when a registry component or hook hits a compiler diagnostic not listed in `allowed` there. React Compiler 1.0 can't compile a `try … finally`, a conditional inside `try`, or a default parameter built from `||`/`&&`, so keep those out of components and hooks.
+6. React Compiler: `bun run test:compiler` builds the showcase with `babel-plugin-react-compiler` (`apps/showcase/react-compiler.ts`) and runs the overlay, fast-link, icon tooltip, shell and contrast checks on it. The build fails when a registry component or hook hits a compiler diagnostic not listed in `allowed` there. React Compiler 1.0 can't compile a `try … finally`, a conditional inside `try`, or a default parameter built from `||`/`&&`, so keep those out of components and hooks.
 
-The `lint-rules` item ships consumers the `react` and `ui-tailwind` presets with `@shadcn/lint`, the component-shape rules off and spacing tokens as warnings.
+The `lint-rules` item ships consumers the `react` and `ui-tailwind` presets with `@shadcn/lint`, the component-shape rules off, spacing tokens as warnings and `eskais/icon-button-needs-label` (from `registry/rules/eskais-oxlint-plugin.js`, which the repo's plugin also loads).
 
 ## Comments
 

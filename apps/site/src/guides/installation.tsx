@@ -124,7 +124,10 @@ createRoot(root).render(
         <Code>npx shadcn@latest add @eskais/lint-rules</Code> adds an oxlint config with the <Code>react</Code> and{" "}
         <Code>ui-tailwind</Code> presets of <Code>@p-otero/oxlint-rules</Code> (hook and React Compiler checks, spacing
         role tokens) and the <Code>@shadcn/lint</Code> design-system rules (<Code>no-restyle</Code>,{" "}
-        <Code>no-raw-colors</Code>, <Code>no-arbitrary-values</Code>…). Extend it from your <Code>.oxlintrc.json</Code>.
+        <Code>no-raw-colors</Code>, <Code>no-arbitrary-values</Code>…), plus <Code>eskais/icon-button-needs-label</Code>
+        , which flags an icon-only <Code>Button</Code> or <Code>Toggle</Code> without <Code>size="icon"</Code> and an{" "}
+        <Code>aria-label</Code> (it comes as <Code>eskais-oxlint-plugin.js</Code> beside the config). Extend it from
+        your <Code>.oxlintrc.json</Code>.
       </P>
 
       <H2 id="testing">Optional: test helpers</H2>

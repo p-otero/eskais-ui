@@ -17,6 +17,7 @@ import { createContext, useContext, useMemo, useState, type ComponentProps, type
 import { ChevronLeftIcon, ChevronRightIcon } from "lucide-react"
 
 import { buttonVariants } from "@/components/ui/button"
+import { ControlTooltip, type ControlTooltipOption } from "@/components/ui/tooltip"
 import { cn, cnState } from "@/lib/utils"
 
 const stepClassName = buttonVariants({ variant: "outline", size: "icon" })
@@ -120,14 +121,17 @@ function CarouselPrevious({
   className,
   children,
   "aria-label": label = "Previous slide",
+  tooltip,
   ...props
-}: ComponentProps<typeof CarouselPreviousPrimitive>) {
+}: ComponentProps<typeof CarouselPreviousPrimitive> & { tooltip?: ControlTooltipOption }) {
   return (
-    <CarouselPreviousPrimitive aria-label={label} className={cnState(stepClassName, className)} {...props}>
-      {children ?? (
-        <ChevronLeftIcon className="in-data-[orientation=horizontal]:rtl:rotate-180 in-data-[orientation=vertical]:rotate-90" />
-      )}
-    </CarouselPreviousPrimitive>
+    <ControlTooltip label={label} tooltip={tooltip} iconOnly={children === undefined}>
+      <CarouselPreviousPrimitive aria-label={label} className={cnState(stepClassName, className)} {...props}>
+        {children ?? (
+          <ChevronLeftIcon className="in-data-[orientation=horizontal]:rtl:rotate-180 in-data-[orientation=vertical]:rotate-90" />
+        )}
+      </CarouselPreviousPrimitive>
+    </ControlTooltip>
   )
 }
 
@@ -135,14 +139,17 @@ function CarouselNext({
   className,
   children,
   "aria-label": label = "Next slide",
+  tooltip,
   ...props
-}: ComponentProps<typeof CarouselNextPrimitive>) {
+}: ComponentProps<typeof CarouselNextPrimitive> & { tooltip?: ControlTooltipOption }) {
   return (
-    <CarouselNextPrimitive aria-label={label} className={cnState(stepClassName, className)} {...props}>
-      {children ?? (
-        <ChevronRightIcon className="in-data-[orientation=horizontal]:rtl:rotate-180 in-data-[orientation=vertical]:rotate-90" />
-      )}
-    </CarouselNextPrimitive>
+    <ControlTooltip label={label} tooltip={tooltip} iconOnly={children === undefined}>
+      <CarouselNextPrimitive aria-label={label} className={cnState(stepClassName, className)} {...props}>
+        {children ?? (
+          <ChevronRightIcon className="in-data-[orientation=horizontal]:rtl:rotate-180 in-data-[orientation=vertical]:rotate-90" />
+        )}
+      </CarouselNextPrimitive>
+    </ControlTooltip>
   )
 }
 
@@ -180,8 +187,16 @@ function CarouselIndicator({ className, page, label = slideLabel, ...props }: Ca
   )
 }
 
-function CarouselPlayToggle({ className, ...props }: ComponentProps<typeof CarouselPlayTogglePrimitive>) {
-  return <CarouselPlayTogglePrimitive className={cnState(stepClassName, className)} {...props} />
+function CarouselPlayToggle({
+  className,
+  tooltip,
+  ...props
+}: ComponentProps<typeof CarouselPlayTogglePrimitive> & { tooltip?: ControlTooltipOption }) {
+  return (
+    <ControlTooltip label={props["aria-label"]} tooltip={tooltip}>
+      <CarouselPlayTogglePrimitive className={cnState(stepClassName, className)} {...props} />
+    </ControlTooltip>
+  )
 }
 
 export {

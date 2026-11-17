@@ -23,6 +23,7 @@ import { CheckIcon, ChevronDownIcon, XIcon } from "lucide-react"
 
 import { floatingLabelControls, useFloatingPlaceholder } from "@/components/ui/field"
 import { fieldSurfaceClassName } from "@/components/ui/input"
+import { ControlTooltip, type ControlTooltipOption } from "@/components/ui/tooltip"
 import {
   listGroupLabelClassName,
   listIndicatorClassName,
@@ -92,16 +93,19 @@ function ComboboxTrigger({
   className,
   children,
   "aria-label": ariaLabel = "Show options",
+  tooltip,
   ...props
-}: ComponentProps<typeof ComboboxTriggerPrimitive>) {
+}: ComponentProps<typeof ComboboxTriggerPrimitive> & { tooltip?: ControlTooltipOption }) {
   return (
-    <ComboboxTriggerPrimitive
-      aria-label={ariaLabel}
-      className={cnState(`${iconButtonClassName} data-open:[&_svg]:rotate-180`, className)}
-      {...props}
-    >
-      {children ?? <ChevronDownIcon />}
-    </ComboboxTriggerPrimitive>
+    <ControlTooltip label={ariaLabel} tooltip={tooltip} iconOnly={children === undefined}>
+      <ComboboxTriggerPrimitive
+        aria-label={ariaLabel}
+        className={cnState(`${iconButtonClassName} data-open:[&_svg]:rotate-180`, className)}
+        {...props}
+      >
+        {children ?? <ChevronDownIcon />}
+      </ComboboxTriggerPrimitive>
+    </ControlTooltip>
   )
 }
 
@@ -109,12 +113,15 @@ function ComboboxClear({
   className,
   children,
   "aria-label": ariaLabel = "Clear",
+  tooltip,
   ...props
-}: ComponentProps<typeof ComboboxClearPrimitive>) {
+}: ComponentProps<typeof ComboboxClearPrimitive> & { tooltip?: ControlTooltipOption }) {
   return (
-    <ComboboxClearPrimitive aria-label={ariaLabel} className={cnState(iconButtonClassName, className)} {...props}>
-      {children ?? <XIcon />}
-    </ComboboxClearPrimitive>
+    <ControlTooltip label={ariaLabel} tooltip={tooltip} iconOnly={children === undefined}>
+      <ComboboxClearPrimitive aria-label={ariaLabel} className={cnState(iconButtonClassName, className)} {...props}>
+        {children ?? <XIcon />}
+      </ComboboxClearPrimitive>
+    </ControlTooltip>
   )
 }
 

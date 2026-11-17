@@ -19,15 +19,13 @@ import {
   MenuTrigger as MenuTriggerPrimitive,
   createMenuController,
 } from "@ui-sdk/react/menu"
-import type { VariantProps } from "class-variance-authority"
 import { matchesShortcut } from "@ui-sdk/core/shortcuts"
 import type { ComponentProps, KeyboardEvent } from "react"
 import { CheckIcon } from "lucide-react"
 
-import { buttonVariants } from "@/components/ui/button"
+import { buttonVariants, type ButtonLookProps } from "@/components/ui/button"
+import { ControlTooltip } from "@/components/ui/tooltip"
 import { cnState } from "@/lib/utils"
-
-type ButtonLook = VariantProps<typeof buttonVariants>
 
 const menuContentClassName =
   "z-popover m-0 flex max-h-(--available-height) min-w-48 flex-col overflow-y-auto overscroll-contain surface-floating p-inline text-sm outline-none origin-(--transform-origin) transition duration-micro ease-standard data-ending-style:scale-95 data-ending-style:opacity-0 data-starting-style:scale-95 data-starting-style:opacity-0 motion-reduce:transition-opacity motion-reduce:data-ending-style:scale-100 motion-reduce:data-starting-style:scale-100"
@@ -42,9 +40,14 @@ function DropdownMenuTrigger({
   className,
   variant = "outline",
   size,
+  tooltip,
   ...props
-}: ComponentProps<typeof MenuTriggerPrimitive> & ButtonLook) {
-  return <MenuTriggerPrimitive className={cnState(buttonVariants({ variant, size }), className)} {...props} />
+}: Omit<ComponentProps<typeof MenuTriggerPrimitive>, "aria-label"> & ButtonLookProps) {
+  return (
+    <ControlTooltip label={props["aria-label"]} tooltip={tooltip} iconOnly={size === "icon"}>
+      <MenuTriggerPrimitive className={cnState(buttonVariants({ variant, size }), className)} {...props} />
+    </ControlTooltip>
+  )
 }
 
 // UI SDK shows a markup item's `shortcut` and leaves the key to the app. Pressing it while the menu is open

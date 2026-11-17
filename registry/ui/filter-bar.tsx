@@ -7,12 +7,12 @@ import {
   ToolbarSeparator as ToolbarSeparatorPrimitive,
   createToolbarController,
 } from "@ui-sdk/react/toolbar"
-import type { VariantProps } from "class-variance-authority"
 import type { ComponentProps, ReactNode } from "react"
 import { SearchIcon } from "lucide-react"
 
-import { buttonVariants } from "@/components/ui/button"
+import { buttonVariants, type ButtonLookProps } from "@/components/ui/button"
 import { Input, InputGroup } from "@/components/ui/input"
+import { ControlTooltip } from "@/components/ui/tooltip"
 import { cn, cnState } from "@/lib/utils"
 
 type FilterBarProps = Omit<ComponentProps<typeof Toolbar>, "aria-label" | "children"> & {
@@ -48,10 +48,14 @@ function FilterBar({
   )
 }
 
-type FilterBarButtonProps = ComponentProps<typeof ToolbarButtonPrimitive> & VariantProps<typeof buttonVariants>
+type FilterBarButtonProps = Omit<ComponentProps<typeof ToolbarButtonPrimitive>, "aria-label"> & ButtonLookProps
 
-function FilterBarButton({ className, variant = "outline", size, ...props }: FilterBarButtonProps) {
-  return <ToolbarButtonPrimitive className={cnState(buttonVariants({ variant, size }), className)} {...props} />
+function FilterBarButton({ className, variant = "outline", size, tooltip, ...props }: FilterBarButtonProps) {
+  return (
+    <ControlTooltip label={props["aria-label"]} tooltip={tooltip} iconOnly={size === "icon"}>
+      <ToolbarButtonPrimitive className={cnState(buttonVariants({ variant, size }), className)} {...props} />
+    </ControlTooltip>
+  )
 }
 
 function FilterBarSeparator({ className, ...props }: ComponentProps<typeof ToolbarSeparatorPrimitive>) {

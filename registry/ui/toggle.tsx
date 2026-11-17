@@ -8,6 +8,7 @@ import {
 import { cva, type VariantProps } from "class-variance-authority"
 import type { ComponentProps } from "react"
 
+import { ControlTooltip, type ControlTooltipOption } from "@/components/ui/tooltip"
 import { cnState } from "@/lib/utils"
 
 // Pressed is a full primary fill: a muted tint against the page doesn't reach the 3:1 a state needs.
@@ -31,16 +32,28 @@ const toggleVariants = cva(
   },
 )
 
-type ToggleProps = ComponentProps<typeof TogglePrimitive> & VariantProps<typeof toggleVariants>
+type ToggleVariants = VariantProps<typeof toggleVariants>
 
-function Toggle({ className, variant, size, ...props }: ToggleProps) {
+type ToggleBaseProps = Omit<ComponentProps<typeof TogglePrimitive>, "aria-label"> & {
+  variant?: ToggleVariants["variant"]
+  /** An icon toggle shows its `aria-label` in a tooltip; `false` turns it off, text or `{ content, side }` replaces it. */
+  tooltip?: ControlTooltipOption
+}
+
+type ToggleProps =
+  | (ToggleBaseProps & { size?: Exclude<ToggleVariants["size"], "icon">; "aria-label"?: string })
+  | (ToggleBaseProps & { size: "icon"; "aria-label": string })
+
+function Toggle({ className, variant, size, tooltip, ...props }: ToggleProps) {
   return (
-    <TogglePrimitive
-      data-variant={variant ?? "default"}
-      data-size={size ?? "default"}
-      className={cnState(toggleVariants({ variant, size }), className)}
-      {...props}
-    />
+    <ControlTooltip label={props["aria-label"]} tooltip={tooltip} iconOnly={size === "icon"}>
+      <TogglePrimitive
+        data-variant={variant ?? "default"}
+        data-size={size ?? "default"}
+        className={cnState(toggleVariants({ variant, size }), className)}
+        {...props}
+      />
+    </ControlTooltip>
   )
 }
 
