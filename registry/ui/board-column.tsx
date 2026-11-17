@@ -88,12 +88,15 @@ function BoardColumn({
   collapsed: collapsedProp,
   defaultCollapsed,
   onCollapsedChange,
-  collapsible = collapsedProp !== undefined || onCollapsedChange !== undefined || defaultCollapsed !== undefined,
+  collapsible: collapsibleProp,
   labels,
   className,
   children,
   ...props
 }: BoardColumnProps) {
+  const collapsible =
+    collapsibleProp ??
+    (collapsedProp !== undefined || onCollapsedChange !== undefined || defaultCollapsed !== undefined)
   const titleId = useId()
   const [uncontrolled, setUncontrolled] = useState(defaultCollapsed ?? false)
   const collapsed = collapsible && (collapsedProp ?? uncontrolled)

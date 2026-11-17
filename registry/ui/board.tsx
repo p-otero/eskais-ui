@@ -39,7 +39,7 @@ function Board({
   return (
     <ScrollArea type="auto" className={cn("w-full", className)} {...props}>
       <ScrollAreaViewport render={<section />} aria-label={ariaLabel} aria-labelledby={ariaLabelledBy}>
-        {/* oxlint-disable-next-line eskais/spacing-tokens -- room for the h-2 horizontal scrollbar so it never covers the columns */}
+        {/* oxlint-disable-next-line p-otero/spacing-tokens -- room for the h-2 horizontal scrollbar so it never covers the columns */}
         <ScrollAreaContent render={<ul />} className="flex w-max min-w-full items-start gap-section pb-2">
           {children}
         </ScrollAreaContent>

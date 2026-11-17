@@ -1,7 +1,7 @@
 const categories = [
   {
     name: "Foundations",
-    items: ["appearance", "tone", "button", "kbd", "separator", "label"],
+    items: ["appearance", "tone", "button", "kbd", "shortcuts", "shortcuts-dialog", "separator", "label"],
   },
   {
     name: "Forms",
@@ -75,6 +75,7 @@ const categories = [
       "floating",
       "carousel",
       "board",
+      "side-panel",
     ],
   },
   {
@@ -118,7 +119,7 @@ const categories = [
   },
   {
     name: "Blocks",
-    items: ["landing-page", "hero", "section-heading", "bento", "steps", "site-footer", "docs-layout"],
+    items: ["landing-page", "inbox", "hero", "section-heading", "bento", "steps", "site-footer", "docs-layout"],
   },
   {
     name: "Editor",

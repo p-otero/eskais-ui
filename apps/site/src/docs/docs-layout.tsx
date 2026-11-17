@@ -1,9 +1,10 @@
-import { useEffect, useRef, type CSSProperties, type ReactNode } from "react"
+import { useRef, type CSSProperties, type ReactNode } from "react"
 
 import { DocsBreadcrumb, DocsLayout, DocsPager, DocsToc, useTocItems } from "@/components/ui/docs-layout"
 import { Sidebar, SidebarGroup, SidebarItem } from "@/components/ui/sidebar"
 
 import { slug } from "../header"
+import { useScrollIntoView } from "../hooks/use-scroll-into-view"
 import { docPages, docSections, neighbours } from "../pages"
 import { followTo, hrefFor, linkTo } from "../router"
 
@@ -11,9 +12,7 @@ const layoutStyle = { "--docs-top": "var(--site-header)", "--docs-sidebar-width"
 
 function DocsSidebar({ route }: { route: string }) {
   const container = useRef<HTMLDivElement>(null)
-  useEffect(() => {
-    container.current?.querySelector(`a[href="${hrefFor(route)}"]`)?.scrollIntoView({ block: "nearest" })
-  }, [route])
+  useScrollIntoView(container, `a[href="${hrefFor(route)}"]`)
   return (
     <div ref={container} className="w-full">
       <Sidebar label="Documentation" collapsible={false} narrowQuery="(width <= 47.5rem)" className="w-full">

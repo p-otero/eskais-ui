@@ -189,12 +189,10 @@ function FormDialog<Schema extends StandardSchemaV1>({
         wrote = true
       },
     })
-    let prepared: ReviewPrepareResult<Output> | void
-    try {
-      prepared = await reviewStep.prepare(values, { form: instance })
-    } finally {
-      stop()
-    }
+    // No try/finally: React Compiler 1.0 can't compile it.
+    const prepared: ReviewPrepareResult<Output> | void = await Promise.resolve(
+      reviewStep.prepare(values, { form: instance }),
+    ).finally(stop)
     if (prepared && prepared.error !== undefined) throw prepared.error
     if (prepared?.values !== undefined) {
       for (const [name, value] of Object.entries(prepared.values as Record<string, unknown>))
@@ -207,16 +205,22 @@ function FormDialog<Schema extends StandardSchemaV1>({
     return result.value as Output
   }
 
+  const showSubmitError = (error: unknown) => {
+    if (Object.keys(toFormErrors(error)?.fieldErrors ?? {}).length > 0) setReview(null)
+    else setReview((current) => current && { ...current, error })
+  }
+
   const submit: FormProps<Schema>["onSubmit"] = async (values, helpers) => {
     if (reviewStep && !review) {
       setReview({ values: await startReview(values, helpers.form), error: undefined })
       return
     }
+    const submitted = review ? review.values : values
+    // Conditionals stay out of the try statement: React Compiler 1.0 can't compile them inside one.
     try {
-      await onSubmit(review ? review.values : values, helpers)
+      await onSubmit(submitted, helpers)
     } catch (error) {
-      if (Object.keys(toFormErrors(error)?.fieldErrors ?? {}).length > 0) setReview(null)
-      else setReview((current) => current && { ...current, error })
+      showSubmitError(error)
       throw error
     }
     setOpen(false, { reason: "submit" })

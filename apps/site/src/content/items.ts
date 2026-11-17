@@ -34,6 +34,18 @@ const itemNotes: Record<string, ItemNotes> = {
     a11y: ["Renders <kbd>, so screen readers announce keys as keyboard input."],
     related: ["command", "tooltip", "dropdown-menu"],
   },
+  shortcuts: {
+    a11y: [
+      "Plain keys never fire while someone types in a field or contenteditable, nor during IME composition.",
+      "Hints are aria-hidden Kbd; the control carries aria-keyshortcuts instead.",
+    ],
+    agent: "Nothing new: shortcuts press the same parts agents already press by name.",
+    related: ["shortcuts-dialog", "kbd", "button", "list-item"],
+  },
+  "shortcuts-dialog": {
+    a11y: ["A modal dialog titled by its heading; each scope is a labelled section of key and description pairs."],
+    related: ["shortcuts", "dialog", "kbd"],
+  },
   separator: {
     a11y: ['Announced as a separator, or decorative with role="none" when it only draws a line.'],
     related: ["card", "dropdown-menu"],
@@ -265,6 +277,27 @@ const itemNotes: Record<string, ItemNotes> = {
   menubar: {
     a11y: ["One tab stop, arrow keys between menus, menus open with Enter or arrow down."],
     related: ["dropdown-menu", "navigation-menu"],
+  },
+  inbox: {
+    usage:
+      "Copy it, then edit the copy object at its top and the row and panel content. A keyboard-first list with an inspector: sampleInboxItems(count) makes demo data.",
+    a11y: [
+      "Rows are one tab stop: j/k or the arrows move, Enter opens the side panel, Escape closes it and focus returns to the row.",
+      "The panel is a complementary region named by the message subject; U and P are shown on its buttons and set aria-keyshortcuts.",
+      "1,500 messages render only the rows in view, with aria-setsize and aria-posinset; find in page still reaches the rest.",
+    ],
+    agent:
+      "Agents select any message with the list's select(id), rendered or not, and press the panel's buttons by name.",
+    related: ["list-item", "side-panel", "shortcuts-dialog"],
+  },
+  "side-panel": {
+    usage:
+      "An inspector beside a list: open it from a row's onSelect, pass returnFocus to the row, and give its buttons a shortcut.",
+    a11y: [
+      "A non-modal complementary region named by its title, so the list beside it stays usable.",
+      "Escape closes it; focus that was inside returns to the row that opened it.",
+    ],
+    related: ["list-item", "drawer", "shortcuts"],
   },
   "landing-page": {
     usage:

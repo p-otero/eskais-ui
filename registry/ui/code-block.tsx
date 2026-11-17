@@ -1,17 +1,23 @@
 "use client"
 
 import { usePart, usePrimitive } from "@ui-sdk/react/primitive"
-import { useEffect, useMemo, useReducer, type ComponentProps, type CSSProperties, type ReactNode } from "react"
+import {
+  useCallback,
+  useMemo,
+  useSyncExternalStore,
+  type ComponentProps,
+  type CSSProperties,
+  type ReactNode,
+} from "react"
 import { CheckIcon, CopyIcon } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { codeBlock, type CodeBlockOptions } from "@/components/ui/code-block-primitive"
 import {
   highlight,
-  loadParser,
-  needsParser,
   normalizeLanguage,
   parserFor,
+  watchParser,
   type CodeLanguage,
   type CodeLine,
   type SyntaxTone,
@@ -65,11 +71,9 @@ const toneClassNames = {
 } satisfies Record<SyntaxTone, string>
 
 function useHighlightedLines(code: string, language: CodeLanguage) {
-  const [, loaded] = useReducer((count: number) => count + 1, 0)
-  const parser = parserFor(language)
-  useEffect(() => {
-    if (needsParser(language)) loadParser(language).then(loaded, () => {})
-  }, [language])
+  const subscribe = useCallback((onLoad: () => void) => watchParser(language, onLoad), [language])
+  const current = () => parserFor(language)
+  const parser = useSyncExternalStore(subscribe, current, current)
   return useMemo(() => highlight(code, language, parser), [code, language, parser])
 }
 

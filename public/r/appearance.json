@@ -18,7 +18,12 @@
     },
     {
       "path": "registry/ui/appearance.tsx",
-      "content": "\"use client\"\n\nimport { Preferences } from \"@ui-sdk/react/preferences\"\nimport { useLayoutEffect, type ReactNode } from \"react\"\n\nimport { createAppearance, type Appearance as AppearanceState } from \"@/lib/appearance-state\"\n\ntype AppearanceProps<Theme extends string, Palette extends string> = {\n  appearance: AppearanceState<Theme, Palette>\n  children?: ReactNode\n}\n\n/** Keeps `.dark`, `data-color-scheme`, `data-theme` and `data-palette` on `<html>` in sync with `appearance` while it's mounted. */\nfunction Appearance<Theme extends string, Palette extends string>({\n  appearance,\n  children,\n}: AppearanceProps<Theme, Palette>) {\n  useLayoutEffect(() => appearance.connect(), [appearance])\n  return <Preferences preferences={[appearance.colorScheme]}>{children}</Preferences>\n}\n\nexport { Appearance, createAppearance }\nexport type { AppearanceProps, AppearanceState }\n",
+      "content": "\"use client\"\n\nimport { Preferences } from \"@ui-sdk/react/preferences\"\nimport type { ReactNode } from \"react\"\n\nimport { useConnectedAppearance } from \"@/components/ui/use-appearance\"\nimport { createAppearance, type Appearance as AppearanceState } from \"@/lib/appearance-state\"\n\ntype AppearanceProps<Theme extends string, Palette extends string> = {\n  appearance: AppearanceState<Theme, Palette>\n  children?: ReactNode\n}\n\n/** Keeps `.dark`, `data-color-scheme`, `data-theme` and `data-palette` on `<html>` in sync with `appearance` while it's mounted. */\nfunction Appearance<Theme extends string, Palette extends string>({\n  appearance,\n  children,\n}: AppearanceProps<Theme, Palette>) {\n  useConnectedAppearance(appearance)\n  return <Preferences preferences={[appearance.colorScheme]}>{children}</Preferences>\n}\n\nexport { Appearance, createAppearance }\nexport type { AppearanceProps, AppearanceState }\n",
+      "type": "registry:ui"
+    },
+    {
+      "path": "registry/ui/use-appearance.ts",
+      "content": "\"use client\"\n\nimport { useLayoutEffect } from \"react\"\n\n/** Connects `appearance` to `<html>` while the caller is mounted; `connect` returns the disconnect. */\nfunction useConnectedAppearance(appearance: { connect: () => () => void }) {\n  useLayoutEffect(() => appearance.connect(), [appearance])\n}\n\nexport { useConnectedAppearance }\n",
       "type": "registry:ui"
     }
   ],

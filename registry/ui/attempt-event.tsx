@@ -89,9 +89,9 @@ function AttemptEvent({ attempt, ...options }: AttemptEventOptions & { attempt: 
       data-attempt-status={attempt.status}
       className="group/attempt relative flex gap-items rounded-control pb-group outline-none data-last:pb-0 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
     >
-      {/* oxlint-disable-next-line eskais/spacing-tokens -- centres the size-3 marker on the first 20px line */}
+      {/* oxlint-disable-next-line p-otero/spacing-tokens -- centres the size-3 marker on the first 20px line */}
       <TimelineMarker className={cn("mt-1 size-3 shrink-0 rounded-full border-2", markerColor[attempt.status])} />
-      {/* oxlint-disable-next-line eskais/spacing-tokens -- geometry: runs from under the size-3 marker, centred on it, to the next one */}
+      {/* oxlint-disable-next-line p-otero/spacing-tokens -- geometry: runs from under the size-3 marker, centred on it, to the next one */}
       <TimelineConnector className="absolute start-1.25 top-5 bottom-1 w-0.5 bg-border group-data-last/attempt:hidden" />
       <AttemptColumn collapsible={attempt.usage !== undefined} defaultOpen={options.usageOpen}>
         <div className="flex flex-wrap items-center gap-inline">

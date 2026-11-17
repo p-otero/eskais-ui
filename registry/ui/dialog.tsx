@@ -12,17 +12,16 @@ import {
 } from "@ui-sdk/react/dialog"
 import { renderElement, type PartProps } from "@ui-sdk/react/primitive"
 import { cva, type VariantProps } from "class-variance-authority"
-import {
-  useCallback,
-  useLayoutEffect,
-  useRef,
-  type ComponentProps,
-  type ReactNode,
-  type Ref,
-  type RefObject,
-} from "react"
+import { useCallback, useRef, type ComponentProps, type ReactNode, type Ref, type RefObject } from "react"
 
 import { buttonVariants } from "@/components/ui/button"
+import {
+  focusedElement,
+  mayReturnFocus,
+  useRecordFocusMove,
+  useRecordOpener,
+  type FocusMemory,
+} from "@/components/ui/use-dialog-focus"
 import { cn, cnState } from "@/lib/utils"
 
 type ButtonLook = VariantProps<typeof buttonVariants>
@@ -79,62 +78,20 @@ type DialogContentProps = ComponentProps<typeof DialogContentPrimitive> & {
   sheet?: boolean
 }
 
-type FocusMemory = { opener: HTMLElement | null; movedBeforeOpen: boolean; content?: HTMLElement | null }
 type FinalFocus = ComponentProps<typeof DialogContentPrimitive>["finalFocus"]
-
-function focusedElement() {
-  const active = document.activeElement
-  return active instanceof HTMLElement && active !== document.body ? active : null
-}
-
-function openModals() {
-  const modals = [...document.querySelectorAll('[aria-modal="true"]')]
-  try {
-    modals.push(...document.querySelectorAll("dialog:modal"))
-  } catch {
-    // Engines without :modal (jsdom) still see modals by aria-modal.
-  }
-  return modals.filter((modal) => !modal.hasAttribute("data-ending-style"))
-}
-
-// A closing dialog gives focus back only from inside itself, or from <body> when no other modal is open. Another
-// modal opened meanwhile (one of ours or another library's, which may move focus in a frame later) keeps it.
-function mayReturnFocus(own: Element | null, active: Element | null = focusedElement()) {
-  if (active) return own?.contains(active) ?? false
-  return !openModals().some((modal) => modal !== own && !own?.contains(modal))
-}
 
 // Mounts before the content's children, so its layout effect runs before React's `autoFocus` inside them, and
 // records the element to return to. Unmounted with focus still inside (the dialog itself left the page while
 // open), it gives focus back to that element instead of letting it fall to <body>.
 function FocusOpener({ memoryRef, restore }: { memoryRef: RefObject<FocusMemory>; restore: boolean }) {
-  const recorded = useRef(false)
-  useLayoutEffect(() => {
-    if (!recorded.current) {
-      recorded.current = true
-      memoryRef.current = { ...memoryRef.current, opener: focusedElement(), movedBeforeOpen: false }
-    }
-    return () => {
-      const inside = document.activeElement
-      const { opener } = memoryRef.current
-      queueMicrotask(() => {
-        if (!restore || !opener?.isConnected || inside?.isConnected || !mayReturnFocus(null)) return
-        opener.focus({ preventScroll: true })
-      })
-    }
-  }, [memoryRef, restore])
+  useRecordOpener(memoryRef, restore)
   return null
 }
 
 // Mounts after the children: focus that moved between the two was taken by `autoFocus`, before UI SDK could
 // record where it came from.
 function FocusMoved({ memoryRef }: { memoryRef: RefObject<FocusMemory> }) {
-  const checked = useRef(false)
-  useLayoutEffect(() => {
-    if (checked.current) return
-    checked.current = true
-    memoryRef.current = { ...memoryRef.current, movedBeforeOpen: focusedElement() !== memoryRef.current.opener }
-  }, [memoryRef])
+  useRecordFocusMove(memoryRef)
   return null
 }
 
@@ -204,18 +161,17 @@ function DialogContent({
   children,
   ...props
 }: DialogContentProps) {
-  const focus = useFocusReturn(finalFocus, ref as Ref<HTMLElement> | undefined)
+  const { attach, finalFocus: returnFocus, wrap } = useFocusReturn(finalFocus, ref as Ref<HTMLElement> | undefined)
   return (
     <DialogContentPrimitive
-      ref={focus.attach}
+      ref={attach}
       data-size={size}
       data-sheet={sheet ? "" : undefined}
       className={cnState(dialogContentVariants({ size, sheet }), className)}
-      // oxlint-disable-next-line react/refs -- read when UI SDK calls finalFocus on close, never during render
-      finalFocus={focus.finalFocus}
+      finalFocus={returnFocus}
       {...props}
     >
-      {focus.wrap(children)}
+      {wrap(children)}
     </DialogContentPrimitive>
   )
 }

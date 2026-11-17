@@ -18,6 +18,7 @@ import { AgentBadge } from "@/components/ui/agent-badge"
 import type { AgentTaskBoardLabels } from "@/components/ui/agent-task-labels"
 import { QuantityValue } from "@/components/ui/quantity-value"
 import { RelativeTime } from "@/components/ui/relative-time"
+import { NavigableRow, RowNavigationProvider, useRowNavigation } from "@/components/ui/row-navigation"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { TaskStatusIcon, TaskStatusPill } from "@/components/ui/task-status"
 import type { TaskDisplayOptions } from "@/components/ui/task-card"
@@ -56,6 +57,7 @@ function AgentTaskBoardTable({ tasks, selectedTaskId, display }: AgentTaskBoardT
     direction: "ascending",
   })
   const rows = useMemo(() => sortTasks(tasks, sort.key, sort.direction), [tasks, sort])
+  const navigation = useRowNavigation({ ids: rows.map((task) => task.id) })
   const formatCost = usageFormatter("cost", { locale, formatCurrency })
   const text = labels.table
 
@@ -98,59 +100,70 @@ function AgentTaskBoardTable({ tasks, selectedTaskId, display }: AgentTaskBoardT
         </TableRow>
       </TableHeader>
       <TableBody>
-        {rows.map((task) => {
-          const attempt = activeAttempt(task)
-          const selected = task.id === selectedTaskId
-          return (
-            <TableRow
-              key={task.id}
-              data-task-id={task.id}
-              data-selected={selected ? "" : undefined}
-              className="data-selected:bg-muted"
-            >
-              <TableCell className="font-mono text-xs text-muted-foreground">{task.id}</TableCell>
-              <TableCell className="max-w-96">
-                <Button
-                  data-task-select=""
-                  data-task-id={task.id}
-                  aria-label={labels.card.open(task.id, task.title)}
-                  aria-current={selected ? "true" : undefined}
-                  title={task.title}
-                  onClick={() => onSelectTask?.(task.id)}
-                  className="max-w-full cursor-pointer truncate rounded-control text-start font-medium underline-offset-4 outline-none hover:underline focus-visible:ring-2 focus-visible:ring-ring"
-                >
-                  {task.title}
-                </Button>
-              </TableCell>
-              <TableCell>
-                <span className="inline-flex items-center gap-inline">
-                  <TaskStatusIcon status={task.status} tone={display.statusTones?.[task.status]} />
-                  <TaskStatusPill status={task.status} labels={labels.components.taskStatus} />
-                </span>
-              </TableCell>
-              <TableCell className="text-muted-foreground">{task.profile ?? "—"}</TableCell>
-              <TableCell className="max-w-56">
-                {attempt ? (
-                  <AgentBadge
-                    agent={effectiveAgent(attempt)}
-                    requested={attempt.configured}
-                    labels={labels.components.agentBadge}
-                    avatars={agentAvatars}
+        <RowNavigationProvider handle={navigation}>
+          {rows.map((task) => {
+            const attempt = activeAttempt(task)
+            const selected = task.id === selectedTaskId
+            return (
+              <TableRow
+                key={task.id}
+                data-task-id={task.id}
+                data-selected={selected ? "" : undefined}
+                className="data-selected:bg-muted"
+              >
+                <TableCell className="font-mono text-xs text-muted-foreground">{task.id}</TableCell>
+                <TableCell className="max-w-96">
+                  <NavigableRow
+                    id={task.id}
+                    render={
+                      <Button
+                        data-task-select=""
+                        data-task-id={task.id}
+                        aria-label={labels.card.open(task.id, task.title)}
+                        aria-current={selected ? "true" : undefined}
+                        title={task.title}
+                        onClick={() => onSelectTask?.(task.id)}
+                        className="max-w-full cursor-pointer truncate rounded-control text-start font-medium underline-offset-4 outline-none hover:underline focus-visible:ring-2 focus-visible:ring-ring"
+                      >
+                        {task.title}
+                      </Button>
+                    }
                   />
-                ) : (
-                  "—"
-                )}
-              </TableCell>
-              <TableCell className="text-end tabular-nums">{attemptCount(task)}</TableCell>
-              <TableCell className="text-end">
-                <QuantityValue value={taskCost(task)} format={formatCost} labels={labels.components.usage?.quantity} />
-              </TableCell>
-              <TableCell className="text-muted-foreground">
-                <RelativeTime value={task.updatedAt} now={now} locale={locale} timeZone={timeZone} />
-              </TableCell>
-            </TableRow>
-          )
-        })}
+                </TableCell>
+                <TableCell>
+                  <span className="inline-flex items-center gap-inline">
+                    <TaskStatusIcon status={task.status} tone={display.statusTones?.[task.status]} />
+                    <TaskStatusPill status={task.status} labels={labels.components.taskStatus} />
+                  </span>
+                </TableCell>
+                <TableCell className="text-muted-foreground">{task.profile ?? "—"}</TableCell>
+                <TableCell className="max-w-56">
+                  {attempt ? (
+                    <AgentBadge
+                      agent={effectiveAgent(attempt)}
+                      requested={attempt.configured}
+                      labels={labels.components.agentBadge}
+                      avatars={agentAvatars}
+                    />
+                  ) : (
+                    "—"
+                  )}
+                </TableCell>
+                <TableCell className="text-end tabular-nums">{attemptCount(task)}</TableCell>
+                <TableCell className="text-end">
+                  <QuantityValue
+                    value={taskCost(task)}
+                    format={formatCost}
+                    labels={labels.components.usage?.quantity}
+                  />
+                </TableCell>
+                <TableCell className="text-muted-foreground">
+                  <RelativeTime value={task.updatedAt} now={now} locale={locale} timeZone={timeZone} />
+                </TableCell>
+              </TableRow>
+            )
+          })}
+        </RowNavigationProvider>
       </TableBody>
     </Table>
   )

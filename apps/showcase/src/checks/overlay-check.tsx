@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react"
+import { useState } from "react"
 
 import { Button } from "@/components/ui/button"
 import { ConfirmDialog } from "@/components/ui/confirm-dialog"
@@ -15,6 +15,8 @@ import {
 } from "@/components/ui/dialog"
 import { Drawer, DrawerClose, DrawerContent, DrawerTitle, DrawerTrigger, DrawerBackdrop } from "@/components/ui/drawer"
 import { Input } from "@/components/ui/input"
+
+import { useThirdPartyModal } from "../hooks/use-third-party-modal"
 
 // ?demo=overlay-check: the fixture tooling/overlay-check.mjs drives in Chrome. A counter sits under the
 // center of the screen, where the dialogs open, to catch a press the closing overlay swallows.
@@ -78,20 +80,7 @@ function AutoFocused() {
 
 // Stands in for a modal from another library: it moves focus in a frame after mounting and closes when focus leaves.
 function ThirdPartyModal({ onClose }: { onClose: (reason: string) => void }) {
-  const ref = useRef<HTMLDialogElement>(null)
-  useEffect(() => {
-    const element = ref.current
-    if (!element) return
-    const frame = requestAnimationFrame(() => element.querySelector("input")?.focus())
-    const onFocusIn = (event: FocusEvent) => {
-      if (event.target instanceof Node && !element.contains(event.target)) onClose("focus left")
-    }
-    document.addEventListener("focusin", onFocusIn)
-    return () => {
-      cancelAnimationFrame(frame)
-      document.removeEventListener("focusin", onFocusIn)
-    }
-  }, [onClose])
+  const ref = useThirdPartyModal(onClose)
   return (
     <dialog
       ref={ref}
@@ -114,10 +103,10 @@ function HandOff({ by }: { by: "trigger" | "controller" }) {
   const [thirdParty, setThirdParty] = useState(false)
   const [closed, setClosed] = useState("")
   const [later, setLater] = useState(false)
-  const closeThirdParty = useCallback((reason: string) => {
+  const closeThirdParty = (reason: string) => {
     setThirdParty(false)
     setClosed(reason)
-  }, [])
+  }
   return (
     <>
       {by === "controller" ? <Button onClick={() => first.open()}>Open handoff dialog{suffix}</Button> : null}

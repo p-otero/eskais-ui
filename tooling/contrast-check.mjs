@@ -260,6 +260,16 @@ const popups = [
     open: (page) => page.getByRole("button", { name: "View import-error.png" }),
     selector: '[data-slot="lightbox"]',
   },
+  {
+    name: "inbox inspector",
+    open: (page) => page.getByRole("group", { name: "Messages" }).getByRole("button").first(),
+    selector: '[data-slot="side-panel"]',
+  },
+  {
+    name: "shortcuts dialog",
+    press: "?",
+    selector: '[role="dialog"]:has([data-slot="shortcuts-dialog-row"])',
+  },
 ]
 
 await withShowcase(async (page) => {
@@ -292,7 +302,8 @@ await withShowcase(async (page) => {
         })
         await page.locator('[data-slot="toast"]').first().waitFor({ state: "detached" })
         for (const popup of popups) {
-          await popup.open(page).click()
+          if (popup.press) await page.keyboard.press(popup.press)
+          else await popup.open(page).click()
           await page.locator(popup.selector).first().waitFor()
           await page.waitForTimeout(250)
           await check(page, `${scope} ${popup.name}`, popup.selector)

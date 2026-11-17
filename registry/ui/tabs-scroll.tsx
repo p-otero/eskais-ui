@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useRef, useState, type ReactNode, type RefObject } from "react"
+import { useCallback, useRef, useState, useSyncExternalStore, type ReactNode, type RefObject } from "react"
 import { ChevronLeftIcon, ChevronRightIcon } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
@@ -52,58 +52,70 @@ function isTab(node: unknown): node is HTMLElement {
   return node instanceof HTMLElement && node.getAttribute("role") === "tab"
 }
 
+const noEdges: Edges = { left: false, right: false }
+
+// The subscription also keeps the selected tab in view: on mount, after each resize (tabs change width as fonts load
+// or labels change), on focus and on selection.
+function createEdgesStore() {
+  let edges = noEdges
+  return {
+    getSnapshot: () => edges,
+    getServerSnapshot: () => noEdges,
+    watch(element: HTMLElement | null, onChange: () => void) {
+      if (!element) return () => {}
+      const update = () => {
+        const next = readEdges(element)
+        if (next.left === edges.left && next.right === edges.right) return
+        edges = next
+        onChange()
+      }
+      const revealSelected = () => {
+        const selected = element.querySelector<HTMLElement>('[role="tab"][aria-selected="true"]')
+        if (selected) revealTab(element, selected, false)
+      }
+      const observer =
+        typeof ResizeObserver === "function"
+          ? new ResizeObserver(() => {
+              update()
+              revealSelected()
+            })
+          : undefined
+      observer?.observe(element)
+      for (const child of element.children) observer?.observe(child)
+      element.addEventListener("scroll", update, { passive: true })
+      update()
+
+      const onFocus = (event: FocusEvent) => {
+        if (isTab(event.target)) revealTab(element, event.target, true)
+      }
+      const selection =
+        typeof MutationObserver === "function"
+          ? new MutationObserver((records) => {
+              for (const record of records) {
+                if (isTab(record.target) && record.target.getAttribute("aria-selected") === "true") {
+                  revealTab(element, record.target, true)
+                }
+              }
+            })
+          : undefined
+      selection?.observe(element, { attributes: true, attributeFilter: ["aria-selected"], subtree: true })
+      element.addEventListener("focusin", onFocus)
+      revealSelected()
+      return () => {
+        observer?.disconnect()
+        selection?.disconnect()
+        element.removeEventListener("scroll", update)
+        element.removeEventListener("focusin", onFocus)
+      }
+    },
+  }
+}
+
 function useScrollEdges() {
   const ref = useRef<HTMLDivElement>(null)
-  const [edges, setEdges] = useState<Edges>({ left: false, right: false })
-
-  useEffect(() => {
-    const element = ref.current
-    if (!element) return
-    const update = () =>
-      setEdges((previous) => {
-        const next = readEdges(element)
-        return next.left === previous.left && next.right === previous.right ? previous : next
-      })
-    const revealSelected = () => {
-      const selected = element.querySelector<HTMLElement>('[role="tab"][aria-selected="true"]')
-      if (selected) revealTab(element, selected, false)
-    }
-    // Tabs change width as fonts load or labels change, so the selected tab is revealed again after each resize.
-    const observer =
-      typeof ResizeObserver === "function"
-        ? new ResizeObserver(() => {
-            update()
-            revealSelected()
-          })
-        : undefined
-    observer?.observe(element)
-    for (const child of element.children) observer?.observe(child)
-    element.addEventListener("scroll", update, { passive: true })
-    update()
-
-    const onFocus = (event: FocusEvent) => {
-      if (isTab(event.target)) revealTab(element, event.target, true)
-    }
-    const selection =
-      typeof MutationObserver === "function"
-        ? new MutationObserver((records) => {
-            for (const record of records) {
-              if (isTab(record.target) && record.target.getAttribute("aria-selected") === "true") {
-                revealTab(element, record.target, true)
-              }
-            }
-          })
-        : undefined
-    selection?.observe(element, { attributes: true, attributeFilter: ["aria-selected"], subtree: true })
-    element.addEventListener("focusin", onFocus)
-    revealSelected()
-    return () => {
-      observer?.disconnect()
-      selection?.disconnect()
-      element.removeEventListener("scroll", update)
-      element.removeEventListener("focusin", onFocus)
-    }
-  }, [])
+  const [store] = useState(createEdgesStore)
+  const subscribe = useCallback((onChange: () => void) => store.watch(ref.current, onChange), [store])
+  const edges = useSyncExternalStore(subscribe, store.getSnapshot, store.getServerSnapshot)
 
   const scroll = (direction: -1 | 1) => {
     const element = ref.current

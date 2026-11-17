@@ -41,7 +41,7 @@ UI SDK-first, agent-native React components, distributed as a shadcn-style regis
 | `palettes`       | Colour presets inside `data-palette="blue"` (also `neutral`, `violet`, `green`, `orange`)                                    |
 | `font-geist`     | Geist Variable from `@fontsource-variable/geist`, bundled (the default font); `font-inter` for Inter Variable                |
 | `appearance`     | `createAppearance` + `<Appearance>`: `.dark` and `data-theme` on `<html>`, following the system scheme                       |
-| `lint-rules`     | Optional `@shadcn/lint` config for consumers                                                                                 |
+| `lint-rules`     | Optional oxlint config for consumers: `@p-otero/oxlint-rules` React and spacing presets plus `@shadcn/lint`                  |
 | `test-utils`     | Testing Library helpers that find toasts and alerts past UI SDK's live regions (`getToast`, `queryAlerts`, `resetAnnouncer`) |
 
 ## Use it

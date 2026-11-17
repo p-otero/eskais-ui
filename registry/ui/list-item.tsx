@@ -3,22 +3,26 @@
 import { Button } from "@ui-sdk/react/button"
 import { ListboxItem } from "@ui-sdk/react/listbox"
 import { renderElement, type PartProps } from "@ui-sdk/react/primitive"
-import { createElement, useEffect, useLayoutEffect, useState, type ReactElement, type ReactNode } from "react"
+import { createElement, useState, type ReactElement, type ReactNode } from "react"
 
+import { Checkbox, CheckboxIndicator } from "@/components/ui/checkbox"
 import {
   useListContext,
+  useListItemPosition,
   type ListVariant,
   List,
   ListGroup,
   type ListGroupProps,
   type ListProps,
 } from "@/components/ui/list"
+import { NavigableRow } from "@/components/ui/row-navigation"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
+import { useListItemRegistration, useTruncated } from "@/components/ui/use-list-item"
 import type { Tone } from "@/lib/tone"
 import { cn } from "@/lib/utils"
 
 const rowClassNames = {
-  row: "rounded-control hover:bg-accent/60 data-selected:bg-accent data-selected:text-accent-foreground",
+  row: "rounded-control hover:bg-accent/60 data-checked:bg-accent/60 data-selected:bg-accent data-selected:text-accent-foreground",
   card: "rounded-lg border bg-card/(--glass-opacity) text-card-foreground shadow-surface backdrop-surface hover:border-ring data-selected:border-ring data-selected:bg-accent data-selected:text-accent-foreground data-selected:ring-3 data-selected:ring-ring/25",
 } satisfies Record<ListVariant, string>
 
@@ -52,19 +56,6 @@ function IconTile({ tone = "neutral", className, render, ...props }: PartProps<"
     },
     render,
   )
-}
-
-function useTruncated(node: HTMLElement | null) {
-  const [truncated, setTruncated] = useState(false)
-  useEffect(() => {
-    if (!node || typeof ResizeObserver === "undefined") return
-    const measure = () => setTruncated(node.scrollHeight - node.clientHeight > 1)
-    const observer = new ResizeObserver(measure)
-    observer.observe(node)
-    measure()
-    return () => observer.disconnect()
-  }, [node])
-  return truncated
 }
 
 function ListItemTitle({ className, render, ...props }: PartProps<"span">) {
@@ -123,6 +114,8 @@ type ListItemProps = {
   onSelect?: () => void
   /** Overrides the List's variant. */
   variant?: ListVariant
+  /** The checkbox's name in a list with `checkedIds`; English by default. */
+  checkLabel?: string
   className?: string
 }
 
@@ -139,39 +132,29 @@ function ListItem({
   href,
   onSelect,
   variant: variantProp,
+  checkLabel,
   className,
 }: ListItemProps) {
   const context = useListContext()
+  const position = useListItemPosition()
   const variant = variantProp ?? context?.variant ?? "row"
   const option = context?.selectable ?? false
   const [titleNode, setTitleNode] = useState<HTMLElement | null>(null)
   const truncated = useTruncated(titleNode)
   const [primary, setPrimary] = useState<HTMLElement | null>(null)
-  const register = context?.register
 
-  useLayoutEffect(() => {
-    if (!register || option) return
-    return register(id, {
-      label: title,
-      activate: () => {
-        if (href) {
-          if (!primary) return false
-          // Marks the click as already selected, so the link only follows itself.
-          primary.dataset.selecting = ""
-          primary.click()
-          return true
-        }
-        if (!onSelect) return false
-        onSelect()
-        return true
-      },
-    })
-  }, [register, option, id, title, href, onSelect, primary])
-
-  useLayoutEffect(() => {
-    if (!register || !option) return
-    return register(id, { label: title, activate: () => false })
-  }, [register, option, id, title])
+  useListItemRegistration(context?.register, id, title, option, () => {
+    if (href) {
+      if (!primary) return false
+      // Marks the click as already selected, so the link only follows itself.
+      primary.setAttribute("data-selecting", "")
+      primary.click()
+      return true
+    }
+    if (!onSelect) return false
+    onSelect()
+    return true
+  })
 
   const titleText = (
     <ListItemTitle ref={setTitleNode} title={option && truncated ? title : undefined}>
@@ -209,15 +192,30 @@ function ListItem({
     // Always mounted, so the trigger keeps its element (and focus) when the title starts or stops fitting.
     heading = (
       <Tooltip type="label" disabled={!truncated}>
-        <TooltipTrigger render={element} />
+        <NavigableRow id={id} render={<TooltipTrigger render={element} />} />
         <TooltipContent>{title}</TooltipContent>
       </Tooltip>
     )
   }
+  const checked = option ? undefined : context?.checked
+  // Space and x on the row toggle it, so the box stays out of the tab order instead of adding a stop per row.
+  const checkbox = checked && (
+    <span className="relative z-10 flex min-h-lh shrink-0 items-center">
+      <Checkbox
+        render={(props) => <button {...props} tabIndex={-1} />}
+        aria-label={checkLabel ?? `Select ${title}`}
+        checked={checked.has(id)}
+        onCheckedChange={() => checked.toggle(id)}
+      >
+        <CheckboxIndicator />
+      </Checkbox>
+    </span>
+  )
 
   const body = (
     <>
       <div className="flex min-w-0 grow basis-60 items-start gap-items">
+        {checkbox}
         {leading && (
           <span
             data-slot="list-item-leading"
@@ -253,7 +251,10 @@ function ListItem({
   if (option) {
     return (
       <ListboxItem
+        ref={position?.measure}
         value={id}
+        index={position?.index}
+        data-index={position?.index}
         data-slot="list-item"
         data-item-id={id}
         data-variant={variant}
@@ -265,10 +266,15 @@ function ListItem({
   }
   return (
     <li
+      ref={position?.measure}
+      data-index={position?.index}
+      aria-posinset={position ? position.index + 1 : undefined}
+      aria-setsize={position?.setsize}
       data-slot="list-item"
       data-item-id={id}
       data-variant={variant}
       data-selected={selected ? "" : undefined}
+      data-checked={checked?.has(id) ? "" : undefined}
       data-pressable={pressable ? "" : undefined}
       className={rowClassName}
     >

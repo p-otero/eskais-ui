@@ -1,12 +1,14 @@
 import { createLocalStorage } from "@ui-sdk/core"
 import { usePreference } from "@ui-sdk/react/preferences"
-import { useEffect, useState } from "react"
+import { useState } from "react"
 
 import { createAppearance } from "@/components/ui/appearance"
 import { Button } from "@/components/ui/button"
 import { Field, FieldLabel } from "@/components/ui/field"
 import { SegmentedControl, SegmentedControlIndicator, SegmentedControlItem } from "@/components/ui/segmented-control"
 import { Slider, SliderControl, SliderIndicator, SliderThumb, SliderTrack, SliderValue } from "@/components/ui/slider"
+
+import { useGlassOpacity } from "./hooks/use-glass-opacity"
 
 const themes = ["default", "compact", "glass"] as const
 type Theme = (typeof themes)[number]
@@ -42,18 +44,7 @@ function GlassOpacity() {
   const { value } = usePreference(theme)
   const [opacity, setOpacity] = useState(60)
 
-  useEffect(() => {
-    const root = document.documentElement
-    if (value !== "glass") return
-    root.style.setProperty("--glass-opacity", `${opacity}%`)
-    // A fully opaque surface hides what's behind it, so skip the blur, the expensive part.
-    if (opacity === 100) root.style.setProperty("--glass-blur", "0px")
-    else root.style.removeProperty("--glass-blur")
-    return () => {
-      root.style.removeProperty("--glass-opacity")
-      root.style.removeProperty("--glass-blur")
-    }
-  }, [value, opacity])
+  useGlassOpacity(value === "glass", opacity)
 
   if (value !== "glass") return null
   return (

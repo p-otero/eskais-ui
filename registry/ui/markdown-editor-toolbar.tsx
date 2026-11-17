@@ -2,7 +2,7 @@
 
 import { MenuTrigger } from "@ui-sdk/react/menu"
 import { Toolbar, ToolbarButton, ToolbarSeparator } from "@ui-sdk/react/toolbar"
-import { useLayoutEffect, useRef, useState, type ReactNode } from "react"
+import { useRef, useState, type ReactNode } from "react"
 import {
   BoldIcon,
   ChevronDownIcon,
@@ -29,6 +29,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import type { MarkdownFormat } from "@/components/ui/markdown-editor-commands"
 import type { MarkdownEditorLabels } from "@/components/ui/markdown-editor-labels"
+import { useResizeObserver } from "@/components/ui/use-markdown-editor"
 
 type ToolbarFormat = Exclude<MarkdownFormat, "heading">
 
@@ -96,13 +97,7 @@ function MarkdownEditorToolbar({
   const [visible, setVisible] = useState(ITEMS.length)
   const [level, setLevel] = useState(0)
 
-  useLayoutEffect(() => {
-    const toolbar = ref.current
-    if (!toolbar || typeof ResizeObserver === "undefined") return
-    const observer = new ResizeObserver(() => setVisible(fitCount(toolbar)))
-    observer.observe(toolbar)
-    return () => observer.disconnect()
-  }, [])
+  useResizeObserver(ref, (toolbar) => setVisible(fitCount(toolbar)))
 
   const shown = ITEMS.slice(0, visible)
   const overflow = ITEMS.slice(visible)

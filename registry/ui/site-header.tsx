@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useRef, useState, type ComponentProps, type ReactNode } from "react"
+import type { ComponentProps, ReactNode } from "react"
 
 import {
   NavigationMenu,
@@ -19,7 +19,7 @@ import {
   type SiteHeaderItem,
   type SiteHeaderRenderLink,
 } from "@/components/ui/site-header-links"
-import { useOverflowCount } from "@/components/ui/site-header-overflow"
+import { useOverflowCount, useScrolled } from "@/components/ui/use-site-header"
 import { cn } from "@/lib/utils"
 
 type SiteHeaderLabels = {
@@ -63,19 +63,6 @@ const triggerCurrentClassName = "data-current:bg-accent data-current:text-accent
 
 function Chevron() {
   return <span aria-hidden="true" className="size-3 shrink-0" />
-}
-
-function useScrolled() {
-  const sentinelRef = useRef<HTMLSpanElement>(null)
-  const [scrolled, setScrolled] = useState(false)
-  useEffect(() => {
-    const sentinel = sentinelRef.current
-    if (!sentinel || typeof IntersectionObserver !== "function") return
-    const observer = new IntersectionObserver(([entry]) => setScrolled(entry ? !entry.isIntersecting : false))
-    observer.observe(sentinel)
-    return () => observer.disconnect()
-  }, [])
-  return { sentinelRef, scrolled }
 }
 
 function BarItem({ item, renderLink }: { item: SiteHeaderItem; renderLink?: SiteHeaderRenderLink }) {

@@ -43,7 +43,7 @@ function InputClear({ className, children, ...props }: ComponentProps<typeof Inp
     <InputClearPrimitive
       aria-label="Clear"
       className={cnState(
-        // oxlint-disable-next-line eskais/spacing-tokens -- pulls the icon button into the padding so its glyph lines up with the text inset
+        // oxlint-disable-next-line p-otero/spacing-tokens -- pulls the icon button into the padding so its glyph lines up with the text inset
         "-me-1 inline-flex size-6 shrink-0 cursor-pointer items-center justify-center rounded-full text-muted-foreground outline-none hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring",
         className,
       )}

@@ -53,16 +53,15 @@ function DrawerContent({
   children,
   ...props
 }: ComponentProps<typeof DrawerContentPrimitive>) {
-  const focus = useFocusReturn(finalFocus, ref as Ref<HTMLElement> | undefined)
+  const { attach, finalFocus: returnFocus, wrap } = useFocusReturn(finalFocus, ref as Ref<HTMLElement> | undefined)
   return (
     <DrawerContentPrimitive
-      ref={focus.attach}
+      ref={attach}
       className={cnState(drawerContentClassName, className)}
-      // oxlint-disable-next-line react/refs -- read when UI SDK calls finalFocus on close, never during render
-      finalFocus={focus.finalFocus}
+      finalFocus={returnFocus}
       {...props}
     >
-      {focus.wrap(children)}
+      {wrap(children)}
     </DrawerContentPrimitive>
   )
 }

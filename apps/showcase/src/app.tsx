@@ -72,6 +72,7 @@ import { CodeSection } from "./sections/code"
 import { AttachmentsSection, LightboxSection } from "./sections/media"
 import { StagesSection } from "./sections/stages"
 import { ListsSection } from "./sections/lists"
+import { InboxSection } from "./sections/inbox"
 import { ThemeEditor } from "./theme-editor"
 
 const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
@@ -423,6 +424,7 @@ function App() {
           <StagesSection />
 
           <ListsSection />
+          <InboxSection />
 
           <AgentPanel />
         </main>

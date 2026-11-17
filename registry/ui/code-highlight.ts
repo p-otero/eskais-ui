@@ -103,6 +103,21 @@ function loadParser(language: CodeLanguage) {
   return pending
 }
 
+/** Loads `language`'s parser if it still needs one and calls `onLoad` when it arrives, unless unsubscribed first. */
+function watchParser(language: CodeLanguage, onLoad: () => void) {
+  let active = true
+  if (needsParser(language))
+    loadParser(language).then(
+      () => {
+        if (active) onLoad()
+      },
+      () => {},
+    )
+  return () => {
+    active = false
+  }
+}
+
 function splitLines(tokens: CodeToken[]): CodeLine[] {
   const lines: CodeLine[] = [{ tokens: [] }]
   for (const token of tokens) {
@@ -188,5 +203,5 @@ function highlight(code: string, language: CodeLanguage, parser = parsers.get(la
   return splitLines(parser ? parsed(code, parser) : [{ text: code }])
 }
 
-export { highlight, loadParser, needsParser, normalizeLanguage, parserFor }
+export { highlight, loadParser, needsParser, normalizeLanguage, parserFor, watchParser }
 export type { CodeLanguage, CodeLine, CodeToken, DiffKind, SyntaxTone }

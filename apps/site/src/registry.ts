@@ -27,6 +27,8 @@ const guideItems = [
   "font-geist",
   "font-inter",
   "icon",
+  "row-navigation",
+  "virtual-rows",
 ]
 
 const componentItems = items.filter((item) => !guideItems.includes(item.name))

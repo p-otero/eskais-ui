@@ -68,7 +68,7 @@ function NativeSelect({
     "data-slot": "native-select",
     className: cn(
       fieldSurfaceClassName,
-      // oxlint-disable-next-line eskais/spacing-tokens -- the end padding clears the chevron drawn over the select
+      // oxlint-disable-next-line p-otero/spacing-tokens -- the end padding clears the chevron drawn over the select
       "h-field-control w-full min-w-0 cursor-pointer appearance-none rounded-control ps-control-x pe-9 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50",
       className,
     ),

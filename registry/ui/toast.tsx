@@ -33,7 +33,7 @@ type ButtonLook = VariantProps<typeof buttonVariants>
 // The region is a manual popover in the top layer, so the UA popover box (inset, margin, border, canvas) is reset.
 // It takes no pointer events, so only the toasts cover the page beneath.
 const toastRegionClassName =
-  // oxlint-disable-next-line eskais/spacing-tokens -- the offset from the viewport edge pairs with w-[calc(100%-2rem)]
+  // oxlint-disable-next-line p-otero/spacing-tokens -- the offset from the viewport edge pairs with w-[calc(100%-2rem)]
   "pointer-events-none fixed inset-auto z-toast m-4 w-[calc(100%-2rem)] max-w-88 overflow-visible border-0 bg-transparent p-0 data-[side=bottom]:bottom-0 data-[side=top]:top-0 data-[align=end]:end-0 data-[align=start]:start-0 data-[align=center]:left-1/2 data-[align=center]:mx-0 data-[align=center]:-translate-x-1/2 [&>[data-slot=toast-list]]:m-0 [&>[data-slot=toast-list]]:flex [&>[data-slot=toast-list]]:list-none [&>[data-slot=toast-list]]:flex-col [&>[data-slot=toast-list]]:gap-items [&>[data-slot=toast-list]]:p-0 data-[side=bottom]:[&>[data-slot=toast-list]]:flex-col-reverse"
 
 const toastClassName =

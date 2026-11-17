@@ -4,16 +4,16 @@ import { tmpdir } from "node:os"
 import { join, resolve } from "node:path"
 import { afterAll, expect, test } from "vitest"
 
-const dir = mkdtempSync(join(tmpdir(), "eskais-spacing-rule-"))
+const dir = mkdtempSync(join(tmpdir(), "spacing-rule-"))
 afterAll(() => rmSync(dir, { recursive: true, force: true }))
 
 writeFileSync(
   join(dir, ".oxlintrc.json"),
   JSON.stringify({
     plugins: [],
-    jsPlugins: [resolve("tooling/oxlint-plugin-eskais/index.js").replaceAll("\\", "/")],
+    jsPlugins: [resolve("node_modules/@p-otero/oxlint-rules/dist/plugin.js").replaceAll("\\", "/")],
     categories: { correctness: "off" },
-    rules: { "eskais/spacing-tokens": "error" },
+    rules: { "p-otero/spacing-tokens": "error" },
   }),
 )
 
@@ -67,7 +67,7 @@ test("ignores import sources and accepts a disable comment with a reason", () =>
   expect(
     flagged(`
       import "./p-2"
-      // oxlint-disable-next-line eskais/spacing-tokens -- half the arrow's size, so it overlaps the edge
+      // oxlint-disable-next-line p-otero/spacing-tokens -- half the arrow's size, so it overlaps the edge
       export const arrow = "data-[side=top]:-bottom-1.5"
     `),
   ).toEqual([])

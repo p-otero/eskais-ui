@@ -84,7 +84,7 @@ function ConfirmDialog({
   ...root
 }: ConfirmDialogProps) {
   const destructive = tone === "destructive"
-  const focus = useFocusReturn(undefined)
+  const { attach, finalFocus: returnFocus, wrap } = useFocusReturn(undefined)
   const cancel = labels?.cancel ?? cancelLabel ?? "Cancel"
   const callout =
     children === undefined || children === null ? null : (
@@ -106,13 +106,8 @@ function ConfirmDialog({
         </AlertDialogTrigger>
       )}
       <AlertDialogBackdrop className={backdropClassName} />
-      <AlertDialogContent
-        ref={focus.attach}
-        className={cn(contentClassName, "max-w-md", className)}
-        // oxlint-disable-next-line react/refs -- read when UI SDK calls finalFocus on close, never during render
-        finalFocus={focus.finalFocus}
-      >
-        {focus.wrap(
+      <AlertDialogContent ref={attach} className={cn(contentClassName, "max-w-md", className)} finalFocus={returnFocus}>
+        {wrap(
           <>
             <div className="flex flex-col gap-inline">
               <AlertDialogTitle className="text-title leading-none">{title}</AlertDialogTitle>

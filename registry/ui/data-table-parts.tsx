@@ -15,6 +15,7 @@ import type {
 import { Pagination } from "@/components/ui/pagination"
 import { TableHead } from "@/components/ui/table"
 import type { DataTableSort, SortDirection, SortValue } from "@/lib/data-table-model"
+import type { Virtualize } from "@/components/ui/virtual-rows"
 
 type DataTableAlign = "start" | "center" | "end"
 
@@ -169,6 +170,12 @@ type DataTableProps<Row> = {
   empty?: ReactNode
   labels?: Partial<DataTableLabels>
   controller?: DataTableController
+  /** Enter on a focused row. Rows are one tab stop: arrows or j/k move, Home/End and the page keys jump. */
+  onRowOpen?: (row: Row) => void
+  /** `"auto"` (default) renders only the rows in view past 200 rows. Bound the table's height to scroll inside it. */
+  virtualize?: Virtualize
+  /** A row's estimated height in px before it is measured. */
+  estimateSize?: number
   className?: string
   tableClassName?: string
 }

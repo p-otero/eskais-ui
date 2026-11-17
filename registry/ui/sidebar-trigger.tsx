@@ -75,17 +75,26 @@ const noController: SidebarController = {
   toggle: () => undefined,
 }
 
-/** Whether the narrow-screen drawer of the Sidebar with this controller is open. */
-function useSidebarDrawerOpen(controller: SidebarController | undefined) {
+/**
+ * Whether the narrow-screen drawer of the Sidebar with this controller is open. With `closeWhenWide`, the narrow
+ * query, the drawer closes when the screen leaves it, so it doesn't reopen on the way back.
+ */
+function useSidebarDrawerOpen(controller: SidebarController | undefined, closeWhenWide?: string) {
   const state = drawerOf(controller ?? noController)
   const subscribe = useMemo(
     () => (notify: () => void) => {
       state.listeners.add(notify)
+      const media = closeWhenWide && typeof matchMedia === "function" ? matchMedia(closeWhenWide) : undefined
+      const onChange = () => {
+        if (controller && !media?.matches) setSidebarDrawerOpen(controller, false)
+      }
+      media?.addEventListener("change", onChange)
       return () => {
         state.listeners.delete(notify)
+        media?.removeEventListener("change", onChange)
       }
     },
-    [state],
+    [state, controller, closeWhenWide],
   )
   return useSyncExternalStore(
     subscribe,
