@@ -86,7 +86,7 @@ function DataTableHeaderCell<Row>({
           variant="ghost"
           size="sm"
           aria-label={sortLabel(header)}
-          data-slot="data-table-sort"
+          render={(part) => <button {...part} data-slot="data-table-sort" />}
           data-align={column.align}
           className="-mx-control-x gap-inline text-foreground data-[align=end]:flex-row-reverse [&_svg]:size-3.5"
           onClick={(event) => onSort(event.nativeEvent)}

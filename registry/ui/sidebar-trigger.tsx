@@ -116,6 +116,11 @@ type SidebarTriggerProps = Omit<ComponentProps<typeof Button>, "size" | "aria-la
   narrowQuery?: string
 }
 
+// UI SDK's Button keeps its own data-slot over a prop; the rendered element's props win.
+function sidebarTriggerElement(part: ComponentProps<"button">) {
+  return <button {...part} data-slot="sidebar-trigger" />
+}
+
 function SidebarTrigger({
   controller,
   collapsed,
@@ -131,7 +136,7 @@ function SidebarTrigger({
   if (narrow) {
     return (
       <Button
-        data-slot="sidebar-trigger"
+        render={sidebarTriggerElement}
         variant={variant}
         size="icon"
         aria-label={labels.open}
@@ -148,7 +153,7 @@ function SidebarTrigger({
   const name = collapsed === undefined ? labels.toggle : collapsed ? labels.expand : labels.collapse
   return (
     <Button
-      data-slot="sidebar-trigger"
+      render={sidebarTriggerElement}
       variant={variant}
       size="icon"
       aria-label={name}

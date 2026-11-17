@@ -117,7 +117,7 @@ function MobileNav({
   return (
     <NavigationMenu
       aria-label={label}
-      data-slot="mobile-nav"
+      render={<nav data-slot="mobile-nav" />}
       openOnHover={false}
       className={cn(
         "fixed inset-x-0 bottom-0 z-sticky w-full max-w-none border-t bg-background/(--glass-opacity) backdrop-surface",

@@ -360,7 +360,10 @@ function ListGroup({ label, count, className, children }: ListGroupProps) {
   )
   if (context?.selectable) {
     return (
-      <ListboxGroup data-slot="list-group" className={cn("flex flex-col gap-inline not-first:pt-group", className)}>
+      <ListboxGroup
+        render={<div data-slot="list-group" />}
+        className={cn("flex flex-col gap-inline not-first:pt-group", className)}
+      >
         <ListboxGroupLabel className={groupLabelClassName}>{heading}</ListboxGroupLabel>
         <div className={containerClassNames[variant]}>{children}</div>
       </ListboxGroup>

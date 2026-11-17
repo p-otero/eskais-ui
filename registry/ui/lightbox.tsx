@@ -220,7 +220,7 @@ function Lightbox({
       <DialogBackdrop />
       <DialogContent
         finalFocus={finalFocus}
-        data-slot="lightbox"
+        render={<div data-slot="lightbox" />}
         className={cn(contentClassName, "h-full w-[calc(100%-2rem)] max-w-6xl gap-0 overflow-hidden p-0", className)}
       >
         {items.length > 0 && (

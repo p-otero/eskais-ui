@@ -354,9 +354,10 @@ Components import their icons from `lucide-react` by name (`ChevronDownIcon`, `X
 2. If it doesn't, write a primitive with `definePrimitive` (`agent.actions` last) next to the component, as `search-field-primitive.ts` does, and render it with `createParts`.
 3. Never give a `registry/lib` file and a `registry/ui` file the same basename: `shadcn add` rewrites imports by basename and points one at the other in the consumer.
 4. Use `cnState` from `@/lib/utils` so a consumer's `className` can still be a function of state.
-5. Size and shape it with the tokens above so every theme applies.
-6. Add tests in `test/`: behavior with Testing Library, `mount`/`checkServer` for primitives, the agent test, and `allow` refused/approved for anything with `data-agent-confirm`.
-7. Add the item to `registry.json`, run `bun run verify` and commit `public/r`.
+5. A UI SDK part keeps its own `data-slot` over a prop. To give a part built on one (or on `Button`) its own slot, set it on the rendered element: `render={(part) => <button {...part} data-slot="list-item-primary" />}`. `test/data-slot.test.tsx` fails on a `data-slot` prop passed straight to one.
+6. Size and shape it with the tokens above so every theme applies.
+7. Add tests in `test/`: behavior with Testing Library, `mount`/`checkServer` for primitives, the agent test, and `allow` refused/approved for anything with `data-agent-confirm`.
+8. Add the item to `registry.json`, run `bun run verify` and commit `public/r`.
 
 ## Keep it small
 

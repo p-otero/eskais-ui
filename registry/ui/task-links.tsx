@@ -84,7 +84,7 @@ function TaskLinks({ links, labels, renderLink, onOpenLink, className, ...props 
             <Button
               variant="link"
               size="sm"
-              render={createElement("a", { href: link.href })}
+              render={createElement("a", { href: link.href, "data-slot": "task-card-pull-request" })}
               title={`${text.kind[link.kind]}: ${link.href}`}
               onClick={openWith(link, onOpenLink)}
               className="h-auto min-w-0 justify-start px-0 py-inline text-start whitespace-normal wrap-anywhere"
@@ -114,7 +114,6 @@ type PullRequestLinkProps = {
 function PullRequestLink({ link, label, onOpenLink, className }: PullRequestLinkProps) {
   return (
     <Button
-      data-slot="task-card-pull-request"
       data-state={link.state}
       variant="ghost"
       size="icon"
