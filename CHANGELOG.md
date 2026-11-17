@@ -14,6 +14,7 @@ Versions follow [semver](https://semver.org). Before 1.0, a minor version can br
 - `StepDialog` `resultStep={{ title, render: (result, { close, restart }) => … }}` (opt-in) shows what `onSubmit` resolved with inside the dialog instead of closing: focus moves to the result heading, Done (`labels.done`) and Escape close it, and `restart` starts over from step 1. `onOpenChange` now gets `details.reason` (`submit`, `done`, `cancel`, `escape`, `outside`, `dismiss`, `trigger`).
 - `icon` item: `<Icon icon={TrashIcon} label="…" />` for meaningful icons; `eskais/no-inline-icons` rejects hand-drawn SVG icons in the registry.
 - Keyboard-first lists: `shortcuts` (`useShortcut`, `ShortcutScope`, `ShortcutHint`, `Button`/`DropdownMenuItem` `shortcut`), `shortcuts-dialog` (`?`), `row-navigation` (j/k, Home/End, PageUp/PageDown, Enter, x) in List, DataTable and the AgentTaskBoard table and backlog, `virtual-rows` (TanStack Virtual past 200 rows), `SidePanel` and the `inbox` block.
+- `@eskais/mockup` (`packages/mockup`, run from the repo with Bun): build a screen as TSX with the project's own components and fixtures into one offline HTML file, then `validate` it. A `/docs/mockups` guide covers it, with an A/B benchmark against hand-written HTML (`packages/mockup/BENCHMARKS.md`).
 - `bun run test:compiler`: the showcase built with React Compiler, with the browser checks run on it (in CI).
 
 ### Changed
