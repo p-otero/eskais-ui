@@ -6,6 +6,7 @@ import { Children, isValidElement, useRef, type ComponentProps, type ReactNode }
 
 import { ShortcutHint, useAriaKeyshortcuts, useShortcut } from "@/components/ui/shortcuts"
 import { Spinner } from "@/components/ui/spinner"
+import { ControlTooltip, type ControlTooltipOption } from "@/components/ui/tooltip"
 import { cnState } from "@/lib/utils"
 
 const buttonVariants = cva(
@@ -57,7 +58,26 @@ type ButtonBaseProps = Omit<ComponentProps<typeof ButtonPrimitive>, "aria-label"
   shortcutDescription?: string
   /** `false` binds the key without showing it. */
   shortcutHint?: boolean
+  /**
+   * An icon button shows its `aria-label`, and its shortcut, in a tooltip on hover and keyboard focus. `false` turns
+   * it off when a visible label sits beside the button; a string or `{ content, side, align }` replaces or places it,
+   * on any button.
+   */
+  tooltip?: ControlTooltipOption
 }
+
+/**
+ * The look of a button-like trigger (`DialogTrigger`, `DrawerClose`…): an icon size needs an `aria-label`, which its
+ * tooltip shows.
+ */
+type ButtonLookProps =
+  | {
+      variant?: ButtonVariants["variant"]
+      size?: Exclude<ButtonVariants["size"], "icon">
+      "aria-label"?: string
+      tooltip?: ControlTooltipOption
+    }
+  | { variant?: ButtonVariants["variant"]; size: "icon"; "aria-label": string; tooltip?: ControlTooltipOption }
 
 type ButtonProps =
   | (ButtonBaseProps & { size?: Exclude<ButtonVariants["size"], "icon">; "aria-label"?: string })
@@ -109,11 +129,13 @@ function Button({
   shortcut,
   shortcutDescription,
   shortcutHint = true,
+  tooltip,
   ref,
   children,
   ...props
 }: ButtonProps) {
   const iconOnly = size === "icon"
+  const tooltipShown = tooltip !== false && (iconOnly || tooltip !== undefined)
   const element = useRef<HTMLElement | null>(null)
   const description =
     shortcutDescription ?? props["aria-label"] ?? (typeof children === "string" ? children : undefined)
@@ -123,11 +145,11 @@ function Button({
   })
   const ariaKeyshortcuts = useAriaKeyshortcuts(shortcut)
   const hint =
-    shortcut !== undefined && shortcutHint ? (
+    shortcut !== undefined && shortcutHint && !(iconOnly && tooltipShown) ? (
       <ShortcutHint key="shortcut-hint" keys={shortcut} className="ms-auto" />
     ) : null
   const content = (inner: ReactNode) => (hint ? withHint(inner, hint) : inner)
-  return (
+  const button = (
     <ButtonPrimitive
       ref={(node: HTMLElement | null) => {
         element.current = node
@@ -149,7 +171,18 @@ function Button({
         : withSpinner(content(children), iconOnly, variant)}
     </ButtonPrimitive>
   )
+  if (!tooltipShown) return button
+  return (
+    <ControlTooltip
+      label={props["aria-label"]}
+      tooltip={tooltip}
+      iconOnly={iconOnly}
+      shortcut={shortcutHint ? shortcut : undefined}
+    >
+      {button}
+    </ControlTooltip>
+  )
 }
 
 export { Button, buttonVariants }
-export type { ButtonProps }
+export type { ButtonLookProps, ButtonProps }

@@ -10,13 +10,11 @@ import {
   PopoverTrigger as PopoverTriggerPrimitive,
   createPopoverController,
 } from "@ui-sdk/react/popover"
-import type { VariantProps } from "class-variance-authority"
 import type { ComponentProps } from "react"
 
-import { buttonVariants } from "@/components/ui/button"
+import { buttonVariants, type ButtonLookProps } from "@/components/ui/button"
+import { ControlTooltip } from "@/components/ui/tooltip"
 import { cnState } from "@/lib/utils"
-
-type ButtonLook = VariantProps<typeof buttonVariants>
 
 const floatingSurfaceClassName =
   "z-popover m-0 surface-floating outline-none origin-(--transform-origin) transition duration-micro ease-standard data-ending-style:scale-95 data-ending-style:opacity-0 data-starting-style:scale-95 data-starting-style:opacity-0 motion-reduce:transition-opacity motion-reduce:data-ending-style:scale-100 motion-reduce:data-starting-style:scale-100"
@@ -31,9 +29,14 @@ function PopoverTrigger({
   className,
   variant = "outline",
   size,
+  tooltip,
   ...props
-}: ComponentProps<typeof PopoverTriggerPrimitive> & ButtonLook) {
-  return <PopoverTriggerPrimitive className={cnState(buttonVariants({ variant, size }), className)} {...props} />
+}: Omit<ComponentProps<typeof PopoverTriggerPrimitive>, "aria-label"> & ButtonLookProps) {
+  return (
+    <ControlTooltip label={props["aria-label"]} tooltip={tooltip} iconOnly={size === "icon"}>
+      <PopoverTriggerPrimitive className={cnState(buttonVariants({ variant, size }), className)} {...props} />
+    </ControlTooltip>
+  )
 }
 
 function PopoverContent({ className, ...props }: ComponentProps<typeof PopoverContentPrimitive>) {
@@ -56,9 +59,14 @@ function PopoverClose({
   className,
   variant = "outline",
   size = "sm",
+  tooltip,
   ...props
-}: ComponentProps<typeof PopoverClosePrimitive> & ButtonLook) {
-  return <PopoverClosePrimitive className={cnState(buttonVariants({ variant, size }), className)} {...props} />
+}: Omit<ComponentProps<typeof PopoverClosePrimitive>, "aria-label"> & ButtonLookProps) {
+  return (
+    <ControlTooltip label={props["aria-label"]} tooltip={tooltip} iconOnly={size === "icon"}>
+      <PopoverClosePrimitive className={cnState(buttonVariants({ variant, size }), className)} {...props} />
+    </ControlTooltip>
+  )
 }
 
 export {
