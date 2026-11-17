@@ -67,7 +67,7 @@ function ComboboxControl({ className, render, ...props }: PartProps<"div">) {
       "data-slot": "combobox-control",
       className: cn(
         fieldSurfaceClassName,
-        "flex h-field-control w-full min-w-0 items-center gap-inline rounded-control ps-control-x pe-inline text-sm has-aria-invalid:border-destructive has-data-disabled:cursor-not-allowed has-data-disabled:opacity-50 has-[input:focus-visible]:ring-2 has-[input:focus-visible]:ring-ring",
+        "flex h-field-control w-full min-w-0 items-center gap-inline rounded-control ps-control-x pe-inline text-entry has-aria-invalid:border-destructive has-data-disabled:cursor-not-allowed has-data-disabled:opacity-50 has-[input:focus-visible]:ring-2 has-[input:focus-visible]:ring-ring",
         className,
       ),
       ...props,

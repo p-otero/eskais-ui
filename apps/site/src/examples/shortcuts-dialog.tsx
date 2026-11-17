@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button"
 import { ShortcutHint, ShortcutScope } from "@/components/ui/shortcuts"
-import { ShortcutsDialog } from "@/components/ui/shortcuts-dialog"
+import { ShortcutsDialog, ShortcutsDialogTrigger } from "@/components/ui/shortcuts-dialog"
 
 export default function ShortcutsDialogDemo() {
   return (
@@ -12,11 +12,16 @@ export default function ShortcutsDialogDemo() {
         <Button variant="outline" shortcut="p">
           Pin
         </Button>
+        <ShortcutsDialog>
+          <ShortcutsDialogTrigger variant="ghost">
+            Keyboard shortcuts
+            <ShortcutHint keys="?" />
+          </ShortcutsDialogTrigger>
+        </ShortcutsDialog>
       </div>
       <p className="flex items-center gap-inline text-body-sm text-muted-foreground">
-        Focus a button, then press <ShortcutHint keys="?" /> to list what you can do here.
+        Press Keyboard shortcuts, or focus a button and press <ShortcutHint keys="?" />, to list what you can do here.
       </p>
-      <ShortcutsDialog />
     </ShortcutScope>
   )
 }

@@ -61,7 +61,7 @@ function TimeInput({ className, ...props }: ComponentProps<typeof TimeInputPrimi
   return (
     <TimeInputPrimitive
       className={cnState(
-        `${fieldSurfaceClassName} inline-flex h-field-control w-fit shrink-0 items-center rounded-control px-control-x text-sm tabular-nums has-focus-visible:ring-2 has-focus-visible:ring-ring aria-invalid:border-destructive data-invalid:border-destructive [&_[data-slot=time-input-segment]]:rounded-sm [&_[data-slot=time-input-segment]]:outline-none [&_[data-slot=time-input-segment][data-empty]]:text-muted-foreground [&_[data-slot=time-input-segment]:focus]:bg-accent [&_[data-slot=time-input-segment]:focus]:text-accent-foreground`,
+        `${fieldSurfaceClassName} inline-flex h-field-control w-fit shrink-0 items-center rounded-control px-control-x text-entry tabular-nums has-focus-visible:ring-2 has-focus-visible:ring-ring aria-invalid:border-destructive data-invalid:border-destructive [&_[data-slot=time-input-segment]]:rounded-sm [&_[data-slot=time-input-segment]]:outline-none [&_[data-slot=time-input-segment][data-empty]]:text-muted-foreground [&_[data-slot=time-input-segment]:focus]:bg-accent [&_[data-slot=time-input-segment]:focus]:text-accent-foreground`,
         className,
       )}
       {...props}

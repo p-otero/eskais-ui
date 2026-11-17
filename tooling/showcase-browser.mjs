@@ -16,7 +16,7 @@ async function freePort() {
   return port
 }
 
-async function withShowcase(run) {
+async function withShowcase(run, pageOptions = {}) {
   const port = await freePort()
   const server = spawn("npx", ["vite", "preview", "--port", String(port), "--strictPort"], {
     cwd: showcase,
@@ -28,7 +28,7 @@ async function withShowcase(run) {
   const browser = await chromium.launch({ channel: "chrome" })
   const errors = []
   try {
-    const page = await browser.newPage({ viewport: { width: 1100, height: 900 }, deviceScaleFactor: 2 })
+    const page = await browser.newPage({ viewport: { width: 1100, height: 900 }, deviceScaleFactor: 2, ...pageOptions })
     page.setDefaultTimeout(10_000)
     page.on("console", (message) => message.type() === "error" && errors.push(message.text()))
     page.on("pageerror", (error) => errors.push(error.message))

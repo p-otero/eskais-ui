@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, type ReactNode } from "react"
+import { useState, type ComponentProps, type MouseEvent, type ReactNode } from "react"
 
 import {
   Dialog,
@@ -10,6 +10,7 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
+  DialogTrigger,
 } from "@/components/ui/dialog"
 import { Kbd, KbdGroup } from "@/components/ui/kbd"
 import { listShortcuts, useShortcut, type ListedShortcut } from "@/components/ui/shortcuts"
@@ -40,6 +41,8 @@ type ShortcutsDialogProps = {
   /** Extra rows that aren't registered shortcuts, like a list's own keys. */
   extra?: readonly ListedShortcut[]
   className?: string
+  /** A `ShortcutsDialogTrigger`, the way in without a keyboard. */
+  children?: ReactNode
 }
 
 const noExtra: readonly ListedShortcut[] = []
@@ -69,6 +72,7 @@ function ShortcutsDialog({
   labels: labelOverrides,
   extra = noExtra,
   className,
+  children,
 }: ShortcutsDialogProps) {
   const labels = { ...shortcutsDialogLabels, ...labelOverrides }
   const [ownOpen, setOwnOpen] = useState(defaultOpen)
@@ -99,6 +103,7 @@ function ShortcutsDialog({
 
   return (
     <Dialog open={open} onOpenChange={(next) => setOpen(next)}>
+      {children}
       <DialogBackdrop />
       <DialogContent size="md" className={cn("max-h-(--dialog-max-height)", className)} data-slot="shortcuts-dialog">
         <DialogHeader>
@@ -135,5 +140,19 @@ function ShortcutsDialog({
   )
 }
 
-export { ShortcutsDialog, shortcutsDialogLabels }
+/**
+ * Opens the `ShortcutsDialog` it sits in, for touch screens and anyone who doesn't know "?". A `Button` look
+ * (`variant`, `size`); give it visible text or an `aria-label`. It lists the shortcuts of the `ShortcutScope` it is in.
+ */
+function ShortcutsDialogTrigger({ onClick, ...props }: ComponentProps<typeof DialogTrigger>) {
+  // Safari and touch don't focus a pressed button, and a scope is active while focus is inside it, so take focus
+  // before the dialog reads the shortcuts that can run here.
+  const focusFirst = (event: MouseEvent<HTMLButtonElement>) => {
+    onClick?.(event)
+    event.currentTarget.focus({ preventScroll: true })
+  }
+  return <DialogTrigger onClick={focusFirst} {...props} />
+}
+
+export { ShortcutsDialog, ShortcutsDialogTrigger, shortcutsDialogLabels }
 export type { ShortcutsDialogLabels, ShortcutsDialogProps }

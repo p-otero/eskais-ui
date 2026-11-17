@@ -44,7 +44,13 @@ const itemNotes: Record<string, ItemNotes> = {
     related: ["shortcuts-dialog", "kbd", "button", "list-item"],
   },
   "shortcuts-dialog": {
-    a11y: ["A modal dialog titled by its heading; each scope is a labelled section of key and description pairs."],
+    a11y: [
+      "A modal dialog titled by its heading; each scope is a labelled section of key and description pairs.",
+      "? opens it on any keyboard layout: a symbol shortcut matches the character typed, whether it took Shift, AltGr or Option.",
+      "ShortcutsDialogTrigger is the way in on touch screens, where there is no ? key; it takes focus as it opens, so its scope's shortcuts are listed in Safari too.",
+    ],
+    agent:
+      "Agents open it by pressing the ShortcutsDialogTrigger by name; the shortcuts themselves add nothing for agents, who press the same buttons.",
     related: ["shortcuts", "dialog", "kbd"],
   },
   separator: {
@@ -191,6 +197,7 @@ const itemNotes: Record<string, ItemNotes> = {
     a11y: [
       "One choice from a row, as a radio group: arrow keys move and select.",
       "The indicator slides, or fades under reduced motion.",
+      "activateOnPress (off by default) checks an item on a mouse or pen press instead of on release, like macOS. Touch stays on release, so scrolling past doesn't change it. WCAG 2.5.2 allows it because another press undoes it; actions and menus always activate on release.",
     ],
     related: ["tabs", "radio-group", "toggle-group"],
   },
@@ -411,7 +418,10 @@ const itemNotes: Record<string, ItemNotes> = {
     related: ["data-table", "table"],
   },
   tabs: {
-    a11y: ["Arrow keys move between tabs, automatic or manual activation; panels are labelled by their tab."],
+    a11y: [
+      "Arrow keys move between tabs, automatic or manual activation; panels are labelled by their tab.",
+      "activateOnPress (off by default) selects a tab on a mouse or pen press instead of on release, like Linear and macOS. Touch stays on release, so scrolling a tab bar doesn't select. WCAG 2.5.2 allows it because another press undoes it; actions and menus always activate on release.",
+    ],
     related: ["segmented-control", "page-header"],
   },
   "skip-link": {

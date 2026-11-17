@@ -179,7 +179,9 @@
           "--type-display-sm-size": "1.5rem",
           "--type-display-sm-leading": "1.75rem",
           "--type-display-size": "1.75rem",
-          "--type-display-leading": "2rem"
+          "--type-display-leading": "2rem",
+          "--type-entry-size": "0.875rem",
+          "--type-entry-leading": "1.25rem"
         },
         "[data-palette]": {
           "--background": "oklch(1 var(--neutral-chroma) var(--neutral-hue))",
@@ -279,6 +281,12 @@
           "--neutral-border": "oklch(0.42 var(--neutral-chroma) var(--neutral-hue))",
           "--skeleton": "color-mix(in oklab, var(--foreground) 14%, transparent)",
           "--code-highlight": "color-mix(in oklab, var(--foreground) 8%, var(--muted))"
+        },
+        "@media (pointer: coarse)": {
+          ":where(:root)": {
+            "--type-entry-size": "1rem",
+            "--type-entry-leading": "1.5rem"
+          }
         },
         "@media (prefers-color-scheme: dark)": {
           ":root:where(:not(.light, [data-color-scheme=\"light\"]))": {
@@ -664,6 +672,8 @@
           "text-display": "var(--type-display-size)",
           "text-display--line-height": "var(--type-display-leading)",
           "text-display--font-weight": "700",
+          "text-entry": "var(--type-entry-size)",
+          "text-entry--line-height": "var(--type-entry-leading)",
           "tracking-meta": "0.12em",
           "tracking-tight": "-0.012em",
           "color-background": "var(--background)",
@@ -1754,7 +1764,7 @@
       "type": "registry:ui",
       "title": "Shortcuts Dialog",
       "description": "A ? dialog that lists the shortcuts available where the person is, grouped by ShortcutScope.",
-      "docs": "Mount `<ShortcutsDialog />` once. `?` opens it (`shortcut` changes or, with `null`, removes the key; `open`/`onOpenChange` control it). It reads `listShortcuts()` as it opens, before the modal pauses the page's shortcuts, and lists only shortcuts with a `description`, grouped by scope under each `ShortcutScope label`. `extra` adds rows that aren't registered shortcuts, like a list's own j/k keys. `labels` (`title`, `global`, `open`, `description`) in the page's language; English by default.",
+      "docs": "Mount `<ShortcutsDialog />` once. `?` opens it, however the layout types it (`shortcut` changes or, with `null`, removes the key). Touch screens have no `?`, so give it a way in: `<ShortcutsDialog><ShortcutsDialogTrigger>Keyboard shortcuts</ShortcutsDialogTrigger></ShortcutsDialog>` (a `Button` look; it lists the shortcuts of the `ShortcutScope` it sits in), or control it with `open`/`onOpenChange` from a button elsewhere. It reads `listShortcuts()` as it opens, before the modal pauses the page's shortcuts, and lists only shortcuts with a `description`, grouped by scope under each `ShortcutScope label`. `extra` adds rows that aren't registered shortcuts, like a list's own j/k keys. `labels` (`title`, `global`, `open`, `description`) in the page's language; English by default.",
       "dependencies": [
         "@ui-sdk/core@0.1.0-beta.5",
         "@ui-sdk/react@0.1.0-beta.5"

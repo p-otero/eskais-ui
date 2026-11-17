@@ -1,4 +1,4 @@
-import { act, render, screen } from "@testing-library/react"
+import { act, fireEvent, render, screen } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { createAgent } from "@ui-sdk/react/agent"
 import { useState } from "react"
@@ -7,7 +7,7 @@ import { expect, test, vi } from "vitest"
 import { Button } from "@/components/ui/button"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { listShortcuts, ShortcutHint, ShortcutScope, useShortcut } from "@/components/ui/shortcuts"
-import { ShortcutsDialog } from "@/components/ui/shortcuts-dialog"
+import { ShortcutsDialog, ShortcutsDialogTrigger } from "@/components/ui/shortcuts-dialog"
 
 import { axeViolations } from "./axe"
 
@@ -235,4 +235,112 @@ test("a menu item's shortcut presses it while the menu is open", async () => {
   await vi.waitFor(() => expect(item.closest('[role="menu"]')?.contains(document.activeElement)).toBe(true))
   await user.keyboard("p")
   expect(pin).toHaveBeenCalledTimes(1)
+})
+
+// What each layout sends for "?" or "/": the produced key, with the modifiers that layout needed to make it.
+const keyEvents = {
+  "? on a US layout (Shift+/)": { key: "?", code: "Slash", shiftKey: true },
+  "? on a Spanish layout (Shift+')": { key: "?", code: "Minus", shiftKey: true },
+  "? with AltGr on Windows": { key: "?", code: "KeyQ", ctrlKey: true, altKey: true },
+  "? with Option on a Mac": { key: "?", code: "KeyQ", altKey: true },
+  "/ on a Spanish layout (Shift+7)": { key: "/", code: "Digit7", shiftKey: true },
+  "1 on AZERTY (Shift+&)": { key: "1", code: "Digit1", shiftKey: true },
+}
+
+test.each(Object.entries(keyEvents))("a symbol or digit shortcut matches the produced key: %s", (_, init) => {
+  const run = vi.fn()
+  render(<Shortcut keys={init.key} onRun={run} />)
+  fireEvent.keyDown(document.body, init)
+  expect(run).toHaveBeenCalledTimes(1)
+})
+
+test("a letter keeps its exact modifiers, and Ctrl or ⌘ with a symbol is another shortcut", () => {
+  const letter = vi.fn()
+  const help = vi.fn()
+  render(
+    <>
+      <Shortcut keys="u" onRun={letter} />
+      <Shortcut keys="?" onRun={help} />
+    </>,
+  )
+  fireEvent.keyDown(document.body, { key: "U", code: "KeyU", shiftKey: true })
+  expect(letter).not.toHaveBeenCalled()
+  fireEvent.keyDown(document.body, { key: "?", code: "Slash", shiftKey: true, ctrlKey: true })
+  fireEvent.keyDown(document.body, { key: "?", code: "Slash", shiftKey: true, metaKey: true })
+  expect(help).not.toHaveBeenCalled()
+})
+
+test("the dialog lists a symbol shortcut once, however many layouts it matches", async () => {
+  render(
+    <>
+      <Shortcut keys="/" onRun={() => {}} description="Search" />
+      <ShortcutsDialog />
+    </>,
+  )
+  fireEvent.keyDown(document.body, { key: "?", code: "Minus", shiftKey: true })
+  const dialog = await screen.findByRole("dialog", { name: "Keyboard shortcuts" })
+  const rows = [...dialog.querySelectorAll("[data-slot=shortcuts-dialog-row] dt")].map((row) => row.textContent)
+  expect(rows.toSorted()).toEqual(["Search", "Show keyboard shortcuts"])
+})
+
+function Message({ onOpenChange }: { onOpenChange?: (open: boolean) => void }) {
+  return (
+    <ShortcutScope name="message" label="Message">
+      <Button shortcut="u">Mark read</Button>
+      <Button shortcut="p">Pin</Button>
+      <ShortcutsDialog onOpenChange={onOpenChange}>
+        <ShortcutsDialogTrigger>Keyboard shortcuts</ShortcutsDialogTrigger>
+      </ShortcutsDialog>
+    </ShortcutScope>
+  )
+}
+
+test("ShortcutsDialogTrigger opens the dialog with its scope's shortcuts, and focus returns to it", async () => {
+  const user = userEvent.setup()
+  render(<Message />)
+  const trigger = screen.getByRole("button", { name: "Keyboard shortcuts" })
+  await user.click(trigger)
+  const dialog = await screen.findByRole("dialog", { name: "Keyboard shortcuts" })
+  expect(dialog.textContent).toContain("Mark read")
+  expect(dialog.textContent).toContain("Pin")
+  expect(await axeViolations(document.body)).toEqual([])
+  await user.keyboard("{Escape}")
+  await vi.waitFor(() => expect(screen.queryByRole("dialog")).toBeNull())
+  await vi.waitFor(() => expect(document.activeElement).toBe(trigger))
+})
+
+test("a press that doesn't focus the trigger, as in Safari or on touch, still lists its scope", async () => {
+  render(<Message />)
+  fireEvent.click(screen.getByRole("button", { name: "Keyboard shortcuts" }))
+  const dialog = await screen.findByRole("dialog", { name: "Keyboard shortcuts" })
+  expect(dialog.textContent).toContain("Mark read")
+})
+
+test("agents open the dialog by pressing the trigger by name", async () => {
+  const onOpenChange = vi.fn()
+  render(<Message onOpenChange={onOpenChange} />)
+  const agent = createAgent()
+  const result = await act(() => agent.act({ steps: [{ ref: "Keyboard shortcuts", action: "press" }] }))
+  expect(result.ok, result.error?.message).toBe(true)
+  expect(onOpenChange).toHaveBeenLastCalledWith(true)
+  expect(await screen.findByRole("dialog", { name: "Keyboard shortcuts" })).toBeTruthy()
+})
+
+function Help() {
+  const [open, setOpen] = useState(false)
+  return (
+    <ShortcutScope name="message" label="Message">
+      <Button shortcut="u">Mark read</Button>
+      <Button onClick={() => setOpen(true)}>Help</Button>
+      <ShortcutsDialog open={open} onOpenChange={setOpen} />
+    </ShortcutScope>
+  )
+}
+
+test("a controlled ShortcutsDialog opened from a Button lists the shortcuts", async () => {
+  const user = userEvent.setup()
+  render(<Help />)
+  await user.click(screen.getByRole("button", { name: "Help" }))
+  const dialog = await screen.findByRole("dialog", { name: "Keyboard shortcuts" })
+  expect(dialog.textContent).toContain("Mark read")
 })

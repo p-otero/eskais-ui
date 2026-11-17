@@ -110,7 +110,7 @@ function TokenInputFrame({
         data-slot="token-input"
         className={cn(
           // oxlint-disable-next-line shadcn/no-arbitrary-values -- the field grows with its tokens, so the pill radius stops at half a one-line field
-          `${fieldSurfaceClassName} flex min-h-field-control w-full min-w-0 cursor-text items-start rounded-[min(var(--control-radius),var(--control-height)/2)] px-control-x py-control-inset text-sm`,
+          `${fieldSurfaceClassName} flex min-h-field-control w-full min-w-0 cursor-text items-start rounded-[min(var(--control-radius),var(--control-height)/2)] px-control-x py-control-inset text-entry`,
           // oxlint-disable-next-line shadcn/no-arbitrary-values -- a label inside the field floats in the room above the first line
           "in-data-[label-placement=in]:pt-[calc(var(--field-label-offset)+var(--spacing-control-inset))]",
           // oxlint-disable-next-line shadcn/no-arbitrary-values -- a label on the border reaches half its line into the field, so the first row of chips starts below it

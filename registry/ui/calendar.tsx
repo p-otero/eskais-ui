@@ -53,7 +53,7 @@ function CalendarHeading({ className, ...props }: ComponentProps<typeof Calendar
 function CalendarGrid({ className, ...props }: ComponentProps<typeof CalendarGridPrimitive>) {
   return (
     <CalendarGridPrimitive
-      className={cnState("border-separate border-spacing-0.5 outline-none", className)}
+      className={cnState("border-separate border-spacing-x-0 border-spacing-y-0.5 outline-none", className)}
       {...props}
     />
   )
@@ -68,16 +68,26 @@ function CalendarWeekday({ className, ...props }: ComponentProps<typeof Calendar
   )
 }
 
+// A range is one band: the middle days' own fill, and under each end a half band (::after) on the side the range
+// continues, so it joins the end's circle (::before). Days touch within a week, so the band breaks only between weeks.
+// ::before also draws the hover and the focus ring, so every day's ring follows its shape; a focused day rises
+// above its neighbours so the ring isn't covered.
+const dayClassName = [
+  "relative isolate size-control cursor-pointer p-0 text-center text-sm tabular-nums outline-none",
+  "before:absolute before:inset-0 before:-z-10 before:rounded-control before:transition-colors before:content-['']",
+  "after:absolute after:inset-y-0 after:-z-20 after:content-none",
+  "hover:text-accent-foreground hover:before:bg-accent",
+  "focus-visible:z-10 focus-visible:before:outline-2 focus-visible:before:outline-offset-2 focus-visible:before:outline-ring",
+  "data-today:font-semibold data-today:underline data-today:underline-offset-4",
+  "data-outside:text-muted-foreground data-unavailable:line-through data-disabled:cursor-not-allowed data-disabled:opacity-50",
+  "data-selected:not-data-range-middle:text-primary-foreground data-selected:not-data-range-middle:before:bg-primary",
+  "data-range-middle:bg-accent data-range-middle:text-accent-foreground data-range-middle:hover:before:bg-transparent",
+  "data-range-start:not-data-range-end:after:start-1/2 data-range-start:not-data-range-end:after:end-0 data-range-start:not-data-range-end:after:bg-accent data-range-start:not-data-range-end:after:content-['']",
+  "data-range-end:not-data-range-start:after:start-0 data-range-end:not-data-range-start:after:end-1/2 data-range-end:not-data-range-start:after:bg-accent data-range-end:not-data-range-start:after:content-['']",
+].join(" ")
+
 function CalendarDay({ className, ...props }: ComponentProps<typeof CalendarDayPrimitive>) {
-  return (
-    <CalendarDayPrimitive
-      className={cnState(
-        "size-control cursor-pointer rounded-control p-0 text-center text-sm tabular-nums outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:ring-2 focus-visible:ring-ring data-today:font-semibold data-today:underline data-today:underline-offset-4 data-outside:text-muted-foreground data-unavailable:line-through data-disabled:cursor-not-allowed data-disabled:opacity-50 data-selected:bg-primary data-selected:text-primary-foreground data-range-middle:rounded-none data-range-middle:bg-accent data-range-middle:text-accent-foreground data-preview:bg-accent data-preview:text-accent-foreground",
-        className,
-      )}
-      {...props}
-    />
-  )
+  return <CalendarDayPrimitive className={cnState(dayClassName, className)} {...props} />
 }
 
 function CalendarMonths({ months = 1, labels }: { months?: number; labels?: CalendarLabels }) {

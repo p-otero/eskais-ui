@@ -113,7 +113,7 @@ function MarkdownEditor(props: MarkdownEditorProps) {
       readOnly={readOnly}
       aria-label={label}
       className={cn(
-        `${fieldSurfaceClassName} flex min-h-0 flex-col overflow-hidden rounded-choice text-body has-[.cm-focused]:ring-2 has-[.cm-focused]:ring-ring data-readonly:bg-transparent data-readonly:shadow-none`,
+        `${fieldSurfaceClassName} flex min-h-0 flex-col overflow-hidden rounded-choice text-body pointer-coarse:text-entry has-[.cm-focused]:ring-2 has-[.cm-focused]:ring-ring data-readonly:bg-transparent data-readonly:shadow-none`,
         className,
       )}
     >

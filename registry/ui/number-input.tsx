@@ -39,7 +39,7 @@ function NumberInputControl({ className, placeholder, ...props }: ComponentProps
     <NumberInputControlPrimitive
       placeholder={useFloatingPlaceholder(placeholder)}
       className={cnState(
-        "h-full min-w-0 flex-1 bg-transparent px-inline text-center text-sm tabular-nums outline-none placeholder:text-muted-foreground data-disabled:cursor-not-allowed",
+        "h-full min-w-0 flex-1 bg-transparent px-inline text-center text-entry tabular-nums outline-none placeholder:text-muted-foreground data-disabled:cursor-not-allowed",
         className,
       )}
       {...props}
