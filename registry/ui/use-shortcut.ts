@@ -1,6 +1,6 @@
 "use client"
 
-import { createContext, use, useEffect, useEffectEvent, type RefObject } from "react"
+import { createContext, use, useEffect, useLayoutEffect, useRef, type RefObject } from "react"
 
 import { addShortcut, type ShortcutLayer } from "@/components/ui/shortcuts-registry"
 
@@ -41,25 +41,28 @@ function useShortcut(
 ) {
   const context = use(ScopeContext)
   const resolvedScope = scope === null ? undefined : (scope ?? context?.scope)
-  const run = useEffectEvent((event: KeyboardEvent) => handler(event))
-  const check = useEffectEvent(() => when?.() ?? true)
   const layerContext = scope === null ? null : context
   const hasLayer = layer !== undefined || layerContext !== null
-  const currentLayer = useEffectEvent(() => {
-    const resolved = layerOf(layer, layerContext)
-    return typeof resolved === "function" ? (resolved() ?? null) : (resolved ?? null)
+  const latest = useRef({ handler, when, layer, layerContext })
+  // oxlint-disable-next-line p-otero/no-latest-ref-effect -- ShortcutsDialog lists shortcuts in the render that opens it (the modal pauses them after), which calls `when` and the layer; an effect event throws during render
+  useLayoutEffect(() => {
+    latest.current = { handler, when, layer, layerContext }
   })
 
   useEffect(() => {
     if (!keys || !enabled) return
+    const currentLayer = () => {
+      const resolved = layerOf(latest.current.layer, latest.current.layerContext)
+      return typeof resolved === "function" ? (resolved() ?? null) : (resolved ?? null)
+    }
     return addShortcut({
       keys,
-      handler: run,
+      handler: (event) => latest.current.handler(event),
       scope: resolvedScope,
       layer: hasLayer ? currentLayer : undefined,
       description,
       allowInInput,
-      when: check,
+      when: () => latest.current.when?.() ?? true,
     })
   }, [keys, enabled, resolvedScope, hasLayer, description, allowInInput])
 }

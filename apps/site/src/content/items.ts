@@ -44,7 +44,13 @@ const itemNotes: Record<string, ItemNotes> = {
     related: ["shortcuts-dialog", "kbd", "button", "list-item"],
   },
   "shortcuts-dialog": {
-    a11y: ["A modal dialog titled by its heading; each scope is a labelled section of key and description pairs."],
+    a11y: [
+      "A modal dialog titled by its heading; each scope is a labelled section of key and description pairs.",
+      "? opens it on any keyboard layout: a symbol shortcut matches the character typed, whether it took Shift, AltGr or Option.",
+      "ShortcutsDialogTrigger is the way in on touch screens, where there is no ? key; it takes focus as it opens, so its scope's shortcuts are listed in Safari too.",
+    ],
+    agent:
+      "Agents open it by pressing the ShortcutsDialogTrigger by name; the shortcuts themselves add nothing for agents, who press the same buttons.",
     related: ["shortcuts", "dialog", "kbd"],
   },
   separator: {

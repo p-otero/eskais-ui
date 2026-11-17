@@ -1764,7 +1764,7 @@
       "type": "registry:ui",
       "title": "Shortcuts Dialog",
       "description": "A ? dialog that lists the shortcuts available where the person is, grouped by ShortcutScope.",
-      "docs": "Mount `<ShortcutsDialog />` once. `?` opens it (`shortcut` changes or, with `null`, removes the key; `open`/`onOpenChange` control it). It reads `listShortcuts()` as it opens, before the modal pauses the page's shortcuts, and lists only shortcuts with a `description`, grouped by scope under each `ShortcutScope label`. `extra` adds rows that aren't registered shortcuts, like a list's own j/k keys. `labels` (`title`, `global`, `open`, `description`) in the page's language; English by default.",
+      "docs": "Mount `<ShortcutsDialog />` once. `?` opens it, however the layout types it (`shortcut` changes or, with `null`, removes the key). Touch screens have no `?`, so give it a way in: `<ShortcutsDialog><ShortcutsDialogTrigger>Keyboard shortcuts</ShortcutsDialogTrigger></ShortcutsDialog>` (a `Button` look; it lists the shortcuts of the `ShortcutScope` it sits in), or control it with `open`/`onOpenChange` from a button elsewhere. It reads `listShortcuts()` as it opens, before the modal pauses the page's shortcuts, and lists only shortcuts with a `description`, grouped by scope under each `ShortcutScope label`. `extra` adds rows that aren't registered shortcuts, like a list's own j/k keys. `labels` (`title`, `global`, `open`, `description`) in the page's language; English by default.",
       "dependencies": [
         "@ui-sdk/core@0.1.0-beta.5",
         "@ui-sdk/react@0.1.0-beta.5"

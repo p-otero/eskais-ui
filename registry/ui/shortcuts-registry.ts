@@ -33,9 +33,14 @@ const prefixes = new Map<string, { count: number; off: () => void }>()
 let pending: { prefix: string; timer: ReturnType<typeof setTimeout> } | null = null
 let listing = false
 
-/** `"?"` is typed with Shift on most layouts but not all, and UI SDK matches the modifiers it sees. */
+// UI SDK matches the modifiers it sees, but a symbol or digit takes different ones on different layouts: "?" is
+// Shift+/ in the US, Shift+' in Spain, AltGr on some Windows layouts and Option on some Mac ones; "/" is Shift+7 in
+// Spain; digits take Shift on AZERTY. So a step that is one such character matches the produced key with whichever
+// of Shift, Alt or AltGr (Ctrl+Alt) made it. Letters stay exact, since Shift changes what they mean.
+const producedWith = ["", "shift+", "alt+", "alt+shift+", "ctrl+alt+", "ctrl+alt+shift+"]
+
 function variantsOf(step: string) {
-  return step === "?" ? ["?", "shift+?"] : [step]
+  return /^[^\p{L}\s+]$/u.test(step) ? producedWith.map((modifiers) => `${modifiers}${step}`) : [step]
 }
 
 function stepsOf(keys: string) {

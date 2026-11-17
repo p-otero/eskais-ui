@@ -1,7 +1,6 @@
-// Smoke test for the built docs site (`bun run test:site`): serves apps/site/dist from a sub-path and checks
-// a few pages in the system Chrome for axe violations, console errors and horizontal scroll at phone width.
-// On an emulated 390px phone it also checks that nothing fixed or sticky covers a docs page's first heading,
-// that search is a centred icon button ⌘K still opens, and that breadcrumb crumbs route on the client.
+// Smoke test for the built docs site (`bun run test:site`): axe, console errors and horizontal scroll on a few
+// pages; on a 390px phone, nothing covers a page's first heading, ⌘K search opens and breadcrumbs route on the
+// client; "?" from several layouts and the Keyboard shortcuts button open the Shortcuts Dialog with the demo's keys.
 import { createRequire } from "node:module"
 
 import { openPage, withSite } from "./site-browser.mjs"
@@ -16,6 +15,7 @@ const pages = [
   "docs/components/form/",
   "docs/components/agent-task-board/",
   "docs/components/inbox/",
+  "docs/components/shortcuts-dialog/",
   "docs/keyboard/",
   "docs/mockups/",
 ]
@@ -286,6 +286,55 @@ async function checkThemeEditor(browser, origin) {
   console.log("theme editor: layout at 4 widths, area, swatches and recolouring checked")
 }
 
+// "?" as each layout sends it: the produced key with the modifiers that layout needs (CDP: Alt 1, Ctrl 2, Shift 8).
+const questionMarks = [
+  { layout: "US Shift+/", code: "Slash", modifiers: 8, keyCode: 191 },
+  { layout: "Spanish Shift+'", code: "Minus", modifiers: 8, keyCode: 219 },
+  { layout: "AltGr", code: "KeyQ", modifiers: 3, keyCode: 81 },
+]
+
+async function shortcutsDialogLists(page, label) {
+  const dialog = page.getByRole("dialog", { name: "Keyboard shortcuts" })
+  const opened = await dialog.waitFor({ timeout: 3000 }).then(
+    () => true,
+    () => false,
+  )
+  if (!opened) return failures.push(`shortcuts dialog, ${label}: no dialog`)
+  const text = await dialog.textContent()
+  for (const name of ["Mark read", "Pin"]) {
+    if (!text.includes(name)) failures.push(`shortcuts dialog, ${label}: "${name}" isn't listed`)
+  }
+  console.log(`shortcuts dialog, ${label}: opens`)
+}
+
+async function checkShortcutsDialog(browser, origin) {
+  const url = `${origin}docs/components/shortcuts-dialog/`
+  for (const press of questionMarks) {
+    const { page, context } = await openPage(browser, url)
+    await page.getByRole("button", { name: "Mark read" }).focus()
+    const cdp = await context.newCDPSession(page)
+    const key = { key: "?", code: press.code, modifiers: press.modifiers, windowsVirtualKeyCode: press.keyCode }
+    await cdp.send("Input.dispatchKeyEvent", { type: "keyDown", ...key, text: "?" })
+    await cdp.send("Input.dispatchKeyEvent", { type: "keyUp", ...key })
+    await shortcutsDialogLists(page, `? (${press.layout})`)
+    await context.close()
+  }
+  for (const [name, options] of [
+    ["mouse", { viewport: { width: 1440, height: 900 } }],
+    ["touch", phone],
+  ]) {
+    const context = await browser.newContext(options)
+    const page = await context.newPage()
+    await page.goto(url)
+    await page.waitForLoadState("networkidle")
+    const trigger = page.getByRole("button", { name: "Keyboard shortcuts" })
+    if (options.hasTouch) await trigger.tap()
+    else await trigger.click()
+    await shortcutsDialogLists(page, `Keyboard shortcuts button (${name})`)
+    await context.close()
+  }
+}
+
 await withSite(async ({ browser, origin }) => {
   for (const path of pages) {
     for (const viewport of viewports) {
@@ -321,6 +370,7 @@ await withSite(async ({ browser, origin }) => {
   await checkThemeEditor(browser, origin)
   await checkPhone(browser, origin)
   await checkBreadcrumbs(browser, origin)
+  await checkShortcutsDialog(browser, origin)
 })
 
 if (failures.length > 0) {
