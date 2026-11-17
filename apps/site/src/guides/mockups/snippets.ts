@@ -2,7 +2,7 @@
 const quickstart = `git clone --depth 1 https://github.com/p-otero/eskais-ui
 npx shadcn@latest init -t vite -n app -b base -p nova --no-monorepo
 cd app && npx shadcn@latest registry add "@eskais=https://raw.githubusercontent.com/p-otero/eskais-ui/main/public/r/{name}.json"
-npx shadcn@latest add @eskais/theme @eskais/card @eskais/button --overwrite
+npx shadcn@latest add @eskais/theme @eskais/card @eskais/button --overwrite -y
 # write .mockups/hello/screen.tsx (below), then:
 bun ../eskais-ui/packages/mockup/src/cli.ts validate hello`
 

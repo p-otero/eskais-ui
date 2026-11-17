@@ -48,7 +48,7 @@ export default function Mockups() {
         </li>
         <li>
           Install the theme and two components. <Code>--overwrite</Code> replaces the <Code>button.tsx</Code> and{" "}
-          <Code>utils.ts</Code> that <Code>shadcn init</Code> wrote.
+          <Code>utils.ts</Code> that <Code>shadcn init</Code> wrote, and <Code>-y</Code> accepts the new theme.
         </li>
         <li>
           Write the screen, put <Code>@layer ui-sdk;</Code> on the first line of <Code>src/index.css</Code> (see{" "}
