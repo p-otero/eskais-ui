@@ -6,25 +6,31 @@ import { buildMockup, summary, type Scheme } from "./build"
 import { DEFAULT_MAX_PROBLEMS, formatProblems } from "./checks"
 import { componentDetail, detailJson, detailText, indexJson, indexText } from "./inspect"
 import { displayPath, EnvironmentError, findProject, mockupDirectory } from "./project"
-import { validateMockup } from "./validate"
+import { registryListJson, registryListText } from "./registry"
+import { sdkDetail, sdkDetailJson, sdkDetailText, sdkIndexJson, sdkIndexText } from "./sdk"
+import { partsSummary, validateMockup } from "./validate"
 
 const COMMANDS = new Set(["inspect", "build", "validate", "clean"])
 const VALUE_FLAGS = new Set(["--project", "--css", "--theme", "--scheme", "--out", "--max"])
 
 const USAGE = `eskais-mockup: offline HTML mockups of a project's own components
 
-  bun <path>/src/cli.ts inspect [Names…] [--json] [--project <dir>] [--css <file>] [--max <n>]
+  bun <path>/src/cli.ts inspect [Names…] [--registry | --sdk] [--json] [--project <dir>] [--css <file>]
   bun <path>/src/cli.ts build <name> [--theme <name>] [--scheme light|dark|system] [--out <file>]
   bun <path>/src/cli.ts validate <name>
   bun <path>/src/cli.ts clean [name]
 
-A mockup lives in <project>/.mockups/<name>/ with screen.tsx, fixtures.ts and an optional
+inspect lists the project's components; --registry lists the registry items it has not installed,
+--sdk the @ui-sdk subpaths it installs, and --sdk <name> one primitive's parts and props.
+A mockup lives in <project>/.mockups/<name>/ with screen.tsx, fixtures.ts, parts/ and an optional
 ../wrapper.tsx. Exit codes: 0 ok, 1 problems to fix, 2 environment or usage error.`
 
 type Options = {
   command: "inspect" | "build" | "validate" | "clean"
   names: string[]
   json: boolean
+  registry: boolean
+  sdk: boolean
   max: number
   scheme: Scheme
   project?: string | undefined
@@ -43,6 +49,8 @@ function parseArgs(argv: string[]): Options | null {
     command: command as Options["command"],
     names: [],
     json: false,
+    registry: false,
+    sdk: false,
     max: DEFAULT_MAX_PROBLEMS,
     scheme: "system",
   }
@@ -53,6 +61,11 @@ function parseArgs(argv: string[]): Options | null {
     const inline = separator === -1 ? undefined : argument.slice(separator + 1)
     if (flag === "--json") {
       options.json = true
+      continue
+    }
+    if (flag === "--registry" || flag === "--sdk") {
+      options[flag === "--registry" ? "registry" : "sdk"] = true
+      if (inline !== undefined) options.names.push(inline)
       continue
     }
     if (flag === "--help" || flag === "-h") return null
@@ -99,6 +112,35 @@ function mockupName(options: Options): string {
 async function run(options: Options, cwd: string): Promise<number> {
   const project = findProject({ cwd, project: options.project, css: options.css })
   if (options.command === "inspect") {
+    if (options.registry && options.sdk) {
+      throw new EnvironmentError("inspect takes --registry or --sdk, not both")
+    }
+    if (options.registry) {
+      if (options.names.length > 0) throw new EnvironmentError("inspect --registry takes no names")
+      console.log(
+        options.json
+          ? JSON.stringify(await registryListJson(project, cwd), null, 2)
+          : await registryListText(project, cwd),
+      )
+      return 0
+    }
+    if (options.sdk) {
+      if (options.names.length === 0) {
+        console.log(options.json ? JSON.stringify(sdkIndexJson(project), null, 2) : sdkIndexText(project, cwd))
+        return 0
+      }
+      const details = options.names.map((name) => sdkDetail(project, name))
+      console.log(
+        options.json
+          ? JSON.stringify(
+              details.map((detail) => sdkDetailJson(detail, cwd)),
+              null,
+              2,
+            )
+          : details.map((detail) => sdkDetailText(detail, cwd)).join("\n\n"),
+      )
+      return 0
+    }
     if (options.names.length === 0) {
       console.log(options.json ? JSON.stringify(indexJson(project, cwd), null, 2) : indexText(project, cwd))
       return 0
@@ -146,11 +188,14 @@ async function run(options: Options, cwd: string): Promise<number> {
   }
   const outcome = await validateMockup(project, settings)
   for (const warning of outcome.warnings) console.error(`warning: ${warning}`)
+  const summaryLines = partsSummary(outcome.build.manifest)
   if (outcome.problems.length > 0) {
     for (const line of formatProblems(outcome.problems, options.max)) console.log(line)
+    for (const line of summaryLines) console.log(line)
     return 1
   }
   console.log(`ok ${summary(outcome.build, cwd)}`)
+  for (const line of summaryLines) console.log(line)
   return 0
 }
 
