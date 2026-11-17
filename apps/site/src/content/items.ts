@@ -316,6 +316,7 @@ const itemNotes: Record<string, ItemNotes> = {
     a11y: [
       "A non-modal complementary region named by its title, so the list beside it stays usable.",
       "Escape closes it; focus that was inside returns to the row that opened it.",
+      'On narrow screens narrow="stack" (default) keeps it in the flow below the list, hiding nothing and trapping no focus; "sheet" is a modal bottom sheet that takes focus and gives it back.',
     ],
     related: ["list-item", "drawer", "shortcuts"],
   },

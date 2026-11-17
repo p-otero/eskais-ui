@@ -1,6 +1,6 @@
 // Drives the showcase where layout decides whether things show: at phone widths the ⌘K dialog and the Sidebar
 // drawer opened from the Topbar, scrollable tabs and MobileNav labels; CardHeader (?demo=card-header-check) and
-// SidePanel (?demo=side-panel-check) headers at the widths where their actions wrap.
+// SidePanel (?demo=side-panel-check) headers at the widths where their actions wrap, and SidePanel's narrow modes.
 // Usage: node tooling/shell-check.mjs [--screenshots=<dir>] (after `bun run build:showcase`)
 import { mkdirSync } from "node:fs"
 import { join, resolve } from "node:path"
@@ -201,6 +201,58 @@ async function checkSidePanelHeader(page) {
   await shot(page, "side-panel-24rem.png", true)
 }
 
+async function checkSidePanelNarrow(page) {
+  await page.setViewportSize({ width: 375, height: 720 })
+  const origin = new URL(page.url()).origin
+  const boxes = () =>
+    page.evaluate(() =>
+      Object.fromEntries(
+        Object.entries({
+          layout: '[data-testid="layout"]',
+          list: '[data-testid="list"]',
+          panel: '[data-slot="side-panel"]',
+        }).map(([key, selector]) => [key, document.querySelector(selector)?.getBoundingClientRect().toJSON()]),
+      ),
+    )
+
+  await page.goto(`${origin}/?demo=side-panel-check&narrow=stack`)
+  await page.getByRole("complementary").waitFor()
+  await page.evaluate(() => document.fonts.ready)
+  let { layout, list, panel } = await boxes()
+  check(
+    "SidePanel narrow=stack: the list keeps the full width and the panel follows below it",
+    Math.abs(list.width - layout.width) <= 2 &&
+      Math.abs(panel.width - layout.width) <= 2 &&
+      panel.top >= list.bottom - 1,
+    `list ${Math.round(list.width)}px wide, panel at ${Math.round(panel.top)} below ${Math.round(list.bottom)}`,
+  )
+  await shot(page, "side-panel-narrow-stack.png", true)
+
+  await page.goto(`${origin}/?demo=side-panel-check&narrow=overlay`)
+  await page.getByRole("complementary").waitFor()
+  ;({ layout, list, panel } = await boxes())
+  check(
+    "SidePanel narrow=overlay: the panel covers its positioned parent",
+    Math.abs(panel.top - layout.top) <= 2 &&
+      Math.abs(panel.width - layout.width) <= 2 &&
+      panel.bottom >= list.bottom - 1,
+  )
+  await shot(page, "side-panel-narrow-overlay.png")
+
+  await page.goto(`${origin}/?demo=side-panel-check&narrow=sheet`)
+  const sheet = page.getByRole("dialog", { name: "Webhook retries" })
+  check("SidePanel narrow=sheet: a visible bottom sheet", await onScreen(sheet))
+  const inside = await sheet.evaluate((element) => element.contains(document.activeElement))
+  check("SidePanel narrow=sheet: focus moves into the sheet", inside)
+  await shot(page, "side-panel-narrow-sheet.png")
+  await page.keyboard.press("Escape")
+  await sheet.waitFor({ state: "detached" })
+  const focused = await page.evaluate(() =>
+    document.activeElement?.closest("[data-item-id]")?.getAttribute("data-item-id"),
+  )
+  check("SidePanel narrow=sheet: Escape closes it and focus returns to the row", focused === "Webhook retries", focused)
+}
+
 async function checkMobileNav(page) {
   await page.setViewportSize({ width: 320, height: 640 })
   await page.goto(`${new URL(page.url()).origin}/?demo=mobile-nav-check`)
@@ -277,6 +329,7 @@ await withShowcase(async (page) => {
 
   await checkCardHeaders(page)
   await checkSidePanelHeader(page)
+  await checkSidePanelNarrow(page)
   await checkMobileNav(page)
 })
 
