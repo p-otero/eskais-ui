@@ -86,6 +86,9 @@
           },
           ":has(option:checked:not([value=\"\"])) > &": {
             "@slot": {}
+          },
+          ":has([data-slot=\"token-input-editor\"]:not([data-empty])) > &": {
+            "@slot": {}
           }
         },
         ":root": {
@@ -1371,7 +1374,7 @@
           "type": "registry:ui"
         }
       ],
-      "docs": "`<Form schema defaultValues onSubmit messages label>` with `<FormField name label description required>` around one control: Input, Textarea, NumberInput, Select, Combobox, Checkbox, Switch, RadioGroup, Slider, DatePicker, SegmentedControl or ToggleGroup bind by `name` (no `control` or `render`); `bind` or `render` for anything else, `useFormField()` inside a custom control. Give every field a default value. A field the schema rejects when empty (probed synchronously with the default values; Zod, Valibot and ArkType report every issue) gets a required marker, an `aria-hidden` asterisk in `text-destructive`, and its control `required`; `required` forces it, `required={false}` drops it. `requiredLabel` on the Form or field adds words for screen readers, like \"required\" in the page's language, which join the field's name; unset, screen readers announce the control's `required` state instead. `const { Form, FormField, useFormInstance, useFormWatch, useFormFieldArray } = createForm<typeof schema>()` types `name` against the schema's input; they are the same components. `onSubmit(values, { setError })` may return a Promise: the submit Button shows `loading`, fields are disabled (`disableWhilePending={false}` keeps them), a second submit is ignored. Throw a `FormServerError(message, fieldErrors)`, `{ fieldErrors, message }` or a Standard Schema issue list (`toFormErrors`) to put errors on fields and in `<FormRootError />` (an `Alert tone=\"destructive\" live`); any other error shows its message there. Focus then goes to the first invalid field, or to the root error. Messages: `messages={formMessagesEs}`, a dictionary, or a function of the issue for i18next, FormatJS or Lingui (`createFormMessages(t)` makes one from `t(key, params)`, keys `form.<code>`); `FormField messages` wins over the form's. An issue is `{ code, field, label, params, message }`; codes: `required`, `minLength`, `maxLength`, `minItems`, `maxItems`, `min`, `max` (params `min`/`max`), `email`, `url`, `pattern`, `invalid`, `server`, or a schema message that looks like a key (`form.email.taken`), or a server error's own `code`. Schemas whose issues carry no code or params (Effect Schema) write the code into the message: `formIssueMessage(\"form.name.min\", { min: 3 })` gives `@@form:form.name.min|{\"min\":3}` (a reserved prefix, never read from prose), read back as code `form.name.min` with `params.min` and no `message`; a built-in code works the same way (`formIssueMessage(\"minLength\", { min: 3 })` gets the built-in translations). Unmatched, the key shows without its params. Inside a Form, `useFormInstance<Values>()` returns the typed react-hook-form instance (`trigger`, `setValue`, `getValues`, `control`, `formState`); its `watch` re-renders the Form, so read a live value with `useFormWatch(name)`. `useFormFieldArray(name, options)` is `useFieldArray` bound to the form: key rows by `field.id` (or, when the items carry their own `id`, by the property `keyName: \"fieldKey\"` names) and name their fields `items.${index}.title`. `form-context.ts` is internal; import only from `form`. Agents fill fields through their own parts and call the form's `submit` and `reset` when it has a `label`; `<FormActions tone=\"destructive\" confirm=\"…\">` puts `data-agent-confirm` on the submit button and hides the form's `submit` from agents. `FormActions disabled` (submit and cancel), `submitDisabled` (submit only) and `pending` (the pending look) reflect a busy state outside the form; while set, the form doesn't submit."
+      "docs": "`<Form schema defaultValues onSubmit messages label>` with `<FormField name label description required>` around one control: Input, Textarea, NumberInput, Select, Combobox, Checkbox, Switch, RadioGroup, Slider, DatePicker, SegmentedControl, ToggleGroup or TokenInput bind by `name` (no `control` or `render`); `bind` or `render` for anything else, `useFormField()` inside a custom control. Give every field a default value. A field the schema rejects when empty (probed synchronously with the default values; Zod, Valibot and ArkType report every issue) gets a required marker, an `aria-hidden` asterisk in `text-destructive`, and its control `required`; `required` forces it, `required={false}` drops it. `requiredLabel` on the Form or field adds words for screen readers, like \"required\" in the page's language, which join the field's name; unset, screen readers announce the control's `required` state instead. `const { Form, FormField, useFormInstance, useFormWatch, useFormFieldArray } = createForm<typeof schema>()` types `name` against the schema's input; they are the same components. `onSubmit(values, { setError })` may return a Promise: the submit Button shows `loading`, fields are disabled (`disableWhilePending={false}` keeps them), a second submit is ignored. Throw a `FormServerError(message, fieldErrors)`, `{ fieldErrors, message }` or a Standard Schema issue list (`toFormErrors`) to put errors on fields and in `<FormRootError />` (an `Alert tone=\"destructive\" live`); any other error shows its message there. Focus then goes to the first invalid field, or to the root error. Messages: `messages={formMessagesEs}`, a dictionary, or a function of the issue for i18next, FormatJS or Lingui (`createFormMessages(t)` makes one from `t(key, params)`, keys `form.<code>`); `FormField messages` wins over the form's. An issue is `{ code, field, label, params, message }`; codes: `required`, `minLength`, `maxLength`, `minItems`, `maxItems`, `min`, `max` (params `min`/`max`), `email`, `url`, `pattern`, `invalid`, `server`, or a schema message that looks like a key (`form.email.taken`), or a server error's own `code`. Schemas whose issues carry no code or params (Effect Schema) write the code into the message: `formIssueMessage(\"form.name.min\", { min: 3 })` gives `@@form:form.name.min|{\"min\":3}` (a reserved prefix, never read from prose), read back as code `form.name.min` with `params.min` and no `message`; a built-in code works the same way (`formIssueMessage(\"minLength\", { min: 3 })` gets the built-in translations). Unmatched, the key shows without its params. Inside a Form, `useFormInstance<Values>()` returns the typed react-hook-form instance (`trigger`, `setValue`, `getValues`, `control`, `formState`); its `watch` re-renders the Form, so read a live value with `useFormWatch(name)`. `useFormFieldArray(name, options)` is `useFieldArray` bound to the form: key rows by `field.id` (or, when the items carry their own `id`, by the property `keyName: \"fieldKey\"` names) and name their fields `items.${index}.title`. `form-context.ts` is internal; import only from `form`. Agents fill fields through their own parts and call the form's `submit` and `reset` when it has a `label`; `<FormActions tone=\"destructive\" confirm=\"…\">` puts `data-agent-confirm` on the submit button and hides the form's `submit` from agents. `FormActions disabled` (submit and cancel), `submitDisabled` (submit only) and `pending` (the pending look) reflect a busy state outside the form; while set, the form doesn't submit."
     },
     {
       "name": "form-dialog",
@@ -2058,6 +2061,36 @@
           "type": "registry:ui"
         }
       ]
+    },
+    {
+      "name": "token-input",
+      "type": "registry:ui",
+      "title": "Token Input",
+      "description": "UI SDK Token Input styled as a field: removable token chips with undo, Backspace and arrow keys, and a labels mode where Enter or a comma commits and a paste splits; agents set it by label.",
+      "dependencies": [
+        "@ui-sdk/core@0.1.0-beta.5",
+        "@ui-sdk/react@0.1.0-beta.5",
+        "lucide-react@1.73.0"
+      ],
+      "registryDependencies": [
+        "@eskais/utils",
+        "@eskais/theme",
+        "@eskais/tone",
+        "@eskais/field",
+        "@eskais/input",
+        "@eskais/badge"
+      ],
+      "files": [
+        {
+          "path": "registry/ui/token-input.tsx",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/token-input-labels.ts",
+          "type": "registry:ui"
+        }
+      ],
+      "docs": "`<TokenInput tokenType=\"label\" value onValueChange validate max tone labels>` with a `<TokenInputEditor placeholder>` child, inside a `Field` or `FormField`: a list of labels as removable chips. Enter or a comma turns the typed text into a label, a paste splits on commas and line breaks, Backspace removes the chip before the caret and Ctrl/Cmd+Z brings it back. The value is `string[]` (readonly arrays welcome). Without `tokenType`, the value is UI SDK's mix of text and tokens (`TokenInputValue`), for mentions or files: pass `renderToken` and a `TriggerMenu` child as UI SDK documents. The remove buttons are pointer-only and named by `labels.remove` (\"Remove {label}\")."
     },
     {
       "name": "quantity",
@@ -3118,7 +3151,7 @@
       "name": "carousel",
       "type": "registry:ui",
       "title": "Carousel",
-      "description": "UI SDK Carousel: native scroll-snap slides with Previous and Next, arrow keys, indicators and optional rotation; agents page it by name.",
+      "description": "UI SDK Carousel: native scroll-snap slides with Previous and Next, arrow keys, indicators and optional rotation; CarouselStatus shows \"1 of 3\" and useCarouselState reads the page and count; agents page it by name.",
       "dependencies": [
         "@ui-sdk/core@0.1.0-beta.5",
         "@ui-sdk/react@0.1.0-beta.5",

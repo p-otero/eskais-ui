@@ -60,6 +60,7 @@ import { SelectionSection } from "./sections/selection"
 import { FormsSection } from "./sections/forms"
 import { FormSection } from "./sections/form"
 import { FloatingLabelsSection } from "./sections/floating-labels"
+import { TokenInputSection } from "./sections/token-input"
 import { ValuesSection } from "./sections/values"
 import { StatusSection } from "./sections/status"
 import { AgentsSection } from "./sections/agents"
@@ -327,6 +328,8 @@ function App() {
           <FormSection />
 
           <FloatingLabelsSection />
+
+          <TokenInputSection />
 
           <Section title="Dialog" description="Focus trap, Escape, focus restore and an agent-editable field.">
             <RenameDialog />

@@ -14,6 +14,7 @@ import type { SiteHeaderItem, SiteHeaderProps } from "@/components/ui/site-heade
 import type { Stage, StageTrackProps } from "@/components/ui/stage-track"
 import type { StageFilter } from "@/components/ui/stage-filter"
 import type { FormStep, StepFormProps } from "@/components/ui/step-form"
+import type { Token, TokenInputLabelProps, TokenInputTextProps } from "@/components/ui/token-input"
 import type { UsageTableProps } from "@/components/ui/usage"
 import type { AttemptView, TaskView } from "@/lib/agent-task-types"
 
@@ -38,6 +39,8 @@ const typeChecks = {
   siteHeader: true satisfies Accepts<SiteHeaderProps["items"], readonly SiteHeaderItem[]>,
   dataTableRows: true satisfies Accepts<DataTableProps<Item>["rows"], readonly Item[]>,
   dataTableSelection: true satisfies Accepts<DataTableProps<Item>["selection"], readonly string[]>,
+  tokenInputLabels: true satisfies Accepts<TokenInputLabelProps["value"], readonly string[]>,
+  tokenInputText: true satisfies Accepts<TokenInputTextProps["defaultValue"], readonly (string | Token)[]>,
   dependencyChips: true satisfies Accepts<
     DependencyChipsProps["items"],
     readonly DependencyChipsProps["items"][number][]

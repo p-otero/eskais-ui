@@ -32,6 +32,9 @@
   :has(option:checked:not([value=""])) > & {
     @slot;
   }
+  :has([data-slot="token-input-editor"]:not([data-empty])) > & {
+    @slot;
+  }
 }
 
 /* Zero specificity, so a data-theme scope always overrides these. */

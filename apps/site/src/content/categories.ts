@@ -12,6 +12,7 @@ const categories = [
       "field",
       "input",
       "textarea",
+      "token-input",
       "number-input",
       "otp-input",
       "search-field",

@@ -19,7 +19,7 @@ UI SDK-first, agent-native React components, distributed as a shadcn-style regis
 | `confirm-dialog` | UI SDK `AlertDialog` with an async `action` and `data-agent-confirm`                                                         |
 | `card`, `badge`  | `renderElement`, presentational                                                                                              |
 | Overlays         | `tooltip`, `popover`, `drawer`, `dropdown-menu`, `toast`                                                                     |
-| Selection        | `select`, `combobox`, `segmented-control`, `checkbox`, `textarea`                                                            |
+| Selection        | `select`, `combobox`, `segmented-control`, `checkbox`, `textarea`, `token-input` (removable tokens, labels mode)             |
 | Form controls    | `radio-group`, `switch`, `slider`, `toggle`, `toggle-group`, `label`                                                         |
 | Inputs, feedback | `otp-input`, `number-input`, `progress`, `meter`, `alert`                                                                    |
 | Structure        | `tabs`, `collapsible`, `scroll-area`, `separator`, `avatar`                                                                  |
@@ -31,7 +31,7 @@ UI SDK-first, agent-native React components, distributed as a shadcn-style regis
 | Agent history    | `usage` (table, compact grid), `attempt-timeline`                                                                            |
 | Agent board core | `agent-task-board-core` (logic, labels, agent actions), `proposal-actions`                                                   |
 | Agent task board | `task-card`, `task-detail-panel`, `agent-task-board` (the full board)                                                        |
-| Data and layout  | `calendar`, `date-picker`, `carousel`, `resizable`, `sidebar`                                                                |
+| Data and layout  | `calendar`, `date-picker`, `carousel` (`CarouselStatus`: "1 of 3"), `resizable`, `sidebar`                                   |
 | Data tables      | `data-table` (sort, select, pages), `page-header`, `filter-bar`                                                              |
 | Charts           | `chart` (Recharts v3, `--chart-1`…`--chart-5`, tooltip, legend, `ChartDataTable`)                                            |
 | Navigation       | `accordion`, `hover-card`, `context-menu`, `menubar`, `navigation-menu`, `breadcrumb`, `pagination`, `command` (⌘K palette)  |

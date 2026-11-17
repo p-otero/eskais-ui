@@ -4,6 +4,11 @@ Versions follow [semver](https://semver.org). Before 1.0, a minor version can br
 
 ## Unreleased
 
+### Added
+
+- `token-input`: UI SDK's Token Input styled as a field (`bg-field`, `border-input`, the control shape, growing with its chips), with `TokenInput`, `TokenInputEditor`, `TokenInputToken` (`tone`, soft tone tokens) and `TokenInputTokenRemove` (lucide `XIcon`, named by `labels.remove`, "Remove {label}", with a touch target). `tokenType="label"` makes it a list of labels with a `string[]` value (readonly arrays welcome): Enter or a comma turns the typed text into a label, a paste splits on commas and line breaks, `validate` and `max` keep a label as text to fix, and repeats are dropped. Backspace, the arrow keys, undo and redo come from UI SDK. It works in `Field` and `FormField`, floats its label with `labelPlacement` `in` and `on`, and agents set it by label (`setValue("bug, docs")`, `insert`, `removeToken`, `clear`). Without `tokenType` it holds UI SDK's mix of text and tokens, for mentions and files. FormField's adapter table moved to `field` (still exported from `form`), so a control's module can add itself; `FormControlAdapter` gains `blur`. The theme's `field-floated` variant floats a label over a token input that holds something.
+- `carousel`: `CarouselStatus` shows the current page and the page count ("1 of 3", `labels.status` translates it) and announces it politely only when the page changes, never on load or while rotating. `useCarouselState()` returns UI SDK's own `page`, `pageCount` (null until the slides are measured), `playing` and `orientation` to any part inside a `Carousel`, so a header can show its position without duplicating state; `Carousel` children can also be a function of that state.
+
 ## 0.2.0 (2026-11-17)
 
 ### Added
@@ -15,6 +20,7 @@ Versions follow [semver](https://semver.org). Before 1.0, a minor version can br
 - `icon` item: `<Icon icon={TrashIcon} label="…" />` for meaningful icons; `eskais/no-inline-icons` rejects hand-drawn SVG icons in the registry.
 - Keyboard-first lists: `shortcuts` (`useShortcut`, `ShortcutScope`, `ShortcutHint`, `Button`/`DropdownMenuItem` `shortcut`), `shortcuts-dialog` (`?`), `row-navigation` (j/k, Home/End, PageUp/PageDown, Enter, x) in List, DataTable and the AgentTaskBoard table and backlog, `virtual-rows` (TanStack Virtual past 200 rows), `SidePanel` and the `inbox` block.
 - `@eskais/mockup` (`packages/mockup`, run from the repo with Bun): build a screen as TSX with the project's own components and fixtures into one offline HTML file, then `validate` it. A `/docs/mockups` guide covers it, with an A/B benchmark against hand-written HTML (`packages/mockup/BENCHMARKS.md`).
+- `@eskais/mockup` levels: a screen uses the project's components first, then registry items it has not installed (`@registry/<name>`, cached under `.mockups/.registry`), then a composition in `parts/`, then UI SDK primitives with a stated reason, and records a gap instead of a raw control. `inspect` gains `--registry` and `--sdk`; `validate` checks them and prints an install, proposed, SDK parts and gaps summary.
 - `bun run test:compiler`: the showcase built with React Compiler, with the browser checks run on it (in CI).
 
 ### Changed
