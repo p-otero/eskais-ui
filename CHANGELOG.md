@@ -6,6 +6,8 @@ Versions follow [semver](https://semver.org). Before 1.0, a minor version can br
 
 ### Added
 
+- `List` virtualizes `ListItem` children. A row list whose children are all elements with a string `id` (a `ListItem`, or a row of your own that takes `id`) reads them as its data, as it does `items` with `renderItem`: past 200 rows (`virtualize="auto"`) only the rows in view render, j/k, Home/End and PageUp/PageDown reach every row and focus it, agents `select` rows that aren't rendered, and find in page reaches them; `title` is a row's text. Grouped lists, cards and other children render as before. Tests cover both paths with 5,000 rows.
+
 - `StatDelta` (in `stat`): a change beside a Stat's value. `value` (a ratio by default, so 0.12 reads "12%"; `format` and `locale` change it) gives the direction by its sign, or pass `direction`; the direction gives the tone (up success, down destructive, flat neutral), `invert` swaps it for a metric where down is good, and `tone` overrides it. An arrow (lucide, mirrored in right to left) and the size sit in a soft tone chip, then your `comparison` ("vs. last week"). Screen readers hear `labels.up/down/flat(formatted)` ("up 12% vs. last week"), never the arrow or the colour.
 
 - Ring meter: `Meter variant="ring"` with a `MeterRing size` child (`sm`, `md`, `lg`) draws the reading as a ring gauge with the value in the centre and the label below. It is UI SDK's `MeterTrack`, so the root keeps `role="meter"` and its value for screen readers; the drawing is `aria-hidden`, `tone` colours the arc, it fills the other way round in right to left, and it doesn't animate under reduced motion. `node tooling/shell-check.mjs` measures it (`?demo=gauge-check`).
