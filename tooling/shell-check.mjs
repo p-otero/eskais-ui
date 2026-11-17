@@ -1,7 +1,7 @@
 // Drives the showcase where layout decides what shows: the Topbar's ⌘K dialog and Sidebar drawer, tabs and
 // MobileNav labels at phone widths; CardHeader and SidePanel headers where actions wrap; SidePanel's narrow modes;
-// a wrapping DataTable column; DescriptionList layouts; ring meters (?demo=<name>-check); the layout blocks.
-// Usage: node tooling/shell-check.mjs [--screenshots=<dir>] [--only=layout] (after `bun run build:showcase`)
+// a wrapping DataTable column; DescriptionList layouts; ring meters and stat deltas (?demo=<name>-check); the
+// layout blocks. Usage: node tooling/shell-check.mjs [--screenshots=<dir>] [--only=layout] (after `bun run build:showcase`)
 import { mkdirSync } from "node:fs"
 import { join, resolve } from "node:path"
 
@@ -347,6 +347,27 @@ async function checkGauges(page) {
     .locator("svg")
     .evaluateAll((svgs) => svgs.map((svg) => Math.round(svg.getBoundingClientRect().width)))
   check("Ring meter: sm < md < lg", sizes[0] < sizes[1] && sizes[1] < sizes[2], sizes.join(", "))
+  const deltas = await page
+    .getByTestId("stats")
+    .locator('[data-slot="stat-delta"]')
+    .evaluateAll((all) =>
+      all.map((delta) => ({
+        direction: delta.dataset.direction,
+        tone: delta.dataset.tone,
+        spoken: delta.querySelector(".sr-only")?.textContent,
+      })),
+    )
+  check(
+    "StatDelta: up, down, inverted down and flat, in words and in their tones",
+    JSON.stringify(deltas.map((delta) => [delta.direction, delta.tone])) ===
+      JSON.stringify([
+        ["up", "success"],
+        ["down", "destructive"],
+        ["down", "success"],
+        ["flat", "neutral"],
+      ]) && deltas[0].spoken === "up 12%",
+    deltas.map((delta) => delta.spoken).join(" | "),
+  )
   await shot(page, "gauges.png")
   await page.emulateMedia({ reducedMotion: "reduce" })
   const duration = await storage.evaluate(
