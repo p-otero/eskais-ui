@@ -14,6 +14,7 @@ import { ListBench } from "./checks/list-bench"
 import { OverlayCheck } from "./checks/overlay-check"
 import { PressCheck } from "./checks/press-check"
 import { InboxDemo } from "./sections/inbox"
+import { MasterDetailDemo } from "./sections/layout-blocks"
 import { demoStatuses, PageDemo, type DemoStatus } from "./sections/page"
 import { ShellDemo } from "./shell/shell-demo"
 import { SiteDemo } from "./shell/site-demo"
@@ -24,7 +25,8 @@ if (!root) throw new Error("Missing #root element")
 
 // ?demo=page, site and shell render one demo alone, for phone-width screenshots; ?demo=<name>-check pages are the
 // fixtures of tooling/<name>-check.mjs (card-header and mobile-nav are shell-check.mjs's); ?demo=inbox
-// is the keyboard-first inbox alone, and ?demo=list-bench the list tooling/list-bench.mjs times.
+// is the keyboard-first inbox alone, ?demo=master-detail a layout block alone, and ?demo=list-bench the list
+// tooling/list-bench.mjs times.
 const params = new URLSearchParams(location.search)
 const status = demoStatuses.find((name) => name === params.get("status")) ?? "success"
 const demo = params.get("demo")
@@ -41,6 +43,7 @@ const standalone = new Set([
   "list-bench",
   "calendar-check",
   "press-check",
+  "master-detail",
 ])
 
 function Demo() {
@@ -60,6 +63,7 @@ function Demo() {
   if (demo === "list-bench") return <ListBench />
   if (demo === "calendar-check") return <CalendarCheck />
   if (demo === "press-check") return <PressCheck />
+  if (demo === "master-detail") return <MasterDetailDemo />
   return demo === "shell" ? <ShellDemo /> : <SiteDemo />
 }
 

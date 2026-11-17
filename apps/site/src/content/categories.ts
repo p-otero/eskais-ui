@@ -120,7 +120,17 @@ const categories = [
   },
   {
     name: "Blocks",
-    items: ["landing-page", "inbox", "hero", "section-heading", "bento", "steps", "site-footer", "docs-layout"],
+    items: [
+      "landing-page",
+      "inbox",
+      "master-detail",
+      "hero",
+      "section-heading",
+      "bento",
+      "steps",
+      "site-footer",
+      "docs-layout",
+    ],
   },
   {
     name: "Editor",

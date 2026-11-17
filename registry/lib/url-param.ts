@@ -1,0 +1,72 @@
+/**
+ * One value kept in the URL, without knowing the router: what a block reads, writes and listens to. Write your own
+ * over a router's API, or use `createUrlParam`.
+ */
+type UrlParamAdapter = {
+  /** The value now, or null when it's absent. */
+  read: () => string | null
+  /** Sets the value, or removes it with null. */
+  write: (value: string | null) => void
+  /** Calls `listener` when the value may have changed, like on Back; returns the unsubscribe. */
+  subscribe: (listener: () => void) => () => void
+}
+
+type UrlParamOptions = {
+  /**
+   * `search` (default) keeps it in `location.search`, which hash routers never read, so their route is untouched.
+   * `hash` keeps it in the query of a hash route, `#/devices?device=a1`, where a hash router's `useSearchParams`
+   * sees it too.
+   */
+  in?: "search" | "hash"
+  /** `push` (default) adds a history entry, so Back undoes the change; `replace` doesn't. */
+  history?: "push" | "replace"
+}
+
+function hashParts(hash: string) {
+  const at = hash.indexOf("?")
+  return at === -1 ? { route: hash, query: "" } : { route: hash.slice(0, at), query: hash.slice(at + 1) }
+}
+
+const noop = () => () => {}
+
+/** A `UrlParamAdapter` over `history`: deep links, Back and Forward work in plain, history and hash routers. */
+function createUrlParam(name: string, { in: where = "search", history: mode = "push" }: UrlParamOptions = {}) {
+  const listeners = new Set<() => void>()
+  const params = () => {
+    if (typeof location === "undefined") return new URLSearchParams()
+    return new URLSearchParams(where === "search" ? location.search : hashParts(location.hash).query)
+  }
+  const adapter: UrlParamAdapter = {
+    read: () => params().get(name),
+    write(value) {
+      if (typeof location === "undefined" || adapter.read() === value) return
+      const next = params()
+      if (value === null) next.delete(name)
+      else next.set(name, value)
+      const query = next.toString()
+      const url = new URL(location.href)
+      if (where === "search") url.search = query
+      else url.hash = `${hashParts(location.hash).route}${query ? `?${query}` : ""}`
+      // history keeps the router's own state object, so routers that store keys there still recognise the entry.
+      const state: unknown = history.state
+      if (mode === "push") history.pushState(state, "", url)
+      else history.replaceState(state, "", url)
+      for (const listener of listeners) listener()
+    },
+    subscribe(listener) {
+      if (typeof window === "undefined") return noop()
+      listeners.add(listener)
+      addEventListener("popstate", listener)
+      addEventListener("hashchange", listener)
+      return () => {
+        listeners.delete(listener)
+        removeEventListener("popstate", listener)
+        removeEventListener("hashchange", listener)
+      }
+    },
+  }
+  return adapter
+}
+
+export { createUrlParam }
+export type { UrlParamAdapter, UrlParamOptions }

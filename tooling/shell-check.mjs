@@ -1,16 +1,17 @@
-// Drives the showcase's ?demo=shell at phone widths, where layout decides whether things show: the ⌘K dialog opened
-// from the Topbar's compact trigger, the Sidebar drawer opened from the Topbar, scrollable tabs revealing the
-// selected tab, MobileNav labels, and CardHeader at four widths (?demo=card-header-check).
-// Usage: node tooling/shell-check.mjs [--screenshots=<dir>] (after `bun run build:showcase`)
+// Drives the showcase where layout decides whether things show: ⌘K and the Sidebar drawer from the Topbar at phone
+// widths, scrollable tabs, MobileNav labels, CardHeader widths and the layout blocks (layout-blocks-check.mjs).
+// Usage: node tooling/shell-check.mjs [--screenshots=<dir>] [--only=layout] (after `bun run build:showcase`)
 import { mkdirSync } from "node:fs"
 import { join, resolve } from "node:path"
 
+import { checkLayoutBlocks } from "./layout-blocks-check.mjs"
 import { withShowcase } from "./showcase-browser.mjs"
 
 const failures = []
 const shotsArg = process.argv.find((arg) => arg.startsWith("--screenshots="))
 const shots = shotsArg ? resolve(shotsArg.slice("--screenshots=".length)) : undefined
 if (shots) mkdirSync(shots, { recursive: true })
+const onlyLayout = process.argv.includes("--only=layout")
 
 function check(label, ok, detail = "") {
   console.log(`${ok ? "ok  " : "FAIL"} ${label}${detail ? `: ${detail}` : ""}`)
@@ -200,6 +201,8 @@ async function checkMobileNav(page) {
 }
 
 await withShowcase(async (page) => {
+  await checkLayoutBlocks(page, check, shot)
+  if (onlyLayout) return
   await shell(page, 375)
   const search = page.getByRole("dialog", { name: "Search the workspace" })
   await page.getByRole("button", { name: "Search the workspace" }).click()

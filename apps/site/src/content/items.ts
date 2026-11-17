@@ -310,6 +310,18 @@ const itemNotes: Record<string, ItemNotes> = {
       "Agents select any message with the list's select(id), rendered or not, and press the panel's buttons by name.",
     related: ["list-item", "side-panel", "shortcuts-dialog"],
   },
+  "master-detail": {
+    usage:
+      "A list with a detail pane, for review queues, inspectors and device lists: pass the list and a detail(id) view, and let it handle selection, stacking and focus.",
+    a11y: [
+      "The list and the detail are named regions; the open row has aria-current.",
+      "Opening moves focus to the detail's heading, and Close, Back or Escape return it to the row that opened it.",
+      "Below 42rem of container the panes stack: the list, or the open item with a Back button. Nothing overlays.",
+    ],
+    agent:
+      "Agents open and close items through the block by its label (open(id), close()), with the items you pass listed as choices; Back, Close, Collapse and Expand are buttons they press by name.",
+    related: ["list-item", "side-panel", "resizable"],
+  },
   "side-panel": {
     usage:
       "An inspector beside a list: open it from a row's onSelect, pass returnFocus to the row, and give its buttons a shortcut.",
