@@ -102,6 +102,7 @@ const categories = [
     name: "Server data",
     items: [
       "server-data-table",
+      "server-list",
       "filter-search",
       "filter-chips",
       "filter-panel",

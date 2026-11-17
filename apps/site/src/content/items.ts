@@ -763,6 +763,16 @@ const itemNotes: Record<string, ItemNotes> = {
       'Agents sort and page through the table\'s own actions (sortBy, setPage) and filter through the filters group: filter("Status", ["Open"]), clearFilters(). Every control is a named UI SDK part.',
     related: ["data-table", "filter-search", "server-data", "page-source", "filter-schema"],
   },
+  "server-list": {
+    usage: "Use it for a feed or an inbox on a server: rows come in as you scroll, and the button reaches every page.",
+    a11y: [
+      "Rows are one tab stop with arrows and j/k, virtualized past 200 rows without losing find in page.",
+      "New rows never take focus; Load more keeps it while it loads and once there is no more.",
+      "A polite status says how many rows are shown after each load.",
+    ],
+    agent: "Agents select a row through the list's select(id) and press Load more by name.",
+    related: ["list-item", "server-data-table", "server-data"],
+  },
   "filter-search": {
     usage: "Put it in a ServerDataTable toolbar, or in a FilterScope beside any view on a page controller.",
     a11y: ["A search landmark named by the field's label; Escape clears only when there is text."],
