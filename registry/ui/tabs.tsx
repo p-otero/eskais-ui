@@ -8,18 +8,35 @@ import {
   TabsTab as TabsTabPrimitive,
   TabsTabIcon,
   createTabsController,
+  type TabsController,
 } from "@ui-sdk/react/tabs"
-import type { ComponentProps } from "react"
+import { createContext, use, useState, type ComponentProps, type PointerEvent } from "react"
 
 import { TabsScroll, type TabsScrollLabels } from "@/components/ui/tabs-scroll"
 import { cn, cnState } from "@/lib/utils"
 
-function Tabs<T extends string = string>({ className, ...props }: ComponentProps<typeof TabsPrimitive<T>>) {
+// Set only while activateOnPress is on: the controller a tab selects through on pointerdown.
+const TabsPressContext = createContext<TabsController | null>(null)
+
+type TabsProps<T extends string = string> = ComponentProps<typeof TabsPrimitive<T>> & {
+  /**
+   * Selects a tab as soon as a mouse or pen presses it, before release, like native tab bars. Touch still selects
+   * on release, so scrolling a tab bar doesn't select. Keyboard and agents are unchanged. Off by default.
+   */
+  activateOnPress?: boolean
+}
+
+function Tabs<T extends string = string>({ className, activateOnPress = false, controller, ...props }: TabsProps<T>) {
+  const [ownController] = useState(() => createTabsController<T>())
+  const active = controller ?? ownController
   return (
-    <TabsPrimitive<T>
-      className={cnState("flex flex-col gap-items data-[orientation=vertical]:flex-row", className)}
-      {...props}
-    />
+    <TabsPressContext value={activateOnPress ? (active as TabsController) : null}>
+      <TabsPrimitive<T>
+        controller={active}
+        className={cnState("flex flex-col gap-items data-[orientation=vertical]:flex-row", className)}
+        {...props}
+      />
+    </TabsPressContext>
   )
 }
 
@@ -61,9 +78,18 @@ function TabsList({ className, scrollable = "auto", scrollLabels, ...props }: Ta
 }
 
 // A solid primary fill on muted, so the selected tab reads at 3:1 rather than as a faint tint.
-function TabsTab({ className, ...props }: ComponentProps<typeof TabsTabPrimitive>) {
+function TabsTab({ className, onPointerDown, ...props }: ComponentProps<typeof TabsTabPrimitive>) {
+  const pressController = use(TabsPressContext)
+  // Selecting on press is allowed by WCAG 2.5.2 (Pointer Cancellation) because it's reversible: pressing another
+  // tab undoes it. It goes through the controller, so onValueChange, cancel() and controlled values still apply.
+  const selectOnPress = (event: PointerEvent<HTMLButtonElement>) => {
+    onPointerDown?.(event)
+    if (!pressController || event.defaultPrevented || event.button !== 0 || event.pointerType === "touch") return
+    pressController.select(props.value, { reason: "item-press", event: event.nativeEvent })
+  }
   return (
     <TabsTabPrimitive
+      onPointerDown={selectOnPress}
       className={cnState(
         "touch-target inline-flex h-control-sm shrink-0 cursor-pointer items-center justify-center gap-inline rounded-control px-control-x text-sm font-medium whitespace-nowrap transition-colors outline-none select-none hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-muted data-disabled:cursor-not-allowed data-disabled:opacity-50 data-disabled:hover:text-muted-foreground data-selected:bg-primary data-selected:text-primary-foreground data-selected:hover:text-primary-foreground [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
         className,
@@ -86,4 +112,4 @@ function TabsPanel({ className, ...props }: ComponentProps<typeof TabsPanelPrimi
 }
 
 export { createTabsController, Tabs, TabsIndicator, TabsList, TabsPanel, TabsTab, TabsTabIcon }
-export type { TabsListProps }
+export type { TabsListProps, TabsProps }

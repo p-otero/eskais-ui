@@ -26,6 +26,8 @@ Versions follow [semver](https://semver.org). Before 1.0, a minor version can br
 - `Toggle size="icon"` and the button-like triggers with `size="icon"` require `aria-label` at the type level, like `Button`.
 - Lint: `eskais/icon-button-needs-label` flags an icon-only `Button` or `Toggle` without `size="icon"` and an `aria-label`. The `lint-rules` item ships it (`eskais-oxlint-plugin.js`, loaded by `eskais-ui.oxlintrc.json`).
 
+- `Tabs` and `SegmentedControl` take `activateOnPress` (off by default): a primary mouse or pen press selects the tab or segment before release, like Linear and macOS. Touch still selects on release, so scrolling a tab bar doesn't select; keyboard and agents are unchanged. The press goes through the component's controller, so `onValueChange` (reason `item-press`), `cancel()`, controlled values, disabled items and read-only still apply, and a `controller` you pass keeps working. WCAG 2.5.2 allows it because the change is reversible; actions and menus always activate on release. `node tooling/press-check.mjs` (in `test:browser`) checks it in Chrome.
+
 ### Fixed
 
 - Calendar ranges draw one continuous band: the middle days take a soft `accent` fill with no gaps or rounding, and the start and end keep their `primary` circle with the band running under their inner half. A one-day range is only its circle, the band breaks cleanly between weeks, mirrors in right to left and looks the same while a range is being picked. Every day's focus ring follows its circle and stays above its neighbours. Middle days used to keep `data-selected`'s `primary` fill, so they showed as separate dark squares. DatePicker and DateTimePicker share it. `node tooling/calendar-check.mjs` (in `test:browser`) measures the band.

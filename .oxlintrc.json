@@ -169,7 +169,8 @@
         "tooling/site-check.mjs",
         "tooling/list-bench.mjs",
         "tooling/touch-check.mjs",
-        "tooling/calendar-check.mjs"
+        "tooling/calendar-check.mjs",
+        "tooling/press-check.mjs"
       ],
       "rules": {
         "no-await-in-loop": "off"
