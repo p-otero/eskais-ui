@@ -1,4 +1,4 @@
-import { Stat, StatGroup, StatHint, StatLabel, StatValue } from "@/components/ui/stat"
+import { Stat, StatDelta, StatGroup, StatHint, StatLabel, StatValue } from "@/components/ui/stat"
 
 const usd = (value: number) => `$${value.toFixed(2)}`
 
@@ -8,12 +8,12 @@ export default function StatDemo() {
       <Stat>
         <StatLabel>Done</StatLabel>
         <StatValue value={12} />
-        <StatHint>of 20</StatHint>
+        <StatDelta value={0.2} comparison="vs. last week" />
       </Stat>
       <Stat>
         <StatLabel>Cost</StatLabel>
         <StatValue value={{ value: 4.2, quality: "estimated", source: "price table" }} format={usd} />
-        <StatHint>Estimated from tokens</StatHint>
+        <StatDelta value={-0.08} invert comparison="vs. last week" />
       </Stat>
       <Stat>
         <StatLabel>Duration</StatLabel>

@@ -4,6 +4,13 @@ import { Children, isValidElement, type ReactNode } from "react"
 import { formatQuantity, isQuantity, type FormatQuantityOptions, type Quantity } from "@/lib/quantity"
 import { cn } from "@/lib/utils"
 import { QuantityValue } from "@/components/ui/quantity-value"
+import {
+  StatDelta,
+  statDeltaLabels,
+  type StatDeltaDirection,
+  type StatDeltaLabels,
+  type StatDeltaProps,
+} from "@/components/ui/stat-delta"
 
 function part(slot: string, base: string) {
   return function StatPart({ className, render, ...props }: PartProps<"div">) {
@@ -66,5 +73,5 @@ function StatGroup({ className, render, children, ...props }: StatGroupProps) {
   )
 }
 
-export { Stat, StatGroup, StatHint, StatLabel, StatValue }
-export type { StatGroupProps, StatValueProps }
+export { Stat, StatDelta, statDeltaLabels, StatGroup, StatHint, StatLabel, StatValue }
+export type { StatDeltaDirection, StatDeltaLabels, StatDeltaProps, StatGroupProps, StatValueProps }

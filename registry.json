@@ -2188,21 +2188,29 @@
       "name": "stat",
       "type": "registry:ui",
       "title": "Stat",
-      "description": "Summary figures: Stat, StatLabel, StatValue (a number, a Quantity or a node) and StatHint, in a responsive StatGroup list.",
+      "description": "Summary figures: Stat, StatLabel, StatValue (a number, a Quantity or a node), StatHint and StatDelta (a change with its direction in words), in a responsive StatGroup list.",
       "dependencies": [
-        "@ui-sdk/react@0.1.0-beta.5"
+        "@ui-sdk/react@0.1.0-beta.5",
+        "class-variance-authority@0.7.1",
+        "lucide-react@1.73.0"
       ],
       "registryDependencies": [
         "@eskais/utils",
         "@eskais/theme",
+        "@eskais/tone",
         "@eskais/quantity"
       ],
       "files": [
         {
           "path": "registry/ui/stat.tsx",
           "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/stat-delta.tsx",
+          "type": "registry:ui"
         }
-      ]
+      ],
+      "docs": "`<StatDelta value comparison invert direction tone format locale labels>` shows a change beside a value: an arrow (mirrored in right to left) and the size of the change in a soft tone chip, then `comparison` (\"vs. last week\", your words). `value` is a ratio by default (0.12 reads \"12%\"); `format` takes `Intl.NumberFormat` options or a function. Its sign gives the direction (zero is flat) and the direction the tone: up is success, down destructive, flat neutral; `invert` swaps them for a metric where down is good, like cost. The arrow and colour are hidden from screen readers, which hear `labels.up/down/flat(formatted)` (\"up 12%\") and then the comparison, so the meaning never rests on colour or the icon. Override the labels in the page's language."
     },
     {
       "name": "description-list",
