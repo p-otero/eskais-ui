@@ -16,6 +16,20 @@ const BARE_CONTROLS = /<(button|input|select|textarea)\b/g
 const NETWORK_CALL = /\bfetch\s*\(|\b(?:XMLHttpRequest|WebSocket|EventSource)\b/g
 const IMPORT_SPECIFIER =
   /\bimport\s+(?:type\s+)?(?:[^"'`;]*?\bfrom\s*)?["']([^"']+)["']|\bimport\s*\(\s*["']([^"']+)["']/g
+const RAWS =
+  /\b(?:bg|text|border|ring|fill|stroke|from|via|to|outline|decoration|divide|shadow|accent|caret|placeholder)-(?:white|black)\b|\b(?:bg|text|border|ring|fill|stroke|from|via|to|outline|decoration|divide|shadow|accent|caret|placeholder)-\[[^\]\n]*?(?:#[0-9a-fA-F]{3,8}|rgba?\(|hsla?\(|oklch\(|color\()|\b(?:color|background|backgroundColor|borderColor|fill|stroke)\s*:\s*["'](?:#[0-9a-fA-F]{3,8}|rgba?\(|hsla?\(|oklch\()/g
+const ARBITRARY_VALUES =
+  /\b(?:w|h|size|min-w|min-h|max-w|max-h|p|px|py|pt|pb|pl|pr|m|mx|my|mt|mb|ml|mr|gap|space-x|space-y|inset|top|right|bottom|left|start|end|text|leading|tracking|rounded|basis|grid-cols|grid-rows|translate-x|translate-y)-\[[^\]\n]+\]/g
+const ALLOWED_ARBITRARY = new Set(["max-h-[calc(100%-2rem)]", "w-[calc(100%-2rem)]"])
+
+export type ImportedSpecifier = { specifier: string; line: number; column: number }
+
+export function importsOf(source: string): ImportedSpecifier[] {
+  return [...source.matchAll(IMPORT_SPECIFIER)].map((match) => ({
+    specifier: match[1] ?? match[2] ?? "",
+    ...position(source, match.index),
+  }))
+}
 
 export function viewportHeightUnit(page: string): string | undefined {
   return page.match(VIEWPORT_HEIGHT_UNIT)?.[0]
@@ -94,6 +108,47 @@ export function sourceProblems(file: string, source: string, allowed: (specifier
             message: `"${specifier}" is not the project's: import through an alias, a relative path or a dependency`,
           }
     }),
+  ]
+  return problems
+    .map((problem) => ({ ...problem, file }))
+    .toSorted((left, right) => left.line - right.line || left.column - right.column)
+}
+
+export function sdkImportProblems(file: string, source: string, publicSpecifiers: Set<string>): Problem[] {
+  const problems = importsOf(source)
+    .filter(({ specifier }) => specifier.startsWith("@ui-sdk/"))
+    .flatMap(({ specifier, line, column }) => {
+      if (publicSpecifiers.has(specifier)) return []
+      const bare = !specifier.slice("@ui-sdk/".length).includes("/")
+      return [
+        {
+          file,
+          line,
+          column,
+          rule: "sdk-subpath",
+          message: bare
+            ? `import @ui-sdk from a public subpath, like "${specifier}/dialog"`
+            : `"${specifier}" is not a public @ui-sdk subpath of an installed package`,
+        },
+      ]
+    })
+  return problems
+}
+
+export function partStyleProblems(file: string, source: string): Problem[] {
+  const problems = [
+    ...matches(source, RAWS, (match) => ({
+      rule: "shadcn/no-raw-colors",
+      message: `${match[0]} is a raw colour; use a theme token (bg-card, text-muted-foreground, border-input)`,
+    })),
+    ...matches(source, ARBITRARY_VALUES, (match) =>
+      ALLOWED_ARBITRARY.has(match[0]) || /#[0-9a-fA-F]{3,8}|rgba?\(|hsla?\(|oklch\(|color\(/.test(match[0])
+        ? null
+        : {
+            rule: "shadcn/no-arbitrary-values",
+            message: `${match[0]} is an arbitrary size; use the Tailwind scale or a theme token`,
+          },
+    ),
   ]
   return problems
     .map((problem) => ({ ...problem, file }))

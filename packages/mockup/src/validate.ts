@@ -1,19 +1,26 @@
 import { spawnSync } from "node:child_process"
-import { existsSync, readdirSync, readFileSync } from "node:fs"
-import { join, resolve } from "node:path"
-import { pathToFileURL } from "node:url"
+import { existsSync, readFileSync, rmSync, writeFileSync } from "node:fs"
+import { dirname, join, resolve } from "node:path"
 
-import { buildMockup, type BuildOutcome, type BuildSettings } from "./build"
-import { importRule, sourceProblems, type Problem } from "./checks"
-import { displayPath, EnvironmentError, mockupDirectory, type MockupProject } from "./project"
+import { buildMockup, mockupSourceFiles, type BuildOutcome, type BuildSettings, type MockupManifest } from "./build"
+import { importRule, partStyleProblems, sdkImportProblems, sourceProblems, type Problem } from "./checks"
+import {
+  displayPath,
+  EnvironmentError,
+  mockupDirectory,
+  projectSourceFiles,
+  sourceBasenames,
+  type MockupProject,
+} from "./project"
+import { sdkDuplicateWarnings } from "./parts"
+import { mockupTsconfigPath } from "./registry"
+import { sdkPublicSpecifiers } from "./sdk"
 
 export type ValidateOutcome = {
   build: BuildOutcome
   problems: Problem[]
   warnings: string[]
 }
-
-type ElementFactory = (type: unknown, props?: Record<string, unknown> | null, ...children: unknown[]) => unknown
 
 const TYPE_ERROR = /^(.+)\((\d+),(\d+)\): error (TS\d+): (.*)$/
 const BROWSER_GLOBAL =
@@ -40,101 +47,132 @@ export function parseTypeErrors(output: string, project: MockupProject, cwd: str
 }
 
 function sourceFiles(mockup: string): string[] {
-  return readdirSync(mockup)
-    .filter((name) => /\.(ts|tsx)$/.test(name) && !name.startsWith("."))
-    .map((name) => join(mockup, name))
+  return mockupSourceFiles(mockup)
 }
 
-function typecheck(project: MockupProject, screen: string): Problem[] {
-  const result = spawnSync(
-    process.execPath,
-    ["check", "-p", project.tsconfig, "--no-pretty", displayPath(screen, project.root)],
-    { cwd: project.root, encoding: "utf8" },
-  )
+function typecheck(project: MockupProject, mockup: string): Problem[] {
+  const config = existsSync(mockupTsconfigPath(mockup)) ? mockupTsconfigPath(mockup) : project.tsconfig
+  const files = sourceFiles(mockup).map((file) => displayPath(file, project.root))
+  const result = spawnSync(process.execPath, ["check", "-p", config, "--no-pretty", ...files], {
+    cwd: project.root,
+    encoding: "utf8",
+  })
   if (result.status === 0) return []
   const output = `${result.stdout ?? ""}${result.stderr ?? ""}`
   const problems = parseTypeErrors(output, project, process.cwd())
   if (problems.length === 0) {
-    throw new EnvironmentError(
-      `bun check could not read ${displayPath(project.tsconfig, process.cwd())}:\n${output.trim()}`,
-    )
+    throw new EnvironmentError(`bun check could not read ${displayPath(config, process.cwd())}:\n${output.trim()}`)
   }
   return problems
 }
 
-async function importModule(path: string): Promise<Record<string, unknown>> {
-  return (await import(pathToFileURL(path).href)) as Record<string, unknown>
+function renderRunner(mockup: string): string {
+  const wrapper = existsSync(join(dirname(mockup), "wrapper.tsx"))
+  return [
+    'import { createElement } from "react"',
+    'import { renderToString } from "react-dom/server"',
+    'import Screen from "./screen"',
+    ...(wrapper ? ['import Wrapper from "../wrapper"'] : []),
+    "try {",
+    "  const screen = createElement(Screen, {})",
+    `  const html = renderToString(${wrapper ? "createElement(Wrapper, null, screen)" : "screen"})`,
+    '  console.log(html.trim() === "" ? "MOCKUP_RENDER empty" : "MOCKUP_RENDER ok")',
+    "} catch (error) {",
+    '  console.error("MOCKUP_RENDER error:", error instanceof Error ? error.message : String(error))',
+    "  process.exitCode = 1",
+    "}",
+    "",
+  ].join("\n")
 }
 
-async function smokeRender(
-  project: MockupProject,
-  screen: string,
-  cwd: string,
-): Promise<{ problems: Problem[]; warnings: string[] }> {
+function firstLine(output: string): string {
+  return output.split(/\r?\n/).find((line) => line.trim() !== "") ?? "the server render failed"
+}
+
+async function smokeRender(mockup: string, cwd: string): Promise<{ problems: Problem[]; warnings: string[] }> {
+  const screen = join(mockup, "screen.tsx")
   const located = (rule: string, message: string): Problem[] => [
     { file: displayPath(screen, cwd), line: 1, column: 1, rule, message },
   ]
+  const runner = join(mockup, ".render-check.tsx")
+  writeFileSync(runner, renderRunner(mockup))
+  let result: ReturnType<typeof spawnSync>
   try {
-    // React chooses its development or production build when a module first imports it, and the smoke render
-    // must load the same production build the page ships.
-    process.env.NODE_ENV = "production"
-    const react = await importModule(project.runtime.react)
-    const createElement =
-      (react["createElement"] as ElementFactory | undefined) ??
-      (react["default"] as { createElement: ElementFactory } | undefined)?.createElement
-    if (createElement === undefined) throw new EnvironmentError(`react has no createElement: ${project.runtime.react}`)
-    const server = await importModule(project.runtime.reactServer)
-    const renderToString =
-      (server["renderToString"] as ((element: unknown) => string) | undefined) ??
-      (server["default"] as { renderToString: (element: unknown) => string } | undefined)?.renderToString
-    if (renderToString === undefined) throw new EnvironmentError(`react-dom/server has no renderToString`)
-
-    const module = await importModule(screen)
-    const component = module["default"]
-    if (typeof component !== "function") {
-      return { problems: located("render", "screen.tsx must default-export the screen component"), warnings: [] }
-    }
-    let element = createElement(component, {})
-    const wrapper = join(project.root, ".mockups", "wrapper.tsx")
-    if (existsSync(wrapper)) {
-      const wrapperModule = await importModule(wrapper)
-      const provider = wrapperModule["default"]
-      if (typeof provider !== "function") {
-        return {
-          problems: located("render", "wrapper.tsx must default-export a component taking { children }"),
-          warnings: [],
-        }
-      }
-      element = createElement(provider, null, element)
-    }
-    const html = renderToString(element)
-    return typeof html === "string" && html.trim() !== ""
-      ? { problems: [], warnings: [] }
-      : { problems: [], warnings: [`${displayPath(screen, cwd)} renders no markup without props`] }
-  } catch (error) {
-    if (error instanceof EnvironmentError) throw error
-    const message = error instanceof Error ? error.message : String(error)
-    if (BROWSER_GLOBAL.test(message)) {
-      return { problems: [], warnings: [`the server render needs a browser (${message}); skipped`] }
-    }
-    return { problems: located("render", message), warnings: [] }
+    result = spawnSync(process.execPath, [".render-check.tsx"], {
+      cwd: mockup,
+      encoding: "utf8",
+      env: { ...process.env, NODE_ENV: "production" },
+    })
+  } finally {
+    rmSync(runner, { force: true })
   }
+  const output = `${result.stdout ?? ""}${result.stderr ?? ""}`
+  if (output.includes("MOCKUP_RENDER ok")) return { problems: [], warnings: [] }
+  if (output.includes("MOCKUP_RENDER empty")) {
+    return { problems: [], warnings: [`${displayPath(screen, cwd)} renders no markup without props`] }
+  }
+  const reported = output
+    .split(/\r?\n/)
+    .find((line) => line.startsWith("MOCKUP_RENDER error:"))
+    ?.replace("MOCKUP_RENDER error:", "")
+    .trim()
+  const message =
+    reported === undefined || reported === "" ? firstLine(output.replaceAll("MOCKUP_RENDER error:", "")) : reported
+  if (BROWSER_GLOBAL.test(message)) {
+    return { problems: [], warnings: [`the server render needs a browser (${message}); skipped`] }
+  }
+  return { problems: located("render", message), warnings: [] }
 }
 
 export async function validateMockup(project: MockupProject, settings: BuildSettings): Promise<ValidateOutcome> {
   const build = await buildMockup(project, settings)
   const mockup = mockupDirectory(project, settings.name)
-  const problems: Problem[] = [...build.problems]
-  const allowed = importRule(project.pathPrefixes, project.dependencies)
+  const problems: Problem[] = [...build.problems, ...build.parts.problems]
+  const allowed = importRule([...project.pathPrefixes, "@registry/"], project.dependencies)
+  const publicSpecifiers = sdkPublicSpecifiers(project)
   for (const file of sourceFiles(mockup)) {
-    problems.push(...sourceProblems(displayPath(file, settings.cwd), readFileSync(file, "utf8"), allowed))
+    const shown = displayPath(file, settings.cwd)
+    const source = readFileSync(file, "utf8")
+    problems.push(...sourceProblems(shown, source, allowed))
+    problems.push(...sdkImportProblems(shown, source, publicSpecifiers))
   }
-  const screen = join(mockup, "screen.tsx")
-  problems.push(...typecheck(project, screen))
-  const rendered = await smokeRender(project, screen, settings.cwd)
+  for (const file of build.parts.files) {
+    problems.push(...partStyleProblems(displayPath(file, settings.cwd), readFileSync(file, "utf8")))
+  }
+  problems.push(...typecheck(project, mockup))
+  const rendered = await smokeRender(mockup, settings.cwd)
   problems.push(...rendered.problems)
+  const warnings = [
+    ...build.warnings,
+    ...rendered.warnings,
+    ...sdkDuplicateWarnings(build.parts.sdkParts, sourceBasenames(projectSourceFiles(project))),
+  ]
   const sorted = problems.toSorted(
     (left, right) => left.file.localeCompare(right.file) || left.line - right.line || left.column - right.column,
   )
-  return { build, problems: sorted, warnings: [...build.warnings, ...rendered.warnings] }
+  return { build, problems: sorted, warnings }
+}
+
+export function partsSummary(manifest: MockupManifest): string[] {
+  const install =
+    manifest.install.length === 0
+      ? "install none"
+      : `install ${manifest.install.length}: ${manifest.install.map((entry) => entry.item).join(", ")}`
+  const proposed =
+    manifest.proposed.length === 0
+      ? "proposed none"
+      : `proposed ${manifest.proposed.length}: ${manifest.proposed
+          .map((part) => `${part.name} (${part.props.length} ${part.props.length === 1 ? "prop" : "props"})`)
+          .join(", ")}`
+  const sdkParts =
+    manifest.sdkParts.length === 0
+      ? "sdkParts none"
+      : `sdkParts ${manifest.sdkParts.length}: ${manifest.sdkParts
+          .map((entry) => `${entry.part} ← ${entry.primitive}`)
+          .join(", ")}`
+  const gaps =
+    manifest.gaps.length === 0
+      ? "gaps none"
+      : `gaps ${manifest.gaps.length}: ${manifest.gaps.map((gap) => `${gap.component} (${gap.missing})`).join(", ")}`
+  return [install, proposed, sdkParts, gaps]
 }

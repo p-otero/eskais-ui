@@ -1,4 +1,4 @@
-import { existsSync, readFileSync, realpathSync, statSync } from "node:fs"
+import { existsSync, readFileSync, readdirSync, realpathSync, statSync } from "node:fs"
 import { createRequire } from "node:module"
 import { dirname, isAbsolute, join, relative, resolve } from "node:path"
 
@@ -31,6 +31,7 @@ export type MockupProject = {
   entry: string | null
   aliases: ProjectAlias[]
   pathPrefixes: string[]
+  registries: Record<string, string>
   dependencies: Set<string>
   runtime: ConsumerRuntime
 }
@@ -79,7 +80,11 @@ function findUp(start: string, name: string): string | null {
   }
 }
 
-function readComponents(path: string): { css: string | null; aliases: Record<string, string> } {
+function readComponents(path: string): {
+  css: string | null
+  aliases: Record<string, string>
+  registries: Record<string, string>
+} {
   const parsed = readJsonc(path)
   const document = isRecord(parsed) ? parsed : {}
   const tailwind = isRecord(document["tailwind"]) ? document["tailwind"] : {}
@@ -88,8 +93,23 @@ function readComponents(path: string): { css: string | null; aliases: Record<str
   for (const [name, value] of Object.entries(rawAliases)) {
     if (typeof value === "string") aliases[name] = value
   }
+  const rawRegistries = isRecord(document["registries"]) ? document["registries"] : {}
+  const registries: Record<string, string> = {}
+  for (const [name, value] of Object.entries(rawRegistries)) {
+    if (typeof value === "string") registries[name] = value
+  }
   const css = typeof tailwind["css"] === "string" ? tailwind["css"] : null
-  return { css, aliases }
+  return { css, aliases, registries }
+}
+
+function extendsOf(path: string): string | null {
+  const parsed = readJsonc(path)
+  const document = isRecord(parsed) ? parsed : {}
+  const extended = document["extends"]
+  if (typeof extended !== "string" || !extended.startsWith(".")) return null
+  const candidate = resolve(dirname(path), extended)
+  if (existsSync(candidate)) return candidate
+  return existsSync(`${candidate}.json`) ? `${candidate}.json` : null
 }
 
 export function readTsconfigPaths(tsconfig: string): TsconfigPaths {
@@ -106,7 +126,9 @@ export function readTsconfigPaths(tsconfig: string): TsconfigPaths {
       if (typeof target === "string") entries.push({ pattern, target })
     }
   }
-  return { base, entries }
+  if (entries.length > 0) return { base, entries }
+  const parent = extendsOf(tsconfig)
+  return parent === null ? { base, entries } : readTsconfigPaths(parent)
 }
 
 function aliasDirectory(specifier: string, paths: TsconfigPaths): string | null {
@@ -295,7 +317,8 @@ export function findProject(options: ProjectOptions): MockupProject {
     throw new EnvironmentError(`no components.json in ${start} or above it; pass --project <dir> or --css <stylesheet>`)
   }
   const root = componentsFile === null ? start : dirname(componentsFile)
-  const components = componentsFile === null ? { css: null, aliases: {} } : readComponents(componentsFile)
+  const components =
+    componentsFile === null ? { css: null, aliases: {}, registries: {} } : readComponents(componentsFile)
   const css =
     options.css === undefined
       ? components.css === null
@@ -324,6 +347,7 @@ export function findProject(options: ProjectOptions): MockupProject {
     entry,
     aliases,
     pathPrefixes,
+    registries: components.registries,
     dependencies: readDependencies(root),
     runtime: resolveRuntime([...new Set(bases)], root),
   }
@@ -348,4 +372,62 @@ export function specifierOf(project: MockupProject, file: string): string | null
   if (alias === null || alias.dir === null) return null
   const shown = toPosix(relative(alias.dir, file)).replace(/\.(tsx|ts|jsx|js)$/, "")
   return `${alias.specifier}/${shown}`
+}
+
+export function packageDirectoryOf(root: string, specifier: string): string | null {
+  return packageDirectory(root, specifier)
+}
+
+const SKIPPED_DIRECTORIES = new Set(["node_modules", ".mockups", ".git", "dist", "build", "coverage", ".next"])
+
+function pathRoots(project: MockupProject): string[] {
+  const paths = readTsconfigPaths(project.tsconfig)
+  const roots = new Set<string>()
+  for (const { target } of paths.entries) {
+    const star = target.indexOf("*")
+    const fixed = star === -1 ? target : target.slice(0, star)
+    const root = resolve(paths.base, fixed)
+    if (existsSync(root)) roots.add(root)
+  }
+  for (const alias of project.aliases) if (alias.dir !== null) roots.add(alias.dir)
+  return [...roots]
+}
+
+function sourceFile(path: string): boolean {
+  if (!/\.(tsx?|jsx?)$/.test(path)) return false
+  if (/\.(test|spec)\./.test(path) || path.endsWith(".d.ts")) return false
+  return true
+}
+
+function walkSources(root: string, found: Set<string>, depth: number) {
+  if (depth > 12 || !existsSync(root)) return
+  const stats = statSync(root)
+  if (!stats.isDirectory()) {
+    if (sourceFile(root)) found.add(root)
+    return
+  }
+  for (const entry of readdirSync(root, { withFileTypes: true })) {
+    if (entry.name.startsWith(".") || SKIPPED_DIRECTORIES.has(entry.name)) continue
+    const path = join(root, entry.name)
+    if (entry.isDirectory()) walkSources(path, found, depth + 1)
+    else if (sourceFile(path)) found.add(path)
+  }
+}
+
+export function projectSourceFiles(project: MockupProject): string[] {
+  const found = new Set<string>()
+  for (const root of pathRoots(project)) walkSources(root, found, 0)
+  return [...found].toSorted()
+}
+
+export function sourceBasenames(files: string[]): Set<string> {
+  return new Set(
+    files.map(
+      (file) =>
+        toPosix(file)
+          .split("/")
+          .at(-1)
+          ?.replace(/\.(tsx|ts|jsx|js)$/, "") ?? "",
+    ),
+  )
 }

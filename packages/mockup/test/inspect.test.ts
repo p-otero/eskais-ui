@@ -114,6 +114,7 @@ describe("a project's aliases", () => {
     entry: null,
     aliases: [{ name: "ui", specifier: "@/components/ui", dir: ui }],
     pathPrefixes: ["@/"],
+    registries: {},
     dependencies: new Set(["react"]),
     runtime: {
       tailwindNode: "",

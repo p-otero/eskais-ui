@@ -107,7 +107,7 @@ function declarationEnd(source: string, from: number): number {
 }
 
 export function extractType(source: string, name: string): string | null {
-  const match = new RegExp(`\\b(type|interface)\\s+${name}\\b`).exec(source)
+  const match = new RegExp(`\\b(type|interface)\\s+${name}\\b\\s*(?:<|=|\\{|extends\\b)`).exec(source)
   if (match === null) return null
   const start = match.index
   if (match[1] === "interface") {

@@ -1,12 +1,11 @@
 type MockupBuildLoader = "dataurl"
 
+type MockupBuildResolve = { path: string } | { errors: { message: string }[] } | undefined
+
 type MockupBuildPlugin = {
   name: string
   setup(build: {
-    onResolve(
-      options: { filter: RegExp },
-      callback: (args: { path: string }) => { errors: { message: string }[] } | undefined,
-    ): void
+    onResolve(options: { filter: RegExp }, callback: (args: { path: string }) => MockupBuildResolve): void
   }): void
 }
 
@@ -36,4 +35,5 @@ type MockupBuildResult = {
 
 declare const Bun: {
   build(options: MockupBuildOptions): Promise<MockupBuildResult>
+  plugin(plugin: MockupBuildPlugin): void
 }

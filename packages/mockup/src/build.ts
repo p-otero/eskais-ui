@@ -1,11 +1,13 @@
 import { createHash } from "node:crypto"
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs"
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, statSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { basename, dirname, extname, join, relative, resolve } from "node:path"
 import { pathToFileURL, fileURLToPath } from "node:url"
 
 import { pageProblems, reactDevBanner, type Problem } from "./checks"
+import { readMockupParts, type Gap, type MockupParts, type ProposedPart, type SdkPart } from "./parts"
 import { displayPath, EnvironmentError, mockupDirectory, specifierOf, type MockupProject } from "./project"
+import { prepareRegistry, type InstallEntry } from "./registry"
 
 export type Scheme = "light" | "dark" | "system"
 
@@ -26,6 +28,22 @@ export type BuildOutcome = {
   fonts: number
   problems: Problem[]
   warnings: string[]
+  manifest: MockupManifest
+  parts: MockupParts
+}
+
+export type MockupManifest = {
+  name: string
+  date: string
+  theme: string | null
+  scheme: Scheme
+  hashes: { screen: string | null; fixtures: string | null }
+  components: string[]
+  install: InstallEntry[]
+  proposed: ProposedPart[]
+  sdkParts: SdkPart[]
+  gaps: Gap[]
+  size: { total: number; js: number; css: number; fonts: number }
 }
 
 type CompileOptions = {
@@ -132,7 +150,7 @@ const remoteImports = {
   setup(build: {
     onResolve(
       options: { filter: RegExp },
-      callback: (args: { path: string }) => { errors: { message: string }[] } | undefined,
+      callback: (args: { path: string }) => { errors: { message: string }[] } | { path: string } | undefined,
     ): void
   }) {
     build.onResolve({ filter: /^(?:https?:)?\/\// }, (args) => ({
@@ -141,7 +159,34 @@ const remoteImports = {
   },
 }
 
-async function bundle(entry: string, outdir: string): Promise<{ js: string; map: string | null }> {
+function cachedImports(cacheDirs: string[]) {
+  return {
+    name: "mockup-cached-imports",
+    setup(build: {
+      onResolve(
+        options: { filter: RegExp },
+        callback: (args: { path: string }) => { errors: { message: string }[] } | { path: string } | undefined,
+      ): void
+    }) {
+      build.onResolve({ filter: /^@registry\// }, (args) => {
+        const name = args.path.slice("@registry/".length)
+        for (const dir of cacheDirs) {
+          for (const extension of [".tsx", ".ts"]) {
+            const file = join(dir, `${name}${extension}`)
+            if (existsSync(file)) return { path: file }
+          }
+        }
+        return {
+          errors: [
+            { message: `@registry/${name} is not in the registry cache; inspect --registry lists the item names` },
+          ],
+        }
+      })
+    },
+  }
+}
+
+async function bundle(entry: string, outdir: string, cacheDirs: string[]): Promise<{ js: string; map: string | null }> {
   const result = await Bun.build({
     entrypoints: [entry],
     outdir,
@@ -159,7 +204,7 @@ async function bundle(entry: string, outdir: string): Promise<{ js: string; map:
       ".webp": "dataurl",
       ".avif": "dataurl",
     },
-    plugins: [remoteImports],
+    plugins: [remoteImports, ...(cacheDirs.length === 0 ? [] : [cachedImports(cacheDirs)])],
   })
   if (!result.success) {
     const logs = result.logs.map((log) => `${log.level}: ${log.message}`).join("\n")
@@ -226,7 +271,14 @@ function projectComponents(project: MockupProject, files: string[], mockup: stri
   ].toSorted()
 }
 
-function manifest(project: MockupProject, settings: BuildSettings, files: string[], sizes: BuildOutcome) {
+function manifest(
+  project: MockupProject,
+  settings: BuildSettings,
+  files: string[],
+  sizes: { total: number; js: number; css: number; fonts: number },
+  parts: { proposed: ProposedPart[]; sdkParts: SdkPart[]; gaps: Gap[] },
+  install: InstallEntry[],
+): MockupManifest {
   const mockup = mockupDirectory(project, settings.name)
   return {
     name: settings.name,
@@ -238,8 +290,29 @@ function manifest(project: MockupProject, settings: BuildSettings, files: string
       fixtures: hashFile(join(mockup, "fixtures.ts")),
     },
     components: projectComponents(project, files, mockup),
+    install,
+    proposed: parts.proposed,
+    sdkParts: parts.sdkParts,
+    gaps: parts.gaps,
     size: { total: sizes.total, js: sizes.js, css: sizes.css, fonts: sizes.fonts },
   }
+}
+
+export function mockupSourceFiles(mockup: string): string[] {
+  const found: string[] = []
+  const visit = (dir: string) => {
+    for (const entry of readdirSync(dir, { withFileTypes: true })) {
+      if (entry.name.startsWith(".")) continue
+      const path = join(dir, entry.name)
+      if (entry.isDirectory()) {
+        visit(path)
+        continue
+      }
+      if (/\.(ts|tsx)$/.test(entry.name)) found.push(path)
+    }
+  }
+  if (existsSync(mockup)) visit(mockup)
+  return found.toSorted()
 }
 
 export async function buildMockup(project: MockupProject, settings: BuildSettings): Promise<BuildOutcome> {
@@ -251,12 +324,15 @@ export async function buildMockup(project: MockupProject, settings: BuildSetting
   mkdirSync(dirname(mockup), { recursive: true })
   writeFileSync(join(project.root, ".mockups", ".gitignore"), "*\n")
 
+  const parts = await readMockupParts(mockup, settings.cwd)
+  const registry = await prepareRegistry(project, mockup, mockupSourceFiles(mockup))
+
   const entry = writeEntry(mockup)
   const outdir = mkdtempSync(join(tmpdir(), "eskais-mockup-"))
   let built: { js: string; map: string | null }
   let files: string[]
   try {
-    built = await bundle(entry, outdir)
+    built = await bundle(entry, outdir, registry.cacheDirs)
     files = bundledFiles(built.map, outdir)
   } finally {
     rmSync(entry, { force: true })
@@ -269,21 +345,27 @@ export async function buildMockup(project: MockupProject, settings: BuildSetting
   mkdirSync(dirname(outPath), { recursive: true })
   writeFileSync(outPath, page)
 
-  const outcome: BuildOutcome = {
-    outPath,
-    manifestPath: join(mockup, "manifest.json"),
+  const sizes = {
     total: Buffer.byteLength(page),
     js: Buffer.byteLength(built.js),
     css: Buffer.byteLength(css),
     fonts,
-    problems: pageProblems(page).map((message) => ({
-      file: displayPath(outPath, settings.cwd),
-      line: 1,
-      column: 1,
-      rule: "page",
-      message,
-    })),
+  }
+  const problems = pageProblems(page).map((message) => ({
+    file: displayPath(outPath, settings.cwd),
+    line: 1,
+    column: 1,
+    rule: "page",
+    message,
+  }))
+  const outcome: BuildOutcome = {
+    outPath,
+    manifestPath: join(mockup, "manifest.json"),
+    ...sizes,
+    problems,
     warnings: [],
+    manifest: manifest(project, settings, files, sizes, parts, registry.install),
+    parts,
   }
   const banner = reactDevBanner(built.js)
   if (banner !== undefined) {
@@ -300,7 +382,7 @@ export async function buildMockup(project: MockupProject, settings: BuildSetting
       `${displayPath(outPath, settings.cwd)} is ${formatSize(outcome.total)}: the first paint may stall`,
     )
   }
-  writeFileSync(outcome.manifestPath, `${JSON.stringify(manifest(project, settings, files, outcome), null, 2)}\n`)
+  writeFileSync(outcome.manifestPath, `${JSON.stringify(outcome.manifest, null, 2)}\n`)
   return outcome
 }
 
