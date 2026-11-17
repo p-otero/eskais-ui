@@ -16,6 +16,7 @@ import type { ComponentProps } from "react"
 import { ChevronLeftIcon, ChevronRightIcon } from "lucide-react"
 
 import { buttonVariants } from "@/components/ui/button"
+import { ControlTooltip } from "@/components/ui/tooltip"
 import { cnState } from "@/lib/utils"
 
 type CalendarLabels = { previousMonth?: string; nextMonth?: string }
@@ -83,9 +84,13 @@ function CalendarMonths({ months = 1, labels }: { months?: number; labels?: Cale
   return (
     <>
       <div data-slot="calendar-header" className="flex items-center gap-inline">
-        <CalendarPrevious aria-label={labels?.previousMonth} />
+        <ControlTooltip label={labels?.previousMonth ?? "Previous month"}>
+          <CalendarPrevious aria-label={labels?.previousMonth} />
+        </ControlTooltip>
         <CalendarHeading />
-        <CalendarNext aria-label={labels?.nextMonth} />
+        <ControlTooltip label={labels?.nextMonth ?? "Next month"}>
+          <CalendarNext aria-label={labels?.nextMonth} />
+        </ControlTooltip>
       </div>
       <div data-slot="calendar-months" className="flex flex-wrap gap-group">
         {Array.from({ length: months }, (_, offset) => (

@@ -30,6 +30,7 @@ import {
   type SidebarLabels,
   type SidebarTriggerProps,
 } from "@/components/ui/sidebar-trigger"
+import { ControlTooltip } from "@/components/ui/tooltip"
 import { cn } from "@/lib/utils"
 import { useSidebarState, type SidebarState, type SidebarStateOptions } from "@/components/ui/use-sidebar-state"
 
@@ -147,12 +148,14 @@ function Sidebar({
       <div data-slot="sidebar-header" className="flex items-center gap-inline group-data-collapsed/sidebar:flex-col">
         <div className="min-w-0 flex-1 group-data-collapsed/sidebar:hidden">{header}</div>
         {collapsible && trigger && (
-          <SidebarToggle
-            aria-label={collapsed ? labels.expand : labels.collapse}
-            className={cn(buttonVariants({ variant: "ghost", size: "icon" }), "rtl:[&_svg]:-scale-x-100")}
-          >
-            <PanelLeftIcon />
-          </SidebarToggle>
+          <ControlTooltip label={collapsed ? labels.expand : labels.collapse}>
+            <SidebarToggle
+              aria-label={collapsed ? labels.expand : labels.collapse}
+              className={cn(buttonVariants({ variant: "ghost", size: "icon" }), "rtl:[&_svg]:-scale-x-100")}
+            >
+              <PanelLeftIcon />
+            </SidebarToggle>
+          </ControlTooltip>
         )}
       </div>
       <SidebarRailContext value={rail}>{body}</SidebarRailContext>

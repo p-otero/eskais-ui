@@ -13,6 +13,7 @@ import type { ComponentProps } from "react"
 import { CalendarIcon, XIcon } from "lucide-react"
 
 import { buttonVariants } from "@/components/ui/button"
+import { ControlTooltip, type ControlTooltipOption } from "@/components/ui/tooltip"
 import { CalendarMonths, type CalendarLabels } from "@/components/ui/calendar"
 import { floatingLabelControls, useFloatingPlaceholder } from "@/components/ui/field"
 import { fieldSurfaceClassName } from "@/components/ui/input"
@@ -40,29 +41,43 @@ function DatePickerInput({ className, placeholder, ...props }: ComponentProps<ty
   )
 }
 
-function DatePickerTrigger({ className, children, ...props }: ComponentProps<typeof DatePickerTriggerPrimitive>) {
+function DatePickerTrigger({
+  className,
+  children,
+  tooltip,
+  ...props
+}: ComponentProps<typeof DatePickerTriggerPrimitive> & { tooltip?: ControlTooltipOption }) {
   return (
-    <DatePickerTriggerPrimitive
-      // oxlint-disable-next-line p-otero/spacing-tokens -- pulls the icon button into the padding so its glyph lines up with the text inset
-      className={cnState(cn(buttonVariants({ variant: "ghost", size: "icon" }), "-me-2 size-control-sm"), className)}
-      {...props}
-    >
-      {children ?? <CalendarIcon />}
-    </DatePickerTriggerPrimitive>
+    <ControlTooltip label={props["aria-label"]} tooltip={tooltip} iconOnly={children === undefined}>
+      <DatePickerTriggerPrimitive
+        // oxlint-disable-next-line p-otero/spacing-tokens -- pulls the icon button into the padding so its glyph lines up with the text inset
+        className={cnState(cn(buttonVariants({ variant: "ghost", size: "icon" }), "-me-2 size-control-sm"), className)}
+        {...props}
+      >
+        {children ?? <CalendarIcon />}
+      </DatePickerTriggerPrimitive>
+    </ControlTooltip>
   )
 }
 
-function DatePickerClear({ className, children, ...props }: ComponentProps<typeof DatePickerClearPrimitive>) {
+function DatePickerClear({
+  className,
+  children,
+  tooltip,
+  ...props
+}: ComponentProps<typeof DatePickerClearPrimitive> & { tooltip?: ControlTooltipOption }) {
   return (
-    <DatePickerClearPrimitive
-      className={cnState(
-        cn(buttonVariants({ variant: "ghost", size: "icon" }), "size-control-sm data-empty:hidden"),
-        className,
-      )}
-      {...props}
-    >
-      {children ?? <XIcon />}
-    </DatePickerClearPrimitive>
+    <ControlTooltip label={props["aria-label"]} tooltip={tooltip} iconOnly={children === undefined}>
+      <DatePickerClearPrimitive
+        className={cnState(
+          cn(buttonVariants({ variant: "ghost", size: "icon" }), "size-control-sm data-empty:hidden"),
+          className,
+        )}
+        {...props}
+      >
+        {children ?? <XIcon />}
+      </DatePickerClearPrimitive>
+    </ControlTooltip>
   )
 }
 

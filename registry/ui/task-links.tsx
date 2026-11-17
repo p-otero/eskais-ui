@@ -120,7 +120,7 @@ function PullRequestLink({ link, label, onOpenLink, className }: PullRequestLink
       size="icon"
       render={createElement("a", { href: link.href })}
       aria-label={label}
-      title={link.label}
+      tooltip={link.label}
       onClick={openWith(link, onOpenLink)}
       className={cn("size-6 text-muted-foreground [&_svg]:size-3.5", className)}
     >

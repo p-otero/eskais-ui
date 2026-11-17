@@ -12,6 +12,7 @@ import { contentClassName, DialogBackdrop } from "@/components/ui/dialog"
 import { Link } from "@/components/ui/link"
 import { lightbox, type LightboxIndexChangeReason } from "@/components/ui/lightbox-primitive"
 import { ThemedImage, type ThemedImageProps } from "@/components/ui/themed-image"
+import { ControlTooltip } from "@/components/ui/tooltip"
 import { Toggle } from "@/components/ui/toggle"
 import { cn } from "@/lib/utils"
 
@@ -115,20 +116,24 @@ function LightboxView({ items, index, onIndexChange, labels }: ViewProps) {
         >
           <ZoomInIcon />
         </Toggle>
-        <Link
-          data-slot="lightbox-original"
-          variant="plain"
-          href={item.href ?? item.src}
-          target="_blank"
-          rel="noreferrer"
-          aria-label={labels.openOriginal}
-          className={iconButtonClassName}
-        >
-          <ExternalLinkIcon />
-        </Link>
-        <DialogClose aria-label={labels.close} className={iconButtonClassName}>
-          <XIcon />
-        </DialogClose>
+        <ControlTooltip label={labels.openOriginal}>
+          <Link
+            data-slot="lightbox-original"
+            variant="plain"
+            href={item.href ?? item.src}
+            target="_blank"
+            rel="noreferrer"
+            aria-label={labels.openOriginal}
+            className={iconButtonClassName}
+          >
+            <ExternalLinkIcon />
+          </Link>
+        </ControlTooltip>
+        <ControlTooltip label={labels.close}>
+          <DialogClose aria-label={labels.close} className={iconButtonClassName}>
+            <XIcon />
+          </DialogClose>
+        </ControlTooltip>
       </div>
       <div data-slot="lightbox-stage" className="relative min-h-0 flex-1 bg-muted/(--glass-opacity)">
         <div
@@ -147,24 +152,28 @@ function LightboxView({ items, index, onIndexChange, labels }: ViewProps) {
         </div>
         {count > 1 && (
           <>
-            <Button
-              aria-label={labels.previous}
-              disabled={index === 0}
-              focusableWhenDisabled
-              onClick={(event) => handle.api.previous({ reason: "item-press", event: event.nativeEvent })}
-              className={cn(stepClassName, "start-group")}
-            >
-              <ChevronLeftIcon className="rtl:rotate-180" />
-            </Button>
-            <Button
-              aria-label={labels.next}
-              disabled={index === count - 1}
-              focusableWhenDisabled
-              onClick={(event) => handle.api.next({ reason: "item-press", event: event.nativeEvent })}
-              className={cn(stepClassName, "end-group")}
-            >
-              <ChevronRightIcon className="rtl:rotate-180" />
-            </Button>
+            <ControlTooltip label={labels.previous}>
+              <Button
+                aria-label={labels.previous}
+                disabled={index === 0}
+                focusableWhenDisabled
+                onClick={(event) => handle.api.previous({ reason: "item-press", event: event.nativeEvent })}
+                className={cn(stepClassName, "start-group")}
+              >
+                <ChevronLeftIcon className="rtl:rotate-180" />
+              </Button>
+            </ControlTooltip>
+            <ControlTooltip label={labels.next}>
+              <Button
+                aria-label={labels.next}
+                disabled={index === count - 1}
+                focusableWhenDisabled
+                onClick={(event) => handle.api.next({ reason: "item-press", event: event.nativeEvent })}
+                className={cn(stepClassName, "end-group")}
+              >
+                <ChevronRightIcon className="rtl:rotate-180" />
+              </Button>
+            </ControlTooltip>
           </>
         )}
       </div>

@@ -16,7 +16,7 @@ import {
   ScrollAreaThumb,
   ScrollAreaViewport,
 } from "@/components/ui/scroll-area"
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
+import { ControlTooltip } from "@/components/ui/tooltip"
 import type { Tone } from "@/lib/tone"
 import { cn } from "@/lib/utils"
 
@@ -133,19 +133,18 @@ function BoardColumn({
         </div>
       )}
       {collapsible && (
-        <Tooltip>
-          <TooltipTrigger
-            render={
-              <CollapsibleTrigger
-                aria-label={collapsed ? expand(title) : collapse(title)}
-                className="size-control-sm shrink-0 justify-center px-0 text-muted-foreground opacity-0 group-focus-within/board-column-header:opacity-100 group-hover/board-column-header:opacity-100 group-data-collapsed/board-column:order-first group-data-collapsed/board-column:opacity-100 focus-visible:opacity-100 pointer-coarse:opacity-100"
-              />
-            }
+        <ControlTooltip
+          label={collapsed ? expand(title) : collapse(title)}
+          tooltip={collapsed ? expandTooltip : collapseTooltip}
+          agentPressable
+        >
+          <CollapsibleTrigger
+            aria-label={collapsed ? expand(title) : collapse(title)}
+            className="size-control-sm shrink-0 justify-center px-0 text-muted-foreground opacity-0 group-focus-within/board-column-header:opacity-100 group-hover/board-column-header:opacity-100 group-data-collapsed/board-column:order-first group-data-collapsed/board-column:opacity-100 focus-visible:opacity-100 pointer-coarse:opacity-100"
           >
             <CollapseIcon collapsed={collapsed} />
-          </TooltipTrigger>
-          <TooltipContent>{collapsed ? expandTooltip : collapseTooltip}</TooltipContent>
-        </Tooltip>
+          </CollapsibleTrigger>
+        </ControlTooltip>
       )}
     </div>
   )

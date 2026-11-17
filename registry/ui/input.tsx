@@ -9,6 +9,7 @@ import type { ComponentProps } from "react"
 import { XIcon } from "lucide-react"
 
 import { floatingLabelControls } from "@/components/ui/field"
+import { ControlTooltip, type ControlTooltipOption } from "@/components/ui/tooltip"
 import { cnState } from "@/lib/utils"
 
 const fieldSurfaceClassName =
@@ -38,19 +39,27 @@ function InputGroup({ className, ...props }: ComponentProps<typeof InputGroupPri
   )
 }
 
-function InputClear({ className, children, ...props }: ComponentProps<typeof InputClearPrimitive>) {
+function InputClear({
+  className,
+  children,
+  "aria-label": ariaLabel = "Clear",
+  tooltip,
+  ...props
+}: ComponentProps<typeof InputClearPrimitive> & { tooltip?: ControlTooltipOption }) {
   return (
-    <InputClearPrimitive
-      aria-label="Clear"
-      className={cnState(
-        // oxlint-disable-next-line p-otero/spacing-tokens -- pulls the icon button into the padding so its glyph lines up with the text inset
-        "-me-1 inline-flex size-6 shrink-0 cursor-pointer items-center justify-center rounded-full text-muted-foreground outline-none hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring",
-        className,
-      )}
-      {...props}
-    >
-      {children ?? <XIcon className="size-4" />}
-    </InputClearPrimitive>
+    <ControlTooltip label={ariaLabel} tooltip={tooltip} iconOnly={children === undefined}>
+      <InputClearPrimitive
+        aria-label={ariaLabel}
+        className={cnState(
+          // oxlint-disable-next-line p-otero/spacing-tokens -- pulls the icon button into the padding so its glyph lines up with the text inset
+          "-me-1 inline-flex size-6 shrink-0 cursor-pointer items-center justify-center rounded-full text-muted-foreground outline-none hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring",
+          className,
+        )}
+        {...props}
+      >
+        {children ?? <XIcon className="size-4" />}
+      </InputClearPrimitive>
+    </ControlTooltip>
   )
 }
 

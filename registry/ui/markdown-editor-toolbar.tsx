@@ -29,15 +29,17 @@ import {
 } from "@/components/ui/dropdown-menu"
 import type { MarkdownFormat } from "@/components/ui/markdown-editor-commands"
 import type { MarkdownEditorLabels } from "@/components/ui/markdown-editor-labels"
+import { ControlTooltip } from "@/components/ui/tooltip"
 import { useResizeObserver } from "@/components/ui/use-markdown-editor"
 
 type ToolbarFormat = Exclude<MarkdownFormat, "heading">
 
-const ITEMS: { format: ToolbarFormat; glyph: ReactNode; group: number }[] = [
-  { group: 0, format: "bold", glyph: <BoldIcon /> },
-  { group: 0, format: "italic", glyph: <ItalicIcon /> },
-  { group: 0, format: "strikethrough", glyph: <StrikethroughIcon /> },
-  { group: 0, format: "code", glyph: <CodeIcon /> },
+// The keys mirror the editor's keymap (markdown-editor-state.ts), so the tooltip shows what the button is bound to.
+const ITEMS: { format: ToolbarFormat; glyph: ReactNode; group: number; shortcut?: string }[] = [
+  { group: 0, format: "bold", glyph: <BoldIcon />, shortcut: "mod+b" },
+  { group: 0, format: "italic", glyph: <ItalicIcon />, shortcut: "mod+i" },
+  { group: 0, format: "strikethrough", glyph: <StrikethroughIcon />, shortcut: "mod+shift+x" },
+  { group: 0, format: "code", glyph: <CodeIcon />, shortcut: "mod+e" },
   { group: 0, format: "link", glyph: <LinkIcon /> },
   { group: 1, format: "quote", glyph: <TextQuoteIcon /> },
   { group: 1, format: "bulletList", glyph: <ListIcon /> },
@@ -112,15 +114,17 @@ function MarkdownEditorToolbar({
         onOpenChange={(open) => open && setLevel(headingLevel())}
         onValueChange={(value) => onHeading(Number(value))}
       >
-        <ToolbarButton
-          render={<MenuTrigger />}
-          aria-label={labels.blockType}
-          onMouseDown={keepSelection}
-          className={`${buttonClassName} w-auto gap-inline px-inline`}
-        >
-          <HeadingIcon />
-          <ChevronDownIcon />
-        </ToolbarButton>
+        <ControlTooltip label={labels.blockType}>
+          <ToolbarButton
+            render={<MenuTrigger />}
+            aria-label={labels.blockType}
+            onMouseDown={keepSelection}
+            className={`${buttonClassName} w-auto gap-inline px-inline`}
+          >
+            <HeadingIcon />
+            <ChevronDownIcon />
+          </ToolbarButton>
+        </ControlTooltip>
         <DropdownMenuContent finalFocus={restoreFocus}>
           <DropdownMenuRadioGroup value={String(level)} aria-label={labels.blockType}>
             {LEVELS.map((value) => (
@@ -133,31 +137,34 @@ function MarkdownEditorToolbar({
         </DropdownMenuContent>
       </DropdownMenu>
       <ToolbarSeparator className="h-5 w-px shrink-0 self-center bg-border" />
-      {shown.map(({ format, glyph, group }, index) => [
+      {shown.map(({ format, glyph, group, shortcut }, index) => [
         index > 0 && group !== shown[index - 1]!.group && (
           <ToolbarSeparator key={`separator-${format}`} className="h-5 w-px shrink-0 self-center bg-border" />
         ),
-        <ToolbarButton
-          key={format}
-          aria-label={labels[format]}
-          // Keeps focus and the selection in the editor; the toolbar still takes focus from the keyboard.
-          onMouseDown={keepSelection}
-          onClick={() => onFormat(format)}
-          className={buttonClassName}
-        >
-          {glyph}
-        </ToolbarButton>,
+        <ControlTooltip key={format} label={labels[format]} shortcut={shortcut}>
+          <ToolbarButton
+            aria-label={labels[format]}
+            // Keeps focus and the selection in the editor; the toolbar still takes focus from the keyboard.
+            onMouseDown={keepSelection}
+            onClick={() => onFormat(format)}
+            className={buttonClassName}
+          >
+            {glyph}
+          </ToolbarButton>
+        </ControlTooltip>,
       ])}
       {overflow.length > 0 && (
         <DropdownMenu onAction={(value) => onFormat(value as ToolbarFormat)}>
-          <ToolbarButton
-            render={<MenuTrigger />}
-            aria-label={labels.more}
-            onMouseDown={keepSelection}
-            className={`${buttonClassName} ms-auto`}
-          >
-            <EllipsisIcon />
-          </ToolbarButton>
+          <ControlTooltip label={labels.more}>
+            <ToolbarButton
+              render={<MenuTrigger />}
+              aria-label={labels.more}
+              onMouseDown={keepSelection}
+              className={`${buttonClassName} ms-auto`}
+            >
+              <EllipsisIcon />
+            </ToolbarButton>
+          </ControlTooltip>
           <DropdownMenuContent align="end" finalFocus={restoreFocus}>
             {overflow.map(({ format, glyph }) => (
               <DropdownMenuItem key={format} value={format}>
