@@ -1,6 +1,6 @@
 "use client"
 
-import type { ComponentProps, ReactElement, ReactNode } from "react"
+import { memo, type ComponentProps, type ReactElement, type ReactNode } from "react"
 import { EllipsisIcon } from "lucide-react"
 
 import {
@@ -78,7 +78,14 @@ function Badge({ children }: { children: ReactNode }) {
   )
 }
 
-function Slot({ item, renderLink }: { item: MobileNavItem; renderLink: MobileNavProps["renderLink"] }) {
+// Memoized, so a route change re-renders only the slots whose item changed when the items keep their identity.
+const Slot = memo(function Slot({
+  item,
+  renderLink,
+}: {
+  item: MobileNavItem
+  renderLink: MobileNavProps["renderLink"]
+}) {
   return (
     <NavigationMenuItem className="flex min-w-0 flex-1">
       <NavigationMenuLink
@@ -97,7 +104,7 @@ function Slot({ item, renderLink }: { item: MobileNavItem; renderLink: MobileNav
       </NavigationMenuLink>
     </NavigationMenuItem>
   )
-}
+})
 
 function MobileNav({
   label,

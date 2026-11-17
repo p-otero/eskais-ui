@@ -82,6 +82,7 @@ The page ships with no network: every font and image is inlined. Set `font-sans`
 ## Rules
 
 - Read the project's `AGENTS.md` first, if it has one: spacing, colour and typography roles apply to the screen as much as to a component.
+- Start a whole screen from a block rather than composing its frame: an application screen inside `Shell` (`@registry/shell`, from a list of routes), a documentation page inside `DocsLayout`, a landing page from `landing-page`. Put only the page's own content in `parts/`.
 - `parts/` use theme tokens and the Tailwind scale: no `bg-white`, `text-[#hex]`, `w-[13px]` or other raw colours and arbitrary sizes (`max-h-[calc(100%-2rem)]` and `w-[calc(100%-2rem)]` are allowed).
 - If a component can't do what the design needs, change the screen or record a gap, not the project: never edit `src/components/`, the theme or installed registry files for a mockup.
 - One variant per scheme when the person wants both: `mockup build <name> --scheme light --out <name>-light.html` and `--scheme dark`. `--theme compact` applies a density theme; `--scheme system` (the default) follows the viewer.
