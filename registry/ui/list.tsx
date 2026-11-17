@@ -21,6 +21,7 @@ import {
   type FocusEvent,
   type KeyboardEvent,
   type ReactNode,
+  type Ref,
 } from "react"
 
 import { list, type ListEntry, type ListOptions } from "@/components/ui/list-primitive"
@@ -283,53 +284,55 @@ function List<Item = unknown>({
     })
   }
 
-  const container = selectable ? (
-    // The root's `select` covers the listbox for agents; two entries with one name would make a ref ambiguous.
-    <Listbox<string>
-      ref={anchor}
-      data-agent-hidden=""
-      controller={listbox}
-      value={value}
-      defaultValue={defaultValue}
-      onValueChange={onValueChange}
-      onHighlight={(_value, details) => {
-        if (virtual.enabled && details.index >= 0) virtual.scrollToIndex(details.index)
-      }}
-      onKeyDownCapture={(event) => listboxKeyDown(event, (id) => listbox.setValue(id))}
-      aria-label={label}
-      className={cn(containerClassNames[variant], "outline-none", virtual.enabled && "relative")}
-    >
-      {rows}
-    </Listbox>
-  ) : (
-    <ul ref={anchor} className={cn(containerClassNames[variant], virtual.enabled && "relative")}>
-      {rows}
-    </ul>
-  )
-
-  return usePart(
-    handle,
-    "root",
-    {},
-    {
-      ...props,
-      ...rootAttributes(variant, selectable),
-      "aria-label": label,
-      onFocus: (event: FocusEvent<HTMLDivElement>) => {
-        onFocus?.(event)
-        if (!virtual.enabled || !(event.target instanceof Element)) return
-        const index = Number(event.target.closest<HTMLElement>("[data-index]")?.dataset.index ?? Number.NaN)
-        if (!Number.isNaN(index)) virtual.pin(index)
-      },
-      className: cn("flex min-w-0 flex-col", className),
-      children: (
-        <ListContext value={context}>
-          {selectable ? container : <RowNavigationProvider handle={navigation}>{container}</RowNavigationProvider>}
-        </ListContext>
-      ),
+  const rootProps = {
+    ...props,
+    ...rootAttributes(variant, selectable),
+    ref: anchor,
+    "aria-label": label,
+    onFocus: (event: FocusEvent<HTMLElement>) => {
+      onFocus?.(event as FocusEvent<HTMLDivElement>)
+      if (!virtual.enabled || !(event.target instanceof Element)) return
+      const index = Number(event.target.closest<HTMLElement>("[data-index]")?.dataset.index ?? Number.NaN)
+      if (!Number.isNaN(index)) virtual.pin(index)
     },
-    "div",
-  )
+    className: cn("min-w-0", containerClassNames[variant], virtual.enabled && "relative", className),
+  }
+
+  // Selectable, the listbox is the List's own element, so one element carries the name. Agents see both: the List
+  // takes `select` (through `onSelect`), the listbox `setValue`, so a step that names either action is unambiguous.
+  const partProps = selectable
+    ? {
+        ...rootProps,
+        className: cn(rootProps.className, "outline-none"),
+        children: <ListContext value={context}>{rows}</ListContext>,
+        render: ({ ref, ...part }: Record<string, unknown>) => (
+          <Listbox<string>
+            {...part}
+            ref={ref as Ref<HTMLDivElement>}
+            render={(listboxProps) => <div {...listboxProps} data-slot="list" />}
+            controller={listbox}
+            value={value}
+            defaultValue={defaultValue}
+            onValueChange={onValueChange}
+            onHighlight={(_value, details) => {
+              if (virtual.enabled && details.index >= 0) virtual.scrollToIndex(details.index)
+            }}
+            onKeyDownCapture={(event) => listboxKeyDown(event, (id) => listbox.setValue(id))}
+          />
+        ),
+      }
+    : {
+        ...rootProps,
+        // Preflight's list-style: none strips list semantics in Safari unless the role is explicit.
+        role: "list",
+        children: (
+          <ListContext value={context}>
+            <RowNavigationProvider handle={navigation}>{rows}</RowNavigationProvider>
+          </ListContext>
+        ),
+      }
+
+  return usePart(handle, "root", {}, partProps as PartProps<"ul">, selectable ? "div" : "ul")
 }
 
 type ListGroupProps = {

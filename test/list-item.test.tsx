@@ -124,10 +124,23 @@ function Selectable() {
   )
 }
 
+test("the name is on the list itself, not on a group around it", () => {
+  render(
+    <List aria-label="x">
+      <ListItem id="a" title="A" onSelect={() => {}} />
+    </List>,
+  )
+  const named = screen.getByRole("list", { name: "x" })
+  expect(named.dataset.slot).toBe("list")
+  expect(within(named).getByRole("button", { name: "A" })).toBeTruthy()
+  expect(screen.queryByRole("group")).toBeNull()
+})
+
 test("a selectable list is a listbox, with arrow keys", async () => {
   const user = userEvent.setup()
   const { container } = render(<Selectable />)
   const listbox = screen.getByRole("listbox", { name: "Triage queue" })
+  expect(listbox.dataset.slot).toBe("list")
   const options = within(listbox).getAllByRole("option")
   expect(options).toHaveLength(2)
   expect(options[0]?.getAttribute("aria-selected")).toBe("true")
@@ -156,7 +169,10 @@ test("an agent selects a row by id, in either kind of list", async () => {
   render(<Selectable />)
   await settle()
   components = agent.snapshot().filter((entry) => !entry.offPage && entry.component !== "more")
-  expect(components.filter((entry) => entry.label === "Triage queue")).toHaveLength(1)
+  // One element: the List takes `select`, its listbox `setValue`, so each action names one of them.
+  const named = components.filter((entry) => entry.label === "Triage queue")
+  expect(named.map((entry) => entry.component).toSorted()).toEqual(["list", "listbox"])
+  expect(named.filter((entry) => entry.actions.includes("select"))).toHaveLength(1)
   result = await agent.act({ steps: [{ ref: "Triage queue", action: "select", args: ["ENG-415"] }] })
   expect(result.ok, result.error?.message).toBe(true)
   expect(screen.getByRole("status").textContent).toBe("ENG-415")

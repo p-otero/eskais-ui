@@ -512,6 +512,7 @@ const itemNotes: Record<string, ItemNotes> = {
   },
   "list-item": {
     a11y: [
+      "The name is on the list itself: a list, or a listbox when rows are selectable, with no group around it.",
       "A row selects through a stretched link or button, while its own actions stay separate targets.",
       "With value or onValueChange, rows become listbox options with one tab stop.",
     ],
