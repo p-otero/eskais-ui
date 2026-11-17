@@ -1,10 +1,5 @@
+import { BotIcon, FolderIcon, HouseIcon, RocketIcon, SettingsIcon } from "lucide-react"
 import { MobileNav } from "@/components/ui/mobile-nav"
-
-const dot = (
-  <svg viewBox="0 0 24 24" aria-hidden="true">
-    <circle cx="12" cy="12" r="5" fill="currentColor" />
-  </svg>
-)
 
 export default function MobileNavDemo() {
   return (
@@ -14,12 +9,12 @@ export default function MobileNavDemo() {
         always
         className="absolute"
         items={[
-          { label: "Overview", href: "#overview", icon: dot },
-          { label: "Projects", href: "#projects", icon: dot, badge: 4, current: true },
-          { label: "Deploys", href: "#deploys", icon: dot },
-          { label: "Agents", href: "#agents", icon: dot },
+          { label: "Overview", href: "#overview", icon: <HouseIcon /> },
+          { label: "Projects", href: "#projects", icon: <FolderIcon />, badge: 4, current: true },
+          { label: "Deploys", href: "#deploys", icon: <RocketIcon /> },
+          { label: "Agents", href: "#agents", icon: <BotIcon /> },
         ]}
-        overflow={[{ label: "Settings", href: "#settings", icon: dot }]}
+        overflow={[{ label: "Settings", href: "#settings", icon: <SettingsIcon /> }]}
       />
     </div>
   )

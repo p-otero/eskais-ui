@@ -45,6 +45,7 @@ Versions follow [semver](https://semver.org). Before 1.0, a minor version can br
 
 ### Changed
 
+- `eskais/no-inline-icons` runs on `apps/**` too. The showcase and site draw their icons from `lucide-react` (the global search, the shell's navigation, the examples); the brand logos left disable it with a reason.
 - Every npm dependency in `registry.json` is pinned to an exact release at least 7 days old. `tooling/check-dependency-age.mjs` checks the publish times in CI (it skips offline), with the exceptions it lists and why: UI SDK, whose first release is from 2026-11-12. The `release-age` consumer check installs `dialog` with pnpm under a 7-day `minimumReleaseAge`.
 
 ## 0.2.0 (2026-11-17)

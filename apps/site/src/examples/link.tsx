@@ -1,5 +1,6 @@
 import { useState } from "react"
 
+import { ArrowRightIcon } from "lucide-react"
 import { Link } from "@/components/ui/link"
 
 export default function LinkDemo() {
@@ -27,9 +28,7 @@ export default function LinkDemo() {
       <div className="flex flex-col gap-inline">
         <Link variant="standalone" href="#changelog" onFollow={(href) => setFollowed(href)}>
           Read the changelog
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-            <path d="M5 12h14m-6-6 6 6-6 6" />
-          </svg>
+          <ArrowRightIcon className="rtl:-scale-x-100" />
         </Link>
         <p className="text-caption text-muted-foreground" aria-live="polite">
           {followed ? `onFollow got ${followed}` : "This one routes through onFollow, so agents can follow it too."}

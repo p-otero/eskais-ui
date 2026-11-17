@@ -1,7 +1,7 @@
+import { BotIcon, ChartColumnIcon, FolderIcon, HouseIcon, RocketIcon, SettingsIcon } from "lucide-react"
 import { MobileNav } from "@/components/ui/mobile-nav"
 
 import { Section } from "../section"
-import { BotIcon, ChartIcon, FolderIcon, GearIcon, HomeIcon, RocketIcon } from "../shell/shell-icons"
 
 function MobileNavSection() {
   return (
@@ -19,14 +19,14 @@ function MobileNavSection() {
           always
           className="absolute"
           items={[
-            { label: "Overview", href: "#overview", icon: <HomeIcon /> },
+            { label: "Overview", href: "#overview", icon: <HouseIcon /> },
             { label: "Projects", href: "#projects", icon: <FolderIcon />, badge: 4, current: true },
             { label: "Deploys", href: "#deployments", icon: <RocketIcon /> },
             { label: "Agents", href: "#agents", icon: <BotIcon /> },
           ]}
           overflow={[
-            { label: "Usage", href: "#usage", icon: <ChartIcon /> },
-            { label: "Settings", href: "#settings", icon: <GearIcon /> },
+            { label: "Usage", href: "#usage", icon: <ChartColumnIcon /> },
+            { label: "Settings", href: "#settings", icon: <SettingsIcon /> },
           ]}
         />
       </div>

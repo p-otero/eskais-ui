@@ -1,5 +1,5 @@
 import { execFileSync } from "node:child_process"
-import { mkdtempSync, rmSync, writeFileSync } from "node:fs"
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join, resolve } from "node:path"
 import { afterAll, expect, test } from "vitest"
@@ -84,4 +84,14 @@ export function Grip() {
   )
 }`),
   ).toEqual([])
+})
+
+test("the repo's config runs it on the registry and on the apps", () => {
+  const config = JSON.parse(readFileSync(".oxlintrc.json", "utf8")) as {
+    overrides: { files: string[]; rules: Record<string, unknown> }[]
+  }
+  const covered = config.overrides
+    .filter((override) => override.rules["eskais/no-inline-icons"] === "error")
+    .flatMap((override) => override.files)
+  expect(covered).toEqual(expect.arrayContaining(["registry/**", "apps/**"]))
 })

@@ -1,3 +1,4 @@
+import { CopyIcon } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
   Drawer,
@@ -35,15 +36,6 @@ import { ToastStack, toast } from "@/components/ui/toast"
 import { Tooltip, TooltipContent, TooltipShortcut, TooltipTrigger } from "@/components/ui/tooltip"
 
 import { Section } from "../section"
-
-function CopyIcon() {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-      <rect x="9" y="9" width="12" height="12" rx="2" />
-      <path d="M5 15V5a2 2 0 0 1 2-2h10" />
-    </svg>
-  )
-}
 
 function TaskDrawer({ side, label }: { side: "right" | "bottom"; label: string }) {
   return (
