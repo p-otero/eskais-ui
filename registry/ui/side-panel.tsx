@@ -82,18 +82,29 @@ function SidePanel({
         />
       }
     >
+      {/* Like CardHeader: the heading grows from --card-heading-basis, so the actions wrap below it as soon as the
+          title would get narrower than that, whatever their width; the close button keeps its corner. */}
       <header data-slot="side-panel-header" className="flex items-start gap-items border-b p-inset-surface">
-        <div className="flex min-w-0 flex-1 flex-col gap-inline">
-          <h2 id={titleId} data-slot="side-panel-title" className="text-title-sm tracking-tight">
-            {title}
-          </h2>
-          {description !== undefined && (
-            <p id={descriptionId} className="text-body-sm text-muted-foreground">
-              {description}
-            </p>
+        <div className="flex min-w-0 flex-1 flex-wrap items-start gap-x-group gap-y-items">
+          <div
+            data-slot="side-panel-heading"
+            className="flex min-w-0 grow basis-(--card-heading-basis) flex-col gap-inline"
+          >
+            <h2 id={titleId} data-slot="side-panel-title" className="text-title-sm tracking-tight wrap-anywhere">
+              {title}
+            </h2>
+            {description !== undefined && (
+              <p id={descriptionId} data-slot="side-panel-description" className="text-body-sm text-muted-foreground">
+                {description}
+              </p>
+            )}
+          </div>
+          {actions === undefined ? null : (
+            <div data-slot="side-panel-actions" className="flex max-w-full min-w-0 flex-wrap items-center gap-items">
+              {actions}
+            </div>
           )}
         </div>
-        {actions}
         <span className="flex shrink-0 items-center gap-inline">
           <ShortcutHint keys="escape" />
           <Button variant="ghost" size="icon" onClick={close} aria-label={labels.close} aria-keyshortcuts="Escape">

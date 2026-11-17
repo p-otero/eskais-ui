@@ -1,6 +1,6 @@
-// Drives the showcase's ?demo=shell at phone widths, where layout decides whether things show: the ⌘K dialog opened
-// from the Topbar's compact trigger, the Sidebar drawer opened from the Topbar, scrollable tabs revealing the
-// selected tab, MobileNav labels, and CardHeader at four widths (?demo=card-header-check).
+// Drives the showcase where layout decides whether things show: at phone widths the ⌘K dialog and the Sidebar
+// drawer opened from the Topbar, scrollable tabs and MobileNav labels; CardHeader (?demo=card-header-check) and
+// SidePanel (?demo=side-panel-check) headers at the widths where their actions wrap.
 // Usage: node tooling/shell-check.mjs [--screenshots=<dir>] (after `bun run build:showcase`)
 import { mkdirSync } from "node:fs"
 import { join, resolve } from "node:path"
@@ -160,6 +160,47 @@ async function checkCardHeaders(page) {
   await shot(page, "card-header-widths.png", true)
 }
 
+async function checkSidePanelHeader(page) {
+  await page.setViewportSize({ width: 1100, height: 900 })
+  await page.goto(`${new URL(page.url()).origin}/?demo=side-panel-check`)
+  await page.getByTestId("side-panel-both").waitFor()
+  await page.evaluate(() => document.fonts.ready)
+  const kinds = ["both", "pill"]
+  const results = await Promise.all(
+    kinds.map((kind) =>
+      page.getByTestId(`side-panel-${kind}`).evaluate((box) => {
+        const panel = box.querySelector('[data-slot="side-panel"]').getBoundingClientRect()
+        const heading = box.querySelector('[data-slot="side-panel-heading"]').getBoundingClientRect()
+        const description = box.querySelector('[data-slot="side-panel-description"]')
+        const actions = box.querySelector('[data-slot="side-panel-actions"]').getBoundingClientRect()
+        const header = box.querySelector('[data-slot="side-panel-header"]').getBoundingClientRect()
+        const lines = Math.round(
+          description.getBoundingClientRect().height / Number.parseFloat(getComputedStyle(description).lineHeight),
+        )
+        return {
+          width: Math.round(panel.width),
+          below: actions.top >= heading.bottom - 1,
+          headingWidth: Math.round(heading.width),
+          lines,
+          overflow: actions.right > header.right + 1,
+        }
+      }),
+    ),
+  )
+  kinds.forEach((kind, index) => {
+    const result = results[index]
+    check(
+      `SidePanel 24rem header, ${kind}: the title keeps room or the actions wrap below`,
+      result.width === 384 &&
+        !result.overflow &&
+        (result.below || result.headingWidth >= comfortableTitle) &&
+        result.lines <= 3,
+      `${result.below ? "actions below" : "actions beside"}, heading ${result.headingWidth}px, description ${result.lines} lines`,
+    )
+  })
+  await shot(page, "side-panel-24rem.png", true)
+}
+
 async function checkMobileNav(page) {
   await page.setViewportSize({ width: 320, height: 640 })
   await page.goto(`${new URL(page.url()).origin}/?demo=mobile-nav-check`)
@@ -235,6 +276,7 @@ await withShowcase(async (page) => {
   check("320px: a tab selected on load is scrolled into view", preselected.ok, preselected.detail)
 
   await checkCardHeaders(page)
+  await checkSidePanelHeader(page)
   await checkMobileNav(page)
 })
 
