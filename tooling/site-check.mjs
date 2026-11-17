@@ -18,6 +18,7 @@ const pages = [
   "docs/components/shortcuts-dialog/",
   "docs/keyboard/",
   "docs/mockups/",
+  "docs/agent-skills/",
 ]
 const viewports = [
   { width: 1440, height: 900 },

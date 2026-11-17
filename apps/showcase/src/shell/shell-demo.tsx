@@ -1,5 +1,6 @@
 import { useState } from "react"
 
+import { BellIcon, BotIcon, ChartColumnIcon, FolderIcon, HouseIcon, RocketIcon, SettingsIcon } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -20,7 +21,6 @@ import { Tabs, TabsList, TabsPanel, TabsTab } from "@/components/ui/tabs"
 import { Topbar } from "@/components/ui/topbar"
 
 import { GlobalSearch, SearchCompactTrigger, SearchTrigger } from "./global-search"
-import { BellIcon, BotIcon, ChartIcon, FolderIcon, GearIcon, HomeIcon, RocketIcon } from "./shell-icons"
 
 const views = ["Overview", "Deployments", "Logs", "Analytics", "Agents", "Usage", "Domains", "Secrets", "Settings"]
 const initialView = views.find((view) => view === new URLSearchParams(location.search).get("view")) ?? "Overview"
@@ -38,6 +38,7 @@ function Brand() {
       href="#home"
       className="inline-flex items-center gap-2 rounded-control text-title-sm outline-none focus-visible:ring-2 focus-visible:ring-ring"
     >
+      {/* oxlint-disable-next-line eskais/no-inline-icons -- a made-up company's logo, not an icon */}
       <svg viewBox="0 0 24 24" aria-hidden="true" className="size-6 text-primary">
         <path fill="currentColor" d="M12 2 3 7v10l9 5 9-5V7l-9-5Zm0 2.3L18.8 8 12 11.7 5.2 8 12 4.3Z" />
       </svg>
@@ -99,7 +100,7 @@ function ShellDemo() {
           trigger={false}
         >
           <SidebarGroup label="Workspace">
-            <SidebarItem href="#overview" icon={<HomeIcon />} current>
+            <SidebarItem href="#overview" icon={<HouseIcon />} current>
               Overview
             </SidebarItem>
             <SidebarItem href="#projects" icon={<FolderIcon />} badge={4}>
@@ -113,10 +114,10 @@ function ShellDemo() {
             </SidebarItem>
           </SidebarGroup>
           <SidebarGroup label="Account">
-            <SidebarItem href="#usage" icon={<ChartIcon />}>
+            <SidebarItem href="#usage" icon={<ChartColumnIcon />}>
               Usage
             </SidebarItem>
-            <SidebarItem href="#settings" icon={<GearIcon />}>
+            <SidebarItem href="#settings" icon={<SettingsIcon />}>
               Settings
             </SidebarItem>
           </SidebarGroup>
@@ -169,14 +170,14 @@ function ShellDemo() {
       <MobileNav
         label="Workspace"
         items={[
-          { label: "Overview", href: "#overview", icon: <HomeIcon />, current: true },
+          { label: "Overview", href: "#overview", icon: <HouseIcon />, current: true },
           { label: "Projects", href: "#projects", icon: <FolderIcon />, badge: 4 },
           { label: "Deploys", href: "#deployments", icon: <RocketIcon /> },
           { label: "Agents", href: "#agents", icon: <BotIcon /> },
         ]}
         overflow={[
-          { label: "Usage", href: "#usage", icon: <ChartIcon /> },
-          { label: "Settings", href: "#settings", icon: <GearIcon /> },
+          { label: "Usage", href: "#usage", icon: <ChartColumnIcon /> },
+          { label: "Settings", href: "#settings", icon: <SettingsIcon /> },
         ]}
       />
     </div>

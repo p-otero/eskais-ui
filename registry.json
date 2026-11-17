@@ -1235,7 +1235,7 @@
       "dependencies": [
         "@ui-sdk/core@0.1.0-beta.5",
         "@ui-sdk/react@0.1.0-beta.5",
-        "lucide-react@1.73.0"
+        "lucide-react@1.68.0"
       ],
       "registryDependencies": [
         "@eskais/utils",
@@ -1258,7 +1258,7 @@
       "dependencies": [
         "@ui-sdk/core@0.1.0-beta.5",
         "@ui-sdk/react@0.1.0-beta.5",
-        "lucide-react@1.73.0"
+        "lucide-react@1.68.0"
       ],
       "registryDependencies": [
         "@eskais/utils",
@@ -1337,7 +1337,7 @@
         "react-hook-form@7.91.0",
         "@hookform/resolvers@7.0.2",
         "@standard-schema/spec@1.1.0",
-        "lucide-react@1.73.0"
+        "lucide-react@1.68.0"
       ],
       "registryDependencies": [
         "@eskais/utils",
@@ -1427,7 +1427,7 @@
         "@standard-schema/spec@1.1.0",
         "react-hook-form@7.91.0",
         "class-variance-authority@0.7.1",
-        "lucide-react@1.73.0"
+        "lucide-react@1.68.0"
       ],
       "registryDependencies": [
         "@eskais/utils",
@@ -1531,7 +1531,7 @@
       "dependencies": [
         "@ui-sdk/core@0.1.0-beta.5",
         "@ui-sdk/react@0.1.0-beta.5",
-        "lucide-react@1.73.0"
+        "lucide-react@1.68.0"
       ],
       "registryDependencies": [
         "@eskais/utils",
@@ -1558,7 +1558,7 @@
       "dependencies": [
         "@ui-sdk/core@0.1.0-beta.5",
         "@ui-sdk/react@0.1.0-beta.5",
-        "lucide-react@1.73.0"
+        "lucide-react@1.68.0"
       ],
       "registryDependencies": [
         "@eskais/utils",
@@ -1680,7 +1680,7 @@
       "dependencies": [
         "@ui-sdk/react@0.1.0-beta.5",
         "class-variance-authority@0.7.1",
-        "lucide-react@1.73.0"
+        "lucide-react@1.68.0"
       ],
       "registryDependencies": [
         "@eskais/utils",
@@ -1823,7 +1823,7 @@
           "type": "registry:ui"
         }
       ],
-      "docs": "### Icon buttons\n\nYou rarely write a tooltip for an icon button: `Button`, `Toggle` and the button-like triggers with `size=\"icon\"` show their `aria-label` in one, with the shortcut keys, and close, clear, step and toolbar buttons across the registry do the same. `ControlTooltip` is the helper behind them, for a control of your own: `<ControlTooltip label=\"Next\"><MyStepButton aria-label=\"Next\" /></ControlTooltip>`. It labels the control when its text repeats the name and describes it otherwise, hides itself from agents (`agentPressable` lists it, for a trigger that isn't an agent component of its own), skips touch, a natively disabled control and one that is `aria-hidden`, and takes `tooltip={false}`, a string or `{ content, side, align }`. Write the parts yourself for anything else: a hint on a text button, a shared tooltip with a controller, or a toggleable info button."
+      "docs": "### Icon buttons\n\nYou rarely write a tooltip for an icon button: `Button`, `Toggle` and the button-like triggers with `size=\"icon\"` show their `aria-label` in one, with the shortcut keys, and close, clear, step and toolbar buttons across the registry do the same. `ControlTooltip` is the helper behind them, for a control of your own: `<ControlTooltip label=\"Next\">{nextButton}</ControlTooltip>`. It labels the control when its text repeats the name and describes it otherwise, hides itself from agents (`agentPressable` lists it, for a trigger that isn't an agent component of its own), skips touch, a natively disabled control and one that is `aria-hidden`, and takes `tooltip={false}`, a string or `{ content, side, align }`. Write the parts yourself for anything else: a hint on a text button, a shared tooltip with a controller, or a toggleable info button."
     },
     {
       "name": "popover",
@@ -1898,7 +1898,7 @@
         "@ui-sdk/core@0.1.0-beta.5",
         "@ui-sdk/react@0.1.0-beta.5",
         "class-variance-authority@0.7.1",
-        "lucide-react@1.73.0"
+        "lucide-react@1.68.0"
       ],
       "registryDependencies": [
         "@eskais/utils",
@@ -1923,7 +1923,7 @@
         "@ui-sdk/core@0.1.0-beta.5",
         "@ui-sdk/react@0.1.0-beta.5",
         "class-variance-authority@0.7.1",
-        "lucide-react@1.73.0"
+        "lucide-react@1.68.0"
       ],
       "registryDependencies": [
         "@eskais/utils",
@@ -1949,7 +1949,7 @@
       "dependencies": [
         "@ui-sdk/core@0.1.0-beta.5",
         "@ui-sdk/react@0.1.0-beta.5",
-        "lucide-react@1.73.0"
+        "lucide-react@1.68.0"
       ],
       "registryDependencies": [
         "@eskais/utils",
@@ -1973,7 +1973,7 @@
       "dependencies": [
         "@ui-sdk/core@0.1.0-beta.5",
         "@ui-sdk/react@0.1.0-beta.5",
-        "lucide-react@1.73.0"
+        "lucide-react@1.68.0"
       ],
       "registryDependencies": [
         "@eskais/utils",
@@ -2001,7 +2001,7 @@
       "dependencies": [
         "@ui-sdk/core@0.1.0-beta.5",
         "@ui-sdk/react@0.1.0-beta.5",
-        "lucide-react@1.73.0"
+        "lucide-react@1.68.0"
       ],
       "registryDependencies": [
         "@eskais/utils",
@@ -2047,7 +2047,7 @@
       "dependencies": [
         "@ui-sdk/core@0.1.0-beta.5",
         "@ui-sdk/react@0.1.0-beta.5",
-        "lucide-react@1.73.0"
+        "lucide-react@1.68.0"
       ],
       "registryDependencies": [
         "@eskais/utils",
@@ -2091,7 +2091,7 @@
       "dependencies": [
         "@ui-sdk/core@0.1.0-beta.5",
         "@ui-sdk/react@0.1.0-beta.5",
-        "lucide-react@1.73.0"
+        "lucide-react@1.68.0"
       ],
       "registryDependencies": [
         "@eskais/utils",
@@ -2170,7 +2170,7 @@
       "dependencies": [
         "@ui-sdk/core@0.1.0-beta.5",
         "@ui-sdk/react@0.1.0-beta.5",
-        "lucide-react@1.73.0"
+        "lucide-react@1.68.0"
       ],
       "registryDependencies": [
         "@eskais/utils",
@@ -2192,7 +2192,7 @@
       "dependencies": [
         "@ui-sdk/react@0.1.0-beta.5",
         "class-variance-authority@0.7.1",
-        "lucide-react@1.73.0"
+        "lucide-react@1.68.0"
       ],
       "registryDependencies": [
         "@eskais/utils",
@@ -2221,7 +2221,7 @@
         "@ui-sdk/core@0.1.0-beta.5",
         "@ui-sdk/react@0.1.0-beta.5",
         "class-variance-authority@0.7.1",
-        "lucide-react@1.73.0"
+        "lucide-react@1.68.0"
       ],
       "registryDependencies": [
         "@eskais/utils",
@@ -2248,7 +2248,7 @@
       "dependencies": [
         "@ui-sdk/core@0.1.0-beta.5",
         "@ui-sdk/react@0.1.0-beta.5",
-        "lucide-react@1.73.0"
+        "lucide-react@1.68.0"
       ],
       "registryDependencies": [
         "@eskais/utils",
@@ -2336,7 +2336,7 @@
       "description": "Provider, model and effort of an AgentRef: compact for cards (one line, long model ids cut in the middle, full text in title) or detail for panels, with a marker when the agent that ran isn't the one requested.",
       "dependencies": [
         "@ui-sdk/react@0.1.0-beta.5",
-        "lucide-react@1.73.0"
+        "lucide-react@1.68.0"
       ],
       "registryDependencies": [
         "@eskais/utils",
@@ -2434,7 +2434,7 @@
       "dependencies": [
         "@ui-sdk/core@0.1.0-beta.5",
         "@ui-sdk/react@0.1.0-beta.5",
-        "lucide-react@1.73.0"
+        "lucide-react@1.68.0"
       ],
       "registryDependencies": [
         "@eskais/utils",
@@ -2533,7 +2533,7 @@
       "description": "A compact agent task card: id, two-line title, profile, active agent, liveness, acceptance bar, attempts and cost, dependency chips, blocker with its retry time, decision and analysis-mode markers, and proposal actions in live mode. A stretched UI SDK Button selects it without nesting other controls.",
       "dependencies": [
         "@ui-sdk/react@0.1.0-beta.5",
-        "lucide-react@1.73.0"
+        "lucide-react@1.68.0"
       ],
       "registryDependencies": [
         "@eskais/utils",
@@ -2591,7 +2591,7 @@
       "description": "An agent task's goal, acceptance and evidence, dependencies that select their task, the pending decision with proposal actions, usage and the attempt timeline. TaskDetailPanel shows it as a non-modal panel; TaskDetailDialog as a modal dialog or a right-side drawer. Escape and a close button close either.",
       "dependencies": [
         "@ui-sdk/react@0.1.0-beta.5",
-        "lucide-react@1.73.0"
+        "lucide-react@1.68.0"
       ],
       "registryDependencies": [
         "@eskais/utils",
@@ -2639,7 +2639,7 @@
       "dependencies": [
         "@ui-sdk/core@0.1.0-beta.5",
         "@ui-sdk/react@0.1.0-beta.5",
-        "lucide-react@1.73.0"
+        "lucide-react@1.68.0"
       ],
       "registryDependencies": [
         "@eskais/utils",
@@ -2721,7 +2721,7 @@
       "dependencies": [
         "@ui-sdk/core@0.1.0-beta.5",
         "@ui-sdk/react@0.1.0-beta.5",
-        "lucide-react@1.73.0"
+        "lucide-react@1.68.0"
       ],
       "registryDependencies": [
         "@eskais/utils",
@@ -2807,7 +2807,7 @@
         "@ui-sdk/core@0.1.0-beta.5",
         "@ui-sdk/react@0.1.0-beta.5",
         "class-variance-authority@0.7.1",
-        "lucide-react@1.73.0"
+        "lucide-react@1.68.0"
       ],
       "registryDependencies": [
         "@eskais/utils",
@@ -2829,7 +2829,7 @@
       "description": "Presentational breadcrumb trail: a navigation named Breadcrumb, an ordered list and aria-current on the current page.",
       "dependencies": [
         "@ui-sdk/react@0.1.0-beta.5",
-        "lucide-react@1.73.0"
+        "lucide-react@1.68.0"
       ],
       "registryDependencies": [
         "@eskais/utils",
@@ -2851,7 +2851,7 @@
       "dependencies": [
         "@ui-sdk/core@0.1.0-beta.5",
         "@ui-sdk/react@0.1.0-beta.5",
-        "lucide-react@1.73.0"
+        "lucide-react@1.68.0"
       ],
       "registryDependencies": [
         "@eskais/utils",
@@ -2874,7 +2874,7 @@
       "dependencies": [
         "@ui-sdk/core@0.1.0-beta.5",
         "@ui-sdk/react@0.1.0-beta.5",
-        "lucide-react@1.73.0"
+        "lucide-react@1.68.0"
       ],
       "registryDependencies": [
         "@eskais/utils",
@@ -3033,7 +3033,7 @@
       "dependencies": [
         "@ui-sdk/core@0.1.0-beta.5",
         "@ui-sdk/react@0.1.0-beta.5",
-        "lucide-react@1.73.0"
+        "lucide-react@1.68.0"
       ],
       "registryDependencies": [
         "@eskais/utils",
@@ -3146,7 +3146,7 @@
         "@ui-sdk/core@0.1.0-beta.5",
         "@ui-sdk/react@0.1.0-beta.5",
         "class-variance-authority@0.7.1",
-        "lucide-react@1.73.0"
+        "lucide-react@1.68.0"
       ],
       "registryDependencies": [
         "@eskais/utils",
@@ -3170,7 +3170,7 @@
         "@ui-sdk/core@0.1.0-beta.5",
         "@ui-sdk/react@0.1.0-beta.5",
         "class-variance-authority@0.7.1",
-        "lucide-react@1.73.0"
+        "lucide-react@1.68.0"
       ],
       "registryDependencies": [
         "@eskais/utils",
@@ -3221,7 +3221,7 @@
         "@ui-sdk/core@0.1.0-beta.5",
         "@ui-sdk/react@0.1.0-beta.5",
         "class-variance-authority@0.7.1",
-        "lucide-react@1.73.0"
+        "lucide-react@1.68.0"
       ],
       "registryDependencies": [
         "@eskais/utils",
@@ -3265,7 +3265,7 @@
         "@ui-sdk/core@0.1.0-beta.5",
         "@ui-sdk/react@0.1.0-beta.5",
         "class-variance-authority@0.7.1",
-        "lucide-react@1.73.0"
+        "lucide-react@1.68.0"
       ],
       "registryDependencies": [
         "@eskais/utils",
@@ -3297,7 +3297,7 @@
           "type": "registry:ui"
         }
       ],
-      "docs": "Put a `SkipLink` first in `<body>`, before the `Sidebar`, so keyboard users can jump past the navigation, and give the page content the target: `<SkipLink>Skip to content</SkipLink><Sidebar …/><PageLayout as=\"main\">…</PageLayout>` (PageLayout renders `<main id=\"main\">`). If your shell renders `<main>` itself, give it `id=\"main\"` (and `tabIndex={-1}`, so the no-JavaScript fallback moves focus too), or pass the SkipLink a `target` id or ref. To toggle it from a `Topbar`, pass one `createSidebarController()` to both: `<Topbar leading={<SidebarTrigger controller={sidebar} collapsed={collapsed} />} /><Sidebar controller={sidebar} collapsed={collapsed} onCollapsedChange={setCollapsed} trigger={false}>…</Sidebar>`. `collapsed` gives the trigger `aria-expanded` and the name of the next step; without it the trigger is named \"Toggle sidebar\". On narrow screens it renders nothing, and the Sidebar shows its own drawer button. `useSidebarState({ storageKey })` returns the controller and the state for both, remembered in localStorage: `const sidebar = useSidebarState({ storageKey: \"app-sidebar\" })`, then `<SidebarTrigger {...sidebar.triggerProps} />` and `<Sidebar {...sidebar.sidebarProps} trigger={false}>`. Give a sidebar whose items have no icons `collapse=\"hide\"`: collapsed, it slides away instead of leaving an empty rail."
+      "docs": "Put a `SkipLink` first in `<body>`, before the `Sidebar`, so keyboard users can jump past the navigation, and give the page content the target: `<SkipLink>Skip to content</SkipLink><Sidebar …/><PageLayout as=\"main\">…</PageLayout>` (PageLayout renders `<main id=\"main\">`). If your shell renders `<main>` itself, give it `id=\"main\"` (and `tabIndex={-1}`, so the no-JavaScript fallback moves focus too), or pass the SkipLink a `target` id or ref. To toggle it from a `Topbar`, pass one `createSidebarController()` to both: `<Topbar leading={<SidebarTrigger controller={sidebar} collapsed={collapsed} />} /><Sidebar controller={sidebar} collapsed={collapsed} onCollapsedChange={setCollapsed} trigger={false}>…</Sidebar>`. `collapsed` gives the trigger `aria-expanded` and the name of the next step; without it the trigger is named \"Toggle sidebar\". On narrow screens it opens the Sidebar's drawer (named \"Open navigation\", `labels.open`), and a Sidebar with `trigger={false}` renders no drawer button of its own (`narrowTrigger` overrides that); give both the same `narrowQuery`. `useSidebarState({ storageKey })` returns the controller and the state for both, remembered in localStorage: `const sidebar = useSidebarState({ storageKey: \"app-sidebar\" })`, then `<SidebarTrigger {...sidebar.triggerProps} />` and `<Sidebar {...sidebar.sidebarProps} trigger={false}>`. Give a sidebar whose items have no icons `collapse=\"hide\"`: collapsed, it slides away instead of leaving an empty rail."
     },
     {
       "name": "data-table",
@@ -3308,7 +3308,7 @@
         "@ui-sdk/core@0.1.0-beta.5",
         "@ui-sdk/react@0.1.0-beta.5",
         "class-variance-authority@0.7.1",
-        "lucide-react@1.73.0"
+        "lucide-react@1.68.0"
       ],
       "registryDependencies": [
         "@eskais/utils",
@@ -3409,7 +3409,7 @@
       "dependencies": [
         "@ui-sdk/core@0.1.0-beta.5",
         "@ui-sdk/react@0.1.0-beta.5",
-        "lucide-react@1.73.0"
+        "lucide-react@1.68.0"
       ],
       "registryDependencies": [
         "@eskais/utils",
@@ -3467,7 +3467,7 @@
       "dependencies": [
         "@ui-sdk/core@0.1.0-beta.5",
         "@ui-sdk/react@0.1.0-beta.5",
-        "lucide-react@1.73.0"
+        "lucide-react@1.68.0"
       ],
       "registryDependencies": [
         "@eskais/utils",
@@ -3490,7 +3490,7 @@
         "@ui-sdk/core@0.1.0-beta.5",
         "@ui-sdk/react@0.1.0-beta.5",
         "class-variance-authority@0.7.1",
-        "lucide-react@1.73.0"
+        "lucide-react@1.68.0"
       ],
       "registryDependencies": [
         "@eskais/utils",
@@ -3556,7 +3556,7 @@
       "dependencies": [
         "@ui-sdk/core@0.1.0-beta.5",
         "@ui-sdk/react@0.1.0-beta.5",
-        "lucide-react@1.73.0"
+        "lucide-react@1.68.0"
       ],
       "registryDependencies": [
         "@eskais/utils",
@@ -3591,7 +3591,7 @@
       "dependencies": [
         "@ui-sdk/core@0.1.0-beta.5",
         "@ui-sdk/react@0.1.0-beta.5",
-        "lucide-react@1.73.0"
+        "lucide-react@1.68.0"
       ],
       "registryDependencies": [
         "@eskais/utils",
@@ -3672,7 +3672,7 @@
       "type": "registry:ui",
       "title": "Virtual Rows",
       "description": "Windowed rendering for long lists and tables on TanStack Virtual, in document flow with gap rows, the focused row kept rendered, and find in page through hidden=until-found stubs.",
-      "docs": "`useVirtualRows({ count, virtualize, estimateSize, getKey })` virtualizes past 200 rows with `virtualize=\"auto\"`. Put `anchor` on the `ul` or `tbody`; it scrolls with the nearest scrolling ancestor, or the window. Render `segments`: rows, and gaps (`aria-hidden`) that hold the space of the rows between, so a table keeps `tbody > tr` and a list `ul > li`. Give each row `data-index` and `ref={measureElement}`. `pin(index)` keeps the focused row rendered when scrolled away; `renderNow(index)` renders one at once, for an agent's action. `VirtualFindStubs` writes the text of the rows that aren't rendered as `hidden=\"until-found\"` elements, so find in page reaches them and scrolls the real row in.",
+      "docs": "`useVirtualRows({ count, virtualize, estimateSize, getKey })` virtualizes past 200 rows with `virtualize=\"auto\"`. Put `anchor` on the `ul` or `tbody`; it scrolls with the nearest scrolling ancestor, or the window. Render `segments`: rows, and gaps (`aria-hidden`) that hold the space of the rows between, so a table keeps `tbody > tr` and a list `ul > li`. Give each row `data-index` and `ref={measureElement}`. `pin(index)` keeps the focused row rendered when scrolled away; `renderNow(index)` renders one at once, for an agent's action. In each gap, `<GapFindStubs from to text offsetOf={offsetOf} onFound={scrollToIndex}>` writes the text of the rows that aren't rendered as `hidden=\"until-found\"` elements, so find in page reaches them and scrolls the real row in; pass a stable `text(index)`.",
       "dependencies": [
         "@tanstack/react-virtual@3.14.24"
       ],
@@ -3733,7 +3733,7 @@
       "dependencies": [
         "@ui-sdk/core@0.1.0-beta.5",
         "@ui-sdk/react@0.1.0-beta.5",
-        "lucide-react@1.73.0",
+        "lucide-react@1.68.0",
         "class-variance-authority@0.7.1"
       ],
       "registryDependencies": [
@@ -3824,7 +3824,7 @@
         "@lezer/markdown@1.8.1",
         "@ui-sdk/core@0.1.0-beta.5",
         "@ui-sdk/react@0.1.0-beta.5",
-        "lucide-react@1.73.0"
+        "lucide-react@1.68.0"
       ],
       "registryDependencies": [
         "@eskais/utils",
@@ -3934,12 +3934,13 @@
       "type": "registry:ui",
       "title": "Link",
       "description": "Text link with inline, nav, muted, standalone and plain variants: underlined at rest or on hover so it never relies on colour, external and new-tab handling, aria-current, render for router links, an opt-in onFollow that routes plain clicks and gives agents a follow action, and fast navigation on a primary mouse press (fast={false} or data-no-fast-link to opt out); FastLinkRegion and useFastLink do the same for plain anchors.",
+      "docs": "Same-origin links follow on a primary mouse press (`pointerdown`), for navigation only: `fast={false}` opts a link out, `data-no-fast-link` on an ancestor a region or the app. Hash routers work too: an `href` that starts with `#/` follows on press, through `onFollow` or by setting `location.hash`, while any other `#…` href is an in-page anchor and stays native. Set another prefix with `data-fast-link-hash-prefix` on an ancestor (`<body data-fast-link-hash-prefix=\"#!/\">`) or `FastLinkRegion hashPrefix`; an empty value makes every `#…` href an anchor.",
       "dependencies": [
         "@ui-sdk/core@0.1.0-beta.5",
         "@ui-sdk/react@0.1.0-beta.5",
         "class-variance-authority@0.7.1",
         "@fast-link/core@0.0.2",
-        "lucide-react@1.73.0"
+        "lucide-react@1.68.0"
       ],
       "registryDependencies": [
         "@eskais/utils",
@@ -3979,7 +3980,7 @@
         "@lezer/css@1.3.9",
         "@lezer/html@1.3.13",
         "@lezer/markdown@1.8.1",
-        "lucide-react@1.73.0"
+        "lucide-react@1.68.0"
       ],
       "registryDependencies": [
         "@eskais/utils",
@@ -4099,7 +4100,7 @@
       "dependencies": [
         "@ui-sdk/core@0.1.0-beta.5",
         "@ui-sdk/react@0.1.0-beta.5",
-        "lucide-react@1.73.0"
+        "lucide-react@1.68.0"
       ],
       "registryDependencies": [
         "@eskais/utils",
@@ -4155,7 +4156,7 @@
       "description": "Icon names a lucide-react icon (or any SVG component) for screen readers: <Icon icon={TrashIcon} label=\"Deleted\" /> renders role=img with that label. Decorative icons need no wrapper, since lucide hides them by default.",
       "docs": "The registry draws its icons with `lucide-react`: import them by name (`import { CheckIcon } from \"lucide-react\"`). Lucide sets `aria-hidden` on an icon that has no `aria-*`, `role` or `title` prop, so a decorative icon needs no wrapper. Use `Icon` only when the icon carries meaning nothing else states: `<Icon icon={TriangleExclamationPointIcon} label=\"Blocked\" />` renders `role=\"img\"` with that `aria-label`. Size comes from the parent (Button, Badge, menu items and inputs set `[&_svg]:size-4`) or a `size-*` class: `size-3.5` beside `text-body-sm`, `size-4` beside `text-body`, `size-5` beside a title; our classes override lucide's `size` prop. Colour is `currentColor`: set a text colour, like `text-success`.",
       "dependencies": [
-        "lucide-react@1.73.0"
+        "lucide-react@1.68.0"
       ],
       "registryDependencies": [
         "@eskais/utils",
@@ -4193,6 +4194,78 @@
         {
           "path": "registry/blocks/inbox.tsx",
           "type": "registry:component"
+        }
+      ]
+    },
+    {
+      "name": "eskais-mockup-skill",
+      "type": "registry:file",
+      "title": "Mockup skill",
+      "description": "Agent skill for @eskais/mockup: build a throwaway, offline HTML mockup of a screen from the project's own components in five levels (project components, uninstalled registry items, parts, UI SDK primitives with a reason, recorded gaps) and validate it. Lands in .agents/skills/eskais-mockup.",
+      "docs": "The skill runs the mockup CLI with Bun 1.4 from a checkout of the eskais-ui repository (`bun ../eskais-ui/packages/mockup/src/cli.ts`); the CLI isn't on npm. Codex and Cursor read `.agents/skills` as it is. Claude Code reads `.claude/skills` instead: link the folder with `mkdir -p .claude/skills && ln -s ../../.agents/skills/eskais-mockup .claude/skills/eskais-mockup`, or on Windows, in PowerShell, `New-Item -ItemType Junction -Path .claude\\skills\\eskais-mockup -Target .agents\\skills\\eskais-mockup`.",
+      "files": [
+        {
+          "path": "packages/mockup/skills/eskais-mockup/SKILL.md",
+          "type": "registry:file",
+          "target": "~/.agents/skills/eskais-mockup/SKILL.md"
+        }
+      ]
+    },
+    {
+      "name": "eskais-perf-skill",
+      "type": "registry:file",
+      "title": "Performance skill",
+      "description": "Agent skill that keeps Eskais screens fast: virtualized rows instead of thousands of mapped ones, effects in hooks, React Compiler-friendly code, transform and opacity motion, fast links for navigation only, blur kept off large animated surfaces, and measuring with the React Profiler and the Performance panel. Lands in .agents/skills/eskais-perf.",
+      "docs": "Codex and Cursor read `.agents/skills` as it is. Claude Code reads `.claude/skills` instead: link the folder with `mkdir -p .claude/skills && ln -s ../../.agents/skills/eskais-perf .claude/skills/eskais-perf`, or on Windows, in PowerShell, `New-Item -ItemType Junction -Path .claude\\skills\\eskais-perf -Target .agents\\skills\\eskais-perf`.",
+      "files": [
+        {
+          "path": "skills/eskais-perf/SKILL.md",
+          "type": "registry:file",
+          "target": "~/.agents/skills/eskais-perf/SKILL.md"
+        }
+      ]
+    },
+    {
+      "name": "eskais-ui-skill",
+      "type": "registry:file",
+      "title": "Eskais UI skill",
+      "description": "Agent skill for building with Eskais UI: which component to reach for, install and aliases, forms, lists and navigation, styling tokens, data display, toasts and testing, and the AgentTaskBoard. Lands in .agents/skills/eskais-ui; load it with the ui-sdk skill.",
+      "docs": "Codex and Cursor read `.agents/skills` as it is. Claude Code reads `.claude/skills` instead: link the folder with `mkdir -p .claude/skills && ln -s ../../.agents/skills/eskais-ui .claude/skills/eskais-ui`, or on Windows, in PowerShell, `New-Item -ItemType Junction -Path .claude\\skills\\eskais-ui -Target .agents\\skills\\eskais-ui`. The skill builds on UI SDK's own `ui-sdk` skill, which ships in `node_modules/@ui-sdk/core/skills/ui-sdk`: `cp -r node_modules/@ui-sdk/core/skills/ui-sdk .agents/skills/`.",
+      "files": [
+        {
+          "path": "skills/eskais-ui/SKILL.md",
+          "type": "registry:file",
+          "target": "~/.agents/skills/eskais-ui/SKILL.md"
+        },
+        {
+          "path": "skills/eskais-ui/references/agent-task-board.md",
+          "type": "registry:file",
+          "target": "~/.agents/skills/eskais-ui/references/agent-task-board.md"
+        },
+        {
+          "path": "skills/eskais-ui/references/forms.md",
+          "type": "registry:file",
+          "target": "~/.agents/skills/eskais-ui/references/forms.md"
+        },
+        {
+          "path": "skills/eskais-ui/references/lists-and-navigation.md",
+          "type": "registry:file",
+          "target": "~/.agents/skills/eskais-ui/references/lists-and-navigation.md"
+        },
+        {
+          "path": "skills/eskais-ui/references/styling.md",
+          "type": "registry:file",
+          "target": "~/.agents/skills/eskais-ui/references/styling.md"
+        },
+        {
+          "path": "skills/eskais-ui/references/toasts-and-testing.md",
+          "type": "registry:file",
+          "target": "~/.agents/skills/eskais-ui/references/toasts-and-testing.md"
+        },
+        {
+          "path": "skills/eskais-ui/references/data-display.md",
+          "type": "registry:file",
+          "target": "~/.agents/skills/eskais-ui/references/data-display.md"
         }
       ]
     }

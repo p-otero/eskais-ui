@@ -1,8 +1,10 @@
 import { Code, CodeBlock } from "@/components/ui/code-block"
+import { Link } from "@/components/ui/link"
 import { SectionHeading } from "@/components/ui/section-heading"
 import { Step, Steps } from "@/components/ui/steps"
 
 import { registryUrl } from "../registry"
+import { linkTo } from "../router"
 
 const componentsJson = `{
   "$schema": "https://ui.shadcn.com/schema.json",
@@ -65,6 +67,17 @@ function Install() {
           </Step>
         ))}
       </Steps>
+      <p className="text-body text-muted-foreground">
+        Building with a coding agent? Install the{" "}
+        <Link variant="inline" {...linkTo("/docs/agent-skills")}>
+          agent skills
+        </Link>{" "}
+        into <Code>.agents/skills</Code>, and sketch screens as offline{" "}
+        <Link variant="inline" {...linkTo("/docs/mockups")}>
+          mockups
+        </Link>{" "}
+        from your own components.
+      </p>
     </section>
   )
 }

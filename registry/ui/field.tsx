@@ -19,8 +19,8 @@ type FieldLabelPlacement = "top" | "in" | "on"
 const FieldLabelPlacementContext = createContext<FieldLabelPlacement>("top")
 
 /**
- * A default placement for the Fields inside, like a Form's `labelPlacement`. A Field that sets its own wins, and one
- * that holds no control able to float its label (a checkbox, a switch) keeps it on top.
+ * A default placement for the Fields inside, like a Form's `labelPlacement`. A Field that sets its own wins; one that
+ * isn't in the floating layout (see `inFloatingLayout`) keeps its label on top.
  */
 const FieldLabelPlacementDefault = createContext<FieldLabelPlacement | undefined>(undefined)
 
@@ -100,25 +100,45 @@ const labelPlacementClassName: Record<FieldLabelPlacement, string> = {
 
 type FieldProps = ComponentProps<typeof FieldPrimitive> & {
   /**
-   * `top` (default) above the control; `in` inside it, floating up on focus or with a value (a placeholder shows only
-   * while focused); `on` on its border, over `--field-label-surface`. `in` and `on` suit text controls (Input,
-   * Textarea, Select, NativeSelect, NumberInput, DatePicker, Combobox…). Unset inside a Form, a Field holding one of
-   * those takes the Form's `labelPlacement`.
+   * `top` (default) above the control; `in` inside it, floating up on focus or a value; `on` on its border, over
+   * `--field-label-surface`. For text controls (Input, Textarea, Select, NumberInput, DatePicker, Combobox…). Unset in a
+   * Form, it takes the Form's only in the floating layout (`FieldLabel`, such a control, then only a description or
+   * error, no padding of its own). Wins over the Form's, `top` included.
    */
   labelPlacement?: FieldLabelPlacement
 }
 
-function holdsFloatingControl(children: unknown) {
-  if (typeof children === "function") return false
-  return Children.toArray(children as ReactNode).some(
-    (child) => isValidElement(child) && floatingLabelControls.has(child.type as object),
+const ownPadding = /^!?-?p[xytbse]?-(?!0$)/
+
+/**
+ * Whether a Field's own className pads it. The floating label is placed from the Field's box, so padding (which also
+ * replaces the `on` layout's top padding) moves the control away from it and the label lands on the control's value.
+ */
+function padsItself(className: unknown) {
+  if (typeof className !== "string") return false
+  return className.split(/\s+/).some((token) => ownPadding.test(token.slice(token.lastIndexOf(":") + 1)))
+}
+
+const trailingParts = new Set<unknown>()
+
+// The layout the floating styles assume: the label, the control right under it, and only a description or an error
+// after them. Text, a wrapper or any other element between or after them changes where the control sits.
+function inFloatingLayout(children: unknown, className: unknown) {
+  if (typeof children === "function" || padsItself(className)) return false
+  const [label, control, ...rest] = Children.toArray(children as ReactNode)
+  return (
+    isValidElement(label) &&
+    label.type === FieldLabel &&
+    isValidElement(control) &&
+    floatingLabelControls.has(control.type as object) &&
+    rest.every((part) => isValidElement(part) && trailingParts.has(part.type))
   )
 }
 
 function Field({ className, labelPlacement: ownPlacement, ...props }: FieldProps) {
   const inherited = useContext(FieldLabelPlacementDefault)
   const labelPlacement =
-    ownPlacement ?? (inherited !== undefined && holdsFloatingControl(props.children) ? inherited : "top")
+    ownPlacement ?? (inherited !== undefined && inFloatingLayout(props.children, className) ? inherited : "top")
   return (
     <FieldLabelPlacementContext value={labelPlacement}>
       <FieldPrimitive
@@ -150,6 +170,8 @@ function FieldDescription({ className, ...props }: ComponentProps<typeof FieldDe
 function FieldError({ className, ...props }: ComponentProps<typeof FieldErrorPrimitive>) {
   return <FieldErrorPrimitive className={cnState("text-sm text-destructive", className)} {...props} />
 }
+
+trailingParts.add(FieldDescription).add(FieldError)
 
 function FieldLegend({ className, ...props }: ComponentProps<typeof FieldLegendPrimitive>) {
   return (
@@ -193,6 +215,7 @@ export {
   FieldSet,
   floatingLabelControls,
   formControlAdapters,
+  padsItself,
   useFieldLabelPlacement,
   useFloatingPlaceholder,
 }

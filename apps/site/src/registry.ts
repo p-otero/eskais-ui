@@ -15,7 +15,7 @@ type RegistryItem = {
 
 const items: RegistryItem[] = registry.items
 
-// Covered by the Getting started guides instead of a page of their own.
+// Covered by the guides instead of a page of their own.
 const guideItems = [
   "utils",
   "lint-rules",
@@ -29,6 +29,9 @@ const guideItems = [
   "icon",
   "row-navigation",
   "virtual-rows",
+  "eskais-ui-skill",
+  "eskais-mockup-skill",
+  "eskais-perf-skill",
 ]
 
 const componentItems = items.filter((item) => !guideItems.includes(item.name))

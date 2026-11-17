@@ -160,7 +160,7 @@ function Gallery() {
   )
 }
 
-const install = `npm install lucide-react@1.73.0
+const install = `npm install lucide-react@1.68.0
 npx shadcn@latest add @eskais/icon`
 
 const importByName = `import { ChevronDownIcon, TrashIcon } from "lucide-react"
@@ -371,8 +371,9 @@ export default function Icons() {
       <P>
         Draw it to lucide's grid so it sits with the rest: a 24×24 view box, a 2px stroke with round caps and joins,{" "}
         <Code>fill="none"</Code> and <Code>currentColor</Code>, decorative by default, passing its props to the{" "}
-        <Code>{"<svg>"}</Code>. Inside the registry, the <Code>eskais/no-inline-icons</Code> lint rule flags any{" "}
-        <Code>{"<svg>"}</Code>; only drawings that aren't icons, like the spinner, disable it with a reason.
+        <Code>{"<svg>"}</Code>. In the registry and on this site, the <Code>eskais/no-inline-icons</Code> lint rule
+        flags any <Code>{"<svg>"}</Code>; only drawings that aren't icons, like the spinner or a logo, disable it with a
+        reason.
       </P>
       <Pre code={ownIcon} />
     </Article>

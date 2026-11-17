@@ -1,7 +1,7 @@
 // Installs registry items into fresh Vite apps with npm or pnpm (no Bun), builds them and checks them in Chrome.
-// Usage: node tooling/consumer-check.mjs [npm|pnpm] [scenario…] (default: all): `fresh` (every item), `init` (the
-// stylesheet `shadcn init` writes), `aliases` (`~/`), `imports` (package.json `#ui/*`), `imports-flat` (`#ui/*` and
-// `#components/*` on one folder), `imports-tsx` (a mapping that appends `.tsx`, which must fail to type-check).
+// Usage: node tooling/consumer-check.mjs [npm|pnpm] [scenario…] (default: all). Scenarios: fresh, init, aliases
+// (`~/` aliases and the agent skills), imports, imports-flat, imports-tsx (must fail to type-check) and release-age
+// (pnpm); each one says what it checks below.
 import { spawn } from "node:child_process"
 import { createReadStream, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, writeFileSync } from "node:fs"
 import { createServer } from "node:http"
@@ -10,6 +10,8 @@ import { dirname, extname, join, normalize, resolve } from "node:path"
 
 import { createRequire } from "node:module"
 import { pathToFileURL } from "node:url"
+
+import { youngDependencyExceptions } from "./check-dependency-age.mjs"
 
 const pm = process.argv[2] ?? "npm"
 if (pm !== "npm" && pm !== "pnpm") throw new Error(`Unsupported package manager: ${pm}`)
@@ -631,6 +633,27 @@ function App() {
 createRoot(document.getElementById("root")!).render(<App />)
 `
 
+// A dialog and an icon button: dialog brings button and link, which depend on lucide-react.
+const releaseAgeMain = `import { createRoot } from "react-dom/client"
+import { XIcon } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { Dialog, DialogContent, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import { cn } from "@/lib/utils"
+import "./index.css"
+${probes}
+function App() {
+  return (
+    <main className="flex flex-col gap-items p-inset-surface">
+      <Button size="icon" aria-label="Close"><XIcon /></Button>
+      <Dialog><DialogTrigger>Open</DialogTrigger><DialogContent><DialogTitle>Hi</DialogTitle></DialogContent></Dialog>
+      <Probes />
+    </main>
+  )
+}
+
+createRoot(document.getElementById("root")!).render(<App />)
+`
+
 const scenarios = {
   fresh: {
     css: `@layer ui-sdk;\n@import "tailwindcss";\n`,
@@ -674,6 +697,8 @@ const scenarios = {
     // Not `@/`: shadcn places registry:lib and registry:ui files through these aliases and rewrites imports to them.
     alias: "~",
     items: ["theme", "badge", "alert", "appearance", "agent-task-board", "data-table", "chart", "relative-time"],
+    // Agent skills target `~/.agents/skills/…`: the project root, whatever the aliases are, here a `~` alias too.
+    skills: ["eskais-ui-skill", "eskais-mockup-skill", "eskais-perf-skill"],
     main: aliasesMain,
     builtCss: ["--brand", ".text-title{"],
     check: async () => {},
@@ -783,6 +808,26 @@ const scenarios = {
     literals: ["@", "#components", "#ui", "#lib"],
     files: ["src/components/ui/form-context.ts"],
   },
+  // A consumer whose pnpm holds back releases younger than 7 days. shadcn installs dependencies before it writes any
+  // file, so one young pin (lucide-react 1.73.0 in 0.2.0) fails the whole add with ERR_PNPM_NO_MATURE_MATCHING_VERSION.
+  "release-age": {
+    packageManagers: ["pnpm"],
+    releaseAge: {
+      minutes: 7 * 24 * 60,
+      // Only the documented exceptions of check-dependency-age.mjs, and this app's own build tools, which aren't
+      // what the registry asks consumers to install.
+      exclude: [...Object.keys(youngDependencyExceptions), ...devDependencies],
+    },
+    css: `@layer ui-sdk;\n@import "tailwindcss";\n`,
+    items: ["theme", "dialog"],
+    main: releaseAgeMain,
+    builtCss: ["--brand", ".text-title{"],
+    check: async (page) => {
+      const icon = await page.locator('[data-slot="button"][aria-label="Close"] svg.lucide').count()
+      if (icon !== 1) throw new Error("The lucide icon didn't render in the button")
+    },
+    installed: { "lucide-react": "1.68.0" },
+  },
 }
 
 // Where shadcn put the files and what the imports point at, for a scenario with its own aliases.
@@ -801,6 +846,20 @@ function checkPlacement(app, scenario) {
     .map((entry) => join(entry.parentPath, entry.name))
   const stale = sources.filter((file) => readFileSync(file, "utf8").includes('from "@/'))
   if (stale.length > 0) throw new Error(`Imports still point at @/: ${stale.join(", ")}`)
+}
+
+// Every file of a skill item lands at its `~/` target under the project root, byte for byte.
+function checkSkills(app, names) {
+  for (const name of names) {
+    const item = JSON.parse(readFileSync(join(registryDir, `${name}.json`), "utf8"))
+    for (const file of item.files) {
+      if (!file.target?.startsWith("~/.agents/skills/")) throw new Error(`${name}: ${file.path} targets ${file.target}`)
+      const path = join(app, file.target.slice(2))
+      if (!existsSync(path)) throw new Error(`shadcn didn't write ${file.target} for ${name}`)
+      if (readFileSync(path, "utf8") !== file.content) throw new Error(`${file.target} differs from ${file.path}`)
+    }
+    console.log(`${name}: ${item.files.length} files in .agents/skills`)
+  }
 }
 
 const requested = process.argv.slice(3)
@@ -890,11 +949,25 @@ export default defineConfig({
     registries: { "@eskais": `http://127.0.0.1:${port}/{name}.json` },
   })
 
-  // pnpm 11 refuses packages younger than its minimumReleaseAge; UI SDK betas are days old.
-  if (pm === "pnpm") write("pnpm-workspace.yaml", "minimumReleaseAge: 0\n")
+  // pnpm 11 refuses packages younger than its minimumReleaseAge (a day by default); UI SDK betas are days old.
+  const { releaseAge } = scenario
+  if (pm === "pnpm")
+    write(
+      "pnpm-workspace.yaml",
+      releaseAge
+        ? `minimumReleaseAge: ${String(releaseAge.minutes)}\nminimumReleaseAgeExclude:\n${releaseAge.exclude
+            .map((spec) => `  - "${spec}"\n`)
+            .join("")}`
+        : "minimumReleaseAge: 0\n",
+    )
   await run(pm, ["install"])
-  const add = () => exec(["shadcn", "add", ...scenario.items.map((item) => `@eskais/${item}`), "--yes", "--overwrite"])
+  const items = [...scenario.items, ...(scenario.skills ?? [])]
+  const add = () => exec(["shadcn", "add", ...items.map((item) => `@eskais/${item}`), "--yes", "--overwrite"])
   await add()
+  for (const [dependency, version] of Object.entries(scenario.installed ?? {})) {
+    const found = JSON.parse(readFileSync(join(app, "node_modules", dependency, "package.json"), "utf8")).version
+    if (found !== version) throw new Error(`${dependency} ${found} is installed, not ${version}`)
+  }
   const readStylesheet = () => readFileSync(join(app, "src", "index.css"), "utf8")
   checkStylesheet(readStylesheet())
   const addAgain = async (message, format = async () => {}) => {
@@ -914,6 +987,7 @@ export default defineConfig({
   }
 
   if (scenario.files) checkPlacement(app, scenario)
+  if (scenario.skills) checkSkills(app, scenario.skills)
   write("src/main.tsx", scenario.rewrite?.(scenario.main) ?? scenario.main.replaceAll('from "@/', `from "${alias}/`))
   if (scenario.unsupported) {
     const { file, specifier } = scenario.unsupported
@@ -947,7 +1021,12 @@ export default defineConfig({
 }
 
 try {
-  const selected = Object.entries(scenarios).filter(([name]) => requested.length === 0 || requested.includes(name))
+  const selected = Object.entries(scenarios).filter(([name, scenario]) => {
+    if (requested.length > 0 && !requested.includes(name)) return false
+    if (!scenario.packageManagers || scenario.packageManagers.includes(pm)) return true
+    console.log(`\n== ${name} scenario skipped: it runs with ${scenario.packageManagers.join(", ")} only`)
+    return false
+  })
   // One at a time: each scenario installs packages and launches Chrome, and the logs stay readable.
   await selected.reduce(
     (previous, [name, scenario]) => previous.then(() => runScenario(name, scenario)),
