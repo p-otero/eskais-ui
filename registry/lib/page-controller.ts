@@ -82,6 +82,7 @@ type PageController<F> = {
   statusText(result: PageResult<unknown> | undefined, counted?: number): string | undefined
   /** Starts following the URL. Returns the cleanup; call it from an effect. */
   connect(): () => void
+  /** Drops a pending search commit. */
   dispose(): void
 }
 
@@ -287,7 +288,6 @@ function createPageController<T, F>(
     },
     dispose() {
       clearTimeout(timer)
-      listeners.clear()
     },
   }
   return controller

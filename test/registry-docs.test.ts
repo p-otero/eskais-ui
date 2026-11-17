@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs"
 import { join } from "node:path"
 
+import * as reactQuery from "@tanstack/react-query"
 import * as agent from "@ui-sdk/react/agent"
 import * as alertDialog from "@ui-sdk/react/alert-dialog"
 import * as asyncOptions from "@ui-sdk/react/async-options"
@@ -40,7 +41,7 @@ for (const source of sources) {
 
 // Names from the libraries the docs build on, checked against those packages rather than listed.
 const external = new Set(
-  [lucide, react, reactHookForm, agent, alertDialog, asyncOptions, field, triggerMenu].flatMap((module) =>
+  [lucide, react, reactHookForm, reactQuery, agent, alertDialog, asyncOptions, field, triggerMenu].flatMap((module) =>
     Object.keys(module),
   ),
 )

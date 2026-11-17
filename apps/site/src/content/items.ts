@@ -751,6 +751,12 @@ const itemNotes: Record<string, ItemNotes> = {
     usage: "Opt in when people write fenced code: the languages load lazily, per fence.",
     related: ["markdown-editor"],
   },
+  "server-data": {
+    usage:
+      "Reach for the hooks when you build your own screen on a PageSource; the server table, list and combobox already use them.",
+    a11y: ["Pair the status with DataState: never empty while pending or after an error, busy during a refetch."],
+    related: ["page-source", "states", "filter-schema"],
+  },
   "page-source": {
     usage:
       "Wrap your endpoint in the adapter that matches its paging, once per resource; components and hooks only see the PageSource.",
