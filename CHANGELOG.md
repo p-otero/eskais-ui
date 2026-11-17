@@ -19,6 +19,7 @@ Versions follow [semver](https://semver.org). Before 1.0, a minor version can br
 
 ### Fixed
 
+- `DataState` fills the space it is given (`w-full`, and `flex-1` in a flex container) instead of shrinking to its content inside a flex row, so a list in it spans the whole box. The States demo shows a `List` of projects in a `Card`, at the same height for every status.
 - Docs site theme editor: the site's stylesheet never scanned the showcase file the editor lives in, so the brand colour area and hue track had no size (nothing to drag, so the colours never changed), the swatches had no fill and the columns had no gaps or padding. The editor now lays out in two columns only when its container has room, its contrast rows wrap, and the CSS shows in a `CodeBlock`.
 
 ## 0.2.0 (2026-11-17)

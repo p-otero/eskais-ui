@@ -125,7 +125,7 @@ function DataState<T, E = unknown>(props: DataStateProps<T, E>) {
       data-status={status}
       data-busy={busy ? "" : undefined}
       aria-busy={busy || undefined}
-      className={cn("relative flex min-w-0 flex-col", className)}
+      className={cn("relative flex w-full min-w-0 flex-1 flex-col", className)}
     >
       {content}
       {busy ? (
