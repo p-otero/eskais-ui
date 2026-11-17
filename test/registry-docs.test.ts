@@ -1,6 +1,8 @@
 import { readFileSync } from "node:fs"
 import { join } from "node:path"
 
+import * as agent from "@ui-sdk/react/agent"
+import * as alertDialog from "@ui-sdk/react/alert-dialog"
 import * as asyncOptions from "@ui-sdk/react/async-options"
 import * as field from "@ui-sdk/react/field"
 import * as triggerMenu from "@ui-sdk/react/trigger-menu"
@@ -38,7 +40,9 @@ for (const source of sources) {
 
 // Names from the libraries the docs build on, checked against those packages rather than listed.
 const external = new Set(
-  [lucide, react, reactHookForm, asyncOptions, field, triggerMenu].flatMap((module) => Object.keys(module)),
+  [lucide, react, reactHookForm, agent, alertDialog, asyncOptions, field, triggerMenu].flatMap((module) =>
+    Object.keys(module),
+  ),
 )
 // Names a code sample defines itself, and a library named in prose.
 const sampleNames = new Set(["AppTopbar", "GlobalSearch", "UserMenu", "ArkType"])

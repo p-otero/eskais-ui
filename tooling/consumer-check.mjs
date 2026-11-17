@@ -1,8 +1,7 @@
 // Installs registry items into fresh Vite apps with npm or pnpm (no Bun), builds them and checks them in Chrome.
-// Usage: node tooling/consumer-check.mjs [npm|pnpm] [scenario…] (default: all): `fresh` (every item), `init` (the
-// stylesheet `shadcn init` writes), `aliases` (`~/` and the agent skills), `imports` (package.json `#ui/*`),
-// `imports-flat` (`#ui/*` and `#components/*` on one folder), `imports-tsx` (a `.tsx` mapping, must fail to
-// type-check), `release-age` (pnpm).
+// Usage: node tooling/consumer-check.mjs [npm|pnpm] [scenario…] (default: all). Scenarios: fresh, init, aliases
+// (`~/` aliases and the agent skills), imports, imports-flat, imports-tsx (must fail to type-check) and release-age
+// (pnpm); each one says what it checks below.
 import { spawn } from "node:child_process"
 import { createReadStream, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, writeFileSync } from "node:fs"
 import { createServer } from "node:http"
