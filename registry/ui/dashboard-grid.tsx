@@ -1,15 +1,6 @@
 "use client"
 
-import {
-  createContext,
-  use,
-  useId,
-  useMemo,
-  useState,
-  type ComponentProps,
-  type CSSProperties,
-  type ReactNode,
-} from "react"
+import { createContext, use, useId, useMemo, type ComponentProps, type CSSProperties, type ReactNode } from "react"
 
 import { Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { ChartContainer, type ChartConfig } from "@/components/ui/chart"
@@ -19,7 +10,6 @@ import { ErrorState } from "@/components/ui/error-state"
 import { LoadingState } from "@/components/ui/loading-state"
 import { Meter, MeterLabel, MeterRing, type MeterProps, type MeterRingSize } from "@/components/ui/meter"
 import { Skeleton } from "@/components/ui/skeleton"
-import { useOverflowing } from "@/components/ui/use-dashboard-grid"
 import { Stat, StatGroup, StatHint, StatLabel, StatValue, type StatValueProps } from "@/components/ui/stat"
 import { cn } from "@/lib/utils"
 
@@ -58,9 +48,9 @@ type DashboardGridProps = ComponentProps<"div"> & {
 }
 
 /**
- * A dashboard: a row of stats, then cards on a grid sized by its container. Every row has the same height
- * (`--dashboard-row-height`, 20rem by default), so cards beside each other line up and a card keeps its height from
- * loading to loaded; content taller than its card scrolls inside it.
+ * A dashboard: a row of stats, then cards on a grid sized by its container. Rows are at least
+ * `--dashboard-row-height` (20rem) tall and cards in a row share its height, so they line up and keep their size from
+ * loading to loaded; a card whose content is taller grows its row instead of clipping it.
  */
 function DashboardGrid({
   stats,
@@ -83,6 +73,7 @@ function DashboardGrid({
       style={
         {
           "--dashboard-row-height": "20rem",
+          "--dashboard-rows": "minmax(var(--dashboard-row-height), auto)",
           "--dashboard-columns": `repeat(${String(columns)}, minmax(0, 1fr))`,
           ...style,
         } as CSSProperties
@@ -92,7 +83,7 @@ function DashboardGrid({
       {stats}
       <div
         data-slot="dashboard-grid-cards"
-        className="grid auto-rows-(--dashboard-row-height) grid-flow-row-dense grid-cols-1 gap-section @2xl/dashboard:grid-cols-2 @5xl/dashboard:grid-cols-(--dashboard-columns)"
+        className="grid auto-rows-(--dashboard-rows) grid-flow-row-dense grid-cols-1 gap-section @2xl/dashboard:grid-cols-2 @5xl/dashboard:grid-cols-(--dashboard-columns)"
       >
         <DashboardContext value={context}>{children}</DashboardContext>
       </div>
@@ -180,7 +171,7 @@ type DashboardCardBase = Omit<ComponentProps<typeof Card>, "title" | "children">
   actions?: ReactNode
   /** Columns on a wide container, capped at the grid's; over half the columns spans both of the two-column layout. */
   span?: 1 | 2 | 3 | 4
-  /** Rows of `--dashboard-row-height`. */
+  /** Rows it spans, each at least `--dashboard-row-height`. */
   rowSpan?: 1 | 2 | 3
   labels?: Partial<DashboardLabels>
 }
@@ -295,9 +286,6 @@ function DashboardCard<T>(props: DashboardCardProps<T>) {
   const grid = use(DashboardContext)
   const titleId = useId()
   const cardContext = useMemo(() => ({ titleId }), [titleId])
-  const [content, setContent] = useState<HTMLDivElement | null>(null)
-  // Content taller than its row scrolls; a keyboard can only scroll a box it can focus.
-  const scrolls = useOverflowing(content)
   const labels = { ...grid.labels, ...own }
   const wide = Math.min(Math.max(span, 1), grid.columns)
   return (
@@ -305,7 +293,7 @@ function DashboardCard<T>(props: DashboardCardProps<T>) {
       data-slot="dashboard-card"
       data-status={props.status}
       className={cn(
-        "col-span-1 row-span-(--dashboard-row-span) min-h-0 min-w-0 overflow-hidden @2xl/dashboard:col-span-(--dashboard-span-md) @5xl/dashboard:col-span-(--dashboard-span)",
+        "col-span-1 row-span-(--dashboard-row-span) min-w-0 @2xl/dashboard:col-span-(--dashboard-span-md) @5xl/dashboard:col-span-(--dashboard-span)",
         className,
       )}
       style={
@@ -325,14 +313,7 @@ function DashboardCard<T>(props: DashboardCardProps<T>) {
         {description !== undefined && <CardDescription>{description}</CardDescription>}
         {actions !== undefined && <CardAction>{actions}</CardAction>}
       </CardHeader>
-      <CardContent
-        ref={setContent}
-        data-slot="dashboard-card-content"
-        tabIndex={scrolls ? 0 : undefined}
-        role={scrolls ? "group" : undefined}
-        aria-labelledby={scrolls ? titleId : undefined}
-        className="flex min-h-0 flex-1 flex-col overflow-y-auto rounded-control outline-none focus-visible:ring-2 focus-visible:ring-ring"
-      >
+      <CardContent data-slot="dashboard-card-content" className="flex flex-1 flex-col">
         <DashboardCardContext value={cardContext}>
           <DashboardCardBody {...props} labels={labels} />
         </DashboardCardContext>
@@ -352,7 +333,7 @@ type DashboardChartProps = Omit<ComponentProps<"figure">, "children" | "aria-lab
 function DashboardChart({ "aria-label": label, className, ...props }: DashboardChartProps) {
   const card = use(DashboardCardContext)
   const name = label === undefined ? { "aria-labelledby": card?.titleId ?? "" } : { "aria-label": label }
-  return <ChartContainer {...name} className={cn("aspect-auto h-full min-h-0 flex-1", className)} {...props} />
+  return <ChartContainer {...name} className={cn("aspect-auto h-full min-h-48 flex-1", className)} {...props} />
 }
 
 type DashboardMeterProps = Omit<MeterProps, "variant" | "children"> & {

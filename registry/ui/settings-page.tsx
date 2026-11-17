@@ -240,7 +240,7 @@ function SettingsSection({
             id={titleId}
             tabIndex={-1}
             data-slot="settings-section-title"
-            className="rounded-control text-title-sm tracking-tight outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            className="text-title-sm tracking-tight focus:outline-none"
           >
             {title}
           </Heading>

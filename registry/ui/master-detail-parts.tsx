@@ -138,7 +138,7 @@ function MasterDetailDetailHeader({
             id={titleId}
             tabIndex={-1}
             data-slot="master-detail-title"
-            className="rounded-control text-title-sm tracking-tight wrap-anywhere outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            className="text-title-sm tracking-tight wrap-anywhere focus:outline-none"
           >
             {view.title}
           </Heading>

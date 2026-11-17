@@ -95,12 +95,7 @@ function TaskDetailPanel({
       <header className="flex items-start gap-items">
         <div className="flex min-w-0 flex-1 flex-col gap-inline">
           <TaskDetailMeta task={task} labels={labels} />
-          <Title
-            id={titleId}
-            data-slot="task-detail-title"
-            tabIndex={-1}
-            className="rounded-control text-title-sm outline-none focus-visible:ring-2 focus-visible:ring-ring"
-          >
+          <Title id={titleId} data-slot="task-detail-title" tabIndex={-1} className="text-title-sm focus:outline-none">
             {task.title}
           </Title>
         </div>

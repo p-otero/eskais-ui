@@ -54,7 +54,6 @@ const experiments = [
   { id: "exp-14", title: "Shorter system prompt", status: "Running", tone: "info" },
   { id: "exp-13", title: "Retrieval with reranking", status: "Won", tone: "success" },
   { id: "exp-12", title: "Temperature 0.2", status: "Lost", tone: "destructive" },
-  { id: "exp-11", title: "Tool descriptions in Spanish", status: "Inconclusive", tone: "neutral" },
 ] as const
 
 export default function DashboardGridDemo() {

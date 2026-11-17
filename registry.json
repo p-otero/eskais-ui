@@ -616,6 +616,9 @@
           "body": {
             "@apply bg-background text-foreground": {}
           },
+          "[tabindex=\"-1\"]:focus": {
+            "outline": "none"
+          },
           "[data-slot=\"button\"]:not([data-pending]) [data-show=\"pending\"]": {
             "display": "none"
           },
@@ -4242,7 +4245,7 @@
       "name": "dashboard-grid",
       "type": "registry:block",
       "title": "Dashboard Grid",
-      "description": "DashboardGrid: a row of stats over a container-query grid of cards (one column, two from 42rem, `columns` from 64rem) where every row has the same height, so cards line up and keep their size from loading to loaded. DashboardCard spans columns and rows and loads through DataState (a skeleton, the error with Retry, an empty title); DashboardChart fills a card and is named by its title; DashboardMeter centres a ring meter in one; DashboardStats and DashboardStat (with a StatDelta in `delta`) draw placeholders of the value's height.",
+      "description": "DashboardGrid: a row of stats over a container-query grid of cards (one column, two from 42rem, `columns` from 64rem) where rows are at least one height and cards in a row share it, so they line up, keep their size from loading to loaded and grow their row rather than clip. DashboardCard spans columns and rows and loads through DataState (a skeleton, the error with Retry, an empty title); DashboardChart fills a card and is named by its title; DashboardMeter centres a ring meter in one; DashboardStats and DashboardStat (with a StatDelta in `delta`) draw placeholders of the value's height.",
       "dependencies": [
         "@ui-sdk/react@0.1.0-beta.5"
       ],
@@ -4259,15 +4262,11 @@
       ],
       "files": [
         {
-          "path": "registry/ui/use-dashboard-grid.ts",
-          "type": "registry:ui"
-        },
-        {
           "path": "registry/ui/dashboard-grid.tsx",
           "type": "registry:ui"
         }
       ],
-      "docs": "`<DashboardGrid columns={3} labels={{ errorTitle, emptyTitle }} stats={<DashboardStats aria-label=\"This week\" loading={pending}><DashboardStat label=\"Runs\" value={261} delta={<StatDelta value={0.12} comparison=\"vs. last week\" />} loading={pending} /></DashboardStats>}><DashboardCard title=\"Runs\" span={2} status={query.status} data={query.data} error={query.error} onRetry={query.refetch}>{(data) => <DashboardChart config={config}><BarChart data={data}>…</BarChart></DashboardChart>}</DashboardCard></DashboardGrid>`. Rows are `--dashboard-row-height` (20rem) tall; content taller than its card scrolls inside it, focusable then so a keyboard can scroll it. Without `status`, a card shows its children as they are; `DashboardMeter label value hint` centres a ring meter in it. `retry`, `loading` and `refreshing` default to English and every label is overridable on the grid or a card."
+      "docs": "`<DashboardGrid columns={3} labels={{ errorTitle, emptyTitle }} stats={<DashboardStats aria-label=\"This week\" loading={pending}><DashboardStat label=\"Runs\" value={261} delta={<StatDelta value={0.12} comparison=\"vs. last week\" />} loading={pending} /></DashboardStats>}><DashboardCard title=\"Runs\" span={2} status={query.status} data={query.data} error={query.error} onRetry={query.refetch}>{(data) => <DashboardChart config={config}><BarChart data={data}>…</BarChart></DashboardChart>}</DashboardCard></DashboardGrid>`. Rows are at least `--dashboard-row-height` (20rem) tall and cards in a row share the height; a card whose content is taller grows its row, never clips it, so set the row height to fit your cards to keep loading and loaded the same height. Without `status`, a card shows its children as they are; `DashboardMeter label value hint` centres a ring meter in it. `retry`, `loading` and `refreshing` default to English and every label is overridable on the grid or a card."
     },
     {
       "name": "settings-page",

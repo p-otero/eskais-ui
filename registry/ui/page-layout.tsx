@@ -57,7 +57,7 @@ function PageLayout({
       data-width={workspace ? "full" : width}
       id={as === "main" ? (id ?? "main") : id}
       tabIndex={as === "main" ? -1 : undefined}
-      className={cn(pageLayoutVariants({ variant }), as === "main" && "outline-none", className)}
+      className={cn(pageLayoutVariants({ variant }), as === "main" && "focus:outline-none", className)}
       {...props}
     >
       <div

@@ -95,6 +95,11 @@ async function masterDetail(page, check, shot, width, scheme) {
     await page.keyboard.press("Enter")
   }
   check(`${tag}: Enter moves focus to the detail's heading`, (await focusedSlot(page)) === "master-detail-title")
+  const ring = await page.evaluate(() => {
+    const style = getComputedStyle(document.activeElement)
+    return `${style.outlineStyle} ${style.boxShadow}`
+  })
+  check(`${tag}: the focused heading draws no ring`, ring === "none none", ring)
   const opened = await layout(page, panes)
   check(
     `${tag}: ${narrow ? "only the detail shows" : "both panes still show"}`,
@@ -103,8 +108,27 @@ async function masterDetail(page, check, shot, width, scheme) {
   await settle(page)
   const violations = await axe(page)
   check(`${tag} open: axe`, violations.length === 0, violations.join(", "))
-  await shot(page, `master-detail-${width}-${scheme}.png`)
+  if (scheme === "light") await shot(page, `master-detail-${width}-keyboard.png`)
 
+  // By mouse: beside the list the demo follows focus, so a second click on the open row moves focus to the heading.
+  await page.getByRole("button", { name: narrow ? "Back" : "Close detail" }).click()
+  await page.getByRole("region", { name: "Garage door" }).waitFor({ state: "detached" })
+  const hall = page.getByRole("button", { name: "Hall camera" })
+  await hall.click()
+  await page.getByRole("region", { name: "Hall camera" }).waitFor()
+  if (!narrow) await hall.click()
+  const clicked = await page.evaluate(() => {
+    const style = getComputedStyle(document.activeElement)
+    return `${document.activeElement?.getAttribute("data-slot")} ${style.outlineStyle} ${style.boxShadow}`
+  })
+  check(`${tag}: after a click the heading has focus and no ring`, clicked === "master-detail-title none none", clicked)
+  await shot(page, `master-detail-${width}-${scheme}.png`)
+  await page.getByRole("button", { name: narrow ? "Back" : "Close detail" }).click()
+  await page.getByRole("region", { name: "Hall camera" }).waitFor({ state: "detached" })
+  await row.focus()
+  await page.keyboard.press("Enter")
+  if (!narrow) await page.keyboard.press("Enter")
+  await page.getByRole("region", { name: "Garage door" }).waitFor()
   await page.getByRole("button", { name: narrow ? "Back" : "Close detail" }).click()
   await page.getByRole("region", { name: "Garage door" }).waitFor({ state: "detached" })
   check(`${tag}: ${narrow ? "Back" : "Close"} returns focus to the row`, (await focusedText(page)) === "Garage door")
@@ -142,6 +166,25 @@ function cardBoxes(page) {
   )
 }
 
+// The titles of cards whose content spills out of their box or scrolls inside it.
+function clippedCards(page) {
+  return page.locator('[data-slot="dashboard-card"]').evaluateAll((all) =>
+    all
+      .filter((card) => {
+        const box = card.getBoundingClientRect()
+        const inner = [...card.querySelectorAll("*")].some((node) => {
+          const rect = node.getBoundingClientRect()
+          return rect.height > 0 && (rect.bottom > box.bottom + 1 || rect.right > box.right + 1)
+        })
+        const scrolls = [card, ...card.querySelectorAll("*")].some(
+          (node) => node.scrollHeight > node.clientHeight + 1 && getComputedStyle(node).overflowY !== "visible",
+        )
+        return inner || scrolls
+      })
+      .map((card) => card.querySelector('[data-slot="card-title"]')?.textContent),
+  )
+}
+
 async function dashboardGrid(page, check, shot, width, scheme) {
   const tag = `dashboard-grid ${width}px ${scheme}`
   await open(page, "dashboard-grid", width, scheme)
@@ -158,6 +201,8 @@ async function dashboardGrid(page, check, shot, width, scheme) {
   } else {
     check(`${tag}: several columns`, rows.size < cards.length, `${rows.size} rows of ${cards.length} cards`)
   }
+  const clipped = await clippedCards(page)
+  check(`${tag}: no card's content overflows or scrolls inside it`, clipped.length === 0, clipped.join(", "))
   const violations = await axe(page)
   check(`${tag}: axe`, violations.length === 0, violations.join(", "))
   await shot(page, `dashboard-grid-${width}-${scheme}.png`, true)
@@ -171,6 +216,15 @@ async function dashboardGrid(page, check, shot, width, scheme) {
   const busy = await axe(page)
   check(`${tag} loading: axe`, busy.length === 0, busy.join(", "))
   if (scheme === "light") await shot(page, `dashboard-grid-${width}-loading.png`, true)
+
+  // Rows shorter than their content grow instead of clipping it.
+  await page.getByRole("switch", { name: "Show loading" }).click()
+  await page.locator('[data-slot="dashboard-card"][data-status="pending"]').first().waitFor({ state: "detached" })
+  await page
+    .locator('[data-slot="dashboard-grid"]')
+    .evaluate((grid) => grid.style.setProperty("--dashboard-row-height", "4rem"))
+  const squeezed = await clippedCards(page)
+  check(`${tag}: rows shorter than a card's content grow`, squeezed.length === 0, squeezed.join(", "))
 }
 
 const box = (locator) => locator.evaluate((element) => element.getBoundingClientRect().toJSON())
