@@ -20,7 +20,9 @@ import {
   FieldError,
   FieldLabel,
   floatingLabelControls,
+  formControlAdapters,
   type FieldLabelPlacement,
+  type FormControlAdapter,
 } from "@/components/ui/field"
 import { errorText, useFormContext } from "@/components/ui/form-context"
 import type { FormMessages } from "@/components/ui/form-messages"
@@ -30,16 +32,8 @@ import { Textarea } from "@/components/ui/textarea"
 import { useFieldRegistration } from "@/components/ui/use-form-sync"
 import { cn } from "@/lib/utils"
 
-/** How a control takes its value: the prop names, and how the form's value maps to the control and back. */
-type FormControlAdapter = {
-  value: string
-  change: string
-  toControl?: (value: unknown) => unknown
-  fromControl?: (value: unknown) => unknown
-}
-
 const valueAdapter: FormControlAdapter = { value: "value", change: "onValueChange" }
-const textAdapter: FormControlAdapter = { ...valueAdapter, toControl: (value) => value ?? "" }
+const textAdapter: FormControlAdapter = { ...valueAdapter, toControl: (value) => value ?? "", blur: true }
 const checkedAdapter: FormControlAdapter = {
   value: "checked",
   change: "onCheckedChange",
@@ -47,13 +41,12 @@ const checkedAdapter: FormControlAdapter = {
 }
 
 // Every other registry control (NumberInput, Select, Combobox, RadioGroup, Slider, DatePicker, SegmentedControl,
-// ToggleGroup, NativeSelect, DateTimePicker) takes `value` and `onValueChange` as is.
-const formControlAdapters = new Map<unknown, FormControlAdapter>([
-  [Input, textAdapter],
-  [Textarea, textAdapter],
-  [Checkbox, checkedAdapter],
-  [Switch, checkedAdapter],
-])
+// ToggleGroup, NativeSelect, DateTimePicker) takes `value` and `onValueChange` as is; TokenInput adds itself.
+formControlAdapters
+  .set(Input, textAdapter)
+  .set(Textarea, textAdapter)
+  .set(Checkbox, checkedAdapter)
+  .set(Switch, checkedAdapter)
 
 type FormFieldState = {
   name: string
@@ -184,7 +177,7 @@ function FormField<Values extends FieldValues = FieldValues>({
       [adapter.change]: chain(child.props[adapter.change], (value) =>
         field.onChange(adapter.fromControl ? adapter.fromControl(value) : value),
       ),
-      ...(adapter === textAdapter ? { onBlur: chain(child.props.onBlur, field.onBlur) } : {}),
+      ...(adapter.blur ? { onBlur: chain(child.props.onBlur, field.onBlur) } : {}),
     })
   }
 

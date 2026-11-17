@@ -63,6 +63,7 @@ const allItems = [
   "segmented-control",
   "checkbox",
   "textarea",
+  "token-input",
   "quantity",
   "relative-time",
   "acceptance-list",
@@ -345,6 +346,11 @@ async function checkEverything(page) {
       ),
       link: document.querySelector('[data-slot="link"]')?.getAttribute("data-variant"),
       markdown: document.querySelector(".cm-line[data-md-heading]")?.textContent,
+      tokens: [...document.querySelectorAll("[data-slot=token-input-token]")].map((chip) => ({
+        text: chip.firstChild?.textContent,
+        fill: rgb(getComputedStyle(chip).backgroundColor),
+        remove: chip.querySelector("[data-slot=token-input-token-remove]")?.getAttribute("title"),
+      })),
       border: { card: rgb(card.borderTopColor), token: rgb(getComputedStyle(html).getPropertyValue("--border")) },
       spacing: { compact: compactSpacing, default: defaultSpacing },
       font: [...document.fonts].some((font) => font.family.includes("Geist") && font.status === "loaded"),
@@ -359,6 +365,10 @@ async function checkEverything(page) {
   if (result.blocks.length > 0) throw new Error(`Blocks missing from the landing page: ${result.blocks.join(", ")}`)
   if (result.link !== "inline") throw new Error("Link didn't render")
   if (result.markdown !== "Notes") throw new Error(`MarkdownEditor didn't render its heading: ${result.markdown}`)
+  if (result.tokens.map((token) => `${token.text}:${token.remove}`).join() !== "bug:Remove bug,docs:Remove docs")
+    throw new Error(`TokenInput didn't render its chips: ${JSON.stringify(result.tokens)}`)
+  if (result.tokens.some((token) => token.fill === "0,0,0" || token.fill === "255,255,255"))
+    throw new Error(`TokenInput chips have no tone fill: ${JSON.stringify(result.tokens)}`)
   if (result.border.card !== result.border.token) throw new Error("Borders don't use --border")
   if (!result.font) throw new Error("The Geist font didn't load in the built app")
   if (result.blue.background === result.neutral.background) throw new Error("data-palette didn't change --primary")
@@ -457,6 +467,7 @@ import { SkipLink } from "@/components/ui/skip-link"
 import { Topbar } from "@/components/ui/topbar"
 import { Spinner } from "@/components/ui/spinner"
 import { StatusDot } from "@/components/ui/status-pill"
+import { TokenInput, TokenInputEditor } from "@/components/ui/token-input"
 import type { TaskView } from "@/lib/agent-task-types"
 import { cn } from "@/lib/utils"
 import "./index.css"
@@ -515,6 +526,7 @@ function App() {
         <Button onClick={() => Promise.resolve()}>Save</Button>
         <Button loading>Saving</Button>
         <Field><FieldLabel>Name</FieldLabel><Input /></Field>
+        <Field><FieldLabel>Labels</FieldLabel><TokenInput tokenType="label" defaultValue={["bug", "docs"] as const} tone="info"><TokenInputEditor placeholder="Add a label" /></TokenInput></Field>
         <SearchField label="Search" onSearch={() => {}} />
         <Form schema={profileSchema} defaultValues={{ name: "" }} onSubmit={() => {}} messages={formMessagesEs} label="Profile">
           <FormField name="name" label="Display name"><Input /></FormField>

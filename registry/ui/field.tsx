@@ -33,6 +33,20 @@ function useFieldLabelPlacement() {
 // groups, sliders and switches keep their label on top. Each control's module adds itself.
 const floatingLabelControls = new WeakSet<object>()
 
+/** How a control takes its value: the prop names, and how the form's value maps to the control and back. */
+type FormControlAdapter = {
+  value: string
+  change: string
+  toControl?: (value: unknown) => unknown
+  fromControl?: (value: unknown) => unknown
+  /** Chains the field's `onBlur`, so a form that validates on blur sees the control lose focus. */
+  blur?: boolean
+}
+
+// How FormField binds each control, by component. It lives here, not in form-field, so a control's module can add
+// itself without pulling in react-hook-form; a control missing from it binds `value`/`onValueChange` as is.
+const formControlAdapters = new Map<unknown, FormControlAdapter>()
+
 /** A blank placeholder for an input in a `labelPlacement="in"` Field: the label floats on `:placeholder-shown`. */
 function useFloatingPlaceholder(placeholder: string | undefined) {
   const placement = useFieldLabelPlacement()
@@ -178,7 +192,8 @@ export {
   FieldLegend,
   FieldSet,
   floatingLabelControls,
+  formControlAdapters,
   useFieldLabelPlacement,
   useFloatingPlaceholder,
 }
-export type { FieldLabelPlacement, FieldProps, FieldSetProps }
+export type { FieldLabelPlacement, FieldProps, FieldSetProps, FormControlAdapter }

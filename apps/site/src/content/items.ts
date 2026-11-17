@@ -98,6 +98,17 @@ const itemNotes: Record<string, ItemNotes> = {
     a11y: ["autoResize grows with the text; a submit shortcut can be added for chat-like inputs."],
     related: ["input", "field", "markdown-editor"],
   },
+  "token-input": {
+    usage:
+      "Reach for it when a field holds a list, like labels or topics; without tokenType it mixes text with mentions or files.",
+    a11y: [
+      "One multiline text box named by its Field; each token reads as its label and kind, and adding or removing one is announced.",
+      "Backspace and Delete remove the token beside the caret, arrows cross a token in one press, and Ctrl+Z or Cmd+Z undoes.",
+      "The remove buttons are for pointers only, grow to 44px on touch and are named for hover by labels.remove.",
+    ],
+    agent: "Agents find it by its label and call setValue with comma-separated labels, insert, removeToken or clear.",
+    related: ["input", "field", "badge", "form"],
+  },
   "number-input": {
     a11y: [
       "Arrow keys, Page Up/Down and Home/End step the value; the step buttons need their own aria-label.",

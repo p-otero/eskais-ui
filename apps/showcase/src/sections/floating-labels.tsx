@@ -25,6 +25,7 @@ import {
 } from "@/components/ui/number-input"
 import { Select } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
+import { TokenInput, TokenInputEditor } from "@/components/ui/token-input"
 
 import { Section } from "../section"
 
@@ -124,6 +125,12 @@ function PlacementFields({ placement }: { placement: FieldLabelPlacement }) {
             </ComboboxList>
           </ComboboxContent>
         </Combobox>
+      </Field>
+      <Field labelPlacement={placement}>
+        <FieldLabel>Labels</FieldLabel>
+        <TokenInput tokenType="label" defaultValue={placement === "top" ? [] : ["design", "accessibility"]}>
+          <TokenInputEditor placeholder="Add a label" />
+        </TokenInput>
       </Field>
       <Field labelPlacement={placement}>
         <FieldLabel>Notes</FieldLabel>

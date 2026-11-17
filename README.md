@@ -19,7 +19,7 @@ UI SDK-first, agent-native React components, distributed as a shadcn-style regis
 | `confirm-dialog` | UI SDK `AlertDialog` with an async `action` and `data-agent-confirm`                                                         |
 | `card`, `badge`  | `renderElement`, presentational                                                                                              |
 | Overlays         | `tooltip`, `popover`, `drawer`, `dropdown-menu`, `toast`                                                                     |
-| Selection        | `select`, `combobox`, `segmented-control`, `checkbox`, `textarea`                                                            |
+| Selection        | `select`, `combobox`, `segmented-control`, `checkbox`, `textarea`, `token-input` (removable tokens, labels mode)             |
 | Form controls    | `radio-group`, `switch`, `slider`, `toggle`, `toggle-group`, `label`                                                         |
 | Inputs, feedback | `otp-input`, `number-input`, `progress`, `meter`, `alert`                                                                    |
 | Structure        | `tabs`, `collapsible`, `scroll-area`, `separator`, `avatar`                                                                  |
