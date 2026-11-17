@@ -17,6 +17,7 @@ const pages = [
   "docs/components/agent-task-board/",
   "docs/components/inbox/",
   "docs/keyboard/",
+  "docs/mockups/",
 ]
 const viewports = [
   { width: 1440, height: 900 },
