@@ -35,6 +35,7 @@ function SiteBrand() {
       href="#top"
       className="inline-flex items-center gap-inline rounded-control text-title-sm outline-none focus-visible:ring-2 focus-visible:ring-ring"
     >
+      {/* oxlint-disable-next-line eskais/no-inline-icons -- a made-up company's logo, not an icon */}
       <svg viewBox="0 0 24 24" aria-hidden="true" className="size-6 text-primary">
         <path fill="currentColor" d="M12 2 3 7v10l9 5 9-5V7l-9-5Zm0 2.3L18.8 8 12 11.7 5.2 8 12 4.3Z" />
       </svg>

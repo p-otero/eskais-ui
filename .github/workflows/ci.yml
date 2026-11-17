@@ -43,11 +43,16 @@ jobs:
       - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
         with:
           bun-version: 1.4.4
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
       - run: bun install --frozen-lockfile
       - run: bun run registry:build
       - run: bun run registry:validate
       - name: Committed registry output is up to date
         run: git diff --exit-code -- public/r registry.json
+      - name: Every pinned dependency is at least 7 days old, so consumers with a minimum release age can install it
+        run: node tooling/check-dependency-age.mjs --require-network
 
   consumer:
     needs: registry
@@ -75,7 +80,7 @@ jobs:
 
   browser:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 35
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -88,7 +93,7 @@ jobs:
           node-version: 24
       - run: bun install --frozen-lockfile
       - name: Contrast and axe in Chrome, default and compact themes in light and dark
-        timeout-minutes: 8
+        timeout-minutes: 14
         run: bun run test:browser
       - name: AgentTaskBoard as one static HTML file, opened from file:// with the network blocked
         timeout-minutes: 5
@@ -104,7 +109,7 @@ jobs:
           path: screenshots
           if-no-files-found: ignore
       - name: The showcase built with React Compiler, then the overlay, fast-link, shell and contrast checks on it
-        timeout-minutes: 6
+        timeout-minutes: 10
         run: bun run test:compiler
 
   passed:

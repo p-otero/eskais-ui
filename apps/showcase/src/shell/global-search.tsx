@@ -1,5 +1,6 @@
 import { useAsyncOptions } from "@ui-sdk/react/async-options"
 
+import { SearchIcon } from "lucide-react"
 import { Command, CommandEmpty, CommandInput, CommandItem, CommandList, CommandStatus } from "@/components/ui/command"
 import {
   CommandDialog,
@@ -37,15 +38,6 @@ function searchWorkspace(query: string, { signal }: { signal: AbortSignal }) {
       reject(new DOMException("Aborted", "AbortError"))
     })
   })
-}
-
-function SearchIcon() {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
-      <circle cx="11" cy="11" r="7" />
-      <path d="m20 20-3.5-3.5" />
-    </svg>
-  )
 }
 
 // Only the triggers go in the Topbar's slots: `center` is hidden on narrow screens, and a dialog renders where it is

@@ -6,11 +6,11 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb"
+import { BellIcon } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Topbar } from "@/components/ui/topbar"
 
 import { Section } from "../section"
-import { BellIcon } from "../shell/shell-icons"
 
 function TopbarSection() {
   return (

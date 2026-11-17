@@ -36,6 +36,18 @@ Versions follow [semver](https://semver.org). Before 1.0, a minor version can br
 - Calendar ranges draw one continuous band: the middle days take a soft `accent` fill with no gaps or rounding, and the start and end keep their `primary` circle with the band running under their inner half. A one-day range is only its circle, the band breaks cleanly between weeks, mirrors in right to left and looks the same while a range is being picked. Every day's focus ring follows its circle and stays above its neighbours. Middle days used to keep `data-selected`'s `primary` fill, so they showed as separate dark squares. DatePicker and DateTimePicker share it. `node tooling/calendar-check.mjs` (in `test:browser`) measures the band.
 - Focusing a field no longer zooms the page on iOS. A `text-entry` type step (`--type-entry-size`) is 14px as before on a fine pointer and 16px on a coarse one, and Input, InputGroup, Textarea, the Select trigger, NativeSelect, Combobox, CommandInput, NumberInput, DatePicker, DateTimePicker's time and MarkdownEditor use it. Pinch-zoom stays allowed. `node tooling/touch-check.mjs` (in `test:browser`) measures every text-entry control on an emulated phone.
 
+### Fixed
+
+- `lucide-react` is pinned to 1.68.0 (2026-11-04), the oldest release that exports every icon the registry uses, instead of 1.73.0 (2026-11-14): `shadcn add` failed with `ERR_PNPM_NO_MATURE_MATCHING_VERSION` for consumers with a 7-day pnpm `minimumReleaseAge`, since shadcn installs dependencies before it writes any file.
+- Fast links work in hash routers: `@fast-link/core` 0.0.2 leaves every `#…` href native, so `Link`, `ButtonLink`, `NavigationMenuLink` and `FastLinkRegion` links to `#/route` only followed on release. An `href` that starts with `#/` now follows on press, through `onFollow` or by setting `location.hash`; other `#…` hrefs are in-page anchors and stay native. `data-fast-link-hash-prefix` on any ancestor, or `FastLinkRegion hashPrefix`, sets another prefix (`#!/`), and an empty one turns hash routes off.
+- A `Field` inside a `Form` with `labelPlacement="in"` or `"on"` takes the Form's placement only in the floating layout: a `FieldLabel`, then a control that can float its label, then only a `FieldDescription` or `FieldError`, with no padding of its own. A Field styled as its own box (`className="border p-3"`, a help `<p>` after the control) drew its label over the control's value; it now keeps the label on top. A `FormField` with padding in its `className` does the same. A Field's or FormField's own `labelPlacement` still wins, `top` included.
+- Item docs: `sidebar` said a `SidebarTrigger` renders nothing on narrow screens; it opens the Sidebar's drawer, and a Sidebar with `trigger={false}` renders no drawer button of its own. `virtual-rows` named `VirtualFindStubs`, which is `GapFindStubs`. A test fails when an item's docs or the skill name a component or hook that no registry file exports, or one marked deprecated.
+
+### Changed
+
+- `eskais/no-inline-icons` runs on `apps/**` too. The showcase and site draw their icons from `lucide-react` (the global search, the shell's navigation, the examples); the brand logos left disable it with a reason.
+- Every npm dependency in `registry.json` is pinned to an exact release at least 7 days old. `tooling/check-dependency-age.mjs` checks the publish times in CI (it skips offline), with the exceptions it lists and why: UI SDK, whose first release is from 2026-11-12. The `release-age` consumer check installs `dialog` with pnpm under a 7-day `minimumReleaseAge`.
+
 ## 0.2.0 (2026-11-17)
 
 ### Added

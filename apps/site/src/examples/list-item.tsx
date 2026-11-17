@@ -1,5 +1,6 @@
 import { useState } from "react"
 
+import { CircleDotIcon } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { IconTile, List, ListGroup, ListItem } from "@/components/ui/list-item"
@@ -32,15 +33,6 @@ const issues: Issue[] = [
   },
 ]
 
-function IssueIcon() {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-      <circle cx="12" cy="12" r="9" />
-      <circle cx="12" cy="12" r="1.5" fill="currentColor" />
-    </svg>
-  )
-}
-
 export default function ListItemDemo() {
   const [selected, setSelected] = useState("ENG-398")
   return (
@@ -53,7 +45,7 @@ export default function ListItemDemo() {
             title={issue.title}
             leading={
               <IconTile tone={issue.status.tone}>
-                <IssueIcon />
+                <CircleDotIcon />
               </IconTile>
             }
             subtitle={<span className="font-mono">{issue.id}</span>}

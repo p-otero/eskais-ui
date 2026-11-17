@@ -116,6 +116,10 @@ function NavigationSection() {
           <ButtonLink href="?demo=page" size="sm" variant="outline">
             Page demo
           </ButtonLink>
+          <p>
+            In a hash router, a <Link href="#/demo/hash-route">hash route</Link> follows on press too, while an{" "}
+            <Link href="#navigation">in-page anchor</Link> stays native.
+          </p>
         </div>
 
         <div className="flex flex-wrap items-center gap-3">

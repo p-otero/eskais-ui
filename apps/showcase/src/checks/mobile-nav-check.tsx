@@ -1,15 +1,14 @@
+import { BotIcon, ChartColumnIcon, FolderIcon, HouseIcon, RocketIcon, SettingsIcon } from "lucide-react"
 import { MobileNav, type MobileNavItem } from "@/components/ui/mobile-nav"
-
-import { BotIcon, ChartIcon, FolderIcon, GearIcon, HomeIcon, RocketIcon } from "../shell/shell-icons"
 
 // ?demo=mobile-nav-check: the fixture tooling/shell-check.mjs measures at 320px. Five routes with long labels, or
 // with &overflow, four routes and More. The page keeps --mobile-nav-offset clear at its end.
 const routes: readonly MobileNavItem[] = [
-  { label: "Home", href: "#home", icon: <HomeIcon />, current: true },
-  { label: "Wellness", href: "#wellness", icon: <ChartIcon />, badge: 3 },
+  { label: "Home", href: "#home", icon: <HouseIcon />, current: true },
+  { label: "Wellness", href: "#wellness", icon: <ChartColumnIcon />, badge: 3 },
   { label: "Schedule", href: "#schedule", icon: <FolderIcon /> },
   { label: "Messages", href: "#messages", icon: <BotIcon /> },
-  { label: "Settings", href: "#settings", icon: <GearIcon /> },
+  { label: "Settings", href: "#settings", icon: <SettingsIcon /> },
 ]
 
 const overflow: readonly MobileNavItem[] = [{ label: "Deployments", href: "#deployments", icon: <RocketIcon /> }]

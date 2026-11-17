@@ -14,7 +14,7 @@ Eskais UI is a shadcn-style registry of React components built on Vercel UI SDK 
 - Import UI SDK from its public entries (`@ui-sdk/react/dialog`), never `internal/*`.
 - Every control has an accessible name. Style from `data-slot` and state attributes with the semantic tokens in `registry/styles/theme.css`.
 - Destructive actions carry `data-agent-confirm`.
-- Links follow on mouse press (`@fast-link/core`, through `Link`, `NavigationMenuLink` or `FastLinkRegion`), for navigation only: a press can't be cancelled by moving away (WCAG 2.5.2), so actions stay on `Button`s and menu items, and a link that confirms or changes something gets `fast={false}`. `data-no-fast-link` on an ancestor (`<body>` for the whole app) opts out.
+- Links follow on mouse press (`@fast-link/core`, through `Link`, `NavigationMenuLink` or `FastLinkRegion`), for navigation only: a press can't be cancelled by moving away (WCAG 2.5.2), so actions stay on `Button`s and menu items, and a link that confirms or changes something gets `fast={false}`. `data-no-fast-link` on an ancestor (`<body>` for the whole app) opts out. A `#/…` href is a hash route and follows on press (`location.hash` or `onFollow`); other `#…` hrefs are in-page anchors and stay native (`data-fast-link-hash-prefix` changes the prefix).
 - Registry code (`registry/**`) must run in consumer browsers and in Node/npm/pnpm projects: no `bun`, `bun:*` or `node:*` imports.
 - Registry code passes strict consumers' type-aware lint: `bun run lint` also runs `typescript/restrict-template-expressions` on `registry/**` (`tooling/oxlint-type-aware.json`). Convert a non-string in a template literal with `String()` or a formatter.
 - No default copy in a specific language, except overridable accessible labels.
@@ -194,13 +194,22 @@ On a coarse pointer (`@media (pointer: coarse)`), controls reach a hit area of a
 
 ## Icons
 
-Icons come from `lucide-react`, imported by name the way shadcn does: `import { ChevronDownIcon, XIcon } from "lucide-react"`. Every item whose files import it lists `lucide-react@<exact version>` in `dependencies`; a test fails otherwise.
+Icons come from `lucide-react`, imported by name the way shadcn does: `import { ChevronDownIcon, XIcon } from "lucide-react"`. Every item whose files import it lists `lucide-react@<exact version>` in `dependencies`; a test fails otherwise. One version across the registry, `package.json` and the apps: the oldest release that exports every icon in use and is at least 7 days old (see "Dependencies").
 
-1. Never draw an icon by hand. `eskais/no-inline-icons` flags every `<svg>` element in `registry/**`, whatever the function is called. A drawing that isn't an icon (the spinner's arc, task status rings, a stage marker's tick, an avatar placeholder, a grip) disables it on the line before: `// oxlint-disable-next-line eskais/no-inline-icons -- <reason>` (`{/* … */}` inside JSX children).
+1. Never draw an icon by hand. `eskais/no-inline-icons` flags every `<svg>` element in `registry/**` and `apps/**` (showcase and site), whatever the function is called. A drawing that isn't an icon (the spinner's arc, task status rings, a stage marker's tick, an avatar placeholder, a grip, a brand logo) disables it on the line before: `// oxlint-disable-next-line eskais/no-inline-icons -- <reason>` (`{/* … */}` inside JSX children).
 2. Lucide hides an icon from assistive tech (and so from agents) unless it gets an `aria-*`, `role` or `title` prop. A decorative icon needs nothing. A meaningful one, with no text beside it, uses `<Icon icon={XIcon} label="…" />` from `icon`.
 3. Size comes from the parent (`[&_svg]:size-4` in Button, Badge, menu items, inputs) or a `size-*` class: `size-3.5` beside `text-body-sm`, `size-4` beside `text-body`, `size-5` beside a title. Classes override lucide's `size` prop (24 by default, so an unsized icon is 24px). Keep lucide's stroke of 2; a tick in a small indicator (checkbox, select) takes `strokeWidth={2.5}` or `3`.
 4. Colour is `currentColor`: set a text colour (`text-muted-foreground`, `text-success`). Mirror direction icons in right-to-left with `rtl:-scale-x-100` or `rtl:rotate-180`.
 5. An icon-only control shows its name in a tooltip. Use `Button`/`Toggle` (or a button-like trigger) with `size="icon"` and an `aria-label`; any other icon-only control goes inside `ControlTooltip label` from `tooltip`. `tooltip={false}` only when a visible label sits beside it. `eskais/icon-button-needs-label` flags an icon-only `Button` or `Toggle` without both.
+
+## Dependencies
+
+shadcn installs an item's npm `dependencies` before it writes any file. A consumer whose package manager holds back young releases (pnpm's `minimumReleaseAge`, Renovate's `minimumReleaseAge`) can't add the item at all when one pin is too fresh: pnpm fails with `ERR_PNPM_NO_MATURE_MATCHING_VERSION`.
+
+1. Every npm dependency in `registry.json` is an exact version (`name@1.2.3`) published at least 7 days ago. A test fails on a range. `node tooling/check-dependency-age.mjs` reads the publish times from registry.npmjs.org and fails on a younger release; CI runs it in the `registry` job with `--require-network`, and offline it skips with a message.
+2. Bump only to a release at least 7 days old, and prefer the oldest one that has what the code uses.
+3. A pin that can't wait goes in `youngDependencyExceptions` in that script, at its exact version and with the reason (UI SDK: its first release is from 2026-11-12). The check says when an exception is old enough to remove.
+4. `node tooling/consumer-check.mjs pnpm release-age` adds `dialog` (and with it `lucide-react`) under a 7-day `minimumReleaseAge` that excludes only those exceptions and the test app's own build tools.
 
 ## Lint
 
@@ -233,6 +242,7 @@ The `lint-rules` item ships consumers the `react` and `ui-tailwind` presets with
 | Everything     | `bun run verify`                                                 |
 | Showcase       | `bun run dev`                                                    |
 | Clean consumer | `node tooling/consumer-check.mjs npm` (or `pnpm`)                |
+| Dependency age | `node tooling/check-dependency-age.mjs`: 7 days or older         |
 | Contrast (CI)  | `bun run test:browser`: axe and pixel contrast in Chrome         |
 | Contrast glass | `bun run test:browser:glass`: by hand, not in CI                 |
 | React Compiler | `bun run test:compiler`: compiler build, then the browser checks |
