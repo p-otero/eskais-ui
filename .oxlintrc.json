@@ -167,7 +167,8 @@
         "tooling/contrast-check.mjs",
         "tooling/showcase-browser.mjs",
         "tooling/site-check.mjs",
-        "tooling/list-bench.mjs"
+        "tooling/list-bench.mjs",
+        "tooling/touch-check.mjs"
       ],
       "rules": {
         "no-await-in-loop": "off"

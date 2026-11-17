@@ -24,7 +24,7 @@ import { floatingLabelControls } from "@/components/ui/field"
 import { fieldSurfaceClassName } from "@/components/ui/input"
 import { cnState } from "@/lib/utils"
 
-const triggerClassName = `${fieldSurfaceClassName} flex w-full min-w-0 cursor-pointer items-center justify-between gap-inline rounded-control px-control-x text-start text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring [&>svg]:size-4 [&>svg]:shrink-0 [&>svg]:text-muted-foreground`
+const triggerClassName = `${fieldSurfaceClassName} flex w-full min-w-0 cursor-pointer items-center justify-between gap-inline rounded-control px-control-x text-start text-entry outline-none focus-visible:ring-2 focus-visible:ring-ring [&>svg]:size-4 [&>svg]:shrink-0 [&>svg]:text-muted-foreground`
 
 // `default` follows the Field (taller with a floating label); `sm` is a fixed compact height for toolbars and filters.
 const selectTriggerVariants = cva(triggerClassName, {

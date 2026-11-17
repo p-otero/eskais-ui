@@ -335,7 +335,7 @@ On touch screens (`pointer: coarse`) buttons, toggles, tabs, segmented items, ch
 
 ## Typography
 
-Pick text size by role, not by number: `text-meta` (eyebrows; with `tracking-meta`, uppercase if you want), `text-caption`, `text-body-sm`, `text-body`, `text-title-sm` (card titles), `text-title` (dialog titles), `text-display-sm` (page titles, stat values) and `text-display`. Each sets size, line height and weight, and tightens under `data-theme="compact"`; see AGENTS.md "Typography" for the values. `tracking-tight` (-0.012em) suits titles; `font-mono` is Geist Mono (installed by `font-geist`).
+Pick text size by role, not by number: `text-meta` (eyebrows; with `tracking-meta`, uppercase if you want), `text-caption`, `text-body-sm`, `text-body`, `text-title-sm` (card titles), `text-title` (dialog titles), `text-display-sm` (page titles, stat values), `text-display`, and `text-entry` for text a person types (16px on touch screens, so iOS doesn't zoom into a focused field; never set `maximum-scale` or `user-scalable=no` instead). Each sets size, line height and weight, and tightens under `data-theme="compact"`; see AGENTS.md "Typography" for the values. `tracking-tight` (-0.012em) suits titles; `font-mono` is Geist Mono (installed by `font-geist`).
 
 ## Icons
 

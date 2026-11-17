@@ -40,7 +40,7 @@ function CommandInput({ className, ...props }: ComponentProps<typeof CommandInpu
       <SearchIcon className="size-4 shrink-0 text-muted-foreground" />
       <CommandInputPrimitive
         className={cnState(
-          "h-control-lg w-full min-w-0 bg-transparent text-sm outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50",
+          "h-control-lg w-full min-w-0 bg-transparent text-entry outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50",
           className,
         )}
         {...props}

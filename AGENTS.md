@@ -145,9 +145,12 @@ Text is sized by role. Each `text-*` step sets size and line height, and the met
 | `text-title`      | dialog, drawer and section titles                           | 18/24/600                  | 16/22               |
 | `text-display-sm` | page titles, stat values                                    | 24/28/650                  | 20/24               |
 | `text-display`    | hero numbers, empty-state headlines                         | 28/32/700                  | 24/28               |
+| `text-entry`      | text a person types: inputs, textareas, selects, editors    | 14/20/inherited            | 14/20               |
 | `tracking-meta`   | 0.12em, for `text-meta`; uppercase is the caller's choice   |                            |                     |
 | `tracking-tight`  | -0.012em, for titles and display text                       |                            |                     |
 | `font-mono`       | ids, hashes, code, keyboard shortcuts (Geist Mono Variable) |                            |                     |
+
+`text-entry` is 16/24 on a coarse pointer, in every theme: iOS Safari zooms into a focused field whose text is under 16px. Every text-entry control in `registry/**` uses it (an editor that reads at the body size takes `pointer-coarse:text-entry`), and `node tooling/touch-check.mjs` measures them on an emulated phone. Never stop the zoom with `maximum-scale` or `user-scalable=no` in the viewport meta: that blocks pinch-zoom (WCAG 1.4.4).
 
 Sizes are in rem, from `--type-<step>-size` and `--type-<step>-leading`. Override the weight with `font-*` and the line height with `leading-*` (a title on one line inside a tight header keeps `leading-none`). `font-geist` installs Geist and Geist Mono.
 

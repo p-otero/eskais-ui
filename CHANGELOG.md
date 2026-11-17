@@ -26,6 +26,10 @@ Versions follow [semver](https://semver.org). Before 1.0, a minor version can br
 - `Toggle size="icon"` and the button-like triggers with `size="icon"` require `aria-label` at the type level, like `Button`.
 - Lint: `eskais/icon-button-needs-label` flags an icon-only `Button` or `Toggle` without `size="icon"` and an `aria-label`. The `lint-rules` item ships it (`eskais-oxlint-plugin.js`, loaded by `eskais-ui.oxlintrc.json`).
 
+### Fixed
+
+- Focusing a field no longer zooms the page on iOS. A `text-entry` type step (`--type-entry-size`) is 14px as before on a fine pointer and 16px on a coarse one, and Input, InputGroup, Textarea, the Select trigger, NativeSelect, Combobox, CommandInput, NumberInput, DatePicker, DateTimePicker's time and MarkdownEditor use it. Pinch-zoom stays allowed. `node tooling/touch-check.mjs` (in `test:browser`) measures every text-entry control on an emulated phone.
+
 ## 0.2.0 (2026-11-17)
 
 ### Added

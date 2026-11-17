@@ -33,7 +33,7 @@ function DatePickerInput({ className, placeholder, ...props }: ComponentProps<ty
     <DatePickerInputPrimitive
       placeholder={useFloatingPlaceholder(placeholder)}
       className={cnState(
-        "h-full w-full min-w-0 bg-transparent text-sm tabular-nums outline-none placeholder:text-muted-foreground data-disabled:cursor-not-allowed",
+        "h-full w-full min-w-0 bg-transparent text-entry tabular-nums outline-none placeholder:text-muted-foreground data-disabled:cursor-not-allowed",
         className,
       )}
       {...props}
@@ -123,7 +123,7 @@ function DatePicker({
         <>
           <div
             data-slot="date-picker-group"
-            className={`${fieldSurfaceClassName} flex h-field-control w-full items-center gap-inline rounded-control px-control-x text-sm has-[input:focus-visible]:ring-2 has-[input:focus-visible]:ring-ring has-aria-invalid:border-destructive`}
+            className={`${fieldSurfaceClassName} flex h-field-control w-full items-center gap-inline rounded-control px-control-x text-entry has-[input:focus-visible]:ring-2 has-[input:focus-visible]:ring-ring has-aria-invalid:border-destructive`}
           >
             <DatePickerInput aria-label={range ? text.start : label} placeholder={placeholder} />
             {range && (
