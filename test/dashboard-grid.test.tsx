@@ -8,6 +8,7 @@ import {
   DashboardCard,
   DashboardChart,
   DashboardGrid,
+  DashboardMeter,
   DashboardStat,
   DashboardStats,
 } from "@/components/ui/dashboard-grid"
@@ -92,6 +93,36 @@ test("DashboardChart: named by its card's title", () => {
   )
   const title = screen.getByText("Latency")
   expect(screen.getByRole("figure").getAttribute("aria-labelledby")).toBe(title.id)
+})
+
+test("DashboardMeter: a ring meter named by its label, and DashboardStat shows its delta once loaded", () => {
+  const { rerender } = render(
+    <DashboardGrid
+      stats={
+        <DashboardStats aria-label="Week">
+          <DashboardStat label="Runs" value={9} delta={<span data-testid="delta">+12%</span>} />
+        </DashboardStats>
+      }
+    >
+      <DashboardCard title="Storage">
+        <DashboardMeter label="Space used" value={93} tone="warning" hint="1.86 of 2 TB" />
+      </DashboardCard>
+    </DashboardGrid>,
+  )
+  const meter = screen.getByRole("meter", { name: "Space used" })
+  expect(meter.getAttribute("aria-valuenow")).toBe("93")
+  expect(screen.getByText("1.86 of 2 TB")).toBeTruthy()
+  expect(screen.getByTestId("delta")).toBeTruthy()
+  rerender(
+    <DashboardGrid
+      stats={
+        <DashboardStats aria-label="Week" loading>
+          <DashboardStat label="Runs" value={9} delta={<span data-testid="delta">+12%</span>} loading />
+        </DashboardStats>
+      }
+    />,
+  )
+  expect(screen.getByTestId("delta").closest('[aria-hidden="true"]')).toBeTruthy()
 })
 
 test("DashboardGrid: agents find every control by name and press Retry", async () => {

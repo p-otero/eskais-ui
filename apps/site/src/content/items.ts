@@ -326,7 +326,7 @@ const itemNotes: Record<string, ItemNotes> = {
     usage:
       "A home or metrics screen: a row of DashboardStats over DashboardCards that load through status and data, with charts and meters inside.",
     a11y: [
-      "Each card is a region named by its title; a DashboardChart inside is named by the same title.",
+      "Each card is a region named by its title; a DashboardChart inside is named by the same title, and a DashboardMeter keeps role=meter with its label.",
       "Rows share one height, so a card keeps its size from loading to loaded; overflowing content becomes focusable so a keyboard can scroll it.",
       "A failed card announces its error once, as an alert, with a Retry button.",
     ],

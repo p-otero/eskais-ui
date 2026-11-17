@@ -4241,7 +4241,7 @@
       "name": "dashboard-grid",
       "type": "registry:block",
       "title": "Dashboard Grid",
-      "description": "DashboardGrid: a row of stats over a container-query grid of cards (one column, two from 42rem, `columns` from 64rem) where every row has the same height, so cards line up and keep their size from loading to loaded. DashboardCard spans columns and rows and loads through DataState (a skeleton, the error with Retry, an empty title); DashboardChart fills a card and is named by its title; DashboardStats and DashboardStat draw placeholders of the value's height.",
+      "description": "DashboardGrid: a row of stats over a container-query grid of cards (one column, two from 42rem, `columns` from 64rem) where every row has the same height, so cards line up and keep their size from loading to loaded. DashboardCard spans columns and rows and loads through DataState (a skeleton, the error with Retry, an empty title); DashboardChart fills a card and is named by its title; DashboardMeter centres a ring meter in one; DashboardStats and DashboardStat (with a StatDelta in `delta`) draw placeholders of the value's height.",
       "dependencies": [
         "@ui-sdk/react@0.1.0-beta.5"
       ],
@@ -4252,6 +4252,7 @@
         "@eskais/chart",
         "@eskais/states",
         "@eskais/empty",
+        "@eskais/meter",
         "@eskais/skeleton",
         "@eskais/stat"
       ],

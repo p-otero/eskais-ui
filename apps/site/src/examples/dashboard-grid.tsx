@@ -13,12 +13,13 @@ import {
   DashboardCard,
   DashboardChart,
   DashboardGrid,
+  DashboardMeter,
   DashboardStat,
   DashboardStats,
 } from "@/components/ui/dashboard-grid"
 import { Field, FieldLabel } from "@/components/ui/field"
 import { List, ListItem } from "@/components/ui/list-item"
-import { Meter, MeterLabel, MeterTrack, MeterValue } from "@/components/ui/meter"
+import { StatDelta } from "@/components/ui/stat"
 import { StatusPill } from "@/components/ui/status-pill"
 import { Switch } from "@/components/ui/switch"
 
@@ -69,9 +70,20 @@ export default function DashboardGridDemo() {
         labels={{ errorTitle: "Couldn't load this card", emptyTitle: "Nothing yet" }}
         stats={
           <DashboardStats aria-label="This week" loading={loading}>
-            <DashboardStat label="Runs" value={261} hint="+12% on last week" loading={loading} />
+            <DashboardStat
+              label="Runs"
+              value={261}
+              delta={<StatDelta value={0.12} comparison="vs. last week" />}
+              loading={loading}
+            />
             <DashboardStat label="Pass rate" value={94.2} format={(n) => `${n}%`} hint="Target 95%" loading={loading} />
-            <DashboardStat label="Median latency" value={126} format={(n) => `${n} ms`} loading={loading} />
+            <DashboardStat
+              label="Median latency"
+              value={126}
+              format={(n) => `${n} ms`}
+              delta={<StatDelta value={-0.05} invert comparison="vs. last week" />}
+              loading={loading}
+            />
             <DashboardStat label="Spend" value={182.4} format={(n) => `$${n.toFixed(2)}`} loading={loading} />
           </DashboardStats>
         }
@@ -110,11 +122,12 @@ export default function DashboardGridDemo() {
           data={{ used: 72 }}
         >
           {(data) => (
-            <Meter value={data.used} tone={data.used > 90 ? "warning" : undefined}>
-              <MeterLabel>Hours used</MeterLabel>
-              <MeterValue />
-              <MeterTrack />
-            </Meter>
+            <DashboardMeter
+              label="Hours used"
+              value={data.used}
+              hint="72 of 100 GPU hours"
+              tone={data.used > 90 ? "warning" : undefined}
+            />
           )}
         </DashboardCard>
         <DashboardCard
@@ -125,11 +138,12 @@ export default function DashboardGridDemo() {
           data={{ used: 93 }}
         >
           {(data) => (
-            <Meter value={data.used} tone={data.used > 90 ? "warning" : undefined}>
-              <MeterLabel>Space used</MeterLabel>
-              <MeterValue />
-              <MeterTrack />
-            </Meter>
+            <DashboardMeter
+              label="Space used"
+              value={data.used}
+              hint="1.86 of 2 TB"
+              tone={data.used > 90 ? "warning" : undefined}
+            />
           )}
         </DashboardCard>
         <DashboardCard

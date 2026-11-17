@@ -17,6 +17,7 @@ import { DataState, type DataStatus } from "@/components/ui/data-state"
 import { Empty, EmptyHeader, EmptyTitle } from "@/components/ui/empty"
 import { ErrorState } from "@/components/ui/error-state"
 import { LoadingState } from "@/components/ui/loading-state"
+import { Meter, MeterLabel, MeterRing, type MeterProps, type MeterRingSize } from "@/components/ui/meter"
 import { Skeleton } from "@/components/ui/skeleton"
 import { useOverflowing } from "@/components/ui/use-dashboard-grid"
 import { Stat, StatGroup, StatHint, StatLabel, StatValue, type StatValueProps } from "@/components/ui/stat"
@@ -121,7 +122,9 @@ type DashboardStatProps = Omit<ComponentProps<typeof Stat>, "children"> &
   Pick<StatValueProps, "format" | "locale"> & {
     label: ReactNode
     value?: StatValueProps["value"]
-    /** A change or a comparison under the value, like a `StatDelta` or "of 20". */
+    /** A `StatDelta` under the value: the change, with its direction in words. */
+    delta?: ReactNode
+    /** A note under the value, like "of 20". */
     hint?: ReactNode
     /** Draws a placeholder of the value's height instead of the value. */
     loading?: boolean
@@ -132,6 +135,7 @@ type DashboardStatProps = Omit<ComponentProps<typeof Stat>, "children"> &
 function DashboardStat({
   label,
   value,
+  delta,
   hint,
   loading = false,
   format,
@@ -150,6 +154,15 @@ function DashboardStat({
         <StatValue value={value} format={format} locale={locale}>
           {children}
         </StatValue>
+      )}
+      {loading && delta !== undefined ? (
+        // The delta keeps its height under the placeholder, so the figure doesn't grow once it loads.
+        <div aria-hidden="true" className="relative w-fit">
+          <div className="invisible flex">{delta}</div>
+          <Skeleton className="absolute inset-0 size-full" />
+        </div>
+      ) : (
+        delta
       )}
       {hint !== undefined && <StatHint>{hint}</StatHint>}
     </Stat>
@@ -342,12 +355,36 @@ function DashboardChart({ "aria-label": label, className, ...props }: DashboardC
   return <ChartContainer {...name} className={cn("aspect-auto h-full min-h-0 flex-1", className)} {...props} />
 }
 
-export { DashboardCard, DashboardChart, DashboardGrid, dashboardLabels, DashboardStat, DashboardStats }
+type DashboardMeterProps = Omit<MeterProps, "variant" | "children"> & {
+  label: ReactNode
+  /** `lg` (default) fills a card; `md` or `sm` beside other content. */
+  size?: MeterRingSize
+  /** A line under the label, like "28 of 40 hours". */
+  hint?: ReactNode
+  /** Replaces the value in the ring's centre. */
+  children?: ReactNode
+}
+
+/** A ring meter centred in its `DashboardCard`: the reading in the ring, the label and a hint below. */
+function DashboardMeter({ label, size = "lg", hint, children, ...props }: DashboardMeterProps) {
+  return (
+    <div data-slot="dashboard-meter" className="flex min-h-0 flex-1 flex-col items-center justify-center gap-inline">
+      <Meter variant="ring" {...props}>
+        <MeterRing size={size}>{children}</MeterRing>
+        <MeterLabel>{label}</MeterLabel>
+      </Meter>
+      {hint !== undefined && <p className="text-center text-body-sm text-muted-foreground">{hint}</p>}
+    </div>
+  )
+}
+
+export { DashboardCard, DashboardChart, DashboardGrid, dashboardLabels, DashboardMeter, DashboardStat, DashboardStats }
 export type {
   DashboardCardProps,
   DashboardChartProps,
   DashboardGridProps,
   DashboardLabels,
+  DashboardMeterProps,
   DashboardStatProps,
   DashboardStatsProps,
 }
