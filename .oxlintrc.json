@@ -173,7 +173,7 @@
       }
     },
     {
-      "files": ["test/**", "tooling/**", "apps/site/src/content/**", "registry/**/*-labels.ts"],
+      "files": ["test/**", "tooling/**", "apps/site/src/content/**", "registry/**/*-labels.ts", "packages/mockup/**"],
       "rules": {
         "max-lines": "off"
       }

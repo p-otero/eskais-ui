@@ -25,6 +25,7 @@
   "include": [
     "registry",
     "test",
+    "packages",
     "apps/showcase/src",
     "apps/showcase/vite.config.ts",
     "apps/site/src",

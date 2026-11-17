@@ -52,6 +52,12 @@ const guides: GuideMeta[] = [
       "Every control is a UI SDK part an agent can read and operate, with a person approving what can't be undone.",
   },
   {
+    slug: "mockups",
+    title: "Mockups",
+    description:
+      "Sketch a screen in TSX with your own components and fixtures, then build one offline HTML file and validate it.",
+  },
+  {
     slug: "accessibility",
     title: "Accessibility",
     description:
