@@ -104,8 +104,9 @@ const translateKeyed = (key: string, params: Record<string, unknown>) =>
   keyed[key]?.replace(/\{(\w+)\}/g, (_, name: string) => String(params[name])) ?? key
 
 test("a schema message can be a key or a built-in code with JSON params", async () => {
-  expect(formIssueMessage("form.handle.min", { min: 3 })).toBe('form.handle.min|{"min":3}')
-  expect(formIssueMessage("form.handle.taken")).toBe("form.handle.taken")
+  expect(formIssueMessage("form.handle.min", { min: 3 })).toBe('@@form:form.handle.min|{"min":3}')
+  expect(formIssueMessage("form.handle.taken")).toBe("@@form:form.handle.taken")
+  expect(formIssueMessage("email")).toBe("@@form:email")
   const user = userEvent.setup()
   render(
     <Form

@@ -21,7 +21,9 @@ function holdExitAnimations() {
   const { promise: finished, resolve: finish } = Promise.withResolvers<void>()
   const spy = vi.spyOn(Element.prototype, "getAnimations").mockImplementation(function (this: Element) {
     if (!this.hasAttribute("data-ending-style")) return []
-    return [{ finished, playState: "running", cancel: () => {}, finish: () => {} } as unknown as Animation]
+    // A long remaining time: without one, UI SDK ends the exit after a 50ms fallback, which a loaded runner can pass.
+    const effect = { getComputedTiming: () => ({ endTime: 60_000, localTime: 0 }) }
+    return [{ finished, effect, playState: "running", cancel: () => {}, finish: () => {} } as unknown as Animation]
   })
   return {
     finish: async () => {

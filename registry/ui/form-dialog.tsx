@@ -3,6 +3,7 @@
 import type { StandardSchemaV1 } from "@standard-schema/spec"
 import type { DialogOpenChangeReason } from "@ui-sdk/react/dialog"
 import { useRef, useState, type ComponentProps, type ReactNode } from "react"
+import type { FieldValues, Path, UseFormReturn } from "react-hook-form"
 
 import { Button, type buttonVariants } from "@/components/ui/button"
 import { ConfirmDialog } from "@/components/ui/confirm-dialog"
@@ -31,6 +32,11 @@ import type { VariantProps } from "class-variance-authority"
 /** What `prepare` may return: other values for the review and `onSubmit`, or an error in any shape `onSubmit` throws. */
 type ReviewPrepareResult<Values> = { values?: Values; error?: unknown }
 
+type ReviewPrepareContext<Input extends FieldValues> = {
+  /** The form's react-hook-form instance: `setValue` or `reset` here changes what the fields show after Edit. */
+  form: UseFormReturn<Input>
+}
+
 type ReviewState<Values> = {
   values: Values
   /** What the last confirm threw, until the review opens again. */
@@ -38,16 +44,20 @@ type ReviewState<Values> = {
   pending: boolean
 }
 
-type ReviewStep<Values> = {
+type ReviewStep<Values, Input extends FieldValues = FieldValues> = {
   /** What the person checks before confirming, from the parsed (or prepared) values. */
   render: (values: Values) => ReactNode
   editLabel: ReactNode
   confirmLabel: ReactNode
   /**
-   * Runs after validation and before the review shows, with the submit pending: fetch a price, normalize an address.
-   * Return `{ values }` to review and submit other values, or `{ error }` (or throw) to stay on the fields.
+   * Runs after validation, before the review, with the submit pending. Returned `{ values }` are reviewed, submitted
+   * and written into the form for Edit; they win over fields set through `form`, whose values are otherwise parsed
+   * again and reviewed. `{ error }` (or a throw) stays on the fields.
    */
-  prepare?: (values: Values) => Promise<ReviewPrepareResult<Values> | void> | ReviewPrepareResult<Values> | void
+  prepare?: (
+    values: Values,
+    context: ReviewPrepareContext<Input>,
+  ) => Promise<ReviewPrepareResult<Values> | void> | ReviewPrepareResult<Values> | void
   /** `false` hides the edit button, for example once a delivery failed. `true` by default. */
   editable?: boolean | ((state: ReviewState<Values>) => boolean)
   /** The dialog's title while reviewing, or a function of the step for both. The dialog's `title` by default. */
@@ -103,7 +113,7 @@ type FormDialogProps<Schema extends StandardSchemaV1> = Omit<
     discardLabel?: string
     keepEditingLabel?: string
     /** Submit validates and shows a review; confirming it runs `onSubmit`. */
-    reviewStep?: ReviewStep<StandardSchemaV1.InferOutput<Schema>>
+    reviewStep?: ReviewStep<StandardSchemaV1.InferOutput<Schema>, StandardSchemaV1.InferInput<Schema> & FieldValues>
     rootErrorTitle?: ReactNode
     className?: string
     /** The fields. */
@@ -138,6 +148,7 @@ function FormDialog<Schema extends StandardSchemaV1>({
   ...form
 }: FormDialogProps<Schema>) {
   type Output = StandardSchemaV1.InferOutput<Schema>
+  type Input = StandardSchemaV1.InferInput<Schema> & FieldValues
   const [ownOpen, setOwnOpen] = useState(defaultOpen)
   const [pending, setPending] = useState(false)
   const [dirty, setDirty] = useState(false)
@@ -169,11 +180,36 @@ function FormDialog<Schema extends StandardSchemaV1>({
     else setOpen(false, details)
   }
 
+  const startReview = async (values: Output, instance: UseFormReturn<Input>) => {
+    if (!reviewStep?.prepare) return values
+    let wrote = false
+    const stop = instance.subscribe({
+      formState: { values: true },
+      callback: () => {
+        wrote = true
+      },
+    })
+    let prepared: ReviewPrepareResult<Output> | void
+    try {
+      prepared = await reviewStep.prepare(values, { form: instance })
+    } finally {
+      stop()
+    }
+    if (prepared && prepared.error !== undefined) throw prepared.error
+    if (prepared?.values !== undefined) {
+      for (const [name, value] of Object.entries(prepared.values as Record<string, unknown>))
+        instance.setValue(name as Path<Input>, value as Input[Path<Input>], { shouldDirty: true })
+      return prepared.values
+    }
+    if (!wrote) return values
+    const result = await form.schema["~standard"].validate(instance.getValues())
+    if (result.issues) throw { issues: result.issues }
+    return result.value as Output
+  }
+
   const submit: FormProps<Schema>["onSubmit"] = async (values, helpers) => {
     if (reviewStep && !review) {
-      const prepared = await reviewStep.prepare?.(values)
-      if (prepared && prepared.error !== undefined) throw prepared.error
-      setReview({ values: prepared?.values ?? values, error: undefined })
+      setReview({ values: await startReview(values, helpers.form), error: undefined })
       return
     }
     try {
@@ -289,6 +325,7 @@ export type {
   FormDialogOpenChangeDetails,
   FormDialogOpenChangeReason,
   FormDialogProps,
+  ReviewPrepareContext,
   ReviewPrepareResult,
   ReviewState,
   ReviewStep,

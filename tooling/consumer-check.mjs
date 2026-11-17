@@ -1,7 +1,7 @@
 // Installs registry items into fresh Vite apps with npm or pnpm (no Bun), builds them and checks them in Chrome.
 // Usage: node tooling/consumer-check.mjs [npm|pnpm] [scenario…] (default: all): `fresh` (every item), `init` (the
-// stylesheet `shadcn init` writes), `aliases` (`~/`), `imports` (package.json `#ui/*`), `imports-tsx` (a mapping that
-// appends `.tsx`, which must fail to type-check).
+// stylesheet `shadcn init` writes), `aliases` (`~/`), `imports` (package.json `#ui/*`), `imports-flat` (`#ui/*` and
+// `#components/*` on one folder), `imports-tsx` (a mapping that appends `.tsx`, which must fail to type-check).
 import { spawn } from "node:child_process"
 import { createReadStream, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, writeFileSync } from "node:fs"
 import { createServer } from "node:http"
@@ -697,6 +697,40 @@ const scenarios = {
       "src/components/ui/form-context.ts",
     ],
   },
+  // A flat layout: `ui` is the components folder itself. Both aliases resolve there, and shadcn writes the imports
+  // between registry files through `components`, the first alias that matches.
+  "imports-flat": {
+    css: `@layer ui-sdk;
+@import "tailwindcss";
+`,
+    imports: {
+      "#components/*": "./src/components/*",
+      "#ui/*": "./src/components/*",
+      "#lib/*": "./src/lib/*",
+      "#hooks/*": "./src/hooks/*",
+    },
+    aliases: { components: "#components", ui: "#ui", utils: "#lib/utils", lib: "#lib", hooks: "#hooks" },
+    // Your own imports may use either alias; the app imports through `#ui`.
+    rewrite: (source) =>
+      source
+        .replaceAll(/from "@\/components\/ui\/(form-messages)"/g, 'from "#ui/$1.ts"')
+        .replaceAll(/from "@\/components\/ui\/([\w-]+)"/g, 'from "#ui/$1.tsx"')
+        .replaceAll(/from "@\/lib\/([\w-]+)"/g, 'from "#lib/$1.ts"'),
+    dependencies: ["zod"],
+    items: ["theme", "badge", "alert", "toast", "form"],
+    main: importsMain,
+    builtCss: ["--brand", ".text-title{"],
+    check: async () => {},
+    literals: ["@", "#components", "#ui", "#lib"],
+    files: [
+      "src/lib/utils.ts",
+      "src/components/badge.tsx",
+      "src/components/toast.tsx",
+      "src/components/form-context.ts",
+    ],
+    absent: ["src/components/ui"],
+    writes: { file: "src/components/form-actions.tsx", specifier: 'from "#components/form-context.ts"' },
+  },
   // The mapping that appends `.tsx` doesn't work: shadcn then writes `#ui/components/form-context` without an extension,
   // and `ui` holds `.ts` files too (form-context.ts, *-primitive.ts). Kept so the README's advice stays true.
   "imports-tsx": {
@@ -731,6 +765,11 @@ const scenarios = {
 // Where shadcn put the files and what the imports point at, for a scenario with its own aliases.
 function checkPlacement(app, scenario) {
   for (const file of scenario.files) if (!existsSync(join(app, file))) throw new Error(`shadcn didn't write ${file}`)
+  for (const path of scenario.absent ?? []) if (existsSync(join(app, path))) throw new Error(`shadcn wrote ${path}`)
+  if (scenario.writes) {
+    const { file, specifier } = scenario.writes
+    if (!readFileSync(join(app, file), "utf8").includes(specifier)) throw new Error(`${file} lacks ${specifier}`)
+  }
   for (const literal of scenario.literals ?? ["@", scenario.alias]) {
     if (existsSync(join(app, literal))) throw new Error(`shadcn wrote files into a literal "${literal}" folder`)
   }
