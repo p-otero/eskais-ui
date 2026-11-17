@@ -1,6 +1,7 @@
 "use client"
 
 import { renderElement, type PartProps } from "@ui-sdk/react/primitive"
+import type { PointerEvent } from "react"
 
 import { ScrollArea, ScrollAreaScrollbar, ScrollAreaThumb, ScrollAreaViewport } from "@/components/ui/scroll-area"
 import { cn } from "@/lib/utils"
@@ -85,12 +86,32 @@ function TableHead({ className, render, ...props }: PartProps<"th">) {
   )
 }
 
-function TableCell({ className, render, ...props }: PartProps<"td">) {
+type TableCellProps = PartProps<"td"> & {
+  /** Wraps long text onto more lines instead of cutting it at `max-w-80` with an ellipsis. */
+  wrap?: boolean
+}
+
+// A cut-off cell shows its whole text in a native tooltip, set as the pointer arrives so cells that fit get none.
+function titleIfTruncated(event: PointerEvent<HTMLTableCellElement>) {
+  const cell = event.currentTarget
+  cell.title = cell.scrollWidth > cell.clientWidth ? (cell.textContent ?? "") : ""
+}
+
+function TableCell({ className, render, wrap = false, onPointerEnter, ...props }: TableCellProps) {
   return renderElement(
     "td",
     {
       "data-slot": "table-cell",
-      className: cn("max-w-80 truncate px-inset-item py-inset-item align-middle", className),
+      "data-wrap": wrap ? "" : undefined,
+      className: cn(
+        "px-inset-item py-inset-item align-middle",
+        wrap ? "min-w-40 break-words whitespace-normal" : "max-w-80 truncate",
+        className,
+      ),
+      onPointerEnter: (event: PointerEvent<HTMLTableCellElement>) => {
+        onPointerEnter?.(event)
+        if (!wrap && props.title === undefined) titleIfTruncated(event)
+      },
       ...props,
     },
     render,
@@ -106,4 +127,4 @@ function TableCaption({ className, render, ...props }: PartProps<"caption">) {
 }
 
 export { Table, TableBody, TableCaption, TableCell, TableFooter, TableHead, TableHeader, TableRow }
-export type { TableProps }
+export type { TableCellProps, TableProps }

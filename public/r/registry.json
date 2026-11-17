@@ -1787,7 +1787,7 @@
       "name": "table",
       "type": "registry:ui",
       "title": "Table",
-      "description": "Semantic table parts with truncating cells, aria-sort-ready headers and a horizontal scroll area on narrow screens.",
+      "description": "Semantic table parts with aria-sort-ready headers and a horizontal scroll area on narrow screens. Cells stay on one line, cut with an ellipsis and a title holding the whole text while they overflow; TableCell wrap lets one wrap.",
       "dependencies": [
         "@ui-sdk/core@0.1.0-beta.5",
         "@ui-sdk/react@0.1.0-beta.5"
@@ -1801,7 +1801,8 @@
           "path": "registry/ui/table.tsx",
           "type": "registry:ui"
         }
-      ]
+      ],
+      "docs": "`TableCell` keeps its text on one line, up to `max-w-80`, with an ellipsis; when the pointer arrives at a cell that is cut off, its `title` becomes the whole text (a `title` you pass stays). `wrap` drops the limit and wraps the text onto more lines instead, for descriptions and summaries. Screen readers and agents always get the whole text."
     },
     {
       "name": "tooltip",
@@ -3304,7 +3305,7 @@
           "type": "registry:ui"
         }
       ],
-      "docs": "Rows are one tab stop: arrows or j/k move, Home/End and PageUp/PageDown jump, Enter calls `onRowOpen(row)`, and with `selectable` Space or x toggles the focused row; a checkbox or button inside a row keeps its own keys. Past 200 rows (`virtualize=\"auto\"`, `estimateSize`, default 41) only the rows in view render, in `tbody` between gap rows, with `aria-rowcount` and `aria-rowindex`, a sticky header and find in page through hidden stubs. Bound its height (`className=\"max-h-96\"`) so it scrolls inside; otherwise it scrolls with the page."
+      "docs": "Rows are one tab stop: arrows or j/k move, Home/End and PageUp/PageDown jump, Enter calls `onRowOpen(row)`, and with `selectable` Space or x toggles the focused row; a checkbox or button inside a row keeps its own keys. Past 200 rows (`virtualize=\"auto\"`, `estimateSize`, default 41) only the rows in view render, in `tbody` between gap rows, with `aria-rowcount` and `aria-rowindex`, a sticky header and find in page through hidden stubs. Bound its height (`className=\"max-h-96\"`) so it scrolls inside; otherwise it scrolls with the page. A column takes `wrap` (its cells wrap onto more lines instead of truncating), `cellClassName` (classes on every body cell, such as a width) and `headerClassName` (classes on its header cell)."
     },
     {
       "name": "skip-link",

@@ -1,6 +1,6 @@
-// Drives the showcase where layout decides whether things show: at phone widths the ⌘K dialog and the Sidebar
-// drawer opened from the Topbar, scrollable tabs and MobileNav labels; CardHeader (?demo=card-header-check) and
-// SidePanel (?demo=side-panel-check) headers at the widths where their actions wrap, and SidePanel's narrow modes.
+// Drives the showcase where layout decides what shows: the Topbar's ⌘K dialog and Sidebar drawer, tabs and
+// MobileNav labels at phone widths; CardHeader and SidePanel headers where actions wrap; SidePanel's narrow modes;
+// a wrapping DataTable column (?demo=card-header-check, side-panel-check, table-check).
 // Usage: node tooling/shell-check.mjs [--screenshots=<dir>] (after `bun run build:showcase`)
 import { mkdirSync } from "node:fs"
 import { join, resolve } from "node:path"
@@ -253,6 +253,41 @@ async function checkSidePanelNarrow(page) {
   check("SidePanel narrow=sheet: Escape closes it and focus returns to the row", focused === "Webhook retries", focused)
 }
 
+async function checkTableWrap(page) {
+  await page.setViewportSize({ width: 1100, height: 700 })
+  await page.goto(`${new URL(page.url()).origin}/?demo=table-check`)
+  const table = page.getByTestId("table")
+  await table.getByRole("cell").first().waitFor()
+  await page.evaluate(() => document.fonts.ready)
+  const cells = await table
+    .locator("tbody tr")
+    .first()
+    .getByRole("cell")
+    .evaluateAll((all) =>
+      all.map((cell) => ({
+        lines: Math.round(cell.getBoundingClientRect().height / Number.parseFloat(getComputedStyle(cell).lineHeight)),
+        cut: cell.scrollWidth > cell.clientWidth + 1,
+        ellipsis: getComputedStyle(cell).textOverflow === "ellipsis",
+      })),
+    )
+  const [, title, summary] = cells
+  check(
+    "DataTable wrap: the wrapped column shows its whole text on several lines",
+    summary.lines >= 2 && !summary.cut && !summary.ellipsis,
+    `${summary.lines} lines`,
+  )
+  check("DataTable wrap: the column beside it still truncates with an ellipsis", title.cut && title.ellipsis)
+  const titleCell = table.locator("tbody tr").first().getByRole("cell").nth(1)
+  await titleCell.hover()
+  const hint = await titleCell.getAttribute("title")
+  check(
+    "DataTable wrap: a cut-off cell shows its whole text in a title on hover",
+    hint?.startsWith("Webhook retries"),
+    hint,
+  )
+  await shot(page, "table-wrap.png")
+}
+
 async function checkMobileNav(page) {
   await page.setViewportSize({ width: 320, height: 640 })
   await page.goto(`${new URL(page.url()).origin}/?demo=mobile-nav-check`)
@@ -330,6 +365,7 @@ await withShowcase(async (page) => {
   await checkCardHeaders(page)
   await checkSidePanelHeader(page)
   await checkSidePanelNarrow(page)
+  await checkTableWrap(page)
   await checkMobileNav(page)
 })
 

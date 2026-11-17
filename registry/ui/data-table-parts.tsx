@@ -15,6 +15,7 @@ import type {
 import { Pagination } from "@/components/ui/pagination"
 import { TableHead } from "@/components/ui/table"
 import type { DataTableSort, SortDirection, SortValue } from "@/lib/data-table-model"
+import { cn } from "@/lib/utils"
 import type { Virtualize } from "@/components/ui/virtual-rows"
 
 type DataTableAlign = "start" | "center" | "end"
@@ -25,6 +26,12 @@ type DataTableColumn<Row> = {
   cell: (row: Row) => ReactNode
   sortValue?: (row: Row) => SortValue
   align?: DataTableAlign
+  /** Wraps the column's cells onto more lines; by default they stay on one line, cut with an ellipsis and a tooltip. */
+  wrap?: boolean
+  /** Classes for every body cell of the column, such as a width. */
+  cellClassName?: string
+  /** Classes for the column's header cell. */
+  headerClassName?: string
 }
 
 type DataTableLabels = {
@@ -74,12 +81,14 @@ function DataTableHeaderCell<Row>({
 }) {
   const direction = sort?.columnId === column.id ? sort.direction : undefined
   const header = typeof column.header === "string" ? column.header : column.id
+  // oxlint-disable-next-line shadcn/require-static-classes -- the column's own classes, passed through like className
+  const headerClassName = cn("data-[align=center]:text-center data-[align=end]:text-end", column.headerClassName)
   return (
     <TableHead
       scope="col"
       aria-sort={column.sortValue ? (direction ?? "none") : undefined}
       data-align={column.align}
-      className="data-[align=center]:text-center data-[align=end]:text-end"
+      className={headerClassName}
     >
       {column.sortValue ? (
         <Button
