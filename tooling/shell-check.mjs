@@ -1,6 +1,6 @@
 // Drives the showcase where layout decides what shows: the Topbar's ⌘K dialog and Sidebar drawer, tabs and
 // MobileNav labels at phone widths; CardHeader and SidePanel headers where actions wrap; SidePanel's narrow modes;
-// a wrapping DataTable column; DescriptionList layouts (?demo=<card-header|side-panel|table|description-list>-check).
+// a wrapping DataTable column; DescriptionList layouts; ring meters (?demo=<name>-check).
 // Usage: node tooling/shell-check.mjs [--screenshots=<dir>] (after `bun run build:showcase`)
 import { mkdirSync } from "node:fs"
 import { join, resolve } from "node:path"
@@ -316,6 +316,44 @@ async function checkDescriptionList(page) {
   await shot(page, "description-list-layouts.png", true)
 }
 
+async function checkGauges(page) {
+  await page.setViewportSize({ width: 1100, height: 900 })
+  await page.goto(`${new URL(page.url()).origin}/?demo=gauge-check`)
+  const storage = page.getByRole("meter", { name: "Storage" })
+  await storage.waitFor()
+  await page.evaluate(() => document.fonts.ready)
+  const ring = await storage.evaluate((meter) => {
+    const arc = meter.querySelector('[data-slot="meter-ring-arc"]')
+    const value = meter.querySelector('[data-slot="meter-value"]').getBoundingClientRect()
+    const box = meter.querySelector("svg").getBoundingClientRect()
+    return {
+      dash: arc.getAttribute("stroke-dasharray"),
+      centred:
+        Math.abs(value.left + value.width / 2 - (box.left + box.width / 2)) < 2 &&
+        Math.abs(value.top + value.height / 2 - (box.top + box.height / 2)) < 2,
+      now: meter.getAttribute("aria-valuenow"),
+    }
+  })
+  check(
+    "Ring meter: role=meter with its value, the arc at 68 of 100",
+    ring.now === "68" && ring.dash === "68 100",
+    ring.dash,
+  )
+  check("Ring meter: the value sits in the centre of the ring", ring.centred)
+  const sizes = await page
+    .getByTestId("rings")
+    .locator("svg")
+    .evaluateAll((svgs) => svgs.map((svg) => Math.round(svg.getBoundingClientRect().width)))
+  check("Ring meter: sm < md < lg", sizes[0] < sizes[1] && sizes[1] < sizes[2], sizes.join(", "))
+  await shot(page, "gauges.png")
+  await page.emulateMedia({ reducedMotion: "reduce" })
+  const duration = await storage.evaluate(
+    (meter) => getComputedStyle(meter.querySelector('[data-slot="meter-ring-arc"]')).transitionDuration,
+  )
+  check("Ring meter: no animation under reduced motion", Number.parseFloat(duration) <= 0.01, duration)
+  await page.emulateMedia({ reducedMotion: "no-preference" })
+}
+
 async function checkMobileNav(page) {
   await page.setViewportSize({ width: 320, height: 640 })
   await page.goto(`${new URL(page.url()).origin}/?demo=mobile-nav-check`)
@@ -395,6 +433,7 @@ await withShowcase(async (page) => {
   await checkSidePanelNarrow(page)
   await checkTableWrap(page)
   await checkDescriptionList(page)
+  await checkGauges(page)
   await checkMobileNav(page)
 })
 

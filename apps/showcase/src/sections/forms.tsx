@@ -2,7 +2,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
 import { Field, FieldDescription, FieldLabel } from "@/components/ui/field"
 import { Label } from "@/components/ui/label"
-import { Meter, MeterLabel, MeterTrack, MeterValue } from "@/components/ui/meter"
+import { Meter, MeterLabel, MeterRing, MeterTrack, MeterValue } from "@/components/ui/meter"
 import {
   NumberInput,
   NumberInputControl,
@@ -131,6 +131,20 @@ function Controls() {
           <MeterValue />
           <MeterTrack />
         </Meter>
+        <div className="flex flex-wrap items-end gap-section">
+          <Meter variant="ring" value={68}>
+            <MeterRing size="sm" />
+            <MeterLabel>Storage</MeterLabel>
+          </Meter>
+          <Meter variant="ring" value={92} tone="warning">
+            <MeterRing />
+            <MeterLabel>Build minutes</MeterLabel>
+          </Meter>
+          <Meter variant="ring" value={40} tone="success">
+            <MeterRing size="lg" />
+            <MeterLabel>Seats</MeterLabel>
+          </Meter>
+        </div>
       </div>
     </div>
   )

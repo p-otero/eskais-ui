@@ -1,9 +1,10 @@
 import { render, screen } from "@testing-library/react"
 import { expect, test } from "vitest"
 
-import { Meter, MeterLabel, MeterTrack, MeterValue } from "@/components/ui/meter"
+import { Meter, MeterLabel, MeterRing, MeterTrack, MeterValue } from "@/components/ui/meter"
 import { Progress, ProgressLabel, ProgressTrack, ProgressValue } from "@/components/ui/progress"
 
+import { axeViolations } from "./axe"
 import { settle } from "./overlay-helpers"
 
 function valueText() {
@@ -73,4 +74,37 @@ test("ProgressValue formatValue gets null while the bar is indeterminate", async
     </Progress>,
   )
   expect(valueText()).toBe("4 files")
+})
+
+test("Meter variant=ring keeps role=meter on the root and draws the value as an arc, with the value in the centre", async () => {
+  const { container, rerender } = render(
+    <Meter variant="ring" value={68} tone="success" locale="en-US">
+      <MeterRing size="lg" />
+      <MeterLabel>Storage</MeterLabel>
+    </Meter>,
+  )
+  await settle()
+  const meter = screen.getByRole("meter", { name: "Storage" })
+  expect(meter.getAttribute("aria-valuenow")).toBe("68")
+  expect(meter.dataset.variant).toBe("ring")
+  expect(meter.className).toContain("group/gauge")
+  const svg = container.querySelector("svg")!
+  expect(svg.getAttribute("aria-hidden")).toBe("true")
+  const arc = container.querySelector("[data-slot=meter-ring-arc]")!
+  expect(arc.getAttribute("stroke-dasharray")).toBe("68 100")
+  expect(arc.getAttribute("class")).toContain("group-data-[tone=success]/gauge:stroke-success")
+  expect(arc.getAttribute("class")).toContain("motion-reduce:transition-none")
+  expect(container.querySelector("[data-slot=meter-track]")?.getAttribute("data-size")).toBe("lg")
+  expect(valueText()).toBe("68%")
+  expect(await axeViolations(container)).toEqual([])
+
+  rerender(
+    <Meter variant="ring" value={0} locale="en-US" aria-label="Quota">
+      <MeterRing size="sm">
+        <span>0 of 5</span>
+      </MeterRing>
+    </Meter>,
+  )
+  expect(container.querySelector("[data-slot=meter-ring-arc]")?.getAttribute("stroke-linecap")).toBe("butt")
+  expect(screen.getByRole("meter", { name: "Quota" }).textContent).toContain("0 of 5")
 })

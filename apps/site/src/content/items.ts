@@ -593,7 +593,10 @@ const itemNotes: Record<string, ItemNotes> = {
     related: ["meter", "spinner"],
   },
   meter: {
-    a11y: ["A meter for a reading in a known range, like storage used; tone colours the indicator."],
+    a11y: [
+      "A meter for a reading in a known range, like storage used; tone colours the indicator.",
+      'variant="ring" keeps role="meter" and its value; the ring itself is hidden from screen readers and still under reduced motion.',
+    ],
     related: ["progress", "stat"],
   },
   empty: {
