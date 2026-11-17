@@ -22,11 +22,9 @@ import "./index.css"
 const root = document.getElementById("root")
 if (!root) throw new Error("Missing #root element")
 
-// ?demo=page&status=error, ?demo=site and ?demo=shell render one demo alone, for screenshots at phone width;
-// ?demo=overlay-check, card-header-check, mobile-nav-check, icon-tooltip-check, calendar-check and press-check are
-// fixtures for tooling/overlay-check.mjs, shell-check.mjs, icon-tooltip-check.mjs, calendar-check.mjs and
-// press-check.mjs; ?demo=inbox is the keyboard-first inbox alone, ?demo=list-bench the list tooling/list-bench.mjs
-// times.
+// ?demo=page, site and shell render one demo alone, for phone-width screenshots; ?demo=<name>-check pages are the
+// fixtures of tooling/<name>-check.mjs (card-header and mobile-nav are shell-check.mjs's); ?demo=inbox
+// is the keyboard-first inbox alone, and ?demo=list-bench the list tooling/list-bench.mjs times.
 const params = new URLSearchParams(location.search)
 const status = demoStatuses.find((name) => name === params.get("status")) ?? "success"
 const demo = params.get("demo")
