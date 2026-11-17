@@ -12,6 +12,7 @@ import { usePreference } from "@ui-sdk/react/preferences"
 import { useState } from "react"
 
 import type { AppearanceState } from "@/components/ui/appearance"
+import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { CodeBlock } from "@/components/ui/code-block"
 import { Field, FieldDescription, FieldLabel } from "@/components/ui/field"
@@ -118,7 +119,10 @@ function ThemeEditor<Theme extends string, Palette extends string>({
       <div className="grid min-w-0 grid-cols-1 gap-section @2xl:grid-cols-2">
         <div className="flex min-w-0 flex-col gap-group">
           <Field>
-            <FieldLabel>Preset</FieldLabel>
+            <div className="flex items-center justify-between gap-items">
+              <FieldLabel>Preset</FieldLabel>
+              {customised && <Badge variant="outline">Custom</Badge>}
+            </div>
             <div className="-m-1 overflow-x-auto p-1">
               <SegmentedControl<Palette | typeof CUSTOM>
                 value={customised ? CUSTOM : palette}
@@ -134,7 +138,6 @@ function ThemeEditor<Theme extends string, Palette extends string>({
                     {name.charAt(0).toUpperCase() + name.slice(1)}
                   </SegmentedControlItem>
                 ))}
-                {customised && <SegmentedControlItem value={CUSTOM}>Custom</SegmentedControlItem>}
               </SegmentedControl>
             </div>
           </Field>
