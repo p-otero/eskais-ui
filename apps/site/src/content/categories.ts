@@ -100,7 +100,15 @@ const categories = [
   },
   {
     name: "Server data",
-    items: ["server-data-table", "filter-search", "server-data", "page-source", "filter-schema", "url-state"],
+    items: [
+      "server-data-table",
+      "filter-search",
+      "server-combobox",
+      "server-data",
+      "page-source",
+      "filter-schema",
+      "url-state",
+    ],
   },
   {
     name: "Feedback",

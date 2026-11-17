@@ -3711,6 +3711,30 @@
       ]
     },
     {
+      "name": "server-combobox",
+      "type": "registry:ui",
+      "title": "Server Combobox",
+      "description": "A Combobox whose options come from a PageSource, searched on the server as you type: requests wait for typing to pause and are aborted when replaced, the next page loads at the end of the list, and the server's order is kept. With multiple, choices show as chips.",
+      "docs": "`<ServerCombobox source getLabel value onValueChange />` inside a `Field` with a `FieldLabel`. The source's filter gets the typed text as `q`; `getValue` picks what an option stores (the source's `getId` by default). It runs on UI SDK's `useAsyncOptions` with `filter={false}`: `debounce` (250 ms) before a search, the previous options kept while the next load, the request it replaces aborted, and `pageSize` (20) more whenever scrolling or the arrow keys reach the last option, by page number or cursor. `multiple` keeps an array and shows each choice as a chip with a remove button named \"Remove {label}\"; `valueLabels` names values chosen before their options load, such as ids read from the URL. A hidden status announces loading, errors and the count; `labels` translates it and the control names. Agents choose an option by its label.",
+      "dependencies": [
+        "@ui-sdk/core@0.1.0-beta.5",
+        "@ui-sdk/react@0.1.0-beta.5",
+        "lucide-react@1.68.0"
+      ],
+      "registryDependencies": [
+        "@eskais/utils",
+        "@eskais/theme",
+        "@eskais/combobox",
+        "@eskais/page-source"
+      ],
+      "files": [
+        {
+          "path": "registry/ui/server-combobox.tsx",
+          "type": "registry:ui"
+        }
+      ]
+    },
+    {
       "name": "chart",
       "type": "registry:ui",
       "title": "Chart",

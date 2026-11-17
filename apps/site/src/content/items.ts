@@ -769,6 +769,15 @@ const itemNotes: Record<string, ItemNotes> = {
     agent: "Agents set the search by its label, and it commits at once; FilterScope adds filter(field, value).",
     related: ["server-data-table", "filter-bar", "search-field"],
   },
+  "server-combobox": {
+    usage: "Use it when the options live on the server: people, tasks, anything too long to load at once.",
+    a11y: [
+      "A UI SDK Combobox: the list keeps the server's order, and a hidden status announces loading, errors and the count.",
+      "Each chip's remove button is named for its choice.",
+    ],
+    agent: "Agents choose an option by its label, as in any Combobox.",
+    related: ["combobox", "filter-schema", "page-source"],
+  },
   "server-data": {
     usage:
       "Reach for the hooks when you build your own screen on a PageSource; the server table, list and combobox already use them.",
