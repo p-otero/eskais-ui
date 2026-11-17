@@ -31,7 +31,7 @@ test("a toggle keeps its name, reports aria-pressed and data-pressed, and Enter 
   const user = userEvent.setup()
   const onPressedChange = vi.fn()
   render(
-    <Toggle variant="outline" aria-label="Pin" onPressedChange={onPressedChange}>
+    <Toggle variant="outline" size="icon" aria-label="Pin" onPressedChange={onPressedChange}>
       <ToggleIcon>
         <svg viewBox="0 0 24 24" />
       </ToggleIcon>
