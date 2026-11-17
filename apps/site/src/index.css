@@ -8,6 +8,9 @@
 @import "../../../registry/styles/palettes.css";
 
 @source "../../../registry";
+/* The Theming guide renders the showcase's theme editor. Without this its classes never reach the site's
+   stylesheet, and the colour area, hue track and swatches render with no size or fill. */
+@source "../../showcase/src/theme-editor.tsx";
 
 :root {
   /* The floating header: its offset, the bar's rim and border, and one control. Docs columns stick below it. */

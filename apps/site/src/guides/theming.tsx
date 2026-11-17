@@ -26,9 +26,8 @@ export default function Theming() {
       </P>
       <section
         aria-label="Theme editor"
-        // oxlint-disable-next-line jsx-a11y/no-noninteractive-tabindex -- the editor's preset row is wider than a phone, so the box scrolls sideways and takes focus
-        tabIndex={0}
-        className="overflow-x-auto rounded-surface border bg-card p-inset-surface outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        data-slot="theme-editor-card"
+        className="min-w-0 rounded-surface border bg-card p-inset-surface narrow:p-group"
       >
         <ThemeEditor appearance={appearance} palettes={palettes} />
       </section>
