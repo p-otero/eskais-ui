@@ -4,12 +4,24 @@ Versions follow [semver](https://semver.org). Before 1.0, a minor version can br
 
 ## Unreleased
 
+## 0.2.0 (2026-11-17)
+
 ### Added
 
 - Fast links: `Link`, `ButtonLink` and `NavigationMenuLink` follow a same-origin link on a primary mouse press instead of on release, with `@fast-link/core` 0.0.2 (through `onFollow`, or `location.assign`). `fast={false}` opts a link out and `data-no-fast-link` on any ancestor a region or the app; `FastLinkRegion` and `useFastLink` cover plain anchors. A `render`ed router link or a link with its own `onClick` stays on click unless it has `onFollow`.
 - Icons come from `lucide-react` (1.73.0): every hand-drawn icon in the registry is now a lucide import, and the items that use one depend on it. `icon` adds `Icon`, which names an icon for screen readers (`<Icon icon={TrashIcon} label="Deleted" />`). The `eskais/no-inline-icons` lint rule flags any other `<svg>` in `registry/**`.
 - Deprecated: `ChevronIcon` from `select` and `PanelIcon` from `sidebar` (import `ChevronDownIcon` and `PanelLeftIcon` from `lucide-react`). `CloseIcon` is no longer exported from `task-detail-parts`. `select` still exports lucide's `CheckIcon`.
 - `StepDialog` `resultStep={{ title, render: (result, { close, restart }) => … }}` (opt-in) shows what `onSubmit` resolved with inside the dialog instead of closing: focus moves to the result heading, Done (`labels.done`) and Escape close it, and `restart` starts over from step 1. `onOpenChange` now gets `details.reason` (`submit`, `done`, `cancel`, `escape`, `outside`, `dismiss`, `trigger`).
+- `icon` item: `<Icon icon={TrashIcon} label="…" />` for meaningful icons; `eskais/no-inline-icons` rejects hand-drawn SVG icons in the registry.
+- Keyboard-first lists: `shortcuts` (`useShortcut`, `ShortcutScope`, `ShortcutHint`, `Button`/`DropdownMenuItem` `shortcut`), `shortcuts-dialog` (`?`), `row-navigation` (j/k, Home/End, PageUp/PageDown, Enter, x) in List, DataTable and the AgentTaskBoard table and backlog, `virtual-rows` (TanStack Virtual past 200 rows), `SidePanel` and the `inbox` block.
+- `@eskais/mockup` (`packages/mockup`, run from the repo with Bun): build a screen as TSX with the project's own components and fixtures into one offline HTML file, then `validate` it. A `/docs/mockups` guide covers it, with an A/B benchmark against hand-written HTML (`packages/mockup/BENCHMARKS.md`).
+- `bun run test:compiler`: the showcase built with React Compiler, with the browser checks run on it (in CI).
+
+### Changed
+
+- Lint: the shared `@p-otero/oxlint-rules` presets replace the local rules (`p-otero/spacing-tokens`, `p-otero/no-low-value-comments`); effects live in hooks (`use-*.ts`); the `lint-rules` item ships the `react` and `ui-tailwind` presets.
+- Shell: the global search dialog sits beside `Topbar` (only triggers in `center`/`centerCompact`); `SidebarTrigger` opens the sidebar drawer on narrow screens; tabs scroll the active tab clear of the fade; `CardHeader` wraps its action below the title sooner; dialog focus return never steals focus from another modal; `MobileNav` labels shrink or wrap and its offset includes the border; plain `Field`s inherit `Form`'s `labelPlacement`; option and item arrays accept `readonly`.
+- `DocsLayout`: on narrow screens the header row scrolls with the page instead of covering it.
 
 ### Fixed
 
