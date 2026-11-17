@@ -460,7 +460,12 @@ const itemNotes: Record<string, ItemNotes> = {
     related: ["filter-bar", "scroll-area"],
   },
   carousel: {
-    a11y: ["Native scroll-snap slides with Previous and Next, arrow keys and named indicators."],
+    a11y: [
+      "Native scroll-snap slides with Previous and Next, arrow keys and named indicators.",
+      'CarouselStatus shows "1 of 3" and announces it politely only when the page changes, never while rotating.',
+    ],
+    agent:
+      "Agents page it with setPage, next and previous; useCarouselState() reads page and pageCount for your own header.",
     related: ["lightbox", "attachments"],
   },
   board: {

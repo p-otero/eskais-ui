@@ -3151,7 +3151,7 @@
       "name": "carousel",
       "type": "registry:ui",
       "title": "Carousel",
-      "description": "UI SDK Carousel: native scroll-snap slides with Previous and Next, arrow keys, indicators and optional rotation; agents page it by name.",
+      "description": "UI SDK Carousel: native scroll-snap slides with Previous and Next, arrow keys, indicators and optional rotation; CarouselStatus shows \"1 of 3\" and useCarouselState reads the page and count; agents page it by name.",
       "dependencies": [
         "@ui-sdk/core@0.1.0-beta.5",
         "@ui-sdk/react@0.1.0-beta.5",

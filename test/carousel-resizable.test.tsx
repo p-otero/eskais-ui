@@ -11,7 +11,9 @@ import {
   CarouselItem,
   CarouselNext,
   CarouselPrevious,
+  CarouselStatus,
   CarouselViewport,
+  useCarouselState,
 } from "@/components/ui/carousel"
 import { Resizable, ResizableHandle, ResizablePanel } from "@/components/ui/resizable"
 
@@ -121,6 +123,69 @@ test("a carousel has no axe violations and an agent can page it", async () => {
   const result = await act(() => agent.act({ steps: [{ ref: "Featured", action: "setPage", args: [2] }] }))
   expect(result.ok, result.error?.message).toBe(true)
   expect(screen.getByRole("tab", { name: "Slide 2" }).getAttribute("aria-selected")).toBe("true")
+})
+
+function Position() {
+  const { page, pageCount } = useCarouselState()
+  return <output aria-label="Position">{`${String(page)}/${String(pageCount)}`}</output>
+}
+
+function Counted({ labels }: { labels?: { status: (page: number, pageCount: number) => string } }) {
+  return (
+    <Carousel aria-label="Featured">
+      <div className="flex items-center justify-between">
+        <CarouselStatus labels={labels} />
+        <Position />
+      </div>
+      <CarouselViewport>
+        <CarouselContent>
+          {slides.map((slide) => (
+            <CarouselItem key={slide}>{slide}</CarouselItem>
+          ))}
+        </CarouselContent>
+      </CarouselViewport>
+      <CarouselNext />
+    </Carousel>
+  )
+}
+
+function liveRegion() {
+  return document.querySelector("[data-slot=carousel-status] [aria-live]")
+}
+
+test("CarouselStatus shows the page and the count, and announces only a change", async () => {
+  const user = userEvent.setup()
+  const { container } = render(<Counted />)
+  await settle()
+  const status = container.querySelector("[data-slot=carousel-status]")
+  expect(status?.textContent).toBe("1 of 3")
+  expect(liveRegion()?.getAttribute("aria-live")).toBe("polite")
+  expect(liveRegion()?.textContent).toBe("")
+
+  await user.click(screen.getByRole("button", { name: "Next slide" }))
+  expect(status?.textContent).toContain("2 of 3")
+  expect(liveRegion()?.textContent).toBe("2 of 3")
+  expect(await axeViolations(container)).toEqual([])
+})
+
+test("useCarouselState reads the page and count from UI SDK, and labels translate the status", async () => {
+  const user = userEvent.setup()
+  render(<Counted labels={{ status: (page, pageCount) => `${String(page)} de ${String(pageCount)}` }} />)
+  await settle()
+  expect(screen.getByRole("status", { name: "Position" }).textContent).toBe("1/3")
+  expect(document.querySelector("[data-slot=carousel-status]")?.textContent).toBe("1 de 3")
+  await user.click(screen.getByRole("button", { name: "Next slide" }))
+  expect(screen.getByRole("status", { name: "Position" }).textContent).toBe("2/3")
+  const result = await act(() => agent.act({ steps: [{ ref: "Featured", action: "setPage", args: [3] }] }))
+  expect(result.ok, result.error?.message).toBe(true)
+  expect(screen.getByRole("status", { name: "Position" }).textContent).toBe("3/3")
+  expect(liveRegion()?.textContent).toBe("3 de 3")
+})
+
+test("useCarouselState outside a Carousel says where it belongs", () => {
+  vi.spyOn(console, "error").mockImplementation(() => undefined)
+  expect(() => render(<Position />)).toThrow("useCarouselState must be inside a Carousel.")
+  vi.mocked(console.error).mockRestore()
 })
 
 function Editor() {

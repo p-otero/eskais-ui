@@ -351,6 +351,7 @@ async function checkEverything(page) {
         fill: rgb(getComputedStyle(chip).backgroundColor),
         remove: chip.querySelector("[data-slot=token-input-token-remove]")?.getAttribute("title"),
       })),
+      carouselStatus: document.querySelector("[data-slot=carousel-status]")?.textContent,
       border: { card: rgb(card.borderTopColor), token: rgb(getComputedStyle(html).getPropertyValue("--border")) },
       spacing: { compact: compactSpacing, default: defaultSpacing },
       font: [...document.fonts].some((font) => font.family.includes("Geist") && font.status === "loaded"),
@@ -369,6 +370,7 @@ async function checkEverything(page) {
     throw new Error(`TokenInput didn't render its chips: ${JSON.stringify(result.tokens)}`)
   if (result.tokens.some((token) => token.fill === "0,0,0" || token.fill === "255,255,255"))
     throw new Error(`TokenInput chips have no tone fill: ${JSON.stringify(result.tokens)}`)
+  if (result.carouselStatus !== "1 of 3") throw new Error(`CarouselStatus shows ${String(result.carouselStatus)}`)
   if (result.border.card !== result.border.token) throw new Error("Borders don't use --border")
   if (!result.font) throw new Error("The Geist font didn't load in the built app")
   if (result.blue.background === result.neutral.background) throw new Error("data-palette didn't change --primary")
@@ -468,6 +470,7 @@ import { Topbar } from "@/components/ui/topbar"
 import { Spinner } from "@/components/ui/spinner"
 import { StatusDot } from "@/components/ui/status-pill"
 import { TokenInput, TokenInputEditor } from "@/components/ui/token-input"
+import { Carousel, CarouselContent, CarouselItem, CarouselStatus, CarouselViewport } from "@/components/ui/carousel"
 import type { TaskView } from "@/lib/agent-task-types"
 import { cn } from "@/lib/utils"
 import "./index.css"
@@ -527,6 +530,7 @@ function App() {
         <Button loading>Saving</Button>
         <Field><FieldLabel>Name</FieldLabel><Input /></Field>
         <Field><FieldLabel>Labels</FieldLabel><TokenInput tokenType="label" defaultValue={["bug", "docs"] as const} tone="info"><TokenInputEditor placeholder="Add a label" /></TokenInput></Field>
+        <Carousel aria-label="Slides"><CarouselStatus /><CarouselViewport><CarouselContent>{["One", "Two", "Three"].map((name) => <CarouselItem key={name}>{name}</CarouselItem>)}</CarouselContent></CarouselViewport></Carousel>
         <SearchField label="Search" onSearch={() => {}} />
         <Form schema={profileSchema} defaultValues={{ name: "" }} onSubmit={() => {}} messages={formMessagesEs} label="Profile">
           <FormField name="name" label="Display name"><Input /></FormField>

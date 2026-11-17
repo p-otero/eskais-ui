@@ -6,6 +6,7 @@ import {
   CarouselItem,
   CarouselNext,
   CarouselPrevious,
+  CarouselStatus,
   CarouselViewport,
 } from "@/components/ui/carousel"
 
@@ -14,6 +15,10 @@ const projects = ["Apollo", "Borealis", "Cygnus", "Draco"]
 export default function CarouselDemo() {
   return (
     <Carousel aria-label="Featured projects" className="w-full max-w-md">
+      <div className="flex items-baseline justify-between">
+        <h3 className="text-title-sm">Featured projects</h3>
+        <CarouselStatus />
+      </div>
       <CarouselViewport>
         <CarouselContent>
           {projects.map((name) => (

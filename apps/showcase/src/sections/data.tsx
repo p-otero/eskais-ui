@@ -10,6 +10,7 @@ import {
   CarouselItem,
   CarouselNext,
   CarouselPrevious,
+  CarouselStatus,
   CarouselViewport,
 } from "@/components/ui/carousel"
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table"
@@ -163,11 +164,18 @@ function DataSection() {
         </div>
       </Section>
 
-      <Section title="Carousel" description="Native scrolling slides with Previous, Next, arrow keys and indicators.">
+      <Section
+        title="Carousel"
+        description="Native scrolling slides with Previous, Next, arrow keys and indicators; CarouselStatus says where you are."
+      >
         <Carousel aria-label="Featured projects" className="w-full max-w-md">
+          <div className="flex items-baseline justify-between">
+            <h3 className="text-title-sm">Featured projects</h3>
+            <CarouselStatus />
+          </div>
           <CarouselViewport>
             <CarouselContent>
-              {["Apollo", "Borealis", "Cygnus", "Draco"].map((name) => (
+              {["Apollo", "Borealis", "Cygnus"].map((name) => (
                 <CarouselItem key={name}>
                   <div className="flex h-32 items-center justify-center rounded-surface bg-muted text-lg font-medium">
                     {name}
@@ -179,7 +187,7 @@ function DataSection() {
           <div className="flex items-center justify-between">
             <CarouselPrevious />
             <CarouselIndicatorGroup aria-label="Choose a project">
-              {[1, 2, 3, 4].map((page) => (
+              {[1, 2, 3].map((page) => (
                 <CarouselIndicator key={page} page={page} />
               ))}
             </CarouselIndicatorGroup>

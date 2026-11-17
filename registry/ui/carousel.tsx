@@ -11,17 +11,84 @@ import {
   CarouselPrevious as CarouselPreviousPrimitive,
   CarouselViewport as CarouselViewportPrimitive,
   createCarouselController,
+  type CarouselState,
 } from "@ui-sdk/react/carousel"
-import type { ComponentProps } from "react"
+import { createContext, useContext, useMemo, useState, type ComponentProps, type ReactNode } from "react"
 import { ChevronLeftIcon, ChevronRightIcon } from "lucide-react"
 
 import { buttonVariants } from "@/components/ui/button"
-import { cnState } from "@/lib/utils"
+import { cn, cnState } from "@/lib/utils"
 
 const stepClassName = buttonVariants({ variant: "outline", size: "icon" })
 
-function Carousel({ className, ...props }: ComponentProps<typeof CarouselPrimitive>) {
-  return <CarouselPrimitive className={cnState("relative flex flex-col gap-group", className)} {...props} />
+const CarouselStateContext = createContext<CarouselState | null>(null)
+
+function CarouselStateProvider({ state, children }: { state: CarouselState; children: ReactNode }) {
+  const { page, pageCount, playing, orientation } = state
+  const value = useMemo(() => ({ page, pageCount, playing, orientation }), [page, pageCount, playing, orientation])
+  return <CarouselStateContext value={value}>{children}</CarouselStateContext>
+}
+
+/** A region of slides that scroll a page at a time; the parts inside read its page through `useCarouselState`. */
+function Carousel({ className, children, ...props }: ComponentProps<typeof CarouselPrimitive>) {
+  return (
+    <CarouselPrimitive className={cnState("relative flex flex-col gap-group", className)} {...props}>
+      {(state) => (
+        <CarouselStateProvider state={state}>
+          {typeof children === "function" ? children(state) : children}
+        </CarouselStateProvider>
+      )}
+    </CarouselPrimitive>
+  )
+}
+
+/**
+ * The carousel's state, read from UI SDK inside a `Carousel`: `page` (from 1), `pageCount` (null until the slides are
+ * measured, as on the server), `playing` and `orientation`.
+ */
+function useCarouselState() {
+  const state = useContext(CarouselStateContext)
+  if (!state) throw new Error("useCarouselState must be inside a Carousel.")
+  return state
+}
+
+type CarouselLabels = {
+  /** The position, shown and announced: "2 of 3". */
+  status: (page: number, pageCount: number) => string
+}
+
+const defaultCarouselLabels: CarouselLabels = { status: (page, pageCount) => `${String(page)} of ${String(pageCount)}` }
+
+type CarouselStatusProps = Omit<ComponentProps<"p">, "children"> & {
+  labels?: Partial<CarouselLabels>
+}
+
+/**
+ * The current page and the page count, like "1 of 3". Screen readers hear it politely when the page changes, never
+ * on load or while the carousel rotates; the slides already say their own position.
+ */
+function CarouselStatus({ className, labels, ...props }: CarouselStatusProps) {
+  const { page, pageCount, playing } = useCarouselState()
+  const status = labels?.status ?? defaultCarouselLabels.status
+  const text = pageCount === null ? "" : status(page, pageCount)
+  const [shownPage, setShownPage] = useState(page)
+  const [announcement, setAnnouncement] = useState("")
+  if (page !== shownPage) {
+    setShownPage(page)
+    setAnnouncement(text)
+  }
+  return (
+    <p
+      data-slot="carousel-status"
+      className={cn("text-body-sm text-muted-foreground tabular-nums", className)}
+      {...props}
+    >
+      <span aria-hidden="true">{text}</span>
+      <span className="sr-only" aria-live={playing ? "off" : "polite"} aria-atomic="true">
+        {announcement}
+      </span>
+    </p>
+  )
 }
 
 function CarouselViewport({ className, ...props }: ComponentProps<typeof CarouselViewportPrimitive>) {
@@ -126,8 +193,10 @@ export {
   CarouselNext,
   CarouselPlayToggle,
   CarouselPrevious,
+  CarouselStatus,
   CarouselViewport,
   createCarouselController,
+  useCarouselState,
 }
-export type { CarouselIndicatorProps }
+export type { CarouselIndicatorProps, CarouselLabels, CarouselStatusProps }
 export type { CarouselController, CarouselOrientation, CarouselState } from "@ui-sdk/react/carousel"
