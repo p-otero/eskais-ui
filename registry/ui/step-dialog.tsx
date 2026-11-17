@@ -3,7 +3,7 @@
 import type { StandardSchemaV1 } from "@standard-schema/spec"
 import type { DialogOpenChangeReason } from "@ui-sdk/react/dialog"
 import type { VariantProps } from "class-variance-authority"
-import { useEffect, useId, useRef, useState, type ComponentProps, type ReactNode } from "react"
+import { useId, useRef, useState, type ComponentProps, type ReactNode } from "react"
 import type { FieldValues } from "react-hook-form"
 
 import { Button, type buttonVariants } from "@/components/ui/button"
@@ -28,6 +28,7 @@ import {
   type StepChangeDetails,
   type StepDirection,
 } from "@/components/ui/step-form"
+import { useFocusFirstStepOnRestart } from "@/components/ui/use-step-dialog-focus"
 import { cn } from "@/lib/utils"
 
 type StepDialogLabels = StepFormLabels & {
@@ -109,6 +110,9 @@ type StepDialogProps<Schema extends StandardSchemaV1, Result = unknown> = Omit<
 
 type Shown<Result> = { result: Result } | null
 
+// A stable ref callback runs once, when the heading mounts.
+const focusOnMount = (node: HTMLElement | null) => node?.focus()
+
 function ResultStep<Result>({
   step,
   result,
@@ -121,14 +125,12 @@ function ResultStep<Result>({
   doneLabel: ReactNode
 }) {
   const headingId = useId()
-  const heading = useRef<HTMLHeadingElement>(null)
-  useEffect(() => heading.current?.focus(), [])
   return (
     <>
       <DialogBody>
         <section aria-labelledby={headingId} data-slot="step-dialog-result" className="flex min-w-0 flex-col gap-group">
           <h3
-            ref={heading}
+            ref={focusOnMount}
             id={headingId}
             tabIndex={-1}
             data-slot="step-dialog-result-title"
@@ -179,9 +181,7 @@ function StepDialog<Schema extends StandardSchemaV1, Result = unknown>({
   const content = useRef<HTMLDivElement>(null)
   const open = openProp ?? ownOpen
 
-  useEffect(() => {
-    if (run > 0) content.current?.querySelector<HTMLElement>('[data-slot="step-form-title"]')?.focus()
-  }, [run])
+  useFocusFirstStepOnRestart(content, run)
 
   const setOpen = (next: boolean, details: StepDialogOpenChangeDetails) => {
     if (openProp === undefined) setOwnOpen(next)
