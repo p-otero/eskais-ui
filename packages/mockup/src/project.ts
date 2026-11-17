@@ -112,6 +112,29 @@ function extendsOf(path: string): string | null {
   return existsSync(`${candidate}.json`) ? `${candidate}.json` : null
 }
 
+function setsJsx(tsconfig: string): boolean {
+  const parsed = readJsonc(tsconfig)
+  const compiler = isRecord(parsed) && isRecord(parsed["compilerOptions"]) ? parsed["compilerOptions"] : {}
+  if (typeof compiler["jsx"] === "string") return true
+  const parent = extendsOf(tsconfig)
+  return parent !== null && setsJsx(parent)
+}
+
+// A root tsconfig.json that only lists references (Vite's template keeps the app's options in tsconfig.app.json)
+// can't type-check a .tsx file on its own: use the referenced config that sets jsx, as tsc -b would.
+export function checkTsconfig(tsconfig: string): string {
+  const parsed = readJsonc(tsconfig)
+  const references = isRecord(parsed) && Array.isArray(parsed["references"]) ? parsed["references"] : []
+  if (references.length === 0 || setsJsx(tsconfig)) return tsconfig
+  for (const reference of references) {
+    if (!isRecord(reference) || typeof reference["path"] !== "string") continue
+    const target = resolve(dirname(tsconfig), reference["path"])
+    const file = existsSync(target) && statSync(target).isDirectory() ? join(target, "tsconfig.json") : target
+    if (existsSync(file) && setsJsx(file)) return file
+  }
+  return tsconfig
+}
+
 export function readTsconfigPaths(tsconfig: string): TsconfigPaths {
   const parsed = readJsonc(tsconfig)
   const document = isRecord(parsed) ? parsed : {}
