@@ -1,21 +1,30 @@
-import { useRef, type CSSProperties, type ReactNode } from "react"
+import { useRef, type ReactNode } from "react"
 
 import { DocsBreadcrumb, DocsLayout, DocsPager, DocsToc, useTocItems } from "@/components/ui/docs-layout"
-import { Sidebar, SidebarGroup, SidebarItem } from "@/components/ui/sidebar"
+import { Sidebar, SidebarGroup, SidebarItem, SidebarTrigger, useSidebarState } from "@/components/ui/sidebar"
+import type { SidebarState } from "@/components/ui/sidebar"
 
-import { slug } from "../header"
+import { DocsTopbar, slug } from "../header"
 import { useScrollIntoView } from "../hooks/use-scroll-into-view"
 import { docPages, docSections, neighbours } from "../pages"
 import { followTo, hrefFor, linkTo } from "../router"
 
-const layoutStyle = { "--docs-top": "var(--site-header)", "--docs-sidebar-width": "var(--docs-sidebar)" }
+// The site's narrow breakpoint, the theme's `narrow:` variant, so the drawer and the stacked layout switch together.
+const narrowQuery = "(width <= 47.5rem)"
 
-function DocsSidebar({ route }: { route: string }) {
+function DocsSidebar({ route, state }: { route: string; state: SidebarState }) {
   const container = useRef<HTMLDivElement>(null)
   useScrollIntoView(container, `a[href="${hrefFor(route)}"]`)
   return (
-    <div ref={container} className="w-full">
-      <Sidebar label="Documentation" collapsible={false} narrowQuery="(width <= 47.5rem)" className="w-full">
+    <div ref={container} className="flex h-full">
+      <Sidebar
+        label="Documentation"
+        {...state.sidebarProps}
+        collapse="hide"
+        trigger={false}
+        narrowQuery={narrowQuery}
+        className="bg-transparent"
+      >
         {docSections.map((section) => (
           <SidebarGroup key={section.name} label={section.name}>
             {section.pages.map((page) => (
@@ -54,18 +63,19 @@ function SiteDocsLayout({ route, children }: { route: string; children: ReactNod
   const headings = useTocItems(article, "[data-toc]")
   const { previous, next } = neighbours(route)
   const crumbs = crumbsFor(route)
+  const sidebar = useSidebarState({ storageKey: "eskais-site-sidebar" })
   return (
     <DocsLayout
-      style={layoutStyle as CSSProperties}
-      sidebar={<DocsSidebar route={route} />}
+      topbar={<DocsTopbar trigger={<SidebarTrigger {...sidebar.triggerProps} narrowQuery={narrowQuery} />} />}
+      sidebar={<DocsSidebar route={route} state={sidebar} />}
       header={
-        crumbs.length > 0 && (
+        crumbs.length > 0 ? (
           <DocsBreadcrumb
             items={crumbs.map((crumb, index) =>
               index === crumbs.length - 1 ? { label: crumb.label } : { label: crumb.label, ...followTo(crumb.route) },
             )}
           />
-        )
+        ) : undefined
       }
       toc={<DocsToc items={headings} title="On this page" />}
     >

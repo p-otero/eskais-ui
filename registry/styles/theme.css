@@ -91,6 +91,8 @@
   --card-heading-basis: 11rem;
   --sidebar-width: 16rem;
   --sidebar-rail-width: calc(var(--control-height) + 1rem);
+  /* A Topbar: one control, its block padding and its bottom border. Sticky columns under it start here. */
+  --topbar-height: calc(var(--control-height) + var(--gap-items) * 2 + 1px);
   /* A MobileNav's bar, and the space a page keeps clear under it: the bar, its 1px top border and the safe area. */
   --mobile-nav-height: 3.5rem;
   --mobile-nav-offset: calc(var(--mobile-nav-height) + 1px + env(safe-area-inset-bottom));

@@ -11,19 +11,23 @@ import {
 } from "@/components/ui/breadcrumb"
 import { Link, type LinkProps } from "@/components/ui/link"
 import { PageLayout } from "@/components/ui/page-layout"
-import { ScrollArea, ScrollAreaScrollbar, ScrollAreaThumb, ScrollAreaViewport } from "@/components/ui/scroll-area"
 import { cn } from "@/lib/utils"
 import { DocsToc, useTocItems, type DocsTocItem, type DocsTocProps } from "@/components/ui/docs-toc"
 
 type DocsLayoutProps = ComponentProps<"div"> & {
-  /** Usually a Sidebar. Fixed beside the content on wide screens; in the header row on narrow ones. */
-  sidebar?: ReactNode
-  /** Usually a DocsToc; shown beside the content on extra-wide screens. */
-  toc?: ReactNode
   /**
-   * A bar that sticks above the content, like a DocsBreadcrumb. On narrow screens the sidebar's drawer button joins
-   * it in one row that scrolls with the page, above the content.
+   * A Topbar across the top, usually with a SidebarTrigger in `leading`. The sidebar, the table of contents and
+   * anchor scrolling start below it (`--topbar-height`).
    */
+  topbar?: ReactNode
+  /**
+   * Usually a Sidebar with `trigger={false}` and the same controller as the topbar's SidebarTrigger. It sticks under
+   * the topbar at the full remaining height and scrolls on its own; on narrow screens it's the Sidebar's drawer.
+   */
+  sidebar?: ReactNode
+  /** Usually a DocsToc; sticky beside the content on extra-wide screens. */
+  toc?: ReactNode
+  /** Above the page in the main column, like a DocsBreadcrumb. It scrolls with the page. */
   header?: ReactNode
   /** The `<main>` landmark's id, a SkipLink's target. */
   mainId?: string
@@ -32,10 +36,20 @@ type DocsLayoutProps = ComponentProps<"div"> & {
 }
 
 /**
- * A documentation page: sidebar, main column, table of contents and a sticky header. Pass `--docs-top` in `style` for
- * the height of anything fixed above it (a site header), and `--docs-sidebar-width` to resize the sidebar.
+ * A documentation page: a topbar, a sidebar under it, the main column with a breadcrumb above the page, and a table
+ * of contents. Without a `topbar`, pass `--docs-top` in `style` for the height of anything fixed above it, like a
+ * floating site header. `--docs-sidebar-width` resizes the sidebar, and `--docs-height` (the viewport by default) is the
+ * height of the box that scrolls the page, for a layout inside a pane.
  */
+// Derived below the root, where a consumer's `--docs-top`, `--docs-height` and `--docs-sidebar-width` are set.
+const columns = {
+  "--docs-column-height": "calc(var(--docs-height) - var(--docs-top))",
+  "--docs-scroll-margin": "calc(var(--docs-top) + var(--gap-group))",
+} as CSSProperties
+const sidebarWidth = { "--sidebar-width": "var(--docs-sidebar-width)" } as CSSProperties
+
 function DocsLayout({
+  topbar,
   sidebar,
   toc,
   header,
@@ -46,59 +60,70 @@ function DocsLayout({
   children,
   ...props
 }: DocsLayoutProps) {
+  const top = topbar === undefined ? "0px" : "var(--topbar-height)"
   return (
     <div
       data-slot="docs-layout"
-      className={cn(
-        "flex w-full min-w-0 flex-1 flex-col",
-        sidebar !== undefined && "ps-(--docs-sidebar-width) narrow:ps-0",
-        className,
-      )}
-      style={{ "--docs-sidebar-width": "16rem", "--docs-top": "0px", ...style } as CSSProperties}
+      className={cn("flex w-full min-w-0 flex-1 flex-col", className)}
+      style={
+        {
+          "--docs-sidebar-width": "var(--sidebar-width)",
+          "--docs-top": top,
+          "--docs-height": "100dvh",
+          ...style,
+        } as CSSProperties
+      }
       {...props}
     >
-      {/* On narrow screens the header row scrolls with the page: a second sticky bar under a site header would
-          cover the start of every page on a phone, and its opaque fill would cut through the page background. */}
-      {(sidebar !== undefined || header !== undefined) && (
-        <div
-          data-slot="docs-layout-header"
-          className="sticky top-(--docs-top) z-sticky flex min-w-0 items-center gap-inline bg-background empty:hidden narrow:static narrow:bg-transparent narrow:px-group narrow:pt-inline"
-        >
-          {sidebar !== undefined && (
-            <div
-              data-slot="docs-layout-sidebar"
-              className="fixed start-0 top-(--docs-top) bottom-0 flex w-(--docs-sidebar-width) narrow:static narrow:w-auto"
-            >
-              <ScrollArea className="flex-1 narrow:overflow-visible">
-                <ScrollAreaViewport className="narrow:overflow-visible">{sidebar}</ScrollAreaViewport>
-                <ScrollAreaScrollbar orientation="vertical">
-                  <ScrollAreaThumb />
-                </ScrollAreaScrollbar>
-              </ScrollArea>
-            </div>
-          )}
-          {header !== undefined && (
-            <div className="mx-auto flex w-full max-w-6xl min-w-0 px-section py-inline narrow:px-0">{header}</div>
-          )}
-        </div>
-      )}
-      <div className="mx-auto flex w-full max-w-6xl min-w-0 gap-section px-section pt-group pb-section narrow:px-group">
-        <PageLayout
-          as={as}
-          id={as === "main" ? mainId : undefined}
-          width="full"
-          className="min-w-0 flex-1 p-0 narrow:p-0"
-        >
-          {children}
-        </PageLayout>
-        {toc !== undefined && (
+      {topbar}
+      <div
+        data-slot="docs-layout-body"
+        className="flex min-w-0 flex-1 items-start narrow:flex-col narrow:items-stretch"
+        style={columns}
+      >
+        {sidebar !== undefined && (
+          // With a topbar, its SidebarTrigger opens the drawer on narrow screens, so this box steps aside. Without
+          // one, it's the row that holds the Sidebar's own drawer button above the page.
           <div
-            data-slot="docs-layout-toc"
-            className="sticky top-(--docs-top) hidden w-52 shrink-0 self-start pt-group xl:block"
+            data-slot="docs-layout-sidebar"
+            style={sidebarWidth}
+            className={cn(
+              "sticky top-(--docs-top) flex h-(--docs-column-height) shrink-0 narrow:static narrow:h-auto",
+              topbar === undefined ? "narrow:px-group narrow:pt-inline" : "narrow:contents",
+            )}
           >
-            {toc}
+            {sidebar}
           </div>
         )}
+        <div
+          data-slot="docs-layout-columns"
+          className="mx-auto flex w-full max-w-6xl min-w-0 flex-1 gap-section px-section pt-group pb-section narrow:px-group"
+        >
+          <div data-slot="docs-layout-main" className="flex min-w-0 flex-1 flex-col gap-group">
+            {header !== undefined && (
+              <div data-slot="docs-layout-header" className="flex min-w-0">
+                {header}
+              </div>
+            )}
+            <PageLayout
+              as={as}
+              id={as === "main" ? mainId : undefined}
+              width="full"
+              // Anchors, focus and scrollIntoView all stop below the topbar, whatever the page scrolls to.
+              className="min-w-0 flex-1 p-0 narrow:p-0 **:scroll-mt-(--docs-scroll-margin)"
+            >
+              {children}
+            </PageLayout>
+          </div>
+          {toc !== undefined && (
+            <div
+              data-slot="docs-layout-toc"
+              className="sticky top-(--docs-top) hidden max-h-(--docs-column-height) w-52 shrink-0 self-start overflow-y-auto pt-group pb-section xl:block"
+            >
+              {toc}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   )

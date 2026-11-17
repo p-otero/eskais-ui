@@ -138,6 +138,154 @@ async function checkBreadcrumbs(browser, origin) {
   }
 }
 
+// The docs shell: the sidebar starts at the Topbar's bottom edge and reaches the viewport's, nothing of it sits
+// under the Topbar (also after scrolling), the breadcrumb sits in the main column, and the trigger collapses the
+// sidebar, which stays collapsed after a reload.
+function shellGeometry(page) {
+  return page.evaluate(() => {
+    const topbar = document.querySelector('[data-slot="docs-layout"] > [data-slot="topbar"]')
+    const sidebar = document.querySelector('[data-slot="docs-layout-sidebar"] nav[aria-label="Documentation"]')
+    const main = document.querySelector('[data-slot="docs-layout-main"]')
+    const crumbs = document.querySelector('nav[aria-label="Breadcrumb"]')
+    if (!topbar || !sidebar || !main || !crumbs) {
+      return { problems: ["the topbar, sidebar, main column or breadcrumb is missing"], width: -1 }
+    }
+    const bar = topbar.getBoundingClientRect()
+    const side = sidebar.getBoundingClientRect()
+    const problems = []
+    if (Math.abs(side.top - bar.bottom) > 0.5) problems.push(`sidebar top ${side.top}px, topbar bottom ${bar.bottom}px`)
+    if (Math.abs(side.bottom - innerHeight) > 0.5) problems.push(`sidebar ends at ${side.bottom}px of ${innerHeight}px`)
+    for (const element of sidebar.querySelectorAll('a, [data-slot="sidebar-group-label"]')) {
+      const box = element.getBoundingClientRect()
+      const y = box.top + box.height / 2
+      if (box.width === 0 || y <= side.top || y >= Math.min(side.bottom, innerHeight)) continue
+      // Only what the topbar draws over counts: an item scrolled out of the sidebar's own scroll box isn't drawn.
+      const hit = document.elementFromPoint(box.left + Math.min(8, box.width / 2), y)
+      if (hit && !sidebar.contains(hit) && topbar.contains(hit))
+        problems.push(`"${element.textContent}" is under the topbar`)
+    }
+    if (!main.contains(crumbs)) problems.push("the breadcrumb isn't in the main column")
+    const column = main.getBoundingClientRect()
+    const trail = crumbs.getBoundingClientRect()
+    if (trail.left < column.left - 0.5 || trail.right > column.right + 0.5) {
+      problems.push("the breadcrumb leaves the main column")
+    }
+    for (let node = crumbs; node; node = node.parentElement) {
+      const position = getComputedStyle(node).position
+      if (position === "sticky" || position === "fixed") {
+        problems.push(`the breadcrumb is in a ${position} ${node.dataset.slot ?? node.tagName.toLowerCase()}`)
+      }
+    }
+    return { problems, width: side.width }
+  })
+}
+
+async function checkShell(browser, origin) {
+  for (const width of [1920, 1440, 1100, 768]) {
+    for (const path of ["docs/theming/", "docs/components/", "docs/components/button/"]) {
+      const { page, context } = await openPage(browser, origin + path, { width, height: 900 })
+      await page.locator("main h1").waitFor()
+      const scope = `shell /${path} ${width}px`
+      for (const problem of (await shellGeometry(page)).problems) failures.push(`${scope}: ${problem}`)
+      await page.mouse.move(width / 2, 450)
+      await page.mouse.wheel(0, 2400)
+      await page.waitForTimeout(200)
+      for (const problem of (await shellGeometry(page)).problems) failures.push(`${scope} scrolled: ${problem}`)
+      if (path === "docs/components/button/") {
+        await page.getByRole("button", { name: "Collapse sidebar" }).click()
+        await page.waitForTimeout(400)
+        const { width: collapsed } = await shellGeometry(page)
+        if (collapsed !== 0) failures.push(`${scope}: the collapsed sidebar is ${collapsed}px wide`)
+        await page.reload()
+        await page.locator("main h1").waitFor()
+        const expand = page.getByRole("button", { name: "Expand sidebar" })
+        if (await expand.isVisible()) {
+          await expand.click()
+          await page.waitForTimeout(400)
+          if ((await shellGeometry(page)).width === 0) failures.push(`${scope}: the sidebar doesn't expand again`)
+        } else failures.push(`${scope}: the sidebar doesn't stay collapsed after a reload`)
+      }
+      await context.close()
+    }
+  }
+  const context = await browser.newContext(phone)
+  const page = await context.newPage()
+  await page.goto(`${origin}docs/components/button/`)
+  await page.locator("main h1").waitFor()
+  await page.waitForLoadState("networkidle")
+  await page.getByRole("button", { name: "Open navigation" }).tap()
+  const drawer = page.getByRole("dialog", { name: "Documentation" })
+  if (!(await drawer.getByRole("link", { name: "Installation" }).isVisible())) {
+    failures.push("shell 390px: the trigger doesn't open the sidebar's drawer")
+  }
+  await context.close()
+  console.log("docs shell: 4 widths, collapse and drawer checked")
+}
+
+// The theme editor fits its card at every width, draws its colour area and swatches, and recolours the site.
+async function checkThemeEditor(browser, origin) {
+  for (const width of [1440, 1100, 768, 390]) {
+    const { page, context } = await openPage(browser, `${origin}docs/theming/`, { width, height: 900 })
+    const scope = `theme editor ${width}px`
+    const editor = page.locator('[data-slot="theme-editor-card"]')
+    await editor.scrollIntoViewIfNeeded()
+    const layout = await editor.evaluate((card) => {
+      const edge = card.getBoundingClientRect()
+      // Content inside a box that scrolls sideways, like the preset row on a phone, is clipped to that box.
+      const clipped = (element) => {
+        for (let node = element.parentElement; node && node !== card; node = node.parentElement) {
+          if (getComputedStyle(node).overflowX !== "visible") return true
+        }
+        return false
+      }
+      const problems = []
+      for (const element of card.querySelectorAll("*")) {
+        const box = element.getBoundingClientRect()
+        if (box.width === 0 || box.height === 0 || clipped(element)) continue
+        if (box.left < edge.left - 0.5 || box.right > edge.right + 0.5) {
+          const name = element.dataset.slot ?? element.tagName.toLowerCase()
+          problems.push(`${name} spans ${box.left}-${box.right}px, the card ${edge.left}-${edge.right}px`)
+        }
+      }
+      const area = card.querySelector('[data-slot="color-picker-area"]').getBoundingClientRect()
+      if (area.width < 1 || area.height < 1) problems.push(`the colour area is ${area.width}x${area.height}px`)
+      for (const swatch of card.querySelectorAll('[data-slot="color-picker-swatch"]')) {
+        if (getComputedStyle(swatch).backgroundColor === "rgba(0, 0, 0, 0)") problems.push("a swatch has no fill")
+      }
+      return problems.slice(0, 5)
+    })
+    for (const problem of layout) failures.push(`${scope}: ${problem}`)
+
+    if (width === 1440) {
+      const read = () =>
+        page.evaluate(() => ({
+          primary: getComputedStyle(document.documentElement).getPropertyValue("--primary").trim(),
+          card: getComputedStyle(document.querySelector('[data-slot="theme-editor-card"]')).backgroundColor,
+        }))
+      const start = await read()
+      const area = await page.locator('[data-slot="color-picker-area"]').boundingBox()
+      await page.mouse.click(area.x + area.width * 0.6, area.y + area.height * 0.4)
+      const dragged = await read()
+      if (dragged.primary === start.primary)
+        failures.push(`${scope}: the colour area leaves --primary at ${start.primary}`)
+      const input = page.getByRole("textbox", { name: "Brand colour in OKLCH" })
+      await input.fill("oklch(0.5 0.2 150)")
+      await input.press("Enter")
+      const typed = await read()
+      if (typed.primary === dragged.primary)
+        failures.push(`${scope}: typing a brand leaves --primary at ${typed.primary}`)
+      await page.getByRole("slider", { name: "Neutral tint" }).focus()
+      for (let step = 0; step < 10; step++) await page.keyboard.press("ArrowRight")
+      const tinted = await read()
+      if (tinted.card === typed.card) failures.push(`${scope}: the neutral tint leaves the card at ${typed.card}`)
+      await page.getByRole("button", { name: "Reset to preset" }).click()
+      if ((await read()).primary !== start.primary) failures.push(`${scope}: reset doesn't restore --primary`)
+    }
+    await context.close()
+  }
+  console.log("theme editor: layout at 4 widths, area, swatches and recolouring checked")
+}
+
 await withSite(async ({ browser, origin }) => {
   for (const path of pages) {
     for (const viewport of viewports) {
@@ -169,6 +317,8 @@ await withSite(async ({ browser, origin }) => {
       }
     }
   }
+  await checkShell(browser, origin)
+  await checkThemeEditor(browser, origin)
   await checkPhone(browser, origin)
   await checkBreadcrumbs(browser, origin)
 })
