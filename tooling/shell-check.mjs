@@ -1,13 +1,15 @@
 // Drives the showcase where layout decides whether things show: at phone widths the ⌘K dialog and Sidebar drawer
-// opened from the Topbar, scrollable tabs, MobileNav labels; CardHeader at four widths (?demo=card-header-check);
-// where a Form's floating label lands (?demo=field-placement-check).
+// opened from the Topbar, scrollable tabs, MobileNav labels; CardHeader widths; a Form's floating label; and
+// ?demo=shell-block at 1440, 768 and 390px (overlap, bottom bar, drawer, palette, Go to, skip link, hash routes, axe).
 // Usage: node tooling/shell-check.mjs [--screenshots=<dir>] (after `bun run build:showcase`)
 import { mkdirSync } from "node:fs"
+import { createRequire } from "node:module"
 import { join, resolve } from "node:path"
 
 import { withShowcase } from "./showcase-browser.mjs"
 
 const failures = []
+const axePath = createRequire(import.meta.url).resolve("axe-core/axe.min.js")
 const shotsArg = process.argv.find((arg) => arg.startsWith("--screenshots="))
 const shots = shotsArg ? resolve(shotsArg.slice("--screenshots=".length)) : undefined
 if (shots) mkdirSync(shots, { recursive: true })
@@ -243,7 +245,184 @@ async function checkFieldPlacement(page) {
   await shot(page, "field-placement.png")
 }
 
+async function shellBlock(page, width, scheme, query = "") {
+  await page.setViewportSize({ width, height: 800 })
+  await page.emulateMedia({ colorScheme: scheme })
+  await page.goto(`${new URL(page.url()).origin}/?demo=shell-block${query}`)
+  await page.evaluate((dark) => {
+    localStorage.clear()
+    document.documentElement.classList.toggle("dark", dark)
+    document.documentElement.classList.toggle("light", !dark)
+  }, scheme === "dark")
+  await page.getByRole("main").waitFor()
+  await page.evaluate(() => document.fonts.ready)
+  await page.waitForTimeout(300)
+}
+
+async function axeClean(page, scope) {
+  await page.waitForTimeout(300)
+  await page.evaluate(() => {
+    for (const animation of document.getAnimations()) animation.finish()
+  })
+  if (!(await page.evaluate(() => "axe" in window))) await page.addScriptTag({ path: axePath })
+  const violations = await page.evaluate(async () => {
+    const result = await window.axe.run(document, {
+      runOnly: ["wcag2a", "wcag2aa", "wcag21aa", "wcag22aa", "best-practice"],
+    })
+    return result.violations.map(
+      (violation) => `${violation.id}: ${violation.nodes.map((node) => node.target.join(" ")).join(" | ")}`,
+    )
+  })
+  check(`${scope}: 0 axe violations`, violations.length === 0, violations.join("; "))
+}
+
+// The shell's visible regions, pairwise: none may cover another, and the page never scrolls sideways. Scrolled, the
+// page passes under the sticky topbar by design, so only the chrome is compared.
+async function overlaps(page, withMain = true) {
+  return page.evaluate((includeMain) => {
+    const regions = [
+      ["topbar", document.querySelector('[data-slot="topbar"]')],
+      ["sidebar", document.querySelector('[data-slot="shell-sidebar"] nav')],
+      ["main", includeMain ? document.querySelector('[data-slot="shell-main"]') : null],
+      ["mobile-nav", document.querySelector('nav[aria-label="Bottom bar"]')],
+    ]
+      .filter(([, element]) => element?.checkVisibility())
+      .map(([name, element]) => [name, element.getBoundingClientRect()])
+      .filter(([, box]) => box.width > 0 && box.height > 0)
+    const problems = []
+    for (let i = 0; i < regions.length; i++) {
+      for (let j = i + 1; j < regions.length; j++) {
+        const [a, boxA] = regions[i]
+        const [b, boxB] = regions[j]
+        // The page runs on under the sticky bottom bar until it ends; bottomBarRoom checks that end.
+        if (a === "main" && b === "mobile-nav") continue
+        const x = Math.min(boxA.right, boxB.right) - Math.max(boxA.left, boxB.left)
+        const y = Math.min(boxA.bottom, boxB.bottom) - Math.max(boxA.top, boxB.top)
+        if (x > 0.5 && y > 0.5) problems.push(`${a} and ${b} overlap by ${Math.round(x)}×${Math.round(y)}`)
+      }
+    }
+    const scrollWidth = document.documentElement.scrollWidth
+    if (scrollWidth > innerWidth) problems.push(`scrolls sideways to ${scrollWidth}px`)
+    return { problems, names: regions.map(([name]) => name) }
+  }, withMain)
+}
+
+// Scrolled to the end, the last card ends above the bottom bar, which is --mobile-nav-offset tall and sits at the
+// viewport's bottom edge.
+function bottomBarRoom(page) {
+  return page.evaluate(() => {
+    const bar = document.querySelector('nav[aria-label="Bottom bar"]').getBoundingClientRect()
+    const last = document.querySelector('[data-testid="last-card"]').getBoundingClientRect()
+    const probe = document.createElement("div")
+    probe.style.height = "var(--mobile-nav-offset)"
+    document.body.append(probe)
+    const offset = Math.round(probe.getBoundingClientRect().height)
+    probe.remove()
+    return {
+      gap: Math.round(bar.top - last.bottom),
+      bar: Math.round(bar.height),
+      offset,
+      fromBottom: Math.round(innerHeight - bar.bottom),
+    }
+  })
+}
+
+async function checkDrawer(page, scope, scheme) {
+  const room = await bottomBarRoom(page)
+  check(
+    `${scope}: the page ends above the bottom bar, as tall as --mobile-nav-offset, at the viewport's bottom`,
+    room.gap >= 0 && room.bar === room.offset && room.fromBottom === 0,
+    JSON.stringify(room),
+  )
+  await page.getByRole("banner").getByRole("button", { name: "Open navigation" }).click()
+  const drawer = page.getByRole("dialog", { name: "Main" })
+  check(`${scope}: the topbar trigger opens the sidebar drawer`, await onScreen(drawer))
+  const inbox = await drawer.getByRole("link", { name: /Inbox/ }).getAttribute("aria-current")
+  check(`${scope}: the drawer marks the current route`, inbox === "page", inbox)
+  await shot(page, `shell-390-${scheme}-drawer.png`)
+  await axeClean(page, `${scope} drawer`)
+  await page.keyboard.press("Escape")
+  await drawer.waitFor({ state: "detached" })
+  const focused = await page.evaluate(() => document.activeElement?.getAttribute("aria-label"))
+  check(`${scope}: Escape closes the drawer and focus returns to its trigger`, focused === "Open navigation", focused)
+}
+
+async function checkPalette(page, scope, file) {
+  await page.keyboard.press("ControlOrMeta+k")
+  const palette = page.getByRole("dialog", { name: "Command palette" })
+  check(`${scope}: Ctrl+K opens the palette`, await onScreen(palette))
+  const inbox = await palette.getByRole("option", { name: "Inbox" }).getAttribute("aria-current")
+  check(`${scope}: the palette marks the current route`, inbox === "page", inbox)
+  await shot(page, file)
+  await axeClean(page, `${scope} palette`)
+  await page.keyboard.type("stats")
+  await page.keyboard.press("Enter")
+  await palette.waitFor({ state: "detached" })
+  const heading = await page.getByRole("main").getByRole("heading", { level: 1 }).textContent()
+  // On a phone Reports sits behind the bottom bar's More, which then carries the mark.
+  const current = await page
+    .locator('a[aria-current="page"], nav[aria-label="Bottom bar"] button[data-current]')
+    .evaluateAll((marks) => marks.filter((mark) => mark.checkVisibility()).map((mark) => mark.textContent))
+  check(
+    `${scope}: Go to Reports (by keyword) navigates and marks it current`,
+    heading === "Reports" && current.length > 0 && current.every((text) => /Reports|More/.test(text ?? "")),
+    `${heading}; current: ${current.join(", ")}`,
+  )
+}
+
+async function checkShellAt(page, width, scheme) {
+  const scope = `Shell ${width}px ${scheme}`
+  await shellBlock(page, width, scheme)
+  const top = await overlaps(page)
+  await shot(page, `shell-${width}-${scheme}.png`)
+  await axeClean(page, scope)
+  await page.evaluate(() => scrollTo(0, document.documentElement.scrollHeight))
+  await page.waitForTimeout(200)
+  const end = await overlaps(page, false)
+  const problems = [...top.problems, ...end.problems]
+  check(`${scope}: ${top.names.join(", ")} don't overlap, at the top or the end`, problems.length === 0, problems)
+  if (width === 390) await checkDrawer(page, scope, scheme)
+  await page.evaluate(() => scrollTo(0, 0))
+  await checkPalette(page, scope, `shell-${width}-${scheme}-palette.png`)
+}
+
+async function checkShell(page) {
+  const cases = ["light", "dark"].flatMap((scheme) => [1440, 768, 390].map((width) => ({ scheme, width })))
+  // One page, so one case at a time.
+  await cases.reduce(
+    (previous, { scheme, width }) => previous.then(() => checkShellAt(page, width, scheme)),
+    Promise.resolve(),
+  )
+
+  await shellBlock(page, 1440, "light")
+  await page.keyboard.press("Tab")
+  const skip = page.getByRole("link", { name: "Skip to content" })
+  check("Shell: Tab reaches the skip link first", await skip.evaluate((link) => link === document.activeElement))
+  await page.keyboard.press("Enter")
+  const onMain = await page.evaluate(() => document.activeElement?.tagName === "MAIN" && location.hash === "")
+  check("Shell: the skip link focuses main without changing the URL", onMain)
+
+  await shellBlock(page, 1440, "light", "&router=hash")
+  const sidebar = page.getByRole("navigation", { name: "Main" })
+  await sidebar.getByRole("link", { name: "Archive" }).click()
+  await page.waitForFunction(() => location.hash === "#/archive")
+  const archived = await page.getByRole("main").getByRole("heading", { level: 1 }).textContent()
+  const marked = await sidebar.getByRole("link", { name: "Archive" }).getAttribute("aria-current")
+  check(
+    "Shell hash router: a #/route link routes and becomes current",
+    archived === "Archive" && marked === "page",
+    `${archived}, ${marked}`,
+  )
+  await shellBlock(page, 390, "light", "&router=hash")
+  const bar = page.getByRole("navigation", { name: "Bottom bar" })
+  await bar.getByRole("link", { name: "Calendar" }).click()
+  await page.waitForFunction(() => location.hash === "#/calendar")
+  const calendar = await bar.getByRole("link", { name: "Calendar" }).getAttribute("aria-current")
+  check("Shell hash router 390px: the bottom bar routes and marks the route", calendar === "page", calendar)
+}
+
 await withShowcase(async (page) => {
+  await checkShell(page)
   await shell(page, 375)
   const search = page.getByRole("dialog", { name: "Search the workspace" })
   await page.getByRole("button", { name: "Search the workspace" }).click()

@@ -16,6 +16,7 @@ const pages = [
   "docs/components/agent-task-board/",
   "docs/components/inbox/",
   "docs/components/shortcuts-dialog/",
+  "docs/components/shell/",
   "docs/keyboard/",
   "docs/mockups/",
   "docs/agent-skills/",
