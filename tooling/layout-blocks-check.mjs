@@ -173,6 +173,69 @@ async function dashboardGrid(page, check, shot, width, scheme) {
   if (scheme === "light") await shot(page, `dashboard-grid-${width}-loading.png`, true)
 }
 
+const box = (locator) => locator.evaluate((element) => element.getBoundingClientRect().toJSON())
+
+async function settingsPage(page, check, shot, width, scheme) {
+  const tag = `settings-page ${width}px ${scheme}`
+  await open(page, "settings-page", width, scheme)
+  const wide = width === 1440
+  const { overflow } = await layout(page, '[data-slot="settings-section"]')
+  check(`${tag}: no sideways scroll`, !overflow)
+  const nav = page.getByRole("navigation", { name: "Settings sections" })
+  const picker = page.getByRole("combobox", { name: "Go to section" })
+  check(
+    `${tag}: ${wide ? "a section nav" : "a section picker"}`,
+    wide ? await nav.isVisible() : await picker.isVisible(),
+  )
+  check(`${tag}: one way to pick a section shows`, wide ? !(await picker.isVisible()) : !(await nav.isVisible()))
+  const violations = await axe(page)
+  check(`${tag}: axe`, violations.length === 0, violations.join(", "))
+  await shot(page, `settings-page-${width}-${scheme}.png`)
+
+  const row = page.locator("[data-settings-row]").filter({ hasText: "Sign out after" })
+  const [label, control] = await Promise.all([
+    box(row.locator('[data-slot="field-label"], label').first()),
+    box(row.getByRole("combobox")),
+  ])
+  const stacked = control.top >= label.bottom - 1
+  check(
+    `${tag}: a row ${width === 390 ? "stacks its control under the label" : "keeps its control beside the label"}`,
+    width === 390 ? stacked : !stacked,
+  )
+
+  const bar = await box(page.getByTestId("app-bar"))
+  if (wide) {
+    await nav.getByRole("link", { name: "Danger zone" }).click()
+  } else {
+    await picker.click()
+    await page.getByRole("option", { name: "Danger zone" }).click()
+  }
+  await page.waitForTimeout(900)
+  const heading = page.getByRole("heading", { name: "Danger zone" })
+  const landed = await box(heading)
+  check(
+    `${tag}: going to a section lands it below the sticky bars`,
+    landed.top >= bar.bottom,
+    `${Math.round(landed.top)}px`,
+  )
+  check(`${tag}: and focuses its heading`, (await focusedText(page)) === "Danger zone")
+  const jumped = wide ? await nav.locator('[aria-current="location"]').textContent() : await picker.textContent()
+  check(`${tag}: and marks it, though it can't reach the top`, jumped?.includes("Danger zone"), jumped)
+  const sticky = await box(wide ? nav : picker)
+  check(
+    `${tag}: the ${wide ? "nav" : "picker"} sticks under the bar`,
+    sticky.top >= bar.bottom - 1 && sticky.top < bar.bottom + 40,
+    `${Math.round(sticky.top)}px`,
+  )
+  if (scheme === "light") await shot(page, `settings-page-${width}-scrolled.png`)
+
+  await page.mouse.wheel(0, -1)
+  await page.locator("#security").evaluate((element) => element.scrollIntoView({ block: "start", behavior: "instant" }))
+  await page.waitForTimeout(400)
+  const marked = wide ? await nav.locator('[aria-current="location"]').textContent() : await picker.textContent()
+  check(`${tag}: scrolling marks the section being read`, marked?.includes("Security"), marked)
+}
+
 async function checkLayoutBlocks(page, check, shot) {
   for (const width of widths) {
     // oxlint-disable-next-line eslint/no-await-in-loop -- one page drives the steps, in order
@@ -181,6 +244,10 @@ async function checkLayoutBlocks(page, check, shot) {
   for (const width of widths) {
     // oxlint-disable-next-line eslint/no-await-in-loop -- one page drives the steps, in order
     for (const scheme of schemes) await dashboardGrid(page, check, shot, width, scheme)
+  }
+  for (const width of widths) {
+    // oxlint-disable-next-line eslint/no-await-in-loop -- one page drives the steps, in order
+    for (const scheme of schemes) await settingsPage(page, check, shot, width, scheme)
   }
 }
 

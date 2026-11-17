@@ -17,6 +17,7 @@ const pages = [
   "docs/components/inbox/",
   "docs/components/master-detail/",
   "docs/components/dashboard-grid/",
+  "docs/components/settings-page/",
   "docs/components/shortcuts-dialog/",
   "docs/keyboard/",
   "docs/mockups/",

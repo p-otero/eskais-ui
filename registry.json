@@ -4258,6 +4258,40 @@
         }
       ],
       "docs": "`<DashboardGrid columns={3} labels={{ errorTitle, emptyTitle }} stats={<DashboardStats aria-label=\"This week\" loading={pending}><DashboardStat label=\"Runs\" value={261} hint=\"+12%\" loading={pending} /></DashboardStats>}><DashboardCard title=\"Runs\" span={2} status={query.status} data={query.data} error={query.error} onRetry={query.refetch}>{(data) => <DashboardChart config={config}><BarChart data={data}>…</BarChart></DashboardChart>}</DashboardCard></DashboardGrid>`. Rows are `--dashboard-row-height` (20rem) tall; content taller than its card scrolls inside it, focusable then so a keyboard can scroll it. Without `status`, a card shows its children as they are. `retry`, `loading` and `refreshing` default to English and every label is overridable on the grid or a card."
+    },
+    {
+      "name": "settings-page",
+      "type": "registry:block",
+      "title": "Settings Page",
+      "description": "SettingsPage: a section navigation that sticks beside the sections on wide containers and becomes a section picker on narrow ones, marking the section being read (IntersectionObserver). Going to a section scrolls by id and focuses its heading, so it works under hash routers; the section can live in the URL through createUrlParam. SettingsSection, SettingsRow (a label, a description and the control on the right, stacking when narrow), SettingsFacts (a DescriptionList for read-only facts) and SettingsDangerZone with SettingsDangerAction rows that confirm through ConfirmDialog and need a person's approval for agents.",
+      "dependencies": [
+        "@ui-sdk/core@0.1.0-beta.5",
+        "@ui-sdk/react@0.1.0-beta.5"
+      ],
+      "registryDependencies": [
+        "@eskais/utils",
+        "@eskais/theme",
+        "@eskais/confirm-dialog",
+        "@eskais/description-list",
+        "@eskais/field",
+        "@eskais/link",
+        "@eskais/select"
+      ],
+      "files": [
+        {
+          "path": "registry/lib/url-param.ts",
+          "type": "registry:lib"
+        },
+        {
+          "path": "registry/ui/use-settings-page.ts",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/settings-page.tsx",
+          "type": "registry:ui"
+        }
+      ],
+      "docs": "`<SettingsPage url={createUrlParam(\"section\")} style={{ \"--settings-top\": \"var(--topbar-height)\" }}><SettingsSection id=\"security\" title=\"Security\" description=\"…\" actions={…}><SettingsRow label=\"Two-factor authentication\" description=\"…\"><Switch /></SettingsRow></SettingsSection><SettingsSection id=\"device\" title=\"This device\"><SettingsFacts aria-label=\"This device\"><DescriptionItem>…</DescriptionItem></SettingsFacts></SettingsSection><SettingsDangerZone id=\"danger\" title=\"Danger zone\"><SettingsDangerAction label trigger title confirmLabel agentConfirm onConfirm /></SettingsDangerZone></SettingsPage>`. The navigation lists every direct `SettingsSection` child with a text title (`navLabel` otherwise), or pass `sections`. `--settings-top` is the height of anything sticky above the page and `--settings-height` the box that scrolls it. `currentSection` and `onSectionChange` (reason `scroll`, `nav` or `url`) follow your own state. A `SettingsRow` is a `Field` that names a UI SDK control; `field={false}` for a button. Labels `nav` and `jump` are overridable."
     }
   ]
 }

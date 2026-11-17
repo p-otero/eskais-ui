@@ -18,7 +18,7 @@ import { PressCheck } from "./checks/press-check"
 import { SidePanelCheck } from "./checks/side-panel-check"
 import { TableCheck } from "./checks/table-check"
 import { InboxDemo } from "./sections/inbox"
-import { DashboardGridDemo, MasterDetailDemo } from "./sections/layout-blocks"
+import { DashboardGridDemo, MasterDetailDemo, SettingsPageDemo } from "./sections/layout-blocks"
 import { demoStatuses, PageDemo, type DemoStatus } from "./sections/page"
 import { ShellDemo } from "./shell/shell-demo"
 import { SiteDemo } from "./shell/site-demo"
@@ -29,8 +29,8 @@ if (!root) throw new Error("Missing #root element")
 
 // ?demo=page, site and shell render one demo alone, for phone-width screenshots; ?demo=<name>-check pages are the
 // fixtures of tooling/<name>-check.mjs (card-header, mobile-nav, side-panel, table, description-list and gauge
-// are shell-check.mjs's); ?demo=inbox is the keyboard-first inbox alone, ?demo=master-detail and dashboard-grid
-// a layout block alone, and ?demo=list-bench the list tooling/list-bench.mjs times.
+// are shell-check.mjs's); ?demo=inbox is the keyboard-first inbox alone, ?demo=master-detail, dashboard-grid and
+// settings-page a layout block alone, and ?demo=list-bench the list tooling/list-bench.mjs times.
 const params = new URLSearchParams(location.search)
 const status = demoStatuses.find((name) => name === params.get("status")) ?? "success"
 const demo = params.get("demo")
@@ -53,6 +53,7 @@ const standalone = new Set([
   "gauge-check",
   "master-detail",
   "dashboard-grid",
+  "settings-page",
 ])
 
 function Demo() {
@@ -78,6 +79,7 @@ function Demo() {
   if (demo === "gauge-check") return <GaugeCheck />
   if (demo === "master-detail") return <MasterDetailDemo />
   if (demo === "dashboard-grid") return <DashboardGridDemo />
+  if (demo === "settings-page") return <SettingsPageDemo />
   return demo === "shell" ? <ShellDemo /> : <SiteDemo />
 }
 

@@ -334,6 +334,18 @@ const itemNotes: Record<string, ItemNotes> = {
       "Agents press the cards' own buttons (Retry, your actions) by name; charts expose their data through ChartDataTable.",
     related: ["stat", "chart", "meter", "states", "card"],
   },
+  "settings-page": {
+    usage:
+      "A settings or device page: SettingsSections of SettingsRows, SettingsFacts for read-only facts and a SettingsDangerZone, with a navigation that follows your scroll.",
+    a11y: [
+      "The navigation is a named landmark; the section being read has aria-current=location.",
+      "Going to a section scrolls by id and moves focus to its heading, without touching location.hash, so hash routers keep their route.",
+      "Each section is a region named by its title and described by its description; each row's label names its control.",
+    ],
+    agent:
+      "Agents follow a section's link or set the section picker by name, set each row's control by its label, and need a person's approval to confirm a danger action.",
+    related: ["field", "description-list", "confirm-dialog", "select"],
+  },
   "side-panel": {
     usage:
       "An inspector beside a list: open it from a row's onSelect, pass returnFocus to the row, and give its buttons a shortcut.",
