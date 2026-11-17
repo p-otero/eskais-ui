@@ -1,7 +1,7 @@
 "use client"
 
 import type { ChangeDetails } from "@ui-sdk/core"
-import { useState, useSyncExternalStore, type ReactNode } from "react"
+import { useRef, useState, useSyncExternalStore, type ReactNode } from "react"
 
 import {
   createDataTableController,
@@ -11,6 +11,8 @@ import {
   type DataTableSort,
 } from "@/components/ui/data-table"
 import { DataState } from "@/components/ui/data-state"
+import { FilterChips } from "@/components/ui/filter-chips"
+import { countActiveFilters, FilterPanel, FilterPanelTrigger } from "@/components/ui/filter-panel"
 import { FilterScope } from "@/components/ui/filter-scope"
 import { FilterSearch } from "@/components/ui/filter-search"
 import {
@@ -44,7 +46,7 @@ type ServerTableUrlState = {
   format?: "fields" | "encoded"
 }
 
-type ServerDataTableFilterUi = "search" | "none"
+type ServerDataTableFilterUi = "search" | "chips" | "panel" | "none"
 
 type ServerDataTableProps<T, S extends FilterSchema> = Pick<
   DataTableProps<T>,
@@ -65,7 +67,11 @@ type ServerDataTableProps<T, S extends FilterSchema> = Pick<
   /** Give a column `sortField` to sort it on the server. */
   columns: readonly DataTableColumn<T>[]
   filters?: S
-  /** The built-in filter UI. Default `"search"` when the schema has a text field. Ignored with `toolbar`. */
+  /**
+   * The built-in filter UI: `"search"` (default when the schema has a text field), `"chips"` (search and
+   * `FilterChips`) or `"panel"` (search and a `FilterPanel` beside the table, a sheet on narrow screens).
+   * Ignored with `toolbar`.
+   */
   filterUi?: ServerDataTableFilterUi
   /** Filter UIs of your own, composed from the parts; they find the schema and controller from the table. */
   toolbar?: ReactNode
@@ -144,6 +150,8 @@ function ServerDataTable<T, S extends FilterSchema = Record<never, never>>({
   const controller = controllerProp ?? own.controller
   const state = useSyncExternalStore(controller.subscribe, controller.getState, controller.getState)
   const [tableController] = useState(createDataTableController)
+  const [panelOpen, setPanelOpen] = useState(false)
+  const panelTrigger = useRef<HTMLButtonElement>(null)
 
   const accumulating = ["load-more", "infinite"].includes(resolveNavigation(source.capabilities, navigationMode))
   const paged = useServerPage(source, state.request, { enabled: !accumulating, navigation: navigationMode })
@@ -221,8 +229,31 @@ function ServerDataTable<T, S extends FilterSchema = Record<never, never>>({
     />
   )
 
+  const ui = toolbar === undefined ? (filterUi ?? (searchKey ? "search" : "none")) : "custom"
+  const search = searchKey ? <FilterSearch /> : null
   const filterContent =
-    toolbar ?? ((filterUi ?? (searchKey ? "search" : "none")) === "search" && searchKey ? <FilterSearch /> : null)
+    ui === "custom" ? (
+      toolbar
+    ) : ui === "search" ? (
+      search
+    ) : ui === "chips" ? (
+      <>
+        {search}
+        <FilterChips labels={labels.chips} />
+      </>
+    ) : ui === "panel" ? (
+      <>
+        {search}
+        <FilterPanelTrigger
+          ref={panelTrigger}
+          open={panelOpen}
+          onOpenChange={setPanelOpen}
+          count={countActiveFilters(schema, state.filter)}
+        >
+          {labels.panel?.title}
+        </FilterPanelTrigger>
+      </>
+    ) : null
 
   return (
     <div data-slot="server-data-table" className={cn("flex w-full min-w-0 flex-col gap-items", className)}>
@@ -236,45 +267,60 @@ function ServerDataTable<T, S extends FilterSchema = Record<never, never>>({
           {filterContent}
         </FilterScope>
       )}
-      <DataState
-        status={view.status}
-        data={view.status === "success" ? view.items : undefined}
-        error={view.error}
-        onRetry={view.retry}
-        labels={labels}
-        loading={table([], true)}
-        empty={table([], false, labels.emptyTitle)}
-      >
-        {(rows) => table(rows, false)}
-      </DataState>
-      {navigation === "infinite" && <div ref={reachEnd} aria-hidden="true" data-slot="server-data-table-end" />}
-      <div
-        data-slot="server-data-table-footer"
-        className="flex flex-wrap items-center justify-between gap-items narrow:flex-col narrow:items-stretch"
-      >
-        <output aria-live="polite" className="min-h-5 text-body-sm text-muted-foreground tabular-nums">
-          {statusText}
-        </output>
-        <div className="flex flex-wrap items-center gap-items narrow:justify-between">
-          {!accumulating && (
-            <ServerTablePageSize
-              size={state.size}
-              sizes={controller.pageSizes}
-              onSizeChange={(size) => controller.setPageSize(size)}
-              label={labels.pageSize}
-            />
-          )}
-          <ServerTableNavigation
-            navigation={navigation}
-            page={index}
-            pageCount={pageCount}
-            onPageChange={goToPage}
-            hasMore={more.hasMore}
-            loadingMore={more.loadingMore}
-            onLoadMore={more.loadMore}
+      <div className="flex min-w-0 items-start gap-section">
+        <div className="flex min-w-0 flex-1 flex-col gap-items">
+          <DataState
+            status={view.status}
+            data={view.status === "success" ? view.items : undefined}
+            error={view.error}
+            onRetry={view.retry}
             labels={labels}
-          />
+            loading={table([], true)}
+            empty={table([], false, labels.emptyTitle)}
+          >
+            {(rows) => table(rows, false)}
+          </DataState>
+          {navigation === "infinite" && <div ref={reachEnd} aria-hidden="true" data-slot="server-data-table-end" />}
+          <div
+            data-slot="server-data-table-footer"
+            className="flex flex-wrap items-center justify-between gap-items narrow:flex-col narrow:items-stretch"
+          >
+            <output aria-live="polite" className="min-h-5 text-body-sm text-muted-foreground tabular-nums">
+              {statusText}
+            </output>
+            <div className="flex flex-wrap items-center gap-items narrow:justify-between">
+              {!accumulating && (
+                <ServerTablePageSize
+                  size={state.size}
+                  sizes={controller.pageSizes}
+                  onSizeChange={(size) => controller.setPageSize(size)}
+                  label={labels.pageSize}
+                />
+              )}
+              <ServerTableNavigation
+                navigation={navigation}
+                page={index}
+                pageCount={pageCount}
+                onPageChange={goToPage}
+                hasMore={more.hasMore}
+                loadingMore={more.loadingMore}
+                onLoadMore={more.loadMore}
+                labels={labels}
+              />
+            </div>
+          </div>
         </div>
+        {filters && ui === "panel" && (
+          <FilterPanel
+            schema={schema}
+            controller={controller}
+            open={panelOpen}
+            onOpenChange={setPanelOpen}
+            returnFocus={() => panelTrigger.current}
+            labels={labels.panel}
+            className="self-start overflow-hidden rounded-surface border"
+          />
+        )}
       </div>
     </div>
   )

@@ -3,6 +3,8 @@
 import type { ReactNode } from "react"
 
 import { Button } from "@/components/ui/button"
+import type { FilterChipsLabels } from "@/components/ui/filter-chips"
+import type { FilterPanelLabels } from "@/components/ui/filter-panel"
 import {
   Pagination,
   PaginationItem,
@@ -34,6 +36,8 @@ type ServerDataTableLabels = {
   loadMore?: string
   /** Names the filters for agents. */
   filters?: (label: string) => string
+  chips?: Partial<FilterChipsLabels>
+  panel?: Partial<FilterPanelLabels>
 }
 
 const serverDataTableLabels = {
@@ -48,7 +52,10 @@ const serverDataTableLabels = {
   page: defaultPaginationLabels.page,
   loadMore: "Load more",
   filters: (label: string) => `${label} filters`,
-} satisfies Omit<Required<ServerDataTableLabels>, "errorTitle" | "retry" | "emptyTitle" | "emptyDescription">
+} satisfies Omit<
+  Required<ServerDataTableLabels>,
+  "errorTitle" | "retry" | "emptyTitle" | "emptyDescription" | "chips" | "panel"
+>
 
 type ResolvedLabels = typeof serverDataTableLabels & ServerDataTableLabels
 

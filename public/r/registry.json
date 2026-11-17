@@ -3643,7 +3643,7 @@
       "type": "registry:ui",
       "title": "Server Data Table",
       "description": "A DataTable over a PageSource: the server filters, sorts and pages; page numbers, previous and next, or load more follow what the source gives; DataState covers loading, error with retry and empty; a polite status says \"Showing 21–40 of 312\" after each load; filters, sort and page can live in the URL.",
-      "docs": "`<ServerDataTable label source columns filters labels={{ errorTitle, retry, emptyTitle }} />`. Columns are DataTable columns; `sortField` sorts one on the server, and `sortMode=\"multi\"` adds a column with Shift+click. `navigation=\"auto\"` shows page numbers with an exact total (or the source's `fetchTotal`), previous and next with an estimate or only `hasMore`, and load more for a cursor; `\"infinite\"` also loads when the end scrolls into view, beside the button. `pageSize` (25) and `pageSizes` (`[10, 25, 50, 100]`, capped by the source's `maxPageSize`) show a page size select. `filters` takes a `defineFilters` schema, `filterUi` picks the built-in filter UI (`\"search\"`, a `FilterSearch`, by default when the schema has a text field), and `toolbar` composes your own from the parts. `urlState={hashUrlState()}` (or `historyUrlState()`, or `{ adapter, prefix, history, format }`) keeps filters, sort and page in readable params, and Back and Forward move through them. While a page loads its predecessor stays, marked `aria-busy`; it never shows empty while loading or after an error. The status says \"Loading…\" only once a load has taken 400 ms, and focus stays on the control pressed. Agents sort and page through the table (`sortBy`, `setPage`) and filter through the \"{label} filters\" group: `filter(\"Status\", [\"Open\"])`, `clearFilters()`. Visible copy has no default: `errorTitle`, `retry` and `emptyTitle` are required; control names default to English (`labels.pageSize`, `loadMore`, `range`…). Pass `controller` from `usePageController` to drive it from outside.",
+      "docs": "`<ServerDataTable label source columns filters labels={{ errorTitle, retry, emptyTitle }} />`. Columns are DataTable columns; `sortField` sorts one on the server, and `sortMode=\"multi\"` adds a column with Shift+click. `navigation=\"auto\"` shows page numbers with an exact total (or the source's `fetchTotal`), previous and next with an estimate or only `hasMore`, and load more for a cursor; `\"infinite\"` also loads when the end scrolls into view, beside the button. `pageSize` (25) and `pageSizes` (`[10, 25, 50, 100]`, capped by the source's `maxPageSize`) show a page size select. `filters` takes a `defineFilters` schema, `filterUi` picks the built-in filter UI: `\"search\"` (a `FilterSearch`, the default when the schema has a text field), `\"chips\"` (search and `FilterChips`) or `\"panel\"` (search and a `FilterPanelTrigger` that opens a `FilterPanel` beside the table, a bottom sheet on narrow screens), and `toolbar` composes your own from the parts. `urlState={hashUrlState()}` (or `historyUrlState()`, or `{ adapter, prefix, history, format }`) keeps filters, sort and page in readable params, and Back and Forward move through them. While a page loads its predecessor stays, marked `aria-busy`; it never shows empty while loading or after an error. The status says \"Loading…\" only once a load has taken 400 ms, and focus stays on the control pressed. Agents sort and page through the table (`sortBy`, `setPage`) and filter through the \"{label} filters\" group: `filter(\"Status\", [\"Open\"])`, `clearFilters()`. Visible copy has no default: `errorTitle`, `retry` and `emptyTitle` are required; control names default to English (`labels.pageSize`, `loadMore`, `range`…). Pass `controller` from `usePageController` to drive it from outside.",
       "dependencies": [
         "@ui-sdk/core@0.1.0-beta.5",
         "@ui-sdk/react@0.1.0-beta.5"
@@ -3657,6 +3657,8 @@
         "@eskais/data-table",
         "@eskais/states",
         "@eskais/filter-search",
+        "@eskais/filter-panel",
+        "@eskais/filter-chips",
         "@eskais/server-data",
         "@eskais/url-state",
         "@eskais/filter-schema",
@@ -3706,6 +3708,95 @@
         },
         {
           "path": "registry/ui/server-filters-primitive.ts",
+          "type": "registry:ui"
+        }
+      ]
+    },
+    {
+      "name": "filter-chips",
+      "type": "registry:ui",
+      "title": "Filter Chips",
+      "description": "Filters as chips in a FilterBar: one chip per active filter that opens an editor for its field, a button that removes it, Add filter for the others, and reset. Picks apply at once; typed values on Enter or when the editor closes.",
+      "docs": "Inside a `ServerDataTable` with `filterUi=\"chips\"`, or a `FilterScope`, it reads the schema and controller (or pass `schema` and `controller`). Each chip's text is its name, \"Status: Open, Blocked\" (`labels.chip`, with `summarizeFilter` for the value), and opens a popover with the field's `FilterField`; a choice applies at once, a typed text or number on Enter or when the popover closes. Its remove button, \"Remove Status filter\", clears the field and returns focus to Add filter, a menu of the fields without a value: choosing one opens its editor, and leaving it empty adds nothing. The toolbar is one tab stop with arrow keys (UI SDK Toolbar), named by `labels.toolbar`, and Reset filters shows while any chip applies. `fields` limits and orders the fields offered (every field but the search field by default); `valueLabels` names remote option ids it hasn't loaded. Labels default to English and can be overridden.",
+      "dependencies": [
+        "@ui-sdk/core@0.1.0-beta.5",
+        "@ui-sdk/react@0.1.0-beta.5",
+        "lucide-react@1.68.0"
+      ],
+      "registryDependencies": [
+        "@eskais/utils",
+        "@eskais/theme",
+        "@eskais/filter-bar",
+        "@eskais/popover",
+        "@eskais/dropdown-menu",
+        "@eskais/filter-field",
+        "@eskais/filter-search",
+        "@eskais/filter-schema",
+        "@eskais/page-source"
+      ],
+      "files": [
+        {
+          "path": "registry/ui/filter-chips.tsx",
+          "type": "registry:ui"
+        }
+      ]
+    },
+    {
+      "name": "filter-panel",
+      "type": "registry:ui",
+      "title": "Filter Panel",
+      "description": "Every filter of a schema in one form, applied together: a SidePanel beside the results on wide screens, a bottom Drawer sheet on narrow ones; Apply and Reset.",
+      "docs": "`<FilterPanel open onOpenChange />` inside a `FilterScope` (or with `schema` and `controller`), toggled by `<FilterPanelTrigger open onOpenChange count />`, which shows how many filters apply (`countActiveFilters`). `ServerDataTable filterUi=\"panel\"` puts both in place. Each field is a `FilterField` editing a draft; Apply (a submit button, so Enter works) sends it, Reset clears the fields the panel shows and applies at once. At 760px and below it is a modal bottom sheet that Apply closes; wider, a non-modal `SidePanel` that stays open, closes on Escape and returns focus to `returnFocus`. The draft starts again whenever the applied filters change elsewhere, like a chip or the URL. `labels` names the title, Apply, Reset and Close, in English by default.",
+      "dependencies": [
+        "@ui-sdk/core@0.1.0-beta.5",
+        "@ui-sdk/react@0.1.0-beta.5",
+        "lucide-react@1.68.0"
+      ],
+      "registryDependencies": [
+        "@eskais/utils",
+        "@eskais/theme",
+        "@eskais/badge",
+        "@eskais/button",
+        "@eskais/drawer",
+        "@eskais/side-panel",
+        "@eskais/filter-field",
+        "@eskais/filter-search",
+        "@eskais/filter-schema",
+        "@eskais/page-source"
+      ],
+      "files": [
+        {
+          "path": "registry/ui/filter-panel.tsx",
+          "type": "registry:ui"
+        }
+      ]
+    },
+    {
+      "name": "filter-field",
+      "type": "registry:ui",
+      "title": "Filter Field",
+      "description": "The control for one filter schema field, named by its label: an input for text, a select or checkboxes for options, a select for a boolean, a comparison and numbers, date pickers, or a ServerCombobox for remote options.",
+      "docs": "`<FilterField field={schema.status} value onValueChange />` is controlled with the field's value type (`FilterValues`); an empty choice gives `undefined`. Options are a `Select` with Any, or a checkbox group when `multiple`; a boolean a `Select` of `trueLabel` and `falseLabel`; a number a comparison `Select` (`operators`, `eq`, `gte`, `lte` and `between` by default) and a `NumberInput`, two for between; a date a `DatePicker`, a range two (From, To, each end optional); a remote option a `ServerCombobox`, which reports chosen labels through `onValueLabels`. `appliesAtOnce(field)` says whether a change is a pick or typing. `FilterChips` and `FilterPanel` use it; use it in a form of your own. `labels` translates Any, Yes, No, From, To and the comparisons.",
+      "dependencies": [
+        "@ui-sdk/core@0.1.0-beta.5",
+        "@ui-sdk/react@0.1.0-beta.5"
+      ],
+      "registryDependencies": [
+        "@eskais/utils",
+        "@eskais/theme",
+        "@eskais/field",
+        "@eskais/input",
+        "@eskais/label",
+        "@eskais/select",
+        "@eskais/checkbox",
+        "@eskais/number-input",
+        "@eskais/date-picker",
+        "@eskais/server-combobox",
+        "@eskais/filter-schema"
+      ],
+      "files": [
+        {
+          "path": "registry/ui/filter-field.tsx",
           "type": "registry:ui"
         }
       ]

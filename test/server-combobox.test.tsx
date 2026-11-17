@@ -125,9 +125,9 @@ test("multiple shows chips named for removal, with labels for values that haven'
   await user.click(screen.getByRole("button", { name: "Show options" }))
   await waitFor(() => expect(optionNames()).toHaveLength(10))
   await user.click(screen.getByRole("option", { name: "Alan 3" }))
-  expect(onValueChange).toHaveBeenLastCalledWith(["p44", "p3"])
+  expect(onValueChange).toHaveBeenLastCalledWith(["p44", "p3"], { labels: { p44: "Edsger 44", p3: "Alan 3" } })
   await user.click(screen.getByRole("button", { name: "Remove Edsger 44" }))
-  expect(onValueChange).toHaveBeenLastCalledWith(["p3"])
+  expect(onValueChange).toHaveBeenLastCalledWith(["p3"], { labels: { p3: "Alan 3" } })
 })
 
 test("agents choose an option by its label; no axe violations", async () => {

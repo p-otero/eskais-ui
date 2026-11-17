@@ -103,6 +103,9 @@ const categories = [
     items: [
       "server-data-table",
       "filter-search",
+      "filter-chips",
+      "filter-panel",
+      "filter-field",
       "server-combobox",
       "server-data",
       "page-source",

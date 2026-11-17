@@ -769,6 +769,31 @@ const itemNotes: Record<string, ItemNotes> = {
     agent: "Agents set the search by its label, and it commits at once; FilterScope adds filter(field, value).",
     related: ["server-data-table", "filter-bar", "search-field"],
   },
+  "filter-chips": {
+    usage: "Use chips when a few filters apply at a time and people should see them at a glance.",
+    a11y: [
+      "A UI SDK Toolbar: one tab stop, arrow keys between chips. Each chip's text is its name, and its remove button says which filter it removes.",
+      "Removing a chip moves focus to Add filter instead of losing it.",
+    ],
+    agent:
+      "Agents open a chip by its name and set the field inside; FilterScope's filter(field, value) does it in one step.",
+    related: ["filter-bar", "filter-field", "filter-panel", "server-data-table"],
+  },
+  "filter-panel": {
+    usage: "Use the panel when there are many filters, or people set several before looking at the results.",
+    a11y: [
+      "Wide: a non-modal complementary region; Escape closes it and returns focus to the trigger.",
+      "Narrow: a modal bottom sheet with a title, closed by Apply, Escape or the backdrop.",
+      "The trigger has aria-expanded and says how many filters apply.",
+    ],
+    agent: "Agents set each field by its label and press Apply filters.",
+    related: ["side-panel", "drawer", "filter-field", "filter-chips"],
+  },
+  "filter-field": {
+    usage: "Use it to edit one schema field anywhere: the chips and the panel are built on it.",
+    a11y: ["Every control is named by the field's label; groups of checkboxes and number pairs are labelled groups."],
+    related: ["filter-chips", "filter-panel", "filter-schema"],
+  },
   "server-combobox": {
     usage: "Use it when the options live on the server: people, tasks, anything too long to load at once.",
     a11y: [

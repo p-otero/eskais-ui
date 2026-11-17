@@ -51,6 +51,9 @@ const serverComboboxLabels: ServerComboboxLabels = {
 
 type Option = { value: string; label: string }
 
+/** What a change chose, by label: an id's label is only known once its option has loaded. */
+type ServerComboboxChange = { labels: Readonly<Record<string, string>> }
+
 type ServerComboboxBaseProps<T> = {
   source: PageSource<T, { q?: string }>
   getLabel: (item: T) => string
@@ -72,14 +75,14 @@ type ServerComboboxSingleProps<T> = ServerComboboxBaseProps<T> & {
   multiple?: false
   value?: string | null
   defaultValue?: string | null
-  onValueChange?: (value: string | null) => void
+  onValueChange?: (value: string | null, change: ServerComboboxChange) => void
 }
 
 type ServerComboboxMultipleProps<T> = ServerComboboxBaseProps<T> & {
   multiple: true
   value?: readonly string[]
   defaultValue?: readonly string[]
-  onValueChange?: (value: string[]) => void
+  onValueChange?: (value: string[], change: ServerComboboxChange) => void
 }
 
 type ServerComboboxProps<T> = ServerComboboxSingleProps<T> | ServerComboboxMultipleProps<T>
@@ -129,6 +132,9 @@ function ServerCombobox<T>({ className, ...props }: ServerComboboxProps<T>) {
   )
 
   const labelOf = (value: string) => known.current.get(value) ?? valueLabels?.[value] ?? value
+  const changeOf = (values: readonly string[]): ServerComboboxChange => ({
+    labels: Object.fromEntries(values.map((value) => [value, labelOf(value)])),
+  })
 
   const root = {
     items: options.items,
@@ -172,7 +178,7 @@ function ServerCombobox<T>({ className, ...props }: ServerComboboxProps<T>) {
         multiple
         value={props.value === undefined ? undefined : [...props.value]}
         defaultValue={props.defaultValue === undefined ? undefined : [...props.defaultValue]}
-        onValueChange={(value) => props.onValueChange?.(value)}
+        onValueChange={(value) => props.onValueChange?.(value, changeOf(value))}
       >
         <ComboboxControl className={cn("h-auto min-h-field-control flex-wrap py-inline", className)}>
           <ComboboxChipsPrimitive className="flex min-w-0 flex-1 flex-wrap items-center gap-inline">
@@ -204,7 +210,7 @@ function ServerCombobox<T>({ className, ...props }: ServerComboboxProps<T>) {
       {...root}
       value={props.value}
       defaultValue={props.defaultValue}
-      onValueChange={(value) => props.onValueChange?.(value)}
+      onValueChange={(value) => props.onValueChange?.(value, changeOf(value === null ? [] : [value]))}
     >
       <ComboboxControl className={className}>
         <ComboboxInput aria-label={props["aria-label"]} placeholder={placeholder} />
@@ -217,4 +223,10 @@ function ServerCombobox<T>({ className, ...props }: ServerComboboxProps<T>) {
 }
 
 export { ServerCombobox, serverComboboxLabels }
-export type { ServerComboboxLabels, ServerComboboxMultipleProps, ServerComboboxProps, ServerComboboxSingleProps }
+export type {
+  ServerComboboxChange,
+  ServerComboboxLabels,
+  ServerComboboxMultipleProps,
+  ServerComboboxProps,
+  ServerComboboxSingleProps,
+}
