@@ -133,6 +133,7 @@ const categories = [
       "steps",
       "site-footer",
       "docs-layout",
+      "shell",
     ],
   },
   {
