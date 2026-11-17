@@ -20,6 +20,7 @@ import { SidePanelCheck } from "./checks/side-panel-check"
 import { TableCheck } from "./checks/table-check"
 import { InboxDemo } from "./sections/inbox"
 import { demoStatuses, PageDemo, type DemoStatus } from "./sections/page"
+import { ShellBlockDemo } from "./shell/shell-block-demo"
 import { ShellDemo } from "./shell/shell-demo"
 import { SiteDemo } from "./shell/site-demo"
 import "./index.css"
@@ -29,7 +30,7 @@ if (!root) throw new Error("Missing #root element")
 
 // ?demo=page, site and shell render one demo alone, for phone-width screenshots; ?demo=<name>-check pages are the
 // fixtures of tooling/<name>-check.mjs (shell-check.mjs's: card-header, description-list, field-placement, gauge,
-// mobile-nav, side-panel, table); ?demo=inbox is the inbox alone, ?demo=list-bench the list list-bench.mjs times.
+// mobile-nav, side-panel, table); ?demo=inbox the inbox, ?demo=list-bench list-bench.mjs's list, ?demo=shell-block.
 const params = new URLSearchParams(location.search)
 const status = demoStatuses.find((name) => name === params.get("status")) ?? "success"
 const demo = params.get("demo")
@@ -51,6 +52,7 @@ const standalone = new Set([
   "table-check",
   "description-list-check",
   "gauge-check",
+  "shell-block",
 ])
 
 function Demo() {
@@ -75,6 +77,7 @@ function Demo() {
   if (demo === "table-check") return <TableCheck />
   if (demo === "description-list-check") return <DescriptionListCheck />
   if (demo === "gauge-check") return <GaugeCheck />
+  if (demo === "shell-block") return <ShellBlockDemo />
   return demo === "shell" ? <ShellDemo /> : <SiteDemo />
 }
 

@@ -369,6 +369,19 @@ const itemNotes: Record<string, ItemNotes> = {
     a11y: ["Each group is a navigation landmark named by its title; links are muted and underline on hover."],
     related: ["link", "separator", "landing-page"],
   },
+  shell: {
+    usage:
+      "The frame of an application from one list of routes: pass routes, groups, currentHref and onNavigate (or plain or #/route hrefs), a brand and actions, and put each page in a PageLayout inside it. Use DocsLayout instead for documentation with a table of contents.",
+    a11y: [
+      "A skip link first, to the <main> landmark, which takes focus (tabIndex -1) without changing the URL, so hash routers keep their route.",
+      'The sidebar and the bottom bar are navigation landmarks named by labels.sidebar and labels.mobileNav; the current route carries aria-current="page" in both, and in the palette.',
+      "On narrow screens the topbar's trigger opens the sidebar as a drawer; Escape closes it and focus returns to the trigger. The palette (Ctrl/⌘+K) returns focus the same way.",
+      "The bottom bar is sticky at the end of the shell rather than fixed, so the page always ends above it, also inside a pane or an iframe; scroll margins keep focused elements clear of the topbar and the bar.",
+    ],
+    agent:
+      "Every route is a sidebar Link with a follow action that calls onNavigate (or loads the href), so agents follow routes by name. The palette's Go to commands are listed under the palette once its Search trigger is pressed; agents collapse and expand the sidebar by its name.",
+    related: ["sidebar", "topbar", "command", "mobile-nav", "skip-link", "docs-layout"],
+  },
   "docs-layout": {
     usage:
       "A documentation app shell: DocsLayout with a topbar (a Topbar with a SidebarTrigger), a sidebar that sticks under it, a breadcrumb header above the page, the content and a sticky toc; DocsToc from useTocItems, DocsPager and DocsBreadcrumb. useSidebarState({ storageKey }) wires the trigger and the Sidebar and remembers the collapsed state.",

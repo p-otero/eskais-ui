@@ -132,6 +132,7 @@ const allItems = [
   "virtual-rows",
   "side-panel",
   "inbox",
+  "shell",
 ]
 const versions = {
   react: "19.3.1",
@@ -355,6 +356,9 @@ async function checkEverything(page) {
         remove: chip.querySelector("[data-slot=token-input-token-remove]")?.getAttribute("title"),
       })),
       carouselStatus: document.querySelector("[data-slot=carousel-status]")?.textContent,
+      shell: [...document.querySelectorAll('[data-slot="shell"] nav[aria-label="Shell"] a[aria-current="page"]')]
+        .map((link) => link.textContent)
+        .join(),
       border: { card: rgb(card.borderTopColor), token: rgb(getComputedStyle(html).getPropertyValue("--border")) },
       spacing: { compact: compactSpacing, default: defaultSpacing },
       font: [...document.fonts].some((font) => font.family.includes("Geist") && font.status === "loaded"),
@@ -373,6 +377,7 @@ async function checkEverything(page) {
     throw new Error(`TokenInput didn't render its chips: ${JSON.stringify(result.tokens)}`)
   if (result.tokens.some((token) => token.fill === "0,0,0" || token.fill === "255,255,255"))
     throw new Error(`TokenInput chips have no tone fill: ${JSON.stringify(result.tokens)}`)
+  if (result.shell !== "Shell B") throw new Error(`Shell didn't mark its current route: ${String(result.shell)}`)
   if (result.carouselStatus !== "1 of 3") throw new Error(`CarouselStatus shows ${String(result.carouselStatus)}`)
   if (result.border.card !== result.border.token) throw new Error("Borders don't use --border")
   if (!result.font) throw new Error("The Geist font didn't load in the built app")
@@ -441,8 +446,10 @@ function checkBuiltCss(css, expected) {
   }
 }
 
-const everythingMain = `import { createRoot } from "react-dom/client"
+const everythingMain = `import type { CSSProperties } from "react"
+import { createRoot } from "react-dom/client"
 import { AgentTaskBoard } from "@/components/ui/agent-task-board"
+import { Shell } from "@/components/ui/shell"
 import { Appearance, createAppearance } from "@/components/ui/appearance"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -552,6 +559,9 @@ function App() {
     <Hero headingLevel={2} title="Blocks" install="npx shadcn add @eskais/hero" actions={<Link href="#docs" onFollow={() => {}}>Docs</Link>} />
     <CodeBlock code={"const answer = 42"} language="ts" title="answer.ts" lineNumbers />
     <LandingPage as="div" />
+    <div className="h-96 overflow-y-auto">
+      <Shell as="div" mainId="shell-main" style={{ "--shell-height": "24rem" } as CSSProperties} searchShortcut={false} currentHref="/shell/b" routes={[{ id: "a", label: "Shell A", href: "/shell/a", group: "Shell", mobile: true }, { id: "b", label: "Shell B", href: "/shell/b", group: "Old" }]} groups={[{ id: "Shell", label: "Shell" }, { id: "Old", label: "Old", tone: "muted" }]} labels={{ skipToContent: "Skip to the shell", sidebar: "Shell", mobileNav: "Shell bar", openSearch: "Search the shell" }}><p>Shell page</p></Shell>
+    </div>
     <Probes />
     </PageLayout>
     <MobileNav label="Phone" items={[{ label: "Home", href: "/", icon: <span aria-hidden="true">H</span>, current: true }]} />
