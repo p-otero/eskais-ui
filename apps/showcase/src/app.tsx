@@ -75,6 +75,7 @@ import { AttachmentsSection, LightboxSection } from "./sections/media"
 import { StagesSection } from "./sections/stages"
 import { ListsSection } from "./sections/lists"
 import { InboxSection } from "./sections/inbox"
+import { DocumentWorkspaceSection } from "./sections/document-workspace"
 import { ThemeEditor } from "./theme-editor"
 
 const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
@@ -415,6 +416,7 @@ function App() {
           <ChartsSection />
 
           <MarkdownSection />
+          <DocumentWorkspaceSection />
 
           <CodeSection />
           <LightboxSection />

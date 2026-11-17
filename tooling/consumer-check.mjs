@@ -136,6 +136,7 @@ const allItems = [
   "dashboard-grid",
   "settings-page",
   "shell",
+  "document-workspace",
 ]
 const versions = {
   react: "19.3.1",
@@ -353,6 +354,7 @@ async function checkEverything(page) {
       ),
       link: document.querySelector('[data-slot="link"]')?.getAttribute("data-variant"),
       markdown: document.querySelector(".cm-line[data-md-heading]")?.textContent,
+      workspace: [...document.querySelectorAll("[data-slot=document-outline] button")].map((node) => node.textContent),
       tokens: [...document.querySelectorAll("[data-slot=token-input-token]")].map((chip) => ({
         text: chip.firstChild?.textContent,
         fill: rgb(getComputedStyle(chip).backgroundColor),
@@ -376,6 +378,8 @@ async function checkEverything(page) {
   if (result.blocks.length > 0) throw new Error(`Blocks missing from the landing page: ${result.blocks.join(", ")}`)
   if (result.link !== "inline") throw new Error("Link didn't render")
   if (result.markdown !== "Notes") throw new Error(`MarkdownEditor didn't render its heading: ${result.markdown}`)
+  if (result.workspace?.join() !== "Plan,Goals")
+    throw new Error(`DocumentWorkspace didn't render its outline: ${JSON.stringify(result.workspace)}`)
   if (result.tokens.map((token) => `${token.text}:${token.remove}`).join() !== "bug:Remove bug,docs:Remove docs")
     throw new Error(`TokenInput didn't render its chips: ${JSON.stringify(result.tokens)}`)
   if (result.tokens.some((token) => token.fill === "0,0,0" || token.fill === "255,255,255"))
@@ -475,7 +479,8 @@ import { SearchField } from "@/components/ui/search-field"
 import { MobileNav } from "@/components/ui/mobile-nav"
 import { MarkdownEditor } from "@/components/ui/markdown-editor"
 import { markdownCodeLanguages } from "@/components/ui/markdown-editor-languages"
-import { MarkdownView } from "@/components/ui/markdown-view"
+import { extractHeadings, MarkdownView } from "@/components/ui/markdown-view"
+import { DocumentOutline, DocumentQuickOpen, DocumentWorkspace } from "@/components/ui/document-workspace"
 import { Section } from "@/components/ui/section"
 import { SiteHeader } from "@/components/ui/site-header"
 import { SkipLink } from "@/components/ui/skip-link"
@@ -561,6 +566,7 @@ function App() {
     </Card>
     <Hero headingLevel={2} title="Blocks" install="npx shadcn add @eskais/hero" actions={<Link href="#docs" onFollow={() => {}}>Docs</Link>} />
     <CodeBlock code={"const answer = 42"} language="ts" title="answer.ts" lineNumbers />
+    <DocumentWorkspace className="h-96" document={<MarkdownView markdown={"# Plan\\n\\n## Goals\\n"} />} explorer={<p>Files</p>} aside={<DocumentOutline headings={extractHeadings("# Plan\\n\\n## Goals\\n")} />} quickOpen={<DocumentQuickOpen items={[{ value: "plan", label: "Plan" }]} onOpen={() => {}} />} saveState="saved" />
     <LandingPage as="div" />
     <div className="h-96 overflow-y-auto">
       <Shell as="div" mainId="shell-main" style={{ "--shell-height": "24rem" } as CSSProperties} searchShortcut={false} currentHref="/shell/b" routes={[{ id: "a", label: "Shell A", href: "/shell/a", group: "Shell", mobile: true }, { id: "b", label: "Shell B", href: "/shell/b", group: "Old" }]} groups={[{ id: "Shell", label: "Shell" }, { id: "Old", label: "Old", tone: "muted" }]} labels={{ skipToContent: "Skip to the shell", sidebar: "Shell", mobileNav: "Shell bar", openSearch: "Search the shell" }}><p>Shell page</p></Shell>
