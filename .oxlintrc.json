@@ -168,7 +168,8 @@
         "tooling/showcase-browser.mjs",
         "tooling/site-check.mjs",
         "tooling/list-bench.mjs",
-        "tooling/touch-check.mjs"
+        "tooling/touch-check.mjs",
+        "tooling/calendar-check.mjs"
       ],
       "rules": {
         "no-await-in-loop": "off"

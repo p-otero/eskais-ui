@@ -28,6 +28,7 @@ Versions follow [semver](https://semver.org). Before 1.0, a minor version can br
 
 ### Fixed
 
+- Calendar ranges draw one continuous band: the middle days take a soft `accent` fill with no gaps or rounding, and the start and end keep their `primary` circle with the band running under their inner half. A one-day range is only its circle, the band breaks cleanly between weeks, mirrors in right to left and looks the same while a range is being picked. Every day's focus ring follows its circle and stays above its neighbours. Middle days used to keep `data-selected`'s `primary` fill, so they showed as separate dark squares. DatePicker and DateTimePicker share it. `node tooling/calendar-check.mjs` (in `test:browser`) measures the band.
 - Focusing a field no longer zooms the page on iOS. A `text-entry` type step (`--type-entry-size`) is 14px as before on a fine pointer and 16px on a coarse one, and Input, InputGroup, Textarea, the Select trigger, NativeSelect, Combobox, CommandInput, NumberInput, DatePicker, DateTimePicker's time and MarkdownEditor use it. Pinch-zoom stays allowed. `node tooling/touch-check.mjs` (in `test:browser`) measures every text-entry control on an emulated phone.
 
 ## 0.2.0 (2026-11-17)

@@ -6,6 +6,7 @@ import { SkipLink } from "@/components/ui/skip-link"
 
 import { App } from "./app"
 import { appearance } from "./appearance"
+import { CalendarCheck } from "./checks/calendar-check"
 import { CardHeaderCheck } from "./checks/card-header-check"
 import { IconTooltipCheck } from "./checks/icon-tooltip-check"
 import { MobileNavCheck } from "./checks/mobile-nav-check"
@@ -21,9 +22,9 @@ const root = document.getElementById("root")
 if (!root) throw new Error("Missing #root element")
 
 // ?demo=page&status=error, ?demo=site and ?demo=shell render one demo alone, for screenshots at phone width;
-// ?demo=overlay-check, card-header-check, mobile-nav-check and icon-tooltip-check are fixtures for
-// tooling/overlay-check.mjs, shell-check.mjs and icon-tooltip-check.mjs; ?demo=inbox is the keyboard-first inbox
-// alone, ?demo=list-bench the list tooling/list-bench.mjs times.
+// ?demo=overlay-check, card-header-check, mobile-nav-check, icon-tooltip-check and calendar-check are fixtures for
+// tooling/overlay-check.mjs, shell-check.mjs, icon-tooltip-check.mjs and calendar-check.mjs; ?demo=inbox is the
+// keyboard-first inbox alone, ?demo=list-bench the list tooling/list-bench.mjs times.
 const params = new URLSearchParams(location.search)
 const status = demoStatuses.find((name) => name === params.get("status")) ?? "success"
 const demo = params.get("demo")
@@ -38,6 +39,7 @@ const standalone = new Set([
   "icon-tooltip-check",
   "inbox",
   "list-bench",
+  "calendar-check",
 ])
 
 function Demo() {
@@ -55,6 +57,7 @@ function Demo() {
   if (demo === "icon-tooltip-check") return <IconTooltipCheck />
   if (demo === "inbox") return <InboxDemo />
   if (demo === "list-bench") return <ListBench />
+  if (demo === "calendar-check") return <CalendarCheck />
   return demo === "shell" ? <ShellDemo /> : <SiteDemo />
 }
 
