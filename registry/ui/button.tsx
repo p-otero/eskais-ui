@@ -10,7 +10,7 @@ import { ControlTooltip, type ControlTooltipOption } from "@/components/ui/toolt
 import { cnState } from "@/lib/utils"
 
 const buttonVariants = cva(
-  "touch-target inline-flex shrink-0 cursor-pointer items-center justify-center gap-inline rounded-control text-sm font-medium whitespace-nowrap transition-colors outline-none select-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background data-disabled:not-data-pending:cursor-not-allowed data-disabled:not-data-pending:opacity-50 active:not-data-disabled:translate-y-px data-pending:relative data-pending:cursor-progress data-pending:[&>[data-slot=spinner]+*]:hidden data-pending:has-[>[data-slot=spinner][data-overlay]]:text-transparent! [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
+  "touch-target inline-flex shrink-0 not-data-pending:[&>[data-show=pending]]:hidden cursor-pointer items-center justify-center gap-inline rounded-control text-sm font-medium whitespace-nowrap transition-colors outline-none select-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background data-disabled:not-data-pending:cursor-not-allowed data-disabled:not-data-pending:opacity-50 active:not-data-disabled:translate-y-px data-pending:relative data-pending:cursor-progress data-pending:[&>[data-slot=spinner]+*]:hidden data-pending:has-[>[data-slot=spinner][data-overlay]]:text-transparent! [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
   {
     variants: {
       variant: {

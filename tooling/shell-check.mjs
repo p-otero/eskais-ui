@@ -1,5 +1,6 @@
-// Drives the showcase where layout decides whether things show: ⌘K and the Sidebar drawer from the Topbar at phone
-// widths, scrollable tabs, MobileNav labels, CardHeader widths and the layout blocks (layout-blocks-check.mjs).
+// Drives the showcase where layout decides what shows: the Topbar's ⌘K dialog and Sidebar drawer, tabs and
+// MobileNav labels at phone widths; CardHeader and SidePanel headers where actions wrap; SidePanel's narrow modes;
+// a wrapping DataTable column; DescriptionList layouts; ring meters (?demo=<name>-check); the layout blocks.
 // Usage: node tooling/shell-check.mjs [--screenshots=<dir>] [--only=layout] (after `bun run build:showcase`)
 import { mkdirSync } from "node:fs"
 import { join, resolve } from "node:path"
@@ -161,6 +162,200 @@ async function checkCardHeaders(page) {
   await shot(page, "card-header-widths.png", true)
 }
 
+async function checkSidePanelHeader(page) {
+  await page.setViewportSize({ width: 1100, height: 900 })
+  await page.goto(`${new URL(page.url()).origin}/?demo=side-panel-check`)
+  await page.getByTestId("side-panel-both").waitFor()
+  await page.evaluate(() => document.fonts.ready)
+  const kinds = ["both", "pill"]
+  const results = await Promise.all(
+    kinds.map((kind) =>
+      page.getByTestId(`side-panel-${kind}`).evaluate((box) => {
+        const panel = box.querySelector('[data-slot="side-panel"]').getBoundingClientRect()
+        const heading = box.querySelector('[data-slot="side-panel-heading"]').getBoundingClientRect()
+        const description = box.querySelector('[data-slot="side-panel-description"]')
+        const actions = box.querySelector('[data-slot="side-panel-actions"]').getBoundingClientRect()
+        const header = box.querySelector('[data-slot="side-panel-header"]').getBoundingClientRect()
+        const lines = Math.round(
+          description.getBoundingClientRect().height / Number.parseFloat(getComputedStyle(description).lineHeight),
+        )
+        return {
+          width: Math.round(panel.width),
+          below: actions.top >= heading.bottom - 1,
+          headingWidth: Math.round(heading.width),
+          lines,
+          overflow: actions.right > header.right + 1,
+        }
+      }),
+    ),
+  )
+  kinds.forEach((kind, index) => {
+    const result = results[index]
+    check(
+      `SidePanel 24rem header, ${kind}: the title keeps room or the actions wrap below`,
+      result.width === 384 &&
+        !result.overflow &&
+        (result.below || result.headingWidth >= comfortableTitle) &&
+        result.lines <= 3,
+      `${result.below ? "actions below" : "actions beside"}, heading ${result.headingWidth}px, description ${result.lines} lines`,
+    )
+  })
+  await shot(page, "side-panel-24rem.png", true)
+}
+
+async function checkSidePanelNarrow(page) {
+  await page.setViewportSize({ width: 375, height: 720 })
+  const origin = new URL(page.url()).origin
+  const boxes = () =>
+    page.evaluate(() =>
+      Object.fromEntries(
+        Object.entries({
+          layout: '[data-testid="layout"]',
+          list: '[data-testid="list"]',
+          panel: '[data-slot="side-panel"]',
+        }).map(([key, selector]) => [key, document.querySelector(selector)?.getBoundingClientRect().toJSON()]),
+      ),
+    )
+
+  await page.goto(`${origin}/?demo=side-panel-check&narrow=stack`)
+  await page.getByRole("complementary").waitFor()
+  await page.evaluate(() => document.fonts.ready)
+  let { layout, list, panel } = await boxes()
+  check(
+    "SidePanel narrow=stack: the list keeps the full width and the panel follows below it",
+    Math.abs(list.width - layout.width) <= 2 &&
+      Math.abs(panel.width - layout.width) <= 2 &&
+      panel.top >= list.bottom - 1,
+    `list ${Math.round(list.width)}px wide, panel at ${Math.round(panel.top)} below ${Math.round(list.bottom)}`,
+  )
+  await shot(page, "side-panel-narrow-stack.png", true)
+
+  await page.goto(`${origin}/?demo=side-panel-check&narrow=overlay`)
+  await page.getByRole("complementary").waitFor()
+  ;({ layout, list, panel } = await boxes())
+  check(
+    "SidePanel narrow=overlay: the panel covers its positioned parent",
+    Math.abs(panel.top - layout.top) <= 2 &&
+      Math.abs(panel.width - layout.width) <= 2 &&
+      panel.bottom >= list.bottom - 1,
+  )
+  await shot(page, "side-panel-narrow-overlay.png")
+
+  await page.goto(`${origin}/?demo=side-panel-check&narrow=sheet`)
+  const sheet = page.getByRole("dialog", { name: "Webhook retries" })
+  check("SidePanel narrow=sheet: a visible bottom sheet", await onScreen(sheet))
+  const inside = await sheet.evaluate((element) => element.contains(document.activeElement))
+  check("SidePanel narrow=sheet: focus moves into the sheet", inside)
+  await shot(page, "side-panel-narrow-sheet.png")
+  await page.keyboard.press("Escape")
+  await sheet.waitFor({ state: "detached" })
+  const focused = await page.evaluate(() =>
+    document.activeElement?.closest("[data-item-id]")?.getAttribute("data-item-id"),
+  )
+  check("SidePanel narrow=sheet: Escape closes it and focus returns to the row", focused === "Webhook retries", focused)
+}
+
+async function checkTableWrap(page) {
+  await page.setViewportSize({ width: 1100, height: 700 })
+  await page.goto(`${new URL(page.url()).origin}/?demo=table-check`)
+  const table = page.getByTestId("table")
+  await table.getByRole("cell").first().waitFor()
+  await page.evaluate(() => document.fonts.ready)
+  const cells = await table
+    .locator("tbody tr")
+    .first()
+    .getByRole("cell")
+    .evaluateAll((all) =>
+      all.map((cell) => ({
+        lines: Math.round(cell.getBoundingClientRect().height / Number.parseFloat(getComputedStyle(cell).lineHeight)),
+        cut: cell.scrollWidth > cell.clientWidth + 1,
+        ellipsis: getComputedStyle(cell).textOverflow === "ellipsis",
+      })),
+    )
+  const [, title, summary] = cells
+  check(
+    "DataTable wrap: the wrapped column shows its whole text on several lines",
+    summary.lines >= 2 && !summary.cut && !summary.ellipsis,
+    `${summary.lines} lines`,
+  )
+  check("DataTable wrap: the column beside it still truncates with an ellipsis", title.cut && title.ellipsis)
+  const titleCell = table.locator("tbody tr").first().getByRole("cell").nth(1)
+  await titleCell.hover()
+  const hint = await titleCell.getAttribute("title")
+  check(
+    "DataTable wrap: a cut-off cell shows its whole text in a title on hover",
+    hint?.startsWith("Webhook retries"),
+    hint,
+  )
+  await shot(page, "table-wrap.png")
+}
+
+async function checkDescriptionList(page) {
+  await page.setViewportSize({ width: 1100, height: 900 })
+  await page.goto(`${new URL(page.url()).origin}/?demo=description-list-check`)
+  await page.getByTestId("grid-wide").waitFor()
+  await page.evaluate(() => document.fonts.ready)
+  const measure = (id) =>
+    page.getByTestId(id).evaluate((list) => {
+      const items = [...list.querySelectorAll('[data-slot="description-item"]')]
+      const tops = new Set(items.map((item) => Math.round(item.getBoundingClientRect().top)))
+      const first = items[0]
+      const term = first.querySelector("dt").getBoundingClientRect()
+      const details = first.querySelector("dd").getBoundingClientRect()
+      return { rows: tops.size, beside: Math.abs(term.top - details.top) < term.height }
+    })
+  const [inlineWide, inlineNarrow, gridWide, gridNarrow] = await Promise.all(
+    ["inline-wide", "inline-narrow", "grid-wide", "grid-narrow"].map((id) => measure(id)),
+  )
+  check("DescriptionList inline: term beside details in a wide list", inlineWide.beside)
+  check("DescriptionList inline: term above details under 24rem of list", !inlineNarrow.beside)
+  check(
+    "DescriptionList grid: three columns at 40rem (4 items in 2 rows)",
+    gridWide.rows === 2,
+    `${gridWide.rows} rows`,
+  )
+  check("DescriptionList grid: one column at 20rem", gridNarrow.rows === 4, `${gridNarrow.rows} rows`)
+  await shot(page, "description-list-layouts.png", true)
+}
+
+async function checkGauges(page) {
+  await page.setViewportSize({ width: 1100, height: 900 })
+  await page.goto(`${new URL(page.url()).origin}/?demo=gauge-check`)
+  const storage = page.getByRole("meter", { name: "Storage" })
+  await storage.waitFor()
+  await page.evaluate(() => document.fonts.ready)
+  const ring = await storage.evaluate((meter) => {
+    const arc = meter.querySelector('[data-slot="meter-ring-arc"]')
+    const value = meter.querySelector('[data-slot="meter-value"]').getBoundingClientRect()
+    const box = meter.querySelector("svg").getBoundingClientRect()
+    return {
+      dash: arc.getAttribute("stroke-dasharray"),
+      centred:
+        Math.abs(value.left + value.width / 2 - (box.left + box.width / 2)) < 2 &&
+        Math.abs(value.top + value.height / 2 - (box.top + box.height / 2)) < 2,
+      now: meter.getAttribute("aria-valuenow"),
+    }
+  })
+  check(
+    "Ring meter: role=meter with its value, the arc at 68 of 100",
+    ring.now === "68" && ring.dash === "68 100",
+    ring.dash,
+  )
+  check("Ring meter: the value sits in the centre of the ring", ring.centred)
+  const sizes = await page
+    .getByTestId("rings")
+    .locator("svg")
+    .evaluateAll((svgs) => svgs.map((svg) => Math.round(svg.getBoundingClientRect().width)))
+  check("Ring meter: sm < md < lg", sizes[0] < sizes[1] && sizes[1] < sizes[2], sizes.join(", "))
+  await shot(page, "gauges.png")
+  await page.emulateMedia({ reducedMotion: "reduce" })
+  const duration = await storage.evaluate(
+    (meter) => getComputedStyle(meter.querySelector('[data-slot="meter-ring-arc"]')).transitionDuration,
+  )
+  check("Ring meter: no animation under reduced motion", Number.parseFloat(duration) <= 0.01, duration)
+  await page.emulateMedia({ reducedMotion: "no-preference" })
+}
+
 async function checkMobileNav(page) {
   await page.setViewportSize({ width: 320, height: 640 })
   await page.goto(`${new URL(page.url()).origin}/?demo=mobile-nav-check`)
@@ -238,6 +433,11 @@ await withShowcase(async (page) => {
   check("320px: a tab selected on load is scrolled into view", preselected.ok, preselected.detail)
 
   await checkCardHeaders(page)
+  await checkSidePanelHeader(page)
+  await checkSidePanelNarrow(page)
+  await checkTableWrap(page)
+  await checkDescriptionList(page)
+  await checkGauges(page)
   await checkMobileNav(page)
 })
 

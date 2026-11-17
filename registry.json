@@ -1787,7 +1787,7 @@
       "name": "table",
       "type": "registry:ui",
       "title": "Table",
-      "description": "Semantic table parts with truncating cells, aria-sort-ready headers and a horizontal scroll area on narrow screens.",
+      "description": "Semantic table parts with aria-sort-ready headers and a horizontal scroll area on narrow screens. Cells stay on one line, cut with an ellipsis and a title holding the whole text while they overflow; TableCell wrap lets one wrap.",
       "dependencies": [
         "@ui-sdk/core@0.1.0-beta.5",
         "@ui-sdk/react@0.1.0-beta.5"
@@ -1801,7 +1801,8 @@
           "path": "registry/ui/table.tsx",
           "type": "registry:ui"
         }
-      ]
+      ],
+      "docs": "`TableCell` keeps its text on one line, up to `max-w-80`, with an ellipsis; when the pointer arrives at a cell that is cut off, its `title` becomes the whole text (a `title` you pass stays). `wrap` drops the limit and wraps the text onto more lines instead, for descriptions and summaries. Screen readers and agents always get the whole text."
     },
     {
       "name": "tooltip",
@@ -2202,6 +2203,34 @@
           "type": "registry:ui"
         }
       ]
+    },
+    {
+      "name": "description-list",
+      "type": "registry:ui",
+      "title": "Description List",
+      "description": "Terms and their details in a dl: stacked, inline (side by side, stacked again in a narrow container) or a grid of columns. Spacing from the role tokens, copyable details with an agent copy action, and a dash for an empty value that screen readers read as an overridable label.",
+      "dependencies": [
+        "@ui-sdk/core@0.1.0-beta.5",
+        "@ui-sdk/react@0.1.0-beta.5",
+        "class-variance-authority@0.7.1",
+        "lucide-react@1.73.0"
+      ],
+      "registryDependencies": [
+        "@eskais/utils",
+        "@eskais/theme",
+        "@eskais/button"
+      ],
+      "files": [
+        {
+          "path": "registry/ui/description-list-primitive.ts",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/description-list.tsx",
+          "type": "registry:ui"
+        }
+      ],
+      "docs": "`<DescriptionList layout columns labels>` renders a `dl` of `DescriptionItem`s, each a `div` holding a `DescriptionTerm` (`dt`) and its `DescriptionDetails` (`dd`). `layout=\"stacked\"` (default) puts each term above its details, `gap-group` between items; `\"inline\"` puts them side by side, the term at `--description-term-width` (33%), divided by rules, and stacks them again once the list's own width drops under 24rem (a container query, so it works in a side panel); `\"grid\"` lays the items out in as many columns as fit at `--description-column-min` (12rem), never more than `columns` (3). Spacing comes from the role tokens, so `data-theme=\"compact\"` tightens it. An empty `DescriptionDetails` (nothing, `null` or `\"\"`) shows an `aria-hidden` dash and reads `labels.empty` (\"Not set\"). `mono` sets the value in the monospace face (ids, hashes). `copyable` adds a copy button after the value (`copyValue` when the details aren't plain text, `onCopy`), as CodeBlock does: the value is a group named by its term with a `copy` action for agents, the button is hidden from them, and \"Copied\" (`labels.copied`) is announced. Override `labels={{ empty, copy, copied }}` in the page's language."
     },
     {
       "name": "board",
@@ -3051,16 +3080,18 @@
           "path": "registry/ui/progress.tsx",
           "type": "registry:ui"
         }
-      ]
+      ],
+      "docs": "The value reads in the page's locale by default, as CLDR writes it: es-ES, fr-FR and de-DE put a no-break space (U+00A0) before the percent sign (\"21 %\"), en-US none. `format` on the root (`Intl.NumberFormat` options, or a function of the value) changes the visible value and what screen readers hear together, and `locale` pins the locale. `formatValue={(value, { min, max, percent, text }) => …}` on the Value part replaces only the visible value (a node, so it can hold markup), while screen readers keep the root's text; use `getValueLabel` on the root to change theirs. While the bar is indeterminate `value` and `percent` are null."
     },
     {
       "name": "meter",
       "type": "registry:ui",
       "title": "Meter",
-      "description": "UI SDK Meter: a reading within a known range, like storage used.",
+      "description": "UI SDK Meter: a reading within a known range, like storage used, as a bar or a ring gauge.",
       "dependencies": [
         "@ui-sdk/core@0.1.0-beta.5",
-        "@ui-sdk/react@0.1.0-beta.5"
+        "@ui-sdk/react@0.1.0-beta.5",
+        "class-variance-authority@0.7.1"
       ],
       "registryDependencies": [
         "@eskais/utils",
@@ -3073,7 +3104,8 @@
           "path": "registry/ui/meter.tsx",
           "type": "registry:ui"
         }
-      ]
+      ],
+      "docs": "The value reads in the page's locale by default, as CLDR writes it: es-ES, fr-FR and de-DE put a no-break space (U+00A0) before the percent sign (\"21 %\"), en-US none. `format` on the root (`Intl.NumberFormat` options, or a function of the value) changes the visible value and what screen readers hear together, and `locale` pins the locale. `formatValue={(value, { min, max, percent, text }) => …}` on the Value part replaces only the visible value (a node, so it can hold markup), while screen readers keep the root's text; use `getValueLabel` on the root to change theirs. `variant=\"ring\"` on `Meter` with a `MeterRing size` (`sm`, `md`, `lg`) child draws the reading as a ring with the value in the centre (`children` replaces it) and the label below; the root keeps `role=\"meter\"`, the ring is `aria-hidden`, `tone` colours the arc, it fills the other way round in right to left, and its transition stops under reduced motion."
     },
     {
       "name": "alert",
@@ -3304,7 +3336,7 @@
           "type": "registry:ui"
         }
       ],
-      "docs": "Rows are one tab stop: arrows or j/k move, Home/End and PageUp/PageDown jump, Enter calls `onRowOpen(row)`, and with `selectable` Space or x toggles the focused row; a checkbox or button inside a row keeps its own keys. Past 200 rows (`virtualize=\"auto\"`, `estimateSize`, default 41) only the rows in view render, in `tbody` between gap rows, with `aria-rowcount` and `aria-rowindex`, a sticky header and find in page through hidden stubs. Bound its height (`className=\"max-h-96\"`) so it scrolls inside; otherwise it scrolls with the page."
+      "docs": "Rows are one tab stop: arrows or j/k move, Home/End and PageUp/PageDown jump, Enter calls `onRowOpen(row)`, and with `selectable` Space or x toggles the focused row; a checkbox or button inside a row keeps its own keys. Past 200 rows (`virtualize=\"auto\"`, `estimateSize`, default 41) only the rows in view render, in `tbody` between gap rows, with `aria-rowcount` and `aria-rowindex`, a sticky header and find in page through hidden stubs. Bound its height (`className=\"max-h-96\"`) so it scrolls inside; otherwise it scrolls with the page. A column takes `wrap` (its cells wrap onto more lines instead of truncating), `cellClassName` (classes on every body cell, such as a width) and `headerClassName` (classes on its header cell)."
     },
     {
       "name": "skip-link",
@@ -3471,7 +3503,7 @@
       "type": "registry:ui",
       "title": "Chart",
       "description": "Recharts v3 composed with Eskais tokens: ChartContainer maps a config to --color-<key> variables (light and dark), popover tooltips and legends, and ChartDataTable renders the same data as a table for screen readers and agents. The container is a figure that requires a name.",
-      "docs": "Categorical series use --chart-1 to --chart-5. Series with a meaning use the series tokens, which follow the theme and meet 3:1 on the background and card in both modes: --series-positive (gains, done; from --success), --series-negative (losses, failures; from --destructive), --series-target (a goal or reference line; from --foreground) and --series-remaining (what is left, a track; from --muted-foreground over --muted). Pass them as a config color, e.g. { done: { label: \"Done\", color: \"var(--series-positive)\" } }, or use the Tailwind colours (stroke-series-target). Don't rely on colour alone: add a legend or labels, and dash a target line.",
+      "docs": "Categorical series use --chart-1 to --chart-5. Series with a meaning use the series tokens, which follow the theme and meet 3:1 on the background and card in both modes: --series-positive (gains, done; from --success), --series-negative (losses, failures; from --destructive), --series-target (a goal or reference line; from --foreground) and --series-remaining (what is left, a track; from --muted-foreground over --muted). Pass them as a config color, e.g. { done: { label: \"Done\", color: \"var(--series-positive)\" } }, or use the Tailwind colours (stroke-series-target). Don't rely on colour alone: add a legend or labels, and dash a target line. `ChartDataTable data labelKey keys` is generic over the row type (`TRow extends object`), so rows typed by an `interface` pass as they are and `labelKey` and `keys` must name their fields.",
       "dependencies": [
         "recharts@3.10.1"
       ],
@@ -3651,7 +3683,7 @@
       "type": "registry:ui",
       "title": "List Item",
       "description": "Dense, Linear-style rows that also work as entity cards: List, ListGroup (label and count), ListItem with leading, title, subtitle, status, meta, trailing and actions, plus ListItemTitle, ListItemMeta, ListItemActions and IconTile. Agents get select(id).",
-      "docs": "`List aria-label` holds `ListItem`s, optionally inside `ListGroup label count`. A row selects through a stretched link (`href`, `aria-current=\"page\"` when `selected`) or a stretched UI SDK Button (`onSelect`), and its actions, chips and status stay their own targets. Give `List` a `value`, `defaultValue` or `onValueChange` and the rows become options of a UI SDK Listbox (arrow keys, one tab stop); options can't hold controls, so `actions` are ignored there. `variant=\"card\"` lays rows out as cards in a responsive grid. Titles wrap to two lines, then show the full title in a tooltip; a status pill wraps below a narrow title, and trailing content and actions drop to their own line on a narrow row. `List onSelect(id, details)` runs before a row is chosen, for people and agents, and `details.cancel()` stops it. Agents see the list by its label with `select(id)`. Rows of a non-selectable list are one tab stop: arrows or j/k move, Home/End and PageUp/PageDown jump, Enter opens the row through its link or button, and the moved-to row scrolls into view with the least scrolling; a selectable list takes j/k and the page keys as its own arrows. Pass `items` with `renderItem` (and `getItemId`, `itemText`) to render rows from data: past 200 rows (`virtualize=\"auto\"`, `estimateSize`) only the rows in view render, with `aria-setsize`/`aria-posinset`, every row reachable by keyboard and by agents' `select`, and find in page through hidden stubs. `checkedIds` with `onCheckedIdsChange` checks rows for a bulk action: Space or x toggles the focused row, each row shows a checkbox outside the tab order (`checkLabel` names it).",
+      "docs": "`List aria-label` holds `ListItem`s, optionally inside `ListGroup label count`. The name goes on the list itself: a `ul` (`role=\"list\"`), or the listbox when rows are selectable, with no group around it. A row selects through a stretched link (`href`, `aria-current=\"page\"` when `selected`) or a stretched UI SDK Button (`onSelect`), and its actions, chips and status stay their own targets. Give `List` a `value`, `defaultValue` or `onValueChange` and the rows become options of a UI SDK Listbox (arrow keys, one tab stop); options can't hold controls, so `actions` are ignored there. `variant=\"card\"` lays rows out as cards in a responsive grid. Titles wrap to two lines, then show the full title in a tooltip; a status pill wraps below a narrow title, and trailing content and actions drop to their own line on a narrow row. `List onSelect(id, details)` runs before a row is chosen, for people and agents, and `details.cancel()` stops it. Agents see the list by its label with `select(id)`; a selectable list also shows its listbox under the same name with `setValue`, and each action resolves to one of them. Rows of a non-selectable list are one tab stop: arrows or j/k move, Home/End and PageUp/PageDown jump, Enter opens the row through its link or button, and the moved-to row scrolls into view with the least scrolling; a selectable list takes j/k and the page keys as its own arrows. Pass `items` with `renderItem` (and `getItemId`, `itemText`) to render rows from data: past 200 rows (`virtualize=\"auto\"`, `estimateSize`) only the rows in view render, with `aria-setsize`/`aria-posinset`, every row reachable by keyboard and by agents' `select`, and find in page through hidden stubs. `checkedIds` with `onCheckedIdsChange` checks rows for a bulk action: Space or x toggles the focused row, each row shows a checkbox outside the tab order (`checkLabel` names it).",
       "dependencies": [
         "@ui-sdk/core@0.1.0-beta.5",
         "@ui-sdk/react@0.1.0-beta.5"
@@ -3688,22 +3720,28 @@
       "name": "side-panel",
       "type": "registry:ui",
       "title": "Side Panel",
-      "description": "A non-modal inspector beside a list: a named complementary region, Escape closes it and returns focus to the row, and shortcuts declared inside run while it is open.",
-      "docs": "`<SidePanel open onOpenChange title description actions returnFocus>` renders nothing while closed. Lay it out beside the list in a flex row (`--side-panel-width`, 24rem by default); on narrow screens it covers its positioned parent. Escape anywhere on the page closes it (a modal above it gets Escape first), and focus that was inside it, or lost to the body, moves to `returnFocus()`. It is a `ShortcutScope` that is active while open (`scope`, `scopeLabel` for the `ShortcutsDialog`), so `Button shortcut=\"u\"` inside it works while focus stays in the list. `labels={{ close }}` names the close button.",
+      "description": "A non-modal inspector beside a list: a named complementary region, Escape closes it and returns focus to the row, shortcuts declared inside run while it is open, and on narrow screens it stacks below the list, overlays it or opens as a bottom sheet.",
+      "docs": "`<SidePanel open onOpenChange title description actions returnFocus>` renders nothing while closed. Lay it out beside the list in a flex row (`--side-panel-width`, 24rem by default). `actions` (a status pill, small buttons) sit beside the title until the title would get narrower than `--card-heading-basis` (11rem), then wrap below it, as `CardHeader`'s do; the close button keeps its corner. `narrow` sets what happens at the `narrow:` breakpoint (760px and below): `\"stack\"` (default) keeps it in the page flow, full width, and makes its flex parent wrap so it goes below the list; `\"overlay\"` covers its positioned parent, as it always did before; `\"sheet\"` opens it as a modal bottom `Drawer` that takes focus and returns it to `returnFocus()` on close. `stack` is the default because it is the only mode that neither hides the page nor traps focus, so a panel that is open on load still leaves the list readable and reachable. Use `overlay` to show the panel instead of the list (a tall scroller in a bounded column, as the `inbox` block does), and `sheet` for a detail that should read as a step away from the list. Escape anywhere on the page closes it (a modal above it gets Escape first), and focus that was inside it, or lost to the body, moves to `returnFocus()`. It is a `ShortcutScope` that is active while open (`scope`, `scopeLabel` for the `ShortcutsDialog`), so `Button shortcut=\"u\"` inside it works while focus stays in the list. `labels={{ close }}` names the close button.",
       "dependencies": [
         "@ui-sdk/core@0.1.0-beta.5",
         "@ui-sdk/react@0.1.0-beta.5",
-        "lucide-react@1.73.0"
+        "lucide-react@1.73.0",
+        "class-variance-authority@0.7.1"
       ],
       "registryDependencies": [
         "@eskais/utils",
         "@eskais/theme",
         "@eskais/button",
-        "@eskais/shortcuts"
+        "@eskais/shortcuts",
+        "@eskais/drawer"
       ],
       "files": [
         {
           "path": "registry/ui/side-panel.tsx",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/use-media-query.ts",
           "type": "registry:ui"
         }
       ]

@@ -340,6 +340,7 @@ const itemNotes: Record<string, ItemNotes> = {
     a11y: [
       "A non-modal complementary region named by its title, so the list beside it stays usable.",
       "Escape closes it; focus that was inside returns to the row that opened it.",
+      'On narrow screens narrow="stack" (default) keeps it in the flow below the list, hiding nothing and trapping no focus; "sheet" is a modal bottom sheet that takes focus and gives it back.',
     ],
     related: ["list-item", "drawer", "shortcuts"],
   },
@@ -534,8 +535,20 @@ const itemNotes: Record<string, ItemNotes> = {
     a11y: ["A labelled group of figures; unknown values show a dash and estimates a tilde, explained in their title."],
     related: ["quantity", "chart", "usage"],
   },
+  "description-list": {
+    usage:
+      "Reach for it for an entity's properties: a deployment's region and commit, a task's owner and dates. Pick inline for a panel, grid for a summary page.",
+    a11y: [
+      "A real dl: screen readers announce a list of terms with their definitions.",
+      "An empty value shows a dash but reads a word (labels.empty), never silence.",
+      "The copy button announces Copied in a polite live region.",
+    ],
+    agent: "Agents find a copyable value by its term and call copy.",
+    related: ["stat", "card", "side-panel", "code-block"],
+  },
   "list-item": {
     a11y: [
+      "The name is on the list itself: a list, or a listbox when rows are selectable, with no group around it.",
       "A row selects through a stretched link or button, while its own actions stay separate targets.",
       "With value or onValueChange, rows become listbox options with one tab stop.",
     ],
@@ -604,7 +617,10 @@ const itemNotes: Record<string, ItemNotes> = {
     related: ["meter", "spinner"],
   },
   meter: {
-    a11y: ["A meter for a reading in a known range, like storage used; tone colours the indicator."],
+    a11y: [
+      "A meter for a reading in a known range, like storage used; tone colours the indicator.",
+      'variant="ring" keeps role="meter" and its value; the ring itself is hidden from screen readers and still under reduced motion.',
+    ],
     related: ["progress", "stat"],
   },
   empty: {

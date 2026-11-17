@@ -47,10 +47,13 @@ function AttemptThread({
   }
   return (
     <Button
-      data-slot="attempt-thread"
       variant={inline ? "link" : "outline"}
       size="sm"
-      render={thread.href && !onOpenThread ? createElement("a", { href: thread.href }) : undefined}
+      render={
+        thread.href && !onOpenThread
+          ? createElement("a", { href: thread.href, "data-slot": "attempt-thread" })
+          : (part) => <button {...part} data-slot="attempt-thread" />
+      }
       aria-label={label(thread.title ?? thread.id)}
       title={thread.id}
       onClick={onOpenThread && (() => onOpenThread(thread))}

@@ -7,6 +7,7 @@ import { NavigableRow } from "@/components/ui/row-navigation"
 import { Empty } from "@/components/ui/empty"
 import { Skeleton } from "@/components/ui/skeleton"
 import { TableCell, TableRow } from "@/components/ui/table"
+import { cn } from "@/lib/utils"
 
 type DataTableRowProps<Row> = {
   row: Row
@@ -76,7 +77,8 @@ function DataTableRowElement<Row>({
         <TableCell
           key={column.id}
           data-align={column.align}
-          className="data-[align=center]:text-center data-[align=end]:text-end"
+          wrap={column.wrap}
+          className={cn("data-[align=center]:text-center data-[align=end]:text-end", column.cellClassName)}
         >
           {column.cell(row)}
         </TableCell>

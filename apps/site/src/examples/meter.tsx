@@ -1,4 +1,4 @@
-import { Meter, MeterLabel, MeterTrack, MeterValue } from "@/components/ui/meter"
+import { Meter, MeterLabel, MeterRing, MeterTrack, MeterValue } from "@/components/ui/meter"
 
 export default function MeterDemo() {
   return (
@@ -13,6 +13,16 @@ export default function MeterDemo() {
         <MeterValue />
         <MeterTrack />
       </Meter>
+      <div className="flex items-end gap-section">
+        <Meter variant="ring" value={40} tone="success">
+          <MeterRing size="sm" />
+          <MeterLabel>Seats</MeterLabel>
+        </Meter>
+        <Meter variant="ring" value={68}>
+          <MeterRing />
+          <MeterLabel>Storage</MeterLabel>
+        </Meter>
+      </div>
     </div>
   )
 }

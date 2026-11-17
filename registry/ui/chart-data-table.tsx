@@ -6,20 +6,23 @@ import { formatChartValue, type ChartConfig, type ChartFormatOptions, type Chart
 import { ChartContext } from "@/components/ui/chart-context"
 import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 
-type ChartRow = Record<string, unknown>
+/** Any row object; an `interface` works too, since rows don't need an index signature. */
+type ChartRow = object
 
-type ChartDataTableProps<Row extends ChartRow> = ChartName &
+type ChartDataTableProps<TRow extends ChartRow> = ChartName &
   ChartFormatOptions & {
-    data: readonly Row[]
-    labelKey: keyof Row & string
-    keys?: readonly (keyof Row & string)[]
+    data: readonly TRow[]
+    /** The field that names each row, like a month. */
+    labelKey: keyof TRow & string
+    /** The value columns, in order; by default the config's series that hold a number. */
+    keys?: readonly (keyof TRow & string)[]
     config?: ChartConfig
     caption?: ReactNode
     visuallyHidden?: boolean
     className?: string
   }
 
-function ChartDataTable<Row extends ChartRow>({
+function ChartDataTable<TRow extends ChartRow>({
   data,
   labelKey,
   keys,
@@ -30,10 +33,11 @@ function ChartDataTable<Row extends ChartRow>({
   format,
   className,
   ...name
-}: ChartDataTableProps<Row>) {
+}: ChartDataTableProps<TRow>) {
   const config = configProp ?? use(ChartContext)?.config ?? {}
-  const columns =
-    keys ?? Object.keys(config).filter((key) => key !== labelKey && data.some((row) => typeof row[key] === "number"))
+  const rows = data as readonly Record<string, unknown>[]
+  const columns: readonly string[] =
+    keys ?? Object.keys(config).filter((key) => key !== labelKey && rows.some((row) => typeof row[key] === "number"))
   const headerFor = (key: string) => config[key]?.label ?? key
 
   const table = (
@@ -50,7 +54,7 @@ function ChartDataTable<Row extends ChartRow>({
         </TableRow>
       </TableHeader>
       <TableBody>
-        {data.map((row) => {
+        {rows.map((row) => {
           const category = String(row[labelKey] ?? "")
           return (
             <TableRow key={category}>
