@@ -1,6 +1,7 @@
+import DashboardGridExample from "../../../site/src/examples/dashboard-grid"
 import MasterDetailExample from "../../../site/src/examples/master-detail"
 
-/** The layout blocks alone, filling the window: ?demo=master-detail, for tooling/shell-check.mjs and screenshots. */
+/** The layout blocks alone: ?demo=master-detail fills the window, for tooling/shell-check.mjs and screenshots. */
 function MasterDetailDemo() {
   return (
     <main className="flex h-dvh flex-col p-inset-surface narrow:p-0">
@@ -10,4 +11,14 @@ function MasterDetailDemo() {
   )
 }
 
-export { MasterDetailDemo }
+/** ?demo=dashboard-grid: the dashboard demo on a page, with its loading switch. */
+function DashboardGridDemo() {
+  return (
+    <main className="mx-auto flex w-full max-w-7xl flex-col gap-group p-inset-surface">
+      <h1 className="text-display-sm tracking-tight">Lab</h1>
+      <DashboardGridExample />
+    </main>
+  )
+}
+
+export { DashboardGridDemo, MasterDetailDemo }

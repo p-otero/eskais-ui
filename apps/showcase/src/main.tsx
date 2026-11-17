@@ -14,7 +14,7 @@ import { ListBench } from "./checks/list-bench"
 import { OverlayCheck } from "./checks/overlay-check"
 import { PressCheck } from "./checks/press-check"
 import { InboxDemo } from "./sections/inbox"
-import { MasterDetailDemo } from "./sections/layout-blocks"
+import { DashboardGridDemo, MasterDetailDemo } from "./sections/layout-blocks"
 import { demoStatuses, PageDemo, type DemoStatus } from "./sections/page"
 import { ShellDemo } from "./shell/shell-demo"
 import { SiteDemo } from "./shell/site-demo"
@@ -44,6 +44,7 @@ const standalone = new Set([
   "calendar-check",
   "press-check",
   "master-detail",
+  "dashboard-grid",
 ])
 
 function Demo() {
@@ -64,6 +65,7 @@ function Demo() {
   if (demo === "calendar-check") return <CalendarCheck />
   if (demo === "press-check") return <PressCheck />
   if (demo === "master-detail") return <MasterDetailDemo />
+  if (demo === "dashboard-grid") return <DashboardGridDemo />
   return demo === "shell" ? <ShellDemo /> : <SiteDemo />
 }
 

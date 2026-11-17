@@ -322,6 +322,18 @@ const itemNotes: Record<string, ItemNotes> = {
       "Agents open and close items through the block by its label (open(id), close()), with the items you pass listed as choices; Back, Close, Collapse and Expand are buttons they press by name.",
     related: ["list-item", "side-panel", "resizable"],
   },
+  "dashboard-grid": {
+    usage:
+      "A home or metrics screen: a row of DashboardStats over DashboardCards that load through status and data, with charts and meters inside.",
+    a11y: [
+      "Each card is a region named by its title; a DashboardChart inside is named by the same title.",
+      "Rows share one height, so a card keeps its size from loading to loaded; overflowing content becomes focusable so a keyboard can scroll it.",
+      "A failed card announces its error once, as an alert, with a Retry button.",
+    ],
+    agent:
+      "Agents press the cards' own buttons (Retry, your actions) by name; charts expose their data through ChartDataTable.",
+    related: ["stat", "chart", "meter", "states", "card"],
+  },
   "side-panel": {
     usage:
       "An inspector beside a list: open it from a row's onSelect, pass returnFocus to the row, and give its buttons a shortcut.",

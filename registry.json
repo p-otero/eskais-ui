@@ -4190,6 +4190,36 @@
         }
       ],
       "docs": "`<MasterDetail label=\"Devices\" renderList={(state) => <List aria-label=\"Devices\">{devices.map((d) => <ListItem key={d.id} title={d.name} {...state.itemProps(d.id)} />)}</List>} renderDetail={(id) => ({ title, description, actions, content })} emptyDetail={<Empty … />} />`. It fills its parent's height (`--master-detail-height`, 100% by default), so give it a bounded box, like an app shell's main column. `selectedId`/`defaultSelectedId`/`onSelectedIdChange` (cancel with `details.cancel()`); `url={createUrlParam(\"device\")}` from `@/lib/url-param` keeps it in the URL (`{ in: \"hash\" }` for a hash route's query); `followFocus` opens the row that j/k move to; `collapsible`, `resizable` and `storageKey` for the detail's width. Every label is in `labels`."
+    },
+    {
+      "name": "dashboard-grid",
+      "type": "registry:block",
+      "title": "Dashboard Grid",
+      "description": "DashboardGrid: a row of stats over a container-query grid of cards (one column, two from 42rem, `columns` from 64rem) where every row has the same height, so cards line up and keep their size from loading to loaded. DashboardCard spans columns and rows and loads through DataState (a skeleton, the error with Retry, an empty title); DashboardChart fills a card and is named by its title; DashboardStats and DashboardStat draw placeholders of the value's height.",
+      "dependencies": [
+        "@ui-sdk/react@0.1.0-beta.5"
+      ],
+      "registryDependencies": [
+        "@eskais/utils",
+        "@eskais/theme",
+        "@eskais/card",
+        "@eskais/chart",
+        "@eskais/states",
+        "@eskais/empty",
+        "@eskais/skeleton",
+        "@eskais/stat"
+      ],
+      "files": [
+        {
+          "path": "registry/ui/use-dashboard-grid.ts",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/dashboard-grid.tsx",
+          "type": "registry:ui"
+        }
+      ],
+      "docs": "`<DashboardGrid columns={3} labels={{ errorTitle, emptyTitle }} stats={<DashboardStats aria-label=\"This week\" loading={pending}><DashboardStat label=\"Runs\" value={261} hint=\"+12%\" loading={pending} /></DashboardStats>}><DashboardCard title=\"Runs\" span={2} status={query.status} data={query.data} error={query.error} onRetry={query.refetch}>{(data) => <DashboardChart config={config}><BarChart data={data}>…</BarChart></DashboardChart>}</DashboardCard></DashboardGrid>`. Rows are `--dashboard-row-height` (20rem) tall; content taller than its card scrolls inside it, focusable then so a keyboard can scroll it. Without `status`, a card shows its children as they are. `retry`, `loading` and `refreshing` default to English and every label is overridable on the grid or a card."
     }
   ]
 }

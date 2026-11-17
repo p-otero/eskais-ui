@@ -29,7 +29,7 @@ Use the first level that can express the design, and never skip one:
 ## The files
 
 - `screen.tsx` exports a component taking its data as props: `{ account = sampleAccount }: { account?: Account }`. Presentational only: no fetching, no `window`, no router. Behaviour is React state plus `setTimeout` promises for a saving or deleting state.
-- **Start a screen from a layout block** when one fits, and fill its slots instead of laying out the page by hand: `@registry/master-detail` for a list with a detail pane.
+- **Start a screen from a layout block** when one fits, and fill its slots instead of laying out the page by hand: `@registry/master-detail` for a list with a detail pane, `@registry/dashboard-grid` for a dashboard.
 - `fixtures.ts` types the data and exports a sample of it. Reuse the project's own types when they import cleanly through an alias.
 - `parts/<part>.tsx` exports the components you propose to add. Each component with a `<Name>Props` type is recorded in `manifest.proposed` with its props (the members of that type).
 - `gaps.ts` exports `gaps`: `{ component, missing, reason }[]` for a prop, variant or behaviour a part needed and levels 1–4 cannot give. It is recorded in `manifest.gaps`, so a design review sees the cost of the screen instead of guessing.

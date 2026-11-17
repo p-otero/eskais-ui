@@ -125,10 +125,62 @@ async function masterDetail(page, check, shot, width, scheme) {
   }
 }
 
+function cardBoxes(page) {
+  return page.locator('[data-slot="dashboard-card"], [data-slot="dashboard-stat"]').evaluateAll((cards) =>
+    cards.map((card) => {
+      const box = card.getBoundingClientRect()
+      return {
+        slot: card.dataset.slot,
+        left: Math.round(box.left),
+        right: Math.round(box.right),
+        top: Math.round(box.top),
+        bottom: Math.round(box.bottom),
+        width: Math.round(box.width),
+        height: Math.round(box.height),
+      }
+    }),
+  )
+}
+
+async function dashboardGrid(page, check, shot, width, scheme) {
+  const tag = `dashboard-grid ${width}px ${scheme}`
+  await open(page, "dashboard-grid", width, scheme)
+  const loaded = await cardBoxes(page)
+  const cards = loaded.filter((box) => box.slot === "dashboard-card")
+  const { overflow } = await layout(page, '[data-slot="dashboard-card"]')
+  check(`${tag}: no sideways scroll`, !overflow)
+  check(`${tag}: cards don't overlap`, !overlaps(cards))
+  const rows = Map.groupBy(cards, (box) => box.top)
+  const ragged = [...rows.values()].filter((row) => new Set(row.map((box) => box.bottom)).size > 1)
+  check(`${tag}: cards in a row share their height`, ragged.length === 0)
+  if (width === 390) {
+    check(`${tag}: one column`, new Set(cards.map((box) => box.left)).size === 1 && rows.size === cards.length)
+  } else {
+    check(`${tag}: several columns`, rows.size < cards.length, `${rows.size} rows of ${cards.length} cards`)
+  }
+  const violations = await axe(page)
+  check(`${tag}: axe`, violations.length === 0, violations.join(", "))
+  await shot(page, `dashboard-grid-${width}-${scheme}.png`, true)
+
+  await page.getByRole("switch", { name: "Show loading" }).click()
+  await page.locator('[data-slot="dashboard-card"][data-status="pending"]').first().waitFor()
+  await settle(page)
+  const pending = await cardBoxes(page)
+  const moved = pending.filter((box, index) => box.height !== loaded[index]?.height || box.top !== loaded[index]?.top)
+  check(`${tag}: loading keeps every card and figure in place`, moved.length === 0, `${moved.length} moved`)
+  const busy = await axe(page)
+  check(`${tag} loading: axe`, busy.length === 0, busy.join(", "))
+  if (scheme === "light") await shot(page, `dashboard-grid-${width}-loading.png`, true)
+}
+
 async function checkLayoutBlocks(page, check, shot) {
   for (const width of widths) {
     // oxlint-disable-next-line eslint/no-await-in-loop -- one page drives the steps, in order
     for (const scheme of schemes) await masterDetail(page, check, shot, width, scheme)
+  }
+  for (const width of widths) {
+    // oxlint-disable-next-line eslint/no-await-in-loop -- one page drives the steps, in order
+    for (const scheme of schemes) await dashboardGrid(page, check, shot, width, scheme)
   }
 }
 
