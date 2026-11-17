@@ -5,6 +5,7 @@ import { dirname, join, resolve } from "node:path"
 import { buildMockup, mockupSourceFiles, type BuildOutcome, type BuildSettings, type MockupManifest } from "./build"
 import { importRule, partStyleProblems, sdkImportProblems, sourceProblems, type Problem } from "./checks"
 import {
+  checkTsconfig,
   displayPath,
   EnvironmentError,
   mockupDirectory,
@@ -51,7 +52,7 @@ function sourceFiles(mockup: string): string[] {
 }
 
 function typecheck(project: MockupProject, mockup: string): Problem[] {
-  const config = existsSync(mockupTsconfigPath(mockup)) ? mockupTsconfigPath(mockup) : project.tsconfig
+  const config = existsSync(mockupTsconfigPath(mockup)) ? mockupTsconfigPath(mockup) : checkTsconfig(project.tsconfig)
   const files = sourceFiles(mockup).map((file) => displayPath(file, project.root))
   const result = spawnSync(process.execPath, ["check", "-p", config, "--no-pretty", ...files], {
     cwd: project.root,

@@ -11,6 +11,8 @@ const groups = [
       { label: "Installation", ...linkTo("/docs/installation") },
       { label: "Theming", ...linkTo("/docs/theming") },
       { label: "Agents", ...linkTo("/docs/agents") },
+      { label: "Agent skills", ...linkTo("/docs/agent-skills") },
+      { label: "Mockups", ...linkTo("/docs/mockups") },
       { label: "Accessibility", ...linkTo("/docs/accessibility") },
     ],
   },

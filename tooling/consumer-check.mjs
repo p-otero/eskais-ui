@@ -1,7 +1,7 @@
 // Installs registry items into fresh Vite apps with npm or pnpm (no Bun), builds them and checks them in Chrome.
-// Usage: node tooling/consumer-check.mjs [npm|pnpm] [scenario…] (default: all): `fresh` (every item), `init` (the
-// stylesheet `shadcn init` writes), `aliases` (`~/`), `imports` (package.json `#ui/*`), `imports-flat` (`#ui/*` and
-// `#components/*` on one folder), `imports-tsx` (a `.tsx` mapping, must fail to type-check), `release-age` (pnpm).
+// Usage: node tooling/consumer-check.mjs [npm|pnpm] [scenario…] (default: all). Scenarios: fresh, init, aliases
+// (`~/` aliases and the agent skills), imports, imports-flat, imports-tsx (must fail to type-check) and release-age
+// (pnpm); each one says what it checks below.
 import { spawn } from "node:child_process"
 import { createReadStream, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, writeFileSync } from "node:fs"
 import { createServer } from "node:http"
@@ -696,6 +696,8 @@ const scenarios = {
     // Not `@/`: shadcn places registry:lib and registry:ui files through these aliases and rewrites imports to them.
     alias: "~",
     items: ["theme", "badge", "alert", "appearance", "agent-task-board", "data-table", "chart", "relative-time"],
+    // Agent skills target `~/.agents/skills/…`: the project root, whatever the aliases are, here a `~` alias too.
+    skills: ["eskais-ui-skill", "eskais-mockup-skill", "eskais-perf-skill"],
     main: aliasesMain,
     builtCss: ["--brand", ".text-title{"],
     check: async () => {},
@@ -845,6 +847,20 @@ function checkPlacement(app, scenario) {
   if (stale.length > 0) throw new Error(`Imports still point at @/: ${stale.join(", ")}`)
 }
 
+// Every file of a skill item lands at its `~/` target under the project root, byte for byte.
+function checkSkills(app, names) {
+  for (const name of names) {
+    const item = JSON.parse(readFileSync(join(registryDir, `${name}.json`), "utf8"))
+    for (const file of item.files) {
+      if (!file.target?.startsWith("~/.agents/skills/")) throw new Error(`${name}: ${file.path} targets ${file.target}`)
+      const path = join(app, file.target.slice(2))
+      if (!existsSync(path)) throw new Error(`shadcn didn't write ${file.target} for ${name}`)
+      if (readFileSync(path, "utf8") !== file.content) throw new Error(`${file.target} differs from ${file.path}`)
+    }
+    console.log(`${name}: ${item.files.length} files in .agents/skills`)
+  }
+}
+
 const requested = process.argv.slice(3)
 for (const name of requested) if (!scenarios[name]) throw new Error(`Unknown scenario: ${name}`)
 
@@ -944,7 +960,8 @@ export default defineConfig({
         : "minimumReleaseAge: 0\n",
     )
   await run(pm, ["install"])
-  const add = () => exec(["shadcn", "add", ...scenario.items.map((item) => `@eskais/${item}`), "--yes", "--overwrite"])
+  const items = [...scenario.items, ...(scenario.skills ?? [])]
+  const add = () => exec(["shadcn", "add", ...items.map((item) => `@eskais/${item}`), "--yes", "--overwrite"])
   await add()
   for (const [dependency, version] of Object.entries(scenario.installed ?? {})) {
     const found = JSON.parse(readFileSync(join(app, "node_modules", dependency, "package.json"), "utf8")).version
@@ -969,6 +986,7 @@ export default defineConfig({
   }
 
   if (scenario.files) checkPlacement(app, scenario)
+  if (scenario.skills) checkSkills(app, scenario.skills)
   write("src/main.tsx", scenario.rewrite?.(scenario.main) ?? scenario.main.replaceAll('from "@/', `from "${alias}/`))
   if (scenario.unsupported) {
     const { file, specifier } = scenario.unsupported

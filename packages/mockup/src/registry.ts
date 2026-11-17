@@ -5,6 +5,7 @@ import { fileURLToPath } from "node:url"
 
 import { importsOf } from "./checks"
 import {
+  checkTsconfig,
   displayPath,
   EnvironmentError,
   projectSourceFiles,
@@ -291,7 +292,7 @@ function writeMockupTsconfig(project: MockupProject, mockup: string, cacheDirs: 
   }
   mapped["@registry/*"] = cacheDirs.map((dir) => relativeFrom(from, join(dir, "*")))
   const document = {
-    extends: relativeFrom(from, project.tsconfig),
+    extends: relativeFrom(from, checkTsconfig(project.tsconfig)),
     compilerOptions: { paths: mapped },
   }
   writeFileSync(target, `${JSON.stringify(document, null, 2)}\n`)

@@ -5,7 +5,7 @@ Eskais UI is a shadcn-style registry of React components built on Vercel UI SDK 
 ## Before building or changing a component
 
 1. **Read the UI SDK docs first.** Load the `ui-sdk` skill (`.agents/skills/ui-sdk/SKILL.md`), then read `node_modules/@ui-sdk/react/docs/llms.txt` and the page of every component you touch. Don't guess the API: UI SDK is in beta and changes.
-2. Read `skills/eskais-ui/SKILL.md` for the conventions of this registry.
+2. Read `skills/eskais-ui/SKILL.md` and its `references/` for the conventions of this registry, and "Add a component" below.
 
 ## Rules
 
@@ -19,6 +19,20 @@ Eskais UI is a shadcn-style registry of React components built on Vercel UI SDK 
 - Registry code passes strict consumers' type-aware lint: `bun run lint` also runs `typescript/restrict-template-expressions` on `registry/**` (`tooling/oxlint-type-aware.json`). Convert a non-string in a template literal with `String()` or a formatter.
 - No default copy in a specific language, except overridable accessible labels.
 - Every interface gets the agent test (see the ui-sdk skill, `references/agent-ready.md`).
+
+## Add a component
+
+1. Read the UI SDK page for the component. If UI SDK ships it, style its parts; don't reimplement.
+2. If it doesn't, write a primitive with `definePrimitive` (`agent.actions` last) next to the component, as `search-field-primitive.ts` does, and render it with `createParts`.
+3. Never give a `registry/lib` file and a `registry/ui` file the same basename: `shadcn add` rewrites imports by basename and points one at the other in the consumer.
+4. Use `cnState` from `@/lib/utils` so a consumer's `className` can still be a function of state.
+5. Size and shape it with the tokens below so every theme applies.
+6. Add tests in `test/`: behavior with Testing Library, `mount`/`checkServer` for primitives, the agent test, and `allow` refused/approved for anything with `data-agent-confirm`.
+7. Add the item to `registry.json`, run `bun run verify` and commit `public/r`.
+
+## Agent skills
+
+`skills/eskais-ui`, `skills/eskais-perf` and `packages/mockup/skills/eskais-mockup` ship to consumers as the `eskais-ui-skill`, `eskais-perf-skill` and `eskais-mockup-skill` registry items (`registry:file` with a `~/.agents/skills/<name>/` target). They are written for a project that installs Eskais UI, not for this repository: no `registry/`, `tooling/` or AGENTS.md paths. A new file in a skill joins its item's `files`; `test/registry-skills.test.ts` checks the targets, the references and `public/r`.
 
 ## Spacing
 
