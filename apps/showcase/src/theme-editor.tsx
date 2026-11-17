@@ -9,11 +9,13 @@ import {
   ColorPickerSwatch,
 } from "@ui-sdk/react/color-picker"
 import { usePreference } from "@ui-sdk/react/preferences"
-import { useId, useState } from "react"
+import { useState } from "react"
 
 import type { AppearanceState } from "@/components/ui/appearance"
+import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Field, FieldLabel } from "@/components/ui/field"
+import { CodeBlock } from "@/components/ui/code-block"
+import { Field, FieldDescription, FieldLabel } from "@/components/ui/field"
 import { SegmentedControl, SegmentedControlIndicator, SegmentedControlItem } from "@/components/ui/segmented-control"
 import { Slider, SliderControl, SliderIndicator, SliderThumb, SliderTrack, SliderValue } from "@/components/ui/slider"
 import { StatusPill } from "@/components/ui/status-pill"
@@ -26,16 +28,30 @@ const CUSTOM = "custom"
 const thumb =
   "size-4 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-background bg-(--color-picker-color) shadow-sm ring-1 ring-foreground/50 outline-none focus-visible:ring-3 focus-visible:ring-ring"
 
+// A fixed rainbow rather than the picker's own track, which draws the hue at the current chroma: a grey brand would
+// get a flat grey bar that disappears in dark mode.
+const hueTrack = {
+  background: `linear-gradient(to right, ${[0, 60, 120, 180, 240, 300, 360].map((hue) => `oklch(0.65 0.18 ${hue})`).join(", ")})`,
+}
+
+const swatch = "size-control shrink-0 rounded-choice border border-input-strong bg-(--color-picker-color)"
+
+const colorInput =
+  "h-control w-full min-w-0 rounded-control border border-input bg-field px-control-x font-mono text-body-sm outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+
 function ContrastRow({ label, ratio }: { label: string; ratio: number | null }) {
   const pass = ratio !== null && ratio >= 4.5
   return (
-    <div className="flex items-center justify-between gap-3 text-sm">
-      <span>{label}</span>
-      <span className="flex items-center gap-2">
-        <span className="tabular-nums">{ratio === null ? "—" : `${ratio.toFixed(2)}:1`}</span>
+    <li
+      data-slot="theme-editor-contrast-row"
+      className="flex flex-wrap items-center justify-between gap-x-items gap-y-inline py-inset-item text-body-sm"
+    >
+      <span className="min-w-0">{label}</span>
+      <span className="ms-auto flex shrink-0 items-center gap-inline">
+        <span>{ratio === null ? "—" : `${ratio.toFixed(2)}:1`}</span>
         <StatusPill tone={pass ? "success" : "destructive"}>{pass ? "Pass" : "Fail"}</StatusPill>
       </span>
-    </div>
+    </li>
   )
 }
 
@@ -59,7 +75,7 @@ function SeedSlider({
   return (
     <Field>
       <Slider value={value} onValueChange={onChange} min={min} max={max} step={step} format={format}>
-        <div className="flex justify-between text-sm">
+        <div className="flex items-center justify-between gap-items text-body-sm">
           <FieldLabel>{label}</FieldLabel>
           <SliderValue />
         </div>
@@ -74,6 +90,10 @@ function SeedSlider({
   )
 }
 
+/**
+ * Edits the theme's seeds on `<html>` and shows the CSS to keep them. Two columns only when its container has room
+ * for both, so it fits a card in a docs column as well as a full-width showcase section.
+ */
 function ThemeEditor<Theme extends string, Palette extends string>({
   appearance,
   palettes,
@@ -84,8 +104,6 @@ function ThemeEditor<Theme extends string, Palette extends string>({
   const { value: palette } = usePreference(appearance.palette)
   const [overrides, setOverrides] = useState<Overrides>({})
   const [{ seeds, primary, text, link }, setMeasured] = useThemeMeasurements(appearance)
-  const [copied, setCopied] = useState("")
-  const snippetId = useId()
 
   const customised = Object.keys(overrides).length > 0
   const snippet = themeSnippet(seeds)
@@ -97,125 +115,118 @@ function ThemeEditor<Theme extends string, Palette extends string>({
   }
 
   return (
-    <div className="grid w-full gap-6 md:grid-cols-2">
-      <div className="flex flex-col gap-4">
-        <Field>
-          <FieldLabel>Preset</FieldLabel>
-          <SegmentedControl<Palette | typeof CUSTOM>
-            value={customised ? CUSTOM : palette}
-            onValueChange={(next) => {
-              if (!next || next === CUSTOM) return
-              override({})
-              appearance.palette.set(next)
-            }}
-          >
-            <SegmentedControlIndicator />
-            {palettes.map((name) => (
-              <SegmentedControlItem key={name} value={name}>
-                {name.charAt(0).toUpperCase() + name.slice(1)}
-              </SegmentedControlItem>
-            ))}
-            {customised && <SegmentedControlItem value={CUSTOM}>Custom</SegmentedControlItem>}
-          </SegmentedControl>
-        </Field>
-        <Field>
-          <FieldLabel>Brand colour</FieldLabel>
-          <ColorPicker
-            space="oklch"
-            value={seeds.brand}
-            onValueChange={(brand) => override({ brand })}
-            className="flex flex-col gap-3"
-          >
-            <ColorPickerArea className="relative h-36 w-full overflow-hidden rounded-choice border">
-              <ColorPickerAreaCanvas className="absolute inset-0 size-full" />
-              <ColorPickerAreaThumb aria-label="Brand chroma and lightness" className={thumb} />
-            </ColorPickerArea>
-            <ColorPickerSlider
-              channel="hue"
-              className="relative h-3 w-full rounded-full bg-(image:--color-slider-background)"
-            >
-              <ColorPickerSliderThumb aria-label="Brand hue" className={`${thumb} top-1/2`} />
-            </ColorPickerSlider>
-            <div className="flex items-center gap-2">
-              <ColorPickerSwatch className="size-control shrink-0 rounded-choice border bg-(--color-picker-color)" />
-              <ColorPickerInput
-                aria-label="Brand colour in OKLCH"
-                className="h-control w-full min-w-0 rounded-control border border-input bg-background px-control-x text-sm outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
-              />
+    <div data-slot="theme-editor" className="@container w-full min-w-0">
+      <div className="grid min-w-0 grid-cols-1 gap-section @2xl:grid-cols-2">
+        <div className="flex min-w-0 flex-col gap-group">
+          <Field>
+            <div className="flex items-center justify-between gap-items">
+              <FieldLabel>Preset</FieldLabel>
+              {customised && <Badge variant="outline">Custom</Badge>}
             </div>
-          </ColorPicker>
-        </Field>
-        <Field>
-          <FieldLabel>Link colour</FieldLabel>
-          <ColorPicker
-            space="oklch"
-            value={seeds.linkBrand}
-            onValueChange={(linkBrand) => override({ linkBrand })}
-            className="flex items-center gap-2"
-          >
-            <ColorPickerSwatch className="size-control shrink-0 rounded-choice border bg-(--color-picker-color)" />
-            <ColorPickerInput
-              aria-label="Link colour in OKLCH"
-              className="h-control w-full min-w-0 rounded-control border border-input bg-background px-control-x text-sm outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
-            />
-          </ColorPicker>
-          <p className="text-sm text-muted-foreground">
-            Links and the editor caret derive from it, capped in lightness to keep 4.5:1.
-          </p>
-        </Field>
-        <SeedSlider
-          label="Neutral tint"
-          value={seeds.neutralChroma}
-          onChange={(tint) => override({ tint })}
-          min={0}
-          max={0.03}
-          step={0.002}
-          format={(value) => value.toFixed(3)}
-        />
-        <SeedSlider
-          label="Radius"
-          value={seeds.radius}
-          onChange={(radius) => override({ radius })}
-          min={0}
-          max={1.5}
-          step={0.125}
-          format={(value) => `${value}rem`}
-        />
-      </div>
-      <div className="flex flex-col gap-4">
-        <div className="flex flex-col gap-2 rounded-surface border p-4">
-          <h3 className="text-sm font-medium">Contrast (needs 4.5:1)</h3>
-          <ContrastRow label="Primary foreground on primary" ratio={primary} />
-          <ContrastRow label="Text on background" ratio={text} />
-          <ContrastRow label="Links on muted" ratio={link} />
+            <div className="-m-1 overflow-x-auto p-1">
+              <SegmentedControl<Palette | typeof CUSTOM>
+                value={customised ? CUSTOM : palette}
+                onValueChange={(next) => {
+                  if (!next || next === CUSTOM) return
+                  override({})
+                  appearance.palette.set(next)
+                }}
+              >
+                <SegmentedControlIndicator />
+                {palettes.map((name) => (
+                  <SegmentedControlItem key={name} value={name}>
+                    {name.charAt(0).toUpperCase() + name.slice(1)}
+                  </SegmentedControlItem>
+                ))}
+              </SegmentedControl>
+            </div>
+          </Field>
+          <Field>
+            <FieldLabel>Brand colour</FieldLabel>
+            <ColorPicker
+              space="oklch"
+              value={seeds.brand}
+              onValueChange={(brand) => override({ brand })}
+              className="flex flex-col gap-items"
+            >
+              <ColorPickerArea className="relative h-36 w-full touch-none rounded-choice border bg-muted">
+                <ColorPickerAreaCanvas className="absolute inset-0 size-full rounded-choice" />
+                <ColorPickerAreaThumb aria-label="Brand chroma and lightness" className={thumb} />
+              </ColorPickerArea>
+              <ColorPickerSlider
+                channel="hue"
+                className="relative h-3 w-full touch-none rounded-full border border-input"
+                style={hueTrack}
+              >
+                <ColorPickerSliderThumb aria-label="Brand hue" className={`${thumb} top-1/2`} />
+              </ColorPickerSlider>
+              <div className="flex items-center gap-items">
+                <ColorPickerSwatch className={swatch} />
+                <ColorPickerInput aria-label="Brand colour in OKLCH" className={colorInput} />
+              </div>
+            </ColorPicker>
+            <FieldDescription>
+              A grey brand has no chroma, so its hue shows only once you drag right in the area.
+            </FieldDescription>
+          </Field>
+          <Field>
+            <FieldLabel>Link colour</FieldLabel>
+            <ColorPicker
+              space="oklch"
+              value={seeds.linkBrand}
+              onValueChange={(linkBrand) => override({ linkBrand })}
+              className="flex items-center gap-items"
+            >
+              <ColorPickerSwatch className={swatch} />
+              <ColorPickerInput aria-label="Link colour in OKLCH" className={colorInput} />
+            </ColorPicker>
+            <FieldDescription>
+              Links and the editor caret derive from it, capped in lightness to keep 4.5:1.
+            </FieldDescription>
+          </Field>
+          <SeedSlider
+            label="Neutral tint"
+            value={seeds.neutralChroma}
+            onChange={(tint) => override({ tint })}
+            min={0}
+            max={0.03}
+            step={0.002}
+            format={(value) => value.toFixed(3)}
+          />
+          <SeedSlider
+            label="Radius"
+            value={seeds.radius}
+            onChange={(radius) => override({ radius })}
+            min={0}
+            max={1.5}
+            step={0.125}
+            format={(value) => `${value}rem`}
+          />
         </div>
-        <pre
-          id={snippetId}
-          aria-label="Theme CSS"
-          className="rounded-surface bg-muted p-4 text-xs break-words whitespace-pre-wrap text-muted-foreground"
-        >
-          {snippet}
-        </pre>
-        <div className="flex flex-wrap items-center gap-3">
-          <Button
-            aria-describedby={snippetId}
-            onClick={async () => {
-              try {
-                await navigator.clipboard.writeText(snippet)
-                setCopied("Copied. Paste it after the theme in your stylesheet.")
-              } catch {
-                setCopied("The browser blocked the clipboard. Select the CSS above and copy it.")
-              }
-            }}
+        <div className="flex min-w-0 flex-col gap-group">
+          <section
+            aria-labelledby="theme-editor-contrast"
+            data-slot="theme-editor-contrast"
+            className="flex min-w-0 flex-col rounded-surface border bg-card px-inset-item py-inset-item"
           >
-            Copy CSS
-          </Button>
-          <Button variant="outline" onClick={() => override({})}>
-            Reset to preset
-          </Button>
-          <p className="text-sm text-muted-foreground" aria-live="polite">
-            {copied}
-          </p>
+            <h3 id="theme-editor-contrast" className="text-title-sm">
+              Contrast <span className="font-normal text-muted-foreground">(needs 4.5:1)</span>
+            </h3>
+            <ul className="flex flex-col divide-y">
+              <ContrastRow label="Primary foreground on primary" ratio={primary} />
+              <ContrastRow label="Text on background" ratio={text} />
+              <ContrastRow label="Links on muted" ratio={link} />
+            </ul>
+          </section>
+          <CodeBlock code={snippet} language="css" title="Theme CSS" wrap className="min-w-0" />
+          <div className="flex flex-wrap items-center gap-items">
+            <Button variant="outline" onClick={() => override({})}>
+              Reset to preset
+            </Button>
+            <p className="min-w-0 flex-1 text-body-sm text-muted-foreground">
+              Paste the CSS after the theme in your stylesheet.
+            </p>
+          </div>
         </div>
       </div>
     </div>

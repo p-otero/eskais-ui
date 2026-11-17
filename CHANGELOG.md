@@ -8,6 +8,18 @@ Versions follow [semver](https://semver.org). Before 1.0, a minor version can br
 
 - `token-input`: UI SDK's Token Input styled as a field (`bg-field`, `border-input`, the control shape, growing with its chips), with `TokenInput`, `TokenInputEditor`, `TokenInputToken` (`tone`, soft tone tokens) and `TokenInputTokenRemove` (lucide `XIcon`, named by `labels.remove`, "Remove {label}", with a touch target). `tokenType="label"` makes it a list of labels with a `string[]` value (readonly arrays welcome): Enter or a comma turns the typed text into a label, a paste splits on commas and line breaks, `validate` and `max` keep a label as text to fix, and repeats are dropped. Backspace, the arrow keys, undo and redo come from UI SDK. It works in `Field` and `FormField`, floats its label with `labelPlacement` `in` and `on`, and agents set it by label (`setValue("bug, docs")`, `insert`, `removeToken`, `clear`). Without `tokenType` it holds UI SDK's mix of text and tokens, for mentions and files. FormField's adapter table moved to `field` (still exported from `form`), so a control's module can add itself; `FormControlAdapter` gains `blur`. The theme's `field-floated` variant floats a label over a token input that holds something.
 - `carousel`: `CarouselStatus` shows the current page and the page count ("1 of 3", `labels.status` translates it) and announces it politely only when the page changes, never on load or while rotating. `useCarouselState()` returns UI SDK's own `page`, `pageCount` (null until the slides are measured), `playing` and `orientation` to any part inside a `Carousel`, so a header can show its position without duplicating state; `Carousel` children can also be a function of that state.
+- `useSidebarState({ storageKey })` (`sidebar`): one controller and collapsed state for a `Sidebar` and its `SidebarTrigger`, remembered in localStorage (`sidebarProps`, `triggerProps`). `Sidebar collapse="hide"` slides the sidebar away when collapsed instead of leaving an icon rail, for items without icons.
+- `--topbar-height` (theme): a `Topbar`'s height, which it now keeps as a minimum, for anything that sticks under it.
+
+### Changed
+
+- `DocsLayout` is an app shell. `topbar` puts a `Topbar` across the top; the sidebar sticks under it at the full remaining height and scrolls on its own (no more fixed box cut off by a floating header, and no white panel that ends early), collapses through the topbar's `SidebarTrigger` and is a drawer on narrow screens. `header` (the breadcrumb) now sits above the page in the main column instead of in a sticky full-width bar, the table of contents sticks under the topbar, and everything in the page scrolls into view below it. `--docs-height` sizes it inside a pane. Without `topbar`, `--docs-top` still clears a header of your own.
+- Docs site: docs pages use that shell, with a full-width `Topbar` (sidebar trigger, brand, navigation, search, theme and GitHub); the landing page keeps the floating header.
+
+### Fixed
+
+- `DataState` fills the space it is given (`w-full`, and `flex-1` in a flex container) instead of shrinking to its content inside a flex row, so a list in it spans the whole box. The States demo shows a `List` of projects in a `Card`, at the same height for every status.
+- Docs site theme editor: the site's stylesheet never scanned the showcase file the editor lives in, so the brand colour area and hue track had no size (nothing to drag, so the colours never changed), the swatches had no fill and the columns had no gaps or padding. The editor now lays out in two columns only when its container has room, its contrast rows wrap, and the CSS shows in a `CodeBlock`.
 
 ## 0.2.0 (2026-11-17)
 

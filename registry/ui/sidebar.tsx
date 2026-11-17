@@ -31,6 +31,7 @@ import {
   type SidebarTriggerProps,
 } from "@/components/ui/sidebar-trigger"
 import { cn } from "@/lib/utils"
+import { useSidebarState, type SidebarState, type SidebarStateOptions } from "@/components/ui/use-sidebar-state"
 
 const { Root: SidebarRoot, Trigger: SidebarToggle } = createParts(sidebar, { root: "nav", trigger: "button" })
 
@@ -40,6 +41,12 @@ type SidebarProps = {
   defaultCollapsed?: boolean
   onCollapsedChange?: (collapsed: boolean, details: ChangeDetails<SidebarCollapsedChangeReason>) => void
   collapsible?: boolean
+  /**
+   * What collapsing does on wide screens: `rail` keeps the items as icons with tooltips; `hide` slides the sidebar
+   * away, for items without icons, like a docs sidebar. Hidden, it has no toggle of its own, so pair it with a
+   * SidebarTrigger elsewhere.
+   */
+  collapse?: "rail" | "hide"
   /**
    * `false` when a SidebarTrigger elsewhere, like in a Topbar's `leading`, takes the place of the sidebar's own
    * buttons: the collapse toggle in its header and, on narrow screens, the drawer button.
@@ -64,6 +71,7 @@ function Sidebar({
   defaultCollapsed = false,
   onCollapsedChange,
   collapsible = true,
+  collapse = "rail",
   controller,
   narrowQuery = defaultNarrowQuery,
   trigger = true,
@@ -83,6 +91,7 @@ function Sidebar({
   const setDrawerOpen = (open: boolean) =>
     controller ? setSidebarDrawerOpen(controller, open) : setOwnDrawerOpen(open)
   const collapsed = collapsible && !narrow && (collapsedProp ?? ownCollapsed)
+  const rail = collapsed && collapse === "rail"
 
   const body = <div className="flex min-h-0 flex-1 flex-col gap-group overflow-y-auto">{children}</div>
 
@@ -120,6 +129,7 @@ function Sidebar({
   return (
     <SidebarRoot
       aria-label={label}
+      data-collapse={collapse}
       collapsed={collapsed}
       controller={controller}
       onCollapsedChange={(next, details) => {
@@ -129,6 +139,8 @@ function Sidebar({
       className={cn(
         surfaceClassName,
         "group/sidebar h-full w-(--sidebar-width) shrink-0 overflow-hidden border-e bg-muted/(--glass-opacity) p-items backdrop-surface transition-all duration-panel ease-standard data-collapsed:w-(--sidebar-rail-width) motion-reduce:transition-none",
+        collapse === "hide" &&
+          "data-collapsed:invisible data-collapsed:w-0 data-collapsed:border-e-0 data-collapsed:px-0",
         className,
       )}
     >
@@ -143,7 +155,7 @@ function Sidebar({
           </SidebarToggle>
         )}
       </div>
-      <SidebarRailContext value={collapsed}>{body}</SidebarRailContext>
+      <SidebarRailContext value={rail}>{body}</SidebarRailContext>
       {footer !== undefined && (
         <div data-slot="sidebar-footer" className="group-data-collapsed/sidebar:hidden">
           {footer}
@@ -153,7 +165,8 @@ function Sidebar({
   )
 }
 
-export { createSidebarController, Sidebar, SidebarGroup, SidebarItem, sidebarLabels, SidebarTrigger }
+export { createSidebarController, Sidebar, SidebarGroup, SidebarItem, sidebarLabels, SidebarTrigger, useSidebarState }
+export type { SidebarState, SidebarStateOptions }
 export type { SidebarController, SidebarLabels, SidebarProps }
 export type { SidebarTriggerProps }
 export type { SidebarGroupProps, SidebarItemProps }

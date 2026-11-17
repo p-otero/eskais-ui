@@ -161,6 +161,7 @@
           "--card-heading-basis": "11rem",
           "--sidebar-width": "16rem",
           "--sidebar-rail-width": "calc(var(--control-height) + 1rem)",
+          "--topbar-height": "calc(var(--control-height) + var(--gap-items) * 2 + 1px)",
           "--mobile-nav-height": "3.5rem",
           "--mobile-nav-offset": "calc(var(--mobile-nav-height) + 1px + env(safe-area-inset-bottom))",
           "--type-meta-size": "0.6875rem",
@@ -3194,7 +3195,7 @@
       "name": "sidebar",
       "type": "registry:ui",
       "title": "Sidebar",
-      "description": "App navigation: a named landmark with groups and items (href or a router link), the current page marked with aria-current, collapsing to an icon rail with tooltips and opening in a drawer on narrow screens. Agents collapse and expand it by name. A SidebarTrigger toggles it from elsewhere, like a Topbar, through its controller.",
+      "description": "App navigation: a named landmark with groups and items (href or a router link), the current page marked with aria-current, collapsing to an icon rail with tooltips (or hiding, with collapse=\"hide\") and opening in a drawer on narrow screens. Agents collapse and expand it by name. A SidebarTrigger toggles it from elsewhere, like a Topbar, through its controller; useSidebarState wires both and remembers the state.",
       "dependencies": [
         "@ui-sdk/core@0.1.0-beta.5",
         "@ui-sdk/react@0.1.0-beta.5",
@@ -3223,11 +3224,15 @@
           "type": "registry:ui"
         },
         {
+          "path": "registry/ui/use-sidebar-state.ts",
+          "type": "registry:ui"
+        },
+        {
           "path": "registry/ui/sidebar.tsx",
           "type": "registry:ui"
         }
       ],
-      "docs": "Put a `SkipLink` first in `<body>`, before the `Sidebar`, so keyboard users can jump past the navigation, and give the page content the target: `<SkipLink>Skip to content</SkipLink><Sidebar …/><PageLayout as=\"main\">…</PageLayout>` (PageLayout renders `<main id=\"main\">`). If your shell renders `<main>` itself, give it `id=\"main\"` (and `tabIndex={-1}`, so the no-JavaScript fallback moves focus too), or pass the SkipLink a `target` id or ref. To toggle it from a `Topbar`, pass one `createSidebarController()` to both: `<Topbar leading={<SidebarTrigger controller={sidebar} collapsed={collapsed} />} /><Sidebar controller={sidebar} collapsed={collapsed} onCollapsedChange={setCollapsed} trigger={false}>…</Sidebar>`. `collapsed` gives the trigger `aria-expanded` and the name of the next step; without it the trigger is named \"Toggle sidebar\". On narrow screens it renders nothing, and the Sidebar shows its own drawer button."
+      "docs": "Put a `SkipLink` first in `<body>`, before the `Sidebar`, so keyboard users can jump past the navigation, and give the page content the target: `<SkipLink>Skip to content</SkipLink><Sidebar …/><PageLayout as=\"main\">…</PageLayout>` (PageLayout renders `<main id=\"main\">`). If your shell renders `<main>` itself, give it `id=\"main\"` (and `tabIndex={-1}`, so the no-JavaScript fallback moves focus too), or pass the SkipLink a `target` id or ref. To toggle it from a `Topbar`, pass one `createSidebarController()` to both: `<Topbar leading={<SidebarTrigger controller={sidebar} collapsed={collapsed} />} /><Sidebar controller={sidebar} collapsed={collapsed} onCollapsedChange={setCollapsed} trigger={false}>…</Sidebar>`. `collapsed` gives the trigger `aria-expanded` and the name of the next step; without it the trigger is named \"Toggle sidebar\". On narrow screens it renders nothing, and the Sidebar shows its own drawer button. `useSidebarState({ storageKey })` returns the controller and the state for both, remembered in localStorage: `const sidebar = useSidebarState({ storageKey: \"app-sidebar\" })`, then `<SidebarTrigger {...sidebar.triggerProps} />` and `<Sidebar {...sidebar.sidebarProps} trigger={false}>`. Give a sidebar whose items have no icons `collapse=\"hide\"`: collapsed, it slides away instead of leaving an empty rail."
     },
     {
       "name": "data-table",
@@ -4011,7 +4016,7 @@
       "name": "docs-layout",
       "type": "registry:block",
       "title": "Docs Layout",
-      "description": "DocsLayout (a sidebar slot fixed beside the content, a sticky header slot, the main landmark and a table of contents slot), DocsToc (headings marked as you read with IntersectionObserver), DocsPager and DocsBreadcrumb.",
+      "description": "DocsLayout, an app shell for documentation: a topbar slot, a sidebar that sticks under it at the full remaining height (a drawer on narrow screens), a breadcrumb slot above the page in the main column, the main landmark and a sticky table of contents. Also DocsToc (headings marked as you read with IntersectionObserver), DocsPager and DocsBreadcrumb.",
       "dependencies": [
         "@ui-sdk/core@0.1.0-beta.5",
         "@ui-sdk/react@0.1.0-beta.5",
@@ -4022,8 +4027,7 @@
         "@eskais/theme",
         "@eskais/link",
         "@eskais/breadcrumb",
-        "@eskais/page-layout",
-        "@eskais/scroll-area"
+        "@eskais/page-layout"
       ],
       "files": [
         {
@@ -4038,7 +4042,8 @@
           "path": "registry/ui/use-docs-toc.ts",
           "type": "registry:ui"
         }
-      ]
+      ],
+      "docs": "Compose the shell from a Topbar and a Sidebar that share one controller: `const sidebar = useSidebarState({ storageKey: \"docs-sidebar\" })`, then `<DocsLayout topbar={<Topbar leading={<SidebarTrigger {...sidebar.triggerProps} />} brand={…} trailing={…} />} sidebar={<Sidebar label=\"Documentation\" {...sidebar.sidebarProps} collapse=\"hide\" trigger={false} narrowQuery=\"(width <= 47.5rem)\">…</Sidebar>} header={<DocsBreadcrumb items={…} />} toc={<DocsToc items={headings} />}>…</DocsLayout>`. The topbar sticks to the top; the sidebar sticks under it (`top: var(--topbar-height)`) at the full remaining height and scrolls on its own; elements with an `id` in the page scroll into view below the topbar. The trigger collapses the sidebar on wide screens and opens its drawer on narrow ones. Without a `topbar`, pass `--docs-top` in `style` to clear a fixed header of your own."
     },
     {
       "name": "landing-page",

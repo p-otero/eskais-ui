@@ -376,6 +376,7 @@
       "--card-heading-basis": "11rem",
       "--sidebar-width": "16rem",
       "--sidebar-rail-width": "calc(var(--control-height) + 1rem)",
+      "--topbar-height": "calc(var(--control-height) + var(--gap-items) * 2 + 1px)",
       "--mobile-nav-height": "3.5rem",
       "--mobile-nav-offset": "calc(var(--mobile-nav-height) + 1px + env(safe-area-inset-bottom))",
       "--type-meta-size": "0.6875rem",

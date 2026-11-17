@@ -4,6 +4,7 @@ import { Appearance } from "@/components/ui/appearance"
 import { SkipLink } from "@/components/ui/skip-link"
 import { Spinner } from "@/components/ui/spinner"
 import { ToastStack } from "@/components/ui/toast"
+import { cn } from "@/lib/utils"
 
 import { AgentApproval } from "./agent"
 import { appearance } from "./appearance"
@@ -32,11 +33,13 @@ function Page({ route }: { route: string }) {
 function App() {
   const route = useRoute()
   useDocumentTitle(route)
+  // Docs pages bring their own Topbar, through DocsLayout; the landing and the 404 keep the floating pill.
+  const docs = route === "/docs" || route.startsWith("/docs/")
   return (
     <Appearance appearance={appearance}>
       <SkipLink>Skip to content</SkipLink>
-      <div data-slot="site" className="flex min-h-full flex-col pt-floating">
-        <SiteHeader />
+      <div data-slot="site" className={cn("flex min-h-full flex-col", !docs && "pt-floating")}>
+        {!docs && <SiteHeader />}
         <Suspense fallback={<Loading />}>
           <Page route={route} />
         </Suspense>

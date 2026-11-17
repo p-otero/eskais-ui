@@ -24,7 +24,7 @@ function Topbar({ brand, leading, center, centerCompact, trailing, className, ..
     <header
       data-slot="topbar"
       className={cn(
-        "sticky top-0 z-sticky flex w-full min-w-0 items-center gap-group border-b bg-background/(--glass-opacity) px-group py-items backdrop-surface narrow:gap-items narrow:px-items",
+        "sticky top-0 z-sticky flex min-h-(--topbar-height) w-full min-w-0 shrink-0 items-center gap-group border-b bg-background/(--glass-opacity) px-group py-items backdrop-surface narrow:gap-items narrow:px-items",
         className,
       )}
       {...props}

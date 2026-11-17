@@ -8,11 +8,13 @@
 @import "../../../registry/styles/palettes.css";
 
 @source "../../../registry";
+/* The Theming guide renders the showcase's theme editor. Without this its classes never reach the site's
+   stylesheet, and the colour area, hue track and swatches render with no size or fill. */
+@source "../../showcase/src/theme-editor.tsx";
 
 :root {
-  /* The floating header: its offset, the bar's rim and border, and one control. Docs columns stick below it. */
+  /* The landing page's floating header: its offset, the bar's rim and border, and one control. */
   --site-header: calc(var(--floating-offset) * 2 + var(--control-height) + var(--gap-inline) * 2 + 2px);
-  --docs-sidebar: 16rem;
 }
 
 @layer base {
@@ -22,13 +24,9 @@
       "calt" 1;
     scroll-padding-top: calc(var(--site-header) + var(--gap-group));
   }
-  /* On wide screens the docs breadcrumb bar sticks under the site header too, so anchors land below both. */
-  @media (width > 47.5rem) {
-    html:has([data-slot="docs-layout-header"]) {
-      scroll-padding-top: calc(
-        var(--site-header) + var(--gap-inline) * 2 + var(--type-body-sm-leading) + var(--gap-group)
-      );
-    }
+  /* Docs pages: DocsLayout gives everything in the page a scroll margin for its Topbar, so the root adds none. */
+  html:has([data-slot="docs-layout"]) {
+    scroll-padding-top: 0;
   }
   html,
   body,

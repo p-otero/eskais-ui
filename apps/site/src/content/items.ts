@@ -361,15 +361,17 @@ const itemNotes: Record<string, ItemNotes> = {
   },
   "docs-layout": {
     usage:
-      "A documentation page: DocsLayout with sidebar, header, toc and the content; DocsToc from useTocItems, DocsPager and DocsBreadcrumb. Set --docs-top in style to clear a fixed site header.",
+      "A documentation app shell: DocsLayout with a topbar (a Topbar with a SidebarTrigger), a sidebar that sticks under it, a breadcrumb header above the page, the content and a sticky toc; DocsToc from useTocItems, DocsPager and DocsBreadcrumb. useSidebarState({ storageKey }) wires the trigger and the Sidebar and remembers the collapsed state.",
     a11y: [
-      "The sidebar is fixed beside the content and joins the header row on narrow screens, where a Sidebar becomes its drawer trigger.",
+      "The sidebar sticks under the topbar at the full remaining height and scrolls on its own; on narrow screens it is the Sidebar's drawer, opened by the same SidebarTrigger.",
+      "The SidebarTrigger is named for its next step (Collapse sidebar, Expand sidebar, Open navigation) and carries aria-expanded.",
+      "Everything in the page gets a scroll margin for the topbar, so anchors, focus and scrollIntoView never land under it.",
       'DocsToc marks the heading being read with aria-current="location", from an IntersectionObserver.',
       'Pass as="div" when the page already has its <main>.',
     ],
     agent:
-      "Its links are Links: pass onFollow where agents should follow them. Sidebar items and pager links accept it too.",
-    related: ["sidebar", "link", "breadcrumb", "page-layout", "scroll-area"],
+      "Sidebar items, crumbs and pager links are Links: pass onFollow where agents should follow them. Agents collapse and expand the sidebar through the trigger or the Sidebar's own actions.",
+    related: ["topbar", "sidebar", "link", "breadcrumb", "page-layout"],
   },
   "code-block": {
     usage:
