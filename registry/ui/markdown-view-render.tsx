@@ -3,11 +3,20 @@ import type { ReactNode } from "react"
 
 import { CodeBlock, type CodeBlockLabels } from "@/components/ui/code-block"
 import { Link } from "@/components/ui/link"
+import { parseFrontmatter, type Frontmatter } from "@/components/ui/markdown-frontmatter"
+import { renderFrontmatter, renderSoleEmbed, wikilink, wikilinkParts } from "@/components/ui/markdown-view-links"
 import { markdownParser, type WikilinkResolver } from "@/components/ui/markdown-syntax"
+
+type FrontmatterDisplay = "hide" | "properties" | "raw"
 
 type RenderOptions = {
   resolveWikilink?: WikilinkResolver
   wikilinkHref?: (slug: string) => string | undefined
+  onWikilinkClick?: (target: string, event: Event | undefined) => void
+  renderEmbed?: (target: string, alias: string | undefined) => ReactNode
+  frontmatter?: FrontmatterDisplay
+  renderFrontmatter?: (frontmatter: Frontmatter) => ReactNode
+  frontmatterLabel?: string
   taskLabel: string
   /** Names for fenced code blocks and their copy buttons. */
   codeLabels?: Partial<CodeBlockLabels>
@@ -159,20 +168,15 @@ function renderInline(cx: Context, node: SyntaxNode): ReactNode {
     case "HardBreak":
       return <br key={key} />
     case "Wikilink": {
-      const target = node.getChild("WikilinkTarget")
-      const slug = target ? slice(cx, target).trim() : ""
-      const labelNode = node.getChild("WikilinkLabel")
-      const resolution = cx.resolveWikilink?.(slug) ?? { exists: true }
-      const text = labelNode ? slice(cx, labelNode) : (resolution.label ?? slug)
-      const href = resolution.exists ? cx.wikilinkHref?.(slug) : undefined
-      const props = { "data-slot": "markdown-wikilink", "data-unresolved": resolution.exists ? undefined : "" }
-      return href ? (
-        <Link key={key} href={href} {...props}>
-          {text}
-        </Link>
-      ) : (
-        <span key={key} {...props}>
-          {text}
+      const { slug, alias } = wikilinkParts(cx, node)
+      return wikilink(cx, key, slug, alias, "markdown-wikilink")
+    }
+    case "Embed": {
+      const { slug, alias } = wikilinkParts(cx, node)
+      if (!cx.renderEmbed) return wikilink(cx, key, slug, alias, "markdown-embed")
+      return (
+        <span key={key} data-slot="markdown-embed" data-target={slug}>
+          {cx.renderEmbed(slug, alias)}
         </span>
       )
     }
@@ -207,7 +211,10 @@ function renderBlock(cx: Context, node: SyntaxNode, tight = false): ReactNode {
   }
   switch (node.name) {
     case "Paragraph":
-      return tight ? <span key={key}>{trim(inline(cx, node))}</span> : <p key={key}>{trim(inline(cx, node))}</p>
+      return (
+        renderSoleEmbed(cx, node) ??
+        (tight ? <span key={key}>{trim(inline(cx, node))}</span> : <p key={key}>{trim(inline(cx, node))}</p>)
+      )
     case "Blockquote":
       return <blockquote key={key}>{blocks(cx, node)}</blockquote>
     case "BulletList":
@@ -365,13 +372,20 @@ function markdownBlocks(src: string, options: RenderOptions, previous?: Parsed) 
   const cx: Context = { ...options, src, refs: new Map() }
   collectReferences(cx, tree.topNode)
   const seen = new Map<string, number>()
-  const list: MarkdownBlock[] = children(tree.topNode).map((node) => {
-    const text = slice(cx, node)
+  const block = (text: string, render: () => ReactNode): MarkdownBlock => {
     const digest = hash(text)
     const count = seen.get(digest) ?? 0
     seen.set(digest, count + 1)
-    return { key: `${digest}.${count}`, text, render: () => renderBlock(cx, node) }
-  })
+    return { key: `${digest}.${String(count)}`, text, render }
+  }
+  // Leading YAML parses as a rule and a setext heading; those nodes are left out and it renders as one block.
+  const frontmatter = parseFrontmatter(src)
+  const nodes = children(tree.topNode).filter((node) => !frontmatter || node.to > frontmatter.to)
+  const list: MarkdownBlock[] = nodes.map((node) => block(slice(cx, node), () => renderBlock(cx, node)))
+  if (frontmatter && (cx.renderFrontmatter || (cx.frontmatter ?? "hide") !== "hide")) {
+    const source = `${cx.frontmatter ?? "custom"}\n${src.slice(frontmatter.from, frontmatter.to)}`
+    list.unshift(block(source, () => renderFrontmatter(cx, frontmatter)))
+  }
   const references = hash(JSON.stringify([...cx.refs]))
   return { blocks: list, references, parsed: { src, tree } satisfies Parsed }
 }
@@ -381,4 +395,4 @@ function renderMarkdown(src: string, options: RenderOptions): ReactNode[] {
 }
 
 export { markdownBlocks, renderMarkdown, safeHref }
-export type { MarkdownBlock, Parsed, RenderOptions }
+export type { Context as RenderContext, FrontmatterDisplay, MarkdownBlock, Parsed, RenderOptions }

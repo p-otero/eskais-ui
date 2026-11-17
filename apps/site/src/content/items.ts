@@ -721,7 +721,13 @@ const itemNotes: Record<string, ItemNotes> = {
     related: ["markdown-view", "markdown-editor-languages", "textarea"],
   },
   "markdown-view": {
-    a11y: ["Renders semantic HTML (headings, lists, tables) without raw HTML; task boxes are labelled."],
+    usage:
+      "For notes: onWikilinkClick routes wikilinks, renderEmbed draws ![[embeds]], frontmatter hides or lists the YAML block, and extractHeadings feeds an outline.",
+    a11y: [
+      "Renders semantic HTML (headings, lists, tables) without raw HTML; task boxes are labelled.",
+      "Wikilinks are links when they have an address and buttons when only onWikilinkClick handles them; properties are a named description list.",
+    ],
+    agent: "Wikilinks with onWikilinkClick are links agents follow by their text.",
     related: ["markdown-editor"],
   },
   "markdown-editor-languages": {

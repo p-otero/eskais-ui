@@ -3802,7 +3802,7 @@
       "name": "markdown-view",
       "type": "registry:ui",
       "title": "Markdown View",
-      "description": "Renders Markdown (CommonMark, GFM tables, tasks and strikethrough, and [[wikilinks]]) to React elements with the Lezer parser, fenced code as a highlighted CodeBlock: raw HTML shows as text, only http, https, mailto and tel links become links, and each top-level block is memoised so long notes re-render only what changed.",
+      "description": "Renders Markdown (CommonMark, GFM tables, tasks and strikethrough, [[wikilinks]] and ![[embeds]]) to React elements with the Lezer parser, fenced code as a highlighted CodeBlock: raw HTML shows as text, only http, https, mailto and tel links become links, leading YAML frontmatter is hidden or shown as properties, and each top-level block is memoised so long notes re-render only what changed. Also extractHeadings for an outline and parseFrontmatter.",
       "dependencies": [
         "@lezer/common@1.5.5",
         "@lezer/markdown@1.8.1"
@@ -3815,7 +3815,19 @@
       ],
       "files": [
         {
+          "path": "registry/ui/markdown-frontmatter.ts",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/markdown-outline.ts",
+          "type": "registry:ui"
+        },
+        {
           "path": "registry/ui/markdown-syntax.ts",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/markdown-view-links.tsx",
           "type": "registry:ui"
         },
         {
@@ -3826,7 +3838,8 @@
           "path": "registry/ui/markdown-view.tsx",
           "type": "registry:ui"
         }
-      ]
+      ],
+      "docs": "Wikilinks: `resolveWikilink(target)` returns `{ exists, label }` (an unresolved link is dashed), `wikilinkHref(target)` its address, and `onWikilinkClick(target, event)` takes plain clicks and agents' `follow` for client routing (modified clicks stay with the browser). A wikilink with an address renders through `Link`, so it follows on press and hash routes (`#/note/x`) work; one without an address but with `onWikilinkClick` is a button. Both carry `data-wikilink` (`link` or `embed`) and `data-target`. Embeds: `![[target]]` and `![[target|alias]]` render `renderEmbed(target, alias)`, as a block when the embed is alone in its paragraph; without it, a dashed link-like chip. Frontmatter: a `---` block on the first line, closed by `---` or `...`, is hidden by default (`frontmatter=\"hide\"`), a `<dl>` of its `key: value` lines and lists with `frontmatter=\"properties\"` (named by `frontmatterLabel`, \"Properties\"), or its YAML with `\"raw\"`; `renderFrontmatter({ raw, properties, from, to })` draws your own. `parseFrontmatter(markdown)` reads it without a YAML dependency: plain `key: value` lines, `- item` and `[a, b]` lists, `|` and `>` blocks; nested maps are skipped, and `raw` is there for a real YAML parser. `extractHeadings(markdown)` lists `{ level, text, line, from, to, textFrom }`, frontmatter and code left out, for an outline. Keep the callbacks stable (module-level or `useCallback`): a new function re-renders every block."
     },
     {
       "name": "markdown-editor",
