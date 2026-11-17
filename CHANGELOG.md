@@ -10,6 +10,7 @@ Versions follow [semver](https://semver.org). Before 1.0, a minor version can br
 - `carousel`: `CarouselStatus` shows the current page and the page count ("1 of 3", `labels.status` translates it) and announces it politely only when the page changes, never on load or while rotating. `useCarouselState()` returns UI SDK's own `page`, `pageCount` (null until the slides are measured), `playing` and `orientation` to any part inside a `Carousel`, so a header can show its position without duplicating state; `Carousel` children can also be a function of that state.
 - `useSidebarState({ storageKey })` (`sidebar`): one controller and collapsed state for a `Sidebar` and its `SidebarTrigger`, remembered in localStorage (`sidebarProps`, `triggerProps`). `Sidebar collapse="hide"` slides the sidebar away when collapsed instead of leaving an icon rail, for items without icons.
 - `--topbar-height` (theme): a `Topbar`'s height, which it now keeps as a minimum, for anything that sticks under it.
+- `MeterValue` and `ProgressValue` take `formatValue(value, { min, max, percent, text })`, which replaces the visible value with any node while screen readers keep the root's text. The root's `format` (`Intl.NumberFormat` options or a function) still changes both. The default stays locale-correct: es-ES writes "21 %" with a no-break space (U+00A0), as CLDR does, and the docs now say so.
 
 ### Changed
 
