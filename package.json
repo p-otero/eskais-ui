@@ -5,7 +5,8 @@
   "description": "UI SDK-first, agent-native React components distributed as a shadcn-style registry.",
   "license": "MIT",
   "workspaces": [
-    "apps/*"
+    "apps/*",
+    "packages/*"
   ],
   "type": "module",
   "scripts": {
