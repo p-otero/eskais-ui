@@ -20,7 +20,8 @@ import {
   createMenuController,
 } from "@ui-sdk/react/menu"
 import type { VariantProps } from "class-variance-authority"
-import type { ComponentProps } from "react"
+import { matchesShortcut } from "@ui-sdk/core/shortcuts"
+import type { ComponentProps, KeyboardEvent } from "react"
 import { CheckIcon } from "lucide-react"
 
 import { buttonVariants } from "@/components/ui/button"
@@ -46,16 +47,61 @@ function DropdownMenuTrigger({
   return <MenuTriggerPrimitive className={cnState(buttonVariants({ variant, size }), className)} {...props} />
 }
 
-function DropdownMenuContent({ className, ...props }: ComponentProps<typeof MenuContentPrimitive>) {
-  return <MenuContentPrimitive className={cnState(menuContentClassName, className)} {...props} />
+// UI SDK shows a markup item's `shortcut` and leaves the key to the app. Pressing it while the menu is open
+// presses the item; capturing it first keeps typeahead from taking the letter.
+function pressItemShortcut(event: KeyboardEvent<HTMLElement>) {
+  if (event.defaultPrevented || event.nativeEvent.isComposing) return
+  const items = event.currentTarget.querySelectorAll<HTMLElement>("[data-shortcut]")
+  for (const item of items) {
+    if (item.closest('[role="menu"]') !== event.currentTarget) continue
+    const keys = item.dataset.shortcut
+    if (!keys || !matchesShortcut(event.nativeEvent, keys)) continue
+    event.preventDefault()
+    event.stopPropagation()
+    if (item.getAttribute("aria-disabled") !== "true") item.click()
+    return
+  }
 }
 
-function DropdownMenuSubContent({ className, ...props }: ComponentProps<typeof MenuSubContentPrimitive>) {
-  return <MenuSubContentPrimitive className={cnState(menuContentClassName, className)} {...props} />
+function DropdownMenuContent({ className, onKeyDownCapture, ...props }: ComponentProps<typeof MenuContentPrimitive>) {
+  return (
+    <MenuContentPrimitive
+      className={cnState(menuContentClassName, className)}
+      onKeyDownCapture={(event) => {
+        onKeyDownCapture?.(event)
+        pressItemShortcut(event)
+      }}
+      {...props}
+    />
+  )
 }
 
-function DropdownMenuItem({ className, ...props }: ComponentProps<typeof MenuItemPrimitive>) {
-  return <MenuItemPrimitive className={cnState(menuItemClassName, className)} {...props} />
+function DropdownMenuSubContent({
+  className,
+  onKeyDownCapture,
+  ...props
+}: ComponentProps<typeof MenuSubContentPrimitive>) {
+  return (
+    <MenuSubContentPrimitive
+      className={cnState(menuContentClassName, className)}
+      onKeyDownCapture={(event) => {
+        onKeyDownCapture?.(event)
+        pressItemShortcut(event)
+      }}
+      {...props}
+    />
+  )
+}
+
+function DropdownMenuItem({ className, shortcut, ...props }: ComponentProps<typeof MenuItemPrimitive>) {
+  return (
+    <MenuItemPrimitive
+      shortcut={shortcut}
+      data-shortcut={shortcut}
+      className={cnState(menuItemClassName, className)}
+      {...props}
+    />
+  )
 }
 
 function DropdownMenuSubTrigger({ className, ...props }: ComponentProps<typeof MenuSubTriggerPrimitive>) {

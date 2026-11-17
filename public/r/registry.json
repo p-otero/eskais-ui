@@ -1177,7 +1177,8 @@
         "@eskais/utils",
         "@eskais/theme",
         "@eskais/spinner",
-        "@eskais/link"
+        "@eskais/link",
+        "@eskais/shortcuts"
       ],
       "files": [
         {
@@ -1189,7 +1190,7 @@
           "type": "registry:ui"
         }
       ],
-      "docs": "Return a Promise from `onClick` and the button stays pending until it settles: `aria-busy`, presses ignored, focus kept, a spinner, and `pendingAnnouncement` after a second. For work the button didn't start (a form submit, a mutation elsewhere), pass `loading`: it renders the same state through `disabled` + `focusableWhenDisabled`, as UI SDK documents for external pending flags. The spinner takes the leading icon's place, or sits centered over the label, so the width never changes. `size=\"icon\"` requires `aria-label`."
+      "docs": "Return a Promise from `onClick` and the button stays pending until it settles: `aria-busy`, presses ignored, focus kept, a spinner, and `pendingAnnouncement` after a second. For work the button didn't start (a form submit, a mutation elsewhere), pass `loading`: it renders the same state through `disabled` + `focusableWhenDisabled`, as UI SDK documents for external pending flags. The spinner takes the leading icon's place, or sits centered over the label, so the width never changes. `size=\"icon\"` requires `aria-label`. `shortcut=\"u\"` presses the button from the keyboard while it is mounted, in the enclosing `ShortcutScope`, shows the keys after the label and sets `aria-keyshortcuts` (`shortcutHint={false}` hides them, `shortcutDescription` names it in the `ShortcutsDialog`)."
     },
     {
       "name": "field",
@@ -1708,6 +1709,60 @@
       ]
     },
     {
+      "name": "shortcuts",
+      "type": "registry:ui",
+      "title": "Shortcuts",
+      "description": "Keyboard shortcuts on UI SDK's shared shortcuts: useShortcut with scopes, sequences (g i) and mod, ShortcutScope for a region or an open panel, ShortcutHint drawn with Kbd. Plain keys never fire while typing or composing.",
+      "docs": "`useShortcut(keys, handler, { scope, enabled, description, allowInInput, when, layer })` registers while mounted. Keys are `+`-joined (`mod+k`, `shift+?`), a space makes a two-step sequence (`g i`, 1.2 s apart at most), and `?` matches with or without Shift. Plain keys never run while focus is in an input, textarea or contenteditable, nor during IME composition. `<ShortcutScope name label active>` limits the shortcuts inside it: `active=\"focus\"` (default) while focus is within, `true` while mounted (an open side panel), and inside a dialog they belong to that dialog. `ShortcutHint keys` draws the keys with `Kbd` (aria-hidden; give the control `aria-keyshortcuts`, which `useAriaKeyshortcuts` returns for single steps). `Button shortcut` and `DropdownMenuItem shortcut` bind and show a key. Shortcuts are a people-only accelerator: agents already press the same parts by name, so they gain nothing new.",
+      "dependencies": [
+        "@ui-sdk/core@0.1.0-beta.5",
+        "@ui-sdk/react@0.1.0-beta.5"
+      ],
+      "registryDependencies": [
+        "@eskais/utils",
+        "@eskais/theme",
+        "@eskais/kbd"
+      ],
+      "files": [
+        {
+          "path": "registry/ui/shortcuts-registry.ts",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/shortcuts.tsx",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/use-shortcut.ts",
+          "type": "registry:ui"
+        }
+      ]
+    },
+    {
+      "name": "shortcuts-dialog",
+      "type": "registry:ui",
+      "title": "Shortcuts Dialog",
+      "description": "A ? dialog that lists the shortcuts available where the person is, grouped by ShortcutScope.",
+      "docs": "Mount `<ShortcutsDialog />` once. `?` opens it (`shortcut` changes or, with `null`, removes the key; `open`/`onOpenChange` control it). It reads `listShortcuts()` as it opens, before the modal pauses the page's shortcuts, and lists only shortcuts with a `description`, grouped by scope under each `ShortcutScope label`. `extra` adds rows that aren't registered shortcuts, like a list's own j/k keys. `labels` (`title`, `global`, `open`, `description`) in the page's language; English by default.",
+      "dependencies": [
+        "@ui-sdk/core@0.1.0-beta.5",
+        "@ui-sdk/react@0.1.0-beta.5"
+      ],
+      "registryDependencies": [
+        "@eskais/utils",
+        "@eskais/theme",
+        "@eskais/kbd",
+        "@eskais/dialog",
+        "@eskais/shortcuts"
+      ],
+      "files": [
+        {
+          "path": "registry/ui/shortcuts-dialog.tsx",
+          "type": "registry:ui"
+        }
+      ]
+    },
+    {
       "name": "table",
       "type": "registry:ui",
       "title": "Table",
@@ -1830,7 +1885,8 @@
           "path": "registry/ui/dropdown-menu.tsx",
           "type": "registry:ui"
         }
-      ]
+      ],
+      "docs": "`DropdownMenuItem shortcut` shows the keys, as UI SDK does, and presses the item when they're pressed while its menu is open (ahead of typeahead). For keys that work while the menu is closed, use UI SDK's data menus (`items`) or `useShortcut`."
     },
     {
       "name": "toast",
@@ -2517,7 +2573,8 @@
         "@eskais/stage-track",
         "@eskais/attachments",
         "@eskais/proposal-actions",
-        "@eskais/toggle-group"
+        "@eskais/toggle-group",
+        "@eskais/row-navigation"
       ],
       "files": [
         {
@@ -3154,7 +3211,9 @@
         "@eskais/empty",
         "@eskais/skeleton",
         "@eskais/table",
-        "@eskais/pagination"
+        "@eskais/pagination",
+        "@eskais/row-navigation",
+        "@eskais/virtual-rows"
       ],
       "files": [
         {
@@ -3177,7 +3236,8 @@
           "path": "registry/ui/data-table.tsx",
           "type": "registry:ui"
         }
-      ]
+      ],
+      "docs": "Rows are one tab stop: arrows or j/k move, Home/End and PageUp/PageDown jump, Enter calls `onRowOpen(row)`, and with `selectable` Space or x toggles the focused row; a checkbox or button inside a row keeps its own keys. Past 200 rows (`virtualize=\"auto\"`, `estimateSize`, default 41) only the rows in view render, in `tbody` between gap rows, with `aria-rowcount` and `aria-rowindex`, a sticky header and find in page through hidden stubs. Bound its height (`className=\"max-h-96\"`) so it scrolls inside; otherwise it scrolls with the page."
     },
     {
       "name": "skip-link",
@@ -3475,11 +3535,54 @@
       ]
     },
     {
+      "name": "row-navigation",
+      "type": "registry:ui",
+      "title": "Row Navigation",
+      "description": "One tab stop over a collection's rows on UI SDK roving focus: arrows and j/k move, Home/End and PageUp/PageDown jump, Enter opens, Space and x toggle. Adds no role.",
+      "docs": "`useRowNavigation({ ids, onOpen, onToggle, reveal })` makes the instance; wrap the rows in `RowNavigationProvider handle` and each row (a `tr`, or a row's link or button) in `NavigableRow id render`. `ids` lists every row in order, rendered or not, so Home, End and PageDown reach rows a virtualized collection hasn't rendered: `reveal(id)` scrolls one into view and focus follows when it renders. Enter calls `onOpen` only for rows that aren't links or buttons, which open themselves. Keys typed in a control inside a row stay with that control. Agents don't see it: the rows' parts and the collection's own actions already cover them.",
+      "dependencies": [
+        "@ui-sdk/core@0.1.0-beta.5",
+        "@ui-sdk/react@0.1.0-beta.5"
+      ],
+      "registryDependencies": [
+        "@eskais/utils"
+      ],
+      "files": [
+        {
+          "path": "registry/ui/row-navigation-primitive.ts",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/row-navigation.tsx",
+          "type": "registry:ui"
+        }
+      ]
+    },
+    {
+      "name": "virtual-rows",
+      "type": "registry:ui",
+      "title": "Virtual Rows",
+      "description": "Windowed rendering for long lists and tables on TanStack Virtual, in document flow with gap rows, the focused row kept rendered, and find in page through hidden=until-found stubs.",
+      "docs": "`useVirtualRows({ count, virtualize, estimateSize, getKey })` virtualizes past 200 rows with `virtualize=\"auto\"`. Put `anchor` on the `ul` or `tbody`; it scrolls with the nearest scrolling ancestor, or the window. Render `segments`: rows, and gaps (`aria-hidden`) that hold the space of the rows between, so a table keeps `tbody > tr` and a list `ul > li`. Give each row `data-index` and `ref={measureElement}`. `pin(index)` keeps the focused row rendered when scrolled away; `renderNow(index)` renders one at once, for an agent's action. `VirtualFindStubs` writes the text of the rows that aren't rendered as `hidden=\"until-found\"` elements, so find in page reaches them and scrolls the real row in.",
+      "dependencies": [
+        "@tanstack/react-virtual@3.14.24"
+      ],
+      "registryDependencies": [
+        "@eskais/utils"
+      ],
+      "files": [
+        {
+          "path": "registry/ui/virtual-rows.tsx",
+          "type": "registry:ui"
+        }
+      ]
+    },
+    {
       "name": "list-item",
       "type": "registry:ui",
       "title": "List Item",
       "description": "Dense, Linear-style rows that also work as entity cards: List, ListGroup (label and count), ListItem with leading, title, subtitle, status, meta, trailing and actions, plus ListItemTitle, ListItemMeta, ListItemActions and IconTile. Agents get select(id).",
-      "docs": "`List aria-label` holds `ListItem`s, optionally inside `ListGroup label count`. A row selects through a stretched link (`href`, `aria-current=\"page\"` when `selected`) or a stretched UI SDK Button (`onSelect`), and its actions, chips and status stay their own targets. Give `List` a `value`, `defaultValue` or `onValueChange` and the rows become options of a UI SDK Listbox (arrow keys, one tab stop); options can't hold controls, so `actions` are ignored there. `variant=\"card\"` lays rows out as cards in a responsive grid. Titles wrap to two lines, then show the full title in a tooltip; a status pill wraps below a narrow title, and trailing content and actions drop to their own line on a narrow row. `List onSelect(id, details)` runs before a row is chosen, for people and agents, and `details.cancel()` stops it. Agents see the list by its label with `select(id)`.",
+      "docs": "`List aria-label` holds `ListItem`s, optionally inside `ListGroup label count`. A row selects through a stretched link (`href`, `aria-current=\"page\"` when `selected`) or a stretched UI SDK Button (`onSelect`), and its actions, chips and status stay their own targets. Give `List` a `value`, `defaultValue` or `onValueChange` and the rows become options of a UI SDK Listbox (arrow keys, one tab stop); options can't hold controls, so `actions` are ignored there. `variant=\"card\"` lays rows out as cards in a responsive grid. Titles wrap to two lines, then show the full title in a tooltip; a status pill wraps below a narrow title, and trailing content and actions drop to their own line on a narrow row. `List onSelect(id, details)` runs before a row is chosen, for people and agents, and `details.cancel()` stops it. Agents see the list by its label with `select(id)`. Rows of a non-selectable list are one tab stop: arrows or j/k move, Home/End and PageUp/PageDown jump, Enter opens the row through its link or button, and the moved-to row scrolls into view with the least scrolling; a selectable list takes j/k and the page keys as its own arrows. Pass `items` with `renderItem` (and `getItemId`, `itemText`) to render rows from data: past 200 rows (`virtualize=\"auto\"`, `estimateSize`) only the rows in view render, with `aria-setsize`/`aria-posinset`, every row reachable by keyboard and by agents' `select`, and find in page through hidden stubs. `checkedIds` with `onCheckedIdsChange` checks rows for a bulk action: Space or x toggles the focused row, each row shows a checkbox outside the tab order (`checkLabel` names it).",
       "dependencies": [
         "@ui-sdk/core@0.1.0-beta.5",
         "@ui-sdk/react@0.1.0-beta.5"
@@ -3488,7 +3591,10 @@
         "@eskais/utils",
         "@eskais/tone",
         "@eskais/theme",
-        "@eskais/tooltip"
+        "@eskais/tooltip",
+        "@eskais/checkbox",
+        "@eskais/row-navigation",
+        "@eskais/virtual-rows"
       ],
       "files": [
         {
@@ -3505,6 +3611,30 @@
         },
         {
           "path": "registry/ui/use-list-item.ts",
+          "type": "registry:ui"
+        }
+      ]
+    },
+    {
+      "name": "side-panel",
+      "type": "registry:ui",
+      "title": "Side Panel",
+      "description": "A non-modal inspector beside a list: a named complementary region, Escape closes it and returns focus to the row, and shortcuts declared inside run while it is open.",
+      "docs": "`<SidePanel open onOpenChange title description actions returnFocus>` renders nothing while closed. Lay it out beside the list in a flex row (`--side-panel-width`, 24rem by default); on narrow screens it covers its positioned parent. Escape anywhere on the page closes it (a modal above it gets Escape first), and focus that was inside it, or lost to the body, moves to `returnFocus()`. It is a `ShortcutScope` that is active while open (`scope`, `scopeLabel` for the `ShortcutsDialog`), so `Button shortcut=\"u\"` inside it works while focus stays in the list. `labels={{ close }}` names the close button.",
+      "dependencies": [
+        "@ui-sdk/core@0.1.0-beta.5",
+        "@ui-sdk/react@0.1.0-beta.5",
+        "lucide-react@1.73.0"
+      ],
+      "registryDependencies": [
+        "@eskais/utils",
+        "@eskais/theme",
+        "@eskais/button",
+        "@eskais/shortcuts"
+      ],
+      "files": [
+        {
+          "path": "registry/ui/side-panel.tsx",
           "type": "registry:ui"
         }
       ]
@@ -3914,6 +4044,34 @@
         {
           "path": "registry/ui/icon.tsx",
           "type": "registry:ui"
+        }
+      ]
+    },
+    {
+      "name": "inbox",
+      "type": "registry:block",
+      "title": "Inbox",
+      "description": "A keyboard-first inbox block: a virtualized List of messages, j/k and Enter to open a SidePanel inspector with single-key actions, x to select for a bulk action and ? for every key.",
+      "registryDependencies": [
+        "@eskais/utils",
+        "@eskais/theme",
+        "@eskais/tone",
+        "@eskais/badge",
+        "@eskais/button",
+        "@eskais/list-item",
+        "@eskais/shortcuts",
+        "@eskais/shortcuts-dialog",
+        "@eskais/side-panel",
+        "@eskais/status-pill"
+      ],
+      "files": [
+        {
+          "path": "registry/blocks/inbox-sample.ts",
+          "type": "registry:component"
+        },
+        {
+          "path": "registry/blocks/inbox.tsx",
+          "type": "registry:component"
         }
       ]
     }

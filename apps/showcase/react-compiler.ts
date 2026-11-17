@@ -15,6 +15,11 @@ const allowed = [
     category: "Refs",
     reason: "reads its ref while rendering on purpose; the compiler skips the hook and DataState still compiles",
   },
+  {
+    file: "registry/ui/virtual-rows.tsx",
+    category: "IncompatibleLibrary",
+    reason: "TanStack Virtual's instance is read during render by design; the compiler skips useVirtualRows only",
+  },
 ]
 
 /**

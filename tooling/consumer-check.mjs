@@ -122,6 +122,12 @@ const allItems = [
   "attachments",
   "stage-track",
   "list-item",
+  "shortcuts",
+  "shortcuts-dialog",
+  "row-navigation",
+  "virtual-rows",
+  "side-panel",
+  "inbox",
 ]
 const versions = {
   react: "19.3.1",

@@ -39,6 +39,13 @@ const guides: GuideMeta[] = [
     covers: ["icon"],
   },
   {
+    slug: "keyboard",
+    title: "Keyboard and long lists",
+    description:
+      "Shortcuts with scopes and a ? dialog, the keyboard map for lists and tables, and virtualization for thousands of rows.",
+    covers: ["row-navigation", "virtual-rows"],
+  },
+  {
     slug: "agents",
     title: "Agents",
     description:

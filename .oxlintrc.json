@@ -165,7 +165,8 @@
         "tooling/screenshots.mjs",
         "tooling/contrast-check.mjs",
         "tooling/showcase-browser.mjs",
-        "tooling/site-check.mjs"
+        "tooling/site-check.mjs",
+        "tooling/list-bench.mjs"
       ],
       "rules": {
         "no-await-in-loop": "off"

@@ -2,8 +2,9 @@
 
 import { Button as ButtonPrimitive, type ButtonState } from "@ui-sdk/react/button"
 import { cva, type VariantProps } from "class-variance-authority"
-import { Children, isValidElement, type ComponentProps, type ReactNode } from "react"
+import { Children, isValidElement, useRef, type ComponentProps, type ReactNode } from "react"
 
+import { ShortcutHint, useAriaKeyshortcuts, useShortcut } from "@/components/ui/shortcuts"
 import { Spinner } from "@/components/ui/spinner"
 import { cnState } from "@/lib/utils"
 
@@ -47,6 +48,15 @@ type ButtonBaseProps = Omit<ComponentProps<typeof ButtonPrimitive>, "aria-label"
   loading?: boolean
   /** Lets a text button shrink and wrap its label onto more lines in a tight row, instead of overflowing it. */
   wrap?: boolean
+  /**
+   * A key that presses the button while it is mounted, in the enclosing `ShortcutScope`: `"u"`, `"mod+s"`, `"g i"`.
+   * Shows the keys after the label and sets `aria-keyshortcuts`. People only: agents press the button by name.
+   */
+  shortcut?: string
+  /** What `ShortcutsDialog` lists the shortcut as; defaults to the `aria-label` or a plain-text label. */
+  shortcutDescription?: string
+  /** `false` binds the key without showing it. */
+  shortcutHint?: boolean
 }
 
 type ButtonProps =
@@ -84,6 +94,10 @@ function withSpinner(children: ReactNode, iconOnly: boolean, variant: ButtonVari
   )
 }
 
+function withHint(children: ReactNode, hint: ReactNode) {
+  return [...Children.toArray(children), hint]
+}
+
 function Button({
   className,
   variant,
@@ -92,12 +106,36 @@ function Button({
   wrap,
   disabled,
   focusableWhenDisabled,
+  shortcut,
+  shortcutDescription,
+  shortcutHint = true,
+  ref,
   children,
   ...props
 }: ButtonProps) {
   const iconOnly = size === "icon"
+  const element = useRef<HTMLElement | null>(null)
+  const description =
+    shortcutDescription ?? props["aria-label"] ?? (typeof children === "string" ? children : undefined)
+  useShortcut(shortcut, () => element.current?.click(), {
+    description,
+    when: () => element.current?.isConnected === true && !element.current.closest("[inert]"),
+  })
+  const ariaKeyshortcuts = useAriaKeyshortcuts(shortcut)
+  const hint =
+    shortcut !== undefined && shortcutHint ? (
+      <ShortcutHint key="shortcut-hint" keys={shortcut} className="ms-auto" />
+    ) : null
+  const content = (inner: ReactNode) => (hint ? withHint(inner, hint) : inner)
   return (
     <ButtonPrimitive
+      ref={(node: HTMLElement | null) => {
+        element.current = node
+        if (typeof ref === "function") return ref(node as never)
+        if (ref) (ref as { current: unknown }).current = node
+        return undefined
+      }}
+      aria-keyshortcuts={ariaKeyshortcuts}
       data-variant={variant ?? "default"}
       data-size={size ?? "default"}
       {...(loading ? { "data-pending": "", "aria-busy": true } : {})}
@@ -107,8 +145,8 @@ function Button({
       {...props}
     >
       {typeof children === "function"
-        ? (state: ButtonState) => withSpinner(children(state), iconOnly, variant)
-        : withSpinner(children, iconOnly, variant)}
+        ? (state: ButtonState) => withSpinner(content(children(state)), iconOnly, variant)
+        : withSpinner(content(children), iconOnly, variant)}
     </ButtonPrimitive>
   )
 }
