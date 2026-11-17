@@ -1,8 +1,11 @@
+"use client"
+
 import { renderElement, type PartProps } from "@ui-sdk/react/primitive"
 import { cva } from "class-variance-authority"
 import { ArrowDownRightIcon, ArrowUpRightIcon, MinusIcon } from "lucide-react"
 import type { ReactNode } from "react"
 
+import { useLocale } from "@/lib/locale"
 import type { Tone } from "@/lib/tone"
 import { cn } from "@/lib/utils"
 
@@ -73,13 +76,14 @@ function StatDelta({
   tone: toneProp,
   comparison,
   format = percent,
-  locale,
+  locale: localeProp,
   labels: labelOverrides,
   className,
   render,
   ...props
 }: StatDeltaProps) {
   const labels = { ...statDeltaLabels, ...labelOverrides }
+  const locale = useLocale(localeProp)
   const direction = directionProp ?? directionOf(value)
   const tone = toneProp ?? toneOf(direction, invert)
   const size = Math.abs(value)

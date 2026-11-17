@@ -7,7 +7,8 @@
     "@ui-sdk/react@0.1.0-beta.5"
   ],
   "registryDependencies": [
-    "@eskais/utils"
+    "@eskais/utils",
+    "@eskais/locale"
   ],
   "files": [
     {
@@ -17,7 +18,7 @@
     },
     {
       "path": "registry/ui/relative-time.tsx",
-      "content": "\"use client\"\n\nimport { renderElement, type PartProps } from \"@ui-sdk/react/primitive\"\n\nimport { useNow, type UseNowOptions } from \"@/components/ui/use-now\"\nimport { formatInstant, formatRelative, toISO, type Instant } from \"@/lib/time\"\nimport { cn } from \"@/lib/utils\"\n\ntype RelativeTimeProps = Omit<PartProps<\"time\">, \"children\" | \"dateTime\"> & {\n  value: Instant\n  now?: Instant\n  locale?: string\n  timeZone?: string\n  intervalMs?: number\n  /** \"short\" (\"2 min. ago\") or \"narrow\" where space is tight; \"long\" by default. */\n  formatStyle?: Intl.RelativeTimeFormatStyle\n}\n\nfunction RelativeTime({\n  value,\n  now,\n  locale,\n  timeZone,\n  intervalMs,\n  formatStyle,\n  className,\n  render,\n  ...props\n}: RelativeTimeProps) {\n  const current = useNow({ now, intervalMs })\n  return renderElement(\n    \"time\",\n    {\n      \"data-slot\": \"relative-time\",\n      dateTime: toISO(value),\n      title: formatInstant(value, { locale, timeZone }),\n      className: cn(\"tabular-nums\", className),\n      // Server and browser differ in clock and time zone; the effect in useNow resyncs the text.\n      suppressHydrationWarning: true,\n      ...props,\n      children: formatRelative(value, { now: current, locale, style: formatStyle }),\n    },\n    render,\n  )\n}\n\nexport { RelativeTime, useNow }\nexport type { RelativeTimeProps, UseNowOptions }\n",
+      "content": "\"use client\"\n\nimport { renderElement, type PartProps } from \"@ui-sdk/react/primitive\"\n\nimport { useNow, type UseNowOptions } from \"@/components/ui/use-now\"\nimport { useLocale } from \"@/lib/locale\"\nimport { formatInstant, formatRelative, toISO, type Instant } from \"@/lib/time\"\nimport { cn } from \"@/lib/utils\"\n\ntype RelativeTimeProps = Omit<PartProps<\"time\">, \"children\" | \"dateTime\"> & {\n  value: Instant\n  now?: Instant\n  locale?: string\n  timeZone?: string\n  intervalMs?: number\n  /** \"short\" (\"2 min. ago\") or \"narrow\" where space is tight; \"long\" by default. */\n  formatStyle?: Intl.RelativeTimeFormatStyle\n}\n\nfunction RelativeTime({\n  value,\n  now,\n  locale: localeProp,\n  timeZone,\n  intervalMs,\n  formatStyle,\n  className,\n  render,\n  ...props\n}: RelativeTimeProps) {\n  const current = useNow({ now, intervalMs })\n  const locale = useLocale(localeProp)\n  return renderElement(\n    \"time\",\n    {\n      \"data-slot\": \"relative-time\",\n      dateTime: toISO(value),\n      title: formatInstant(value, { locale, timeZone }),\n      className: cn(\"tabular-nums\", className),\n      // Server and browser differ in clock and time zone; the effect in useNow resyncs the text.\n      suppressHydrationWarning: true,\n      ...props,\n      children: formatRelative(value, { now: current, locale, style: formatStyle }),\n    },\n    render,\n  )\n}\n\nexport { RelativeTime, useNow }\nexport type { RelativeTimeProps, UseNowOptions }\n",
       "type": "registry:ui"
     },
     {

@@ -3,6 +3,7 @@
 import { renderElement, type PartProps } from "@ui-sdk/react/primitive"
 
 import { useNow, type UseNowOptions } from "@/components/ui/use-now"
+import { useLocale } from "@/lib/locale"
 import { formatInstant, formatRelative, toISO, type Instant } from "@/lib/time"
 import { cn } from "@/lib/utils"
 
@@ -19,7 +20,7 @@ type RelativeTimeProps = Omit<PartProps<"time">, "children" | "dateTime"> & {
 function RelativeTime({
   value,
   now,
-  locale,
+  locale: localeProp,
   timeZone,
   intervalMs,
   formatStyle,
@@ -28,6 +29,7 @@ function RelativeTime({
   ...props
 }: RelativeTimeProps) {
   const current = useNow({ now, intervalMs })
+  const locale = useLocale(localeProp)
   return renderElement(
     "time",
     {

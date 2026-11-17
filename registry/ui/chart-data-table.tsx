@@ -2,6 +2,7 @@
 
 import { use, type ReactNode } from "react"
 
+import { useLocale } from "@/lib/locale"
 import { formatChartValue, type ChartConfig, type ChartFormatOptions, type ChartName } from "@/lib/chart-config"
 import { ChartContext } from "@/components/ui/chart-context"
 import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
@@ -29,12 +30,13 @@ function ChartDataTable<TRow extends ChartRow>({
   config: configProp,
   caption,
   visuallyHidden = true,
-  locale,
+  locale: localeProp,
   format,
   className,
   ...name
 }: ChartDataTableProps<TRow>) {
   const config = configProp ?? use(ChartContext)?.config ?? {}
+  const locale = useLocale(localeProp)
   const rows = data as readonly Record<string, unknown>[]
   const columns: readonly string[] =
     keys ?? Object.keys(config).filter((key) => key !== labelKey && rows.some((row) => typeof row[key] === "number"))

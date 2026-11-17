@@ -7,6 +7,7 @@ import { FileIcon } from "lucide-react"
 import type { Attachment } from "@/components/ui/attachments-primitive"
 import { Link } from "@/components/ui/link"
 import { ThemedImage } from "@/components/ui/themed-image"
+import { useLocale } from "@/lib/locale"
 import { cn } from "@/lib/utils"
 
 // UI SDK's Button keeps its own data-slot over a prop; the rendered element's props win.
@@ -76,9 +77,10 @@ function AttachmentThumb({
   size = "md",
   onOpen,
   openLabel = defaultOpenLabel,
-  locale,
+  locale: localeProp,
   className,
 }: AttachmentThumbProps) {
+  const locale = useLocale(localeProp)
   const shared = {
     "data-slot": "attachment-thumb",
     "data-kind": attachment.kind,

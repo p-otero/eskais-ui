@@ -50,6 +50,13 @@ export default function I18n() {
           <A to="/docs/components/relative-time">RelativeTime</A>, <A to="/docs/components/usage">Usage</A>,{" "}
           <A to="/docs/components/date-time-picker">DateTimePicker</A> and the agent task components.
         </li>
+        <li>
+          Without a <Code>locale</Code>, numbers and dates follow the page's <Code>{"<html lang>"}</Code>, not the
+          browser's default: <Code>useLocale(locale)</Code> from <Code>@/lib/locale</Code> (the <Code>locale</Code>{" "}
+          item) returns the explicit locale or the page's, and follows <Code>lang</Code> as it changes. StatDelta,
+          StatValue, QuantityValue, RelativeTime, charts, attachments, the inbox and the agent task board use it; Meter
+          and Progress read the page's language through UI SDK. Use it in your own formatters.
+        </li>
         <li>Calendars and date pickers read the week start and date format from the locale.</li>
         <li>Right to left needs no provider: components read the direction from the page.</li>
       </Ul>

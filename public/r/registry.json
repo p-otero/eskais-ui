@@ -32,6 +32,18 @@
       ]
     },
     {
+      "name": "locale",
+      "type": "registry:lib",
+      "title": "Locale",
+      "description": "useLocale(locale?): the locale components format numbers and dates in, an explicit locale or else the page's <html lang>, followed as it changes and skipped on the server and first render so hydration matches.",
+      "files": [
+        {
+          "path": "registry/lib/locale.ts",
+          "type": "registry:lib"
+        }
+      ]
+    },
+    {
       "name": "test-utils",
       "type": "registry:lib",
       "title": "Test utils",
@@ -2126,7 +2138,8 @@
       ],
       "registryDependencies": [
         "@eskais/utils",
-        "@eskais/theme"
+        "@eskais/theme",
+        "@eskais/locale"
       ],
       "files": [
         {
@@ -2148,7 +2161,8 @@
         "@ui-sdk/react@0.1.0-beta.5"
       ],
       "registryDependencies": [
-        "@eskais/utils"
+        "@eskais/utils",
+        "@eskais/locale"
       ],
       "files": [
         {
@@ -2201,7 +2215,8 @@
         "@eskais/utils",
         "@eskais/theme",
         "@eskais/tone",
-        "@eskais/quantity"
+        "@eskais/quantity",
+        "@eskais/locale"
       ],
       "files": [
         {
@@ -2671,7 +2686,8 @@
         "@eskais/attachments",
         "@eskais/proposal-actions",
         "@eskais/toggle-group",
-        "@eskais/row-navigation"
+        "@eskais/row-navigation",
+        "@eskais/locale"
       ],
       "files": [
         {
@@ -3521,7 +3537,8 @@
       "registryDependencies": [
         "@eskais/utils",
         "@eskais/theme",
-        "@eskais/table"
+        "@eskais/table",
+        "@eskais/locale"
       ],
       "files": [
         {
@@ -3600,7 +3617,8 @@
         "@eskais/utils",
         "@eskais/theme",
         "@eskais/lightbox",
-        "@eskais/link"
+        "@eskais/link",
+        "@eskais/locale"
       ],
       "files": [
         {
@@ -4187,7 +4205,8 @@
         "@eskais/shortcuts",
         "@eskais/shortcuts-dialog",
         "@eskais/side-panel",
-        "@eskais/status-pill"
+        "@eskais/status-pill",
+        "@eskais/locale"
       ],
       "files": [
         {
