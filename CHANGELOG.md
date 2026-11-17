@@ -40,6 +40,7 @@ Versions follow [semver](https://semver.org). Before 1.0, a minor version can br
 
 - `lucide-react` is pinned to 1.68.0 (2026-11-04), the oldest release that exports every icon the registry uses, instead of 1.73.0 (2026-11-14): `shadcn add` failed with `ERR_PNPM_NO_MATURE_MATCHING_VERSION` for consumers with a 7-day pnpm `minimumReleaseAge`, since shadcn installs dependencies before it writes any file.
 - Fast links work in hash routers: `@fast-link/core` 0.0.2 leaves every `#…` href native, so `Link`, `ButtonLink`, `NavigationMenuLink` and `FastLinkRegion` links to `#/route` only followed on release. An `href` that starts with `#/` now follows on press, through `onFollow` or by setting `location.hash`; other `#…` hrefs are in-page anchors and stay native. `data-fast-link-hash-prefix` on any ancestor, or `FastLinkRegion hashPrefix`, sets another prefix (`#!/`), and an empty one turns hash routes off.
+- A `Field` inside a `Form` with `labelPlacement="in"` or `"on"` takes the Form's placement only in the floating layout: a `FieldLabel`, then a control that can float its label, then only a `FieldDescription` or `FieldError`, with no padding of its own. A Field styled as its own box (`className="border p-3"`, a help `<p>` after the control) drew its label over the control's value; it now keeps the label on top. A `FormField` with padding in its `className` does the same. A Field's or FormField's own `labelPlacement` still wins, `top` included.
 
 ### Changed
 

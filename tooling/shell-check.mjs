@@ -1,6 +1,6 @@
-// Drives the showcase's ?demo=shell at phone widths, where layout decides whether things show: the ⌘K dialog opened
-// from the Topbar's compact trigger, the Sidebar drawer opened from the Topbar, scrollable tabs revealing the
-// selected tab, MobileNav labels, and CardHeader at four widths (?demo=card-header-check).
+// Drives the showcase where layout decides whether things show: at phone widths the ⌘K dialog and Sidebar drawer
+// opened from the Topbar, scrollable tabs, MobileNav labels; CardHeader at four widths (?demo=card-header-check);
+// where a Form's floating label lands (?demo=field-placement-check).
 // Usage: node tooling/shell-check.mjs [--screenshots=<dir>] (after `bun run build:showcase`)
 import { mkdirSync } from "node:fs"
 import { join, resolve } from "node:path"
@@ -199,6 +199,50 @@ async function checkMobileNav(page) {
   check("MobileNav: with overflow, four routes and More", routes === 4 && moreButton === 1, `${routes} links`)
 }
 
+// A Form's `in`/`on` floats the label of a Field in the floating layout; a padded Field with its own text between the
+// parts keeps it on top, as does `labelPlacement="top"`. In every case the label stays clear of the control's value.
+async function checkFieldPlacement(page) {
+  await page.setViewportSize({ width: 1100, height: 720 })
+  await page.goto(`${new URL(page.url()).origin}/?demo=field-placement-check`)
+  await page.locator("[data-case]").first().waitFor()
+  await page.evaluate(() => document.fonts.ready)
+  const cases = await page.locator("[data-case]").evaluateAll((wrappers) =>
+    wrappers.map((wrapper) => {
+      const field = wrapper.querySelector('[data-slot="field"]')
+      const label = field.querySelector("label").getBoundingClientRect()
+      const control = field.querySelector('[data-slot="select-trigger"], input')
+      const valueNode = field.querySelector('[data-slot="select-value"]') ?? control
+      const box = valueNode.getBoundingClientRect()
+      const style = getComputedStyle(valueNode)
+      const value =
+        (box.top + Number.parseFloat(style.paddingTop) + box.bottom - Number.parseFloat(style.paddingBottom)) / 2
+      return {
+        name: wrapper.dataset.case,
+        placement: field.dataset.labelPlacement,
+        label: { top: label.top, bottom: label.bottom },
+        control: { top: control.getBoundingClientRect().top, bottom: control.getBoundingClientRect().bottom },
+        value,
+      }
+    }),
+  )
+  for (const { name, placement, label, control, value } of cases) {
+    const expected = /boxed|explicit-top/.test(name) ? "top" : name.split("-")[0]
+    // `in`: inside the control, above its value's line; `on`: centred on its top border; `top`: above it.
+    const center = (label.top + label.bottom) / 2
+    const placed = {
+      top: label.bottom <= control.top + 1,
+      in: label.top >= control.top - 1 && center < value - 4,
+      on: Math.abs(center - control.top) <= 3,
+    }[placement]
+    check(
+      `field placement ${name}: label ${expected}, clear of the value`,
+      placement === expected && placed,
+      `${placement}, label ${Math.round(label.top)}–${Math.round(label.bottom)}, control top ${Math.round(control.top)}, value line ${Math.round(value)}`,
+    )
+  }
+  await shot(page, "field-placement.png")
+}
+
 await withShowcase(async (page) => {
   await shell(page, 375)
   const search = page.getByRole("dialog", { name: "Search the workspace" })
@@ -236,6 +280,7 @@ await withShowcase(async (page) => {
 
   await checkCardHeaders(page)
   await checkMobileNav(page)
+  await checkFieldPlacement(page)
 })
 
 if (failures.length > 0) {
