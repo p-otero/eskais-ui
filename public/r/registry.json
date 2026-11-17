@@ -1171,7 +1171,7 @@
       "name": "button",
       "type": "registry:ui",
       "title": "Button",
-      "description": "UI SDK Button with variants: async pending state, a loading prop with a spinner, focusable-when-disabled, link rendering. ButtonLink is a Link with the Button look, for calls to action that navigate.",
+      "description": "UI SDK Button with variants: async pending state, a loading prop with a spinner, focusable-when-disabled, link rendering, and a tooltip with its name (and shortcut) on an icon button. ButtonLink is a Link with the Button look, for calls to action that navigate.",
       "dependencies": [
         "@ui-sdk/core@0.1.0-beta.5",
         "@ui-sdk/react@0.1.0-beta.5",
@@ -1182,7 +1182,8 @@
         "@eskais/theme",
         "@eskais/spinner",
         "@eskais/link",
-        "@eskais/shortcuts"
+        "@eskais/shortcuts",
+        "@eskais/tooltip"
       ],
       "files": [
         {
@@ -1194,7 +1195,7 @@
           "type": "registry:ui"
         }
       ],
-      "docs": "Return a Promise from `onClick` and the button stays pending until it settles: `aria-busy`, presses ignored, focus kept, a spinner, and `pendingAnnouncement` after a second. For work the button didn't start (a form submit, a mutation elsewhere), pass `loading`: it renders the same state through `disabled` + `focusableWhenDisabled`, as UI SDK documents for external pending flags. The spinner takes the leading icon's place, or sits centered over the label, so the width never changes. `size=\"icon\"` requires `aria-label`. `shortcut=\"u\"` presses the button from the keyboard while it is mounted, in the enclosing `ShortcutScope`, shows the keys after the label and sets `aria-keyshortcuts` (`shortcutHint={false}` hides them, `shortcutDescription` names it in the `ShortcutsDialog`)."
+      "docs": "Return a Promise from `onClick` and the button stays pending until it settles: `aria-busy`, presses ignored, focus kept, a spinner, and `pendingAnnouncement` after a second. For work the button didn't start (a form submit, a mutation elsewhere), pass `loading`: it renders the same state through `disabled` + `focusableWhenDisabled`, as UI SDK documents for external pending flags. The spinner takes the leading icon's place, or sits centered over the label, so the width never changes. `shortcut=\"u\"` presses the button from the keyboard while it is mounted, in the enclosing `ShortcutScope`, shows the keys after the label and sets `aria-keyshortcuts` (`shortcutHint={false}` hides them, `shortcutDescription` names it in the `ShortcutsDialog`).\n\n### Icon buttons\n\n`size=\"icon\"` requires `aria-label`, and the button shows that label in a tooltip on hover and keyboard focus (never on touch), with the `shortcut` keys after it instead of inside the square. The tooltip labels the button with the same text, so screen readers hear the name once, and agents see only the button. Tooltips group without a provider: once one is open, the next opens at once, so moving along a toolbar reads as one tooltip. `tooltip={false}` turns it off when a visible label sits beside the button; `tooltip=\"Moves it to the trash\"` describes the button with other text, and `tooltip={{ content, side, align }}` places it. A text button gets a tooltip only when you pass one. A natively `disabled` icon button can't be focused, so it gets none: `focusableWhenDisabled` keeps it. `DialogTrigger`, `DialogClose`, `DrawerTrigger`, `DrawerClose`, `PopoverTrigger`, `PopoverClose`, `DropdownMenuTrigger`, `ToastClose` and `Toggle` take the same `size=\"icon\"`, `aria-label` and `tooltip`. A Button that is already a `TooltipTrigger`'s `render` keeps that tooltip. The `eskais/icon-button-needs-label` lint rule (in `@eskais/lint-rules`) flags an icon-only Button or Toggle without `size=\"icon\"` and an `aria-label`."
     },
     {
       "name": "field",
@@ -1229,7 +1230,8 @@
       "registryDependencies": [
         "@eskais/utils",
         "@eskais/theme",
-        "@eskais/field"
+        "@eskais/field",
+        "@eskais/tooltip"
       ],
       "files": [
         {
@@ -1276,7 +1278,8 @@
       "registryDependencies": [
         "@eskais/utils",
         "@eskais/theme",
-        "@eskais/button"
+        "@eskais/button",
+        "@eskais/tooltip"
       ],
       "files": [
         {
@@ -1794,7 +1797,7 @@
       "name": "tooltip",
       "type": "registry:ui",
       "title": "Tooltip",
-      "description": "UI SDK Tooltip parts: names or describes its trigger, opens on hover and keyboard focus, Escape closes it, optional shortcut and arrow.",
+      "description": "UI SDK Tooltip parts: names or describes its trigger, opens on hover and keyboard focus, Escape closes it, optional shortcut and arrow. ControlTooltip gives an icon-only control its name in a tooltip.",
       "dependencies": [
         "@ui-sdk/core@0.1.0-beta.5",
         "@ui-sdk/react@0.1.0-beta.5"
@@ -1808,7 +1811,8 @@
           "path": "registry/ui/tooltip.tsx",
           "type": "registry:ui"
         }
-      ]
+      ],
+      "docs": "### Icon buttons\n\nYou rarely write a tooltip for an icon button: `Button`, `Toggle` and the button-like triggers with `size=\"icon\"` show their `aria-label` in one, with the shortcut keys, and close, clear, step and toolbar buttons across the registry do the same. `ControlTooltip` is the helper behind them, for a control of your own: `<ControlTooltip label=\"Next\"><MyStepButton aria-label=\"Next\" /></ControlTooltip>`. It labels the control when its text repeats the name and describes it otherwise, hides itself from agents (`agentPressable` lists it, for a trigger that isn't an agent component of its own), skips touch, a natively disabled control and one that is `aria-hidden`, and takes `tooltip={false}`, a string or `{ content, side, align }`. Write the parts yourself for anything else: a hint on a text button, a shared tooltip with a controller, or a toggleable info button."
     },
     {
       "name": "popover",
@@ -1823,7 +1827,8 @@
       "registryDependencies": [
         "@eskais/utils",
         "@eskais/theme",
-        "@eskais/button"
+        "@eskais/button",
+        "@eskais/tooltip"
       ],
       "files": [
         {
@@ -1863,7 +1868,8 @@
         "@eskais/utils",
         "@eskais/theme",
         "@eskais/button",
-        "@eskais/dialog"
+        "@eskais/dialog",
+        "@eskais/tooltip"
       ],
       "files": [
         {
@@ -1886,7 +1892,8 @@
       "registryDependencies": [
         "@eskais/utils",
         "@eskais/theme",
-        "@eskais/button"
+        "@eskais/button",
+        "@eskais/tooltip"
       ],
       "files": [
         {
@@ -1912,7 +1919,8 @@
         "@eskais/tone",
         "@eskais/theme",
         "@eskais/button",
-        "@eskais/spinner"
+        "@eskais/spinner",
+        "@eskais/tooltip"
       ],
       "files": [
         {
@@ -1989,7 +1997,8 @@
         "@eskais/theme",
         "@eskais/field",
         "@eskais/select",
-        "@eskais/input"
+        "@eskais/input",
+        "@eskais/tooltip"
       ],
       "files": [
         {
@@ -2800,7 +2809,8 @@
       "registryDependencies": [
         "@eskais/utils",
         "@eskais/theme",
-        "@eskais/button"
+        "@eskais/button",
+        "@eskais/tooltip"
       ],
       "files": [
         {
@@ -2914,7 +2924,8 @@
       ],
       "registryDependencies": [
         "@eskais/utils",
-        "@eskais/theme"
+        "@eskais/theme",
+        "@eskais/tooltip"
       ],
       "files": [
         {
@@ -2981,7 +2992,8 @@
         "@eskais/utils",
         "@eskais/theme",
         "@eskais/input",
-        "@eskais/field"
+        "@eskais/field",
+        "@eskais/tooltip"
       ],
       "files": [
         {
@@ -3089,7 +3101,8 @@
       "registryDependencies": [
         "@eskais/utils",
         "@eskais/theme",
-        "@eskais/button"
+        "@eskais/button",
+        "@eskais/tooltip"
       ],
       "files": [
         {
@@ -3115,7 +3128,8 @@
         "@eskais/button",
         "@eskais/input",
         "@eskais/calendar",
-        "@eskais/field"
+        "@eskais/field",
+        "@eskais/tooltip"
       ],
       "files": [
         {
@@ -3162,7 +3176,8 @@
       "registryDependencies": [
         "@eskais/utils",
         "@eskais/theme",
-        "@eskais/button"
+        "@eskais/button",
+        "@eskais/tooltip"
       ],
       "files": [
         {
@@ -3431,7 +3446,8 @@
         "@eskais/utils",
         "@eskais/theme",
         "@eskais/button",
-        "@eskais/input"
+        "@eskais/input",
+        "@eskais/tooltip"
       ],
       "files": [
         {
@@ -3498,7 +3514,8 @@
         "@eskais/button",
         "@eskais/dialog",
         "@eskais/toggle",
-        "@eskais/link"
+        "@eskais/link",
+        "@eskais/tooltip"
       ],
       "files": [
         {
@@ -3685,7 +3702,7 @@
       "name": "lint-rules",
       "type": "registry:file",
       "title": "Lint Rules (optional)",
-      "description": "Optional oxlint config for Eskais UI consumers: the React, React Compiler and spacing-token presets of @p-otero/oxlint-rules plus the @shadcn/lint design-system rules. Extend it from your .oxlintrc.json.",
+      "description": "Optional oxlint config for Eskais UI consumers: the React, React Compiler and spacing-token presets of @p-otero/oxlint-rules, the @shadcn/lint design-system rules and eskais/icon-button-needs-label (an icon-only Button or Toggle takes size=\"icon\" and an aria-label, so it shows a tooltip). Extend it from your .oxlintrc.json.",
       "devDependencies": [
         "oxlint@1.93.0",
         "@shadcn/lint@0.2.5",
@@ -3696,6 +3713,11 @@
           "path": "registry/rules/eskais-ui.oxlintrc.json",
           "type": "registry:file",
           "target": "~/eskais-ui.oxlintrc.json"
+        },
+        {
+          "path": "registry/rules/eskais-oxlint-plugin.js",
+          "type": "registry:file",
+          "target": "~/eskais-oxlint-plugin.js"
         }
       ]
     },
@@ -3755,7 +3777,8 @@
         "@eskais/button",
         "@eskais/input",
         "@eskais/popover",
-        "@eskais/dropdown-menu"
+        "@eskais/dropdown-menu",
+        "@eskais/tooltip"
       ],
       "files": [
         {

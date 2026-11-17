@@ -21,6 +21,11 @@ Versions follow [semver](https://semver.org). Before 1.0, a minor version can br
 - `DataState` fills the space it is given (`w-full`, and `flex-1` in a flex container) instead of shrinking to its content inside a flex row, so a list in it spans the whole box. The States demo shows a `List` of projects in a `Card`, at the same height for every status.
 - Docs site theme editor: the site's stylesheet never scanned the showcase file the editor lives in, so the brand colour area and hue track had no size (nothing to drag, so the colours never changed), the swatches had no fill and the columns had no gaps or padding. The editor now lays out in two columns only when its container has room, its contrast rows wrap, and the CSS shows in a `CodeBlock`.
 
+- Icon buttons show their name in a tooltip. `Button` and `Toggle` with `size="icon"`, and `DialogTrigger`, `DialogClose`, `DrawerTrigger`, `DrawerClose`, `PopoverTrigger`, `PopoverClose`, `DropdownMenuTrigger`, `ToastAction`, `ToastClose` and `FilterBarButton` with it, show their `aria-label` on hover and keyboard focus, with the `shortcut` keys after it (no longer inside the square button). The tooltip labels the control with the same text, so screen readers hear the name once, and it stays out of the agent snapshot. Never on touch, nor on a natively disabled or `aria-hidden` control. `tooltip={false}` turns it off; `tooltip="…"` or `{ content, side, align }` describes or places it, on any button. Tooltips group without a provider, so a toolbar shows the next one at once.
+- The registry's other icon-only controls do the same: dialog, drawer, sidebar, lightbox and toast close buttons, the carousel, pagination, calendar and number input steps, the combobox, date picker and input clear and trigger buttons, the code block copy button, the sidebar collapse toggle, the markdown editor toolbar (with its shortcuts) and the board column toggle. `ControlTooltip` (in `tooltip`) is the helper, for controls of your own.
+- `Toggle size="icon"` and the button-like triggers with `size="icon"` require `aria-label` at the type level, like `Button`.
+- Lint: `eskais/icon-button-needs-label` flags an icon-only `Button` or `Toggle` without `size="icon"` and an `aria-label`. The `lint-rules` item ships it (`eskais-oxlint-plugin.js`, loaded by `eskais-ui.oxlintrc.json`).
+
 ## 0.2.0 (2026-11-17)
 
 ### Added
