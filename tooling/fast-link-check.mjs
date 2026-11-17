@@ -1,5 +1,6 @@
 // Presses links in the showcase's Navigation section in Chrome: a fast Link and a ButtonLink navigate while the
-// mouse button is still down; a `fast={false}` Link and a touch tap wait for the click.
+// mouse button is still down; a `fast={false}` Link and a touch tap wait for the click. A hash route (`#/…`) sets
+// the hash on press, and an in-page anchor (`#navigation`) only on release.
 // Usage: node tooling/fast-link-check.mjs (after `bun run build:showcase`)
 import { withShowcase } from "./showcase-browser.mjs"
 
@@ -48,6 +49,25 @@ await withShowcase(async (page) => {
     .then(() => true)
     .catch(() => false)
   check("fast={false}: navigates on release", released, page.url())
+
+  await reset()
+  await pressAndHold(page, "hash route")
+  const routed = await page
+    .waitForURL((url) => url.hash === "#/demo/hash-route", { timeout: 3000 })
+    .then(() => true)
+    .catch(() => false)
+  check("hash route: sets location.hash on mouse down, before mouse up", routed, page.url())
+
+  await reset()
+  await pressAndHold(page, "in-page anchor")
+  await page.waitForTimeout(500)
+  check("in-page anchor: no navigation while the button is down", new URL(page.url()).hash === "", page.url())
+  await page.mouse.up()
+  const jumped = await page
+    .waitForURL((url) => url.hash === "#navigation", { timeout: 3000 })
+    .then(() => true)
+    .catch(() => false)
+  check("in-page anchor: jumps natively on release", jumped, page.url())
 
   await reset()
   await page.getByTestId("fast-links").getByRole("link", { name: "site demo" }).dispatchEvent("pointerdown", {

@@ -433,10 +433,10 @@ const itemNotes: Record<string, ItemNotes> = {
   },
   link: {
     usage:
-      "Use Link for every anchor: inline in prose, nav and muted in lists, standalone for a call to action, plain inside a styled row or card. Pass onFollow for client-side routing. Same-origin links follow on a primary mouse press, not on release; fast={false} opts a link out, data-no-fast-link on an ancestor (or <body>) a region or the app, and FastLinkRegion gives plain anchors the same behaviour.",
+      "Use Link for every anchor: inline in prose, nav and muted in lists, standalone for a call to action, plain inside a styled row or card. Pass onFollow for client-side routing. Same-origin links follow on a primary mouse press, not on release; fast={false} opts a link out, data-no-fast-link on an ancestor (or <body>) a region or the app, and FastLinkRegion gives plain anchors the same behaviour. In a hash router, #/ links follow on press too (through onFollow or location.hash) while other # links stay in-page anchors; data-fast-link-hash-prefix on an ancestor, or FastLinkRegion hashPrefix, sets another prefix.",
     a11y: [
       "Fast links are for navigation only: a press can't be cancelled by moving away (WCAG 2.5.2 Pointer Cancellation), which Back undoes for a page change but not for an action. Keep actions on buttons, and give a link that confirms or changes something fast={false}; set data-no-fast-link on <body> where 2.5.2 must hold strictly.",
-      "Keyboard, touch and pen activation, modified and middle clicks, new-tab, download, external and hash links stay native.",
+      "Keyboard, touch and pen activation, modified and middle clicks, new-tab, download and external links and in-page anchors (#section) stay native.",
       "Inline links are underlined at rest and the others on hover, so a link never relies on colour alone.",
       'newTab adds an sr-only note, overridable with newTabLabel; external adds rel="noopener noreferrer" and an icon.',
       "current sets aria-current, page by default or any other token such as location.",

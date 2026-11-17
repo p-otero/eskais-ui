@@ -7,7 +7,7 @@
     "@ui-sdk/core@0.1.0-beta.5",
     "@ui-sdk/react@0.1.0-beta.5",
     "class-variance-authority@0.7.1",
-    "lucide-react@1.73.0"
+    "lucide-react@1.68.0"
   ],
   "registryDependencies": [
     "@eskais/utils",
@@ -44,6 +44,6 @@
       "type": "registry:ui"
     }
   ],
-  "docs": "Put a `SkipLink` first in `<body>`, before the `Sidebar`, so keyboard users can jump past the navigation, and give the page content the target: `<SkipLink>Skip to content</SkipLink><Sidebar …/><PageLayout as=\"main\">…</PageLayout>` (PageLayout renders `<main id=\"main\">`). If your shell renders `<main>` itself, give it `id=\"main\"` (and `tabIndex={-1}`, so the no-JavaScript fallback moves focus too), or pass the SkipLink a `target` id or ref. To toggle it from a `Topbar`, pass one `createSidebarController()` to both: `<Topbar leading={<SidebarTrigger controller={sidebar} collapsed={collapsed} />} /><Sidebar controller={sidebar} collapsed={collapsed} onCollapsedChange={setCollapsed} trigger={false}>…</Sidebar>`. `collapsed` gives the trigger `aria-expanded` and the name of the next step; without it the trigger is named \"Toggle sidebar\". On narrow screens it renders nothing, and the Sidebar shows its own drawer button. `useSidebarState({ storageKey })` returns the controller and the state for both, remembered in localStorage: `const sidebar = useSidebarState({ storageKey: \"app-sidebar\" })`, then `<SidebarTrigger {...sidebar.triggerProps} />` and `<Sidebar {...sidebar.sidebarProps} trigger={false}>`. Give a sidebar whose items have no icons `collapse=\"hide\"`: collapsed, it slides away instead of leaving an empty rail.",
+  "docs": "Put a `SkipLink` first in `<body>`, before the `Sidebar`, so keyboard users can jump past the navigation, and give the page content the target: `<SkipLink>Skip to content</SkipLink><Sidebar …/><PageLayout as=\"main\">…</PageLayout>` (PageLayout renders `<main id=\"main\">`). If your shell renders `<main>` itself, give it `id=\"main\"` (and `tabIndex={-1}`, so the no-JavaScript fallback moves focus too), or pass the SkipLink a `target` id or ref. To toggle it from a `Topbar`, pass one `createSidebarController()` to both: `<Topbar leading={<SidebarTrigger controller={sidebar} collapsed={collapsed} />} /><Sidebar controller={sidebar} collapsed={collapsed} onCollapsedChange={setCollapsed} trigger={false}>…</Sidebar>`. `collapsed` gives the trigger `aria-expanded` and the name of the next step; without it the trigger is named \"Toggle sidebar\". On narrow screens it opens the Sidebar's drawer (named \"Open navigation\", `labels.open`), and a Sidebar with `trigger={false}` renders no drawer button of its own (`narrowTrigger` overrides that); give both the same `narrowQuery`. `useSidebarState({ storageKey })` returns the controller and the state for both, remembered in localStorage: `const sidebar = useSidebarState({ storageKey: \"app-sidebar\" })`, then `<SidebarTrigger {...sidebar.triggerProps} />` and `<Sidebar {...sidebar.sidebarProps} trigger={false}>`. Give a sidebar whose items have no icons `collapse=\"hide\"`: collapsed, it slides away instead of leaving an empty rail.",
   "type": "registry:ui"
 }

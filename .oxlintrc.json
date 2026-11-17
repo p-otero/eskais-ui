@@ -150,6 +150,12 @@
       }
     },
     {
+      "files": ["apps/**"],
+      "rules": {
+        "eskais/no-inline-icons": "error"
+      }
+    },
+    {
       "files": ["apps/showcase/**"],
       "rules": {
         "shadcn/no-restyle": [

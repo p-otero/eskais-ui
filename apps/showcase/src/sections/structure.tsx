@@ -1,5 +1,6 @@
 import { useState } from "react"
 
+import { ChevronDownIcon, ChevronUpIcon } from "lucide-react"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -51,16 +52,11 @@ function SortableHead({
         onClick={() => onSort({ key: column, direction: next })}
       >
         {label}
-        <svg
-          aria-hidden="true"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          className={active ? "" : "opacity-40"}
-        >
-          <path d={active && sort.direction === "descending" ? "m6 9 6 6 6-6" : "m18 15-6-6-6 6"} />
-        </svg>
+        {active && sort.direction === "descending" ? (
+          <ChevronDownIcon />
+        ) : (
+          <ChevronUpIcon className={active ? undefined : "opacity-40"} />
+        )}
       </Button>
     </TableHead>
   )

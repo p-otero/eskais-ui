@@ -1,172 +1,159 @@
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { ThemedImage } from "@/components/ui/themed-image"
 
 import { A, Article, Code, DocTable, DocTitle, H2, H3, Ol, P, Pre, Ul } from "../docs/prose"
-import htmlDark from "./mockups/html-dark.webp"
-import htmlLight from "./mockups/html-light.webp"
-import tsxDark from "./mockups/tsx-dark.webp"
-import tsxLight from "./mockups/tsx-light.webp"
-
-const commands = `# from your project, with a checkout of eskais-ui next to it
-bun ../eskais-ui/packages/mockup/src/cli.ts inspect
-bun ../eskais-ui/packages/mockup/src/cli.ts inspect Button Dialog Table
-bun ../eskais-ui/packages/mockup/src/cli.ts validate api-keys
-bun ../eskais-ui/packages/mockup/src/cli.ts build api-keys --scheme dark --out api-keys-dark.html
-bun ../eskais-ui/packages/mockup/src/cli.ts clean api-keys`
-
-const layout = `.mockups/
-  .gitignore        # "*", written by build: mockups stay out of the repository
-  wrapper.tsx       # optional, shared: ({ children }) => providers
-  api-keys/
-    screen.tsx      # default-exports the screen; data comes in as props
-    fixtures.ts     # the types and a sample of the data
-    manifest.json   # written by build: hashes, bundled components, size
-    out.html        # written by build: one offline file`
-
-const screen = `import { Button } from "@/components/ui/button"
-import { PageHeader } from "@/components/ui/page-header"
-
-import { sampleKeys, type ApiKey } from "./fixtures"
-
-export default function ApiKeys({ keys = sampleKeys }: { keys?: ApiKey[] }) {
-  return (
-    <main className="flex flex-col gap-section p-inset-surface font-sans">
-      <PageHeader title="API keys" eyebrow="Workspace" actions={<Button>Create key</Button>} />
-      {/* tabs, table, dialogs… */}
-    </main>
-  )
-}`
-
-const validateOutput = `.mockups/api-keys/screen.tsx:42:9 bare-control a bare <select> is invisible to agents and unstyled; use the project's own control part
-.mockups/api-keys/screen.tsx:57:14 type TS2322: Type '{ children: string; tone: string; }' is not assignable to type 'IntrinsicAttributes & ButtonProps'.`
-
-type Row = { metric: string; html: string; tsx: string; change: string }
-
-const results: Row[] = [
-  { metric: "Model calls", html: "93", tsx: "63", change: "−32%" },
-  { metric: "Output tokens", html: "143k", tsx: "56.5k", change: "−60%" },
-  { metric: "of which reasoning", html: "96.9k", tsx: "38.3k", change: "−60%" },
-  { metric: "Uncached input tokens", html: "239k", tsx: "152k", change: "−36%" },
-  { metric: "Cache read tokens", html: "13.9M", tsx: "5.84M", change: "−58%" },
-  { metric: "Cost (API-equivalent)", html: "$0.163", tsx: "$0.074", change: "−55%" },
-  { metric: "Wall time (approx.)", html: "~28 min", tsx: "~12 min", change: "−57%" },
-  {
-    metric: "Agent deliverable",
-    html: "89.6 KB, 2,720 lines of HTML",
-    tsx: "21 KB screen.tsx + 1.5 KB fixtures.ts",
-    change: "",
-  },
-  { metric: "Built page", html: "90 KB", tsx: "887 KB (components and fonts inlined)", change: "" },
-]
-
-const shots = [
-  {
-    title: "A: hand-written HTML",
-    light: htmlLight,
-    dark: htmlDark,
-    width: 1200,
-    height: 640,
-    alt: "The API keys screen written as one HTML file: an app bar, a page header with Create key, Active and Revoked tabs, and a table of four keys with scope badges and row menus.",
-  },
-  {
-    title: "B: TSX with @eskais/mockup",
-    light: tsxLight,
-    dark: tsxDark,
-    width: 1200,
-    height: 458,
-    alt: "The same API keys screen built from the project's own components: a page header with Create key, Active and Revoked tabs, and a card with a table of four keys, scope badges and row menus.",
-  },
-]
-
-function ResultsTable() {
-  return (
-    <Table aria-label="Benchmark results: hand-written HTML against @eskais/mockup TSX" className="text-body-sm">
-      <TableHeader>
-        <TableRow>
-          <TableHead scope="col">Measure</TableHead>
-          <TableHead scope="col">A: hand-written HTML</TableHead>
-          <TableHead scope="col">B: @eskais/mockup TSX</TableHead>
-          <TableHead scope="col">B vs A</TableHead>
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {results.map((row) => (
-          <TableRow key={row.metric}>
-            <TableHead scope="row" className="font-medium text-foreground">
-              {row.metric}
-            </TableHead>
-            <TableCell className="tabular-nums">{row.html}</TableCell>
-            <TableCell className="tabular-nums">{row.tsx}</TableCell>
-            <TableCell className="tabular-nums">{row.change}</TableCell>
-          </TableRow>
-        ))}
-      </TableBody>
-    </Table>
-  )
-}
-
-function Screenshots() {
-  return (
-    <div className="grid grid-cols-2 gap-group narrow:grid-cols-1">
-      {shots.map((shot) => (
-        <figure key={shot.title} className="flex min-w-0 flex-col gap-items">
-          <ThemedImage
-            src={shot.light}
-            srcDark={shot.dark}
-            alt={shot.alt}
-            width={shot.width}
-            height={shot.height}
-            loading="lazy"
-            className="h-auto w-full rounded-surface border bg-card"
-          />
-          <figcaption className="text-caption text-muted-foreground">{shot.title}</figcaption>
-        </figure>
-      ))}
-    </div>
-  )
-}
+import {
+  agentPrompt,
+  checkoutCommands,
+  helloOutput,
+  helloScreen,
+  inspectRegistry,
+  inspectSdk,
+  layout,
+  levelFive,
+  levelFour,
+  levelOne,
+  levelThree,
+  levelTwo,
+  linkCommands,
+  quickstart,
+  screen,
+  validateOk,
+  validateProblems,
+} from "./mockups/snippets"
+import { ResultsTable, Screenshots } from "./mockups/benchmark"
 
 export default function Mockups() {
   return (
     <Article>
       <DocTitle
-        eyebrow="Getting started"
+        eyebrow="Tools"
         title="Mockups"
         description="Sketch a screen as TSX with your project's own components and fixture data, then build it into one offline HTML file and check it."
       />
 
-      <H2 id="what">What it is</H2>
+      <H2 id="quickstart">Quickstart</H2>
       <P>
-        <Code>@eskais/mockup</Code> is a command-line tool for proposals. An agent or a person writes one screen as a
-        React component that uses the project's real Eskais UI components, with sample data in a fixtures file. The CLI
-        bundles it with the project's own Tailwind stylesheet, React and aliases into a single HTML file that opens from
-        disk with no network, and <Code>validate</Code> reports what to fix.
+        From an empty folder to a validated <Code>out.html</Code>: five commands and one file. You need Node with npx,
+        git, and <A href="https://bun.sh">Bun</A> 1.4 or newer.
       </P>
-      <Ul>
-        <li>Use it to show a screen before building it: a design review, a "what would this look like", a variant.</li>
+      <Pre code={quickstart} language="bash" />
+      <Ol>
         <li>
-          It is a proposal, not a feature: no routes, no data fetching, no tests. The <Code>screen.tsx</Code> is the
-          deliverable; <Code>out.html</Code> is a build artifact.
+          Clone the eskais-ui repository next to your project: the CLI runs from its source (see{" "}
+          <A to="/docs/mockups#install">Install</A>).
+        </li>
+        <li>Create a Vite app with Tailwind and a components.json, without prompts.</li>
+        <li>
+          Add the <Code>@eskais</Code> registry to <Code>components.json</Code>.
         </li>
         <li>
-          It works in any project with a <Code>components.json</Code>, a Tailwind stylesheet and a{" "}
-          <Code>tsconfig.json</Code>, not only this registry.
+          Install the theme and two components. <Code>--overwrite</Code> replaces the <Code>button.tsx</Code> and{" "}
+          <Code>utils.ts</Code> that <Code>shadcn init</Code> wrote, and <Code>-y</Code> accepts the new theme.
         </li>
-      </Ul>
+        <li>
+          Write the screen, put <Code>@layer ui-sdk;</Code> on the first line of <Code>src/index.css</Code> (see{" "}
+          <A to="/docs/installation#stylesheet">Installation</A>), and validate.
+        </li>
+      </Ol>
+      <Pre code={helloScreen} title=".mockups/hello/screen.tsx" />
+      <P>
+        <Code>validate</Code> builds the page and prints where it wrote it; open that file in a browser. In an existing
+        project with a <Code>components.json</Code>, skip straight to the last step.
+      </P>
+      <Pre code={helloOutput} language="plaintext" />
+
+      <H2 id="agents">For agents</H2>
+      <P>
+        An agent follows the same loop with the <Code>eskais-mockup</Code> skill. Install it into the project (see{" "}
+        <A to="/docs/agent-skills">Agent skills</A> for pointing your agent at it):
+      </P>
+      <Pre code="npx shadcn@latest add @eskais/eskais-mockup-skill" language="bash" />
+      <P>Then ask for a screen in plain words:</P>
+      <Pre code={agentPrompt} language="plaintext" title="Prompt" />
+      <Ol>
+        <li>
+          The agent runs <Code>inspect</Code> to learn the project's components instead of reading their sources, and{" "}
+          <Code>inspect --registry</Code> or <Code>--sdk</Code> when a part is missing.
+        </li>
+        <li>
+          It writes <Code>screen.tsx</Code>, <Code>fixtures.ts</Code> and, when needed, <Code>parts/</Code> and{" "}
+          <Code>gaps.ts</Code>, walking the <A to="/docs/mockups#levels">five levels</A> in order.
+        </li>
+        <li>
+          It runs <Code>validate</Code> until it prints <Code>ok</Code>, fixing each <Code>file:line:col</Code> line.
+        </li>
+        <li>
+          It opens <Code>out.html</Code> in the host's preview (it never reads the file) and reports the summary: what
+          to install, the parts it proposes, the UI SDK parts it used and why, and the gaps.
+        </li>
+      </Ol>
+      <P>
+        The skill needs the CLI too: tell the agent where your checkout is, or let it clone one. Every rule it follows
+        is on this page.
+      </P>
 
       <H2 id="install">Install</H2>
       <P>
-        The CLI runs with Bun 1.4 or newer and isn't published to npm yet: run <Code>src/cli.ts</Code> from a checkout
-        of the <A href="https://github.com/p-otero/eskais-ui">eskais-ui repository</A>. It reads the project's{" "}
-        <Code>components.json</Code>, its stylesheet and its tsconfig aliases from the current folder or the nearest one
-        above it, and builds with the project's own Tailwind and React.
+        <Code>@eskais/mockup</Code> isn't published to npm: it runs from a checkout of the{" "}
+        <A href="https://github.com/p-otero/eskais-ui">eskais-ui repository</A> with Bun 1.4 or newer, and needs no{" "}
+        <Code>bun install</Code> there. It reads your project's <Code>components.json</Code>, its stylesheet and its
+        tsconfig aliases from the current folder or the nearest one above it, and builds with the project's own Tailwind
+        and React, so the project can use npm, pnpm or Bun.
       </P>
+      <H3 id="install-path">Run it by path</H3>
+      <Pre code={checkoutCommands} language="bash" />
+      <H3 id="install-link">Or link it with Bun</H3>
+      <Pre code={linkCommands} language="bash" />
       <P>
-        For an agent, copy <Code>packages/mockup/skills/eskais-mockup</Code> into its skills folder. The skill holds the
-        loop below and the rules a mockup follows.
+        <Code>bun link @eskais/mockup</Code> leaves <Code>package.json</Code> alone, but the next{" "}
+        <Code>npm install</Code> or <Code>pnpm install</Code> removes the link; run it again then.{" "}
+        <Code>bun unlink</Code> in the checkout unregisters it.
       </P>
-      <Pre code={commands} language="bash" />
+
+      <H2 id="levels">The five levels</H2>
+      <P>
+        Each part of a screen comes from the first level that can express it, and no level is skipped. The levels keep a
+        mockup honest: it shows what the project can build today, and records what it can't.
+      </P>
+      <H3 id="level-1">1. The project's components</H3>
+      <P>
+        Whatever the project has, its own or installed from a registry, through its aliases. <Code>inspect</Code> lists
+        them and <Code>inspect Button Card</Code> prints each one's import line, props and variants.
+      </P>
+      <Pre code={levelOne} />
+      <H3 id="level-2">2. Registry items the project hasn't installed</H3>
+      <P>
+        Import an Eskais item as <Code>@registry/&lt;name&gt;</Code>. <Code>build</Code> fetches it and its{" "}
+        <Code>registryDependencies</Code> from the registry URL in <Code>components.json</Code> into{" "}
+        <Code>.mockups/.registry/&lt;ref&gt;/</Code> (the commit pinned in the URL, or a hash of the URL), compiles them
+        into the page and records the install command in <Code>manifest.install</Code>. Only <Code>inspect</Code> and{" "}
+        <Code>build</Code> use the network; the page stays offline.
+      </P>
+      <Pre code={levelTwo} />
+      <Pre code={inspectRegistry} language="plaintext" title="inspect --registry" />
+      <H3 id="level-3">3. A composition in parts/</H3>
+      <P>
+        A component the screen proposes, built from levels 1 and 2 in <Code>.mockups/&lt;name&gt;/parts/</Code>. Each
+        one with a <Code>&lt;Name&gt;Props</Code> type is recorded in <Code>manifest.proposed</Code> with its props.
+      </P>
+      <Pre code={levelThree} />
+      <H3 id="level-4">4. UI SDK primitives, with a reason</H3>
+      <P>
+        Only for behaviour Eskais has no part for. Import from a public <Code>@ui-sdk/react/&lt;subpath&gt;</Code>,
+        style it only with the project's tokens, <Code>cn</Code>/<Code>cva</Code> and visual parts, and say why on a{" "}
+        <Code>{"// sdk-reason:"}</Code> line. It's recorded in <Code>manifest.sdkParts</Code>; a part without the line
+        fails <Code>validate</Code>, and a primitive that duplicates an installed part (a dialog, a select) is a
+        warning.
+      </P>
+      <Pre code={levelFour} />
+      <Pre code={inspectSdk} language="plaintext" title="inspect --sdk" />
+      <H3 id="level-5">5. A recorded gap, never a raw control</H3>
+      <P>
+        No bare <Code>&lt;button&gt;</Code>, <Code>&lt;input&gt;</Code>, <Code>&lt;select&gt;</Code> or{" "}
+        <Code>&lt;textarea&gt;</Code>. When no level reaches the design, leave that part out and record it in{" "}
+        <Code>gaps.ts</Code>, so a review sees what the screen would cost.
+      </P>
+      <Pre code={levelFive} language="ts" />
 
       <H2 id="commands">Commands</H2>
       <DocTable
@@ -181,10 +168,21 @@ export default function Mockups() {
             <Code key="c">inspect Names…</Code>,
             "Prints each component's import line, its *Props type and its cva variants, about 200 tokens each: a cheaper read than the source.",
           ],
-          [<Code key="c">build name</Code>, "Bundles .mockups/name/screen.tsx into out.html and writes manifest.json."],
+          [
+            <Code key="c">inspect --registry</Code>,
+            "Lists the items of each registry in components.json that the project hasn't installed, with one-line descriptions, and caches the registry index under .mockups/.registry.",
+          ],
+          [
+            <Code key="c">inspect --sdk [name…]</Code>,
+            "Without a name, lists the public @ui-sdk/react subpaths the project installs and their parts. With names, prints each primitive's import line and parts.",
+          ],
+          [
+            <Code key="c">build name</Code>,
+            "Bundles .mockups/name/screen.tsx into out.html, fetching @registry/ items first, and writes manifest.json.",
+          ],
           [
             <Code key="c">validate name</Code>,
-            "Builds the page, then checks the page and the sources and prints every problem.",
+            "Builds the page, checks the page and the sources, prints every problem and then the install, proposed, sdkParts and gaps summary.",
           ],
           [<Code key="c">clean [name]</Code>, "Removes one mockup, or the whole .mockups folder without a name."],
         ]}
@@ -193,6 +191,8 @@ export default function Mockups() {
         label="Flags"
         head={["Flag", "Commands", "Effect"]}
         rows={[
+          [<Code key="f">--registry</Code>, "inspect", "Lists the registry items the project hasn't installed."],
+          [<Code key="f">--sdk</Code>, "inspect", "Lists the installed UI SDK subpaths, or details the named ones."],
           [<Code key="f">--json</Code>, "inspect", "Prints JSON instead of text."],
           [<Code key="f">--project dir</Code>, "all", "The project folder, when it isn't the current one."],
           [<Code key="f">--css file</Code>, "all", "The stylesheet, when components.json doesn't name one."],
@@ -208,7 +208,8 @@ export default function Mockups() {
       />
       <P>
         Exit codes: <Code>0</Code> fine, <Code>1</Code> problems to fix, <Code>2</Code> an environment or usage error,
-        such as no <Code>components.json</Code> or an unknown flag.
+        such as no <Code>components.json</Code>, an unknown flag, an unreachable registry, or a fetched item whose npm
+        packages the project doesn't declare.
       </P>
 
       <H2 id="files">The files</H2>
@@ -223,15 +224,16 @@ export default function Mockups() {
           through an alias.
         </li>
         <li>
-          <Code>wrapper.tsx</Code> is optional and shared by every mockup: add it when a screen needs a provider the app
-          entry installs.
+          <Code>parts/</Code> and <Code>gaps.ts</Code> are levels 3 to 5. <Code>wrapper.tsx</Code> is optional and
+          shared by every mockup: add it when a screen needs a provider the app entry installs.
         </li>
         <li>
           <Code>manifest.json</Code> records the date, theme and scheme, hashes of the screen and fixtures, the project
-          components the page bundled and its size.
+          components the page bundled, <Code>install</Code>, <Code>proposed</Code>, <Code>sdkParts</Code>,{" "}
+          <Code>gaps</Code> and the size.
         </li>
       </Ul>
-      <Pre code={screen} title=".mockups/api-keys/screen.tsx" />
+      <Pre code={screen} title=".mockups/team/screen.tsx" />
 
       <H2 id="validate">What validate checks</H2>
       <Ol>
@@ -249,12 +251,19 @@ export default function Mockups() {
           <Code>bare-control</Code>).
         </li>
         <li>
-          <strong>The project's imports:</strong> an alias, a relative path or a package the project declares (
-          <Code>import-specifier</Code>).
+          <strong>The project's imports:</strong> an alias, a relative path, <Code>@registry/</Code> or a package the
+          project declares (<Code>import-specifier</Code>); UI SDK only from its public subpaths (
+          <Code>sdk-subpath</Code>).
         </li>
         <li>
-          <strong>Types:</strong> <Code>bun check</Code> on the screen with the project's tsconfig, so a prop a
-          component doesn't take fails (<Code>type</Code>).
+          <strong>Parts:</strong> theme tokens and the Tailwind scale in <Code>parts/</Code>, no raw colours or
+          arbitrary sizes (<Code>shadcn/no-raw-colors</Code>, <Code>shadcn/no-arbitrary-values</Code>), and a{" "}
+          <Code>{"// sdk-reason:"}</Code> line in a part that uses a UI SDK primitive (<Code>sdk-reason</Code>).
+        </li>
+        <li>
+          <strong>Types:</strong> <Code>bun check</Code> on the mockup with the project's tsconfig, so a prop a
+          component doesn't take fails (<Code>type</Code>). When the root <Code>tsconfig.json</Code> only lists{" "}
+          <Code>references</Code>, as Vite's template does, it uses the referenced config that sets <Code>jsx</Code>.
         </li>
         <li>
           <strong>A server render:</strong> the screen, inside the wrapper, renders without throwing (
@@ -263,10 +272,16 @@ export default function Mockups() {
       </Ol>
       <P>
         Each problem is one line, <Code>file:line:col rule message</Code>, so an agent can fix it without opening the
-        page. Never read <Code>out.html</Code> itself: it is about a megabyte of inlined JavaScript and CSS. Open it in
-        a browser or the host's preview.
+        page. After the problems, four lines summarize what the screen needs: the items to install, the parts it
+        proposes, the UI SDK primitives it used and the gaps. Both runs below are real, on the Team screen above in the
+        quickstart's app:
       </P>
-      <Pre code={validateOutput} language="plaintext" />
+      <Pre code={validateOk} language="plaintext" title="A screen that passes" />
+      <Pre code={validateProblems} language="plaintext" title="A copy with four problems" />
+      <P>
+        Never read <Code>out.html</Code> itself: it is hundreds of kilobytes of inlined JavaScript and CSS. Open it in a
+        browser or the host's preview.
+      </P>
 
       <H2 id="why">Why mockups in TSX</H2>
       <P>

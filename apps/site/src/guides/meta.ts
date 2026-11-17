@@ -4,6 +4,8 @@ type GuideMeta = {
   description: string
   /** Registry items this guide documents instead of a component page. */
   covers?: string[]
+  /** The docs sidebar group; "Getting started" when unset. */
+  group?: "Tools"
 }
 
 const guides: GuideMeta[] = [
@@ -52,12 +54,6 @@ const guides: GuideMeta[] = [
       "Every control is a UI SDK part an agent can read and operate, with a person approving what can't be undone.",
   },
   {
-    slug: "mockups",
-    title: "Mockups",
-    description:
-      "Sketch a screen in TSX with your own components and fixtures, then build one offline HTML file and validate it.",
-  },
-  {
     slug: "accessibility",
     title: "Accessibility",
     description:
@@ -68,6 +64,21 @@ const guides: GuideMeta[] = [
     title: "Internationalization",
     description:
       "No default copy in a specific language: labels, form messages, dates and numbers in the reader's locale.",
+  },
+  {
+    slug: "agent-skills",
+    title: "Agent skills",
+    description:
+      "Install the eskais-ui, eskais-mockup and eskais-perf skills with shadcn into .agents/skills, and point your coding agent at them.",
+    covers: ["eskais-ui-skill", "eskais-mockup-skill", "eskais-perf-skill"],
+    group: "Tools",
+  },
+  {
+    slug: "mockups",
+    title: "Mockups",
+    description:
+      "Sketch a screen in TSX with your own components and fixtures, then build one offline HTML file and validate it.",
+    group: "Tools",
   },
 ]
 

@@ -20,6 +20,7 @@ import {
   FieldError,
   FieldLabel,
   floatingLabelControls,
+  padsItself,
   formControlAdapters,
   type FieldLabelPlacement,
   type FormControlAdapter,
@@ -181,8 +182,10 @@ function FormField<Values extends FieldValues = FieldValues>({
     })
   }
 
-  // A form's default reaches only controls that can hold a floating label; a checkbox or switch never floats.
-  const placement = checkedLayout ? "top" : (labelPlacement ?? (floats ? context.labelPlacement : undefined) ?? "top")
+  // A form's default reaches only controls that can hold a floating label (a checkbox or switch never floats), in a
+  // field without padding of its own, which would move the control away from the label.
+  const inherited = floats && !padsItself(className) ? context.labelPlacement : undefined
+  const placement = checkedLayout ? "top" : (labelPlacement ?? inherited ?? "top")
   const fieldLabel =
     label === undefined ? null : (
       <FieldLabel>

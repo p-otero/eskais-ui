@@ -59,19 +59,23 @@ function ValuesSection() {
         <StatGroup aria-label="Summary">
           <Stat>
             <StatLabel>Done</StatLabel>
-            <StatValue value={12} />
+            <StatValue locale="en-US" value={12} />
             <StatHint>of 20</StatHint>
             <StatDelta value={0.2} comparison="vs. last week" locale="en-US" />
           </Stat>
           <Stat>
             <StatLabel>Cost</StatLabel>
-            <StatValue value={{ value: 4.2, quality: "estimated", source: "price table" }} format={usd} />
+            <StatValue
+              locale="en-US"
+              value={{ value: 4.2, quality: "estimated", source: "price table" }}
+              format={usd}
+            />
             <StatHint>Estimated from tokens</StatHint>
             <StatDelta value={-0.08} invert comparison="vs. last week" locale="en-US" />
           </Stat>
           <Stat>
             <StatLabel>Duration</StatLabel>
-            <StatValue value={{ value: null, quality: "unknown" }} />
+            <StatValue locale="en-US" value={{ value: null, quality: "unknown" }} />
             <StatHint>Not reported</StatHint>
           </Stat>
           <Stat>

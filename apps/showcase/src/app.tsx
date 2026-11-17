@@ -8,6 +8,7 @@ import {
 } from "@ui-sdk/react/alert-dialog"
 import { useRef, useState } from "react"
 
+import { DownloadIcon, RefreshCwIcon } from "lucide-react"
 import { Appearance } from "@/components/ui/appearance"
 import { Badge } from "@/components/ui/badge"
 import { Button, buttonVariants } from "@/components/ui/button"
@@ -102,18 +103,14 @@ function LoadingButtons() {
         Simulate loading
       </Button>
       <Button loading={loading}>
-        <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-          <path d="M12 3v12m0 0-4-4m4 4 4-4M5 21h14" />
-        </svg>
+        <DownloadIcon />
         Export
       </Button>
       <Button variant="secondary" loading={loading}>
         Publish
       </Button>
       <Button variant="ghost" size="icon" aria-label="Refresh" loading={loading}>
-        <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-          <path d="M20 11a8 8 0 1 0-2.3 5.7M20 4v7h-7" />
-        </svg>
+        <RefreshCwIcon />
       </Button>
     </>
   )

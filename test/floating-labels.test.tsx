@@ -1,13 +1,21 @@
 import { render, screen, waitFor } from "@testing-library/react"
 import { createAgent } from "@ui-sdk/react/agent"
 import { readFileSync } from "node:fs"
+import type { ReactNode } from "react"
 import { expect, test, vi } from "vitest"
 import { z } from "zod"
 
 import { Checkbox, CheckboxIndicator } from "@/components/ui/checkbox"
 import { Combobox, ComboboxControl, ComboboxInput } from "@/components/ui/combobox"
 import { DatePicker } from "@/components/ui/date-picker"
-import { Field, FieldError, FieldLabel, type FieldLabelPlacement } from "@/components/ui/field"
+import {
+  Field,
+  FieldDescription,
+  FieldError,
+  FieldLabel,
+  padsItself,
+  type FieldLabelPlacement,
+} from "@/components/ui/field"
 import { Form, FormField } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import { NativeSelect } from "@/components/ui/native-select"
@@ -218,4 +226,92 @@ test("outside a Form a plain Field stays on top", () => {
     </Field>,
   )
   expect(placementOf("Summary")).toBe("top")
+})
+
+function OnForm({ children }: { children: ReactNode }) {
+  return (
+    <Form
+      label="Ticket"
+      labelPlacement="on"
+      schema={schema}
+      defaultValues={{ email: "", team: "web", notes: "", terms: false }}
+      onSubmit={() => undefined}
+    >
+      {children}
+    </Form>
+  )
+}
+
+test("a Field laid out as its own box keeps the label on top instead of drawing it over the value", () => {
+  render(
+    <OnForm>
+      <Field className="border p-3">
+        <FieldLabel>Team</FieldLabel>
+        <Select options={teams} defaultValue="web" />
+        <p>Who owns it.</p>
+      </Field>
+    </OnForm>,
+  )
+  expect(placementOf("Team")).toBe("top")
+})
+
+test("only the floating layout inherits the Form's placement: label, control, then a description or error", () => {
+  render(
+    <OnForm>
+      <Field>
+        <FieldLabel>Floats</FieldLabel>
+        <Select options={teams} />
+        <FieldDescription>Who owns it.</FieldDescription>
+        <FieldError match>Pick a team.</FieldError>
+      </Field>
+      <Field className="p-3">
+        <FieldLabel>Padded</FieldLabel>
+        <Select options={teams} />
+      </Field>
+      <Field>
+        <FieldLabel>Text after</FieldLabel>
+        <Select options={teams} />
+        <p>Who owns it.</p>
+      </Field>
+      <Field>
+        <Select options={teams} aria-label="Label after" />
+        <FieldLabel>Label after</FieldLabel>
+      </Field>
+      <Field>
+        <FieldLabel>Wrapped</FieldLabel>
+        <div>
+          <Select options={teams} />
+        </div>
+      </Field>
+      <Field className="p-3" labelPlacement="on">
+        <FieldLabel>Own choice</FieldLabel>
+        <Select options={teams} />
+      </Field>
+    </OnForm>,
+  )
+  expect(placementOf("Floats")).toBe("on")
+  for (const name of ["Padded", "Text after", "Label after", "Wrapped"]) expect(placementOf(name), name).toBe("top")
+  expect(placementOf("Own choice")).toBe("on")
+})
+
+test("a padded FormField keeps its label on top unless it sets a placement", () => {
+  render(
+    <OnForm>
+      <FormField name="email" label="Email" className="px-control-x py-inset-item">
+        <Input />
+      </FormField>
+      <FormField name="notes" label="Notes" className="p-3" labelPlacement="on">
+        <Textarea />
+      </FormField>
+    </OnForm>,
+  )
+  expect(placementOf("Email")).toBe("top")
+  expect(placementOf("Notes")).toBe("on")
+})
+
+test("padsItself reads padding utilities in any variant, not other classes", () => {
+  for (const className of ["border p-3", "md:px-control-x", "!pt-2", "hover:ps-(--x)", "py-[3px]"])
+    expect(padsItself(className), className).toBe(true)
+  for (const className of ["p-0 border", "pointer-events-none", "place-items-center", "rounded-surface", undefined])
+    expect(padsItself(className), String(className)).toBe(false)
 })

@@ -12,7 +12,10 @@ const dependenciesOf = (item: { dependencies?: string[] }) => item.dependencies 
 test("every item whose files import lucide-react depends on it at an exact version", () => {
   const missing = registry.items
     .filter((item) =>
-      (item.files ?? []).some((file) => readFileSync(join(root, file.path), "utf8").includes('from "lucide-react"')),
+      (item.files ?? []).some(
+        (file) =>
+          /\.[jt]sx?$/.test(file.path) && readFileSync(join(root, file.path), "utf8").includes('from "lucide-react"'),
+      ),
     )
     .filter((item) => !dependenciesOf(item).some((dependency) => lucide.test(dependency)))
     .map((item) => item.name)

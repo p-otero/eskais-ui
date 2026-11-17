@@ -151,8 +151,18 @@ createRoot(root).render(
       </Ol>
       <H3 id="ai">Using an AI coding agent?</H3>
       <P>
-        Install the <Code>eskais-ui</Code> and <Code>ui-sdk</Code> skills: they teach your agent the conventions on this
-        site, from spacing roles to the agent test every interface gets.
+        Install the skills with shadcn: they teach your agent the conventions on this site, from spacing roles to the
+        agent test every interface gets, and land in <Code>.agents/skills</Code>. See{" "}
+        <A to="/docs/agent-skills">Agent skills</A> for what each one covers and how to point Claude Code, Codex or
+        Cursor at them.
+      </P>
+      <Pre
+        code="npx shadcn@latest add @eskais/eskais-ui-skill @eskais/eskais-perf-skill @eskais/eskais-mockup-skill"
+        language="bash"
+      />
+      <P>
+        To show a screen before building it, sketch it with <A to="/docs/mockups">Mockups</A>: one offline HTML file
+        from your own components, checked by a CLI.
       </P>
     </Article>
   )

@@ -3,7 +3,7 @@ import { tmpdir } from "node:os"
 import { join } from "node:path"
 import { afterAll, describe, expect, test } from "vitest"
 
-import { EnvironmentError, findProject, parseJsonc, readTsconfigPaths } from "../src/project"
+import { checkTsconfig, EnvironmentError, findProject, parseJsonc, readTsconfigPaths } from "../src/project"
 
 const repo = process.cwd()
 const consumer = join(repo, "apps", "showcase")
@@ -99,5 +99,31 @@ describe("readTsconfigPaths", () => {
     const paths = readTsconfigPaths(join(root, "tsconfig.json"))
     expect(paths.base).toBe(root)
     expect(paths.entries).toContainEqual({ pattern: "@/components/ui/*", target: "./src/ui/*" })
+  })
+})
+
+describe("checkTsconfig", () => {
+  test("keeps a tsconfig that has its own compiler options", () => {
+    const root = createProject(null)
+    expect(checkTsconfig(join(root, "tsconfig.json"))).toBe(join(root, "tsconfig.json"))
+  })
+
+  test("follows references to the config that sets jsx, as in Vite's template", () => {
+    const root = createProject(null)
+    writeFileSync(
+      join(root, "tsconfig.json"),
+      JSON.stringify({
+        files: [],
+        references: [{ path: "./tsconfig.node.json" }, { path: "./tsconfig.app.json" }],
+        compilerOptions: { paths: { "@/*": ["./src/*"] } },
+      }),
+    )
+    writeFileSync(join(root, "tsconfig.node.json"), JSON.stringify({ compilerOptions: { module: "esnext" } }))
+    writeFileSync(join(root, "tsconfig.base.json"), JSON.stringify({ compilerOptions: { jsx: "react-jsx" } }))
+    writeFileSync(
+      join(root, "tsconfig.app.json"),
+      JSON.stringify({ extends: "./tsconfig.base.json", include: ["src"] }),
+    )
+    expect(checkTsconfig(join(root, "tsconfig.json"))).toBe(join(root, "tsconfig.app.json"))
   })
 })

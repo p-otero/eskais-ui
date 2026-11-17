@@ -180,7 +180,7 @@ Derived colours use CSS relative colour syntax: Chrome 119, Firefox 128, Safari 
 Notes while UI SDK is in beta:
 
 - `shadcn add` writes `^0.1.0-beta.5` for `@ui-sdk/*`. Change it to the exact version, since later betas can break.
-- pnpm 11+ refuses packages younger than `minimumReleaseAge`. Add `@ui-sdk/*` to `minimumReleaseAgeExclude` in `pnpm-workspace.yaml`.
+- pnpm 11+ refuses packages younger than `minimumReleaseAge`. Every other dependency the registry pins is at least 7 days old, but UI SDK's first release is from 2026-11-12: until its pinned beta is old enough, add `@ui-sdk/*` to `minimumReleaseAgeExclude` in `pnpm-workspace.yaml`.
 
 ## Develop
 

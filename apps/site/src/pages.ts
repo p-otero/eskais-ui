@@ -11,17 +11,22 @@ type DocPage = {
   keywords: string[]
 }
 
-const docSections: { name: string; pages: DocPage[] }[] = [
-  {
-    name: "Getting started",
-    pages: guides.map((guide) => ({
+const guideSection = (name: string) => ({
+  name,
+  pages: guides
+    .filter((guide) => (guide.group ?? "Getting started") === name)
+    .map((guide) => ({
       route: guidePath(guide.slug),
       title: guide.title,
       description: guide.description,
-      section: "Getting started",
+      section: name,
       keywords: guide.covers ?? [],
     })),
-  },
+})
+
+const docSections: { name: string; pages: DocPage[] }[] = [
+  guideSection("Getting started"),
+  guideSection("Tools"),
   ...categories.map((category) => ({
     name: category.name,
     pages: category.items.map((name) => {

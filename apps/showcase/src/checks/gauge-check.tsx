@@ -26,22 +26,22 @@ function GaugeCheck() {
       <StatGroup aria-label="This week" data-testid="stats" className="max-w-4xl">
         <Stat>
           <StatLabel>Signups</StatLabel>
-          <StatValue value={1284} />
+          <StatValue locale="en-US" value={1284} />
           <StatDelta value={0.12} comparison="vs. last week" locale="en-US" />
         </Stat>
         <Stat>
           <StatLabel>Active users</StatLabel>
-          <StatValue value={932} />
+          <StatValue locale="en-US" value={932} />
           <StatDelta value={-0.034} comparison="vs. last week" locale="en-US" />
         </Stat>
         <Stat>
           <StatLabel>Cost</StatLabel>
-          <StatValue value={418} />
+          <StatValue locale="en-US" value={418} />
           <StatDelta value={-0.08} invert comparison="vs. last month" locale="en-US" />
         </Stat>
         <Stat>
           <StatLabel>Uptime</StatLabel>
-          <StatValue value={99.9} />
+          <StatValue locale="en-US" value={99.9} />
           <StatDelta value={0} comparison="vs. last week" locale="en-US" />
         </Stat>
       </StatGroup>

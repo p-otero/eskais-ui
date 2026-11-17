@@ -9,6 +9,7 @@ import { appearance } from "./appearance"
 import { CalendarCheck } from "./checks/calendar-check"
 import { CardHeaderCheck } from "./checks/card-header-check"
 import { DescriptionListCheck } from "./checks/description-list-check"
+import { FieldPlacementCheck } from "./checks/field-placement-check"
 import { GaugeCheck } from "./checks/gauge-check"
 import { IconTooltipCheck } from "./checks/icon-tooltip-check"
 import { MobileNavCheck } from "./checks/mobile-nav-check"
@@ -28,9 +29,9 @@ const root = document.getElementById("root")
 if (!root) throw new Error("Missing #root element")
 
 // ?demo=page, site and shell render one demo alone, for phone-width screenshots; ?demo=<name>-check pages are the
-// fixtures of tooling/<name>-check.mjs (card-header, mobile-nav, side-panel, table, description-list and gauge
-// are shell-check.mjs's); ?demo=inbox is the keyboard-first inbox alone, ?demo=master-detail, dashboard-grid and
-// settings-page a layout block alone, and ?demo=list-bench the list tooling/list-bench.mjs times.
+// fixtures of tooling/<name>-check.mjs (shell-check.mjs's: card-header, description-list, field-placement, gauge,
+// mobile-nav, side-panel, table); ?demo=inbox is the inbox alone, ?demo=list-bench the list list-bench.mjs times,
+// and ?demo=master-detail, dashboard-grid and settings-page a layout block alone.
 const params = new URLSearchParams(location.search)
 const status = demoStatuses.find((name) => name === params.get("status")) ?? "success"
 const demo = params.get("demo")
@@ -41,6 +42,7 @@ const standalone = new Set([
   "shell",
   "overlay-check",
   "card-header-check",
+  "field-placement-check",
   "mobile-nav-check",
   "icon-tooltip-check",
   "inbox",
@@ -67,6 +69,7 @@ function Demo() {
   }
   if (demo === "overlay-check") return <OverlayCheck />
   if (demo === "card-header-check") return <CardHeaderCheck />
+  if (demo === "field-placement-check") return <FieldPlacementCheck />
   if (demo === "mobile-nav-check") return <MobileNavCheck />
   if (demo === "icon-tooltip-check") return <IconTooltipCheck />
   if (demo === "inbox") return <InboxDemo />

@@ -271,3 +271,146 @@ describe("NavigationMenuLink", () => {
     expect(press(screen.getByRole("link", { name: "Off" })).defaultPrevented).toBe(false)
   })
 })
+
+const pressOnly = (element: Element, pointerType = "mouse") =>
+  element.dispatchEvent(new PointerEvent("pointerdown", { bubbles: true, cancelable: true, pointerType }))
+const resetHash = () => history.replaceState(null, "", location.pathname)
+
+describe("hash routes", () => {
+  test("a #/ link follows once on press, through onFollow, and the click after it doesn't follow again", () => {
+    const onFollow = vi.fn()
+    render(
+      <Link href="#/inbox" onFollow={onFollow}>
+        Inbox
+      </Link>,
+    )
+    expect(press(screen.getByRole("link", { name: "Inbox" })).defaultPrevented).toBe(true)
+    expect(onFollow).toHaveBeenCalledTimes(1)
+    expect(onFollow).toHaveBeenCalledWith("#/inbox", expect.objectContaining({ reason: "follow" }))
+  })
+
+  test("without onFollow, the press sets location.hash", () => {
+    resetHash()
+    render(<Link href="#/inbox/42">Message</Link>)
+    pressOnly(screen.getByRole("link", { name: "Message" }))
+    expect(location.hash).toBe("#/inbox/42")
+    resetHash()
+  })
+
+  test("an in-page anchor stays native: no press navigation, the click jumps", () => {
+    resetHash()
+    const onFollow = vi.fn()
+    render(
+      <>
+        <Link href="#section">Section</Link>
+        <FastLinkRegion onFollow={onFollow}>
+          <a href="#notes">Notes</a>
+        </FastLinkRegion>
+      </>,
+    )
+    pressOnly(screen.getByRole("link", { name: "Section" }))
+    pressOnly(screen.getByRole("link", { name: "Notes" }))
+    expect(location.hash).toBe("")
+    expect(press(screen.getByRole("link", { name: "Notes" })).defaultPrevented).toBe(false)
+    expect(onFollow).not.toHaveBeenCalled()
+  })
+
+  test.each(["touch", "data-no-fast-link"])("a %s press on a hash route stays native", (name) => {
+    resetHash()
+    render(
+      <div data-no-fast-link={name === "data-no-fast-link" ? "" : undefined}>
+        <Link href="#/inbox">Inbox</Link>
+      </div>,
+    )
+    pressOnly(screen.getByRole("link", { name: "Inbox" }), name === "touch" ? "touch" : "mouse")
+    expect(location.hash).toBe("")
+  })
+
+  test("ButtonLink and NavigationMenuLink follow hash routes on press", () => {
+    resetHash()
+    render(
+      <>
+        <ButtonLink href="#/start">Start</ButtonLink>
+        <NavigationMenu aria-label="Site">
+          <NavigationMenuList>
+            <NavigationMenuItem>
+              <NavigationMenuLink href="#/docs">Docs</NavigationMenuLink>
+            </NavigationMenuItem>
+          </NavigationMenuList>
+        </NavigationMenu>
+      </>,
+    )
+    pressOnly(screen.getByRole("link", { name: "Start" }))
+    expect(location.hash).toBe("#/start")
+    pressOnly(screen.getByRole("link", { name: "Docs" }))
+    expect(location.hash).toBe("#/docs")
+    resetHash()
+  })
+
+  test("FastLinkRegion follows #/ anchors once; a Link inside keeps its own navigation", () => {
+    resetHash()
+    const onFollow = vi.fn()
+    render(
+      <FastLinkRegion onFollow={onFollow}>
+        <a href="#/a">A</a> <Link href="#/b">B</Link>
+      </FastLinkRegion>,
+    )
+    expect(press(screen.getByRole("link", { name: "A" })).defaultPrevented).toBe(true)
+    expect(onFollow).toHaveBeenCalledTimes(1)
+    expect(onFollow).toHaveBeenCalledWith("#/a", expect.objectContaining({ url: expect.any(URL) }))
+    pressOnly(screen.getByRole("link", { name: "B" }))
+    expect(onFollow).toHaveBeenCalledTimes(1)
+    expect(location.hash).toBe("#/b")
+    resetHash()
+  })
+
+  test("hashPrefix sets what counts as a route, for Links inside too; false makes every # href an anchor", () => {
+    const onFollow = vi.fn()
+    render(
+      <>
+        <FastLinkRegion hashPrefix="#!/" onFollow={onFollow}>
+          <a href="#!/bang">Bang</a> <a href="#/slash">Slash</a>{" "}
+          <Link href="#!/inner" onFollow={onFollow}>
+            Inner
+          </Link>
+        </FastLinkRegion>
+        <FastLinkRegion hashPrefix={false} onFollow={onFollow}>
+          <a href="#/off">Off</a>
+        </FastLinkRegion>
+      </>,
+    )
+    pressOnly(screen.getByRole("link", { name: "Bang" }))
+    pressOnly(screen.getByRole("link", { name: "Slash" }))
+    pressOnly(screen.getByRole("link", { name: "Inner" }))
+    pressOnly(screen.getByRole("link", { name: "Off" }))
+    expect(onFollow.mock.calls.map(([href]) => href as string)).toEqual(["#!/bang", "#!/inner"])
+  })
+
+  test("data-fast-link-hash-prefix on an ancestor configures every link inside", () => {
+    const onFollow = vi.fn()
+    render(
+      <div data-fast-link-hash-prefix="#!">
+        <Link href="#!home" onFollow={onFollow}>
+          Home
+        </Link>
+      </div>,
+    )
+    pressOnly(screen.getByRole("link", { name: "Home" }))
+    expect(onFollow).toHaveBeenCalledWith("#!home", expect.anything())
+  })
+
+  test("with a <base> elsewhere, #/ is another document's URL and stays native", () => {
+    const base = document.createElement("base")
+    base.href = "https://example.com/app/"
+    document.head.append(base)
+    const onFollow = vi.fn()
+    render(
+      <Link href="#/inbox" onFollow={onFollow}>
+        Inbox
+      </Link>,
+    )
+    pressOnly(screen.getByRole("link", { name: "Inbox" }))
+    base.remove()
+    expect(onFollow).not.toHaveBeenCalled()
+  })
+})
