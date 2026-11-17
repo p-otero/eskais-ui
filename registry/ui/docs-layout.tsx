@@ -20,7 +20,10 @@ type DocsLayoutProps = ComponentProps<"div"> & {
   sidebar?: ReactNode
   /** Usually a DocsToc; shown beside the content on extra-wide screens. */
   toc?: ReactNode
-  /** A bar that sticks above the content, like a DocsBreadcrumb; on narrow screens the sidebar's trigger joins it. */
+  /**
+   * A bar that sticks above the content, like a DocsBreadcrumb. On narrow screens the sidebar's drawer button joins
+   * it in one row that scrolls with the page, above the content.
+   */
   header?: ReactNode
   /** The `<main>` landmark's id, a SkipLink's target. */
   mainId?: string
@@ -54,10 +57,12 @@ function DocsLayout({
       style={{ "--docs-sidebar-width": "16rem", "--docs-top": "0px", ...style } as CSSProperties}
       {...props}
     >
+      {/* On narrow screens the header row scrolls with the page: a second sticky bar under a site header would
+          cover the start of every page on a phone, and its opaque fill would cut through the page background. */}
       {(sidebar !== undefined || header !== undefined) && (
         <div
           data-slot="docs-layout-header"
-          className="sticky top-(--docs-top) z-sticky flex min-w-0 items-center gap-inline bg-background narrow:px-group empty:hidden"
+          className="sticky top-(--docs-top) z-sticky flex min-w-0 items-center gap-inline bg-background empty:hidden narrow:static narrow:bg-transparent narrow:px-group narrow:pt-inline"
         >
           {sidebar !== undefined && (
             <div
@@ -156,7 +161,10 @@ function DocsPager({ previous, next, labels: overrides, className, ...props }: D
 type DocsBreadcrumbItem = Omit<LinkProps, "children" | "variant"> & { label: ReactNode; href?: string }
 
 type DocsBreadcrumbProps = Omit<ComponentProps<typeof Breadcrumb>, "children"> & {
-  /** From the top level down; the last item is the current page. */
+  /**
+   * From the top level down; the last item is the current page. Give every other item an `href`, and `onFollow`
+   * to route on the client: an item without `href` renders as plain text that can't be followed.
+   */
   items: readonly DocsBreadcrumbItem[]
 }
 

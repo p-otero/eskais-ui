@@ -1,4 +1,5 @@
 import { act, render, screen, within } from "@testing-library/react"
+import { createAgent } from "@ui-sdk/react/agent"
 import { afterEach, expect, test, vi } from "vitest"
 
 import { DocsBreadcrumb, DocsLayout, DocsPager, DocsToc } from "@/components/ui/docs-layout"
@@ -23,6 +24,31 @@ test("DocsLayout renders main, its slots and the header bar", () => {
   const crumbs = screen.getByRole("navigation", { name: "Breadcrumb" })
   expect(within(crumbs).getByRole("link", { name: "Docs" }).getAttribute("href")).toBe("/docs")
   expect(within(crumbs).getByText("Button").getAttribute("aria-current")).toBe("page")
+})
+
+test("DocsBreadcrumb links with onFollow route for people and agents", async () => {
+  const onFollow = vi.fn()
+  render(
+    <DocsBreadcrumb
+      items={[
+        { label: "Docs", href: "/docs", onFollow },
+        { label: "Guides", href: "/docs/guides", onFollow },
+        { label: "Theming" },
+      ]}
+    />,
+  )
+  const crumbs = screen.getByRole("navigation", { name: "Breadcrumb" })
+  expect(
+    within(crumbs)
+      .getAllByRole("link")
+      .map((link) => link.textContent),
+  ).toEqual(["Docs", "Guides"])
+  expect(within(crumbs).getByText("Theming").getAttribute("aria-current")).toBe("page")
+  within(crumbs).getByRole("link", { name: "Guides" }).click()
+  expect(onFollow).toHaveBeenLastCalledWith("/docs/guides", expect.anything())
+  const result = await act(() => createAgent().act({ steps: [{ ref: "Docs", action: "follow" }] }))
+  expect(result.ok, result.error?.message).toBe(true)
+  expect(onFollow).toHaveBeenLastCalledWith("/docs", expect.objectContaining({ source: "agent" }))
 })
 
 test("DocsToc marks the heading being read", () => {

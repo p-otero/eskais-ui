@@ -63,8 +63,8 @@ function SiteHeader() {
             variant="plain"
             className="flex shrink-0 items-center gap-inline rounded-control px-inset-item text-title-sm tracking-tight outline-none focus-visible:ring-2 focus-visible:ring-ring"
           >
-            <Logo className="size-6" />
-            <span className="narrow:sr-only">Eskais UI</span>
+            <Logo aria-hidden className="size-6" />
+            <span>Eskais UI</span>
           </Link>
           <NavigationMenu aria-label="Main" className="narrow:hidden">
             <NavigationMenuList>

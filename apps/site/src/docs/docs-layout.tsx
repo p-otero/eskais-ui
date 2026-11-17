@@ -3,8 +3,9 @@ import { useEffect, useRef, type CSSProperties, type ReactNode } from "react"
 import { DocsBreadcrumb, DocsLayout, DocsPager, DocsToc, useTocItems } from "@/components/ui/docs-layout"
 import { Sidebar, SidebarGroup, SidebarItem } from "@/components/ui/sidebar"
 
+import { slug } from "../header"
 import { docPages, docSections, neighbours } from "../pages"
-import { hrefFor, linkTo } from "../router"
+import { followTo, hrefFor, linkTo } from "../router"
 
 const layoutStyle = { "--docs-top": "var(--site-header)", "--docs-sidebar-width": "var(--docs-sidebar)" }
 
@@ -30,23 +31,40 @@ function DocsSidebar({ route }: { route: string }) {
   )
 }
 
+const docsHome = "/docs/installation"
+
+// Every crumb but the current page links somewhere else: a component's category opens its section of the
+// components index, and a crumb that would only lead back to this page is left out.
+function crumbsFor(route: string): { label: string; route: string }[] {
+  if (route === "/docs/components")
+    return [
+      { label: "Docs", route: docsHome },
+      { label: "Components", route },
+    ]
+  const page = docPages.find((candidate) => candidate.route === route)
+  if (!page) return []
+  const category = page.route.startsWith("/docs/components/")
+    ? [{ label: page.section, route: `/docs/components#${slug(page.section)}` }]
+    : []
+  const parents = [{ label: "Docs", route: docsHome }, ...category].filter((crumb) => crumb.route !== route)
+  return [...parents, { label: page.title, route }]
+}
+
 function SiteDocsLayout({ route, children }: { route: string; children: ReactNode }) {
   const article = useRef<HTMLDivElement>(null)
   const headings = useTocItems(article, "[data-toc]")
   const { previous, next } = neighbours(route)
-  const current = docPages.find((page) => page.route === route)
+  const crumbs = crumbsFor(route)
   return (
     <DocsLayout
       style={layoutStyle as CSSProperties}
       sidebar={<DocsSidebar route={route} />}
       header={
-        current && (
+        crumbs.length > 0 && (
           <DocsBreadcrumb
-            items={[
-              { label: "Docs", ...linkTo("/docs/installation") },
-              { label: current.section },
-              { label: current.title },
-            ]}
+            items={crumbs.map((crumb, index) =>
+              index === crumbs.length - 1 ? { label: crumb.label } : { label: crumb.label, ...followTo(crumb.route) },
+            )}
           />
         )
       }

@@ -1,5 +1,7 @@
 import type { ComponentProps } from "react"
 
+import symbol from "./brand/eskais-symbol.svg?raw"
+
 type IconProps = ComponentProps<"svg">
 
 function Icon({ children, ...props }: IconProps) {
@@ -25,18 +27,26 @@ const GithubIcon = (props: IconProps) => (
   </Icon>
 )
 
-function Logo(props: IconProps) {
+const symbolViewBox = /viewBox="([^"]+)"/.exec(symbol)?.[1]
+const symbolPath = / d="([^"]+)"/.exec(symbol)?.[1]
+
+/**
+ * The Eskais "Ribbon Slash" symbol, in the text colour. Brand rules: monochrome, symbol only between 16 and 64px,
+ * never animated. It is named "Eskais" unless `aria-hidden`, for when text beside it already names it.
+ */
+function Logo({ "aria-hidden": hidden, ...props }: Omit<IconProps, "children">) {
+  const name = hidden ? { "aria-hidden": hidden } : { role: "img", "aria-label": "Eskais" }
   return (
-    <svg aria-hidden="true" viewBox="0 0 32 32" {...props}>
-      <rect width="32" height="32" rx="9" className="fill-primary" />
-      <path
-        d="M10 10.5h12M10 16h8M10 21.5h12"
-        className="stroke-primary-foreground"
-        strokeWidth="2.6"
-        strokeLinecap="round"
-        fill="none"
-      />
-      <circle cx="22.5" cy="16" r="2.2" className="fill-primary-foreground" />
+    <svg
+      viewBox={symbolViewBox}
+      fill="currentColor"
+      stroke="currentColor"
+      strokeWidth="40"
+      strokeLinejoin="round"
+      {...name}
+      {...props}
+    >
+      <path d={symbolPath} />
     </svg>
   )
 }
