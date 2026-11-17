@@ -63,7 +63,25 @@ const markdownEditorTheme = EditorView.theme({
     textUnderlineOffset: "0.2em",
     cursor: "pointer",
   },
-  "[data-slot=markdown-wikilink][data-unresolved]": { color: "var(--link-soft)", textDecorationStyle: "dashed" },
+  "[data-slot=markdown-wikilink][data-unresolved], [data-slot=markdown-embed][data-unresolved]": {
+    color: "var(--link-soft)",
+    textDecorationStyle: "dashed",
+  },
+  "[data-slot=markdown-embed]": {
+    color: "var(--link)",
+    textDecoration: "underline",
+    textUnderlineOffset: "0.2em",
+    cursor: "pointer",
+    border: "1px dashed var(--input-strong)",
+    borderRadius: "var(--control-radius)",
+    paddingInline: "var(--chip-padding-x)",
+  },
+  "[data-slot=markdown-embed-widget]": {
+    display: "inline-block",
+    maxWidth: "100%",
+    verticalAlign: "top",
+    fontFamily: "var(--font-sans)",
+  },
   "[data-slot=markdown-html]": { fontFamily: mono, fontSize: "0.9em", color: "var(--muted-foreground)" },
 
   ...Object.fromEntries(headings),
@@ -113,6 +131,21 @@ const markdownEditorTheme = EditorView.theme({
     fontSize: "0.9em",
     backgroundColor: "var(--muted)",
     paddingInline: "var(--item-padding-x)",
+  },
+  ".cm-line[data-md-frontmatter]": {
+    fontFamily: mono,
+    fontSize: "0.9em",
+    color: "var(--muted-foreground)",
+    backgroundColor: "var(--muted)",
+    paddingInline: "var(--item-padding-x)",
+  },
+  ".cm-line[data-md-frontmatter='open']": {
+    borderStartStartRadius: "var(--control-radius)",
+    borderStartEndRadius: "var(--control-radius)",
+  },
+  ".cm-line[data-md-frontmatter='close']": {
+    borderEndStartRadius: "var(--control-radius)",
+    borderEndEndRadius: "var(--control-radius)",
   },
   ".cm-line[data-md-code='open']": {
     borderStartStartRadius: "var(--control-radius)",

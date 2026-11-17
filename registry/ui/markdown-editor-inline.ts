@@ -4,7 +4,7 @@ import { Decoration } from "@codemirror/view"
 import type { SyntaxNode } from "@lezer/common"
 
 import type { Span } from "@/components/ui/markdown-editor-structure"
-import { CodeLanguageWidget, LabelWidget, type PortalStore } from "@/components/ui/markdown-editor-widgets"
+import { CodeLanguageWidget, EmbedWidget, LabelWidget, type PortalStore } from "@/components/ui/markdown-editor-widgets"
 import type { WikilinkResolver } from "@/components/ui/markdown-syntax"
 
 const hidden = Decoration.replace({})
@@ -42,6 +42,8 @@ type TreeContext = {
   revealed: (from: number, to: number) => boolean
   resolve?: WikilinkResolver
   portals?: PortalStore
+  /** Whether `![[target]]` off the caret shows a preview widget instead of its text. */
+  embeds?: boolean
 }
 
 function decorateTree(context: TreeContext, from: number, to: number) {
@@ -100,6 +102,9 @@ function decorateTree(context: TreeContext, from: number, to: number) {
           return false
         case "Wikilink":
           decorateWikilink(context, node, hide)
+          return false
+        case "Embed":
+          decorateEmbed(context, node, hide)
           return false
         case "FencedCode":
           decorateFence(context, node, hide)
@@ -214,6 +219,31 @@ function decorateWikilink(context: TreeContext, node: SyntaxNode, hide: (from: n
       hide(child.from, child.to)
     } else if (child.name === "WikilinkTarget" && resolution.label && resolution.label !== slug) {
       ranges.push(Decoration.replace({ widget: new LabelWidget(resolution.label) }).range(child.from, child.to))
+    }
+  }
+}
+
+function decorateEmbed(context: TreeContext, node: SyntaxNode, hide: (from: number, to: number) => void) {
+  const { state, ranges, portals } = context
+  const target = node.getChild("WikilinkTarget")
+  if (!target) return
+  const slug = state.sliceDoc(target.from, target.to).trim()
+  const labelNode = node.getChild("WikilinkLabel")
+  const alias = labelNode ? state.sliceDoc(labelNode.from, labelNode.to) : undefined
+  const show = context.revealed(node.from, node.to)
+  if (!show && context.embeds && portals) {
+    const widget = new EmbedWidget(slug, alias, portals)
+    ranges.push(Decoration.replace({ widget }).range(node.from, node.to))
+    return
+  }
+  const resolution = context.resolve?.(slug) ?? { exists: true }
+  ranges.push(slot("markdown-embed", resolution.exists ? {} : { "data-unresolved": "" }).range(node.from, node.to))
+  for (let child = node.firstChild; child; child = child.nextSibling) {
+    const isSyntax = child.name === "EmbedMark" || child.name === "WikilinkPipe"
+    if (show) {
+      if (isSyntax) ranges.push(syntax.range(child.from, child.to))
+    } else if (isSyntax || (child.name === "WikilinkTarget" && labelNode)) {
+      hide(child.from, child.to)
     }
   }
 }

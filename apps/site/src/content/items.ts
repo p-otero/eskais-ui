@@ -713,9 +713,13 @@ const itemNotes: Record<string, ItemNotes> = {
     related: ["agent-task-board", "task-card"],
   },
   "markdown-editor": {
+    usage:
+      "Pass a ref for a host's Insert or Link menu and an outline: MarkdownEditorHandle runs the toolbar's commands, inserts links and wikilinks, and moves the caret, without importing CodeMirror.",
     a11y: [
       "Named by label; the toolbar is one tab stop with arrow keys, and what doesn't fit moves into More.",
       "Escape then Tab leaves the editor. Shortcuts: Mod+B/I/E, Mod+Alt+0..6 for headings.",
+      "A heading, quote or list command leaves the caret after its marker, so typing goes into the text.",
+      "The slash menu says so when nothing matches, and stays open until Escape or a space.",
     ],
     agent: "Agents read and set the Markdown text through the editor's own part.",
     related: ["markdown-view", "markdown-editor-languages", "textarea"],

@@ -1,6 +1,8 @@
 import { syntaxTree } from "@codemirror/language"
-import { EditorSelection, EditorState, type Line, type Transaction } from "@codemirror/state"
+import { EditorSelection, EditorState, type Line, type Text, type Transaction } from "@codemirror/state"
 import type { SyntaxNode } from "@lezer/common"
+
+import { frontmatterBounds } from "@/components/ui/markdown-frontmatter"
 
 type Span = { from: number; to: number }
 
@@ -20,6 +22,24 @@ type LineStructure = {
   task?: Span & { checked: boolean }
   listItem?: SyntaxNode
   continuation?: boolean
+}
+
+const frontmatterEnds = new WeakMap<Text, number>()
+const FRONTMATTER_SCAN = 65_536
+
+/**
+ * Where the leading YAML block ends (its closing fence), or -1. It parses as a rule and a setext heading, so the
+ * preview leaves that range as written and the caret moves through it freely.
+ */
+function frontmatterEnd(state: EditorState) {
+  const { doc } = state
+  let end = frontmatterEnds.get(doc)
+  if (end === undefined) {
+    const opens = /^\uFEFF?---[ \t]*$/.test(doc.line(1).text)
+    end = opens ? (frontmatterBounds(doc.sliceString(0, FRONTMATTER_SCAN))?.to ?? -1) : -1
+    frontmatterEnds.set(doc, end)
+  }
+  return end
 }
 
 const MARKS = new Set(["QuoteMark", "ListMark", "TaskMarker", "HeaderMark"])
@@ -123,7 +143,7 @@ const caretOutOfPrefix = EditorState.transactionFilter.of((transaction: Transact
   const state = transaction.state
   const head = selection.main.head
   const line = state.doc.lineAt(head)
-  if (head - line.from > 64) return transaction
+  if (head - line.from > 64 || head <= frontmatterEnd(state)) return transaction
   const structure = lineStructure(state, line)
   if (structure.hiddenEnd === line.from || head >= structure.hiddenEnd) return transaction
   const previous = transaction.startState.selection.main
@@ -132,5 +152,5 @@ const caretOutOfPrefix = EditorState.transactionFilter.of((transaction: Transact
   return [transaction, { selection: EditorSelection.cursor(target), sequential: true }]
 })
 
-export { blockMarks, caretOutOfPrefix, lineStructure, listDepth }
+export { blockMarks, caretOutOfPrefix, frontmatterEnd, lineStructure, listDepth }
 export type { LineStructure, Span }

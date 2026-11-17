@@ -10,11 +10,11 @@ import {
 } from "@codemirror/view"
 
 import { decorateTree, hidden, line, slot } from "@/components/ui/markdown-editor-inline"
-import { blockMarks, lineStructure, type Span } from "@/components/ui/markdown-editor-structure"
+import { blockMarks, frontmatterEnd, lineStructure, type Span } from "@/components/ui/markdown-editor-structure"
 import { BulletWidget, TaskWidget, type PortalStore } from "@/components/ui/markdown-editor-widgets"
 import type { WikilinkResolver } from "@/components/ui/markdown-syntax"
 
-type PreviewConfig = { resolve?: WikilinkResolver; taskLabel: string; portals?: PortalStore }
+type PreviewConfig = { resolve?: WikilinkResolver; taskLabel: string; portals?: PortalStore; embeds?: boolean }
 
 const previewConfig = Facet.define<PreviewConfig, PreviewConfig>({
   combine: (values) => values[0] ?? { taskLabel: "Task done" },
@@ -22,6 +22,16 @@ const previewConfig = Facet.define<PreviewConfig, PreviewConfig>({
 
 const refreshReveal = StateEffect.define<null>()
 const bullet = Decoration.replace({ widget: new BulletWidget() })
+
+function decorateFrontmatter(state: EditorState, from: number, end: number, ranges: Range<Decoration>[]) {
+  const last = state.doc.lineAt(end).number
+  for (let pos = from; pos <= end;) {
+    const current = state.doc.lineAt(pos)
+    const edge = current.number === 1 ? "open" : current.number === last ? "close" : ""
+    ranges.push(line({ "data-md-frontmatter": edge }).range(current.from))
+    pos = current.to + 1
+  }
+}
 
 function selectionSpans(state: EditorState): Span[] {
   if (state.readOnly) return []
@@ -101,11 +111,27 @@ class Preview implements PluginValue {
     const atomic: Range<Decoration>[] = []
     const reveal = this.reveal
     const revealed = (from: number, to: number) => reveal.some((span) => span.from <= to && span.to >= from)
-    for (const { from, to } of view.visibleRanges) {
+    const yamlEnd = frontmatterEnd(state)
+    for (const visible of view.visibleRanges) {
+      const { to } = visible
+      let { from } = visible
+      if (from <= yamlEnd) {
+        decorateFrontmatter(state, from, Math.min(to, yamlEnd), ranges)
+        from = yamlEnd + 1
+        if (from > to) continue
+      }
       const lines = decorateLines(state, from, to, config)
       ranges.push(...lines.ranges)
       atomic.push(...lines.atomic)
-      decorateTree({ state, ranges, revealed, resolve: config.resolve, portals: config.portals }, from, to)
+      const context = {
+        state,
+        ranges,
+        revealed,
+        resolve: config.resolve,
+        portals: config.portals,
+        embeds: config.embeds,
+      }
+      decorateTree(context, from, to)
     }
     this.decorations = Decoration.set(ranges, true)
     this.atomic = Decoration.set(atomic, true)

@@ -3,7 +3,7 @@ import { EditorSelection, StateField, type EditorState, type Range, type Transac
 import { Decoration, EditorView, type DecorationSet } from "@codemirror/view"
 
 import { previewConfig } from "@/components/ui/markdown-editor-preview"
-import type { Span } from "@/components/ui/markdown-editor-structure"
+import { frontmatterEnd, type Span } from "@/components/ui/markdown-editor-structure"
 import { TableWidget } from "@/components/ui/markdown-editor-widgets"
 
 type Block = Span & { table: boolean }
@@ -72,10 +72,14 @@ function plan(state: EditorState, tables: Span[], underlines: Span[]) {
   const ranges = state.readOnly ? [] : state.selection.ranges
   const touched = (from: number, to: number) => ranges.some((range) => range.from <= to && range.to >= from)
   const shown: Block[] = []
+  const yamlEnd = frontmatterEnd(state)
   if (state.facet(previewConfig).portals) {
-    for (const table of tables) if (!touched(table.from, table.to)) shown.push({ ...table, table: true })
+    for (const table of tables) {
+      if (table.from > yamlEnd && !touched(table.from, table.to)) shown.push({ ...table, table: true })
+    }
   }
   for (const underline of underlines) {
+    if (underline.from <= yamlEnd) continue
     const current = state.doc.lineAt(underline.from)
     if (current.number > 1 && !touched(current.from, current.to)) {
       shown.push({ from: current.from - 1, to: current.to, table: false })
