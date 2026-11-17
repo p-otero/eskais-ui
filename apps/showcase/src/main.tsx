@@ -8,6 +8,7 @@ import { App } from "./app"
 import { appearance } from "./appearance"
 import { CalendarCheck } from "./checks/calendar-check"
 import { CardHeaderCheck } from "./checks/card-header-check"
+import { DescriptionListCheck } from "./checks/description-list-check"
 import { IconTooltipCheck } from "./checks/icon-tooltip-check"
 import { MobileNavCheck } from "./checks/mobile-nav-check"
 import { ListBench } from "./checks/list-bench"
@@ -25,7 +26,7 @@ const root = document.getElementById("root")
 if (!root) throw new Error("Missing #root element")
 
 // ?demo=page, site and shell render one demo alone, for phone-width screenshots; ?demo=<name>-check pages are the
-// fixtures of tooling/<name>-check.mjs (card-header, mobile-nav, side-panel and table are shell-check.mjs's); ?demo=inbox
+// fixtures of tooling/<name>-check.mjs (card-header, mobile-nav, side-panel, table and description-list are shell-check.mjs's); ?demo=inbox
 // is the keyboard-first inbox alone, and ?demo=list-bench the list tooling/list-bench.mjs times.
 const params = new URLSearchParams(location.search)
 const status = demoStatuses.find((name) => name === params.get("status")) ?? "success"
@@ -45,6 +46,7 @@ const standalone = new Set([
   "press-check",
   "side-panel-check",
   "table-check",
+  "description-list-check",
 ])
 
 function Demo() {
@@ -66,6 +68,7 @@ function Demo() {
   if (demo === "press-check") return <PressCheck />
   if (demo === "side-panel-check") return <SidePanelCheck />
   if (demo === "table-check") return <TableCheck />
+  if (demo === "description-list-check") return <DescriptionListCheck />
   return demo === "shell" ? <ShellDemo /> : <SiteDemo />
 }
 

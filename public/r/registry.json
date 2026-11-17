@@ -2205,6 +2205,34 @@
       ]
     },
     {
+      "name": "description-list",
+      "type": "registry:ui",
+      "title": "Description List",
+      "description": "Terms and their details in a dl: stacked, inline (side by side, stacked again in a narrow container) or a grid of columns. Spacing from the role tokens, copyable details with an agent copy action, and a dash for an empty value that screen readers read as an overridable label.",
+      "dependencies": [
+        "@ui-sdk/core@0.1.0-beta.5",
+        "@ui-sdk/react@0.1.0-beta.5",
+        "class-variance-authority@0.7.1",
+        "lucide-react@1.73.0"
+      ],
+      "registryDependencies": [
+        "@eskais/utils",
+        "@eskais/theme",
+        "@eskais/button"
+      ],
+      "files": [
+        {
+          "path": "registry/ui/description-list-primitive.ts",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/description-list.tsx",
+          "type": "registry:ui"
+        }
+      ],
+      "docs": "`<DescriptionList layout columns labels>` renders a `dl` of `DescriptionItem`s, each a `div` holding a `DescriptionTerm` (`dt`) and its `DescriptionDetails` (`dd`). `layout=\"stacked\"` (default) puts each term above its details, `gap-group` between items; `\"inline\"` puts them side by side, the term at `--description-term-width` (33%), divided by rules, and stacks them again once the list's own width drops under 24rem (a container query, so it works in a side panel); `\"grid\"` lays the items out in as many columns as fit at `--description-column-min` (12rem), never more than `columns` (3). Spacing comes from the role tokens, so `data-theme=\"compact\"` tightens it. An empty `DescriptionDetails` (nothing, `null` or `\"\"`) shows an `aria-hidden` dash and reads `labels.empty` (\"Not set\"). `mono` sets the value in the monospace face (ids, hashes). `copyable` adds a copy button after the value (`copyValue` when the details aren't plain text, `onCopy`), as CodeBlock does: the value is a group named by its term with a `copy` action for agents, the button is hidden from them, and \"Copied\" (`labels.copied`) is announced. Override `labels={{ empty, copy, copied }}` in the page's language."
+    },
+    {
       "name": "board",
       "type": "registry:ui",
       "title": "Board",

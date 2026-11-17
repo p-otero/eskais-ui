@@ -511,6 +511,17 @@ const itemNotes: Record<string, ItemNotes> = {
     a11y: ["A labelled group of figures; unknown values show a dash and estimates a tilde, explained in their title."],
     related: ["quantity", "chart", "usage"],
   },
+  "description-list": {
+    usage:
+      "Reach for it for an entity's properties: a deployment's region and commit, a task's owner and dates. Pick inline for a panel, grid for a summary page.",
+    a11y: [
+      "A real dl: screen readers announce a list of terms with their definitions.",
+      "An empty value shows a dash but reads a word (labels.empty), never silence.",
+      "The copy button announces Copied in a polite live region.",
+    ],
+    agent: "Agents find a copyable value by its term and call copy.",
+    related: ["stat", "card", "side-panel", "code-block"],
+  },
   "list-item": {
     a11y: [
       "The name is on the list itself: a list, or a listbox when rows are selectable, with no group around it.",

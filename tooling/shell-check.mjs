@@ -1,6 +1,6 @@
 // Drives the showcase where layout decides what shows: the Topbar's ⌘K dialog and Sidebar drawer, tabs and
 // MobileNav labels at phone widths; CardHeader and SidePanel headers where actions wrap; SidePanel's narrow modes;
-// a wrapping DataTable column (?demo=card-header-check, side-panel-check, table-check).
+// a wrapping DataTable column; DescriptionList layouts (?demo=<card-header|side-panel|table|description-list>-check).
 // Usage: node tooling/shell-check.mjs [--screenshots=<dir>] (after `bun run build:showcase`)
 import { mkdirSync } from "node:fs"
 import { join, resolve } from "node:path"
@@ -288,6 +288,34 @@ async function checkTableWrap(page) {
   await shot(page, "table-wrap.png")
 }
 
+async function checkDescriptionList(page) {
+  await page.setViewportSize({ width: 1100, height: 900 })
+  await page.goto(`${new URL(page.url()).origin}/?demo=description-list-check`)
+  await page.getByTestId("grid-wide").waitFor()
+  await page.evaluate(() => document.fonts.ready)
+  const measure = (id) =>
+    page.getByTestId(id).evaluate((list) => {
+      const items = [...list.querySelectorAll('[data-slot="description-item"]')]
+      const tops = new Set(items.map((item) => Math.round(item.getBoundingClientRect().top)))
+      const first = items[0]
+      const term = first.querySelector("dt").getBoundingClientRect()
+      const details = first.querySelector("dd").getBoundingClientRect()
+      return { rows: tops.size, beside: Math.abs(term.top - details.top) < term.height }
+    })
+  const [inlineWide, inlineNarrow, gridWide, gridNarrow] = await Promise.all(
+    ["inline-wide", "inline-narrow", "grid-wide", "grid-narrow"].map((id) => measure(id)),
+  )
+  check("DescriptionList inline: term beside details in a wide list", inlineWide.beside)
+  check("DescriptionList inline: term above details under 24rem of list", !inlineNarrow.beside)
+  check(
+    "DescriptionList grid: three columns at 40rem (4 items in 2 rows)",
+    gridWide.rows === 2,
+    `${gridWide.rows} rows`,
+  )
+  check("DescriptionList grid: one column at 20rem", gridNarrow.rows === 4, `${gridNarrow.rows} rows`)
+  await shot(page, "description-list-layouts.png", true)
+}
+
 async function checkMobileNav(page) {
   await page.setViewportSize({ width: 320, height: 640 })
   await page.goto(`${new URL(page.url()).origin}/?demo=mobile-nav-check`)
@@ -366,6 +394,7 @@ await withShowcase(async (page) => {
   await checkSidePanelHeader(page)
   await checkSidePanelNarrow(page)
   await checkTableWrap(page)
+  await checkDescriptionList(page)
   await checkMobileNav(page)
 })
 

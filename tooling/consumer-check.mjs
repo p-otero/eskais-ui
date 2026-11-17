@@ -68,6 +68,7 @@ const allItems = [
   "relative-time",
   "acceptance-list",
   "stat",
+  "description-list",
   "board",
   "status-pill",
   "agent-task-types",
