@@ -751,6 +751,22 @@ const itemNotes: Record<string, ItemNotes> = {
     usage: "Opt in when people write fenced code: the languages load lazily, per fence.",
     related: ["markdown-editor"],
   },
+  "page-source": {
+    usage:
+      "Wrap your endpoint in the adapter that matches its paging, once per resource; components and hooks only see the PageSource.",
+    agent: "Nothing of its own: the table, list and combobox built on it expose paging, sorting and filtering by name.",
+    related: ["filter-schema", "url-state", "data-table"],
+  },
+  "filter-schema": {
+    usage:
+      "Declare the filters once; the same schema types the values, drives the filter UIs, writes the URL and serializes the request.",
+    a11y: ["Every field's label is required: it names the chip, the panel field and what agents set."],
+    related: ["page-source", "url-state", "filter-bar"],
+  },
+  "url-state": {
+    usage: "Pick the adapter that matches your router once, and pass it to every screen that keeps state in the URL.",
+    related: ["page-source", "filter-schema"],
+  },
 }
 
 export { itemNotes }
