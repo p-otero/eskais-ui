@@ -160,7 +160,7 @@ function Gallery() {
   )
 }
 
-const install = `npm install lucide-react@1.73.0
+const install = `npm install lucide-react@1.68.0
 npx shadcn@latest add @eskais/icon`
 
 const importByName = `import { ChevronDownIcon, TrashIcon } from "lucide-react"

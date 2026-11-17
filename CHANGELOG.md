@@ -36,6 +36,14 @@ Versions follow [semver](https://semver.org). Before 1.0, a minor version can br
 - Calendar ranges draw one continuous band: the middle days take a soft `accent` fill with no gaps or rounding, and the start and end keep their `primary` circle with the band running under their inner half. A one-day range is only its circle, the band breaks cleanly between weeks, mirrors in right to left and looks the same while a range is being picked. Every day's focus ring follows its circle and stays above its neighbours. Middle days used to keep `data-selected`'s `primary` fill, so they showed as separate dark squares. DatePicker and DateTimePicker share it. `node tooling/calendar-check.mjs` (in `test:browser`) measures the band.
 - Focusing a field no longer zooms the page on iOS. A `text-entry` type step (`--type-entry-size`) is 14px as before on a fine pointer and 16px on a coarse one, and Input, InputGroup, Textarea, the Select trigger, NativeSelect, Combobox, CommandInput, NumberInput, DatePicker, DateTimePicker's time and MarkdownEditor use it. Pinch-zoom stays allowed. `node tooling/touch-check.mjs` (in `test:browser`) measures every text-entry control on an emulated phone.
 
+### Fixed
+
+- `lucide-react` is pinned to 1.68.0 (2026-11-04), the oldest release that exports every icon the registry uses, instead of 1.73.0 (2026-11-14): `shadcn add` failed with `ERR_PNPM_NO_MATURE_MATCHING_VERSION` for consumers with a 7-day pnpm `minimumReleaseAge`, since shadcn installs dependencies before it writes any file.
+
+### Changed
+
+- Every npm dependency in `registry.json` is pinned to an exact release at least 7 days old. `tooling/check-dependency-age.mjs` checks the publish times in CI (it skips offline), with the exceptions it lists and why: UI SDK, whose first release is from 2026-11-12. The `release-age` consumer check installs `dialog` with pnpm under a 7-day `minimumReleaseAge`.
+
 ## 0.2.0 (2026-11-17)
 
 ### Added
