@@ -1,6 +1,7 @@
 "use client"
 
 import { createParts } from "@ui-sdk/react/primitive"
+import { createTriggerMenuController } from "@ui-sdk/react/trigger-menu"
 import { useId, useMemo, useState, type ReactNode, type Ref } from "react"
 
 import { setMenuOpen } from "@/components/ui/markdown-editor-adapter"
@@ -24,6 +25,8 @@ import {
   type SuggestWikilinks,
 } from "@/components/ui/markdown-editor-menus"
 import type {
+  HandleMenus,
+  InsertTextOptions,
   MarkdownEditorCommand,
   MarkdownEditorHandle,
   MarkdownSelection,
@@ -110,7 +113,20 @@ function MarkdownEditorBody(props: Omit<MarkdownEditorProps, "ref"> & { handle: 
     [label, hintId, readOnly, placeholder, cspNonce, resolveWikilink, labels.task, portals, embedPreview],
   )
   const { hostRef, view, adapter, sync } = useMarkdownEditorView(props, settings)
-  useEditorHandle(props.handle, view)
+  const [menuController] = useState(createTriggerMenuController)
+  const suggests = props.suggestWikilinks !== undefined && !readOnly
+  const menus = useMemo<HandleMenus>(
+    () => ({
+      openWikilinkSuggestions: () => {
+        if (!view || !suggests || view.state.readOnly) return false
+        view.focus()
+        void menuController.open({ trigger: "[[" })
+        return true
+      },
+    }),
+    [view, suggests, menuController],
+  )
+  useEditorHandle(props.handle, view, menus)
 
   const handle = useMemo<MarkdownEditorActions | undefined>(() => {
     if (!view) return undefined
@@ -176,6 +192,7 @@ function MarkdownEditorBody(props: Omit<MarkdownEditorProps, "ref"> & { handle: 
       {!readOnly && (
         <MarkdownEditorMenus
           adapter={adapter}
+          controller={menuController}
           view={view}
           slashCommands={slashCommands}
           suggestWikilinks={props.suggestWikilinks}
@@ -189,6 +206,7 @@ function MarkdownEditorBody(props: Omit<MarkdownEditorProps, "ref"> & { handle: 
 
 export { MarkdownEditor, markdownEditorLabelsEn, markdownEditorLabelsEs, markdownSlashCommands }
 export type {
+  InsertTextOptions,
   MarkdownConflict,
   MarkdownEditorCommand,
   MarkdownEditorHandle,

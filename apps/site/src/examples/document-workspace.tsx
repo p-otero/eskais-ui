@@ -150,6 +150,7 @@ function InsertMenu({ editor }: { editor: RefObject<MarkdownEditorHandle | null>
         if (!handle) return
         if (value === "link") handle.insertLink("https://eskais.dev", "Eskais")
         if (value === "wikilink") handle.insertWikilink("risks", "the risks")
+        if (value === "note") handle.openWikilinkSuggestions()
         if (value === "embed") handle.insertText("![[timeline]]")
         if (value === "highlight") handle.wrapSelection("==")
       }}
@@ -161,6 +162,7 @@ function InsertMenu({ editor }: { editor: RefObject<MarkdownEditorHandle | null>
       <DropdownMenuContent align="end" finalFocus={workspace.documentFocusTarget}>
         <DropdownMenuItem value="link">Link</DropdownMenuItem>
         <DropdownMenuItem value="wikilink">Wikilink</DropdownMenuItem>
+        <DropdownMenuItem value="note">Link to a note…</DropdownMenuItem>
         <DropdownMenuItem value="embed">
           <DropdownMenuItemIcon>
             <ImageIcon />
@@ -206,6 +208,13 @@ export default function DocumentWorkspaceDemo({ className = "h-144 w-full" }: { 
     [notes],
   )
   const onWikilinkClick = useCallback((slug: string) => openNote(slug), [openNote])
+  const suggestWikilinks = useCallback(
+    async (query: string) =>
+      notes
+        .filter((entry) => entry.title.toLowerCase().includes(query.toLowerCase()))
+        .map((entry) => ({ slug: entry.slug, label: entry.title })),
+    [notes],
+  )
 
   const save = (markdown: string) => {
     setNotes((all) => all.map((entry) => (entry.slug === current ? { ...entry, markdown } : entry)))
@@ -322,6 +331,7 @@ export default function DocumentWorkspaceDemo({ className = "h-144 w-full" }: { 
               onDirtyChange={(dirty) => dirty && setSaveState("unsaved")}
               resolveWikilink={resolveWikilink}
               onWikilinkClick={onWikilinkClick}
+              suggestWikilinks={suggestWikilinks}
               embedPreview
               renderEmbed={renderEmbed}
               className="min-h-0 flex-1 rounded-none border-0 bg-transparent shadow-none has-[.cm-focused]:ring-0"

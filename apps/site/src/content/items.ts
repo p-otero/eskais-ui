@@ -738,7 +738,7 @@ const itemNotes: Record<string, ItemNotes> = {
   },
   "markdown-editor": {
     usage:
-      "Pass a ref for a host's Insert or Link menu and an outline: MarkdownEditorHandle runs the toolbar's commands, inserts links and wikilinks, and moves the caret, without importing CodeMirror.",
+      "Pass a ref for a host's Insert or Link menu and an outline: MarkdownEditorHandle runs the toolbar's commands, inserts links and wikilinks, opens the wikilink suggestions (openWikilinkSuggestions) and moves the caret, without importing CodeMirror.",
     a11y: [
       "Named by label; the toolbar is one tab stop with arrow keys, and what doesn't fit moves into More.",
       "Escape then Tab leaves the editor. Shortcuts: Mod+B/I/E, Mod+Alt+0..6 for headings.",

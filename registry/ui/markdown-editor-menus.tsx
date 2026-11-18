@@ -10,6 +10,7 @@ import {
   TriggerMenuStatus,
   type TextEditorAdapter,
   type TriggerDefinition,
+  type TriggerMenuController,
   type TriggerMenuDataItem,
 } from "@ui-sdk/react/trigger-menu"
 import { useMemo, type ReactNode } from "react"
@@ -92,6 +93,8 @@ function markdownSlashCommands(labels: Partial<SlashLabels> = {}): SlashCommand[
 
 type MarkdownEditorMenusProps = {
   adapter: TextEditorAdapter | undefined
+  /** Opens the wikilink suggestions for the editor's handle. */
+  controller?: TriggerMenuController
   view: EditorView | undefined
   slashCommands: SlashCommand[]
   suggestWikilinks?: SuggestWikilinks
@@ -101,6 +104,7 @@ type MarkdownEditorMenusProps = {
 
 function MarkdownEditorMenus({
   adapter,
+  controller,
   view,
   slashCommands,
   suggestWikilinks,
@@ -140,6 +144,7 @@ function MarkdownEditorMenus({
   return (
     <TriggerMenu
       editor={adapter}
+      controller={controller}
       triggers={triggers}
       onOpenChange={(open) => onOpenChange(open)}
       onSelect={(value, details) => {
