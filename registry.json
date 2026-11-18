@@ -4843,7 +4843,19 @@
       ],
       "files": [
         {
+          "path": "registry/ui/document-quick-open.tsx",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/document-workspace-center.tsx",
+          "type": "registry:ui"
+        },
+        {
           "path": "registry/ui/document-workspace-context.ts",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/document-workspace-panels.tsx",
           "type": "registry:ui"
         },
         {
@@ -4852,6 +4864,10 @@
         },
         {
           "path": "registry/ui/document-workspace.tsx",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/use-document-workspace-state.ts",
           "type": "registry:ui"
         },
         {
