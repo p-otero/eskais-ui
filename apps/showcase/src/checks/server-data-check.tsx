@@ -2,8 +2,10 @@ import { useState } from "react"
 
 import { Badge } from "@/components/ui/badge"
 import type { DataTableColumn } from "@/components/ui/data-table"
+import { ListItem } from "@/components/ui/list-item"
 import { PageHeader } from "@/components/ui/page-header"
 import { ServerDataTable, type ServerDataTableFilterUi } from "@/components/ui/server-data-table"
+import { ServerList } from "@/components/ui/server-list"
 import { hashUrlState } from "@/lib/url-state"
 
 import { serverTaskFilters, taskSource, type ServerTask } from "../../../../test/fixtures/server-tasks"
@@ -30,10 +32,28 @@ const columns: DataTableColumn<ServerTask>[] = [
 
 const uis: ServerDataTableFilterUi[] = ["search", "chips", "panel"]
 
+const labels = { errorTitle: "Couldn't load tasks", retry: "Try again", emptyTitle: "No tasks match" }
+
+// ?ui=list: the same tasks as a ServerList that loads more.
+function ServerListCheck({ source }: { source: ReturnType<typeof taskSource> }) {
+  return (
+    <ServerList<ServerTask, typeof serverTaskFilters>
+      aria-label="Task list"
+      source={source}
+      filters={serverTaskFilters}
+      pageSize={20}
+      itemText={(task) => `${task.id} ${task.title}`}
+      renderItem={(task) => <ListItem id={task.id} title={task.title} subtitle={task.id} onSelect={() => {}} />}
+      labels={labels}
+    />
+  )
+}
+
 // ?demo=server-data-check&ui=search|chips|panel: a ServerDataTable over 312 tasks with 500 ms of latency and its
 // state in the hash, for tooling/server-data-check.mjs and the screenshots it takes.
 function ServerDataCheck() {
   const params = new URLSearchParams(location.search)
+  const list = params.get("ui") === "list"
   const ui = uis.find((name) => name === params.get("ui")) ?? "search"
   const delay = Number(params.get("delay") ?? "500")
   const [source] = useState(() => taskSource({ key: ["check", ui], delay }))
@@ -41,6 +61,7 @@ function ServerDataCheck() {
   return (
     <main className="mx-auto flex w-full max-w-6xl flex-col gap-section p-section narrow:p-group">
       <PageHeader title="Tasks" description="Every task across the workspace, filtered and paged on the server." />
+      {list ? <ServerListCheck source={source} /> : null}
       <ServerDataTable
         label="Tasks"
         source={source}
@@ -50,7 +71,7 @@ function ServerDataCheck() {
         urlState={urlState}
         pageSize={10}
         getRowLabel={(task) => `${task.id} ${task.title}`}
-        labels={{ errorTitle: "Couldn't load tasks", retry: "Try again", emptyTitle: "No tasks match" }}
+        labels={labels}
       />
     </main>
   )

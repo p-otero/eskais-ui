@@ -101,13 +101,14 @@ function ServerCombobox<T>({ className, ...props }: ServerComboboxProps<T>) {
   const {
     source,
     getLabel,
-    getValue = (item: T) => source.getId(item),
+    getValue: getValueProp,
     valueLabels,
     placeholder,
     pageSize = 20,
     debounce = 250,
     disabled,
   } = props
+  const getValue = getValueProp ?? ((item: T) => source.getId(item))
   const labels = { ...serverComboboxLabels, ...props.labels }
   const cursors = useRef(new Map<number, string | null>())
   const known = useRef(new Map<string, string>())
