@@ -4,8 +4,8 @@
   "title": "Activity Log",
   "description": "Who changed what, and when, with undo: createActivityLog records the page's UI SDK control changes (from people, agents and the app) and the app's own records, and steps back and forward through them. ActivityLog lists them newest first; pressing an entry seeks to it, Undo and Redo bind Cmd/Ctrl+Z and Shift+Cmd/Ctrl+Z outside text fields, and undoToast shows a toast with Undo. Agents call undo, redo and seek; a seek that undoes more than confirmAbove entries needs a person (data-agent-confirm).",
   "dependencies": [
-    "@ui-sdk/core@0.1.0-beta.5",
-    "@ui-sdk/react@0.1.0-beta.5",
+    "@ui-sdk/core@0.1.0-beta.10",
+    "@ui-sdk/react@0.1.0-beta.10",
     "lucide-react@^1.68.0"
   ],
   "registryDependencies": [

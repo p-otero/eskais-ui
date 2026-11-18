@@ -4,8 +4,8 @@
   "title": "Image Cropper",
   "description": "UI SDK ImageCropper styled: a selection that dims the rest of the image with a grid while dragging and eight handles, or a round frame the image pans and zooms under, with zoom, rotate and flip, and cropImage.",
   "dependencies": [
-    "@ui-sdk/core@0.1.0-beta.5",
-    "@ui-sdk/react@0.1.0-beta.5",
+    "@ui-sdk/core@0.1.0-beta.10",
+    "@ui-sdk/react@0.1.0-beta.10",
     "lucide-react@^1.68.0"
   ],
   "registryDependencies": [
@@ -20,6 +20,6 @@
       "type": "registry:ui"
     }
   ],
-  "docs": "`<ImageCropper aria-label src alt aspectRatio mode shape maxZoom crop onCropChange onCropCommit>`: with no children it renders the viewport (the image's ratio, or a square frame), the image, a selection that dims the rest through a spread `--overlay` shadow, shows a grid at the thirds while dragging and has eight handles (none in `mode=\"frame\"`), then a zoom slider and Rotate, Flip horizontally and Flip vertically buttons with icons and their names from `labels`. Rotate and flip show their label because they're disabled until the image loads, when a tooltip couldn't show. `cropImage(src, crop, { width, shape })` (re-exported) makes the file; save in `onCropCommit`. In UI SDK 0.1.0-beta.5 the handles sit inside the selection's slider, which axe reports as nested-interactive; a frame has no handles.",
+  "docs": "`<ImageCropper aria-label src alt aspectRatio mode shape maxZoom crop onCropChange onCropCommit>`: with no children it renders the viewport (the image's ratio, or a square frame), the image, a selection that dims the rest through a spread `--overlay` shadow, shows a grid at the thirds while dragging and has eight handles (none in `mode=\"frame\"`), then a zoom slider and Rotate, Flip horizontally and Flip vertically buttons with icons and their names from `labels`. Rotate and flip show their label because they're disabled until the image loads, when a tooltip couldn't show. `cropImage(src, crop, { width, shape })` (re-exported) makes the file; save in `onCropCommit`. In UI SDK 0.1.0-beta.10 the handles sit inside the selection's slider, which axe reports as nested-interactive; a frame has no handles.",
   "type": "registry:ui"
 }

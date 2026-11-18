@@ -4,8 +4,8 @@
   "title": "Color Picker",
   "description": "UI SDK ColorPicker styled: an area (painted on a canvas in OKLCH), hue and alpha sliders, a swatch, a text field for any CSS colour, channel inputs, presets and an eye dropper with a tooltip.",
   "dependencies": [
-    "@ui-sdk/core@0.1.0-beta.5",
-    "@ui-sdk/react@0.1.0-beta.5",
+    "@ui-sdk/core@0.1.0-beta.10",
+    "@ui-sdk/react@0.1.0-beta.10",
     "lucide-react@^1.68.0"
   ],
   "registryDependencies": [

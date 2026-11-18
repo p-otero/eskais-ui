@@ -4,8 +4,8 @@
   "title": "Git Diff",
   "description": "A patch or a list of file diffs for review: per-file headers (rename arrow, status chip, +/- counts and bar, mode change, collapse, viewed), a tree of changed files to jump between them, unified/split and wrap controls, one virtualized document for 500-file patches, j/k and n/p, line selection for comments, and agent actions openFile, nextHunk, previousHunk, markViewed and getHunk.",
   "dependencies": [
-    "@ui-sdk/core@0.1.0-beta.5",
-    "@ui-sdk/react@0.1.0-beta.5",
+    "@ui-sdk/core@0.1.0-beta.10",
+    "@ui-sdk/react@0.1.0-beta.10",
     "lucide-react@^1.68.0"
   ],
   "registryDependencies": [

@@ -4,8 +4,8 @@
   "title": "Autocomplete",
   "description": "UI SDK Autocomplete styled as a field: free text with suggestions that filter as you type, matches marked, Clear and Trigger buttons with tooltips, async suggestions through useAsyncOptions, floating labels and FormField binding.",
   "dependencies": [
-    "@ui-sdk/core@0.1.0-beta.5",
-    "@ui-sdk/react@0.1.0-beta.5",
+    "@ui-sdk/core@0.1.0-beta.10",
+    "@ui-sdk/react@0.1.0-beta.10",
     "lucide-react@^1.68.0"
   ],
   "registryDependencies": [
