@@ -30,7 +30,10 @@ type SlashCommand = {
   label: string
   keywords?: string[]
   hint?: string
-  /** Replaces the typed `/query` (from `from` to `to`) with whatever the command inserts. */
+  /**
+   * Replaces the typed `/query` (from `from` to `to`) with whatever the command inserts. It may call the handle's
+   * `openWikilinkSuggestions()`, which opens once the slash menu has closed.
+   */
   run: (view: EditorView, range: { from: number; to: number }) => void
 }
 
@@ -89,6 +92,8 @@ function markdownSlashCommands(labels: Partial<SlashLabels> = {}): SlashCommand[
   ]
 }
 
+const runNow = (run: () => void) => run()
+
 type MarkdownEditorMenusProps = {
   adapter: TextEditorAdapter | undefined
   /** Opens the wikilink suggestions for the editor's handle. */
@@ -97,6 +102,8 @@ type MarkdownEditorMenusProps = {
   slashCommands: SlashCommand[]
   suggestWikilinks?: SuggestWikilinks
   onOpenChange: (open: boolean) => void
+  /** Runs a slash command's `run`, so the editor knows what it calls from there. */
+  runCommand?: (run: () => void) => void
   emptyLabel: ReactNode
 }
 
@@ -107,6 +114,7 @@ function MarkdownEditorMenus({
   slashCommands,
   suggestWikilinks,
   onOpenChange,
+  runCommand = runNow,
   emptyLabel,
 }: MarkdownEditorMenusProps) {
   const triggers = useMemo<TriggerDefinition[]>(() => {
@@ -150,7 +158,7 @@ function MarkdownEditorMenus({
         const command = slashCommands.find((entry) => entry.value === value)
         if (!command) return
         details.preventDefault()
-        command.run(view, { from: details.match.start, to: details.match.end })
+        runCommand(() => command.run(view, { from: details.match.start, to: details.match.end }))
       }}
     >
       <TriggerMenuContent

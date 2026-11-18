@@ -52,8 +52,8 @@ type MarkdownEditorHandle = {
   insertText: (text: string, options?: InsertTextOptions) => boolean
   /**
    * Opens the wikilink suggestions at the caret behind a provisional `[[` (unless one is there): `onChange` and undo
-   * skip it, dismissing puts the note back byte for byte, and a choice is one undoable edit. False when read-only
-   * or without `suggestWikilinks`.
+   * skip it, dismissing puts the note back byte for byte, and a choice is one undoable edit. From a slash command's
+   * `run`, it opens once the slash menu has closed. False when read-only or without `suggestWikilinks`.
    */
   openWikilinkSuggestions: () => boolean
   insertWikilink: (target: string, alias?: string) => boolean

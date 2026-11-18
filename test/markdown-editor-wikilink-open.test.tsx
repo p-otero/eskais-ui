@@ -183,3 +183,78 @@ test("a new value during the session replaces the note and ends the session", as
   expect(handle.getValue()).toBe("Adiós")
   expect(onChange).not.toHaveBeenCalled()
 })
+
+async function mountWithSlash(
+  value: string,
+  run: (handle: MarkdownEditorHandle, range: { from: number; to: number }) => void,
+) {
+  const ref = createRef<MarkdownEditorHandle>()
+  const onChange = vi.fn()
+  const slashCommands = [
+    {
+      value: "link",
+      label: "Link to a note",
+      run: (view: EditorView, range: { from: number; to: number }) => {
+        view.dispatch({ changes: range, selection: { anchor: range.from }, userEvent: "input.complete" })
+        run(ref.current!, range)
+      },
+    },
+  ]
+  render(
+    <MarkdownEditor
+      ref={ref}
+      label="Note"
+      value={value}
+      onChange={onChange}
+      changeDelay={5}
+      suggestWikilinks={suggest}
+      slashCommands={slashCommands}
+    />,
+  )
+  await tick()
+  act(() => {
+    ref.current!.focus()
+    ref.current!.setSelection(value.length)
+  })
+  return { handle: ref.current!, onChange }
+}
+
+test("openWikilinkSuggestions from a slash command's run opens once the slash menu has closed", async () => {
+  let opened: boolean | undefined
+  const { handle, onChange } = await mountWithSlash("see ", (current) => {
+    opened = current.openWikilinkSuggestions()
+  })
+  await typeChars("/li")
+  const slash = await waitForOptions()
+  fireEvent.click(within(slash!).getByRole("option", { name: "Link to a note" }))
+  expect(opened).toBe(true)
+  const options = await waitForOptions()
+  expect(
+    within(options!)
+      .getAllByRole("option")
+      .map((option) => option.textContent),
+  ).toEqual(["roadmap", "risks"])
+  expect(handle.getValue()).toBe("see [[")
+  fireEvent.click(within(options!).getByRole("option", { name: "risks" }))
+  await tick(20)
+  expect(handle.getValue()).toBe("see [[risks]]")
+  expect(onChange).toHaveBeenLastCalledWith("see [[risks]]")
+})
+
+test("dismissing suggestions a slash command opened leaves the note as the command left it", async () => {
+  const { handle } = await mountWithSlash("see ", (current) => {
+    current.openWikilinkSuggestions()
+  })
+  await typeChars("/li")
+  fireEvent.keyDown(editorView().contentDOM, { key: "Enter" })
+  expect(await waitForOptions()).not.toBeNull()
+  expect(handle.getValue()).toBe("see [[")
+  fireEvent.keyDown(editorView().contentDOM, { key: "Escape" })
+  await tick(20)
+  expect(isOpen()).toBe(false)
+  expect(handle.getValue()).toBe("see ")
+  act(() => {
+    undo(editorView())
+  })
+  expect(handle.getValue()).toBe("see /li")
+})

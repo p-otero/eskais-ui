@@ -1,7 +1,8 @@
 "use client"
 
 import { createParts } from "@ui-sdk/react/primitive"
-import { createTriggerMenuController } from "@ui-sdk/react/trigger-menu"
+import type { EditorView } from "@codemirror/view"
+import { createTriggerMenuController, type TriggerMenuController } from "@ui-sdk/react/trigger-menu"
 import { useId, useMemo, useState, type ReactNode, type Ref } from "react"
 
 import { openProvisionally, setMenuOpen } from "@/components/ui/markdown-editor-adapter"
@@ -53,6 +54,38 @@ import { cn } from "@/lib/utils"
 
 const { Root: EditorRoot } = createParts(markdownEditor, { root: "div" })
 const { Root: DocumentRoot } = createParts(markdownDocument, { root: "div" })
+
+/**
+ * Opens the wikilink suggestions behind a provisional `[[`. The trigger menu closes once more after a slash
+ * command's `run` returns, so a request made from `run` opens after that, in a microtask.
+ */
+function createWikilinkOpener(controller: TriggerMenuController) {
+  let running = false
+  let queued: EditorView | null = null
+  const open = (view: EditorView) => {
+    if (view.state.readOnly) return
+    view.focus()
+    const closed = openProvisionally(view, () => controller.open({ trigger: "[[" }))
+    void closed.then(() => settleProvisional(view, "[[", WIKILINK_QUERY))
+  }
+  return {
+    request(view: EditorView) {
+      if (running) queued = view
+      else open(view)
+    },
+    runSlashCommand(run: () => void) {
+      running = true
+      try {
+        run()
+      } finally {
+        running = false
+      }
+      const view = queued
+      queued = null
+      if (view) queueMicrotask(() => open(view))
+    },
+  }
+}
 
 type MarkdownEditorProps = {
   /** Accessible name of the editor and its text box. */
@@ -133,18 +166,17 @@ function MarkdownEditorBody(props: Omit<MarkdownEditorProps, "ref"> & { handle: 
   )
   const { hostRef, view, adapter, sync } = useMarkdownEditorView(props, settings)
   const [menuController] = useState(createTriggerMenuController)
+  const [wikilinks] = useState(() => createWikilinkOpener(menuController))
   const suggests = props.suggestWikilinks !== undefined && !readOnly
   const menus = useMemo<HandleMenus>(
     () => ({
       openWikilinkSuggestions: () => {
         if (!view || !suggests || view.state.readOnly) return false
-        view.focus()
-        const closed = openProvisionally(view, () => menuController.open({ trigger: "[[" }))
-        void closed.then(() => settleProvisional(view, "[[", WIKILINK_QUERY))
+        wikilinks.request(view)
         return true
       },
     }),
-    [view, suggests, menuController],
+    [view, suggests, wikilinks],
   )
   useEditorHandle(props.handle, view, menus)
 
@@ -218,6 +250,7 @@ function MarkdownEditorBody(props: Omit<MarkdownEditorProps, "ref"> & { handle: 
           suggestWikilinks={props.suggestWikilinks}
           emptyLabel={labels.noMatches}
           onOpenChange={(open) => view?.dispatch({ effects: setMenuOpen.of(open) })}
+          runCommand={wikilinks.runSlashCommand}
         />
       )}
     </EditorRoot>
