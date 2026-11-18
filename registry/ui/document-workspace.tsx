@@ -17,8 +17,12 @@ import { WorkspaceColumns, WorkspaceDrawers } from "@/components/ui/document-wor
 import { DocumentOutline, type DocumentOutlineProps } from "@/components/ui/document-workspace-parts"
 import {
   DocumentQuickOpen,
+  documentQuickOpenLabels,
   type DocumentQuickOpenItem,
+  type DocumentQuickOpenItemsProps,
   type DocumentQuickOpenLabels,
+  type DocumentQuickOpenProps,
+  type DocumentQuickOpenSourceProps,
 } from "@/components/ui/document-quick-open"
 import { useDocumentWorkspaceState } from "@/components/ui/use-document-workspace-state"
 import { cn } from "@/lib/utils"
@@ -133,13 +137,23 @@ function DocumentWorkspace(props: DocumentWorkspaceProps) {
   )
 }
 
-export { DocumentOutline, DocumentQuickOpen, DocumentWorkspace, documentWorkspaceLabels, useDocumentWorkspace }
+export {
+  DocumentOutline,
+  DocumentQuickOpen,
+  documentQuickOpenLabels,
+  DocumentWorkspace,
+  documentWorkspaceLabels,
+  useDocumentWorkspace,
+}
 export type {
   DocumentEditor,
   DocumentHeading,
   DocumentOutlineProps,
   DocumentQuickOpenItem,
+  DocumentQuickOpenItemsProps,
   DocumentQuickOpenLabels,
+  DocumentQuickOpenProps,
+  DocumentQuickOpenSourceProps,
   DocumentSaveState,
   DocumentWorkspaceLabels,
   DocumentWorkspaceMode,
