@@ -18,6 +18,7 @@ Versions follow [semver](https://semver.org). Before 1.0, a minor version can br
 - `command`: `CommandFooter`, a line under the list for hints like the keys that move and close, in caption text over a top border.
 - `shell`: `searchFooter` renders at the bottom of the palette in a `CommandFooter`, like `<Kbd>↑</Kbd><Kbd>↓</Kbd>` and your words for them. Nothing by default, and no copy of its own.
 - `MasterDetail idleDetail="visible"`: on a container under 42rem, the detail stays under the list while nothing is open instead of hiding, for a live pane like a monitor. It sits at its content's height up to `--master-detail-idle-height` (50%), scrolls by keyboard, and its bar has a Collapse/Expand button (`labels.collapse`/`expand`, with a tooltip and `aria-expanded`) that folds it to the bar and keeps focus; with `collapsible` the idle detail gets the same button beside the list and folds to the rail. `emptyDetailTitle` titles the bar and names the pane. The collapsed state is the one `storageKey` remembers.
+- `MasterDetail height="auto"`: sized by its content between `--master-detail-min-height` (16rem) and `--master-detail-max-height` (40rem), the panes scrolling inside, for a block in a page that scrolls. `fill` (default) still fills its parent.
 
 ### Changed
 

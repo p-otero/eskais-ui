@@ -1,7 +1,7 @@
 import { act, render, screen, within } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { createAgent } from "@ui-sdk/react/agent"
-import { useState } from "react"
+import { useState, type CSSProperties } from "react"
 import { afterEach, beforeEach, expect, test, vi } from "vitest"
 
 import { List, ListItem } from "@/components/ui/list-item"
@@ -268,4 +268,13 @@ test("MasterDetail: agents collapse and expand a visible idle detail by name", a
   result = await act(() => agent.act({ steps: [{ ref: "Expand detail", action: "press" }] }))
   expect(result.ok, result.error?.message).toBe(true)
   expect(screen.getByText("Pick a device")).toBeTruthy()
+})
+
+test("MasterDetail: height auto sizes to content between a min and a max", () => {
+  render(<Devices height="auto" style={{ "--master-detail-max-height": "30rem" } as CSSProperties} />)
+  const root = document.querySelector<HTMLElement>('[data-slot="master-detail"]')!
+  expect(root.dataset.height).toBe("auto")
+  expect(root.className).toContain("max-h-(--master-detail-max-height)")
+  expect(root.className).not.toContain("h-(--master-detail-height)")
+  expect(root.style.getPropertyValue("--master-detail-max-height")).toBe("30rem")
 })

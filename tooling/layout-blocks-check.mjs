@@ -298,7 +298,7 @@ function visiblePanes(root) {
   )
 }
 
-// ?demo=master-detail-check: `idleDetail="visible"` in a container under 42rem on a wide window.
+// ?demo=master-detail-check: `idleDetail="visible"` in a container under 42rem on a wide window, and `height="auto"`.
 async function masterDetailModes(page, check, shot, scheme) {
   const tag = `master-detail modes ${scheme}`
   await page.setViewportSize({ width: 1440, height: 900 })
@@ -360,6 +360,23 @@ async function masterDetailModes(page, check, shot, scheme) {
     `${opened[0]?.height}px`,
   )
   await idle.getByRole("button", { name: "Back" }).click()
+
+  const auto = page.getByRole("group", { name: "Content sized" })
+  const sized = await auto.evaluate((element) => {
+    const body = element.querySelector('[data-slot="master-detail-list-body"]')
+    return { height: element.getBoundingClientRect().height, scrolls: body.scrollHeight > body.clientHeight + 1 }
+  })
+  const rem = 16
+  check(
+    `${tag}: height auto stops at --master-detail-max-height`,
+    Math.abs(sized.height - 24 * rem) < 2,
+    `${sized.height}px`,
+  )
+  check(`${tag}: and the list scrolls inside it`, sized.scrolls)
+  const few = await page
+    .getByRole("group", { name: "Few rows" })
+    .evaluate((element) => element.getBoundingClientRect().height)
+  check(`${tag}: a short list keeps --master-detail-min-height`, Math.abs(few - 16 * rem) < 2, `${few}px`)
 }
 
 async function checkLayoutBlocks(page, check, shot) {

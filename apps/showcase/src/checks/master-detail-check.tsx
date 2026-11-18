@@ -1,3 +1,5 @@
+import type { CSSProperties } from "react"
+
 import { List, ListItem } from "@/components/ui/list-item"
 import { MasterDetail, type MasterDetailProps } from "@/components/ui/master-detail"
 
@@ -30,7 +32,7 @@ function Devices(props: Omit<Partial<MasterDetailProps>, "label"> & { label: str
 
 /**
  * ?demo=master-detail-check, for tooling/layout-blocks-check.mjs: an idle detail kept under the list in a narrow
- * container.
+ * container, and a content-sized block in a scrolling page.
  */
 function MasterDetailCheck() {
   return (
@@ -50,6 +52,24 @@ function MasterDetailCheck() {
           }
         />
       </div>
+      <p className="text-body text-muted-foreground">Text above the content-sized block.</p>
+      <Devices
+        label="Content sized"
+        height="auto"
+        style={{ "--master-detail-max-height": "24rem" } as CSSProperties}
+        emptyDetail={<p>Pick a device</p>}
+      />
+      <Devices
+        label="Few rows"
+        height="auto"
+        renderList={(state) => (
+          <List aria-label="Few rows list">
+            <ListItem title="Only device" {...state.itemProps("dev-1")} />
+          </List>
+        )}
+        emptyDetail={<p>Pick a device</p>}
+      />
+      <p className="text-body text-muted-foreground">Text below it.</p>
     </main>
   )
 }

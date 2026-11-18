@@ -59,6 +59,12 @@ type MasterDetailProps = Omit<PartProps<"div">, "children" | "aria-label" | "sty
    * `collapsible`, the idle detail also gets that button beside the list, where it collapses to the rail.
    */
   idleDetail?: "hidden" | "visible"
+  /**
+   * `fill` (default) fills the parent's height, for a bounded box like an app shell's main column. `auto` sizes it to
+   * its content between `--master-detail-min-height` (16rem) and `--master-detail-max-height` (40rem), the panes
+   * scrolling inside, for a block in a scrolling page.
+   */
+  height?: "fill" | "auto"
   /** Above the list, like a title and a count. */
   header?: ReactNode
   /** Under the header, like a search field or filters. */
@@ -92,8 +98,9 @@ type MasterDetailProps = Omit<PartProps<"div">, "children" | "aria-label" | "sty
   scope?: string
   labels?: Partial<MasterDetailLabels>
   /**
-   * `--master-detail-height` (100% by default) and `--master-detail-list-width` set the block's size;
-   * `--master-detail-idle-height` (50%) caps a stacked idle detail.
+   * `--master-detail-height` (100% by default) and `--master-detail-list-width` set the block's size; with
+   * `height="auto"`, `--master-detail-min-height` and `--master-detail-max-height` bound it. `--master-detail-idle-height`
+   * (50%) caps a stacked idle detail.
    */
   style?: CSSProperties
 }
@@ -110,13 +117,21 @@ const stackedClassNames = {
     "@max-2xl/master-detail:w-full @max-2xl/master-detail:!flex-auto @max-2xl/master-detail:data-idle:!flex-none @max-2xl/master-detail:data-idle:max-h-(--master-detail-idle-height) @max-2xl/master-detail:data-idle:border-t @max-2xl/master-detail:data-idle:data-collapsed:max-h-none",
 }
 
-function rootAttributes(label: string, narrow: boolean, style: CSSProperties | undefined) {
+const heightClassNames = {
+  fill: "h-(--master-detail-height)",
+  auto: "h-auto min-h-(--master-detail-min-height) max-h-(--master-detail-max-height)",
+}
+
+function rootAttributes(label: string, narrow: boolean, height: "fill" | "auto", style: CSSProperties | undefined) {
   return {
     "aria-label": label,
     "data-slot": "master-detail",
     "data-stacked": narrow ? "" : undefined,
+    "data-height": height,
     style: {
       "--master-detail-height": "100%",
+      "--master-detail-min-height": "16rem",
+      "--master-detail-max-height": "40rem",
       "--master-detail-idle-height": "50%",
       "--master-detail-list-width": "clamp(16rem, 38%, 26rem)",
       ...style,
@@ -142,6 +157,7 @@ function MasterDetail({
   emptyDetail,
   emptyDetailTitle,
   idleDetail = "hidden",
+  height = "fill",
   header,
   toolbar,
   selectedId: selectedIdProp,
@@ -377,10 +393,11 @@ function MasterDetail({
     {},
     {
       ...props,
-      ...rootAttributes(label, narrow, style),
+      ...rootAttributes(label, narrow, height, style),
       ref: setRoot,
       className: cn(
-        "@container/master-detail flex h-(--master-detail-height) min-h-0 w-full min-w-0 overflow-hidden bg-background",
+        "@container/master-detail flex w-full min-w-0 overflow-hidden bg-background",
+        height === "auto" ? heightClassNames.auto : cn(heightClassNames.fill, "min-h-0"),
         className,
       ),
       children: (
