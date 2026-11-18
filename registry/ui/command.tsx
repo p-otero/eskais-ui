@@ -17,21 +17,118 @@ import {
   createCommandController,
 } from "@ui-sdk/react/command"
 import { mergeProps } from "@ui-sdk/react/primitive"
-import { useCallback, useState, type ComponentProps } from "react"
+import { createContext, use, useCallback, useState, type ComponentProps } from "react"
 import { SearchIcon } from "lucide-react"
 
 import { isHashRoute, useFastLink } from "@/components/ui/fast-link"
 import { Kbd } from "@/components/ui/kbd"
 import { isPlainClick } from "@/components/ui/link-primitive"
-import { cnState } from "@/lib/utils"
+import { cn, cnState } from "@/lib/utils"
+import { useHighlightFirstOnOpen } from "@/components/ui/use-command-reset"
 
-function Command({ className, ...props }: ComponentProps<typeof CommandPrimitive>) {
+type CommandHost = {
+  /** Whether the dialog around the command list is open. */
+  open: boolean
+  /** Set when Escape should close the dialog instead of clearing the search or going back a page. */
+  closeOnEscape?: (event: Event | undefined) => void
+}
+
+/** Set by CommandDialogContent, so a Command inside starts fresh on every open and Escape can close the dialog. */
+const CommandHostContext = createContext<CommandHost | null>(null)
+
+/** Whether an Escape that would clear the search or go back a page closes the dialog instead. */
+function escapeClosesHost(host: CommandHost | null, details: { reason: string; event?: Event; cancel: () => void }) {
+  if (details.reason !== "escape-key" || !host?.closeOnEscape) return false
+  details.cancel()
+  host.closeOnEscape(details.event)
+  return true
+}
+
+type CommandProps = ComponentProps<typeof CommandPrimitive>
+
+// A modified click on a link command stays native (a new tab), so CommandLinkItem can't cancel it, and UI SDK then
+// runs the command's onAction with that click. A link command never runs onAction.
+function isModifiedLinkPress(event: Event | undefined) {
+  return (
+    event instanceof MouseEvent &&
+    !isPlainClick(event) &&
+    event.target instanceof Element &&
+    event.target.closest("a[href]") !== null
+  )
+}
+
+const noPages: string[] = []
+
+/**
+ * Inside a CommandDialogContent, each open starts from `defaultQuery` (empty by default), on `defaultPages` (the
+ * first page), with the best match highlighted. A `query` or `pages` you control is left to you.
+ */
+function Command({
+  className,
+  query: queryProp,
+  defaultQuery = "",
+  onQueryChange,
+  pages: pagesProp,
+  defaultPages = noPages,
+  onPagesChange,
+  onAction,
+  controller: controllerProp,
+  autoHighlight,
+  ref,
+  ...props
+}: CommandProps) {
+  const host = use(CommandHostContext)
+  const [ownController] = useState(createCommandController)
+  const controller = controllerProp ?? ownController
+  const [root, setRoot] = useState<HTMLElement | null>(null)
+  const rootRef = useCallback(
+    (node: HTMLDivElement | null) => {
+      setRoot(node)
+      if (typeof ref === "function") return ref(node)
+      if (ref) ref.current = node
+      return undefined
+    },
+    [ref],
+  )
+  // Controlled here rather than remounted on open: a closed dialog can stay mounted (keepMounted, or an exit
+  // animation that never ends), and a remount would replace the input the dialog has just focused.
+  const [ownQuery, setOwnQuery] = useState(defaultQuery)
+  const [ownPages, setOwnPages] = useState(defaultPages)
+  const open = host?.open ?? false
+  const [wasOpen, setWasOpen] = useState(open)
+  if (open !== wasOpen) {
+    setWasOpen(open)
+    if (open) {
+      setOwnQuery(defaultQuery)
+      setOwnPages(defaultPages)
+    }
+  }
+  const hosted = host !== null
+  useHighlightFirstOnOpen(open, hosted && autoHighlight !== false && props.value === undefined, controller, root)
   return (
     <CommandPrimitive
       className={cnState(
         "flex w-full flex-col overflow-hidden rounded-surface bg-popover/(--glass-opacity) text-popover-foreground in-data-[slot=dialog-content]:rounded-none in-data-[slot=dialog-content]:bg-transparent",
         className,
       )}
+      query={queryProp ?? (hosted ? ownQuery : undefined)}
+      defaultQuery={hosted ? undefined : defaultQuery}
+      onQueryChange={(query, details) => {
+        if (escapeClosesHost(host, details)) return
+        onQueryChange?.(query, details)
+        if (!details.canceled) setOwnQuery(query)
+      }}
+      pages={pagesProp ?? (hosted ? ownPages : undefined)}
+      defaultPages={hosted ? undefined : defaultPages}
+      onPagesChange={(pages, details) => {
+        if (escapeClosesHost(host, details)) return
+        onPagesChange?.(pages, details)
+        if (!details.canceled) setOwnPages(pages)
+      }}
+      onAction={(value, details) => (isModifiedLinkPress(details.event) ? undefined : onAction?.(value, details))}
+      controller={controller}
+      autoHighlight={autoHighlight}
+      ref={rootRef}
       {...props}
     />
   )
@@ -120,7 +217,9 @@ type CommandItemProps = ComponentProps<typeof CommandItemPrimitive> & {
 
 function CommandItem({ className, href, onFollow, fast = true, ...props }: CommandItemProps) {
   if (href === undefined) {
-    return <CommandItemPrimitive className={cnState(commandItemClassName, className)} {...props} />
+    return (
+      <CommandItemPrimitive data-value={props.value} className={cnState(commandItemClassName, className)} {...props} />
+    )
   }
   return <CommandLinkItem className={className} href={href} onFollow={onFollow} fast={fast} {...props} />
 }
@@ -183,6 +282,7 @@ function CommandLinkItem({
       // oxlint-disable-next-line jsx-a11y/anchor-has-content, jsx-a11y/control-has-associated-label -- the command's children fill it
       render={render ?? <a href={href} />}
       onSelect={select}
+      data-value={props.value}
       {...mergeProps({ ref, href, target, rel, download }, props)}
     />
   )
@@ -204,6 +304,20 @@ function CommandSeparator({ className, ...props }: ComponentProps<typeof Command
   return <CommandSeparatorPrimitive className={cnState("-mx-inline my-inline h-px bg-border", className)} {...props} />
 }
 
+/** A line under the list, for hints like the keys that move and close. Plain content, not a control. */
+function CommandFooter({ className, ...props }: ComponentProps<"div">) {
+  return (
+    <div
+      data-slot="command-footer"
+      className={cn(
+        "flex flex-wrap items-center gap-x-group gap-y-inline border-t px-control-x py-inset-item text-caption text-muted-foreground",
+        className,
+      )}
+      {...props}
+    />
+  )
+}
+
 function CommandShortcut({ className, ...props }: ComponentProps<typeof CommandShortcutPrimitive>) {
   return (
     <CommandShortcutPrimitive
@@ -217,8 +331,10 @@ function CommandShortcut({ className, ...props }: ComponentProps<typeof CommandS
 export {
   Command,
   CommandEmpty,
+  CommandFooter,
   CommandGroup,
   CommandGroupLabel,
+  CommandHostContext,
   CommandInput,
   CommandItem,
   CommandItemIcon,
@@ -230,4 +346,4 @@ export {
   CommandStatus,
   createCommandController,
 }
-export type { CommandItemFollowDetails, CommandItemProps }
+export type { CommandHost, CommandItemFollowDetails, CommandItemProps, CommandProps }

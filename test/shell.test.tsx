@@ -3,7 +3,8 @@ import userEvent from "@testing-library/user-event"
 import { createAgent } from "@ui-sdk/react/agent"
 import { afterEach, expect, test, vi } from "vitest"
 
-import { Shell, type ShellRoute, type ShellRouteGroup, type ShellProps } from "@/components/ui/shell"
+import { Shell, useShellSidebar, type ShellRoute, type ShellRouteGroup, type ShellProps } from "@/components/ui/shell"
+import { useSidebarState } from "@/components/ui/sidebar"
 import { CommandGroup, CommandGroupLabel, CommandItem } from "@/components/ui/command"
 
 import { axeViolations } from "./axe"
@@ -270,4 +271,400 @@ test("commandGroups add commands that onCommand runs before the palette closes",
   await settle(50)
   expect(onCommand).toHaveBeenCalledWith("new-task")
   expect(screen.queryByRole("dialog")).toBeNull()
+})
+
+test("the palette reopens empty after a route is chosen, and one Escape closes it with text in the search", async () => {
+  const user = userEvent.setup()
+  const onNavigate = vi.fn()
+  render(<TestShell onNavigate={onNavigate} />)
+  await settle()
+  const trigger = document.querySelector<HTMLElement>("[data-slot=dialog-trigger]")!
+  await user.keyboard("{Control>}k{/Control}")
+  await settle()
+  await user.keyboard("Old rep{Enter}")
+  await settle(50)
+  expect(onNavigate).toHaveBeenLastCalledWith("/legacy/reports", expect.anything())
+
+  await user.keyboard("{Control>}k{/Control}")
+  await settle()
+  const input = screen.getByRole<HTMLInputElement>("combobox", { name: "Find a page or command" })
+  expect(input.value).toBe("")
+  await user.keyboard("arch")
+  expect(input.value).toBe("arch")
+  await user.keyboard("{Escape}")
+  await settle(50)
+  expect(screen.queryByRole("dialog")).toBeNull()
+  expect(document.activeElement).toBe(trigger)
+})
+
+test("searchQuery controls the palette's search, and defaultSearchQuery starts every open", async () => {
+  const user = userEvent.setup()
+  const onSearchQueryChange = vi.fn()
+  const { rerender } = render(<TestShell defaultSearchQuery="set" />)
+  await settle()
+  await user.keyboard("{Control>}k{/Control}")
+  await settle()
+  expect(screen.getByRole<HTMLInputElement>("combobox", { name: "Find a page or command" }).value).toBe("set")
+  expect(screen.getAllByRole("option").map((option) => option.textContent)).toEqual(["Settings"])
+  await user.keyboard("{Escape}")
+  await settle(50)
+
+  rerender(<TestShell searchQuery="inb" onSearchQueryChange={onSearchQueryChange} />)
+  await user.keyboard("{Control>}k{/Control}")
+  await settle()
+  const input = screen.getByRole<HTMLInputElement>("combobox", { name: "Find a page or command" })
+  expect(input.value).toBe("inb")
+  await user.keyboard("o")
+  expect(onSearchQueryChange).toHaveBeenLastCalledWith("inbo", expect.objectContaining({ reason: "input-change" }))
+  expect(input.value).toBe("inb")
+})
+
+test("sidebarShortcut toggles the sidebar and shows on the trigger; without it the keys do nothing", async () => {
+  const user = userEvent.setup()
+  const { unmount } = render(<TestShell />)
+  await settle()
+  const sidebar = screen.getByRole("navigation", { name: "Main" })
+  await user.keyboard("{Control>}b{/Control}")
+  await settle()
+  expect(sidebar.hasAttribute("data-collapsed")).toBe(false)
+  unmount()
+
+  render(<TestShell sidebarShortcut="mod+b" />)
+  await settle()
+  const trigger = within(screen.getByRole("banner")).getByRole("button", { name: "Collapse sidebar" })
+  expect(trigger.getAttribute("aria-keyshortcuts")).toBe("Control+B")
+  await user.keyboard("{Control>}b{/Control}")
+  await settle()
+  expect(screen.getByRole("navigation", { name: "Main" }).hasAttribute("data-collapsed")).toBe(true)
+  expect(within(screen.getByRole("banner")).getByRole("button", { name: "Expand sidebar" })).toBeTruthy()
+  await user.keyboard("{Control>}b{/Control}")
+  await settle()
+  expect(screen.getByRole("navigation", { name: "Main" }).hasAttribute("data-collapsed")).toBe(false)
+})
+
+test("on a narrow screen sidebarShortcut opens the drawer", async () => {
+  mockNarrow(true)
+  const user = userEvent.setup()
+  render(<TestShell sidebarShortcut="mod+b" />)
+  await settle()
+  await user.keyboard("{Control>}b{/Control}")
+  await settle()
+  expect(screen.getByRole("dialog", { name: "Main" })).toBeTruthy()
+})
+
+function CollapseFromPage() {
+  const sidebar = useShellSidebar()
+  return (
+    <button type="button" onClick={() => sidebar.setCollapsed(!sidebar.collapsed)}>
+      {sidebar.collapsed ? "Show navigation" : "Hide navigation"}
+    </button>
+  )
+}
+
+test("useShellSidebar reads and sets the Shell's sidebar from inside it", async () => {
+  const user = userEvent.setup()
+  render(
+    <Shell routes={routes} groups={groups}>
+      <CollapseFromPage />
+    </Shell>,
+  )
+  await settle()
+  await user.click(screen.getByRole("button", { name: "Hide navigation" }))
+  await settle()
+  expect(screen.getByRole("navigation", { name: "Main" }).hasAttribute("data-collapsed")).toBe(true)
+  expect(screen.getByRole("button", { name: "Show navigation" })).toBeTruthy()
+})
+
+function OwnSidebarState() {
+  const sidebar = useSidebarState({ defaultCollapsed: true })
+  return (
+    <>
+      <button type="button" onClick={() => sidebar.controller.toggle()}>
+        Toggle from outside
+      </button>
+      <output aria-label="Sidebar state">{sidebar.collapsed ? "collapsed" : "expanded"}</output>
+      <Shell routes={routes} groups={groups} sidebar={sidebar}>
+        <h1>Page</h1>
+      </Shell>
+    </>
+  )
+}
+
+const mainNav = () => screen.getByRole("navigation", { name: "Main" })
+
+test("sidebar takes the app's own useSidebarState, which controls and follows the Shell's sidebar", async () => {
+  const user = userEvent.setup()
+  render(<OwnSidebarState />)
+  await settle()
+  expect(mainNav().hasAttribute("data-collapsed")).toBe(true)
+  await user.click(screen.getByRole("button", { name: "Toggle from outside" }))
+  await settle()
+  expect(mainNav().hasAttribute("data-collapsed")).toBe(false)
+  await user.click(within(screen.getByRole("banner")).getByRole("button", { name: "Collapse sidebar" }))
+  await settle()
+  expect(screen.getByRole("status", { name: "Sidebar state" }).textContent).toBe("collapsed")
+})
+
+test("an agent presses the sidebar's trigger by name, the shortcut adding nothing new", async () => {
+  render(<TestShell sidebarShortcut="mod+b" />)
+  await settle()
+  const pressed = await act(() => agent.act({ steps: [{ ref: "Collapse sidebar", action: "press" }] }))
+  expect(pressed.ok, pressed.error?.message).toBe(true)
+  await settle()
+  expect(screen.getByRole("navigation", { name: "Main" }).hasAttribute("data-collapsed")).toBe(true)
+})
+
+test("mobile order places bottom bar routes apart from the sidebar's order, still four at most", async () => {
+  const user = userEvent.setup()
+  const reordered: Route[] = routes.map((route) => {
+    const order = { reports: 1, calendar: 2, settings: 3, inbox: 4, tasks: 5 }[route.id]
+    return order === undefined
+      ? { ...route, mobile: route.id === "projects" ? true : undefined }
+      : { ...route, mobile: { order } }
+  })
+  render(<TestShell routes={reordered} />)
+  await settle()
+  const sidebar = screen.getByRole("navigation", { name: "Main" })
+  expect(
+    within(within(sidebar).getByRole("list", { name: "Work" }))
+      .getAllByRole("link")
+      .map((link) => link.textContent),
+  ).toEqual(["Inbox", "Tasks", "Projects", "Calendar", "Reports", "Settings"])
+  const bar = screen.getByRole("navigation", { name: "Bottom bar" })
+  // `true` counts as order 0, so Projects leads.
+  expect(
+    within(bar)
+      .getAllByRole("link")
+      .map((link) => link.textContent),
+  ).toEqual(["Projects", "Reports", "Calendar", "Settings"])
+  await user.click(within(bar).getByRole("button", { name: "More" }))
+  await settle()
+  expect(
+    within(bar)
+      .getAllByRole("link")
+      .slice(4)
+      .map((link) => link.textContent),
+  ).toEqual(["Inbox", "Tasks", "Old reports", "Archive"])
+})
+
+test("equal mobile orders keep the list's order", async () => {
+  const tied: Route[] = routes.map((route) => ({ ...route, mobile: { order: route.id === "archive" ? -1 : 1 } }))
+  render(<TestShell routes={tied} />)
+  await settle()
+  expect(
+    within(screen.getByRole("navigation", { name: "Bottom bar" }))
+      .getAllByRole("link")
+      .map((link) => link.textContent),
+  ).toEqual(["Archive", "Inbox", "Tasks", "Projects"])
+})
+
+const linkNames = (scope: HTMLElement) =>
+  within(scope)
+    .queryAllByRole("link")
+    .map((link) => link.textContent)
+
+test("placements keep a route to the sidebar, out of More or out of the palette", async () => {
+  const user = userEvent.setup()
+  const placed: Route[] = routes.map((route) => {
+    if (route.id === "settings") return { ...route, placements: ["sidebar"] }
+    if (route.id === "old-reports") return { ...route, placements: ["sidebar", "palette"] }
+    if (route.id === "archive") return { ...route, placements: ["sidebar", "more"] }
+    return route
+  })
+  render(<TestShell routes={placed} />)
+  await settle()
+  const sidebar = screen.getByRole("navigation", { name: "Main" })
+  expect(linkNames(sidebar)).toEqual(routes.map((route) => route.label))
+
+  const bar = screen.getByRole("navigation", { name: "Bottom bar" })
+  await user.click(within(bar).getByRole("button", { name: "More" }))
+  await settle()
+  expect(linkNames(bar).slice(4)).toEqual(["Reports", "Archive"])
+
+  await user.keyboard("{Control>}k{/Control}")
+  await settle()
+  const options = within(screen.getByRole("dialog")).getAllByRole("option")
+  expect(options.map((option) => option.textContent)).toEqual([
+    "Inbox",
+    "Tasks",
+    "Projects",
+    "Calendar",
+    "Reports",
+    "Old reports",
+  ])
+})
+
+test('placements decide the bottom bar over mobile: without "mobile" a route stays out, with it a route joins', async () => {
+  const placed: Route[] = routes.map((route) => {
+    if (route.id === "inbox") return { ...route, placements: ["sidebar", "more", "palette"] }
+    if (route.id === "archive") return { ...route, mobile: undefined, placements: ["mobile", "palette"] }
+    return route
+  })
+  render(<TestShell routes={placed} />)
+  await settle()
+  const bar = screen.getByRole("navigation", { name: "Bottom bar" })
+  expect(linkNames(bar)).toEqual(["Tasks", "Projects", "Calendar", "Reports"])
+  expect(linkNames(screen.getByRole("navigation", { name: "Main" }))).not.toContain("Archive")
+  // Archive is a mobile candidate behind four earlier ones and isn't allowed in More, so it doesn't show there.
+  const user = userEvent.setup()
+  await user.click(within(bar).getByRole("button", { name: "More" }))
+  await settle()
+  expect(linkNames(bar).slice(4)).toEqual(["Inbox", "Settings", "Old reports"])
+})
+
+test("a route in the bottom bar only, and none in the sidebar, still routes and marks current", async () => {
+  const placed: Route[] = routes.map((route) =>
+    route.id === "calendar" ? { ...route, mobile: { order: -1 }, placements: ["mobile"] } : route,
+  )
+  render(<TestShell routes={placed} currentHref="/calendar" />)
+  await settle()
+  const bar = screen.getByRole("navigation", { name: "Bottom bar" })
+  expect(linkNames(bar)[0]).toBe("Calendar")
+  expect(within(bar).getByRole("link", { name: "Calendar" }).getAttribute("aria-current")).toBe("page")
+  expect(linkNames(screen.getByRole("navigation", { name: "Main" }))).not.toContain("Calendar")
+})
+
+test("sidebarHeader goes above the sidebar's routes, also in the narrow drawer", async () => {
+  const { unmount } = render(<TestShell sidebarHeader={<p>Workspace: Acme</p>} />)
+  await settle()
+  const sidebar = screen.getByRole("navigation", { name: "Main" })
+  const header = within(sidebar).getByText("Workspace: Acme")
+  expect(header.closest("[data-slot=sidebar-header]")).toBeTruthy()
+  expect(header.compareDocumentPosition(within(sidebar).getAllByRole("link")[0]!)).toBe(
+    Node.DOCUMENT_POSITION_FOLLOWING,
+  )
+  unmount()
+
+  mockNarrow(true)
+  const user = userEvent.setup()
+  render(<TestShell sidebarHeader={<p>Workspace: Acme</p>} />)
+  await settle()
+  await user.click(within(screen.getByRole("banner")).getByRole("button", { name: "Open navigation" }))
+  await settle()
+  expect(within(screen.getByRole("dialog", { name: "Main" })).getByText("Workspace: Acme")).toBeTruthy()
+})
+
+test('main="fill" gives main the column height, and a route\'s main overrides it while current', async () => {
+  const { rerender } = render(<TestShell />)
+  await settle()
+  const main = screen.getByRole("main")
+  expect(main.getAttribute("data-main")).toBe("flow")
+  expect(main.className).not.toContain("h-(--shell-column-height)")
+
+  rerender(<TestShell main="fill" />)
+  expect(main.getAttribute("data-main")).toBe("fill")
+  expect(main.className).toContain("h-(--shell-column-height)")
+  expect(main.className).toContain("narrow:h-(--shell-column-height-above-bar)")
+
+  const editorRoutes: Route[] = routes.map((route) => (route.id === "tasks" ? { ...route, main: "fill" } : route))
+  rerender(<TestShell routes={editorRoutes} currentHref="/tasks" />)
+  expect(main.getAttribute("data-main")).toBe("fill")
+  rerender(<TestShell routes={editorRoutes} currentHref="/inbox" />)
+  expect(main.getAttribute("data-main")).toBe("flow")
+})
+
+test("searchFooter sits at the bottom of the palette, after the list; there is none by default", async () => {
+  const user = userEvent.setup()
+  const { unmount } = render(<TestShell />)
+  await settle()
+  await user.keyboard("{Control>}k{/Control}")
+  await settle()
+  expect(document.querySelector("[data-slot=command-footer]")).toBeNull()
+  unmount()
+
+  const { baseElement } = render(
+    <TestShell
+      searchFooter={
+        <>
+          <span>
+            <kbd>↑</kbd> <kbd>↓</kbd> move
+          </span>
+          <span>
+            <kbd>Esc</kbd> close
+          </span>
+        </>
+      }
+    />,
+  )
+  await settle()
+  await user.keyboard("{Control>}k{/Control}")
+  await settle()
+  const dialog = screen.getByRole("dialog")
+  const footer = dialog.querySelector("[data-slot=command-footer]")!
+  expect(footer.textContent).toBe("↑ ↓ moveEsc close")
+  const list = within(dialog).getByRole("listbox")
+  expect(list.compareDocumentPosition(footer)).toBe(Node.DOCUMENT_POSITION_FOLLOWING)
+  expect(await axeViolations(baseElement)).toEqual([])
+  await user.keyboard("{Escape}")
+  await settle(50)
+  expect(screen.queryByRole("dialog")).toBeNull()
+})
+
+test("the palette's routes are link commands: a click follows through onNavigate and closes, a modified click stays native", async () => {
+  const user = userEvent.setup()
+  const onNavigate = vi.fn()
+  render(<TestShell onNavigate={onNavigate} />)
+  await settle()
+  const trigger = document.querySelector<HTMLElement>("[data-slot=dialog-trigger]")!
+  await user.click(trigger)
+  await settle()
+  const archive = within(screen.getByRole("dialog")).getByRole("option", { name: "Archive" })
+  expect(archive.tagName).toBe("A")
+  expect(archive.getAttribute("href")).toBe("/legacy")
+
+  const native = vi.fn((event: MouseEvent) => event.preventDefault())
+  document.addEventListener("click", native)
+  await user.keyboard("{Control>}")
+  await user.click(archive)
+  await user.keyboard("{/Control}")
+  document.removeEventListener("click", native)
+  expect(native).toHaveBeenCalled()
+  expect(onNavigate).not.toHaveBeenCalled()
+  expect(screen.getByRole("dialog")).toBeTruthy()
+
+  await user.click(within(screen.getByRole("dialog")).getByRole("option", { name: "Archive" }))
+  await settle(50)
+  expect(onNavigate).toHaveBeenCalledTimes(1)
+  expect(onNavigate).toHaveBeenLastCalledWith("/legacy", expect.objectContaining({ id: "archive" }))
+  expect(screen.queryByRole("dialog")).toBeNull()
+  expect(document.activeElement).toBe(trigger)
+})
+
+test("without onNavigate, a palette route on a hash router sets the hash and closes the palette", async () => {
+  const user = userEvent.setup()
+  const hashRoutes = routes.map((route) => ({ ...route, href: `#${route.href}` }))
+  render(<TestShell routes={hashRoutes} currentHref="#/tasks" />)
+  await settle()
+  await user.keyboard("{Control>}k{/Control}")
+  await settle()
+  await user.keyboard("Calen{Enter}")
+  await settle(50)
+  expect(location.hash).toBe("#/calendar")
+  expect(screen.queryByRole("dialog")).toBeNull()
+  location.hash = ""
+})
+
+test("commandGroups still run through onCommand next to the link commands", async () => {
+  const user = userEvent.setup()
+  const onCommand = vi.fn()
+  const onNavigate = vi.fn()
+  render(
+    <TestShell
+      onNavigate={onNavigate}
+      onCommand={onCommand}
+      commandGroups={
+        <CommandGroup>
+          <CommandGroupLabel>Actions</CommandGroupLabel>
+          <CommandItem value="new-task">New task</CommandItem>
+        </CommandGroup>
+      }
+    />,
+  )
+  await settle()
+  await user.keyboard("{Control>}k{/Control}")
+  await settle()
+  await user.keyboard("New task{Enter}")
+  await settle(50)
+  expect(onCommand).toHaveBeenCalledWith("new-task")
+  expect(onNavigate).not.toHaveBeenCalled()
 })

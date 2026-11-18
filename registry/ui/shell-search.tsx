@@ -7,12 +7,14 @@ import type { ShellRouteSection } from "@/components/ui/shell-routes"
 import {
   Command,
   CommandEmpty,
+  CommandFooter,
   CommandGroup,
   CommandGroupLabel,
   CommandInput,
   CommandItem,
   CommandItemIcon,
   CommandList,
+  type CommandProps,
 } from "@/components/ui/command"
 import { CommandDialog, CommandDialogContent, type CommandDialogController } from "@/components/ui/command-dialog"
 
@@ -29,6 +31,13 @@ type ShellSearchProps = {
   labels: ShellSearchLabels
   commandGroups?: ReactNode
   onCommand?: (value: string) => unknown
+  /** The search text, to control it. Without it, every open starts from `defaultQuery`. */
+  query?: string
+  /** The search text each open starts from, when `query` doesn't control it. Empty by default. */
+  defaultQuery?: string
+  onQueryChange?: CommandProps["onQueryChange"]
+  /** Under the list, like key hints. Nothing by default. */
+  footer?: ReactNode
 }
 
 function ShellSearch({
@@ -39,21 +48,25 @@ function ShellSearch({
   labels,
   commandGroups,
   onCommand,
+  query,
+  defaultQuery,
+  onQueryChange,
+  footer,
 }: ShellSearchProps) {
+  // Route commands are links, which never reach onAction; only the consumer's commands run here.
   const run = async (value: string) => {
-    if (value.startsWith(goToPrefix)) {
-      // Closed first, so focus is back on the trigger before the route changes.
-      controller.close()
-      navigate(value.slice(goToPrefix.length))
-      return
-    }
     await onCommand?.(value)
     controller.close()
+  }
+  const follow = (id: string) => {
+    // Closed first, so focus is back on the trigger before the route changes.
+    controller.close()
+    navigate(id)
   }
   return (
     <CommandDialog controller={controller}>
       <CommandDialogContent title={labels.palette}>
-        <Command onAction={run}>
+        <Command onAction={run} query={query} defaultQuery={defaultQuery} onQueryChange={onQueryChange}>
           <CommandInput aria-label={labels.search} placeholder={labels.searchPlaceholder} />
           <CommandEmpty>{labels.empty}</CommandEmpty>
           <CommandList>
@@ -66,6 +79,8 @@ function ShellSearch({
                     <CommandItem
                       key={route.id}
                       value={`${goToPrefix}${route.id}`}
+                      href={route.href}
+                      onFollow={() => follow(route.id)}
                       label={route.label}
                       keywords={[...(route.keywords ?? []), ...(section.label === undefined ? [] : [section.label])]}
                       aria-current={current ? "page" : undefined}
@@ -90,6 +105,7 @@ function ShellSearch({
             </CommandGroup>
             {commandGroups}
           </CommandList>
+          {footer !== undefined && <CommandFooter>{footer}</CommandFooter>}
         </Command>
       </CommandDialogContent>
     </CommandDialog>
@@ -97,4 +113,4 @@ function ShellSearch({
 }
 
 export { ShellSearch, goToPrefix }
-export type { ShellSearchLabels }
+export type { ShellSearchLabels, ShellSearchProps }

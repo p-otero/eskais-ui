@@ -1,5 +1,14 @@
 import type { ComponentType, ReactNode } from "react"
 
+/** Where a route can show: the sidebar (and its drawer), the bottom bar, its More sheet, and the palette's Go to. */
+type ShellPlacement = "sidebar" | "mobile" | "more" | "palette"
+
+/**
+ * How `<main>` lays out the page. `flow`: as tall as its content, and the page scrolls. `fill`: exactly the height
+ * left under the topbar (and above the bottom bar), so a child with `h-full` or `flex-1` fills it and scrolls inside.
+ */
+type ShellMain = "flow" | "fill"
+
 type ShellRoute = {
   /** Unique among the routes: keys and the palette's command values come from it. */
   id: string
@@ -10,8 +19,19 @@ type ShellRoute = {
   icon?: ComponentType<{ className?: string }>
   /** The `id` of one of `groups`; without `groups`, the group's label. Routes without one come first, unlabelled. */
   group?: string
-  /** In the bottom bar on narrow screens. The first four flagged routes take its slots; More opens the rest. */
-  mobile?: boolean
+  /**
+   * In the bottom bar on narrow screens, which has four slots; More opens the rest. `{ order }` places it apart from
+   * the sidebar's order: routes sort by `order`, then by their place in the list, and `true` counts as order 0.
+   */
+  mobile?: boolean | { order: number }
+  /**
+   * Where it shows; everywhere by default. `["sidebar"]` keeps it out of the bottom bar, More and the palette.
+   * Listing `"mobile"` puts it in the bottom bar as `mobile: true` does; leaving `"mobile"` out keeps it out of the
+   * bar even with `mobile` set. `"more"` lets More list it when the bar doesn't show it.
+   */
+  placements?: readonly ShellPlacement[]
+  /** Overrides the Shell's `main` while this route is current, like `"fill"` for an editor among scrolling pages. */
+  main?: ShellMain
   /** More words the palette matches, like synonyms. */
   keywords?: readonly string[]
   /** A short count or mark beside the label, like 3. It joins the link's name. */
@@ -41,6 +61,10 @@ type ShellRouteSection = {
 type MobileRoutes = { shown: ShellRoute[]; rest: ShellRoute[] }
 
 const mobileSlots = 4
+
+function placedIn(route: ShellRoute, placement: ShellPlacement) {
+  return route.placements === undefined || route.placements.includes(placement)
+}
 
 function sectionRoutes(
   routes: readonly ShellRoute[],
@@ -76,10 +100,22 @@ function currentRouteId<Route extends ShellRoute>(
   return best?.id
 }
 
-function mobileRoutes(routes: readonly ShellRoute[]): MobileRoutes {
-  const shown = routes.filter((route) => route.mobile).slice(0, mobileSlots)
-  return { shown, rest: routes.filter((route) => !shown.includes(route)) }
+function mobileOrder(route: ShellRoute): number | undefined {
+  if (!placedIn(route, "mobile")) return undefined
+  if (typeof route.mobile === "object") return route.mobile.order
+  return route.mobile || route.placements !== undefined ? 0 : undefined
 }
 
-export { currentRouteId, mobileRoutes, sectionRoutes }
-export type { ShellRoute, ShellRouteGroup, ShellRouteSection, ShellCurrent, MobileRoutes }
+function mobileRoutes(routes: readonly ShellRoute[]): MobileRoutes {
+  const candidates: { route: ShellRoute; order: number; index: number }[] = []
+  for (const [index, route] of routes.entries()) {
+    const order = mobileOrder(route)
+    if (order !== undefined) candidates.push({ route, order, index })
+  }
+  candidates.sort((a, b) => a.order - b.order || a.index - b.index)
+  const shown = candidates.slice(0, mobileSlots).map((candidate) => candidate.route)
+  return { shown, rest: routes.filter((route) => !shown.includes(route) && placedIn(route, "more")) }
+}
+
+export { currentRouteId, mobileRoutes, placedIn, sectionRoutes }
+export type { ShellMain, ShellRoute, ShellPlacement, ShellRouteGroup, ShellRouteSection, ShellCurrent, MobileRoutes }

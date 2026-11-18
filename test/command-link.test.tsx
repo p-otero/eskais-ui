@@ -179,3 +179,22 @@ test("data-no-fast-link on an ancestor leaves the press to the click", () => {
   ideas.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true, detail: 1 }))
   expect(onFollow).toHaveBeenCalledTimes(1)
 })
+
+test("a modified click on a link stays native and runs neither onFollow nor onAction", async () => {
+  const user = userEvent.setup()
+  const onAction = vi.fn()
+  const onFollow = vi.fn()
+  render(<Palette onAction={onAction} onFollow={onFollow} />)
+  const native = vi.fn((event: MouseEvent) => event.preventDefault())
+  document.addEventListener("click", native)
+  await user.keyboard("{Control>}")
+  await user.click(screen.getByRole("option", { name: "Ideas" }))
+  await user.keyboard("{/Control}")
+  document.removeEventListener("click", native)
+  expect(native).toHaveBeenCalled()
+  expect(onFollow).not.toHaveBeenCalled()
+  expect(onAction).not.toHaveBeenCalled()
+
+  await user.click(screen.getByRole("option", { name: "New task" }))
+  expect(onAction).toHaveBeenCalledWith("new-task", expect.anything())
+})

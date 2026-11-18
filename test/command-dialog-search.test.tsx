@@ -5,7 +5,15 @@ import { useAsyncOptions } from "@ui-sdk/react/async-options"
 import { useState } from "react"
 import { expect, test, vi } from "vitest"
 
-import { Command, CommandEmpty, CommandInput, CommandItem, CommandList, CommandStatus } from "@/components/ui/command"
+import {
+  Command,
+  CommandEmpty,
+  CommandInput,
+  CommandItem,
+  CommandList,
+  CommandPage,
+  CommandStatus,
+} from "@/components/ui/command"
 import {
   CommandDialog,
   CommandDialogContent,
@@ -148,4 +156,172 @@ test("an agent opens the search by its name and queries it", async () => {
   expect(searched.ok, searched.error?.message).toBe(true)
   await settle(60)
   expect(screen.getAllByRole("option").map((option) => option.textContent)).toEqual(["Apollo"])
+})
+
+function Palette({
+  escapeKey,
+  dismissible,
+  open,
+  onOpenChange,
+}: {
+  escapeKey?: "close" | "clear"
+  dismissible?: boolean
+  open?: boolean
+  onOpenChange?: (open: boolean) => void
+}) {
+  return (
+    <CommandDialog escapeKey={escapeKey} dismissible={dismissible} open={open} onOpenChange={onOpenChange}>
+      <CommandDialogTrigger>Open palette</CommandDialogTrigger>
+      <CommandDialogContent title="Palette">
+        <Command>
+          <CommandInput aria-label="Find a command" />
+          <CommandList>
+            <CommandItem value="apollo">Apollo</CommandItem>
+            <CommandItem value="atlas">Atlas</CommandItem>
+          </CommandList>
+        </Command>
+      </CommandDialogContent>
+    </CommandDialog>
+  )
+}
+
+test("one Escape closes the palette while the search holds text, and focus returns to the trigger", async () => {
+  const user = userEvent.setup()
+  render(<Palette />)
+  const trigger = screen.getByRole("button", { name: "Open palette" })
+  await user.click(trigger)
+  await user.keyboard("atl")
+  expect(screen.getByRole<HTMLInputElement>("combobox", { name: "Find a command" }).value).toBe("atl")
+  await user.keyboard("{Escape}")
+  await settle(20)
+  expect(screen.queryByRole("dialog")).toBeNull()
+  expect(document.activeElement).toBe(trigger)
+})
+
+function ReopenPalette({ keepMounted, onAction }: { keepMounted: boolean; onAction: (value: string) => void }) {
+  const [controller] = useState(() => createCommandDialogController())
+  return (
+    <CommandDialog controller={controller}>
+      <CommandDialogTrigger shortcut="mod+k">Open palette</CommandDialogTrigger>
+      <CommandDialogContent title="Palette" keepMounted={keepMounted}>
+        <Command
+          onAction={(value) => {
+            onAction(value)
+            controller.close()
+          }}
+        >
+          <CommandInput aria-label="Find a command" />
+          <CommandList>
+            <CommandPage>
+              <CommandItem value="apollo">Apollo</CommandItem>
+              <CommandItem value="atlas">Atlas</CommandItem>
+              <CommandItem value="moons" page="moons">
+                Moons
+              </CommandItem>
+            </CommandPage>
+            <CommandPage value="moons">
+              <CommandItem value="io">Io</CommandItem>
+              <CommandItem value="europa">Europa</CommandItem>
+            </CommandPage>
+          </CommandList>
+        </Command>
+      </CommandDialogContent>
+    </CommandDialog>
+  )
+}
+
+const highlighted = () => document.querySelector("[data-slot=command-item][data-highlighted]")?.textContent
+
+for (const keepMounted of [false, true]) {
+  const how = keepMounted ? "with the content kept mounted" : "with the content unmounted"
+
+  test(`after a command runs, the palette reopens empty, first command highlighted, focus in the search (${how})`, async () => {
+    const user = userEvent.setup()
+    const onAction = vi.fn()
+    render(<ReopenPalette keepMounted={keepMounted} onAction={onAction} />)
+    const trigger = screen.getByRole("button", { name: "Open palette" })
+    await user.keyboard("{Control>}k{/Control}")
+    const first = screen.getByRole("combobox", { name: "Find a command" })
+    await user.keyboard("atl{Enter}")
+    await settle(20)
+    expect(onAction).toHaveBeenCalledWith("atlas")
+    expect(screen.queryByRole("dialog")).toBeNull()
+    expect(document.activeElement).toBe(trigger)
+
+    await user.keyboard("{Control>}k{/Control}")
+    await settle(20)
+    const input = screen.getByRole<HTMLInputElement>("combobox", { name: "Find a command" })
+    expect(document.activeElement).toBe(input)
+    // A kept-mounted search field must be the one the dialog focused: replacing it on open loses focus in Electron.
+    expect(keepMounted ? input : first).toBe(first)
+    expect(input.value).toBe("")
+    expect(highlighted()).toBe("Apollo")
+    await user.keyboard("{Enter}")
+    expect(onAction).toHaveBeenLastCalledWith("apollo")
+  })
+
+  test(`a moved highlight and an open page don't survive a reopen (${how})`, async () => {
+    const user = userEvent.setup()
+    render(<ReopenPalette keepMounted={keepMounted} onAction={vi.fn()} />)
+    await user.keyboard("{Control>}k{/Control}")
+    await user.keyboard("{ArrowDown}")
+    expect(highlighted()).toBe("Atlas")
+    await user.keyboard("{Escape}")
+    await settle(20)
+    await user.keyboard("{Control>}k{/Control}")
+    await settle(20)
+    expect(document.activeElement).toBe(screen.getByRole("combobox", { name: "Find a command" }))
+    expect(highlighted()).toBe("Apollo")
+
+    await user.keyboard("{ArrowDown}{ArrowDown}{Enter}")
+    await settle(20)
+    expect(screen.getAllByRole("option").map((option) => option.textContent)).toEqual(["Io", "Europa"])
+    await user.keyboard("{Escape}")
+    await settle(20)
+    expect(screen.queryByRole("dialog")).toBeNull()
+    await user.keyboard("{Control>}k{/Control}")
+    await settle(20)
+    expect(document.activeElement).toBe(screen.getByRole("combobox", { name: "Find a command" }))
+    expect(screen.getAllByRole("option").map((option) => option.textContent)).toEqual(["Apollo", "Atlas", "Moons"])
+    expect(highlighted()).toBe("Apollo")
+  })
+}
+
+test("escapeKey clear keeps UI SDK's order: the first Escape clears the search, the second closes", async () => {
+  const user = userEvent.setup()
+  render(<Palette escapeKey="clear" />)
+  await user.click(screen.getByRole("button", { name: "Open palette" }))
+  await user.keyboard("atl{Escape}")
+  await settle(20)
+  expect(screen.getByRole<HTMLInputElement>("combobox", { name: "Find a command" }).value).toBe("")
+  expect(screen.getByRole("dialog")).toBeTruthy()
+  await user.keyboard("{Escape}")
+  await settle(20)
+  expect(screen.queryByRole("dialog")).toBeNull()
+})
+
+test("a palette that isn't dismissible keeps Escape for the search", async () => {
+  const user = userEvent.setup()
+  render(<Palette dismissible={false} />)
+  await user.click(screen.getByRole("button", { name: "Open palette" }))
+  await user.keyboard("atl{Escape}")
+  await settle(20)
+  expect(screen.getByRole("dialog")).toBeTruthy()
+  expect(screen.getByRole<HTMLInputElement>("combobox", { name: "Find a command" }).value).toBe("")
+})
+
+function ControlledPalette() {
+  const [open, setOpen] = useState(false)
+  return <Palette open={open} onOpenChange={setOpen} />
+}
+
+test("a controlled palette hears the Escape close through onOpenChange", async () => {
+  const user = userEvent.setup()
+  render(<ControlledPalette />)
+  const trigger = screen.getByRole("button", { name: "Open palette" })
+  await user.click(trigger)
+  await user.keyboard("atl{Escape}")
+  await settle(20)
+  expect(screen.queryByRole("dialog")).toBeNull()
+  expect(document.activeElement).toBe(trigger)
 })

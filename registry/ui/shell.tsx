@@ -4,8 +4,15 @@ import { useCallback, useState, type ComponentProps, type CSSProperties, type Re
 import { SearchIcon } from "lucide-react"
 
 import { ShellSidebarSections, useMobileNavItems } from "@/components/ui/shell-nav"
-import type { ShellRoute, ShellRouteGroup, ShellCurrent } from "@/components/ui/shell-routes"
-import { ShellSearch } from "@/components/ui/shell-search"
+import {
+  placedIn,
+  type ShellMain,
+  type ShellPlacement,
+  type ShellRoute,
+  type ShellRouteGroup,
+  type ShellCurrent,
+} from "@/components/ui/shell-routes"
+import { ShellSearch, type ShellSearchProps } from "@/components/ui/shell-search"
 import {
   CommandDialogOpenButton,
   CommandDialogShortcut,
@@ -13,11 +20,17 @@ import {
   createCommandDialogController,
 } from "@/components/ui/command-dialog"
 import { MobileNav } from "@/components/ui/mobile-nav"
-import { Sidebar, SidebarTrigger, useSidebarState, type SidebarLabels } from "@/components/ui/sidebar"
+import {
+  Sidebar,
+  SidebarTrigger,
+  useSidebarState,
+  type SidebarLabels,
+  type SidebarState,
+} from "@/components/ui/sidebar"
 import { setSidebarDrawerOpen } from "@/components/ui/sidebar-trigger"
 import { SkipLink } from "@/components/ui/skip-link"
 import { Topbar } from "@/components/ui/topbar"
-import { useShellRoutes } from "@/components/ui/use-shell"
+import { ShellSidebarContext, useShellRoutes, useShellSidebar } from "@/components/ui/use-shell"
 import { cn } from "@/lib/utils"
 
 type ShellLabels = {
@@ -61,7 +74,10 @@ const shellLabels: ShellLabels = {
 }
 
 type ShellProps<Route extends ShellRoute = ShellRoute> = Omit<ComponentProps<"div">, "children"> & {
-  /** Every route, in order: the sidebar, the bottom bar (`mobile: true`) and the palette's Go to group come from it. */
+  /**
+   * Every route, in order: the sidebar, the bottom bar (`mobile`), its More sheet and the palette's Go to group come
+   * from it. A route's `placements` limits where it shows.
+   */
   routes: readonly Route[]
   /** The sidebar's groups, in order, with their labels and tone. Without them, routes group by their `group` text. */
   groups?: readonly ShellRouteGroup[]
@@ -82,16 +98,44 @@ type ShellProps<Route extends ShellRoute = ShellRoute> = Omit<ComponentProps<"di
   commandGroups?: ReactNode
   /** Runs the commands of `commandGroups` by value; the palette closes once a returned Promise settles. */
   onCommand?: (value: string) => unknown
+  /**
+   * Above the sidebar's routes, like a brand, a workspace switcher or a caption. Hidden while the sidebar is a rail;
+   * in the narrow drawer it sits under the drawer's title.
+   */
+  sidebarHeader?: ReactNode
   /** Below the sidebar's routes, like an account or a plan. */
   sidebarFooter?: ReactNode
   labels?: Partial<ShellLabels>
   /** Remembers whether the sidebar is collapsed in localStorage under this key. */
   storageKey?: string
   defaultCollapsed?: boolean
+  /**
+   * The sidebar's state, from your own `useSidebarState()`, to read or toggle it outside the Shell. Then `storageKey`
+   * and `defaultCollapsed` go to that call instead. Inside the Shell, `useShellSidebar()` returns the state either way.
+   */
+  sidebar?: SidebarState
+  /**
+   * A shortcut that toggles the sidebar, like `"mod+b"`: it collapses or expands it on wide screens and opens the
+   * drawer on narrow ones. Off by default. The topbar's trigger shows it and `ShortcutsDialog` lists it.
+   */
+  sidebarShortcut?: string
   /** `rail` keeps icons when collapsed; `hide` slides the sidebar away. Rail when every route has an icon. */
   collapse?: "rail" | "hide"
   /** Opens the palette from anywhere; `false` when the page already uses it. */
   searchShortcut?: string | false
+  /** The palette's search text, to control it. Without it, every open starts empty (or from `defaultSearchQuery`). */
+  searchQuery?: string
+  /** The search text each open of the palette starts from, when `searchQuery` doesn't control it. */
+  defaultSearchQuery?: string
+  onSearchQueryChange?: ShellSearchProps["onQueryChange"]
+  /** At the bottom of the palette, like key hints (`<Kbd>↑</Kbd><Kbd>↓</Kbd>` and their words). Nothing by default. */
+  searchFooter?: ReactNode
+  /**
+   * `fill` gives `<main>` the height left under the topbar and above the bottom bar (`--shell-column-height`), so a
+   * page like a DocumentWorkspace fills it with `h-full`; its content scrolls inside. `flow` (default) lets the page
+   * scroll. A route's `main` overrides it while that route is current.
+   */
+  main?: ShellMain
   /** The id of the `<main>` landmark, the skip link's target. */
   mainId?: string
   /** `div` when the page already has its `<main>`, like a preview inside another page. */
@@ -106,6 +150,7 @@ const narrowQuery = "(width <= 47.5rem)"
 const columns = {
   "--shell-column-height": "calc(var(--shell-height) - var(--topbar-height))",
   "--shell-scroll-margin": "calc(var(--topbar-height) + var(--gap-group))",
+  "--shell-column-height-above-bar": "calc(var(--shell-column-height) - var(--mobile-nav-offset))",
 } as CSSProperties
 
 /**
@@ -123,12 +168,20 @@ function Shell<Route extends ShellRoute>({
   actions,
   commandGroups,
   onCommand,
+  sidebarHeader,
   sidebarFooter,
   labels: overrides,
   storageKey,
   defaultCollapsed,
+  sidebar: sidebarState,
+  sidebarShortcut,
   collapse,
   searchShortcut = "mod+k",
+  searchQuery,
+  defaultSearchQuery,
+  onSearchQueryChange,
+  searchFooter,
+  main = "flow",
   mainId = "main",
   as: Main = "main",
   className,
@@ -137,16 +190,18 @@ function Shell<Route extends ShellRoute>({
   ...props
 }: ShellProps<Route>) {
   const labels = { ...shellLabels, ...overrides }
-  const collapseMode = collapse ?? (routes.every((route) => route.icon !== undefined) ? "rail" : "hide")
+  const collapseMode =
+    collapse ?? (routes.every((route) => route.icon !== undefined || !placedIn(route, "sidebar")) ? "rail" : "hide")
   const sidebarLabels: Partial<SidebarLabels> = {
     open: labels.openNavigation,
     close: labels.closeNavigation,
     collapse: labels.collapseSidebar,
     expand: labels.expandSidebar,
   }
-  const sidebar = useSidebarState({ storageKey, defaultCollapsed })
+  const ownSidebar = useSidebarState({ storageKey, defaultCollapsed })
+  const sidebar = sidebarState ?? ownSidebar
   const [search] = useState(() => createCommandDialogController())
-  const { sections, mobile, currentId } = useShellRoutes(routes, groups, currentHref)
+  const { sections, paletteSections, mobile, currentId } = useShellRoutes(routes, groups, currentHref)
   // Stable while the routes and onNavigate are, so a navigation re-renders only the items whose current changed.
   const navigate = useCallback(
     (id: string) => {
@@ -160,95 +215,111 @@ function Shell<Route extends ShellRoute>({
   )
   const mobileNav = useMobileNavItems(mobile, currentId, onNavigate ? navigate : undefined)
   const hasMobileNav = mobileNav.items.length > 0
+  const mainLayout = routes.find((route) => route.id === currentId)?.main ?? main
 
   return (
-    <div
-      data-slot="shell"
-      className={cn("flex min-h-(--shell-height) w-full min-w-0 flex-col", className)}
-      style={{ "--shell-height": "100dvh", ...style } as CSSProperties}
-      {...props}
-    >
-      <SkipLink target={mainId}>{labels.skipToContent}</SkipLink>
-      <Topbar
-        leading={
-          <>
-            <SidebarTrigger {...sidebar.triggerProps} narrowQuery={narrowQuery} labels={sidebarLabels} />
-            {brand}
-          </>
-        }
-        center={
-          <CommandDialogTrigger
-            controller={search}
-            shortcut={searchShortcut === false ? undefined : searchShortcut}
-            className="w-full max-w-sm"
-          >
-            <span className="inline-flex min-w-0 items-center gap-inline">
-              <SearchIcon className="size-4 shrink-0" />
-              <span className="truncate">{labels.openSearch}</span>
-            </span>
-            <CommandDialogShortcut />
-          </CommandDialogTrigger>
-        }
-        centerCompact={
-          <CommandDialogOpenButton controller={search} variant="ghost" size="icon" aria-label={labels.openSearch}>
-            <SearchIcon />
-          </CommandDialogOpenButton>
-        }
-        trailing={actions}
-      />
-      <ShellSearch
-        controller={search}
-        sections={sections}
-        currentId={currentId}
-        navigate={navigate}
-        labels={labels}
-        commandGroups={commandGroups}
-        onCommand={onCommand}
-      />
-      <div data-slot="shell-body" className="flex min-w-0 flex-1 items-start" style={columns}>
-        <div
-          data-slot="shell-sidebar"
-          className="sticky top-(--topbar-height) flex h-(--shell-column-height) shrink-0 narrow:contents"
-        >
-          <Sidebar
-            label={labels.sidebar}
-            {...sidebar.sidebarProps}
-            collapse={collapseMode}
-            trigger={false}
-            narrowQuery={narrowQuery}
-            labels={sidebarLabels}
-            footer={sidebarFooter}
-          >
-            <ShellSidebarSections sections={sections} currentId={currentId} navigate={navigate} />
-          </Sidebar>
-        </div>
-        <Main
-          id={mainId}
-          tabIndex={-1}
-          data-slot="shell-main"
-          // Anchors, focus and scrollIntoView stop below the topbar and above the bottom bar.
-          className={cn(
-            "flex min-w-0 flex-1 flex-col self-stretch focus:outline-none **:scroll-mt-(--shell-scroll-margin)",
-            hasMobileNav && "narrow:**:scroll-mb-(--mobile-nav-offset)",
-          )}
-        >
-          {children}
-        </Main>
-      </div>
-      {hasMobileNav && (
-        // Sticky in the flow rather than fixed: it keeps its own height at the end of the shell, so the page always
-        // ends above it, and it stays inside a pane or an iframe.
-        <MobileNav
-          label={labels.mobileNav}
-          items={mobileNav.items}
-          overflow={mobileNav.overflow}
-          moreLabel={labels.more}
-          className="sticky"
+    <ShellSidebarContext value={sidebar}>
+      <div
+        data-slot="shell"
+        className={cn("flex min-h-(--shell-height) w-full min-w-0 flex-col", className)}
+        style={{ "--shell-height": "100dvh", ...style } as CSSProperties}
+        {...props}
+      >
+        <SkipLink target={mainId}>{labels.skipToContent}</SkipLink>
+        <Topbar
+          leading={
+            <>
+              <SidebarTrigger
+                {...sidebar.triggerProps}
+                narrowQuery={narrowQuery}
+                labels={sidebarLabels}
+                shortcut={sidebarShortcut}
+              />
+              {brand}
+            </>
+          }
+          center={
+            <CommandDialogTrigger
+              controller={search}
+              shortcut={searchShortcut === false ? undefined : searchShortcut}
+              className="w-full max-w-sm"
+            >
+              <span className="inline-flex min-w-0 items-center gap-inline">
+                <SearchIcon className="size-4 shrink-0" />
+                <span className="truncate">{labels.openSearch}</span>
+              </span>
+              <CommandDialogShortcut />
+            </CommandDialogTrigger>
+          }
+          centerCompact={
+            <CommandDialogOpenButton controller={search} variant="ghost" size="icon" aria-label={labels.openSearch}>
+              <SearchIcon />
+            </CommandDialogOpenButton>
+          }
+          trailing={actions}
         />
-      )}
-    </div>
+        <ShellSearch
+          controller={search}
+          sections={paletteSections}
+          currentId={currentId}
+          navigate={navigate}
+          labels={labels}
+          commandGroups={commandGroups}
+          onCommand={onCommand}
+          query={searchQuery}
+          defaultQuery={defaultSearchQuery}
+          onQueryChange={onSearchQueryChange}
+          footer={searchFooter}
+        />
+        <div data-slot="shell-body" className="flex min-w-0 flex-1 items-start" style={columns}>
+          <div
+            data-slot="shell-sidebar"
+            className="sticky top-(--topbar-height) flex h-(--shell-column-height) shrink-0 narrow:contents"
+          >
+            <Sidebar
+              label={labels.sidebar}
+              {...sidebar.sidebarProps}
+              collapse={collapseMode}
+              trigger={false}
+              narrowQuery={narrowQuery}
+              labels={sidebarLabels}
+              header={sidebarHeader}
+              footer={sidebarFooter}
+            >
+              <ShellSidebarSections sections={sections} currentId={currentId} navigate={navigate} />
+            </Sidebar>
+          </div>
+          <Main
+            id={mainId}
+            tabIndex={-1}
+            data-slot="shell-main"
+            data-main={mainLayout}
+            // Anchors, focus and scrollIntoView stop below the topbar and above the bottom bar.
+            className={cn(
+              "flex min-w-0 flex-1 flex-col self-stretch focus:outline-none **:scroll-mt-(--shell-scroll-margin)",
+              hasMobileNav && "narrow:**:scroll-mb-(--mobile-nav-offset)",
+              mainLayout === "fill" && "h-(--shell-column-height) min-h-0 overflow-auto",
+              mainLayout === "fill" && hasMobileNav && "narrow:h-(--shell-column-height-above-bar)",
+            )}
+          >
+            {children}
+          </Main>
+        </div>
+        {hasMobileNav && (
+          // Sticky in the flow rather than fixed: it keeps its own height at the end of the shell, so the page always
+          // ends above it, and it stays inside a pane or an iframe.
+          <MobileNav
+            label={labels.mobileNav}
+            items={mobileNav.items}
+            overflow={mobileNav.overflow}
+            moreLabel={labels.more}
+            className="sticky"
+          />
+        )}
+      </div>
+    </ShellSidebarContext>
   )
 }
 
-export { Shell, shellLabels }
-export type { ShellRoute, ShellRouteGroup, ShellCurrent, ShellLabels, ShellProps }
+export { Shell, shellLabels, useShellSidebar }
+export type { ShellMain, ShellRoute, ShellPlacement, ShellRouteGroup, ShellCurrent, ShellLabels, ShellProps }

@@ -278,6 +278,7 @@ const itemNotes: Record<string, ItemNotes> = {
       "Typing filters; arrow keys move the highlight; Enter runs, or follows a link command.",
       "A link command stays an option of the listbox, rendered as an anchor, so modified clicks open a new tab.",
       "The ⌘K shortcut is opt-in on the trigger.",
+      'In a CommandDialog, each open starts with an empty search, and one Escape closes it and returns focus to the trigger; escapeKey="clear" clears the search first.',
     ],
     agent: "Agents search and highlight commands by name (setQuery, setValue); UI SDK offers no action that runs one.",
     related: ["combobox", "dropdown-menu", "kbd"],
@@ -355,7 +356,7 @@ const itemNotes: Record<string, ItemNotes> = {
   },
   "document-workspace": {
     usage:
-      "For any notes or docs app: put a MarkdownEditor (edit) or MarkdownView (read) in document, your file tree in explorer, DocumentOutline and backlinks in aside, and DocumentQuickOpen in quickOpen. Pass the editor's ref as editorRef and extractHeadings(markdown) as headings.",
+      "For any notes or docs app: put a MarkdownEditor (edit) or MarkdownView (read) in document, your file tree in explorer, DocumentOutline and backlinks in aside, and DocumentQuickOpen in quickOpen. Pass the editor's ref as editorRef and extractHeadings(markdown) as headings. In a Shell, main fill (on the Shell or the route) lets it fill the height left.",
     a11y: [
       "The explorer is a navigation landmark, the document a named region (or main) and the aside a complementary landmark; the Files and Details toggles carry aria-expanded and aria-controls.",
       "It lays out by its own width: resizable, collapsible columns when wide, drawers when narrow. Drawers, quick open and menus give focus back to the document.",
@@ -427,15 +428,15 @@ const itemNotes: Record<string, ItemNotes> = {
   },
   shell: {
     usage:
-      "The frame of an application from one list of routes: pass routes, groups, currentHref and onNavigate (or plain or #/route hrefs), a brand and actions, and put each page in a PageLayout inside it. Use DocsLayout instead for documentation with a table of contents.",
+      "The frame of an application from one list of routes: pass routes, groups, currentHref and onNavigate (or plain or #/route hrefs), a brand and actions, and put each page in a PageLayout inside it; main fill (on the Shell or a route) is for an editor or workspace that fills the height left. Use DocsLayout instead for documentation with a table of contents.",
     a11y: [
       "A skip link first, to the <main> landmark, which takes focus (tabIndex -1) without changing the URL, so hash routers keep their route.",
       'The sidebar and the bottom bar are navigation landmarks named by labels.sidebar and labels.mobileNav; the current route carries aria-current="page" in both, and in the palette.',
-      "On narrow screens the topbar's trigger opens the sidebar as a drawer; Escape closes it and focus returns to the trigger. The palette (Ctrl/⌘+K) returns focus the same way.",
+      "On narrow screens the topbar's trigger opens the sidebar as a drawer; Escape closes it and focus returns to the trigger. The palette (Ctrl/⌘+K) returns focus the same way: it opens with an empty search, and one Escape closes it whatever the search holds.",
       "The bottom bar is sticky at the end of the shell rather than fixed, so the page always ends above it, also inside a pane or an iframe; scroll margins keep focused elements clear of the topbar and the bar.",
     ],
     agent:
-      "Every route is a sidebar Link with a follow action that calls onNavigate (or loads the href), so agents follow routes by name. The palette's Go to commands are listed under the palette once its Search trigger is pressed; agents collapse and expand the sidebar by its name.",
+      "Every route is a sidebar Link with a follow action that calls onNavigate (or loads the href), so agents follow routes by name. The palette's Go to commands (link commands to each route's href) are listed under the palette once its Search trigger is pressed; agents collapse and expand the sidebar by its name. sidebarShortcut presses that same trigger, so it adds nothing new for agents.",
     related: ["sidebar", "topbar", "command", "mobile-nav", "skip-link", "docs-layout"],
   },
   "docs-layout": {

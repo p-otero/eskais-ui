@@ -592,6 +592,10 @@ async function checkPalette(page, scope, file) {
   check(`${scope}: Ctrl+K opens the palette`, await onScreen(palette))
   const inbox = await palette.getByRole("option", { name: "Inbox" }).getAttribute("aria-current")
   check(`${scope}: the palette marks the current route`, inbox === "page", inbox)
+  const link = await palette
+    .getByRole("option", { name: "Archive" })
+    .evaluate((option) => `${option.tagName} ${option.getAttribute("href")}`)
+  check(`${scope}: the palette's routes are links to their hrefs`, link === "A /archive", link)
   await shot(page, file)
   await axeClean(page, `${scope} palette`)
   await page.keyboard.type("stats")
@@ -606,6 +610,28 @@ async function checkPalette(page, scope, file) {
     `${scope}: Go to Reports (by keyword) navigates and marks it current`,
     heading === "Reports" && current.length > 0 && current.every((text) => /Reports|More/.test(text ?? "")),
     `${heading}; current: ${current.join(", ")}`,
+  )
+
+  await page.keyboard.press("ControlOrMeta+k")
+  const search = palette.getByRole("combobox", { name: "Find a page or command" })
+  await search.waitFor()
+  check(
+    `${scope}: after a route, Ctrl+K reopens the palette with focus in its search`,
+    await search.evaluate((input) => input === document.activeElement),
+  )
+  const reopened = await search.inputValue()
+  check(`${scope}: the palette reopens with an empty search`, reopened === "", JSON.stringify(reopened))
+  await page.keyboard.type("arch")
+  await page.keyboard.press("Escape")
+  await palette.waitFor({ state: "detached" })
+  const focused = await page.evaluate(() => ({
+    inTopbar: !!document.activeElement?.closest('[data-slot="topbar"]'),
+    name: document.activeElement?.getAttribute("aria-label") ?? document.activeElement?.textContent,
+  }))
+  check(
+    `${scope}: one Escape closes the palette with text in it, focus back in the topbar`,
+    focused.inTopbar,
+    focused.name,
   )
 }
 
@@ -625,6 +651,63 @@ async function checkShellAt(page, width, scheme) {
   await checkPalette(page, scope, `shell-${width}-${scheme}-palette.png`)
 }
 
+async function checkFill(page, width) {
+  await shellBlock(page, width, "light", "&main=fill")
+  const fill = await page.evaluate(() => {
+    const main = document.querySelector('[data-slot="shell-main"]').getBoundingClientRect()
+    const workspace = document.querySelector('[data-slot="document-workspace"]').getBoundingClientRect()
+    const topbar = document.querySelector('[data-slot="topbar"]').getBoundingClientRect()
+    const bar = document.querySelector('nav[aria-label="Bottom bar"]')
+    const barTop = bar?.checkVisibility() ? bar.getBoundingClientRect().top : innerHeight
+    return {
+      mainTop: Math.round(main.top - topbar.bottom),
+      mainBottom: Math.round(barTop - main.bottom),
+      workspace: Math.round(main.height - workspace.height),
+      pageScroll: document.documentElement.scrollHeight - innerHeight,
+    }
+  })
+  check(
+    `Shell main=fill ${width}px: a DocumentWorkspace fills main from the topbar to the bottom edge, no page scroll`,
+    fill.mainTop === 0 && fill.mainBottom === 0 && fill.workspace === 0 && fill.pageScroll <= 0,
+    JSON.stringify(fill),
+  )
+}
+
+// A palette kept mounted while closed, as some Electron windows leave it: open, run a command, reopen with Ctrl+K.
+async function checkPaletteReopen(page) {
+  await page.setViewportSize({ width: 1024, height: 700 })
+  await page.goto(`${new URL(page.url()).origin}/?demo=palette-reopen-check`)
+  const palette = page.getByRole("dialog", { name: "Palette" })
+  const search = palette.getByRole("combobox", { name: "Find a command" })
+  await page.getByRole("button", { name: /Open palette/ }).waitFor()
+  await page.keyboard.press("ControlOrMeta+k")
+  await search.waitFor()
+  const first = await search.elementHandle()
+  await page.keyboard.type("lab")
+  await page.keyboard.press("Enter")
+  await palette.waitFor({ state: "hidden" })
+  const ran = await page.getByRole("status", { name: "Last command" }).textContent()
+  check("Kept-mounted palette: Enter runs the command and closes it", ran === "lab", ran)
+
+  await page.keyboard.press("ControlOrMeta+k")
+  await search.waitFor()
+  await page.evaluate(() => new Promise((done) => requestAnimationFrame(() => requestAnimationFrame(done))))
+  const state = await search.evaluate(
+    (input, before) => ({
+      focused: input === document.activeElement,
+      same: input === before,
+      value: input.value,
+      highlighted: document.querySelector('[data-slot="command-item"][data-highlighted]')?.textContent,
+    }),
+    first,
+  )
+  check(
+    "Kept-mounted palette: Ctrl+K reopens it empty, the first command highlighted, focus in the same search field",
+    state.focused && state.same && state.value === "" && state.highlighted === "Apollo",
+    JSON.stringify(state),
+  )
+}
+
 async function checkShell(page) {
   const cases = ["light", "dark"].flatMap((scheme) => [1440, 768, 390].map((width) => ({ scheme, width })))
   // One page, so one case at a time.
@@ -640,6 +723,18 @@ async function checkShell(page) {
   await page.keyboard.press("Enter")
   const onMain = await page.evaluate(() => document.activeElement?.tagName === "MAIN" && location.hash === "")
   check("Shell: the skip link focuses main without changing the URL", onMain)
+
+  await shellBlock(page, 1440, "light")
+  const collapsedBy = async () =>
+    page.getByRole("navigation", { name: "Main" }).evaluate((nav) => nav.hasAttribute("data-collapsed"))
+  await page.getByRole("main").click({ position: { x: 5, y: 5 } })
+  await page.keyboard.press("ControlOrMeta+b")
+  const collapsedByShortcut = await collapsedBy()
+  await page.keyboard.press("ControlOrMeta+b")
+  check("Shell: sidebarShortcut collapses and expands the sidebar", collapsedByShortcut && !(await collapsedBy()))
+
+  await checkFill(page, 1440)
+  await checkFill(page, 390)
 
   await shellBlock(page, 1440, "light", "&router=hash")
   const sidebar = page.getByRole("navigation", { name: "Main" })
@@ -664,6 +759,7 @@ await withShowcase(async (page) => {
   await checkLayoutBlocks(page, check, shot)
   if (onlyLayout) return
   await checkShell(page)
+  await checkPaletteReopen(page)
   await shell(page, 375)
   const search = page.getByRole("dialog", { name: "Search the workspace" })
   await page.getByRole("button", { name: "Search the workspace" }).click()
