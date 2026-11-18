@@ -11,6 +11,7 @@ Versions follow [semver](https://semver.org). Before 1.0, a minor version can br
 ### Changed
 
 - The README, the docs site, the `eskais-ui` skill and `@eskais/mockup`'s hint pin the registry as `https://raw.githubusercontent.com/p-otero/eskais-ui/refs/tags/<tag>/public/r/{name}.json`. raw.githubusercontent.com resolves a bare `<tag>` to a branch of the same name first, and a stray `v0.2.1` branch served pre-release files under the documented `v0.2.1` URL; that branch is gone, and `tooling/check-ref-names.mjs` fails CI and the Pages deploy if a branch is ever named like a tag. The site's URL follows the released version.
+- Items depend on `lucide-react@^1.68.0` instead of the exact `lucide-react@1.68.0`. `shadcn add` runs `npm install lucide-react@<spec>`, so the exact pin moved a consumer already on a newer lucide (1.70.0) back down to 1.68.0. The floor stays the oldest release that exports every icon in use and is at least 7 days old; `check-dependency-age.mjs` checks the floor's age, and every other dependency stays exact. `node tooling/consumer-check.mjs pnpm release-age` starts from an app on lucide-react 1.70.0 and checks it isn't downgraded.
 
 ### Fixed
 

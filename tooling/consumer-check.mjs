@@ -165,6 +165,8 @@ const versions = {
   cn: "0.5.2",
   prettier: "3.9.10",
   zod: "4.6.7",
+  // Newer than the registry's lucide-react floor, as a consumer that already uses lucide may be.
+  "lucide-react": "1.70.0",
 }
 const devDependencies = [
   "@types/react",
@@ -1024,8 +1026,10 @@ const scenarios = {
   },
   // A consumer whose pnpm holds back releases younger than 7 days. shadcn installs dependencies before it writes any
   // file, so one young pin (lucide-react 1.73.0 in 0.2.0) fails the whole add with ERR_PNPM_NO_MATURE_MATCHING_VERSION.
+  // It already depends on a newer lucide-react than the registry's floor, which the caret range must keep.
   "release-age": {
     packageManagers: ["pnpm"],
+    dependencies: ["lucide-react"],
     releaseAge: {
       minutes: 7 * 24 * 60,
       // Only the documented exceptions of check-dependency-age.mjs, and this app's own build tools, which aren't
@@ -1040,7 +1044,13 @@ const scenarios = {
       const icon = await page.locator('[data-slot="button"][aria-label="Close"] svg.lucide').count()
       if (icon !== 1) throw new Error("The lucide icon didn't render in the button")
     },
-    installed: { "lucide-react": "1.68.0" },
+    // Still 1.70.0 or newer within major 1: the registry's ^1.68.0 didn't move it back down.
+    installed: {
+      "lucide-react": (version) => {
+        const [major, minor] = version.split(".").map(Number)
+        return major === 1 && minor >= 70
+      },
+    },
   },
 }
 
@@ -1178,9 +1188,11 @@ export default defineConfig({
   const items = [...scenario.items, ...(scenario.skills ?? [])]
   const add = () => exec(["shadcn", "add", ...items.map((item) => `@eskais/${item}`), "--yes", "--overwrite"])
   await add()
-  for (const [dependency, version] of Object.entries(scenario.installed ?? {})) {
+  // An exact version, or a predicate on the installed one.
+  for (const [dependency, expected] of Object.entries(scenario.installed ?? {})) {
     const found = JSON.parse(readFileSync(join(app, "node_modules", dependency, "package.json"), "utf8")).version
-    if (found !== version) throw new Error(`${dependency} ${found} is installed, not ${version}`)
+    const ok = typeof expected === "function" ? expected(found) : found === expected
+    if (!ok) throw new Error(`${dependency} ${found} is installed, not ${String(expected)}`)
   }
   const readStylesheet = () => readFileSync(join(app, "src", "index.css"), "utf8")
   checkStylesheet(readStylesheet())

@@ -209,7 +209,7 @@ On a coarse pointer (`@media (pointer: coarse)`), controls reach a hit area of a
 
 ## Icons
 
-Icons come from `lucide-react`, imported by name the way shadcn does: `import { ChevronDownIcon, XIcon } from "lucide-react"`. Every item whose files import it lists `lucide-react@<exact version>` in `dependencies`; a test fails otherwise. One version across the registry, `package.json` and the apps: the oldest release that exports every icon in use and is at least 7 days old (see "Dependencies").
+Icons come from `lucide-react`, imported by name the way shadcn does: `import { ChevronDownIcon, XIcon } from "lucide-react"`. Every item whose files import it lists `lucide-react@^<version>` in `dependencies`; a test fails otherwise. `<version>` is the exact pin in `package.json` and the apps, one across the repo: the oldest release that exports every icon in use and is at least 7 days old (see "Dependencies"). The caret keeps `shadcn add`, which runs `npm install lucide-react@<spec>`, from moving a consumer already on a newer lucide back down to it.
 
 1. Never draw an icon by hand. `eskais/no-inline-icons` flags every `<svg>` element in `registry/**` and `apps/**` (showcase and site), whatever the function is called. A drawing that isn't an icon (the spinner's arc, task status rings, a stage marker's tick, an avatar placeholder, a grip, a brand logo) disables it on the line before: `// oxlint-disable-next-line eskais/no-inline-icons -- <reason>` (`{/* … */}` inside JSX children).
 2. Lucide hides an icon from assistive tech (and so from agents) unless it gets an `aria-*`, `role` or `title` prop. A decorative icon needs nothing. A meaningful one, with no text beside it, uses `<Icon icon={XIcon} label="…" />` from `icon`.
@@ -221,10 +221,10 @@ Icons come from `lucide-react`, imported by name the way shadcn does: `import { 
 
 shadcn installs an item's npm `dependencies` before it writes any file. A consumer whose package manager holds back young releases (pnpm's `minimumReleaseAge`, Renovate's `minimumReleaseAge`) can't add the item at all when one pin is too fresh: pnpm fails with `ERR_PNPM_NO_MATURE_MATCHING_VERSION`.
 
-1. Every npm dependency in `registry.json` is an exact version (`name@1.2.3`) published at least 7 days ago. A test fails on a range. `node tooling/check-dependency-age.mjs` reads the publish times from registry.npmjs.org and fails on a younger release; CI runs it in the `registry` job with `--require-network`, and offline it skips with a message.
+1. Every npm dependency in `registry.json` is an exact version (`name@1.2.3`) published at least 7 days ago. A test fails on a range, except for the names in `caretRangeDependencies` in `tooling/check-dependency-age.mjs` (only `lucide-react`), which take a caret range (`^1.2.3`) whose floor is checked like a pin. `node tooling/check-dependency-age.mjs` reads the publish times from registry.npmjs.org and fails on a younger release; CI runs it in the `registry` job with `--require-network`, and offline it skips with a message.
 2. Bump only to a release at least 7 days old, and prefer the oldest one that has what the code uses.
 3. A pin that can't wait goes in `youngDependencyExceptions` in that script, at its exact version and with the reason (UI SDK: its first release is from 2026-11-12). The check says when an exception is old enough to remove.
-4. `node tooling/consumer-check.mjs pnpm release-age` adds `dialog` (and with it `lucide-react`) under a 7-day `minimumReleaseAge` that excludes only those exceptions and the test app's own build tools.
+4. `node tooling/consumer-check.mjs pnpm release-age` adds `dialog` (and with it `lucide-react`) under a 7-day `minimumReleaseAge` that excludes only those exceptions and the test app's own build tools, to an app already on a newer `lucide-react` than the floor, and fails if the add moves it back down.
 
 ## Lint
 

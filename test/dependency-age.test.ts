@@ -31,7 +31,7 @@ test("a release younger than 7 days fails, an older one passes", () => {
 
 test("ranges, missing versions and stale exceptions fail; non-npm sources are skipped", () => {
   const { problems } = findYoungDependencies(
-    ["lucide-react", "lucide-react@^1.68.0", "lucide-react@9.9.9", "tool@github:owner/tool#0123abc"],
+    ["lucide-react", "@ui-sdk/react@^0.1.0-beta.5", "lucide-react@9.9.9", "tool@github:owner/tool#0123abc"],
     published,
     now,
     { exceptions: { "gone@1.0.0": "no longer used" } },
@@ -39,9 +39,21 @@ test("ranges, missing versions and stale exceptions fail; non-npm sources are sk
   expect(problems.map((problem) => problem.spec)).toEqual([
     "gone@1.0.0",
     "lucide-react",
-    "lucide-react@^1.68.0",
+    "@ui-sdk/react@^0.1.0-beta.5",
     "lucide-react@9.9.9",
   ])
+})
+
+test("lucide-react alone may be a caret range, whose floor must be 7 days old", () => {
+  const specs = ["lucide-react@^1.68.0", "lucide-react@^1.73.0", "lucide-react@~1.68.0", "lucide-react@^1"]
+  const { problems } = findYoungDependencies(specs, published, now, { exceptions: {} })
+  expect(problems.map((problem) => [problem.spec, problem.reason.split(",")[0]])).toEqual([
+    ["lucide-react@^1.73.0", "published 2026-11-14"],
+    ["lucide-react@~1.68.0", "not pinned to an exact version"],
+    ["lucide-react@^1", "not pinned to an exact version"],
+  ])
+  const exact = findYoungDependencies(["lucide-react@^1.68.0"], published, now, { exceptions: {}, ranges: [] })
+  expect(exact.problems.map((problem) => problem.spec)).toEqual(["lucide-react@^1.68.0"])
 })
 
 test("an exception allows that exact young pin, and is reported once it is old enough", () => {
@@ -56,7 +68,7 @@ test("an exception allows that exact young pin, and is reported once it is old e
   ])
 })
 
-test("every npm dependency in registry.json is pinned to an exact version", () => {
+test("every npm dependency in registry.json is pinned to an exact version, lucide-react to a caret range", () => {
   const { problems } = findYoungDependencies(registryDependencies(registry), new Map(), now, { exceptions: {} })
   expect(problems.filter((problem) => problem.reason.startsWith("not pinned"))).toEqual([])
 })
