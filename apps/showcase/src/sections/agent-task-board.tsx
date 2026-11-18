@@ -1,6 +1,6 @@
 import { useCallback, useRef, useState } from "react"
 
-import { AgentTaskBoard } from "@/components/ui/agent-task-board"
+import { AgentTaskBoard, moveTask } from "@/components/ui/agent-task-board"
 import type { DetailPresentation } from "@/components/ui/agent-task-board-props"
 import { Button } from "@/components/ui/button"
 import { Field, FieldLabel } from "@/components/ui/field"
@@ -77,12 +77,16 @@ function AgentTaskBoardSection() {
     filters,
     onFiltersChange: setFilters,
     filterControls: projectPicker === "host" ? HOST_FILTERS : BOARD_FILTERS,
+    onMoveTask: (change: { id: string; to: TaskStatus; before: string | null }) => {
+      setTasks((list) => moveTask(list, change.id, change.to, change.before))
+      setLog(`Moved ${change.id} to ${change.to}.`)
+    },
   }
 
   return (
     <Section
       title="AgentTaskBoard"
-      description="The full board for agent tasks: filters and stages, board, table or backlog (each row with a host action), summary, collapsible columns, attachments, and the detail as a dialog, drawer or side panel. Live mode decides proposals; snapshot mode is read-only."
+      description="The full board for agent tasks: filters and stages, board, table or backlog (each row with a host action), summary, collapsible columns, attachments, and the detail as a dialog, drawer or side panel, and cards that move between columns by their handle. Live mode decides proposals; snapshot mode is read-only."
     >
       <div className="flex w-full flex-col gap-4">
         <div className="flex flex-wrap items-end gap-4">

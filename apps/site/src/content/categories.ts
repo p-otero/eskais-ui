@@ -98,6 +98,7 @@ const categories = [
       "description-list",
       "list-item",
       "tree",
+      "sortable",
       "stage-track",
       "avatar",
       "badge",
