@@ -83,7 +83,7 @@ type CommitHistoryProps = Omit<PartProps<"div">, "children" | "onSelect"> & {
   /**
    * Find in page reaches commits scrolled out of view, by subject, through UI SDK's virtualizer and its findable
    * layers, built once the page is idle after its first paint. Off by default: on 50,000 commits it costs about a
-   * frame on some held-arrow presses (p95 22-27 ms against 12 ms) and 10-40% on the first paint.
+   * frame on some held-arrow presses (p95 22-27 ms against 10 ms) and 10-40% on the first paint.
    */
   findable?: boolean
   /** Lanes the graph opens at most; an octopus merge's extra parents past it draw no lane. Default 12. */
@@ -235,6 +235,11 @@ function CommitHistory({
     findable,
   })
 
+  // Stable, so the memoized branch select doesn't render its branches again on every move.
+  const focusBranch = useCallback(
+    (name: string | null) => handle.api.focusBranch(name, { reason: "item-press" }),
+    [handle],
+  )
   const context = useMemo<CommitRowContext>(
     () => ({
       now,
@@ -305,7 +310,7 @@ function CommitHistory({
               <CommitBranchSelect
                 branches={model.active}
                 focused={state.focusedBranch}
-                onFocus={(name) => handle.api.focusBranch(name, { reason: "item-press" })}
+                onFocus={focusBranch}
                 labels={labels}
                 now={now}
                 locale={locale}

@@ -6,12 +6,12 @@
       "forcedLayouts": 2.05
     },
     "list-10k": {
-      "renders": 36,
+      "renders": 10,
       "forcedLayouts": 2.7,
       "forcedSlack": 0.3
     },
     "table": {
-      "renders": 95,
+      "renders": 30,
       "forcedLayouts": 3.4
     },
     "table-cells": {
@@ -33,7 +33,7 @@
       "forcedSlack": 0.3
     },
     "master-detail": {
-      "renders": 34,
+      "renders": 10,
       "forcedLayouts": 3.75,
       "forcedSlack": 0.3
     },
@@ -46,7 +46,7 @@
       "forcedLayouts": 3.05
     },
     "command:arrows": {
-      "renders": 6,
+      "renders": 0,
       "forcedLayouts": 1
     },
     "command:type": {
@@ -79,7 +79,7 @@
       "forcedLayouts": 3.05
     },
     "server-list": {
-      "renders": 33,
+      "renders": 10,
       "forcedLayouts": 2.75,
       "forcedSlack": 0.3
     }
@@ -147,7 +147,7 @@
     "combobox": 82.8,
     "command": 90,
     "commit-graph": 4.1,
-    "commit-history": 130.4,
+    "commit-history": 119.5,
     "confirm-button": 24.4,
     "confirm-dialog": 46.4,
     "context-menu": 63.2,
@@ -180,7 +180,7 @@
     "form-dialog": 93.3,
     "git-chip": 13.5,
     "git-diff": 122.9,
-    "git-tree": 61.5,
+    "git-tree": 50.9,
     "hero": 71.1,
     "hover-card": 45.5,
     "icon": 10.7,
@@ -229,7 +229,7 @@
     "select": 72.2,
     "separator": 20.3,
     "server-combobox": 85.9,
-    "server-commit-history": 146.9,
+    "server-commit-history": 136.1,
     "server-data": 17,
     "server-data-table": 219.9,
     "server-list": 116.2,
