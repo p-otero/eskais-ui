@@ -10,6 +10,7 @@ Versions follow [semver](https://semver.org). Before 1.0, a minor version can br
 - `shell`: `searchQuery`, `defaultSearchQuery` and `onSearchQueryChange` control the palette's search; `ShellSearch` takes them as `query`, `defaultQuery` and `onQueryChange`. Without them, every open of the palette starts empty.
 - `shell`: `sidebarShortcut` (off by default), like `"mod+b"`, toggles the sidebar on wide screens and opens its drawer on narrow ones. It is the topbar trigger's `shortcut`, so the trigger carries `aria-keyshortcuts`, shows the keys in its tooltip and `ShortcutsDialog` lists it.
 - `shell`: the sidebar's state is reachable. Pass your own `useSidebarState()` result as `sidebar` to read or toggle it outside the Shell, or call `useShellSidebar()` inside it (pages, `actions`, `brand`) for `collapsed`, `setCollapsed` and the `controller`.
+- `shell`: a route's `mobile` takes `{ order }`, so the bottom bar's order needn't follow the sidebar's. Routes sort by `order`, then by their place in the list; `mobile: true` still works and counts as order 0. The bar still holds four.
 
 ### Changed
 

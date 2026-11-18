@@ -10,8 +10,11 @@ type ShellRoute = {
   icon?: ComponentType<{ className?: string }>
   /** The `id` of one of `groups`; without `groups`, the group's label. Routes without one come first, unlabelled. */
   group?: string
-  /** In the bottom bar on narrow screens. The first four flagged routes take its slots; More opens the rest. */
-  mobile?: boolean
+  /**
+   * In the bottom bar on narrow screens, which has four slots; More opens the rest. `{ order }` places it apart from
+   * the sidebar's order: routes sort by `order`, then by their place in the list, and `true` counts as order 0.
+   */
+  mobile?: boolean | { order: number }
   /** More words the palette matches, like synonyms. */
   keywords?: readonly string[]
   /** A short count or mark beside the label, like 3. It joins the link's name. */
@@ -76,8 +79,19 @@ function currentRouteId<Route extends ShellRoute>(
   return best?.id
 }
 
+function mobileOrder(route: ShellRoute): number | undefined {
+  if (typeof route.mobile === "object") return route.mobile.order
+  return route.mobile ? 0 : undefined
+}
+
 function mobileRoutes(routes: readonly ShellRoute[]): MobileRoutes {
-  const shown = routes.filter((route) => route.mobile).slice(0, mobileSlots)
+  const candidates: { route: ShellRoute; order: number; index: number }[] = []
+  for (const [index, route] of routes.entries()) {
+    const order = mobileOrder(route)
+    if (order !== undefined) candidates.push({ route, order, index })
+  }
+  candidates.sort((a, b) => a.order - b.order || a.index - b.index)
+  const shown = candidates.slice(0, mobileSlots).map((candidate) => candidate.route)
   return { shown, rest: routes.filter((route) => !shown.includes(route)) }
 }
 

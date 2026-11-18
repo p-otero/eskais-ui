@@ -413,3 +413,47 @@ test("an agent presses the sidebar's trigger by name, the shortcut adding nothin
   await settle()
   expect(screen.getByRole("navigation", { name: "Main" }).hasAttribute("data-collapsed")).toBe(true)
 })
+
+test("mobile order places bottom bar routes apart from the sidebar's order, still four at most", async () => {
+  const user = userEvent.setup()
+  const reordered: Route[] = routes.map((route) => {
+    const order = { reports: 1, calendar: 2, settings: 3, inbox: 4, tasks: 5 }[route.id]
+    return order === undefined
+      ? { ...route, mobile: route.id === "projects" ? true : undefined }
+      : { ...route, mobile: { order } }
+  })
+  render(<TestShell routes={reordered} />)
+  await settle()
+  const sidebar = screen.getByRole("navigation", { name: "Main" })
+  expect(
+    within(within(sidebar).getByRole("list", { name: "Work" }))
+      .getAllByRole("link")
+      .map((link) => link.textContent),
+  ).toEqual(["Inbox", "Tasks", "Projects", "Calendar", "Reports", "Settings"])
+  const bar = screen.getByRole("navigation", { name: "Bottom bar" })
+  // `true` counts as order 0, so Projects leads.
+  expect(
+    within(bar)
+      .getAllByRole("link")
+      .map((link) => link.textContent),
+  ).toEqual(["Projects", "Reports", "Calendar", "Settings"])
+  await user.click(within(bar).getByRole("button", { name: "More" }))
+  await settle()
+  expect(
+    within(bar)
+      .getAllByRole("link")
+      .slice(4)
+      .map((link) => link.textContent),
+  ).toEqual(["Inbox", "Tasks", "Old reports", "Archive"])
+})
+
+test("equal mobile orders keep the list's order", async () => {
+  const tied: Route[] = routes.map((route) => ({ ...route, mobile: { order: route.id === "archive" ? -1 : 1 } }))
+  render(<TestShell routes={tied} />)
+  await settle()
+  expect(
+    within(screen.getByRole("navigation", { name: "Bottom bar" }))
+      .getAllByRole("link")
+      .map((link) => link.textContent),
+  ).toEqual(["Archive", "Inbox", "Tasks", "Projects"])
+})

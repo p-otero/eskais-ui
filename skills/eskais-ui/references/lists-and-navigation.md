@@ -98,5 +98,6 @@ function GlobalSearch({ controller }: { controller: CommandDialogController }) {
 
 `Shell` builds the frame from one list of routes: the sidebar, the bottom bar on narrow screens, its More sheet and the palette's Go to group.
 
+- **Bottom bar.** Routes with `mobile` take its four slots and More opens the rest. `mobile: { order }` orders the bar apart from the sidebar: by `order`, then by the routes' place in the list, `true` counting as order 0.
 - **Palette.** Each open starts empty and one Escape closes it, focus back on the trigger. `searchQuery`/`onSearchQueryChange` control the search, `defaultSearchQuery` starts each open, and `commandGroups` with `onCommand` add your commands.
 - **Sidebar.** `sidebarShortcut="mod+b"` (off by default) presses the topbar's sidebar trigger: it collapses or expands the sidebar on wide screens and opens the drawer on narrow ones. Inside the Shell, `useShellSidebar()` returns `{ collapsed, setCollapsed, controller }`. To hold that state above the Shell, call `useSidebarState({ storageKey })` yourself and pass it as `sidebar`.
