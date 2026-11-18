@@ -8,7 +8,7 @@
     "@ui-sdk/react@0.1.0-beta.10",
     "@lezer/common@1.5.5",
     "@lezer/highlight@1.2.5",
-    "lucide-react@^1.68.0"
+    "lucide-react"
   ],
   "registryDependencies": [
     "@eskais/utils",
