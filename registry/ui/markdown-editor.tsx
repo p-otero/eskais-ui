@@ -4,7 +4,7 @@ import { createParts } from "@ui-sdk/react/primitive"
 import { createTriggerMenuController } from "@ui-sdk/react/trigger-menu"
 import { useId, useMemo, useState, type ReactNode, type Ref } from "react"
 
-import { setMenuOpen } from "@/components/ui/markdown-editor-adapter"
+import { openProvisionally, setMenuOpen } from "@/components/ui/markdown-editor-adapter"
 import {
   insertAtCaret,
   insertAtSelection,
@@ -21,6 +21,7 @@ import { headingLevel, setHeading } from "@/components/ui/markdown-editor-lines"
 import {
   MarkdownEditorMenus,
   markdownSlashCommands,
+  WIKILINK_QUERY,
   type SlashCommand,
   type SuggestWikilinks,
 } from "@/components/ui/markdown-editor-menus"
@@ -32,6 +33,7 @@ import type {
   MarkdownEditorHandle,
   MarkdownSelection,
 } from "@/components/ui/markdown-editor-handle"
+import { settleProvisional } from "@/components/ui/markdown-editor-provisional"
 import { MarkdownEditorPortals } from "@/components/ui/markdown-editor-portals"
 import { markdownDocument, markdownEditor, type MarkdownEditorActions } from "@/components/ui/markdown-editor-primitive"
 import {
@@ -136,7 +138,8 @@ function MarkdownEditorBody(props: Omit<MarkdownEditorProps, "ref"> & { handle: 
       openWikilinkSuggestions: () => {
         if (!view || !suggests || view.state.readOnly) return false
         view.focus()
-        void menuController.open({ trigger: "[[" })
+        const closed = openProvisionally(view, () => menuController.open({ trigger: "[[" }))
+        void closed.then(() => settleProvisional(view, "[[", WIKILINK_QUERY))
         return true
       },
     }),

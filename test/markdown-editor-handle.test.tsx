@@ -165,7 +165,11 @@ test("openWikilinkSuggestions types [[ and opens the listbox, or reuses a [[ bef
   expect(editorView().hasFocus).toBe(true)
   fireEvent.keyDown(editorView().contentDOM, { key: "Escape" })
   await settle()
+  expect(handle.getValue()).toBe("see \n")
 
+  run(() => handle.insertText("[[", { userEvent: "input.type" }))
+  fireEvent.keyDown(editorView().contentDOM, { key: "Escape" })
+  await settle()
   run(() => handle.setSelection(6))
   expect(run(() => handle.openWikilinkSuggestions())).toBe(true)
   expect(await waitForListbox()).not.toBeNull()

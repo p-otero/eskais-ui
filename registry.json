@@ -4871,6 +4871,10 @@
           "type": "registry:ui"
         },
         {
+          "path": "registry/ui/markdown-editor-provisional.ts",
+          "type": "registry:ui"
+        },
+        {
           "path": "registry/ui/markdown-editor-sync.ts",
           "type": "registry:ui"
         },

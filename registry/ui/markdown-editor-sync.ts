@@ -3,6 +3,7 @@ import type { EditorView, ViewUpdate } from "@codemirror/view"
 import { useState, type RefObject } from "react"
 
 import { replaceDocument } from "@/components/ui/markdown-editor-commands"
+import { committedDoc, isProvisional } from "@/components/ui/markdown-editor-provisional"
 import { fromValue } from "@/components/ui/markdown-editor-state"
 
 type MarkdownConflict = { local: string; remote: string }
@@ -39,7 +40,7 @@ function createSync(props: RefObject<SyncProps>) {
     if (timer === undefined || !view) return
     clearTimeout(timer)
     timer = undefined
-    emit(view.state.sliceDoc())
+    emit(committedDoc(view.state))
   }
   const schedule = () => {
     if (timer !== undefined) clearTimeout(timer)
@@ -65,6 +66,7 @@ function createSync(props: RefObject<SyncProps>) {
     onUpdate(update: ViewUpdate) {
       if (update.focusChanged && !update.view.hasFocus) flush()
       if (!update.docChanged) return
+      if (update.transactions.every(isProvisional)) return
       updateDirty(update.state)
       if (update.transactions.some((transaction) => transaction.annotation(fromValue))) return
       schedule()
