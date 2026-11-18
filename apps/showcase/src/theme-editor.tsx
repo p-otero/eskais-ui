@@ -82,6 +82,40 @@ function SeedSlider({
   )
 }
 
+function SeedColor({
+  label,
+  name,
+  value,
+  onChange,
+  description,
+}: {
+  label: string
+  name: string
+  value: string
+  onChange: (value: string) => void
+  description: string
+}) {
+  return (
+    <Field>
+      <FieldLabel>{label}</FieldLabel>
+      <ColorPicker space="oklch" value={value} onValueChange={onChange}>
+        <ColorPickerArea>
+          <ColorPickerAreaCanvas />
+          <ColorPickerAreaThumb aria-label={`${name} chroma and lightness`} />
+        </ColorPickerArea>
+        <ColorPickerSlider channel="hue" style={hueTrack}>
+          <ColorPickerSliderThumb aria-label={`${name} hue`} />
+        </ColorPickerSlider>
+        <div className="flex items-center gap-items">
+          <ColorPickerSwatch />
+          <ColorPickerInput aria-label={`${label} in OKLCH`} />
+        </div>
+      </ColorPicker>
+      <FieldDescription>{description}</FieldDescription>
+    </Field>
+  )
+}
+
 /**
  * Edits the theme's seeds on `<html>` and shows the CSS to keep them. Two columns only when its container has room
  * for both, so it fits a card in a docs column as well as a full-width showcase section.
@@ -133,40 +167,20 @@ function ThemeEditor<Theme extends string, Palette extends string>({
               </SegmentedControl>
             </div>
           </Field>
-          <Field>
-            <FieldLabel>Brand colour</FieldLabel>
-            <ColorPicker space="oklch" value={seeds.brand} onValueChange={(brand) => override({ brand })}>
-              <ColorPickerArea>
-                <ColorPickerAreaCanvas />
-                <ColorPickerAreaThumb aria-label="Brand chroma and lightness" />
-              </ColorPickerArea>
-              <ColorPickerSlider channel="hue" style={hueTrack}>
-                <ColorPickerSliderThumb aria-label="Brand hue" />
-              </ColorPickerSlider>
-              <div className="flex items-center gap-items">
-                <ColorPickerSwatch />
-                <ColorPickerInput aria-label="Brand colour in OKLCH" />
-              </div>
-            </ColorPicker>
-            <FieldDescription>
-              A grey brand has no chroma, so its hue shows only once you drag right in the area.
-            </FieldDescription>
-          </Field>
-          <Field>
-            <FieldLabel>Link colour</FieldLabel>
-            <ColorPicker
-              space="oklch"
-              value={seeds.linkBrand}
-              onValueChange={(linkBrand) => override({ linkBrand })}
-              className="flex-row items-center"
-            >
-              <ColorPickerSwatch />
-              <ColorPickerInput aria-label="Link colour in OKLCH" />
-            </ColorPicker>
-            <FieldDescription>
-              Links and the editor caret derive from it, capped in lightness to keep 4.5:1.
-            </FieldDescription>
-          </Field>
+          <SeedColor
+            label="Brand colour"
+            name="Brand"
+            value={seeds.brand}
+            onChange={(brand) => override({ brand })}
+            description="A grey brand has no chroma, so its hue shows only once you drag right in the area."
+          />
+          <SeedColor
+            label="Link colour"
+            name="Link"
+            value={seeds.linkBrand}
+            onChange={(linkBrand) => override({ linkBrand })}
+            description="Links and the editor caret derive from it, capped in lightness to keep 4.5:1."
+          />
           <SeedSlider
             label="Neutral tint"
             value={seeds.neutralChroma}

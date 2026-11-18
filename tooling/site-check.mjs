@@ -282,6 +282,12 @@ async function checkThemeEditor(browser, origin) {
       const typed = await read()
       if (typed.primary === dragged.primary)
         failures.push(`${scope}: typing a brand leaves --primary at ${typed.primary}`)
+      const linkColour = () =>
+        page.evaluate(() => getComputedStyle(document.documentElement).getPropertyValue("--link").trim())
+      const linkBefore = await linkColour()
+      await page.getByRole("slider", { name: "Link hue" }).focus()
+      for (let step = 0; step < 20; step++) await page.keyboard.press("ArrowRight")
+      if ((await linkColour()) === linkBefore) failures.push(`${scope}: the link hue leaves --link at ${linkBefore}`)
       await page.getByRole("slider", { name: "Neutral tint" }).focus()
       for (let step = 0; step < 10; step++) await page.keyboard.press("ArrowRight")
       const tinted = await read()
