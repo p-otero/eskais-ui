@@ -9,7 +9,7 @@ import {
   syntaxTree,
 } from "@codemirror/language"
 import { parseCode, type MarkdownParser } from "@lezer/markdown"
-import { Annotation, Compartment, EditorState, type Extension } from "@codemirror/state"
+import { Annotation, Compartment, EditorState, Text, type Extension } from "@codemirror/state"
 import { EditorView, placeholder as placeholderText, type KeyBinding, type ViewUpdate } from "@codemirror/view"
 import { classHighlighter } from "@lezer/highlight"
 
@@ -77,8 +77,9 @@ const frontmatterSlot = new Compartment()
 
 /**
  * Drops the part of an edit that falls in the frontmatter or on the line break after its closing fence, so the
- * block keeps every byte. Text from `value` still replaces it. Typing at the very start, or after a closing fence
- * that ends the document, would also break a fence, so such a transaction is dropped whole.
+ * block keeps every byte. Text from `value` still replaces it. Typing at the very start would break the opening
+ * fence, so such a transaction is dropped whole; an insertion after a closing fence that ends the document goes
+ * through, and `bodyAfterFence` starts it on a new line.
  */
 const protectFrontmatter = EditorState.changeFilter.of((transaction) => {
   if (!transaction.docChanged || transaction.annotation(fromValue)) return true
@@ -88,12 +89,29 @@ const protectFrontmatter = EditorState.changeFilter.of((transaction) => {
   const guard = Math.min(end + 1, startState.doc.length)
   let breaksFence = false
   transaction.changes.iterChangedRanges((from, to) => {
-    if ((from === 0 && to === 0) || (guard === end && from === end)) breaksFence = true
+    if (from === 0 && to === 0) breaksFence = true
   })
   return breaksFence ? false : [0, guard]
 })
+
+const startsWithLineBreak = (text: Text) => text.lines > 1 && text.line(1).length === 0
+
+/** Puts a line break before text inserted right after a closing fence that ends the document. */
+const bodyAfterFence = EditorState.transactionFilter.of((transaction) => {
+  if (!transaction.docChanged || transaction.annotation(fromValue)) return transaction
+  const { startState } = transaction
+  const end = frontmatterEnd(startState)
+  if (end < 0 || end !== startState.doc.length) return transaction
+  let at = -1
+  transaction.changes.iterChanges((fromA, _toA, fromB, _toB, inserted) => {
+    if (fromA === end && inserted.length && !startsWithLineBreak(inserted)) at = fromB
+  })
+  if (at < 0) return transaction
+  return [transaction, { changes: { from: at, insert: Text.of(["", ""]) }, sequential: true }]
+})
+
 const frontmatterExtension = (editing: FrontmatterEditing = "editable") =>
-  editing === "readonly" ? protectFrontmatter : []
+  editing === "readonly" ? [protectFrontmatter, bodyAfterFence] : []
 
 const readOnlyExtension = (readOnly: boolean) => EditorState.readOnly.of(readOnly)
 const attributesExtension = ({ label, describedBy, readOnly }: EditorSettings) =>
