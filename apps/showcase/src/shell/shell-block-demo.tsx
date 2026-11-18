@@ -65,6 +65,7 @@ function ShellBlockDemo() {
         onNavigate={hashMode ? undefined : onNavigate}
         storageKey="showcase-shell"
         sidebarShortcut="mod+b"
+        sidebarHeader={<p className="truncate px-inset-item text-caption text-muted-foreground">Acme workspace</p>}
         labels={{ searchPlaceholder: "Pages and commands" }}
         brand={<span className="text-title-sm narrow:sr-only">Acme</span>}
         actions={

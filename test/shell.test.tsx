@@ -523,3 +523,23 @@ test("a route in the bottom bar only, and none in the sidebar, still routes and 
   expect(within(bar).getByRole("link", { name: "Calendar" }).getAttribute("aria-current")).toBe("page")
   expect(linkNames(screen.getByRole("navigation", { name: "Main" }))).not.toContain("Calendar")
 })
+
+test("sidebarHeader goes above the sidebar's routes, also in the narrow drawer", async () => {
+  const { unmount } = render(<TestShell sidebarHeader={<p>Workspace: Acme</p>} />)
+  await settle()
+  const sidebar = screen.getByRole("navigation", { name: "Main" })
+  const header = within(sidebar).getByText("Workspace: Acme")
+  expect(header.closest("[data-slot=sidebar-header]")).toBeTruthy()
+  expect(header.compareDocumentPosition(within(sidebar).getAllByRole("link")[0]!)).toBe(
+    Node.DOCUMENT_POSITION_FOLLOWING,
+  )
+  unmount()
+
+  mockNarrow(true)
+  const user = userEvent.setup()
+  render(<TestShell sidebarHeader={<p>Workspace: Acme</p>} />)
+  await settle()
+  await user.click(within(screen.getByRole("banner")).getByRole("button", { name: "Open navigation" }))
+  await settle()
+  expect(within(screen.getByRole("dialog", { name: "Main" })).getByText("Workspace: Acme")).toBeTruthy()
+})

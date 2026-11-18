@@ -90,6 +90,7 @@ export default function ShellDemo() {
           // The docs site already opens its own search with ⌘K.
           searchShortcut={false}
           brand={<span className="text-title-sm narrow:sr-only">Acme</span>}
+          sidebarHeader={<p className="truncate px-inset-item text-caption text-muted-foreground">Acme workspace</p>}
           actions={
             <Button variant="ghost" size="icon" aria-label="Notifications (example)">
               <BellIcon />

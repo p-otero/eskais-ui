@@ -97,6 +97,11 @@ type ShellProps<Route extends ShellRoute = ShellRoute> = Omit<ComponentProps<"di
   commandGroups?: ReactNode
   /** Runs the commands of `commandGroups` by value; the palette closes once a returned Promise settles. */
   onCommand?: (value: string) => unknown
+  /**
+   * Above the sidebar's routes, like a brand, a workspace switcher or a caption. Hidden while the sidebar is a rail;
+   * in the narrow drawer it sits under the drawer's title.
+   */
+  sidebarHeader?: ReactNode
   /** Below the sidebar's routes, like an account or a plan. */
   sidebarFooter?: ReactNode
   labels?: Partial<ShellLabels>
@@ -153,6 +158,7 @@ function Shell<Route extends ShellRoute>({
   actions,
   commandGroups,
   onCommand,
+  sidebarHeader,
   sidebarFooter,
   labels: overrides,
   storageKey,
@@ -263,6 +269,7 @@ function Shell<Route extends ShellRoute>({
               trigger={false}
               narrowQuery={narrowQuery}
               labels={sidebarLabels}
+              header={sidebarHeader}
               footer={sidebarFooter}
             >
               <ShellSidebarSections sections={sections} currentId={currentId} navigate={navigate} />
