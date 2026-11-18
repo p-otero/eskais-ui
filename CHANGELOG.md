@@ -11,6 +11,7 @@ Versions follow [semver](https://semver.org). Before 1.0, a minor version can br
 - `shell`: `sidebarShortcut` (off by default), like `"mod+b"`, toggles the sidebar on wide screens and opens its drawer on narrow ones. It is the topbar trigger's `shortcut`, so the trigger carries `aria-keyshortcuts`, shows the keys in its tooltip and `ShortcutsDialog` lists it.
 - `shell`: the sidebar's state is reachable. Pass your own `useSidebarState()` result as `sidebar` to read or toggle it outside the Shell, or call `useShellSidebar()` inside it (pages, `actions`, `brand`) for `collapsed`, `setCollapsed` and the `controller`.
 - `shell`: a route's `mobile` takes `{ order }`, so the bottom bar's order needn't follow the sidebar's. Routes sort by `order`, then by their place in the list; `mobile: true` still works and counts as order 0. The bar still holds four.
+- `shell`: a route's `placements`, a subset of `"sidebar"`, `"mobile"`, `"more"` and `"palette"` (all by default), says where it shows: `["sidebar"]` keeps it out of the bottom bar, More and the palette, and leaving out `"more"` or `"palette"` keeps it out of just that. `placements` decides over `mobile`: without `"mobile"` a route stays out of the bar even with `mobile` set, and listing `"mobile"` puts it in the bar as `mobile: true` does (`mobile: { order }` still orders it). Exported as `ShellPlacement`.
 
 ### Changed
 

@@ -1,5 +1,8 @@
 import type { ComponentType, ReactNode } from "react"
 
+/** Where a route can show: the sidebar (and its drawer), the bottom bar, its More sheet, and the palette's Go to. */
+type ShellPlacement = "sidebar" | "mobile" | "more" | "palette"
+
 type ShellRoute = {
   /** Unique among the routes: keys and the palette's command values come from it. */
   id: string
@@ -15,6 +18,12 @@ type ShellRoute = {
    * the sidebar's order: routes sort by `order`, then by their place in the list, and `true` counts as order 0.
    */
   mobile?: boolean | { order: number }
+  /**
+   * Where it shows; everywhere by default. `["sidebar"]` keeps it out of the bottom bar, More and the palette.
+   * Listing `"mobile"` puts it in the bottom bar as `mobile: true` does; leaving `"mobile"` out keeps it out of the
+   * bar even with `mobile` set. `"more"` lets More list it when the bar doesn't show it.
+   */
+  placements?: readonly ShellPlacement[]
   /** More words the palette matches, like synonyms. */
   keywords?: readonly string[]
   /** A short count or mark beside the label, like 3. It joins the link's name. */
@@ -44,6 +53,10 @@ type ShellRouteSection = {
 type MobileRoutes = { shown: ShellRoute[]; rest: ShellRoute[] }
 
 const mobileSlots = 4
+
+function placedIn(route: ShellRoute, placement: ShellPlacement) {
+  return route.placements === undefined || route.placements.includes(placement)
+}
 
 function sectionRoutes(
   routes: readonly ShellRoute[],
@@ -80,8 +93,9 @@ function currentRouteId<Route extends ShellRoute>(
 }
 
 function mobileOrder(route: ShellRoute): number | undefined {
+  if (!placedIn(route, "mobile")) return undefined
   if (typeof route.mobile === "object") return route.mobile.order
-  return route.mobile ? 0 : undefined
+  return route.mobile || route.placements !== undefined ? 0 : undefined
 }
 
 function mobileRoutes(routes: readonly ShellRoute[]): MobileRoutes {
@@ -92,8 +106,8 @@ function mobileRoutes(routes: readonly ShellRoute[]): MobileRoutes {
   }
   candidates.sort((a, b) => a.order - b.order || a.index - b.index)
   const shown = candidates.slice(0, mobileSlots).map((candidate) => candidate.route)
-  return { shown, rest: routes.filter((route) => !shown.includes(route)) }
+  return { shown, rest: routes.filter((route) => !shown.includes(route) && placedIn(route, "more")) }
 }
 
-export { currentRouteId, mobileRoutes, sectionRoutes }
-export type { ShellRoute, ShellRouteGroup, ShellRouteSection, ShellCurrent, MobileRoutes }
+export { currentRouteId, mobileRoutes, placedIn, sectionRoutes }
+export type { ShellRoute, ShellPlacement, ShellRouteGroup, ShellRouteSection, ShellCurrent, MobileRoutes }

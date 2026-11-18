@@ -457,3 +457,69 @@ test("equal mobile orders keep the list's order", async () => {
       .map((link) => link.textContent),
   ).toEqual(["Archive", "Inbox", "Tasks", "Projects"])
 })
+
+const linkNames = (scope: HTMLElement) =>
+  within(scope)
+    .queryAllByRole("link")
+    .map((link) => link.textContent)
+
+test("placements keep a route to the sidebar, out of More or out of the palette", async () => {
+  const user = userEvent.setup()
+  const placed: Route[] = routes.map((route) => {
+    if (route.id === "settings") return { ...route, placements: ["sidebar"] }
+    if (route.id === "old-reports") return { ...route, placements: ["sidebar", "palette"] }
+    if (route.id === "archive") return { ...route, placements: ["sidebar", "more"] }
+    return route
+  })
+  render(<TestShell routes={placed} />)
+  await settle()
+  const sidebar = screen.getByRole("navigation", { name: "Main" })
+  expect(linkNames(sidebar)).toEqual(routes.map((route) => route.label))
+
+  const bar = screen.getByRole("navigation", { name: "Bottom bar" })
+  await user.click(within(bar).getByRole("button", { name: "More" }))
+  await settle()
+  expect(linkNames(bar).slice(4)).toEqual(["Reports", "Archive"])
+
+  await user.keyboard("{Control>}k{/Control}")
+  await settle()
+  const options = within(screen.getByRole("dialog")).getAllByRole("option")
+  expect(options.map((option) => option.textContent)).toEqual([
+    "Inbox",
+    "Tasks",
+    "Projects",
+    "Calendar",
+    "Reports",
+    "Old reports",
+  ])
+})
+
+test('placements decide the bottom bar over mobile: without "mobile" a route stays out, with it a route joins', async () => {
+  const placed: Route[] = routes.map((route) => {
+    if (route.id === "inbox") return { ...route, placements: ["sidebar", "more", "palette"] }
+    if (route.id === "archive") return { ...route, mobile: undefined, placements: ["mobile", "palette"] }
+    return route
+  })
+  render(<TestShell routes={placed} />)
+  await settle()
+  const bar = screen.getByRole("navigation", { name: "Bottom bar" })
+  expect(linkNames(bar)).toEqual(["Tasks", "Projects", "Calendar", "Reports"])
+  expect(linkNames(screen.getByRole("navigation", { name: "Main" }))).not.toContain("Archive")
+  // Archive is a mobile candidate behind four earlier ones and isn't allowed in More, so it doesn't show there.
+  const user = userEvent.setup()
+  await user.click(within(bar).getByRole("button", { name: "More" }))
+  await settle()
+  expect(linkNames(bar).slice(4)).toEqual(["Inbox", "Settings", "Old reports"])
+})
+
+test("a route in the bottom bar only, and none in the sidebar, still routes and marks current", async () => {
+  const placed: Route[] = routes.map((route) =>
+    route.id === "calendar" ? { ...route, mobile: { order: -1 }, placements: ["mobile"] } : route,
+  )
+  render(<TestShell routes={placed} currentHref="/calendar" />)
+  await settle()
+  const bar = screen.getByRole("navigation", { name: "Bottom bar" })
+  expect(linkNames(bar)[0]).toBe("Calendar")
+  expect(within(bar).getByRole("link", { name: "Calendar" }).getAttribute("aria-current")).toBe("page")
+  expect(linkNames(screen.getByRole("navigation", { name: "Main" }))).not.toContain("Calendar")
+})

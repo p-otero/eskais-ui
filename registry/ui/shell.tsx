@@ -4,7 +4,13 @@ import { useCallback, useState, type ComponentProps, type CSSProperties, type Re
 import { SearchIcon } from "lucide-react"
 
 import { ShellSidebarSections, useMobileNavItems } from "@/components/ui/shell-nav"
-import type { ShellRoute, ShellRouteGroup, ShellCurrent } from "@/components/ui/shell-routes"
+import {
+  placedIn,
+  type ShellPlacement,
+  type ShellRoute,
+  type ShellRouteGroup,
+  type ShellCurrent,
+} from "@/components/ui/shell-routes"
 import { ShellSearch, type ShellSearchProps } from "@/components/ui/shell-search"
 import {
   CommandDialogOpenButton,
@@ -67,7 +73,10 @@ const shellLabels: ShellLabels = {
 }
 
 type ShellProps<Route extends ShellRoute = ShellRoute> = Omit<ComponentProps<"div">, "children"> & {
-  /** Every route, in order: the sidebar, the bottom bar (`mobile: true`) and the palette's Go to group come from it. */
+  /**
+   * Every route, in order: the sidebar, the bottom bar (`mobile`), its More sheet and the palette's Go to group come
+   * from it. A route's `placements` limits where it shows.
+   */
   routes: readonly Route[]
   /** The sidebar's groups, in order, with their labels and tone. Without them, routes group by their `group` text. */
   groups?: readonly ShellRouteGroup[]
@@ -163,7 +172,8 @@ function Shell<Route extends ShellRoute>({
   ...props
 }: ShellProps<Route>) {
   const labels = { ...shellLabels, ...overrides }
-  const collapseMode = collapse ?? (routes.every((route) => route.icon !== undefined) ? "rail" : "hide")
+  const collapseMode =
+    collapse ?? (routes.every((route) => route.icon !== undefined || !placedIn(route, "sidebar")) ? "rail" : "hide")
   const sidebarLabels: Partial<SidebarLabels> = {
     open: labels.openNavigation,
     close: labels.closeNavigation,
@@ -173,7 +183,7 @@ function Shell<Route extends ShellRoute>({
   const ownSidebar = useSidebarState({ storageKey, defaultCollapsed })
   const sidebar = sidebarState ?? ownSidebar
   const [search] = useState(() => createCommandDialogController())
-  const { sections, mobile, currentId } = useShellRoutes(routes, groups, currentHref)
+  const { sections, paletteSections, mobile, currentId } = useShellRoutes(routes, groups, currentHref)
   // Stable while the routes and onNavigate are, so a navigation re-renders only the items whose current changed.
   const navigate = useCallback(
     (id: string) => {
@@ -231,7 +241,7 @@ function Shell<Route extends ShellRoute>({
         />
         <ShellSearch
           controller={search}
-          sections={sections}
+          sections={paletteSections}
           currentId={currentId}
           navigate={navigate}
           labels={labels}
@@ -288,4 +298,4 @@ function Shell<Route extends ShellRoute>({
 }
 
 export { Shell, shellLabels, useShellSidebar }
-export type { ShellRoute, ShellRouteGroup, ShellCurrent, ShellLabels, ShellProps }
+export type { ShellRoute, ShellPlacement, ShellRouteGroup, ShellCurrent, ShellLabels, ShellProps }

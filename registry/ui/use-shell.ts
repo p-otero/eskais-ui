@@ -5,6 +5,7 @@ import { createContext, use, useMemo } from "react"
 import {
   currentRouteId,
   mobileRoutes,
+  placedIn,
   sectionRoutes,
   type ShellRoute,
   type ShellRouteGroup,
@@ -30,10 +31,25 @@ function useShellRoutes<Route extends ShellRoute>(
   groups: readonly ShellRouteGroup[] | undefined,
   current: ShellCurrent<Route> | undefined,
 ) {
-  const sections = useMemo(() => sectionRoutes(routes, groups), [routes, groups])
+  const sections = useMemo(
+    () =>
+      sectionRoutes(
+        routes.filter((route) => placedIn(route, "sidebar")),
+        groups,
+      ),
+    [routes, groups],
+  )
+  const paletteSections = useMemo(
+    () =>
+      sectionRoutes(
+        routes.filter((route) => placedIn(route, "palette")),
+        groups,
+      ),
+    [routes, groups],
+  )
   const mobile = useMemo(() => mobileRoutes(routes), [routes])
   const currentId = useMemo(() => currentRouteId(routes, current), [routes, current])
-  return { sections, mobile, currentId }
+  return { sections, paletteSections, mobile, currentId }
 }
 
 export { ShellSidebarContext, useShellRoutes, useShellSidebar }
