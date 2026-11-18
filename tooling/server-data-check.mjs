@@ -63,8 +63,8 @@ async function axe(page) {
 function overlaps(page) {
   return page.evaluate(() => {
     const selector = [
-      "[data-slot=filter-scope] button",
-      "[data-slot=filter-scope] input",
+      "[data-slot=server-filters] button",
+      "[data-slot=server-filters] input",
       "[data-slot=server-data-table-footer] output",
       "[data-slot=server-data-table-footer] button",
       "[data-slot=server-data-table-footer] [role=combobox]",

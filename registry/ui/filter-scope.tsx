@@ -10,7 +10,7 @@ import type { PageController } from "@/lib/page-controller"
 
 type AnyController = PageController<FilterValues<FilterSchema>>
 
-type FilterScopeValue = { schema: FilterSchema; controller: AnyController }
+type FilterScopeValue = { schema: FilterSchema; controller: AnyController; searchPlaceholder?: string }
 
 const FilterScopeContext = createContext<FilterScopeValue | null>(null)
 
@@ -19,6 +19,8 @@ type FilterScopeProps<S extends FilterSchema> = {
   controller: PageController<FilterValues<S>>
   /** Names the filters for agents, who set them with `filter(field, value)`, `search` and `clearFilters`. */
   label: string
+  /** The placeholder of a `FilterSearch` inside that doesn't set its own: "Search tasks…". */
+  searchPlaceholder?: string
   className?: string
   children?: ReactNode
 }
@@ -27,8 +29,18 @@ type FilterScopeProps<S extends FilterSchema> = {
  * Gives filter UIs inside it (`FilterSearch`, `FilterChips`, `FilterPanel`) their schema and controller, and lets
  * agents filter by a field's label: `filter("Status", ["Open", "Blocked"])`.
  */
-function FilterScope<S extends FilterSchema>({ schema, controller, label, className, children }: FilterScopeProps<S>) {
-  const scope = useMemo(() => ({ schema, controller: controller as unknown as AnyController }), [schema, controller])
+function FilterScope<S extends FilterSchema>({
+  schema,
+  controller,
+  label,
+  searchPlaceholder,
+  className,
+  children,
+}: FilterScopeProps<S>) {
+  const scope = useMemo(
+    () => ({ schema, controller: controller as unknown as AnyController, searchPlaceholder }),
+    [schema, controller, searchPlaceholder],
+  )
   const handle = usePrimitive(serverFilters, {
     fields: Object.entries(schema).map(([key, field]) => ({ value: key, label: field.label })),
     apply: (name, input) => {
@@ -47,7 +59,6 @@ function FilterScope<S extends FilterSchema>({ schema, controller, label, classN
     {},
     {
       "aria-label": label,
-      ...({ "data-slot": "filter-scope" } as object),
       className,
       children: <FilterScopeContext value={scope}>{children}</FilterScopeContext>,
     },
@@ -63,7 +74,7 @@ function useFilterScope<S extends FilterSchema>(props: { schema?: S; controller?
   if (!schema || !controller)
     throw new Error("A filter UI needs `schema` and `controller`, or a FilterScope around it.")
   const state = useSyncExternalStore(controller.subscribe, controller.getState, controller.getState)
-  return { schema, controller, state }
+  return { schema, controller, state, searchPlaceholder: scope?.searchPlaceholder }
 }
 
 export { FilterScope, useFilterScope }

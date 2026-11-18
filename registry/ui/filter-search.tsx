@@ -23,7 +23,7 @@ type FilterSearchProps<S extends FilterSchema> = {
  * Enter commits at once, Escape clears. An agent's value commits without waiting.
  */
 function FilterSearch<S extends FilterSchema>({ label, placeholder, className, ...props }: FilterSearchProps<S>) {
-  const { schema, controller, state } = useFilterScope(props)
+  const { schema, controller, state, searchPlaceholder } = useFilterScope(props)
   const key = searchFieldOf(schema)
   const name = label ?? (key === undefined ? undefined : schema[key]?.label) ?? ""
   const onKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
@@ -47,7 +47,7 @@ function FilterSearch<S extends FilterSchema>({ label, placeholder, className, .
       <Input
         type="search"
         aria-label={name}
-        placeholder={placeholder}
+        placeholder={placeholder ?? searchPlaceholder}
         value={state.searchText}
         onValueChange={(value, details) =>
           controller.setSearch(value, { immediate: (details as { source?: string } | undefined)?.source === "agent" })

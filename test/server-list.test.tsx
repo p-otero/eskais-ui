@@ -55,7 +55,7 @@ function renderList(options: { infinite?: boolean; key: string; fail?: () => boo
 }
 
 function rowCount() {
-  return within(screen.getByRole("group", { name: "Tasks" })).queryAllByRole("button").length
+  return within(screen.getByRole("list", { name: "Tasks" })).queryAllByRole("button").length
 }
 
 function status() {
@@ -93,7 +93,7 @@ test("rows are one tab stop with arrow keys; search filters on the server", asyn
   const user = userEvent.setup()
   renderList({ key: "keys", infinite: false })
   await waitFor(() => expect(rowCount()).toBe(20))
-  const rows = within(screen.getByRole("group", { name: "Tasks" })).getAllByRole("button")
+  const rows = within(screen.getByRole("list", { name: "Tasks" })).getAllByRole("button")
   expect(rows.filter((row) => row.tabIndex === 0)).toHaveLength(1)
   rows[0]?.focus()
   await user.keyboard("{ArrowDown}")

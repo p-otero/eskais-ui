@@ -17,7 +17,7 @@ Read a component's own file before you use it: the props, variants and the comme
 | `references/toasts-and-testing.md`   | toasts, and testing toasts and alerts with Testing Library                              |
 | `references/data-display.md`         | description lists, stat deltas, ring meters and value formats, table cells, chart data  |
 | `references/agent-task-board.md`     | the AgentTaskBoard and its pieces                                                       |
-| `references/server-data.md`         | tables, lists and comboboxes over a backend: sources, filters, wire formats, the URL     |
+| `references/server-data.md`          | tables, lists and comboboxes over a backend: sources, filters, wire formats, the URL    |
 
 Keeping screens fast (long lists, effects, React Compiler, motion) has its own skill, `eskais-perf`; building a throwaway mockup of a screen has `eskais-mockup`. Both install with `npx shadcn@latest add @eskais/eskais-perf-skill @eskais/eskais-mockup-skill`.
 

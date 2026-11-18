@@ -5,11 +5,10 @@ import { SlidersHorizontalIcon } from "lucide-react"
 
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Drawer, DrawerBackdrop, DrawerContent, DrawerHandle, DrawerHeader, DrawerTitle } from "@/components/ui/drawer"
 import { FilterField, type FilterFieldLabels } from "@/components/ui/filter-field"
 import { useFilterScope } from "@/components/ui/filter-scope"
 import { SidePanel } from "@/components/ui/side-panel"
-import { useMediaQuery } from "@/components/ui/use-media-query"
+import { narrowQuery, useMediaQuery } from "@/components/ui/use-media-query"
 import {
   activeFilterKeys,
   searchFieldOf,
@@ -109,7 +108,7 @@ function FilterPanel<S extends FilterSchema>({
 }: FilterPanelProps<S>) {
   const { schema, controller, state } = useFilterScope(props)
   const labels = { ...filterPanelLabels, ...labelOverrides }
-  const narrow = useMediaQuery("(width <= 47.5rem)")
+  const narrow = useMediaQuery(narrowQuery)
   const searchKey = searchFieldOf(schema)
   const keys = fields ?? Object.keys(schema).filter((key) => key !== searchKey)
   const values = state.filter as Record<string, unknown>
@@ -134,20 +133,6 @@ function FilterPanel<S extends FilterSchema>({
       onApply={apply}
     />
   )
-  if (narrow) {
-    return (
-      <Drawer side="bottom" open={open} onOpenChange={(next) => onOpenChange(next)}>
-        <DrawerBackdrop />
-        <DrawerContent data-slot="filter-panel" className={className}>
-          <DrawerHandle />
-          <DrawerHeader>
-            <DrawerTitle>{labels.title}</DrawerTitle>
-          </DrawerHeader>
-          {form}
-        </DrawerContent>
-      </Drawer>
-    )
-  }
   return (
     <SidePanel
       open={open}
@@ -155,6 +140,7 @@ function FilterPanel<S extends FilterSchema>({
       title={labels.title}
       returnFocus={returnFocus}
       scope="filter-panel"
+      narrow="sheet"
       labels={{ close: labels.close }}
       className={className}
     >
@@ -180,7 +166,7 @@ function FilterPanelTrigger({ open, onOpenChange, count = 0, ref, children, clas
       ref={ref}
       variant="outline"
       aria-expanded={open}
-      data-slot="filter-panel-trigger"
+      render={(part) => <button {...part} data-slot="filter-panel-trigger" />}
       onClick={() => onOpenChange(!open)}
       className={className}
     >

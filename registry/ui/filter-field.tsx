@@ -183,23 +183,24 @@ function NumberBox({
   onSubmit?: () => void
 }) {
   return (
-    <NumberInput
-      value={value ?? null}
-      min={field.min}
-      max={field.max}
-      step={field.step}
-      onValueChange={(next) => onChange(next ?? undefined)}
-      className="min-w-0 flex-1"
-    >
-      <NumberInputGroup>
-        <NumberInputControl
-          aria-label={label}
-          onKeyDown={(event) => {
-            if (event.key === "Enter") onSubmit?.()
-          }}
-        />
-      </NumberInputGroup>
-    </NumberInput>
+    <Field className="min-w-0 flex-1">
+      <FieldLabel>{label}</FieldLabel>
+      <NumberInput
+        value={value ?? null}
+        min={field.min}
+        max={field.max}
+        step={field.step}
+        onValueChange={(next) => onChange(next ?? undefined)}
+      >
+        <NumberInputGroup>
+          <NumberInputControl
+            onKeyDown={(event) => {
+              if (event.key === "Enter") onSubmit?.()
+            }}
+          />
+        </NumberInputGroup>
+      </NumberInput>
+    </Field>
   )
 }
 
@@ -230,42 +231,47 @@ function NumberControl({
     onValueChange(min === undefined || max === undefined ? undefined : { op: "between", min, max })
   }
   return (
-    <FieldSet className={cn("gap-items", className)}>
+    <FieldSet className={cn("@container gap-items", className)}>
       <FieldLegend className={legendClassName}>{field.label}</FieldLegend>
-      {operators.length > 1 && (
-        <Select
-          aria-label={labels.comparison}
-          options={operators.map((operator) => ({ value: operator, label: labels.operators[operator] }))}
-          value={op}
-          onValueChange={(next) => {
-            if (!next) return
-            setOp(next)
-            if (next === "between") return onValueChange(undefined)
-            const kept = single ?? range.min
-            if (kept !== undefined) onValueChange({ op: next, value: kept })
-          }}
-        />
-      )}
-      {op === "between" ? (
-        <div className="flex items-center gap-inline">
-          <NumberBox
-            label={labels.min}
-            value={range.min}
-            field={field}
-            onSubmit={onSubmit}
-            onChange={(min) => setRange(min, range.max)}
-          />
-          <NumberBox
-            label={labels.max}
-            value={range.max}
-            field={field}
-            onSubmit={onSubmit}
-            onChange={(max) => setRange(range.min, max)}
-          />
-        </div>
-      ) : (
-        <NumberBox label={labels.value} value={single} field={field} onSubmit={onSubmit} onChange={setSingle} />
-      )}
+      {/* The comparison and the value share a row once the container has room; a range's two ends get their own. */}
+      <div className={cn("flex flex-col gap-items", op !== "between" && "@xs:flex-row")}>
+        {operators.length > 1 && (
+          <Field className="min-w-0 flex-1">
+            <FieldLabel>{labels.comparison}</FieldLabel>
+            <Select
+              options={operators.map((operator) => ({ value: operator, label: labels.operators[operator] }))}
+              value={op}
+              onValueChange={(next) => {
+                if (!next) return
+                setOp(next)
+                if (next === "between") return onValueChange(undefined)
+                const kept = single ?? range.min
+                if (kept !== undefined) onValueChange({ op: next, value: kept })
+              }}
+            />
+          </Field>
+        )}
+        {op === "between" ? (
+          <div className="flex gap-items">
+            <NumberBox
+              label={labels.min}
+              value={range.min}
+              field={field}
+              onSubmit={onSubmit}
+              onChange={(min) => setRange(min, range.max)}
+            />
+            <NumberBox
+              label={labels.max}
+              value={range.max}
+              field={field}
+              onSubmit={onSubmit}
+              onChange={(max) => setRange(range.min, max)}
+            />
+          </div>
+        ) : (
+          <NumberBox label={labels.value} value={single} field={field} onSubmit={onSubmit} onChange={setSingle} />
+        )}
+      </div>
     </FieldSet>
   )
 }
@@ -302,29 +308,41 @@ function DateControl({
     onValueChange(next.from === undefined && next.to === undefined ? undefined : next)
   }
   return (
-    <FieldSet className={cn("gap-items", className)}>
+    <FieldSet className={cn("@container gap-items", className)}>
       <FieldLegend className={legendClassName}>{field.label}</FieldLegend>
-      <div className="grid gap-items sm:grid-cols-2">
-        <DatePicker
-          label={labels.from}
-          clearable
-          hint={false}
-          value={dateText(range.from)}
-          onValueChange={(next) => set({ from: typeof next === "string" ? next : undefined })}
-        />
-        <DatePicker
-          label={labels.to}
-          clearable
-          hint={false}
-          value={dateText(range.to)}
-          onValueChange={(next) => set({ to: typeof next === "string" ? next : undefined })}
-        />
+      <div className="grid gap-items @sm:grid-cols-2">
+        <Field className="min-w-0">
+          <FieldLabel>{labels.from}</FieldLabel>
+          <DatePicker
+            clearable
+            hint={false}
+            value={dateText(range.from)}
+            onValueChange={(next) => set({ from: typeof next === "string" ? next : undefined })}
+          />
+        </Field>
+        <Field className="min-w-0">
+          <FieldLabel>{labels.to}</FieldLabel>
+          <DatePicker
+            clearable
+            hint={false}
+            value={dateText(range.to)}
+            onValueChange={(next) => set({ to: typeof next === "string" ? next : undefined })}
+          />
+        </Field>
       </div>
     </FieldSet>
   )
 }
 
-function RemoteControl({ field, value, onValueChange, onValueLabels, valueLabels, className }: FilterFieldProps) {
+function RemoteControl({
+  field,
+  value,
+  onValueChange,
+  onValueLabels,
+  valueLabels,
+  labels,
+  className,
+}: FilterFieldProps & { labels: FilterFieldLabels }) {
   if (field.kind !== "remoteOption") return null
   const getValue = field.getValue ? (option: unknown) => field.getValue?.(option) ?? "" : undefined
   return (
@@ -337,6 +355,7 @@ function RemoteControl({ field, value, onValueChange, onValueLabels, valueLabels
           getLabel={(option) => field.getLabel(option)}
           getValue={getValue}
           valueLabels={valueLabels}
+          placeholder={Array.isArray(value) && value.length > 0 ? undefined : labels.any}
           value={Array.isArray(value) ? (value as string[]) : []}
           onValueChange={(next, change) => {
             onValueLabels?.(change.labels)
@@ -349,6 +368,7 @@ function RemoteControl({ field, value, onValueChange, onValueLabels, valueLabels
           getLabel={(option) => field.getLabel(option)}
           getValue={getValue}
           valueLabels={valueLabels}
+          placeholder={labels.any}
           value={typeof value === "string" ? value : null}
           onValueChange={(next, change) => {
             onValueLabels?.(change.labels)
@@ -385,7 +405,7 @@ function FilterField(props: FilterFieldProps) {
       control = <DateControl {...props} labels={labels} />
       break
     default:
-      control = <RemoteControl {...props} />
+      control = <RemoteControl {...props} labels={labels} />
   }
   return control
 }

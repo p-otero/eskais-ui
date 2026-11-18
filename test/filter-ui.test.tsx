@@ -107,6 +107,8 @@ describe("FilterField", () => {
     const user = userEvent.setup()
     const onChange = vi.fn()
     render(<Editor field={schema.points} onChange={onChange} />)
+    expect(screen.getByText("Value").tagName).toBe("LABEL")
+    expect(screen.getByText("Comparison").tagName).toBe("LABEL")
     await user.type(screen.getByRole("textbox", { name: "Value" }), "5")
     await user.tab()
     expect(onChange).toHaveBeenLastCalledWith({ op: "eq", value: 5 })
@@ -126,9 +128,18 @@ describe("FilterField", () => {
     const onChange = vi.fn()
     render(<Editor field={schema.created} onChange={onChange} />)
     const group = screen.getByRole("group", { name: "Created" })
-    await user.type(within(group).getAllByRole("textbox")[0] as HTMLElement, "2026-01-05{Enter}")
+    expect(within(group).getByText("From").tagName).toBe("LABEL")
+    expect(within(group).getByText("To").tagName).toBe("LABEL")
+    await user.type(within(group).getByRole("textbox", { name: "From" }), "2026-01-05{Enter}")
     expect(onChange).toHaveBeenLastCalledWith({ from: "2026-01-05" })
+    await user.type(within(group).getByRole("textbox", { name: "To" }), "2026-01-31{Enter}")
+    expect(onChange).toHaveBeenLastCalledWith({ from: "2026-01-05", to: "2026-01-31" })
   })
+})
+
+test("a remote option says Any until something is chosen", () => {
+  render(<Editor field={schema.assignee} onChange={() => {}} />)
+  expect(screen.getByRole("combobox", { name: "Assignee" }).getAttribute("placeholder")).toBe("Any")
 })
 
 describe("FilterChips", () => {

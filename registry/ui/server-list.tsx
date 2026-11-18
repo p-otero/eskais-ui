@@ -25,6 +25,8 @@ type ServerListLabels = {
   refreshing?: string
   loadMore?: string
   filters?: (label: string) => string
+  /** The search field's placeholder: "Search Tasks…". Its accessible name stays the field's label. */
+  searchPlaceholder?: (label: string) => string
 }
 
 const serverListLabels = {
@@ -34,6 +36,7 @@ const serverListLabels = {
   refreshing: "Refreshing",
   loadMore: "Load more",
   filters: (label: string) => `${label} filters`,
+  searchPlaceholder: (label: string) => `Search ${label}…`,
 }
 
 type ServerListProps<T, S extends FilterSchema> = Pick<
@@ -114,6 +117,7 @@ function ServerList<T, S extends FilterSchema = Record<never, never>>({
           schema={schema}
           controller={controller}
           label={labels.filters(label)}
+          searchPlaceholder={labels.searchPlaceholder(label)}
           className="flex flex-wrap items-center gap-items"
         >
           {content}

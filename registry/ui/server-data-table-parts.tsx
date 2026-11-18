@@ -38,6 +38,8 @@ type ServerDataTableLabels = {
   loadMore?: string
   /** Names the filters for agents. */
   filters?: (label: string) => string
+  /** The search field's placeholder: "Search Tasks…". Its accessible name stays the field's label. */
+  searchPlaceholder?: (label: string) => string
   chips?: Partial<FilterChipsLabels>
   panel?: Partial<FilterPanelLabels>
 }
@@ -54,6 +56,7 @@ const serverDataTableLabels = {
   page: defaultPaginationLabels.page,
   loadMore: "Load more",
   filters: (label: string) => `${label} filters`,
+  searchPlaceholder: (label: string) => `Search ${label}…`,
 } satisfies Omit<
   Required<ServerDataTableLabels>,
   "errorTitle" | "retry" | "emptyTitle" | "emptyDescription" | "chips" | "panel"
@@ -134,7 +137,7 @@ function ServerTableNavigation({
   return (
     <Button
       variant="outline"
-      data-slot="server-data-table-load-more"
+      render={(part) => <button {...part} data-slot="server-data-table-load-more" />}
       loading={loadingMore}
       disabled={!hasMore}
       focusableWhenDisabled

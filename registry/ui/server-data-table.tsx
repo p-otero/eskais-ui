@@ -262,6 +262,7 @@ function ServerDataTable<T, S extends FilterSchema = Record<never, never>>({
           schema={schema}
           controller={controller}
           label={labels.filters(label)}
+          searchPlaceholder={labels.searchPlaceholder(label)}
           className="flex flex-wrap items-center gap-items"
         >
           {filterContent}
