@@ -8,6 +8,8 @@ Versions follow [semver](https://semver.org). Before 1.0, a minor version can br
 
 - `CommandItem href`: a command that goes to a page renders as a link (an anchor that keeps the item's `data-slot`, styles and `option` role) and follows the repo's fast-link rules: Enter, a click, its `shortcut` or a primary mouse press follow it, a `#/…` hash route by setting `location.hash` and a same-origin path with `location.assign`, while other `#…` anchors and modified clicks stay native. A link command never runs `Command onAction`, which stays for actions. `onFollow(href, { event })` routes on the client (and closes the palette), `fast={false}` waits for the click, and `target`, `rel` and `download` reach the anchor. `useFastLink` takes `anchorRole` for an anchor root with a role other than link. The docs site's search uses link commands, so a page opens in a new tab on Ctrl/Cmd+click.
 - `shell`: `searchQuery`, `defaultSearchQuery` and `onSearchQueryChange` control the palette's search; `ShellSearch` takes them as `query`, `defaultQuery` and `onQueryChange`. Without them, every open of the palette starts empty.
+- `shell`: `sidebarShortcut` (off by default), like `"mod+b"`, toggles the sidebar on wide screens and opens its drawer on narrow ones. It is the topbar trigger's `shortcut`, so the trigger carries `aria-keyshortcuts`, shows the keys in its tooltip and `ShortcutsDialog` lists it.
+- `shell`: the sidebar's state is reachable. Pass your own `useSidebarState()` result as `sidebar` to read or toggle it outside the Shell, or call `useShellSidebar()` inside it (pages, `actions`, `brand`) for `collapsed`, `setCollapsed` and the `controller`.
 
 ### Changed
 

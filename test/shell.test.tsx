@@ -3,7 +3,8 @@ import userEvent from "@testing-library/user-event"
 import { createAgent } from "@ui-sdk/react/agent"
 import { afterEach, expect, test, vi } from "vitest"
 
-import { Shell, type ShellRoute, type ShellRouteGroup, type ShellProps } from "@/components/ui/shell"
+import { Shell, useShellSidebar, type ShellRoute, type ShellRouteGroup, type ShellProps } from "@/components/ui/shell"
+import { useSidebarState } from "@/components/ui/sidebar"
 import { CommandGroup, CommandGroupLabel, CommandItem } from "@/components/ui/command"
 
 import { axeViolations } from "./axe"
@@ -316,4 +317,99 @@ test("searchQuery controls the palette's search, and defaultSearchQuery starts e
   await user.keyboard("o")
   expect(onSearchQueryChange).toHaveBeenLastCalledWith("inbo", expect.objectContaining({ reason: "input-change" }))
   expect(input.value).toBe("inb")
+})
+
+test("sidebarShortcut toggles the sidebar and shows on the trigger; without it the keys do nothing", async () => {
+  const user = userEvent.setup()
+  const { unmount } = render(<TestShell />)
+  await settle()
+  const sidebar = screen.getByRole("navigation", { name: "Main" })
+  await user.keyboard("{Control>}b{/Control}")
+  await settle()
+  expect(sidebar.hasAttribute("data-collapsed")).toBe(false)
+  unmount()
+
+  render(<TestShell sidebarShortcut="mod+b" />)
+  await settle()
+  const trigger = within(screen.getByRole("banner")).getByRole("button", { name: "Collapse sidebar" })
+  expect(trigger.getAttribute("aria-keyshortcuts")).toBe("Control+B")
+  await user.keyboard("{Control>}b{/Control}")
+  await settle()
+  expect(screen.getByRole("navigation", { name: "Main" }).hasAttribute("data-collapsed")).toBe(true)
+  expect(within(screen.getByRole("banner")).getByRole("button", { name: "Expand sidebar" })).toBeTruthy()
+  await user.keyboard("{Control>}b{/Control}")
+  await settle()
+  expect(screen.getByRole("navigation", { name: "Main" }).hasAttribute("data-collapsed")).toBe(false)
+})
+
+test("on a narrow screen sidebarShortcut opens the drawer", async () => {
+  mockNarrow(true)
+  const user = userEvent.setup()
+  render(<TestShell sidebarShortcut="mod+b" />)
+  await settle()
+  await user.keyboard("{Control>}b{/Control}")
+  await settle()
+  expect(screen.getByRole("dialog", { name: "Main" })).toBeTruthy()
+})
+
+function CollapseFromPage() {
+  const sidebar = useShellSidebar()
+  return (
+    <button type="button" onClick={() => sidebar.setCollapsed(!sidebar.collapsed)}>
+      {sidebar.collapsed ? "Show navigation" : "Hide navigation"}
+    </button>
+  )
+}
+
+test("useShellSidebar reads and sets the Shell's sidebar from inside it", async () => {
+  const user = userEvent.setup()
+  render(
+    <Shell routes={routes} groups={groups}>
+      <CollapseFromPage />
+    </Shell>,
+  )
+  await settle()
+  await user.click(screen.getByRole("button", { name: "Hide navigation" }))
+  await settle()
+  expect(screen.getByRole("navigation", { name: "Main" }).hasAttribute("data-collapsed")).toBe(true)
+  expect(screen.getByRole("button", { name: "Show navigation" })).toBeTruthy()
+})
+
+function OwnSidebarState() {
+  const sidebar = useSidebarState({ defaultCollapsed: true })
+  return (
+    <>
+      <button type="button" onClick={() => sidebar.controller.toggle()}>
+        Toggle from outside
+      </button>
+      <output aria-label="Sidebar state">{sidebar.collapsed ? "collapsed" : "expanded"}</output>
+      <Shell routes={routes} groups={groups} sidebar={sidebar}>
+        <h1>Page</h1>
+      </Shell>
+    </>
+  )
+}
+
+const mainNav = () => screen.getByRole("navigation", { name: "Main" })
+
+test("sidebar takes the app's own useSidebarState, which controls and follows the Shell's sidebar", async () => {
+  const user = userEvent.setup()
+  render(<OwnSidebarState />)
+  await settle()
+  expect(mainNav().hasAttribute("data-collapsed")).toBe(true)
+  await user.click(screen.getByRole("button", { name: "Toggle from outside" }))
+  await settle()
+  expect(mainNav().hasAttribute("data-collapsed")).toBe(false)
+  await user.click(within(screen.getByRole("banner")).getByRole("button", { name: "Collapse sidebar" }))
+  await settle()
+  expect(screen.getByRole("status", { name: "Sidebar state" }).textContent).toBe("collapsed")
+})
+
+test("an agent presses the sidebar's trigger by name, the shortcut adding nothing new", async () => {
+  render(<TestShell sidebarShortcut="mod+b" />)
+  await settle()
+  const pressed = await act(() => agent.act({ steps: [{ ref: "Collapse sidebar", action: "press" }] }))
+  expect(pressed.ok, pressed.error?.message).toBe(true)
+  await settle()
+  expect(screen.getByRole("navigation", { name: "Main" }).hasAttribute("data-collapsed")).toBe(true)
 })

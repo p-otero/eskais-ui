@@ -64,6 +64,7 @@ function ShellBlockDemo() {
         currentHref={currentHref}
         onNavigate={hashMode ? undefined : onNavigate}
         storageKey="showcase-shell"
+        sidebarShortcut="mod+b"
         labels={{ searchPlaceholder: "Pages and commands" }}
         brand={<span className="text-title-sm narrow:sr-only">Acme</span>}
         actions={

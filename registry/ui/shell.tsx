@@ -13,11 +13,17 @@ import {
   createCommandDialogController,
 } from "@/components/ui/command-dialog"
 import { MobileNav } from "@/components/ui/mobile-nav"
-import { Sidebar, SidebarTrigger, useSidebarState, type SidebarLabels } from "@/components/ui/sidebar"
+import {
+  Sidebar,
+  SidebarTrigger,
+  useSidebarState,
+  type SidebarLabels,
+  type SidebarState,
+} from "@/components/ui/sidebar"
 import { setSidebarDrawerOpen } from "@/components/ui/sidebar-trigger"
 import { SkipLink } from "@/components/ui/skip-link"
 import { Topbar } from "@/components/ui/topbar"
-import { useShellRoutes } from "@/components/ui/use-shell"
+import { ShellSidebarContext, useShellRoutes, useShellSidebar } from "@/components/ui/use-shell"
 import { cn } from "@/lib/utils"
 
 type ShellLabels = {
@@ -88,6 +94,16 @@ type ShellProps<Route extends ShellRoute = ShellRoute> = Omit<ComponentProps<"di
   /** Remembers whether the sidebar is collapsed in localStorage under this key. */
   storageKey?: string
   defaultCollapsed?: boolean
+  /**
+   * The sidebar's state, from your own `useSidebarState()`, to read or toggle it outside the Shell. Then `storageKey`
+   * and `defaultCollapsed` go to that call instead. Inside the Shell, `useShellSidebar()` returns the state either way.
+   */
+  sidebar?: SidebarState
+  /**
+   * A shortcut that toggles the sidebar, like `"mod+b"`: it collapses or expands it on wide screens and opens the
+   * drawer on narrow ones. Off by default. The topbar's trigger shows it and `ShortcutsDialog` lists it.
+   */
+  sidebarShortcut?: string
   /** `rail` keeps icons when collapsed; `hide` slides the sidebar away. Rail when every route has an icon. */
   collapse?: "rail" | "hide"
   /** Opens the palette from anywhere; `false` when the page already uses it. */
@@ -132,6 +148,8 @@ function Shell<Route extends ShellRoute>({
   labels: overrides,
   storageKey,
   defaultCollapsed,
+  sidebar: sidebarState,
+  sidebarShortcut,
   collapse,
   searchShortcut = "mod+k",
   searchQuery,
@@ -152,7 +170,8 @@ function Shell<Route extends ShellRoute>({
     collapse: labels.collapseSidebar,
     expand: labels.expandSidebar,
   }
-  const sidebar = useSidebarState({ storageKey, defaultCollapsed })
+  const ownSidebar = useSidebarState({ storageKey, defaultCollapsed })
+  const sidebar = sidebarState ?? ownSidebar
   const [search] = useState(() => createCommandDialogController())
   const { sections, mobile, currentId } = useShellRoutes(routes, groups, currentHref)
   // Stable while the routes and onNavigate are, so a navigation re-renders only the items whose current changed.
@@ -170,96 +189,103 @@ function Shell<Route extends ShellRoute>({
   const hasMobileNav = mobileNav.items.length > 0
 
   return (
-    <div
-      data-slot="shell"
-      className={cn("flex min-h-(--shell-height) w-full min-w-0 flex-col", className)}
-      style={{ "--shell-height": "100dvh", ...style } as CSSProperties}
-      {...props}
-    >
-      <SkipLink target={mainId}>{labels.skipToContent}</SkipLink>
-      <Topbar
-        leading={
-          <>
-            <SidebarTrigger {...sidebar.triggerProps} narrowQuery={narrowQuery} labels={sidebarLabels} />
-            {brand}
-          </>
-        }
-        center={
-          <CommandDialogTrigger
-            controller={search}
-            shortcut={searchShortcut === false ? undefined : searchShortcut}
-            className="w-full max-w-sm"
-          >
-            <span className="inline-flex min-w-0 items-center gap-inline">
-              <SearchIcon className="size-4 shrink-0" />
-              <span className="truncate">{labels.openSearch}</span>
-            </span>
-            <CommandDialogShortcut />
-          </CommandDialogTrigger>
-        }
-        centerCompact={
-          <CommandDialogOpenButton controller={search} variant="ghost" size="icon" aria-label={labels.openSearch}>
-            <SearchIcon />
-          </CommandDialogOpenButton>
-        }
-        trailing={actions}
-      />
-      <ShellSearch
-        controller={search}
-        sections={sections}
-        currentId={currentId}
-        navigate={navigate}
-        labels={labels}
-        commandGroups={commandGroups}
-        onCommand={onCommand}
-        query={searchQuery}
-        defaultQuery={defaultSearchQuery}
-        onQueryChange={onSearchQueryChange}
-      />
-      <div data-slot="shell-body" className="flex min-w-0 flex-1 items-start" style={columns}>
-        <div
-          data-slot="shell-sidebar"
-          className="sticky top-(--topbar-height) flex h-(--shell-column-height) shrink-0 narrow:contents"
-        >
-          <Sidebar
-            label={labels.sidebar}
-            {...sidebar.sidebarProps}
-            collapse={collapseMode}
-            trigger={false}
-            narrowQuery={narrowQuery}
-            labels={sidebarLabels}
-            footer={sidebarFooter}
-          >
-            <ShellSidebarSections sections={sections} currentId={currentId} navigate={navigate} />
-          </Sidebar>
-        </div>
-        <Main
-          id={mainId}
-          tabIndex={-1}
-          data-slot="shell-main"
-          // Anchors, focus and scrollIntoView stop below the topbar and above the bottom bar.
-          className={cn(
-            "flex min-w-0 flex-1 flex-col self-stretch focus:outline-none **:scroll-mt-(--shell-scroll-margin)",
-            hasMobileNav && "narrow:**:scroll-mb-(--mobile-nav-offset)",
-          )}
-        >
-          {children}
-        </Main>
-      </div>
-      {hasMobileNav && (
-        // Sticky in the flow rather than fixed: it keeps its own height at the end of the shell, so the page always
-        // ends above it, and it stays inside a pane or an iframe.
-        <MobileNav
-          label={labels.mobileNav}
-          items={mobileNav.items}
-          overflow={mobileNav.overflow}
-          moreLabel={labels.more}
-          className="sticky"
+    <ShellSidebarContext value={sidebar}>
+      <div
+        data-slot="shell"
+        className={cn("flex min-h-(--shell-height) w-full min-w-0 flex-col", className)}
+        style={{ "--shell-height": "100dvh", ...style } as CSSProperties}
+        {...props}
+      >
+        <SkipLink target={mainId}>{labels.skipToContent}</SkipLink>
+        <Topbar
+          leading={
+            <>
+              <SidebarTrigger
+                {...sidebar.triggerProps}
+                narrowQuery={narrowQuery}
+                labels={sidebarLabels}
+                shortcut={sidebarShortcut}
+              />
+              {brand}
+            </>
+          }
+          center={
+            <CommandDialogTrigger
+              controller={search}
+              shortcut={searchShortcut === false ? undefined : searchShortcut}
+              className="w-full max-w-sm"
+            >
+              <span className="inline-flex min-w-0 items-center gap-inline">
+                <SearchIcon className="size-4 shrink-0" />
+                <span className="truncate">{labels.openSearch}</span>
+              </span>
+              <CommandDialogShortcut />
+            </CommandDialogTrigger>
+          }
+          centerCompact={
+            <CommandDialogOpenButton controller={search} variant="ghost" size="icon" aria-label={labels.openSearch}>
+              <SearchIcon />
+            </CommandDialogOpenButton>
+          }
+          trailing={actions}
         />
-      )}
-    </div>
+        <ShellSearch
+          controller={search}
+          sections={sections}
+          currentId={currentId}
+          navigate={navigate}
+          labels={labels}
+          commandGroups={commandGroups}
+          onCommand={onCommand}
+          query={searchQuery}
+          defaultQuery={defaultSearchQuery}
+          onQueryChange={onSearchQueryChange}
+        />
+        <div data-slot="shell-body" className="flex min-w-0 flex-1 items-start" style={columns}>
+          <div
+            data-slot="shell-sidebar"
+            className="sticky top-(--topbar-height) flex h-(--shell-column-height) shrink-0 narrow:contents"
+          >
+            <Sidebar
+              label={labels.sidebar}
+              {...sidebar.sidebarProps}
+              collapse={collapseMode}
+              trigger={false}
+              narrowQuery={narrowQuery}
+              labels={sidebarLabels}
+              footer={sidebarFooter}
+            >
+              <ShellSidebarSections sections={sections} currentId={currentId} navigate={navigate} />
+            </Sidebar>
+          </div>
+          <Main
+            id={mainId}
+            tabIndex={-1}
+            data-slot="shell-main"
+            // Anchors, focus and scrollIntoView stop below the topbar and above the bottom bar.
+            className={cn(
+              "flex min-w-0 flex-1 flex-col self-stretch focus:outline-none **:scroll-mt-(--shell-scroll-margin)",
+              hasMobileNav && "narrow:**:scroll-mb-(--mobile-nav-offset)",
+            )}
+          >
+            {children}
+          </Main>
+        </div>
+        {hasMobileNav && (
+          // Sticky in the flow rather than fixed: it keeps its own height at the end of the shell, so the page always
+          // ends above it, and it stays inside a pane or an iframe.
+          <MobileNav
+            label={labels.mobileNav}
+            items={mobileNav.items}
+            overflow={mobileNav.overflow}
+            moreLabel={labels.more}
+            className="sticky"
+          />
+        )}
+      </div>
+    </ShellSidebarContext>
   )
 }
 
-export { Shell, shellLabels }
+export { Shell, shellLabels, useShellSidebar }
 export type { ShellRoute, ShellRouteGroup, ShellCurrent, ShellLabels, ShellProps }

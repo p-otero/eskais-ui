@@ -93,3 +93,10 @@ function GlobalSearch({ controller }: { controller: CommandDialogController }) {
 - The dialog returns focus to the trigger that opened it, and `onOpenChange` on `CommandDialog` reports both ways. `shortcut` is opt-in and only listens while the trigger is mounted.
 - **Go to a page from the palette.** `<CommandItem value="ideas" href="#/ideas">` is a link command: Enter, a click, its `shortcut` and a mouse press (fast links, `#/…` hash routes and same-origin paths) follow it, and it never runs `Command onAction`, which stays for actions. Pass `onFollow={() => { controller.close(); router.push("/ideas") }}` to route on the client and close the palette first; without it a hash route sets `location.hash` and a path loads with `location.assign`. Modified clicks stay native (a new tab); `fast={false}` waits for the click.
 - Outside a Topbar, prefer one trigger whose text goes `narrow:sr-only`. For a second way in, like a `Topbar`'s `centerCompact` icon, use `CommandDialogOpenButton` as above: it opens through the controller, gets focus back on close, and is hidden from agents, who open the dialog by its main trigger's name. Not a second `CommandDialogTrigger`: in UI SDK 0.1.0-beta.5 that drops the dialog's agent label.
+
+## Application shell
+
+`Shell` builds the frame from one list of routes: the sidebar, the bottom bar on narrow screens, its More sheet and the palette's Go to group.
+
+- **Palette.** Each open starts empty and one Escape closes it, focus back on the trigger. `searchQuery`/`onSearchQueryChange` control the search, `defaultSearchQuery` starts each open, and `commandGroups` with `onCommand` add your commands.
+- **Sidebar.** `sidebarShortcut="mod+b"` (off by default) presses the topbar's sidebar trigger: it collapses or expands the sidebar on wide screens and opens the drawer on narrow ones. Inside the Shell, `useShellSidebar()` returns `{ collapsed, setCollapsed, controller }`. To hold that state above the Shell, call `useSidebarState({ storageKey })` yourself and pass it as `sidebar`.

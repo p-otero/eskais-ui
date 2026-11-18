@@ -659,6 +659,15 @@ async function checkShell(page) {
   const onMain = await page.evaluate(() => document.activeElement?.tagName === "MAIN" && location.hash === "")
   check("Shell: the skip link focuses main without changing the URL", onMain)
 
+  await shellBlock(page, 1440, "light")
+  const collapsedBy = async () =>
+    page.getByRole("navigation", { name: "Main" }).evaluate((nav) => nav.hasAttribute("data-collapsed"))
+  await page.getByRole("main").click({ position: { x: 5, y: 5 } })
+  await page.keyboard.press("ControlOrMeta+b")
+  const collapsedByShortcut = await collapsedBy()
+  await page.keyboard.press("ControlOrMeta+b")
+  check("Shell: sidebarShortcut collapses and expands the sidebar", collapsedByShortcut && !(await collapsedBy()))
+
   await shellBlock(page, 1440, "light", "&router=hash")
   const sidebar = page.getByRole("navigation", { name: "Main" })
   await sidebar.getByRole("link", { name: "Archive" }).click()
