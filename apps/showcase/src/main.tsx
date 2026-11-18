@@ -34,9 +34,9 @@ const root = document.getElementById("root")
 if (!root) throw new Error("Missing #root element")
 
 // ?demo=page, site, shell, inbox, list-bench, shell-block, master-detail, dashboard-grid, settings-page and
-// document-workspace render one demo alone (phone-width screenshots); ?demo=<name>-check pages are tooling/<name>-
-// check.mjs fixtures (shell-check's: card-header, description-list, field-placement, gauge, mobile-nav, palette-reopen,
-// side-panel, table, master-detail); server-data-check takes ?ui=search|chips|panel|list.
+// document-workspace render one demo alone, for phone-width screenshots. ?demo=<name>-check pages are the fixtures
+// of tooling/<name>-check.mjs (shell-check's: card-header, description-list, field-placement, gauge, mobile-nav,
+// palette-reopen, side-panel, table, master-detail); server-data-check takes ?ui=search|chips|panel|list.
 const params = new URLSearchParams(location.search)
 const status = demoStatuses.find((name) => name === params.get("status")) ?? "success"
 const demo = params.get("demo")
