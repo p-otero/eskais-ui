@@ -72,7 +72,8 @@ type MarkdownEditorProps = {
   readOnly?: boolean
   /**
    * `"readonly"` protects a leading YAML block: typing, deleting or pasting into it, or across its fences, leaves it
-   * as written, so the Markdown round-trips byte for byte. A new `value` still replaces it. `"editable"` by default.
+   * as written, so the Markdown round-trips byte for byte. After a closing fence that ends the note, the body is still
+   * editable: what goes in there starts on a new line. A new `value` still replaces it. `"editable"` by default.
    */
   frontmatter?: FrontmatterEditing
   /** Where the caret starts: on the line after a leading YAML block (default), or `"start"`. Read at mount. */

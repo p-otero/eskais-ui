@@ -24,7 +24,10 @@ type ProvisionalTrigger = {
 
 /** Marks the transactions that type a provisional trigger or take it back out. */
 const provisional = Annotation.define<boolean>()
-const setProvisional = StateEffect.define<ProvisionalTrigger | null>()
+// A filter can put text before the trigger (a line break after a closing fence that ends the note): it is part of it.
+const setProvisional = StateEffect.define<ProvisionalTrigger | null>({
+  map: (value, mapping) => value && { ...value, from: mapping.mapPos(value.from, -1), to: mapping.mapPos(value.to, 1) },
+})
 
 const provisionalTrigger = StateField.define<ProvisionalTrigger | null>({
   create: () => null,
@@ -98,6 +101,8 @@ function revertProvisional(view: EditorView) {
     selection: { anchor: active.anchor, head: active.head },
     effects: setProvisional.of(null),
     annotations: [provisional.of(true), Transaction.addToHistory.of(false)],
+    // The exact inverse of what went in, so the read-only frontmatter's filters have nothing to guard.
+    filter: false,
   })
   return active
 }
@@ -110,7 +115,8 @@ function settleProvisional(view: EditorView, trigger: string, query: RegExp) {
   const active = activeProvisional(view.state)
   if (!active) return
   const text = view.state.sliceDoc(active.from, active.to)
-  const typed = text.startsWith(trigger) ? text.slice(trigger.length) : null
+  const index = text.indexOf(trigger)
+  const typed = index >= 0 && /^[\r\n]*$/.test(text.slice(0, index)) ? text.slice(index + trigger.length) : null
   const untouched = typed === null ? trigger.startsWith(text) : [...typed].every((char) => query.test(char))
   const caret = view.state.selection.main.head - active.from
   revertProvisional(view)

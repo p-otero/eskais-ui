@@ -8,6 +8,10 @@ Versions follow [semver](https://semver.org). Before 1.0, a minor version can br
 
 - `MarkdownEditor`: dismissing the suggestions `openWikilinkSuggestions()` opened no longer leaves `[[` in the note. The `[[` it types, and the query typed after it, are provisional: a `markdown-editor-provisional` state field tracks them, `onChange`, the dirty state and undo history skip them, and Escape, a click away, leaving the editor or any other close puts the note and the selection back byte for byte, with no `onChange`. Choosing an item inserts the wikilink as one undo step from the original note. A `[[` the user typed stays when the menu closes, and so does a query the user finished by hand (`[[idea]]`).
 
+- `MarkdownEditor frontmatter="readonly"`: a note whose closing fence ends the file (`"---
+  a: 1
+  ---"`, no trailing newline) takes a body again. Typing, a paste, `insertText`, `insertWikilink`, `insertBlock` or an attachment inserted right after `---` was dropped; the text now goes in on a new line (the note's own line break, CRLF included) and the fence keeps every byte. Edits inside the block, on its fences and before the opening one are still dropped.
+
 ## 0.2.2 (2026-11-18)
 
 ### Added
