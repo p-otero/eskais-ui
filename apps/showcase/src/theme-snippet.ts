@@ -1,37 +1,36 @@
 type Seeds = { brand: string; linkBrand: string; neutralHue: number; neutralChroma: number; radius: number }
 
-type Attributes = { density: string; radius: string }
+type Attributes = { density: string; radius: string; glass?: number | undefined }
+
+/** The glass tokens for a strength from 0 to 100: 0 is opaque and sharp, 100 clear behind a 50px blur. */
+function glassTokens(strength: number) {
+  return { opacity: `${String(100 - strength)}%`, blur: `${String(strength / 2)}px` }
+}
 
 // A chosen density or radius step is an attribute, not a seed; with no step, --radius is the seed of the shape.
 function themeSnippet(seeds: Seeds, attributes: Attributes = { density: "default", radius: "default" }) {
   const steps = [
+    attributes.glass === undefined ? "" : 'data-theme="glass"',
     attributes.density === "default" ? "" : `data-density="${attributes.density}"`,
     attributes.radius === "default" ? "" : `data-radius="${attributes.radius}"`,
   ].filter(Boolean)
-  const html =
-    steps.length > 0
-      ? `/* On <html>: ${steps.join(" ")} */
-
-`
-      : ""
-  const radius =
-    attributes.radius === "default"
-      ? `
-  --radius: ${seeds.radius}rem;`
-      : ""
-  return `${html}:root {
-  --brand: ${seeds.brand};
-  --link-brand: ${seeds.linkBrand};
-  --neutral-hue: ${seeds.neutralHue};
-  --neutral-chroma: ${seeds.neutralChroma};${radius}
-}
-
-/* .dark derives from the same seeds.
-   To change one token, override it:
-.dark {
-  --primary: oklch(0.8 0.1 262);
-} */
-`
+  const lines = [
+    ...(steps.length > 0 ? [`/* On <html>: ${steps.join(" ")} */`, ""] : []),
+    ":root {",
+    `  --brand: ${seeds.brand};`,
+    `  --link-brand: ${seeds.linkBrand};`,
+    `  --neutral-hue: ${String(seeds.neutralHue)};`,
+    `  --neutral-chroma: ${String(seeds.neutralChroma)};`,
+    ...(attributes.radius === "default" ? [`  --radius: ${String(seeds.radius)}rem;`] : []),
+    "}",
+  ]
+  if (attributes.glass !== undefined) {
+    const { opacity, blur } = glassTokens(attributes.glass)
+    lines.push("", '[data-theme="glass"] {', `  --glass-opacity: ${opacity};`, `  --glass-blur: ${blur};`, "}")
+  }
+  lines.push("", "/* .dark derives from the same seeds.", "   To change one token, override it:", ".dark {")
+  lines.push("  --primary: oklch(0.8 0.1 262);", "} */", "")
+  return lines.join("\n")
 }
 
 // Resolves each CSS color through a canvas pixel, which turns any syntax (relative colors included) into sRGB.
@@ -61,5 +60,5 @@ function contrastRatio(foreground: string, background: string) {
   return (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05)
 }
 
-export { contrastRatio, themeSnippet }
+export { contrastRatio, glassTokens, themeSnippet }
 export type { Seeds }

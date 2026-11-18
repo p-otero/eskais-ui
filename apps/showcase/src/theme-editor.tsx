@@ -22,7 +22,8 @@ import { Slider, SliderControl, SliderIndicator, SliderThumb, SliderTrack, Slide
 import { StatusPill } from "@/components/ui/status-pill"
 
 import { measure, useThemeMeasurements } from "./hooks/use-theme-measurements"
-import type { Overrides, ThemeEditorStore } from "./theme-editor-store"
+import { defaultGlassStrength, type Overrides, type ThemeEditorStore } from "./theme-editor-store"
+import { GlassControls } from "./theme-editor-glass"
 import { ShapeControls } from "./theme-editor-shape"
 import { themeSnippet } from "./theme-snippet"
 
@@ -136,14 +137,19 @@ function ThemeEditor<Theme extends string, Palette extends string>({
   const { value: palette } = usePreference(appearance.palette)
   const { value: density } = usePreference(appearance.density)
   const { value: radius } = usePreference(appearance.radius)
+  const { value: theme } = usePreference(appearance.theme)
   const overrides = useSyncExternalStore(store.subscribe, store.get, store.get)
   const [{ seeds, primary, text, link }, setMeasured] = useThemeMeasurements(appearance, store)
 
-  const customised = Object.keys(overrides).length > 0
-  const snippet = themeSnippet(seeds, { density, radius })
+  const { glass, ...colours } = overrides
+  const customised = Object.keys(colours).length > 0
+  const snippet = themeSnippet(seeds, {
+    density,
+    radius,
+    glass: theme === "glass" ? (glass ?? defaultGlassStrength) : undefined,
+  })
   const override = (next: Overrides) => {
-    const merged = Object.values(next).every((value) => value === undefined) ? {} : { ...overrides, ...next }
-    store.set(merged)
+    store.set({ ...overrides, ...next })
     setMeasured(measure())
   }
   const reset = () => {
@@ -151,6 +157,7 @@ function ThemeEditor<Theme extends string, Palette extends string>({
     appearance.palette.set(appearance.palette.defaultValue)
     appearance.density.set(appearance.density.defaultValue)
     appearance.radius.set(appearance.radius.defaultValue)
+    appearance.theme.set(appearance.theme.defaultValue)
     setMeasured(measure())
   }
 
@@ -168,7 +175,7 @@ function ThemeEditor<Theme extends string, Palette extends string>({
                 value={customised ? CUSTOM : palette}
                 onValueChange={(next) => {
                   if (!next || next === CUSTOM) return
-                  override({})
+                  store.set(glass === undefined ? {} : { glass })
                   appearance.palette.set(next)
                 }}
               >
@@ -205,6 +212,11 @@ function ThemeEditor<Theme extends string, Palette extends string>({
             format={(value) => value.toFixed(3)}
           />
           <ShapeControls appearance={appearance} />
+          <GlassControls
+            appearance={appearance}
+            strength={glass}
+            onStrengthChange={(next) => override({ glass: next })}
+          />
         </div>
         <div className="flex min-w-0 flex-col gap-group">
           <section

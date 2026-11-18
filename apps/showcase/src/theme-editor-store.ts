@@ -1,9 +1,11 @@
 import { readSeeds } from "./hooks/use-theme-measurements"
+import { glassTokens } from "./theme-snippet"
 
-type Overrides = { brand?: string; linkBrand?: string; tint?: number }
+/** `glass` is the glass strength, 0 to 100: how much of the surface turns to blurred glass. */
+type Overrides = { brand?: string; linkBrand?: string; tint?: number; glass?: number }
 
 const colourKeys = ["brand", "linkBrand"] as const
-const numberKeys = ["tint"] as const
+const numberKeys = ["tint", "glass"] as const
 
 // Saved state comes from an earlier version or another tab, so keep only the fields that still make sense.
 function sanitize(value: unknown): Overrides {
@@ -18,7 +20,27 @@ function sanitize(value: unknown): Overrides {
     const number = record[key]
     if (typeof number === "number" && Number.isFinite(number)) overrides[key] = number
   }
+  if (overrides.glass !== undefined) overrides.glass = Math.min(100, Math.max(0, overrides.glass))
   return overrides
+}
+
+/** The theme-glass item's own strength: 60% opaque and a 20px blur. */
+const defaultGlassStrength = 40
+
+const glassStyleId = "theme-editor-glass"
+
+// A rule on [data-theme="glass"] rather than inline on <html>: --glass-opacity also drives the fills outside glass,
+// which must stay opaque, and the theme's !important fallbacks (no backdrop-filter, reduced transparency) still win.
+function applyGlass(strength: number | undefined) {
+  const existing = document.getElementById(glassStyleId)
+  if (strength === undefined) {
+    existing?.remove()
+    return
+  }
+  const style = existing ?? Object.assign(document.createElement("style"), { id: glassStyleId })
+  const { opacity, blur } = glassTokens(strength)
+  style.textContent = `[data-theme="glass"] { --glass-opacity: ${opacity}; --glass-blur: ${blur}; }`
+  if (!existing) document.head.append(style)
 }
 
 const hueOf = (color: string) => Number(/oklch\(\s*[\d.]+%?\s+[\d.]+\s+([\d.]+)/.exec(color)?.[1] ?? 0)
@@ -31,6 +53,7 @@ function applyOverrides(overrides: Overrides) {
   set("--link-brand", overrides.linkBrand)
   set("--neutral-chroma", overrides.tint === undefined ? undefined : String(overrides.tint))
   set("--neutral-hue", overrides.tint === undefined ? undefined : String(hueOf(overrides.brand ?? readSeeds().brand)))
+  applyGlass(overrides.glass)
 }
 
 function readStorage(key: string | undefined): Overrides {
@@ -85,5 +108,5 @@ function createThemeEditorStore({ storageKey }: { storageKey?: string } = {}) {
 
 type ThemeEditorStore = ReturnType<typeof createThemeEditorStore>
 
-export { applyOverrides, createThemeEditorStore, sanitize }
+export { applyOverrides, createThemeEditorStore, defaultGlassStrength, sanitize }
 export type { Overrides, ThemeEditorStore }
