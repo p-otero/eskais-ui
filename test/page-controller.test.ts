@@ -117,7 +117,9 @@ describe("navigation and status", () => {
     const controller = createPageController(pages, { pageSize: 20 })
     controller.setPage(2)
     expect(controller.statusText(result(20, { total: 312 }))).toBe("Showing 21–40 of 312")
-    expect(controller.statusText(result(20, { totalEstimate: 1300 }))).toBe("Showing 21–40 of about 1,300")
+    expect(controller.statusText(result(20, { totalEstimate: 1300 }), undefined, "en-US")).toBe(
+      "Showing 21–40 of about 1,300",
+    )
     expect(controller.statusText(result(20, { hasMore: true }))).toBe("Showing 21–40")
     expect(controller.statusText(result(0))).toBe("No results")
     expect(controller.statusText(undefined)).toBeUndefined()

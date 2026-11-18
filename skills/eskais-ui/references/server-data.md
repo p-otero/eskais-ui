@@ -98,6 +98,10 @@ Every serializer escapes for its grammar, or throws `FilterSerializeError` for w
 - To drive it from outside: `const { state, controller } = usePageController(source, options)` and pass `controller`.
 - `ServerList` (infinite list of `ListItem` rows) and `ServerCombobox` (remote options, `multiple` chips) follow the same rules.
 
+## Locale
+
+Counts, page sizes and the chips' numbers and dates follow the page's `<html lang>` (`useLocale` from `locale`); pass `locale` to `ServerDataTable`, `ServerList`, `FilterChips`, `FilterPanel`, `FilterField` or `ServerCombobox` to override it. A date-only value (`2026-01-31`) is shown as the day it names, whatever the viewer's time zone. Your own `labels.range(range, locale)` receives the locale.
+
 ## Guarantees to keep
 
 - Never empty while loading or after an error; the previous page's rows stay (`aria-busy`) while the next loads.

@@ -12,6 +12,7 @@ import { useDelayedFlag, useReachEnd } from "@/components/ui/use-server-table"
 import { searchFieldOf, type FilterSchema, type FilterValues } from "@/lib/filter-schema"
 import type { PageController } from "@/lib/page-controller"
 import { pageRange, pageStatusLabels, type PageSource, type PageStatusLabels, type SortSpec } from "@/lib/page-source"
+import { useLocale } from "@/lib/locale"
 import { cn } from "@/lib/utils"
 
 type ServerListLabels = {
@@ -60,6 +61,8 @@ type ServerListProps<T, S extends FilterSchema> = Pick<
   infinite?: boolean
   controller?: PageController<FilterValues<S>>
   labels: ServerListLabels
+  /** Formats the counts; the page's `<html lang>` by default (`useLocale`). */
+  locale?: string
   className?: string
 }
 
@@ -80,10 +83,12 @@ function ServerList<T, S extends FilterSchema = Record<never, never>>({
   infinite = true,
   controller: controllerProp,
   labels: labelOverrides,
+  locale: localeProp,
   className,
   ...listProps
 }: ServerListProps<T, S>) {
   const labels = { ...serverListLabels, ...labelOverrides }
+  const locale = useLocale(localeProp)
   const schema = filters ?? ({} as S)
   const searchKey = searchFieldOf(schema)
   const own = usePageController<T, FilterValues<S>>(source, {
@@ -106,7 +111,7 @@ function ServerList<T, S extends FilterSchema = Record<never, never>>({
         : rows.status === "pending"
           ? ""
           : range
-            ? labels.range(range)
+            ? labels.range(range, locale)
             : labels.noResults
 
   const content = toolbar ?? (searchKey ? <FilterSearch /> : null)

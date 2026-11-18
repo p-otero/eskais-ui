@@ -3530,7 +3530,7 @@
       "type": "registry:lib",
       "title": "Page Source",
       "description": "A backend-agnostic contract for paged data (PageSource, PageRequest, PageResult) with adapters for page/size, limit/offset, cursors and keysets, Relay connections, RFC 8288 Link headers, Spring Page and Slice, and an in-memory arraySource, plus createPageController, which derives the request, resets paging, debounces search, syncs the URL and writes the live region's status.",
-      "docs": "A `PageSource<T, F>` is `{ key, getId, capabilities, fetchPage(request, { signal }), fetchTotal? }`. `capabilities.position` is `\"page\"` or `\"cursor\"`; `total` says whether responses carry an exact count, an estimate or none, and navigation follows: page numbers with an exact total, previous and next with an estimate or only `hasMore`, load more for a cursor (`resolveNavigation`). Adapters build one from your `request` function and never fetch themselves: `pagedSource({ base: 0 | 1 })`, `offsetSource`, `cursorSource` (opaque, or `keyset` cursors built from the rows), `relaySource` (`edges`/`pageInfo`/`totalCount`), `linkHeaderSource` (parses `Link`, an estimate from `last`, exact on the last page), `springPageSource` (`Page<T>`, or the PagedModel of `VIA_DTO`, `sort=field,asc` repeated) and `springSliceSource`. Each takes `params: (filter) => …` for a serializer's output and `read` or `select` to map another response. Return `readJson(response)` from `request` so a failed status throws an `HttpError` with `status`. `arraySource(items, { filter, search, sort, delay, fail, count })` pages an array in memory for demos and tests, honouring abort. With Effect: `fetchPage: (request, { signal }) => Effect.runPromise(program, { signal })`. `createPageController(source, { filter, sort, sortMode, pageSize, pageSizes, search, url, labels })` holds the state outside React: a new filter, sort or size returns to page 1 (or a null cursor), `setSearch` commits after 250 ms, `url: { adapter, codec, history }` keeps it in the URL (`connect()` follows back and forward), and `statusText(result)` writes \"Showing 21–40 of 312\" (`labels.range` translates it).",
+      "docs": "A `PageSource<T, F>` is `{ key, getId, capabilities, fetchPage(request, { signal }), fetchTotal? }`. `capabilities.position` is `\"page\"` or `\"cursor\"`; `total` says whether responses carry an exact count, an estimate or none, and navigation follows: page numbers with an exact total, previous and next with an estimate or only `hasMore`, load more for a cursor (`resolveNavigation`). Adapters build one from your `request` function and never fetch themselves: `pagedSource({ base: 0 | 1 })`, `offsetSource`, `cursorSource` (opaque, or `keyset` cursors built from the rows), `relaySource` (`edges`/`pageInfo`/`totalCount`), `linkHeaderSource` (parses `Link`, an estimate from `last`, exact on the last page), `springPageSource` (`Page<T>`, or the PagedModel of `VIA_DTO`, `sort=field,asc` repeated) and `springSliceSource`. Each takes `params: (filter) => …` for a serializer's output and `read` or `select` to map another response. Return `readJson(response)` from `request` so a failed status throws an `HttpError` with `status`. `arraySource(items, { filter, search, sort, delay, fail, count })` pages an array in memory for demos and tests, honouring abort. With Effect: `fetchPage: (request, { signal }) => Effect.runPromise(program, { signal })`. `createPageController(source, { filter, sort, sortMode, pageSize, pageSizes, search, url, labels })` holds the state outside React: a new filter, sort or size returns to page 1 (or a null cursor), `setSearch` commits after 250 ms, `url: { adapter, codec, history }` keeps it in the URL (`connect()` follows back and forward), and `statusText(result)` writes \"Showing 21–40 of 312\" (`labels.range` translates it). `formatCount(value, locale)` writes a number with a cached `Intl.NumberFormat`; `labels.range(range, locale)` and `statusText(result, counted, locale)` take the locale the components resolve.",
       "files": [
         {
           "path": "registry/lib/page-source.ts",
@@ -3647,7 +3647,7 @@
       "type": "registry:ui",
       "title": "Server Data Table",
       "description": "A DataTable over a PageSource: the server filters, sorts and pages; page numbers, previous and next, or load more follow what the source gives; DataState covers loading, error with retry and empty; a polite status says \"Showing 21–40 of 312\" after each load; filters, sort and page can live in the URL.",
-      "docs": "`<ServerDataTable label source columns filters labels={{ errorTitle, retry, emptyTitle }} />`. Columns are DataTable columns; `sortField` sorts one on the server, and `sortMode=\"multi\"` adds a column with Shift+click. `navigation=\"auto\"` shows page numbers with an exact total (or the source's `fetchTotal`), previous and next with an estimate or only `hasMore`, and load more for a cursor; `\"infinite\"` also loads when the end scrolls into view, beside the button. `pageSize` (25) and `pageSizes` (`[10, 25, 50, 100]`, capped by the source's `maxPageSize`) show a page size select. `filters` takes a `defineFilters` schema, `filterUi` picks the built-in filter UI: `\"search\"` (a `FilterSearch`, the default when the schema has a text field), `\"chips\"` (search and `FilterChips`) or `\"panel\"` (search and a `FilterPanelTrigger` that opens a `FilterPanel` beside the table, a bottom sheet on narrow screens), and `toolbar` composes your own from the parts. `urlState={hashUrlState()}` (or `historyUrlState()`, or `{ adapter, prefix, history, format }`) keeps filters, sort and page in readable params, and Back and Forward move through them. While a page loads its predecessor stays, marked `aria-busy`; it never shows empty while loading or after an error. The status says \"Loading…\" only once a load has taken 400 ms, and focus stays on the control pressed. Agents sort and page through the table (`sortBy`, `setPage`) and filter through the \"{label} filters\" group: `filter(\"Status\", [\"Open\"])`, `clearFilters()`. Visible copy has no default: `errorTitle`, `retry` and `emptyTitle` are required; `labels.searchPlaceholder` writes the search box's placeholder (\"Search {label}…\"), control names default to English (`labels.pageSize`, `loadMore`, `range`…), and the page navigation is named \"{label} pages\" (`labels.pagination`) so two tables on a page keep distinct landmarks. Pass `controller` from `usePageController` to drive it from outside.",
+      "docs": "`<ServerDataTable label source columns filters labels={{ errorTitle, retry, emptyTitle }} />`. Columns are DataTable columns; `sortField` sorts one on the server, and `sortMode=\"multi\"` adds a column with Shift+click. `navigation=\"auto\"` shows page numbers with an exact total (or the source's `fetchTotal`), previous and next with an estimate or only `hasMore`, and load more for a cursor; `\"infinite\"` also loads when the end scrolls into view, beside the button. `pageSize` (25) and `pageSizes` (`[10, 25, 50, 100]`, capped by the source's `maxPageSize`) show a page size select. `filters` takes a `defineFilters` schema, `filterUi` picks the built-in filter UI: `\"search\"` (a `FilterSearch`, the default when the schema has a text field), `\"chips\"` (search and `FilterChips`) or `\"panel\"` (search and a `FilterPanelTrigger` that opens a `FilterPanel` beside the table, a bottom sheet on narrow screens), and `toolbar` composes your own from the parts. `urlState={hashUrlState()}` (or `historyUrlState()`, or `{ adapter, prefix, history, format }`) keeps filters, sort and page in readable params, and Back and Forward move through them. While a page loads its predecessor stays, marked `aria-busy`; it never shows empty while loading or after an error. The status says \"Loading…\" only once a load has taken 400 ms, and focus stays on the control pressed. Agents sort and page through the table (`sortBy`, `setPage`) and filter through the \"{label} filters\" group: `filter(\"Status\", [\"Open\"])`, `clearFilters()`. Visible copy has no default: `errorTitle`, `retry` and `emptyTitle` are required; `labels.searchPlaceholder` writes the search box's placeholder (\"Search {label}…\"), control names default to English (`labels.pageSize`, `loadMore`, `range`…), and the page navigation is named \"{label} pages\" (`labels.pagination`) so two tables on a page keep distinct landmarks. Pass `controller` from `usePageController` to drive it from outside. Counts (\"Showing 1,001–1,020 of 12,345\"), the page sizes and the chips' numbers and dates follow the page's `<html lang>` through `useLocale`; `locale` overrides it, and `labels.range` receives it.",
       "dependencies": [
         "@ui-sdk/core@0.1.0-beta.5",
         "@ui-sdk/react@0.1.0-beta.5"
@@ -3666,7 +3666,8 @@
         "@eskais/server-data",
         "@eskais/url-state",
         "@eskais/filter-schema",
-        "@eskais/page-source"
+        "@eskais/page-source",
+        "@eskais/locale"
       ],
       "files": [
         {
@@ -3684,7 +3685,7 @@
       "type": "registry:ui",
       "title": "Server List",
       "description": "A List over a PageSource that grows as you scroll: ListItem rows, virtualized past 200, one tab stop with row navigation, the next page when the end comes into view, and a visible Load more button for keyboards and agents.",
-      "docs": "`<ServerList aria-label source renderItem itemText labels={{ errorTitle, retry, emptyTitle }} />`, with `renderItem` returning a `ListItem`. It pages with `useServerInfinite`, by page number or cursor, `pageSize` (50) rows at a time. With `infinite` (default) the next page loads as the end of the list scrolls into view; the Load more button is always there too, so keyboards and agents reach every page, and it keeps focus while it loads and once there is no more. `DataState` covers loading, error with retry and empty, the list is `aria-busy` while a new search loads, and a polite status says \"Showing 1–50 of 312\" after each load (\"Loading…\" only past 400 ms). `filters` takes a schema (a `FilterSearch` by default, or your own `toolbar`), and the `List` props (`variant`, `value`, `onValueChange`, `onSelect`, `virtualize`, `estimateSize`) pass through. Agents select rows through the list's `select(id)` and press Load more.",
+      "docs": "`<ServerList aria-label source renderItem itemText labels={{ errorTitle, retry, emptyTitle }} />`, with `renderItem` returning a `ListItem`. It pages with `useServerInfinite`, by page number or cursor, `pageSize` (50) rows at a time. With `infinite` (default) the next page loads as the end of the list scrolls into view; the Load more button is always there too, so keyboards and agents reach every page, and it keeps focus while it loads and once there is no more. `DataState` covers loading, error with retry and empty, the list is `aria-busy` while a new search loads, and a polite status says \"Showing 1–50 of 312\" after each load (\"Loading…\" only past 400 ms). `filters` takes a schema (a `FilterSearch` by default, or your own `toolbar`), and the `List` props (`variant`, `value`, `onValueChange`, `onSelect`, `virtualize`, `estimateSize`) pass through. Agents select rows through the list's `select(id)` and press Load more. Its counts follow `<html lang>` through `useLocale`; `locale` overrides it.",
       "dependencies": [
         "@ui-sdk/core@0.1.0-beta.5",
         "@ui-sdk/react@0.1.0-beta.5"
@@ -3698,7 +3699,8 @@
         "@eskais/filter-search",
         "@eskais/server-data",
         "@eskais/filter-schema",
-        "@eskais/page-source"
+        "@eskais/page-source",
+        "@eskais/locale"
       ],
       "files": [
         {
@@ -3745,7 +3747,7 @@
       "type": "registry:ui",
       "title": "Filter Chips",
       "description": "Filters as chips in a FilterBar: one chip per active filter that opens an editor for its field, a button that removes it, Add filter for the others, and reset. Picks apply at once; typed values on Enter or when the editor closes.",
-      "docs": "Inside a `ServerDataTable` with `filterUi=\"chips\"`, or a `FilterScope`, it reads the schema and controller (or pass `schema` and `controller`). Each chip's text is its name, \"Status: Open, Blocked\" (`labels.chip`, with `summarizeFilter` for the value), and opens a popover with the field's `FilterField`; a choice applies at once, a typed text or number on Enter or when the popover closes. Its remove button, \"Remove Status filter\", clears the field and returns focus to Add filter, a menu of the fields without a value: choosing one opens its editor, and leaving it empty adds nothing. The toolbar is one tab stop with arrow keys (UI SDK Toolbar), named by `labels.toolbar`, and Reset filters shows while any chip applies. `fields` limits and orders the fields offered (every field but the search field by default); `valueLabels` names remote option ids it hasn't loaded. Labels default to English and can be overridden.",
+      "docs": "Inside a `ServerDataTable` with `filterUi=\"chips\"`, or a `FilterScope`, it reads the schema and controller (or pass `schema` and `controller`). Each chip's text is its name, \"Status: Open, Blocked\" (`labels.chip`, with `summarizeFilter` for the value), and opens a popover with the field's `FilterField`; a choice applies at once, a typed text or number on Enter or when the popover closes. Its remove button, \"Remove Status filter\", clears the field and returns focus to Add filter, a menu of the fields without a value: choosing one opens its editor, and leaving it empty adds nothing. The toolbar is one tab stop with arrow keys (UI SDK Toolbar), named by `labels.toolbar`, and Reset filters shows while any chip applies. `fields` limits and orders the fields offered (every field but the search field by default); `valueLabels` names remote option ids it hasn't loaded. Labels default to English and can be overridden. Numbers and dates in the chips (\"Jan 1, 2026 – Jan 31, 2026\", a date-only value read as the day it names) and in the editors follow `<html lang>` through `useLocale`; `locale` overrides it.",
       "dependencies": [
         "@ui-sdk/core@0.1.0-beta.5",
         "@ui-sdk/react@0.1.0-beta.5",
@@ -3760,7 +3762,8 @@
         "@eskais/filter-field",
         "@eskais/filter-search",
         "@eskais/filter-schema",
-        "@eskais/page-source"
+        "@eskais/page-source",
+        "@eskais/locale"
       ],
       "files": [
         {
@@ -3803,7 +3806,7 @@
       "type": "registry:ui",
       "title": "Filter Field",
       "description": "The control for one filter schema field, named by its label: an input for text, a select or checkboxes for options, a select for a boolean, a comparison and numbers, date pickers, or a ServerCombobox for remote options.",
-      "docs": "`<FilterField field={schema.status} value onValueChange />` is controlled with the field's value type (`FilterValues`); an empty choice gives `undefined`. Options are a `Select` with Any, or a checkbox group when `multiple`; a boolean a `Select` of `trueLabel` and `falseLabel`; a number a Comparison `Select` (`operators`, `eq`, `gte`, `lte` and `between` by default) and a Value `NumberInput`, side by side once the container is 20rem wide, Minimum and Maximum for between; a date a `DatePicker`, a range two labelled From and To (each end optional); a remote option a `ServerCombobox` that says Any until something is chosen, which reports chosen labels through `onValueLabels`. `appliesAtOnce(field)` says whether a change is a pick or typing. `FilterChips` and `FilterPanel` use it; use it in a form of your own. Every control has a visible label. `labels` translates Any, Yes, No, From, To, Comparison, Value, Minimum, Maximum and the comparisons.",
+      "docs": "`<FilterField field={schema.status} value onValueChange />` is controlled with the field's value type (`FilterValues`); an empty choice gives `undefined`. Options are a `Select` with Any, or a checkbox group when `multiple`; a boolean a `Select` of `trueLabel` and `falseLabel`; a number a Comparison `Select` (`operators`, `eq`, `gte`, `lte` and `between` by default) and a Value `NumberInput`, side by side once the container is 20rem wide, Minimum and Maximum for between; a date a `DatePicker`, a range two labelled From and To (each end optional); a remote option a `ServerCombobox` that says Any until something is chosen, which reports chosen labels through `onValueLabels`. `appliesAtOnce(field)` says whether a change is a pick or typing. `FilterChips` and `FilterPanel` use it; use it in a form of your own. Every control has a visible label. `labels` translates Any, Yes, No, From, To, Comparison, Value, Minimum, Maximum and the comparisons. Date pickers and number inputs take `locale`, or follow `<html lang>` through `useLocale`.",
       "dependencies": [
         "@ui-sdk/core@0.1.0-beta.5",
         "@ui-sdk/react@0.1.0-beta.5"
@@ -3819,11 +3822,16 @@
         "@eskais/number-input",
         "@eskais/date-picker",
         "@eskais/server-combobox",
-        "@eskais/filter-schema"
+        "@eskais/filter-schema",
+        "@eskais/locale"
       ],
       "files": [
         {
           "path": "registry/ui/filter-field.tsx",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/filter-field-labels.ts",
           "type": "registry:ui"
         }
       ]
@@ -3833,7 +3841,7 @@
       "type": "registry:ui",
       "title": "Server Combobox",
       "description": "A Combobox whose options come from a PageSource, searched on the server as you type: requests wait for typing to pause and are aborted when replaced, the next page loads at the end of the list, and the server's order is kept. With multiple, choices show as chips.",
-      "docs": "`<ServerCombobox source getLabel value onValueChange />` inside a `Field` with a `FieldLabel`. The source's filter gets the typed text as `q`; `getValue` picks what an option stores (the source's `getId` by default). It runs on UI SDK's `useAsyncOptions` with `filter={false}`: `debounce` (250 ms) before a search, the previous options kept while the next load, the request it replaces aborted, and `pageSize` (20) more whenever scrolling or the arrow keys reach the last option, by page number or cursor. `multiple` keeps an array and shows each choice as a chip with a remove button named \"Remove {label}\"; `valueLabels` names values chosen before their options load, such as ids read from the URL. A hidden status announces loading, errors and the count; `labels` translates it and the control names. Agents choose an option by its label.",
+      "docs": "`<ServerCombobox source getLabel value onValueChange />` inside a `Field` with a `FieldLabel`. The source's filter gets the typed text as `q`; `getValue` picks what an option stores (the source's `getId` by default). It runs on UI SDK's `useAsyncOptions` with `filter={false}`: `debounce` (250 ms) before a search, the previous options kept while the next load, the request it replaces aborted, and `pageSize` (20) more whenever scrolling or the arrow keys reach the last option, by page number or cursor. `multiple` keeps an array and shows each choice as a chip with a remove button named \"Remove {label}\"; `valueLabels` names values chosen before their options load, such as ids read from the URL. A hidden status announces loading, errors and the count; `labels` translates it and the control names. Agents choose an option by its label. The count follows `<html lang>` through `useLocale`; `locale` overrides it.",
       "dependencies": [
         "@ui-sdk/core@0.1.0-beta.5",
         "@ui-sdk/react@0.1.0-beta.5",
@@ -3843,7 +3851,8 @@
         "@eskais/utils",
         "@eskais/theme",
         "@eskais/combobox",
-        "@eskais/page-source"
+        "@eskais/page-source",
+        "@eskais/locale"
       ],
       "files": [
         {

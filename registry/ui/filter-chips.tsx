@@ -21,7 +21,9 @@ import {
   type FilterValues,
   type NumberFilter,
 } from "@/lib/filter-schema"
+import { useLocale } from "@/lib/locale"
 import type { PageController } from "@/lib/page-controller"
+import { formatCount } from "@/lib/page-source"
 
 type FilterChipsLabels = {
   /** Names the toolbar. */
@@ -31,8 +33,8 @@ type FilterChipsLabels = {
   remove: (field: string) => string
   /** A chip's text, which is also its name: "Status: Open, Blocked". */
   chip: (field: string, summary: string) => string
-  /** A multiple choice with more than two picks: "3 selected". */
-  selected: (count: number) => string
+  /** A multiple choice with more than two picks: "3 selected", the count in `locale`. */
+  selected: (count: number, locale?: string) => string
   yes: string
   no: string
   field?: Partial<FilterFieldLabels>
@@ -44,24 +46,45 @@ const filterChipsLabels: FilterChipsLabels = {
   reset: "Reset filters",
   remove: (field) => `Remove ${field} filter`,
   chip: (field, summary) => (summary === "" ? field : `${field}: ${summary}`),
-  selected: (count) => `${String(count)} selected`,
+  selected: (count, locale) => `${formatCount(count, locale)} selected`,
   yes: "Yes",
   no: "No",
 }
 
 const symbols = { eq: "=", neq: "≠", lt: "<", lte: "≤", gt: ">", gte: "≥" }
 
-function dateText(value: DateInput | undefined) {
+const dateOnly = /^(\d{4})-(\d{2})-(\d{2})$/
+
+// A date-only value is a calendar day, so it is shown in UTC: the day it names, whatever the viewer's time zone.
+function dateText(value: DateInput | undefined, locale: string | undefined) {
   if (value === undefined) return ""
-  return value instanceof Date ? value.toISOString().slice(0, 10) : value.toString()
+  if (typeof value === "string") {
+    const day = dateOnly.exec(value)
+    if (day) {
+      const time = Date.UTC(Number(day[1]), Number(day[2]) - 1, Number(day[3]))
+      return new Intl.DateTimeFormat(locale, { dateStyle: "medium", timeZone: "UTC" }).format(time)
+    }
+    const time = Date.parse(value)
+    if (Number.isNaN(time)) return value
+    return new Intl.DateTimeFormat(locale, { dateStyle: "medium", timeStyle: "short" }).format(time)
+  }
+  if (value instanceof Date) return new Intl.DateTimeFormat(locale, { dateStyle: "medium" }).format(value)
+  const temporal = value as { toLocaleString?: (locale?: string, options?: Intl.DateTimeFormatOptions) => string }
+  return typeof temporal.toLocaleString === "function"
+    ? temporal.toLocaleString(locale, { dateStyle: "medium" })
+    : value.toString()
 }
 
-/** A short text for a field's value, for a chip: "Open, Blocked", "≥ 10", "2026-01-01 – 2026-01-31". */
+/**
+ * A short text for a field's value, for a chip: "Open, Blocked", "≥ 10", "Jan 1, 2026 – Jan 31, 2026". Numbers and
+ * dates are written in `locale`.
+ */
 function summarizeFilter(
   field: FilterFieldDefinition,
   value: unknown,
   labels: Pick<FilterChipsLabels, "selected" | "yes" | "no">,
   valueLabels?: Readonly<Record<string, string>>,
+  locale?: string,
 ): string {
   if (!isActiveValue(value)) return ""
   switch (field.kind) {
@@ -72,21 +95,23 @@ function summarizeFilter(
         field.kind === "options"
           ? (field.options.find((option) => option.value === item)?.label ?? item)
           : (valueLabels?.[item] ?? item)
-      return values.length > 2 ? labels.selected(values.length) : values.map(name).join(", ")
+      return values.length > 2 ? labels.selected(values.length, locale) : values.map(name).join(", ")
     }
     case "boolean":
       return value === true ? (field.trueLabel ?? labels.yes) : (field.falseLabel ?? labels.no)
     case "number": {
       const number = value as NumberFilter
-      if (number.op === "between") return `${String(number.min)}–${String(number.max)}`
-      return `${symbols[number.op]} ${String(number.value)}`
+      if (number.op === "between") return `${formatCount(number.min, locale)}–${formatCount(number.max, locale)}`
+      return `${symbols[number.op]} ${formatCount(number.value, locale)}`
     }
     case "date":
-      return dateText(value as DateInput)
+      return dateText(value as DateInput, locale)
     case "dateRange": {
       const range = value as DateRange
-      if (range.from !== undefined && range.to !== undefined) return `${dateText(range.from)} – ${dateText(range.to)}`
-      return range.from === undefined ? `≤ ${dateText(range.to)}` : `≥ ${dateText(range.from)}`
+      const from = dateText(range.from, locale)
+      const to = dateText(range.to, locale)
+      if (range.from !== undefined && range.to !== undefined) return `${from} – ${to}`
+      return range.from === undefined ? `≤ ${to}` : `≥ ${from}`
     }
     default:
       return String(value)
@@ -99,6 +124,8 @@ type FilterChipsProps<S extends FilterSchema> = {
   /** Labels of remote option values chosen elsewhere, like ids read from the URL. */
   valueLabels?: Readonly<Record<string, string>>
   labels?: Partial<FilterChipsLabels>
+  /** Writes the chips' numbers and dates, and the editors'; the page's `<html lang>` by default (`useLocale`). */
+  locale?: string
   schema?: S
   controller?: PageController<FilterValues<S>>
   className?: string
@@ -112,11 +139,13 @@ function FilterChips<S extends FilterSchema>({
   fields,
   valueLabels: knownLabels,
   labels: labelOverrides,
+  locale: localeProp,
   className,
   ...props
 }: FilterChipsProps<S>) {
   const { schema, controller, state } = useFilterScope(props)
   const labels = { ...filterChipsLabels, ...labelOverrides }
+  const locale = useLocale(localeProp)
   const searchKey = searchFieldOf(schema)
   const offered = fields ?? Object.keys(schema).filter((key) => key !== searchKey)
   const values = state.filter as Record<string, unknown>
@@ -155,7 +184,7 @@ function FilterChips<S extends FilterSchema>({
         const field = schema[key] as FilterFieldDefinition
         const open = editing?.key === key
         const value = open ? editing.draft : values[key]
-        const summary = summarizeFilter(field, values[key], labels, valueLabels)
+        const summary = summarizeFilter(field, values[key], labels, valueLabels, locale)
         return (
           <span key={key} data-slot="filter-chip" className="inline-flex items-center">
             <Popover open={open} onOpenChange={(next) => (next ? setEditing({ key, draft: values[key] }) : close(key))}>
@@ -172,6 +201,7 @@ function FilterChips<S extends FilterSchema>({
                   field={field}
                   value={value}
                   labels={labels.field}
+                  locale={locale}
                   valueLabels={valueLabels}
                   onValueChange={(next) => {
                     setEditing({ key, draft: next })

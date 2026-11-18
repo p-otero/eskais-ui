@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/pagination"
 import { Select } from "@/components/ui/select"
 import { useMediaQuery } from "@/components/ui/use-media-query"
-import { pageStatusLabels, type Navigation, type PageStatusLabels } from "@/lib/page-source"
+import { formatCount, pageStatusLabels, type Navigation, type PageStatusLabels } from "@/lib/page-source"
 
 type ServerDataTableLabels = {
   errorTitle: ReactNode
@@ -153,11 +153,12 @@ type ServerTablePageSizeProps = {
   sizes: readonly number[]
   onSizeChange: (size: number) => void
   label: string
+  locale?: string
 }
 
-function ServerTablePageSize({ size, sizes, onSizeChange, label }: ServerTablePageSizeProps) {
+function ServerTablePageSize({ size, sizes, onSizeChange, label, locale }: ServerTablePageSizeProps) {
   if (sizes.length < 2) return null
-  const options = sizes.map((value) => ({ value: String(value), label: String(value) }))
+  const options = sizes.map((value) => ({ value: String(value), label: formatCount(value, locale) }))
   return (
     <span data-slot="server-data-table-page-size" className="flex items-center gap-inline text-body-sm">
       <span aria-hidden="true" className="whitespace-nowrap text-muted-foreground">

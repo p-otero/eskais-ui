@@ -36,6 +36,7 @@ import {
   type SortSpec,
 } from "@/lib/page-source"
 import type { UrlStateAdapter } from "@/lib/url-state"
+import { useLocale } from "@/lib/locale"
 import { cn } from "@/lib/utils"
 
 type ServerTableUrlState = {
@@ -88,6 +89,8 @@ type ServerDataTableProps<T, S extends FilterSchema> = Pick<
   /** A controller of your own, from `usePageController`, to drive the table from outside. */
   controller?: PageController<FilterValues<S>>
   labels: ServerDataTableLabels
+  /** Formats the counts, dates and numbers it shows; the page's `<html lang>` by default (`useLocale`). */
+  locale?: string
   className?: string
 }
 
@@ -127,11 +130,13 @@ function ServerDataTable<T, S extends FilterSchema = Record<never, never>>({
   urlState,
   controller: controllerProp,
   labels: labelOverrides,
+  locale: localeProp,
   className,
   tableClassName,
   ...tableProps
 }: ServerDataTableProps<T, S>) {
   const labels = { ...serverDataTableLabels, ...labelOverrides }
+  const locale = useLocale(localeProp)
   const schema = filters ?? ({} as S)
   const searchKey = searchFieldOf(schema)
   const [url] = useState(() =>
@@ -181,7 +186,7 @@ function ServerDataTable<T, S extends FilterSchema = Record<never, never>>({
           ? labels.loading
           : ""
         : range
-          ? labels.range(range)
+          ? labels.range(range, locale)
           : labels.noResults
 
   const goToPage = (next: number) => {
@@ -239,7 +244,7 @@ function ServerDataTable<T, S extends FilterSchema = Record<never, never>>({
     ) : ui === "chips" ? (
       <>
         {search}
-        <FilterChips labels={labels.chips} />
+        <FilterChips labels={labels.chips} locale={locale} />
       </>
     ) : ui === "panel" ? (
       <>
@@ -292,6 +297,7 @@ function ServerDataTable<T, S extends FilterSchema = Record<never, never>>({
             <div className="flex flex-wrap items-center gap-items narrow:justify-between">
               {!accumulating && (
                 <ServerTablePageSize
+                  locale={locale}
                   size={state.size}
                   sizes={controller.pageSizes}
                   onSizeChange={(size) => controller.setPageSize(size)}
@@ -314,6 +320,7 @@ function ServerDataTable<T, S extends FilterSchema = Record<never, never>>({
         </div>
         {filters && ui === "panel" && (
           <FilterPanel
+            locale={locale}
             schema={schema}
             controller={controller}
             open={panelOpen}

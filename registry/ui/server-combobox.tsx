@@ -23,7 +23,8 @@ import {
   ComboboxList,
   ComboboxTrigger,
 } from "@/components/ui/combobox"
-import type { PageSource } from "@/lib/page-source"
+import { useLocale } from "@/lib/locale"
+import { formatCount, type PageSource } from "@/lib/page-source"
 import { cn } from "@/lib/utils"
 
 type ServerComboboxLabels = {
@@ -35,8 +36,8 @@ type ServerComboboxLabels = {
   error: string
   /** Shown in the list when nothing matches. */
   empty: (query: string) => string
-  /** The status region once results are in. */
-  count: (count: number, hasMore: boolean) => string
+  /** The status region once results are in, the count in `locale`. */
+  count: (count: number, hasMore: boolean, locale?: string) => string
 }
 
 const serverComboboxLabels: ServerComboboxLabels = {
@@ -46,7 +47,8 @@ const serverComboboxLabels: ServerComboboxLabels = {
   loading: "Loading…",
   error: "Couldn't load options",
   empty: (query) => (query === "" ? "No options" : `Nothing matches “${query}”`),
-  count: (count, hasMore) => `${String(count)}${hasMore ? "+" : ""} ${count === 1 ? "option" : "options"}`,
+  count: (count, hasMore, locale) =>
+    `${formatCount(count, locale)}${hasMore ? "+" : ""} ${count === 1 ? "option" : "options"}`,
 }
 
 type Option = { value: string; label: string }
@@ -68,6 +70,8 @@ type ServerComboboxBaseProps<T> = {
   debounce?: number
   disabled?: boolean
   labels?: Partial<ServerComboboxLabels>
+  /** Writes the count in the status; the page's `<html lang>` by default (`useLocale`). */
+  locale?: string
   className?: string
 }
 
@@ -97,7 +101,8 @@ const chipRemoveClassName =
  * to pause and are aborted when replaced, the next page loads when the list scrolls to its end, and the server's
  * order is kept (`filter={false}`). With `multiple`, choices show as chips.
  */
-function ServerCombobox<T>({ className, ...props }: ServerComboboxProps<T>) {
+function ServerCombobox<T>({ className, locale: localeProp, ...props }: ServerComboboxProps<T>) {
+  const locale = useLocale(localeProp)
   const {
     source,
     getLabel,
@@ -155,7 +160,7 @@ function ServerCombobox<T>({ className, ...props }: ServerComboboxProps<T>) {
             ? labels.error
             : state.loading
               ? labels.loading
-              : labels.count(state.count, options.hasMore)
+              : labels.count(state.count, options.hasMore, locale)
         }
       </ComboboxStatus>
       <ComboboxEmpty>{(state) => (state.empty && !state.loading ? labels.empty(state.query) : null)}</ComboboxEmpty>

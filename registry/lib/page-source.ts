@@ -90,19 +90,33 @@ function capPageSizes(sizes: readonly number[], capabilities: SourceCapabilities
 type PageRange = { from: number; to: number; total: TotalInfo }
 
 type PageStatusLabels = {
-  /** "Showing 21–40 of 312", "Showing 21–40 of about 300" or "Showing 21–40". */
-  range: (range: PageRange) => string
+  /**
+   * "Showing 21–40 of 312", "Showing 21–40 of about 300" or "Showing 21–40", with the numbers in `locale` (the
+   * page's language in the components, from `useLocale`).
+   */
+  range: (range: PageRange, locale?: string) => string
   empty: string
   loading: string
 }
 
-const numberFormat = new Intl.NumberFormat("en-US")
+const numberFormats = new Map<string, Intl.NumberFormat>()
+
+/** A number in `locale` (the runtime's default when undefined), with one cached `Intl.NumberFormat` per locale. */
+function formatCount(value: number, locale?: string) {
+  const key = locale ?? ""
+  let format = numberFormats.get(key)
+  if (!format) {
+    format = new Intl.NumberFormat(locale)
+    numberFormats.set(key, format)
+  }
+  return format.format(value)
+}
 
 const pageStatusLabels: PageStatusLabels = {
-  range: ({ from, to, total }) => {
-    const shown = `Showing ${numberFormat.format(from)}–${numberFormat.format(to)}`
-    if (total.kind === "exact") return `${shown} of ${numberFormat.format(total.value)}`
-    if (total.kind === "estimate") return `${shown} of about ${numberFormat.format(total.value)}`
+  range: ({ from, to, total }, locale) => {
+    const shown = `Showing ${formatCount(from, locale)}–${formatCount(to, locale)}`
+    if (total.kind === "exact") return `${shown} of ${formatCount(total.value, locale)}`
+    if (total.kind === "estimate") return `${shown} of about ${formatCount(total.value, locale)}`
     return shown
   },
   empty: "No results",
@@ -182,6 +196,7 @@ export {
   appendParams,
   capPageSize,
   capPageSizes,
+  formatCount,
   HttpError,
   isAbortError,
   isPagePosition,

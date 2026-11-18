@@ -43,12 +43,15 @@ type FilterPanelProps<S extends FilterSchema> = {
   /** Where focus goes when the side panel closes: the button that opened it. */
   returnFocus?: () => HTMLElement | null | undefined
   labels?: Partial<FilterPanelLabels>
+  /** Writes the fields' dates and numbers; the page's `<html lang>` by default (`useLocale`). */
+  locale?: string
   schema?: S
   controller?: PageController<FilterValues<S>>
   className?: string
 }
 
 type FormProps = {
+  locale?: string
   schema: FilterSchema
   keys: readonly string[]
   values: Record<string, unknown>
@@ -57,7 +60,7 @@ type FormProps = {
   onApply: (draft: Record<string, unknown>) => void
 }
 
-function FilterPanelForm({ schema, keys, values, labels, valueLabels, onApply }: FormProps) {
+function FilterPanelForm({ schema, keys, values, labels, valueLabels, locale, onApply }: FormProps) {
   const [draft, setDraft] = useState(() => Object.fromEntries(keys.map((key) => [key, values[key]])))
   const submit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
@@ -67,6 +70,7 @@ function FilterPanelForm({ schema, keys, values, labels, valueLabels, onApply }:
     <form onSubmit={submit} data-slot="filter-panel-form" className="flex min-h-0 flex-1 flex-col gap-group">
       {keys.map((key) => (
         <FilterField
+          locale={locale}
           key={key}
           field={schema[key] as FilterFieldDefinition}
           value={draft[key]}
@@ -103,6 +107,7 @@ function FilterPanel<S extends FilterSchema>({
   valueLabels,
   returnFocus,
   labels: labelOverrides,
+  locale,
   className,
   ...props
 }: FilterPanelProps<S>) {
@@ -124,6 +129,7 @@ function FilterPanel<S extends FilterSchema>({
   // A new form whenever the applied filters change elsewhere (chips, the URL), so the draft starts from them.
   const form = (
     <FilterPanelForm
+      locale={locale}
       key={JSON.stringify(keys.map((key) => values[key]))}
       schema={schema}
       keys={keys}

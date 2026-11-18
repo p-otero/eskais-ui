@@ -78,8 +78,8 @@ type PageController<F> = {
   next(result?: PageResult<unknown>): void
   previous(result?: PageResult<unknown>): void
   navigation(result?: PageResult<unknown>, counted?: number): Navigation
-  /** "Showing 21–40 of 312" for the live region; `undefined` before the first result. */
-  statusText(result: PageResult<unknown> | undefined, counted?: number): string | undefined
+  /** "Showing 21–40 of 312" for the live region, numbers in `locale`; `undefined` before the first result. */
+  statusText(result: PageResult<unknown> | undefined, counted?: number, locale?: string): string | undefined
   /** Starts following the URL. Returns the cleanup; call it from an effect. */
   connect(): () => void
   /** Drops a pending search commit. */
@@ -258,12 +258,12 @@ function createPageController<T, F>(
       set({ cursor, direction: "backward", cursorIndex: state.cursorIndex - 1 })
     },
     navigation: (result, counted) => resolveNavigation(capabilities, options.navigation, totalOf(result, counted)),
-    statusText(result, counted) {
+    statusText(result, counted, locale) {
       if (!result) return undefined
       if (result.items.length === 0) return labels.empty
       const offset = cursorMode ? state.cursorIndex * state.size : (state.page - 1) * state.size
       const range = pageRange(offset, result.items.length, totalOf(result, counted))
-      return range ? labels.range(range) : labels.empty
+      return range ? labels.range(range, locale) : labels.empty
     },
     connect() {
       const url = options.url

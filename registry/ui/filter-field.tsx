@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { NumberInput, NumberInputControl, NumberInputGroup } from "@/components/ui/number-input"
 import { Select } from "@/components/ui/select"
+import { filterFieldLabels, type FilterFieldLabels } from "@/components/ui/filter-field-labels"
 import { ServerCombobox } from "@/components/ui/server-combobox"
 import type {
   DateRange,
@@ -17,42 +18,8 @@ import type {
   NumberFilter,
   NumberOp,
 } from "@/lib/filter-schema"
+import { useLocale } from "@/lib/locale"
 import { cn } from "@/lib/utils"
-
-type FilterFieldLabels = {
-  /** The choice that clears a single option or a boolean. */
-  any: string
-  yes: string
-  no: string
-  from: string
-  to: string
-  min: string
-  max: string
-  value: string
-  comparison: string
-  operators: Record<NumberOp | "between", string>
-}
-
-const filterFieldLabels: FilterFieldLabels = {
-  any: "Any",
-  yes: "Yes",
-  no: "No",
-  from: "From",
-  to: "To",
-  min: "Minimum",
-  max: "Maximum",
-  value: "Value",
-  comparison: "Comparison",
-  operators: {
-    eq: "Equals",
-    neq: "Is not",
-    lt: "Less than",
-    lte: "At most",
-    gt: "More than",
-    gte: "At least",
-    between: "Between",
-  },
-}
 
 type FilterFieldProps = {
   field: FilterFieldDefinition
@@ -65,6 +32,8 @@ type FilterFieldProps = {
   onSubmit?: () => void
   /** The labels of remote options as they are chosen, for a summary that shows labels, not ids. */
   onValueLabels?: (labels: Readonly<Record<string, string>>) => void
+  /** Writes dates and numbers in the pickers and inputs; the page's `<html lang>` by default (`useLocale`). */
+  locale?: string
   className?: string
 }
 
@@ -173,12 +142,14 @@ function BooleanControl({
 
 function NumberBox({
   label,
+  locale,
   value,
   onChange,
   field,
   onSubmit,
 }: {
   label: string
+  locale?: string
   value: number | undefined
   onChange: (value: number | undefined) => void
   field: NumberField
@@ -188,6 +159,7 @@ function NumberBox({
     <Field className="min-w-0 flex-1">
       <FieldLabel className={subLabelClassName}>{label}</FieldLabel>
       <NumberInput
+        locale={locale}
         value={value ?? null}
         min={field.min}
         max={field.max}
@@ -215,6 +187,7 @@ function NumberControl({
   onSubmit,
   labels,
   className,
+  locale,
 }: FilterFieldProps & { labels: FilterFieldLabels }) {
   const current = value as NumberFilter | undefined
   const operators = field.kind === "number" ? (field.operators ?? defaultOperators) : defaultOperators
@@ -256,6 +229,7 @@ function NumberControl({
         {op === "between" ? (
           <div className="flex gap-items">
             <NumberBox
+              locale={locale}
               label={labels.min}
               value={range.min}
               field={field}
@@ -263,6 +237,7 @@ function NumberControl({
               onChange={(min) => setRange(min, range.max)}
             />
             <NumberBox
+              locale={locale}
               label={labels.max}
               value={range.max}
               field={field}
@@ -271,7 +246,14 @@ function NumberControl({
             />
           </div>
         ) : (
-          <NumberBox label={labels.value} value={single} field={field} onSubmit={onSubmit} onChange={setSingle} />
+          <NumberBox
+            locale={locale}
+            label={labels.value}
+            value={single}
+            field={field}
+            onSubmit={onSubmit}
+            onChange={setSingle}
+          />
         )}
       </div>
     </FieldSet>
@@ -290,12 +272,14 @@ function DateControl({
   onValueChange,
   labels,
   className,
+  locale,
 }: FilterFieldProps & { labels: FilterFieldLabels }) {
   if (field.kind === "date") {
     return (
       <Field className={className}>
         <FieldLabel>{field.label}</FieldLabel>
         <DatePicker
+          locale={locale}
           clearable
           hint={false}
           value={dateText(value)}
@@ -316,6 +300,7 @@ function DateControl({
         <Field className="min-w-0">
           <FieldLabel className={subLabelClassName}>{labels.from}</FieldLabel>
           <DatePicker
+            locale={locale}
             clearable
             hint={false}
             value={dateText(range.from)}
@@ -325,6 +310,7 @@ function DateControl({
         <Field className="min-w-0">
           <FieldLabel className={subLabelClassName}>{labels.to}</FieldLabel>
           <DatePicker
+            locale={locale}
             clearable
             hint={false}
             value={dateText(range.to)}
@@ -344,6 +330,7 @@ function RemoteControl({
   valueLabels,
   labels,
   className,
+  locale,
 }: FilterFieldProps & { labels: FilterFieldLabels }) {
   if (field.kind !== "remoteOption") return null
   const getValue = field.getValue ? (option: unknown) => field.getValue?.(option) ?? "" : undefined
@@ -352,6 +339,7 @@ function RemoteControl({
       <FieldLabel>{field.label}</FieldLabel>
       {field.multiple ? (
         <ServerCombobox
+          locale={locale}
           multiple
           source={field.source}
           getLabel={(option) => field.getLabel(option)}
@@ -366,6 +354,7 @@ function RemoteControl({
         />
       ) : (
         <ServerCombobox
+          locale={locale}
           source={field.source}
           getLabel={(option) => field.getLabel(option)}
           getValue={getValue}
@@ -386,7 +375,8 @@ function RemoteControl({
  * The control for one schema field, named by its label: an input, a select, checkboxes, a comparison and number,
  * date pickers, or a ServerCombobox for remote options. `FilterChips` and `FilterPanel` use it.
  */
-function FilterField(props: FilterFieldProps) {
+function FilterField({ locale: localeProp, ...rest }: FilterFieldProps) {
+  const props = { ...rest, locale: useLocale(localeProp) }
   const labels = { ...filterFieldLabels, ...props.labels }
   let control: ReactNode
   switch (props.field.kind) {
