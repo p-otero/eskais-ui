@@ -135,14 +135,19 @@ function DataTableCheckbox({
   checked,
   disabled,
   onChange,
+  tabIndex,
 }: {
   label: string
   checked: CheckedState
   disabled?: boolean
   onChange: (checked: boolean, event?: Event) => void
+  /** -1 inside a cell that holds the tab stop itself. */
+  tabIndex?: number
 }) {
   return (
     <Checkbox
+      // The part writes its own tabindex over a prop's; the rendered element's wins.
+      render={tabIndex === undefined ? undefined : (part) => <button {...part} tabIndex={tabIndex} />}
       aria-label={label}
       checked={checked}
       disabled={disabled}
@@ -212,8 +217,14 @@ type DataTableProps<Row> = {
   empty?: ReactNode
   labels?: Partial<DataTableLabels>
   controller?: DataTableController
-  /** Enter on a focused row. Rows are one tab stop: arrows or j/k move, Home/End and the page keys jump. */
+  /** Enter on a focused row, or on a cell with `navigation="cells"`. */
   onRowOpen?: (row: Row) => void
+  /**
+   * What the keys move between. `"rows"` (default): rows are one tab stop, the arrows or j/k move, Home/End and the
+   * page keys jump. `"cells"`: the cells are, as in a spreadsheet; ←/→ move along a row, ↑/↓ keep the column,
+   * Home/End reach a row's ends and Ctrl/⌘ with them the table's corners, Space selects the row.
+   */
+  navigation?: "rows" | "cells"
   /** `"auto"` (default) renders only the rows in view past 200 rows. Bound the table's height to scroll inside it. */
   virtualize?: Virtualize
   /** A row's estimated height in px before it is measured. */

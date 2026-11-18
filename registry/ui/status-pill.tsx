@@ -36,23 +36,50 @@ const dotToneClassNames = {
   muted: "text-input-strong",
 } satisfies Record<StatusTone, string>
 
-function Dot({ pulse }: { pulse?: boolean }) {
+/** `true` pings three times whenever the status changes, then rests; `"always"` pings until it is turned off. */
+type StatusPulse = boolean | "always"
+
+// A running ping is a transform animation, and Chrome promotes everything painted after one to its own layer in
+// case they overlap: twenty pinging cards on a board cost ~15 ms of layerizing on every repaint. So it stops.
+const pulseThrice = { animationIterationCount: 3 }
+
+/**
+ * The ping behind a status dot. `restartKey` names the status: a new one mounts a new ping, which runs again.
+ * Exported for marks that draw their own dot, like a task card's liveness chip.
+ */
+function StatusPing({ pulse, restartKey }: { pulse?: StatusPulse; restartKey?: string }) {
+  if (!pulse) return null
+  return (
+    <span
+      key={restartKey}
+      data-slot="status-ping"
+      className="absolute inset-0 rounded-full bg-current opacity-60 motion-safe:animate-ping motion-reduce:hidden"
+      style={pulse === "always" ? undefined : pulseThrice}
+    />
+  )
+}
+
+function Dot({ pulse, restartKey }: { pulse?: StatusPulse; restartKey?: string }) {
   return (
     <span aria-hidden="true" data-slot="status-pill-dot" className="relative inline-flex size-1.5 shrink-0">
-      {pulse && (
-        <span className="absolute inset-0 rounded-full bg-current opacity-60 motion-safe:animate-ping motion-reduce:hidden" />
-      )}
+      <StatusPing pulse={pulse} restartKey={restartKey} />
       <span className="relative size-full rounded-full bg-current" />
     </span>
   )
 }
 
+const pulseAttribute = (pulse: StatusPulse | undefined) => (pulse === "always" ? "always" : pulse ? "" : undefined)
+
 type StatusDotProps = Omit<PartProps<"span">, "children"> & {
   /** What the dot means, read by screen readers and agents in place of the colour. */
   label: string
   tone?: StatusTone
-  /** Pulses to show something live; still under reduced motion. */
-  pulse?: boolean
+  /**
+   * Pings to show something live: three times when it turns on or the status changes, then still. `"always"` keeps
+   * pinging; avoid it in lists and boards, where every running ping makes the page slower to repaint. Still under
+   * reduced motion.
+   */
+  pulse?: StatusPulse
 }
 
 function StatusDot({ className, label, tone, pulse, render, ...props }: StatusDotProps) {
@@ -61,11 +88,11 @@ function StatusDot({ className, label, tone, pulse, render, ...props }: StatusDo
     {
       "data-slot": "status-dot",
       "data-tone": tone ?? "neutral",
-      "data-pulse": pulse ? "" : undefined,
+      "data-pulse": pulseAttribute(pulse),
       className: cn("inline-flex shrink-0 items-center", dotToneClassNames[tone ?? "neutral"], className),
       children: (
         <>
-          <Dot pulse={pulse} />
+          <Dot pulse={pulse} restartKey={`${tone ?? "neutral"}:${label}`} />
           <span className="sr-only">{label}</span>
         </>
       ),
@@ -79,7 +106,8 @@ type StatusPillProps = Omit<PartProps<"span">, "children"> & {
   children?: ReactNode
   tone?: StatusTone
   dot?: boolean
-  pulse?: boolean
+  /** With `dot`: pings three times when it turns on or the tone changes; `"always"` keeps pinging (costly in lists). */
+  pulse?: StatusPulse
 }
 
 // The label gets its own element so contrast is measured on the text alone, not on the dot beside it.
@@ -89,11 +117,11 @@ function StatusPill({ className, tone, dot, pulse, render, children, ...props }:
     {
       "data-slot": "status-pill",
       "data-tone": tone ?? "neutral",
-      "data-pulse": dot && pulse ? "" : undefined,
+      "data-pulse": dot ? pulseAttribute(pulse) : undefined,
       className: cn(statusPillVariants({ tone }), className),
       children: (
         <>
-          {dot && <Dot pulse={pulse} />}
+          {dot && <Dot pulse={pulse} restartKey={tone ?? "neutral"} />}
           <span data-slot="status-pill-label" className="inline-flex min-w-0 items-center gap-inline">
             {children}
           </span>
@@ -105,5 +133,5 @@ function StatusPill({ className, tone, dot, pulse, render, children, ...props }:
   )
 }
 
-export { StatusDot, StatusPill, statusPillVariants }
-export type { StatusDotProps, StatusPillProps, StatusTone }
+export { StatusDot, StatusPill, StatusPing, statusPillVariants }
+export type { StatusDotProps, StatusPillProps, StatusPulse, StatusTone }

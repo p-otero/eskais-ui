@@ -1,35 +1,46 @@
 "use client"
 
-import { useCallback, type ReactNode } from "react"
+import { memo, useCallback, type ReactElement, type ReactNode } from "react"
 
 import { DataTableCheckbox, type DataTableColumn } from "@/components/ui/data-table-parts"
+import { NavigableCell, useCellNavigationActive } from "@/components/ui/cell-navigation"
 import { NavigableRow } from "@/components/ui/row-navigation"
 import { Empty } from "@/components/ui/empty"
 import { Skeleton } from "@/components/ui/skeleton"
 import { TableCell, TableRow } from "@/components/ui/table"
 import { cn } from "@/lib/utils"
 
+// Plain values and stable callbacks, so `memo` keeps a row as it is while the table re-renders for a scroll, a
+// sort or another row's selection.
 type DataTableRowProps<Row> = {
   row: Row
   id: string
   columns: readonly DataTableColumn<Row>[]
-  selection?: { label: string; selected: boolean; onChange: (checked: boolean, event?: Event) => void }
+  /** The checkbox's name; without it the row has no checkbox. */
+  selectLabel?: string
+  selected?: boolean
+  /** Checks or unchecks the row by id; undefined `checked` flips it. */
+  onToggle?: (id: string, checked?: boolean, event?: Event) => void
   /** The row's place among all rows, while the table is virtualized. */
-  position?: { index: number; measure?: (node: HTMLElement | null) => void }
+  index?: number
+  /** The row's place among the rows shown, for cell navigation. */
+  position: number
+  /** The virtualizer's ref for a row; it returns the cleanup that stops measuring. */
+  measure?: (node: HTMLElement | null) => (() => void) | undefined
 }
 
 // The focus ring sits inside the row: a table row draws no box-shadow, and its outline would be clipped by the scroller.
 const rowClassName =
   "scroll-mt-(--control-height) outline-none data-selected:bg-muted focus-visible:bg-muted/70 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring"
 
-function DataTableRow<Row>({ row, id, columns, selection, position }: DataTableRowProps<Row>) {
-  return (
-    <NavigableRow
-      id={id}
-      render={<DataTableRowElement row={row} id={id} columns={columns} selection={selection} position={position} />}
-    />
-  )
-}
+// The cell's focus ring sits inside it, like the row's.
+const cellClassName = "outline-none focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring"
+
+const DataTableRow = memo(function DataTableRow<Row>(props: DataTableRowProps<Row>) {
+  const cells = useCellNavigationActive()
+  if (cells) return <DataTableRowElement {...props} cells />
+  return <NavigableRow id={props.id} render={<DataTableRowElement {...props} />} />
+}) as <Row>(props: DataTableRowProps<Row>) => ReactNode
 
 function assignRef(ref: unknown, node: HTMLElement | null) {
   if (typeof ref === "function") return (ref as (node: HTMLElement | null) => unknown)(node)
@@ -41,48 +52,70 @@ function DataTableRowElement<Row>({
   row,
   id,
   columns,
-  selection,
+  selectLabel,
+  selected = false,
+  onToggle,
+  index,
   position,
+  measure,
+  cells = false,
   ref,
   ...props
-}: DataTableRowProps<Row> & { ref?: unknown } & Record<string, unknown>) {
-  const measure = position?.measure
+}: DataTableRowProps<Row> & { ref?: unknown; cells?: boolean } & Record<string, unknown>) {
   const rowRef = useCallback(
     (node: HTMLTableRowElement | null) => {
       const cleanup = assignRef(ref, node)
-      measure?.(node)
+      const unmeasure = measure?.(node)
       return () => {
+        if (typeof unmeasure === "function") unmeasure()
         if (typeof cleanup === "function") cleanup()
         else assignRef(ref, null)
       }
     },
     [ref, measure],
   )
+  // Cells join the table's cell navigation only in that mode, so a row-mode row renders no wrapper per cell.
+  const cellAt = (col: number, cell: ReactElement) =>
+    cells ? <NavigableCell key={cell.key ?? col} row={position} col={col} render={cell} /> : cell
   return (
     <TableRow
       {...props}
       ref={rowRef}
-      data-index={position?.index}
-      aria-rowindex={position ? position.index + 2 : undefined}
+      data-index={index}
+      aria-rowindex={index === undefined ? undefined : index + 2}
       data-row-id={id}
-      data-selected={selection?.selected ? "" : undefined}
+      data-selected={selected ? "" : undefined}
       className={rowClassName}
     >
-      {selection && (
-        <TableCell className="w-0">
-          <DataTableCheckbox label={selection.label} checked={selection.selected} onChange={selection.onChange} />
-        </TableCell>
+      {selectLabel !== undefined &&
+        cellAt(
+          0,
+          <TableCell className="w-0">
+            <DataTableCheckbox
+              label={selectLabel}
+              checked={selected}
+              tabIndex={cells ? -1 : undefined}
+              onChange={(checked, event) => onToggle?.(id, checked, event)}
+            />
+          </TableCell>,
+        )}
+      {columns.map((column, col) =>
+        cellAt(
+          col + (selectLabel === undefined ? 0 : 1),
+          <TableCell
+            key={column.id}
+            data-align={column.align}
+            wrap={column.wrap}
+            className={cn(
+              "data-[align=center]:text-center data-[align=end]:text-end",
+              cells && cellClassName,
+              column.cellClassName,
+            )}
+          >
+            {column.cell(row)}
+          </TableCell>,
+        ),
       )}
-      {columns.map((column) => (
-        <TableCell
-          key={column.id}
-          data-align={column.align}
-          wrap={column.wrap}
-          className={cn("data-[align=center]:text-center data-[align=end]:text-end", column.cellClassName)}
-        >
-          {column.cell(row)}
-        </TableCell>
-      ))}
     </TableRow>
   )
 }
@@ -112,7 +145,10 @@ function DataTableLoadingRows({ rows, columns }: { rows: number; columns: number
     <TableRow key={`loading-${row}`} data-slot="data-table-loading-row" className="hover:bg-transparent">
       {Array.from({ length: columns }, (_cell, column) => (
         <TableCell key={column}>
-          <Skeleton className="h-4 w-full max-w-40" />
+          {/* One line of text high, like the rows that replace it, so the table doesn't change height. */}
+          <div className="flex h-lh items-center">
+            <Skeleton className="h-4 w-full max-w-40" />
+          </div>
         </TableCell>
       ))}
     </TableRow>

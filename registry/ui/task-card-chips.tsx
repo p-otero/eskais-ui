@@ -13,7 +13,7 @@ import { DependencyChips } from "@/components/ui/dependency-chips"
 import { livenessLabels, livenessTones } from "@/components/ui/liveness-indicator"
 import { QuantityValue } from "@/components/ui/quantity-value"
 import { StagePill } from "@/components/ui/stage-track"
-import type { StatusTone } from "@/components/ui/status-pill"
+import { StatusPing, type StatusTone } from "@/components/ui/status-pill"
 import { AnalysisModeIcon, TaskBlocker } from "@/components/ui/task-card-parts"
 import type { TaskDisplayOptions } from "@/components/ui/task-card"
 import { stageOf } from "@/components/ui/task-location"
@@ -91,9 +91,7 @@ function TaskCardChips({
               className={cn("inline-flex min-w-0 items-center gap-inline", toneText[livenessTones[liveness]])}
             >
               <span aria-hidden="true" className="relative inline-flex size-1.5 shrink-0">
-                {liveness === "running" && (
-                  <span className="absolute inset-0 rounded-full bg-current opacity-60 motion-safe:animate-ping motion-reduce:hidden" />
-                )}
+                <StatusPing pulse={liveness === "running"} restartKey={liveness} />
                 <span className="relative size-full rounded-full bg-current" />
               </span>
               <span className={livenessShown ? "truncate" : "sr-only"}>{livenessName}</span>

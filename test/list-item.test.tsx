@@ -1,4 +1,4 @@
-import { render, screen, within } from "@testing-library/react"
+import { act, render, screen, within } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { checkServer, mount } from "@ui-sdk/core/testing"
 import { createAgent } from "@ui-sdk/react/agent"
@@ -92,6 +92,48 @@ test("a list of rows with groups, a selected row and its own actions", async () 
   expect(screen.getByRole("button", { name: issues[0]!.title }).getAttribute("aria-current")).toBe("true")
   expect(screen.getByRole("button", { name: "Archive ENG-412" })).toBeTruthy()
   expect(await axeViolations(container)).toEqual([])
+})
+
+test("a row's tooltip mounts only once its title is cut off, and its title keeps its element and focus", async () => {
+  const user = userEvent.setup()
+  let cutOff = false
+  const height = vi.spyOn(HTMLElement.prototype, "scrollHeight", "get").mockImplementation(() => (cutOff ? 40 : 20))
+  const client = vi.spyOn(HTMLElement.prototype, "clientHeight", "get").mockImplementation(() => 20)
+  const callbacks: ((entries: ResizeObserverEntry[]) => void)[] = []
+  const Observer = globalThis.ResizeObserver
+  globalThis.ResizeObserver = class {
+    constructor(callback: (entries: ResizeObserverEntry[]) => void) {
+      callbacks.push(callback)
+    }
+    observe() {}
+    unobserve() {}
+    disconnect() {}
+  } as unknown as typeof ResizeObserver
+  try {
+    render(
+      <List aria-label="Issues">
+        <ListItem id="ENG-412" title="Webhook retries stop after the first timeout" onSelect={() => {}} />
+      </List>,
+    )
+    const title = screen.getByRole("button", { name: "Webhook retries stop after the first timeout" })
+    await user.hover(title)
+    await settle()
+    expect(screen.queryByRole("tooltip")).toBeNull()
+
+    title.focus()
+    cutOff = true
+    act(() => callbacks.forEach((callback) => callback([])))
+    await settle()
+    expect(screen.getByRole("button", { name: "Webhook retries stop after the first timeout" })).toBe(title)
+    expect(document.activeElement).toBe(title)
+    await user.unhover(title)
+    await user.hover(title)
+    expect(await screen.findByRole("tooltip")).toBeTruthy()
+  } finally {
+    globalThis.ResizeObserver = Observer
+    height.mockRestore()
+    client.mockRestore()
+  }
 })
 
 test("rows with href are links, current one marked as the page", async () => {

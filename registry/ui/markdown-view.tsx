@@ -28,6 +28,12 @@ type MarkdownViewProps = Omit<ComponentProps<"div">, "children"> & {
   onWikilinkClick?: (target: string, event: Event | undefined) => void
   /** What `![[target]]` and `![[target|alias]]` show; without it, a link to the target. Keep it stable. */
   renderEmbed?: (target: string, alias: string | undefined) => ReactNode
+  /**
+   * An image's size, so its box is reserved before it loads and the text below doesn't move. `![alt|300x200](src)`
+   * (or `|300` for the width alone) sets it in the Markdown, as in Obsidian; this answers for the others. Keep it
+   * stable.
+   */
+  imageSize?: (src: string, alt: string) => { width: number; height?: number } | undefined
   /** A leading YAML block: hidden (default), a list of its `key: value` properties, or its text. */
   frontmatter?: FrontmatterDisplay
   /** Renders the frontmatter yourself, whatever `frontmatter` says. Keep it stable. */
@@ -55,7 +61,7 @@ const prose = [
   "[&_:not(pre)>code]:rounded-sm [&_:not(pre)>code]:bg-muted [&_:not(pre)>code]:px-px [&_:not(pre)>code]:font-mono [&_:not(pre)>code]:text-[0.9em]",
   "[&_[data-slot=markdown-view-raw]]:font-mono [&_[data-slot=markdown-view-raw]]:text-xs [&_[data-slot=markdown-view-raw]]:whitespace-pre-wrap [&_[data-slot=markdown-view-raw]]:text-muted-foreground",
   "[&_hr]:border-border [&_table]:w-full [&_table]:border-collapse [&_th]:border-b [&_th]:px-inset-item [&_th]:py-inset-item [&_th]:text-start [&_th]:font-semibold [&_td]:border-b [&_td]:px-inset-item [&_td]:py-inset-item",
-  "[&_img]:max-w-full [&_img]:rounded-control",
+  "[&_img]:h-auto [&_img]:max-w-full [&_img]:rounded-control",
 ].join(" ")
 
 type BlockProps = { block: MarkdownBlock; references: string; options: RenderOptions }
@@ -78,6 +84,7 @@ function MarkdownView({
   wikilinkHref,
   onWikilinkClick,
   renderEmbed,
+  imageSize,
   frontmatter = "hide",
   renderFrontmatter,
   frontmatterLabel = "Properties",
@@ -94,6 +101,7 @@ function MarkdownView({
       wikilinkHref,
       onWikilinkClick,
       renderEmbed,
+      imageSize,
       frontmatter,
       renderFrontmatter,
       frontmatterLabel,
@@ -106,6 +114,7 @@ function MarkdownView({
       wikilinkHref,
       onWikilinkClick,
       renderEmbed,
+      imageSize,
       frontmatter,
       renderFrontmatter,
       frontmatterLabel,

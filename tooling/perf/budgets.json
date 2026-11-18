@@ -1,0 +1,254 @@
+{
+  "layersSettleMs": 4000,
+  "keys": {
+    "list-1k": {
+      "renders": 10,
+      "forcedLayouts": 2.05
+    },
+    "list-10k": {
+      "renders": 36,
+      "forcedLayouts": 2.7,
+      "forcedSlack": 0.3
+    },
+    "table": {
+      "renders": 95,
+      "forcedLayouts": 3.4
+    },
+    "table-cells": {
+      "renders": 4,
+      "forcedLayouts": 2.2
+    },
+    "board-table": {
+      "renders": 4,
+      "forcedLayouts": 3.05
+    },
+    "board": {
+      "renders": 37,
+      "forcedLayouts": 10.1,
+      "forcedSlack": 0.3
+    },
+    "board:arrows": {
+      "renders": 4,
+      "forcedLayouts": 4.85,
+      "forcedSlack": 0.3
+    },
+    "master-detail": {
+      "renders": 34,
+      "forcedLayouts": 3.75,
+      "forcedSlack": 0.3
+    },
+    "tabs": {
+      "renders": 16,
+      "forcedLayouts": 6.05
+    },
+    "menu": {
+      "renders": 0,
+      "forcedLayouts": 3.05
+    },
+    "command:arrows": {
+      "renders": 6,
+      "forcedLayouts": 1
+    },
+    "command:type": {
+      "renders": 161,
+      "forcedLayouts": 3.6
+    },
+    "typing:combobox": {
+      "renders": 402,
+      "forcedLayouts": 5.35,
+      "forcedSlack": 0.3
+    },
+    "sidebar": {
+      "renders": 0,
+      "forcedLayouts": 1.05
+    },
+    "shell:sidebar": {
+      "renders": 0,
+      "forcedLayouts": 1.05
+    },
+    "calendar": {
+      "renders": 2,
+      "forcedLayouts": 2.85
+    },
+    "document-workspace:explorer": {
+      "renders": 0,
+      "forcedLayouts": 2.05
+    },
+    "server-data-table": {
+      "renders": 30,
+      "forcedLayouts": 3.05
+    },
+    "server-list": {
+      "renders": 33,
+      "forcedLayouts": 2.75,
+      "forcedSlack": 0.3
+    }
+  },
+  "layers": {
+    "board": 16
+  },
+  "vitals": {
+    "shell": {
+      "cls": 0.01,
+      "lcp": 3500
+    },
+    "dashboard-grid": {
+      "cls": 0.01,
+      "lcp": 3600
+    },
+    "settings-page": {
+      "cls": 0.01,
+      "lcp": 3600
+    },
+    "document-workspace": {
+      "cls": 0.01,
+      "lcp": 3600
+    },
+    "master-detail": {
+      "cls": 0.01,
+      "lcp": 3500
+    },
+    "server-data-table": {
+      "cls": 0.01,
+      "lcp": 4500
+    },
+    "server-list": {
+      "cls": 0.01,
+      "lcp": 4500
+    }
+  },
+  "bundles": {
+    "acceptance-list": 29.6,
+    "accordion": 29.8,
+    "agent-badge": 25.9,
+    "agent-task-board": 197.4,
+    "agent-task-board-core": 17.5,
+    "agent-task-types": 0.3,
+    "alert": 12.3,
+    "appearance": 4.1,
+    "attachments": 68.3,
+    "attempt-timeline": 82.4,
+    "avatar": 22,
+    "badge": 12,
+    "bento": 26.9,
+    "board": 62,
+    "breadcrumb": 25.7,
+    "button": 56.5,
+    "calendar": 61.8,
+    "card": 12.5,
+    "carousel": 67.7,
+    "chart": 124.6,
+    "checkbox": 30.7,
+    "code-block": 81.7,
+    "collapsible": 27.3,
+    "combobox": 82.8,
+    "command": 82.5,
+    "confirm-dialog": 46.4,
+    "context-menu": 60,
+    "dashboard-grid": 67.6,
+    "data-table": 82.8,
+    "date-picker": 72.6,
+    "date-time-picker": 83.9,
+    "dependency-chips": 22.8,
+    "description-list": 55.3,
+    "dialog": 56.9,
+    "docs-layout": 28,
+    "document-workspace": 119.3,
+    "drawer": 73.2,
+    "dropdown-menu": 64.8,
+    "empty": 12.1,
+    "field": 25.9,
+    "filter-bar": 57.8,
+    "filter-chips": 143,
+    "filter-field": 125.5,
+    "filter-panel": 157,
+    "filter-schema": 8.1,
+    "filter-search": 28.6,
+    "floating": 11.1,
+    "form": 92.6,
+    "form-dialog": 93.3,
+    "hero": 71.1,
+    "hover-card": 42.7,
+    "icon": 10.7,
+    "inbox": 113.4,
+    "input": 51.2,
+    "kbd": 11.4,
+    "label": 21.4,
+    "landing-page": 77.9,
+    "lightbox": 66.2,
+    "link": 25.5,
+    "list-item": 77.6,
+    "liveness-indicator": 13.9,
+    "locale": 0.4,
+    "markdown-editor": 246.6,
+    "markdown-editor-languages": 98.1,
+    "markdown-view": 92.4,
+    "master-detail": 70,
+    "menubar": 61.4,
+    "meter": 22.7,
+    "mobile-nav": 52.8,
+    "native-select": 27.6,
+    "navigation-menu": 52,
+    "number-input": 62.4,
+    "otp-input": 30.1,
+    "page-header": 11.1,
+    "page-layout": 11.4,
+    "page-source": 6.5,
+    "pagination": 51.4,
+    "popover": 51.8,
+    "progress": 22.1,
+    "proposal-actions": 61.4,
+    "quantity": 12.1,
+    "radio-group": 30.3,
+    "relative-time": 12.4,
+    "resizable": 33.2,
+    "row-navigation": 13.2,
+    "scroll-area": 30,
+    "search-field": 52.1,
+    "section": 12.7,
+    "section-heading": 11.1,
+    "segmented-control": 30.8,
+    "select": 68.1,
+    "separator": 20.3,
+    "server-combobox": 85.9,
+    "server-data": 17,
+    "server-data-table": 219.9,
+    "server-list": 103.3,
+    "settings-page": 91.6,
+    "shell": 115.4,
+    "shortcuts": 16,
+    "shortcuts-dialog": 58.4,
+    "side-panel": 79.7,
+    "sidebar": 84.9,
+    "site-footer": 26.8,
+    "site-header": 88.8,
+    "skeleton": 11.3,
+    "skip-link": 11.2,
+    "slider": 31.7,
+    "spinner": 11.4,
+    "stage-track": 59.8,
+    "stat": 15.4,
+    "states": 58.3,
+    "status-pill": 12.4,
+    "step-dialog": 94.1,
+    "steps": 11.3,
+    "switch": 25.1,
+    "table": 30.2,
+    "tabs": 64.4,
+    "task-card": 82,
+    "task-detail-panel": 131.7,
+    "task-status": 13.6,
+    "textarea": 26.4,
+    "toast": 62.8,
+    "toggle": 49,
+    "toggle-group": 53.5,
+    "token-input": 41.3,
+    "tone": 0.3,
+    "tooltip": 45.7,
+    "topbar": 11,
+    "url-state": 0.9,
+    "usage": 32.8,
+    "utils": 10.5,
+    "virtual-rows": 4.8
+  }
+}

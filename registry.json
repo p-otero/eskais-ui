@@ -616,7 +616,11 @@
         },
         "@utility backdrop-surface": {
           "-webkit-backdrop-filter": "var(--surface-backdrop)",
-          "backdrop-filter": "var(--surface-backdrop)"
+          "backdrop-filter": "var(--surface-backdrop)",
+          ".backdrop-surface &": {
+            "-webkit-backdrop-filter": "none",
+            "backdrop-filter": "none"
+          }
         },
         "@utility backdrop-floating": {
           "-webkit-backdrop-filter": "var(--floating-backdrop)",
@@ -2463,6 +2467,14 @@
         {
           "path": "registry/ui/board-column.tsx",
           "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/board-navigation-primitive.ts",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/board-navigation.tsx",
+          "type": "registry:ui"
         }
       ]
     },
@@ -2470,7 +2482,7 @@
       "name": "status-pill",
       "type": "registry:ui",
       "title": "Status Pill",
-      "description": "Presentational status pill with the shared tones (plus muted) and an optional dot that can pulse, and StatusDot: a coloured dot with a screen reader label. The pulse stops under reduced motion.",
+      "description": "Presentational status pill with the shared tones (plus muted) and an optional dot that pings three times when its status changes (pulse=\"always\" keeps pinging, which is costly in lists and boards), and StatusDot: a coloured dot with a screen reader label. The ping stops under reduced motion.",
       "dependencies": [
         "@ui-sdk/react@0.1.0-beta.10",
         "class-variance-authority@0.7.1"
@@ -2776,6 +2788,10 @@
         {
           "path": "registry/ui/task-location.tsx",
           "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/use-card-tab-stops.ts",
+          "type": "registry:ui"
         }
       ]
     },
@@ -3078,7 +3094,8 @@
         "@eskais/dialog",
         "@eskais/kbd",
         "@eskais/button",
-        "@eskais/link"
+        "@eskais/link",
+        "@eskais/virtual-rows"
       ],
       "files": [
         {
@@ -3092,9 +3109,13 @@
         {
           "path": "registry/ui/command-dialog.tsx",
           "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/use-command-rows.ts",
+          "type": "registry:ui"
         }
       ],
-      "docs": "For a ⌘K palette: `<CommandDialog><CommandDialogTrigger shortcut=\"mod+k\">Search<CommandDialogShortcut /></CommandDialogTrigger><CommandDialogContent title=\"Search\"><Command onAction={…}>…</Command></CommandDialogContent></CommandDialog>`. The shortcut is opt-in, focus returns to the trigger that opened it, and `onOpenChange` reports both ways. A command that goes to a page takes `href` (and `onFollow` to route on the client and close the palette): it renders as a link that Enter, a click, its shortcut or a mouse press follow (fast links, `#/…` hash routes), and it never runs `onAction`. For results from a server, use `useAsyncOptions` from `@ui-sdk/react/async-options` with `filter={false}`, `status` and `CommandStatus`; the skill's \"Global search\" recipe has the whole pattern. Every open starts with an empty search (or `defaultQuery`), on the first page, the first command highlighted and focus in the search, also when the closed content stays mounted (`keepMounted`); a controlled `query` or `pages` is yours to reset. One Escape closes the dialog whatever the search holds; `escapeKey=\"clear\"` keeps UI SDK's order (clear, then go back a page, then close). `<CommandFooter>` after the `CommandList` holds hints like the keys that move and close. `createCommandDialogController()` opens it from code. For a second way in, like a Topbar's `centerCompact` icon, use `<CommandDialogOpenButton controller={…} aria-label=\"Search\">`, not a second trigger: in UI SDK 0.1.0-beta.10 a second `CommandDialogTrigger` drops the dialog's agent label."
+      "docs": "For a ⌘K palette: `<CommandDialog><CommandDialogTrigger shortcut=\"mod+k\">Search<CommandDialogShortcut /></CommandDialogTrigger><CommandDialogContent title=\"Search\"><Command onAction={…}>…</Command></CommandDialogContent></CommandDialog>`. The shortcut is opt-in, focus returns to the trigger that opened it, and `onOpenChange` reports both ways. A command that goes to a page takes `href` (and `onFollow` to route on the client and close the palette): it renders as a link that Enter, a click, its shortcut or a mouse press follow (fast links, `#/…` hash routes), and it never runs `onAction`. Past 50 commands, pass them as data: `<Command items={commands}>` with `<CommandList>{(state) => <CommandRows items={state.items}>{(item) => …}</CommandRows>}</CommandList>` mounts only the rows in view and the highlighted one, while typing, the arrow keys and agents reach every command; under 50 it renders plain groups. For results from a server, use `useAsyncOptions` from `@ui-sdk/react/async-options` with `filter={false}`, `status` and `CommandStatus`; the skill's \"Global search\" recipe has the whole pattern. Every open starts with an empty search (or `defaultQuery`), on the first page, the first command highlighted and focus in the search, also when the closed content stays mounted (`keepMounted`); a controlled `query` or `pages` is yours to reset. One Escape closes the dialog whatever the search holds; `escapeKey=\"clear\"` keeps UI SDK's order (clear, then go back a page, then close). `<CommandFooter>` after the `CommandList` holds hints like the keys that move and close. `createCommandDialogController()` opens it from code. For a second way in, like a Topbar's `centerCompact` icon, use `<CommandDialogOpenButton controller={…} aria-label=\"Search\">`, not a second trigger: in UI SDK 0.1.0-beta.10 a second `CommandDialogTrigger` drops the dialog's agent label."
     },
     {
       "name": "radio-group",
@@ -3611,6 +3632,14 @@
         },
         {
           "path": "registry/ui/data-table.tsx",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/cell-navigation-primitive.ts",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/cell-navigation.tsx",
           "type": "registry:ui"
         }
       ],
@@ -4526,10 +4555,10 @@
       "name": "virtual-rows",
       "type": "registry:ui",
       "title": "Virtual Rows",
-      "description": "Windowed rendering for long lists and tables on TanStack Virtual, in document flow with gap rows, the focused row kept rendered, and find in page through hidden=until-found stubs.",
-      "docs": "`useVirtualRows({ count, virtualize, estimateSize, getKey })` virtualizes past 200 rows with `virtualize=\"auto\"`. Put `anchor` on the `ul` or `tbody`; it scrolls with the nearest scrolling ancestor, or the window. Render `segments`: rows, and gaps (`aria-hidden`) that hold the space of the rows between, so a table keeps `tbody > tr` and a list `ul > li`. Give each row `data-index` and `ref={measureElement}`. `pin(index)` keeps the focused row rendered when scrolled away; `renderNow(index)` renders one at once, for an agent's action. In each gap, `<GapFindStubs from to text offsetOf={offsetOf} onFound={scrollToIndex}>` writes the text of the rows that aren't rendered as `hidden=\"until-found\"` elements, so find in page reaches them and scrolls the real row in; pass a stable `text(index)`.",
+      "description": "Windowed rendering for long lists and tables on UI SDK's virtualizer, in document flow with gap rows: it renders again only when the rows in view change, keeps the focused row rendered, and keeps find in page working through UI SDK's findable layers.",
+      "docs": "`useVirtualRows({ count, virtualize, estimateSize, getKey })` virtualizes past 200 rows with `virtualize=\"auto\"`. Put `anchor` on the `ul` or `tbody`; it scrolls with the nearest scrolling ancestor, or the window. Render `segments`: rows, and gaps (`aria-hidden`) that hold the space of the rows between, so a table keeps `tbody > tr` and a list `ul > li`. Give each row `data-index` and `ref={measureElement}`. `pin(index)` keeps the focused row rendered when scrolled away; `renderNow(index)` renders one at once, for an agent's action. Pass `findable: (index) => text` (stable) and UI SDK's findable layers hold the text of the rows that aren't rendered in `hidden=\"until-found\"` stand-ins, so find in page reaches them and scrolls the real row in. Keep `getKey` stable (`useCallback` over the ids).",
       "dependencies": [
-        "@tanstack/react-virtual@3.14.24"
+        "@ui-sdk/core@0.1.0-beta.10"
       ],
       "registryDependencies": [
         "@eskais/utils"
@@ -4537,6 +4566,10 @@
       "files": [
         {
           "path": "registry/ui/virtual-rows.tsx",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/use-virtual-rows.ts",
           "type": "registry:ui"
         }
       ]
@@ -4696,7 +4729,7 @@
           "type": "registry:ui"
         }
       ],
-      "docs": "Wikilinks: `resolveWikilink(target)` returns `{ exists, label }` (an unresolved link is dashed), `wikilinkHref(target)` its address, and `onWikilinkClick(target, event)` takes plain clicks and agents' `follow` for client routing (modified clicks stay with the browser). A wikilink with an address renders through `Link`, so it follows on press and hash routes (`#/note/x`) work; one without an address but with `onWikilinkClick` is a button. Both carry `data-wikilink` (`link` or `embed`) and `data-target`. Embeds: `![[target]]` and `![[target|alias]]` render `renderEmbed(target, alias)`, as a block when the embed is alone in its paragraph; without it, a dashed link-like chip. Frontmatter: a `---` block on the first line, closed by `---` or `...`, is hidden by default (`frontmatter=\"hide\"`), a `<dl>` of its `key: value` lines and lists with `frontmatter=\"properties\"` (named by `frontmatterLabel`, \"Properties\"), or its YAML with `\"raw\"`; `renderFrontmatter({ raw, properties, from, to })` draws your own. `parseFrontmatter(markdown)` reads it without a YAML dependency: plain `key: value` lines, `- item` and `[a, b]` lists, `|` and `>` blocks; nested maps are skipped, and `raw` is there for a real YAML parser. `extractHeadings(markdown)` lists `{ level, text, slug, line, from, to, textFrom }`, frontmatter and code left out, for an outline. `slug` is unique in the document (GitHub's rule: lowercased, punctuation dropped, spaces as `-`, `-1`, `-2`… after a repeat, `heading` for an empty one), and the view puts the same slug on each rendered heading as `data-slug`, so a filtered list still finds its heading. Keep the callbacks stable (module-level or `useCallback`): a new function re-renders every block."
+      "docs": "Wikilinks: `resolveWikilink(target)` returns `{ exists, label }` (an unresolved link is dashed), `wikilinkHref(target)` its address, and `onWikilinkClick(target, event)` takes plain clicks and agents' `follow` for client routing (modified clicks stay with the browser). A wikilink with an address renders through `Link`, so it follows on press and hash routes (`#/note/x`) work; one without an address but with `onWikilinkClick` is a button. Both carry `data-wikilink` (`link` or `embed`) and `data-target`. Embeds: `![[target]]` and `![[target|alias]]` render `renderEmbed(target, alias)`, as a block when the embed is alone in its paragraph; without it, a dashed link-like chip. Frontmatter: a `---` block on the first line, closed by `---` or `...`, is hidden by default (`frontmatter=\"hide\"`), a `<dl>` of its `key: value` lines and lists with `frontmatter=\"properties\"` (named by `frontmatterLabel`, \"Properties\"), or its YAML with `\"raw\"`; `renderFrontmatter({ raw, properties, from, to })` draws your own. `parseFrontmatter(markdown)` reads it without a YAML dependency: plain `key: value` lines, `- item` and `[a, b]` lists, `|` and `>` blocks; nested maps are skipped, and `raw` is there for a real YAML parser. `extractHeadings(markdown)` lists `{ level, text, slug, line, from, to, textFrom }`, frontmatter and code left out, for an outline. `slug` is unique in the document (GitHub's rule: lowercased, punctuation dropped, spaces as `-`, `-1`, `-2`… after a repeat, `heading` for an empty one), and the view puts the same slug on each rendered heading as `data-slug`, so a filtered list still finds its heading. Keep the callbacks stable (module-level or `useCallback`): a new function re-renders every block. Images reserve their box before they load when their size is known: write it in the alt text as Obsidian does (`![A chart|640x360](chart.png)`, or `|640` for the width), or answer `imageSize(src, alt)` with `{ width, height }`; without either, the text below moves when the image arrives."
     },
     {
       "name": "markdown-editor",
@@ -4829,7 +4862,7 @@
       "type": "registry:ui",
       "title": "Link",
       "description": "Text link with inline, nav, muted, standalone and plain variants: underlined at rest or on hover so it never relies on colour, external and new-tab handling, aria-current, render for router links, an opt-in onFollow that routes plain clicks and gives agents a follow action, and fast navigation on a primary mouse press (fast={false} or data-no-fast-link to opt out); FastLinkRegion and useFastLink do the same for plain anchors.",
-      "docs": "Same-origin links follow on a primary mouse press (`pointerdown`), for navigation only: `fast={false}` opts a link out, `data-no-fast-link` on an ancestor a region or the app. Hash routers work too: an `href` that starts with `#/` follows on press, through `onFollow` or by setting `location.hash`, while any other `#…` href is an in-page anchor and stays native. Set another prefix with `data-fast-link-hash-prefix` on an ancestor (`<body data-fast-link-hash-prefix=\"#!/\">`) or `FastLinkRegion hashPrefix`; an empty value makes every `#…` href an anchor.",
+      "docs": "`onNavigate(href, event)` routes on the client on a press, a click or Enter, without the agent action `onFollow` adds; `onIntent(href)` runs on a 65 ms hover, focus or a mouse or pen press, to preload the route (idempotent: it can run more than once). Same-origin links follow on a primary mouse press (`pointerdown`), for navigation only: `fast={false}` opts a link out, `data-no-fast-link` on an ancestor a region or the app. Hash routers work too: an `href` that starts with `#/` follows on press, through `onFollow` or by setting `location.hash`, while any other `#…` href is an in-page anchor and stays native. Set another prefix with `data-fast-link-hash-prefix` on an ancestor (`<body data-fast-link-hash-prefix=\"#!/\">`) or `FastLinkRegion hashPrefix`; an empty value makes every `#…` href an anchor.",
       "dependencies": [
         "@ui-sdk/core@0.1.0-beta.10",
         "@ui-sdk/react@0.1.0-beta.10",
@@ -4856,6 +4889,10 @@
         },
         {
           "path": "registry/ui/use-fast-link.ts",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/use-link-intent.ts",
           "type": "registry:ui"
         }
       ]

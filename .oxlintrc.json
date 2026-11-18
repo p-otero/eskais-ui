@@ -180,10 +180,23 @@
         "tooling/press-check.mjs",
         "tooling/markdown-check.mjs",
         "tooling/document-workspace-check.mjs",
-        "tooling/server-data-check.mjs"
+        "tooling/server-data-check.mjs",
+        "tooling/find-check.mjs",
+        "tooling/perf/**"
       ],
       "rules": {
         "no-await-in-loop": "off"
+      }
+    },
+    {
+      "files": ["tooling/perf/**"],
+      "rules": {
+        "no-underscore-dangle": [
+          "warn",
+          {
+            "allow": ["__REACT_DEVTOOLS_GLOBAL_HOOK__", "__perf", "__perfNav", "__perfWatch", "__vitals"]
+          }
+        ]
       }
     },
     {

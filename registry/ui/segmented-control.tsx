@@ -50,7 +50,8 @@ function SegmentedControlIndicator({ className, ...props }: ComponentProps<typeo
   return (
     <SegmentedControlIndicatorPrimitive
       className={cnState(
-        "absolute top-(--segmented-control-indicator-top) left-(--segmented-control-indicator-left) -z-10 h-(--segmented-control-indicator-height) w-(--segmented-control-indicator-width) rounded-control bg-primary shadow-sm transition-all duration-panel ease-standard motion-reduce:transition-none",
+        // oxlint-disable-next-line shadcn/no-arbitrary-values -- transitions only the properties that move; transition-all also eased every colour and shadow change
+        "absolute top-(--segmented-control-indicator-top) left-(--segmented-control-indicator-left) -z-10 h-(--segmented-control-indicator-height) w-(--segmented-control-indicator-width) rounded-control bg-primary shadow-sm transition-[top,left,width,height] duration-panel ease-standard motion-reduce:transition-none",
         className,
       )}
       {...props}

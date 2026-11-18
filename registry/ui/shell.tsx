@@ -90,6 +90,11 @@ type ShellProps<Route extends ShellRoute = ShellRoute> = Omit<ComponentProps<"di
    * navigation re-renders only the two routes whose current state changed.
    */
   onNavigate?: (href: string, route: Route) => void
+  /**
+   * Runs when someone is about to follow a sidebar route (a 65 ms hover, focus, a press), to preload its code or
+   * data: `(href) => router.preload(href)`. It can run more than once per visit; keep it idempotent and stable.
+   */
+  onIntent?: (href: string, route: Route) => void
   /** A logo or product name, after the sidebar trigger. */
   brand?: ReactNode
   /** The topbar's end: notifications, appearance, the account menu. */
@@ -164,6 +169,7 @@ function Shell<Route extends ShellRoute>({
   groups,
   currentHref,
   onNavigate,
+  onIntent,
   brand,
   actions,
   commandGroups,
@@ -212,6 +218,13 @@ function Shell<Route extends ShellRoute>({
       else location.assign(route.href)
     },
     [routes, onNavigate, sidebar.controller],
+  )
+  const intent = useCallback(
+    (id: string) => {
+      const route = routes.find((candidate) => candidate.id === id)
+      if (route) onIntent?.(route.href, route)
+    },
+    [routes, onIntent],
   )
   const mobileNav = useMobileNavItems(mobile, currentId, onNavigate ? navigate : undefined)
   const hasMobileNav = mobileNav.items.length > 0
@@ -286,7 +299,12 @@ function Shell<Route extends ShellRoute>({
               header={sidebarHeader}
               footer={sidebarFooter}
             >
-              <ShellSidebarSections sections={sections} currentId={currentId} navigate={navigate} />
+              <ShellSidebarSections
+                sections={sections}
+                currentId={currentId}
+                navigate={navigate}
+                intent={onIntent ? intent : undefined}
+              />
             </Sidebar>
           </div>
           <Main

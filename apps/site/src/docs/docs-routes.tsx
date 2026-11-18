@@ -1,22 +1,22 @@
-import { createElement, lazy, Suspense, type ComponentType } from "react"
+import { createElement, Suspense, use } from "react"
 
 import { Spinner } from "@/components/ui/spinner"
 
 import { guides } from "../guides/meta"
 import { findItem } from "../registry"
 import { NotFound } from "../not-found"
+import { loadGuide } from "../preload"
 import { ComponentsIndex } from "./components-index"
-import { SiteDocsLayout } from "./docs-layout"
+import { SiteDocsLayout, SiteDocsPager } from "./docs-layout"
 import { ItemPage } from "./item-page"
 
-const guideModules = import.meta.glob<{ default: ComponentType }>("../guides/*.tsx")
+const guideSlugs = new Set(guides.map((guide) => guide.slug))
 
-const guidePages = new Map(
-  guides.map((guide) => {
-    const load = guideModules[`../guides/${guide.slug}.tsx`]
-    return [guide.slug, load ? lazy(load) : undefined] as const
-  }),
-)
+// Read through `use` from the preload cache: a guide preloaded on hover renders without a fallback.
+function Guide({ slug }: { slug: string }) {
+  const module = loadGuide(slug)
+  return module ? createElement(use(module).default) : <NotFound inline />
+}
 
 function Loading() {
   return (
@@ -34,8 +34,7 @@ function DocsPage({ route }: { route: string }) {
     return item ? <ItemPage key={item.name} item={item} /> : <NotFound inline />
   }
   const slug = route === "/docs" ? "installation" : route.slice("/docs/".length)
-  const guide = guidePages.get(slug)
-  return guide ? createElement(guide) : <NotFound inline />
+  return guideSlugs.has(slug) ? <Guide slug={slug} /> : <NotFound inline />
 }
 
 function DocsRoutes({ route }: { route: string }) {
@@ -44,6 +43,7 @@ function DocsRoutes({ route }: { route: string }) {
     <SiteDocsLayout route={layoutRoute}>
       <Suspense fallback={<Loading />}>
         <DocsPage route={route} />
+        <SiteDocsPager route={layoutRoute} />
       </Suspense>
     </SiteDocsLayout>
   )

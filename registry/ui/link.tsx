@@ -2,11 +2,12 @@
 
 import { mergeProps, renderElement, usePart, usePrimitive, type PartProps } from "@ui-sdk/react/primitive"
 import { cva } from "class-variance-authority"
-import type { AriaAttributes, ReactNode } from "react"
+import type { AriaAttributes, MouseEvent, ReactNode } from "react"
 import { ArrowUpRightIcon } from "lucide-react"
 
 import { useFastLink } from "@/components/ui/fast-link"
-import { link, type LinkOptions } from "@/components/ui/link-primitive"
+import { isPlainClick, link, type LinkOptions } from "@/components/ui/link-primitive"
+import { useLinkIntent } from "@/components/ui/use-link-intent"
 import { cn } from "@/lib/utils"
 
 type LinkVariant = "inline" | "nav" | "muted" | "standalone" | "plain"
@@ -51,6 +52,17 @@ type LinkProps = Omit<PartProps<"a">, "children"> & {
    */
   onFollow?: LinkOptions["onFollow"]
   /**
+   * Routes on the client, for a router's links that agents don't need as actions of their own (a sidebar, a pager):
+   * a primary mouse press follows at once, like a fast link, and a plain click or Enter follows too, without a page
+   * load. Modified clicks keep the browser's behaviour. With `onFollow` too, `onFollow` wins.
+   */
+  onNavigate?: (href: string, event: Event) => void
+  /**
+   * Runs when someone is about to follow the link (a 65 ms hover, focus, a mouse or pen press), to preload the
+   * route. It can run more than once for one visit; keep it idempotent.
+   */
+  onIntent?: (href: string) => void
+  /**
    * Follows a same-origin link on mouse press, not release (default `true`): navigation only, as moving away can't
    * cancel it (WCAG 2.5.2). Without `onFollow` it uses `location.assign`, so it is off with `render` or `onClick`,
    * which act on the click. Off for `external`; `data-no-fast-link` on an ancestor turns a region off.
@@ -69,7 +81,7 @@ function linkProps({
   rel,
   target,
   ...props
-}: Omit<LinkProps, "onFollow" | "render" | "fast">) {
+}: Omit<LinkProps, "onFollow" | "onNavigate" | "onIntent" | "render" | "fast">) {
   return {
     "data-slot": "link",
     "data-variant": variant,
@@ -94,20 +106,33 @@ function linkProps({
   }
 }
 
-function FollowLink({ onFollow, render, fast = true, ...props }: LinkProps) {
+function FollowLink({ onFollow, onNavigate: _router, onIntent, render, fast = true, ...props }: LinkProps) {
   const handle = usePrimitive(link, { href: props.href, onFollow })
   const ref = useFastLink<HTMLAnchorElement>({
     enabled: fast && !props.external,
     onFollow: (_href, { event }) => handle.api.follow(event),
   })
-  return usePart(handle, "root", {}, { ...mergeProps(linkProps(props), { ref }), render }, "a")
+  const intent = useLinkIntent(props.href, onIntent)
+  return usePart(handle, "root", {}, { ...mergeProps(linkProps(props), { ref }, intent), render }, "a")
 }
 
-// Without `onFollow`, a router element or an `onClick` may route or cancel on the click, so a press must not
-// navigate first.
-function PlainLink({ render, fast = true, ...props }: Omit<LinkProps, "onFollow">) {
-  const ref = useFastLink<HTMLAnchorElement>({ enabled: fast && !props.external && !render && !props.onClick })
-  return renderElement("a", mergeProps(linkProps(props), { ref }), render)
+// Without `onFollow` or `onNavigate`, a router element or an `onClick` may route or cancel on the click, so a press
+// must not navigate first.
+function PlainLink({ render, fast = true, onNavigate, onIntent, ...props }: Omit<LinkProps, "onFollow">) {
+  const ref = useFastLink<HTMLAnchorElement>({
+    enabled: fast && !props.external && !render && (onNavigate !== undefined || !props.onClick),
+    onFollow: onNavigate ? (href, { event }) => onNavigate(href, event) : undefined,
+  })
+  const intent = useLinkIntent(props.href, onIntent)
+  const route = onNavigate && {
+    onClick: (event: MouseEvent<HTMLAnchorElement>) => {
+      const href = event.currentTarget.getAttribute("href")
+      if (event.defaultPrevented || !isPlainClick(event.nativeEvent) || href === null) return
+      event.preventDefault()
+      onNavigate(href, event.nativeEvent)
+    },
+  }
+  return renderElement("a", mergeProps(linkProps(props), { ref }, intent, route ?? {}), render)
 }
 
 function Link({ onFollow, ...props }: LinkProps) {

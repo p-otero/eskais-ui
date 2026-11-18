@@ -73,10 +73,14 @@ function renderTable(props: Partial<ServerDataTableProps<Task, typeof schema>> &
 }
 
 function titles() {
-  return screen
-    .getAllByRole("row")
-    .slice(1)
-    .map((row) => within(row).queryAllByRole("cell")[0]?.textContent)
+  return (
+    screen
+      .getAllByRole("row")
+      .slice(1)
+      // Placeholder rows hold the page's space while it loads; they aren't tasks.
+      .filter((row) => row.getAttribute("data-slot") !== "data-table-loading-row")
+      .map((row) => within(row).queryAllByRole("cell")[0]?.textContent)
+  )
 }
 
 function status() {

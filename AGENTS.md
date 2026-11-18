@@ -86,6 +86,7 @@ Two levels: surfaces (`shadow-surface`, `rounded-surface`, `backdrop-surface`) a
 1. Anything that floats above the page uses this level; in-page surfaces (cards, board columns, panels) stay on `shadow-surface`.
 2. To override the radius, use the parts (`rounded-lg border border-floating-border bg-floating shadow-floating backdrop-floating`) rather than `surface-floating` plus `rounded-*`: utility order decides which radius wins.
 3. `data-elevation="flat"` on `<html>` or any ancestor drops the floating shadow, backdrop and translucency, also inside a glass scope.
+4. A `backdrop-surface` inside another one doesn't blur again: a card in a glass board column shows the column through its own translucent fill. Each blur is a composited layer; the 200-card glass board went from 142 layers to 26.
 
 ## Text colours
 
@@ -248,18 +249,21 @@ The `lint-rules` item ships consumers the `react` and `ui-tailwind` presets with
 
 ## Commands
 
-| Task           | Command                                                                  |
-| -------------- | ------------------------------------------------------------------------ |
-| Lint           | `bun run lint`                                                           |
-| Format         | `bun run format`                                                         |
-| Typecheck      | `bun run typecheck`                                                      |
-| Tests          | `bun run test`                                                           |
-| Registry       | `bun run registry:build`, then commit `public/r`                         |
-| Everything     | `bun run verify`                                                         |
-| Showcase       | `bun run dev`                                                            |
-| Clean consumer | `node tooling/consumer-check.mjs npm` (or `pnpm`)                        |
-| Dependency age | `node tooling/check-dependency-age.mjs`: 7 days or older                 |
-| Contrast (CI)  | `bun run test:browser`: axe and pixel contrast in Chrome                 |
-| Contrast glass | `bun run test:browser:glass`: by hand, not in CI                         |
-| React Compiler | `bun run test:compiler`: compiler build, then the browser checks         |
-| Diff benchmark | `node tooling/diff-bench.mjs [--cpu=1,4]`; `--ci` runs in `test:browser` |
+| Task           | Command                                                                                |
+| -------------- | -------------------------------------------------------------------------------------- |
+| Lint           | `bun run lint`                                                                         |
+| Format         | `bun run format`                                                                       |
+| Typecheck      | `bun run typecheck`                                                                    |
+| Tests          | `bun run test`                                                                         |
+| Registry       | `bun run registry:build`, then commit `public/r`                                       |
+| Everything     | `bun run verify`                                                                       |
+| Showcase       | `bun run dev`                                                                          |
+| Clean consumer | `node tooling/consumer-check.mjs npm` (or `pnpm`)                                      |
+| Dependency age | `node tooling/check-dependency-age.mjs`: 7 days or older                               |
+| Contrast (CI)  | `bun run test:browser`: axe and pixel contrast in Chrome                               |
+| Contrast glass | `bun run test:browser:glass`: by hand, not in CI                                       |
+| React Compiler | `bun run test:compiler`: compiler build, then the browser checks                       |
+| Diff benchmark | `node tooling/diff-bench.mjs [--cpu=1,4]`; `--ci` runs in `test:browser`               |
+| Perf budgets   | `bun run perf:ci`: renders, forced layouts, layers, gzip per item                      |
+| Web Vitals     | `bun run perf:vitals`: TTFB, FCP, LCP, CLS, INP on cold loads (showcase blocks, site)  |
+| Perf benchmark | `bun run perf`: key-to-paint, held keys, overlays, mount; see `tooling/perf/README.md` |

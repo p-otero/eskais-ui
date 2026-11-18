@@ -99,19 +99,20 @@ const overlaySpinnerVariants = cva("absolute inset-0 m-auto", {
   defaultVariants: { variant: "default" },
 })
 
-// A leading icon is swapped for the spinner, so the width holds. Text alone stays in place with transparent colour
-// under a centered spinner. It stays a direct child: Chrome drops text inside a wrapper from a busy button's name.
-// Button-like triggers that take `buttonVariants` and `data-pending` use it too.
-function withSpinner(children: ReactNode, iconOnly: boolean, variant: ButtonVariants["variant"]) {
+// A leading icon is swapped for the spinner, so the width holds; text stays a direct child under a centered one (Chrome
+// drops text in a wrapper from a busy button's name). Triggers that take `buttonVariants` and `data-pending` use it
+// too. The spinner renders only while `busy`, so a thousand idle buttons carry no SVG; a caller that can't tell
+// leaves it true and lets `data-pending` show it.
+function withSpinner(children: ReactNode, iconOnly: boolean, variant: ButtonVariants["variant"], busy = true) {
   const items = Children.toArray(children)
   const leadingIcon = isValidElement(items[0]) && (items.length > 1 || iconOnly)
+  let spinner: ReactNode = null
+  if (busy && leadingIcon) spinner = <Spinner data-show="pending" />
+  else if (busy)
+    spinner = <Spinner data-show="pending" data-overlay="" className={overlaySpinnerVariants({ variant })} />
   return (
     <>
-      {leadingIcon ? (
-        <Spinner data-show="pending" />
-      ) : (
-        <Spinner data-show="pending" data-overlay="" className={overlaySpinnerVariants({ variant })} />
-      )}
+      {spinner}
       {children}
     </>
   )
@@ -171,9 +172,14 @@ function Button({
       className={cnState(buttonVariants({ variant, size, wrap: wrap && !iconOnly }), className)}
       {...props}
     >
-      {typeof children === "function"
-        ? (state: ButtonState) => withSpinner(content(children(state)), iconOnly, variant)
-        : withSpinner(content(children), iconOnly, variant)}
+      {(state: ButtonState) =>
+        withSpinner(
+          content(typeof children === "function" ? children(state) : children),
+          iconOnly,
+          variant,
+          loading === true || state.pending,
+        )
+      }
     </ButtonPrimitive>
   )
   if (!tooltipShown) return button

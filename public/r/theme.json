@@ -829,7 +829,11 @@
     },
     "@utility backdrop-surface": {
       "-webkit-backdrop-filter": "var(--surface-backdrop)",
-      "backdrop-filter": "var(--surface-backdrop)"
+      "backdrop-filter": "var(--surface-backdrop)",
+      ".backdrop-surface &": {
+        "-webkit-backdrop-filter": "none",
+        "backdrop-filter": "none"
+      }
     },
     "@utility backdrop-floating": {
       "-webkit-backdrop-filter": "var(--floating-backdrop)",

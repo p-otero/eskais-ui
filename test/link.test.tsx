@@ -122,3 +122,52 @@ test("BreadcrumbLink is a nav Link", () => {
 test("primitive: renders on the server", () => {
   checkServer(link, { href: "/docs", onFollow: () => {} }, `<root>Docs</root>`)
 })
+
+test("onNavigate routes a plain click and Enter on the client; a modified click stays the browser's", async () => {
+  const user = userEvent.setup()
+  const onNavigate = vi.fn()
+  render(
+    <Link href="/docs/list" onNavigate={onNavigate}>
+      List
+    </Link>,
+  )
+  const anchor = screen.getByRole("link", { name: "List" })
+  await user.click(anchor)
+  expect(onNavigate).toHaveBeenLastCalledWith("/docs/list", expect.any(MouseEvent))
+  anchor.focus()
+  await user.keyboard("{Enter}")
+  expect(onNavigate).toHaveBeenCalledTimes(2)
+  const native = new MouseEvent("click", { bubbles: true, cancelable: true, ctrlKey: true })
+  anchor.dispatchEvent(native)
+  expect(onNavigate).toHaveBeenCalledTimes(2)
+  expect(native.defaultPrevented).toBe(false)
+  // It routes without offering agents a follow action, unlike onFollow.
+  expect(agent.snapshot().some((entry) => entry.label === "List")).toBe(false)
+})
+
+test("onIntent runs after a 65 ms hover, on focus and on a mouse press, not on a touch press", async () => {
+  vi.useFakeTimers()
+  try {
+    const onIntent = vi.fn()
+    render(
+      <Link href="/docs/table" onIntent={onIntent}>
+        Table
+      </Link>,
+    )
+    const anchor = screen.getByRole("link", { name: "Table" })
+    anchor.dispatchEvent(new PointerEvent("pointerover", { bubbles: true, pointerType: "mouse" }))
+    anchor.dispatchEvent(new PointerEvent("pointerenter", { pointerType: "mouse" }))
+    vi.advanceTimersByTime(40)
+    expect(onIntent).not.toHaveBeenCalled()
+    vi.advanceTimersByTime(40)
+    expect(onIntent).toHaveBeenLastCalledWith("/docs/table")
+    anchor.dispatchEvent(new PointerEvent("pointerdown", { bubbles: true, pointerType: "touch" }))
+    expect(onIntent).toHaveBeenCalledTimes(1)
+    anchor.dispatchEvent(new PointerEvent("pointerdown", { bubbles: true, pointerType: "mouse" }))
+    expect(onIntent).toHaveBeenCalledTimes(2)
+    anchor.focus()
+    expect(onIntent).toHaveBeenCalledTimes(3)
+  } finally {
+    vi.useRealTimers()
+  }
+})

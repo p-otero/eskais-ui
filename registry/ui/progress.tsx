@@ -18,7 +18,8 @@ const gaugeClassNames = {
   value: "text-sm text-muted-foreground tabular-nums",
   track: "relative h-2 w-full basis-full overflow-hidden rounded-full bg-input/40",
   indicator:
-    "absolute inset-y-0 rounded-full bg-primary transition-all motion-reduce:transition-none group-data-[tone=neutral]/gauge:bg-muted-foreground group-data-[tone=info]/gauge:bg-info group-data-[tone=success]/gauge:bg-success group-data-[tone=warning]/gauge:bg-warning group-data-[tone=destructive]/gauge:bg-destructive group-data-[tone=violet]/gauge:bg-violet",
+    // oxlint-disable-next-line shadcn/no-arbitrary-values -- transitions only the properties that move; transition-all also eased every colour and shadow change
+    "absolute inset-y-0 rounded-full bg-primary transition-[width,background-color] motion-reduce:transition-none group-data-[tone=neutral]/gauge:bg-muted-foreground group-data-[tone=info]/gauge:bg-info group-data-[tone=success]/gauge:bg-success group-data-[tone=warning]/gauge:bg-warning group-data-[tone=destructive]/gauge:bg-destructive group-data-[tone=violet]/gauge:bg-violet",
 }
 
 /** Colours the indicator by what the value means; without it the indicator takes the primary colour. */

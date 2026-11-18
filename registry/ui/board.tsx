@@ -3,6 +3,7 @@
 import type { ComponentProps, ReactNode } from "react"
 
 import { cn } from "@/lib/utils"
+import { BoardNavigationProvider, useBoardNavigation } from "@/components/ui/board-navigation"
 import {
   ScrollArea,
   ScrollAreaContent,
@@ -36,12 +37,13 @@ function Board({
   "aria-labelledby": ariaLabelledBy,
   ...props
 }: BoardProps) {
+  const navigation = useBoardNavigation()
   return (
     <ScrollArea type="auto" className={cn("w-full", className)} {...props}>
       <ScrollAreaViewport render={<section />} aria-label={ariaLabel} aria-labelledby={ariaLabelledBy}>
         {/* oxlint-disable-next-line p-otero/spacing-tokens -- room for the h-2 horizontal scrollbar so it never covers the columns */}
         <ScrollAreaContent render={<ul />} className="flex w-max min-w-full items-start gap-section pb-2">
-          {children}
+          <BoardNavigationProvider handle={navigation}>{children}</BoardNavigationProvider>
         </ScrollAreaContent>
       </ScrollAreaViewport>
       <ScrollAreaScrollbar orientation="horizontal">

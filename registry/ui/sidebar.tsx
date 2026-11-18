@@ -139,7 +139,8 @@ function Sidebar({
       }}
       className={cn(
         surfaceClassName,
-        "group/sidebar h-full w-(--sidebar-width) shrink-0 overflow-hidden border-e bg-muted/(--glass-opacity) p-items backdrop-surface transition-all duration-panel ease-standard data-collapsed:w-(--sidebar-rail-width) motion-reduce:transition-none",
+        // oxlint-disable-next-line shadcn/no-arbitrary-values -- transitions only the properties that move; transition-all also eased every colour and shadow change
+        "group/sidebar h-full w-(--sidebar-width) shrink-0 overflow-hidden border-e bg-muted/(--glass-opacity) p-items backdrop-surface transition-[width] duration-panel ease-standard data-collapsed:w-(--sidebar-rail-width) motion-reduce:transition-none",
         collapse === "hide" &&
           "data-collapsed:invisible data-collapsed:w-0 data-collapsed:border-e-0 data-collapsed:px-0",
         className,

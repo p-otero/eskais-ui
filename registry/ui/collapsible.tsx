@@ -42,7 +42,8 @@ function CollapsiblePanel({ className, ...props }: ComponentProps<typeof Collaps
   return (
     <CollapsiblePanelPrimitive
       className={cnState(
-        "h-(--collapsible-panel-height) transition-all duration-panel ease-standard data-ending-style:h-0 data-ending-style:overflow-hidden data-starting-style:h-0 data-starting-style:overflow-hidden",
+        // oxlint-disable-next-line shadcn/no-arbitrary-values -- transitions only the properties that move; transition-all also eased every colour and shadow change
+        "h-(--collapsible-panel-height) transition-[height] duration-panel ease-standard data-ending-style:h-0 data-ending-style:overflow-hidden data-starting-style:h-0 data-starting-style:overflow-hidden",
         className,
       )}
       {...props}

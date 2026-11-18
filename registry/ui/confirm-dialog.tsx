@@ -128,7 +128,7 @@ function ConfirmDialog({
           aria-busy={triggerPending || undefined}
           className={buttonVariants({ variant })}
         >
-          {triggerPending === undefined ? trigger : withPendingSpinner(trigger, false, variant)}
+          {triggerPending === undefined ? trigger : withPendingSpinner(trigger, false, variant, triggerPending)}
         </AlertDialogTrigger>
       )}
       <AlertDialogBackdrop className={backdropClassName} />

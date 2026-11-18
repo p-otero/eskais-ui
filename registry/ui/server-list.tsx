@@ -7,6 +7,7 @@ import { DataState } from "@/components/ui/data-state"
 import { FilterScope } from "@/components/ui/filter-scope"
 import { FilterSearch } from "@/components/ui/filter-search"
 import { List, type ListProps } from "@/components/ui/list"
+import { Skeleton } from "@/components/ui/skeleton"
 import { usePageController, useServerInfinite } from "@/components/ui/use-server-data"
 import { useDelayedFlag, useReachEnd } from "@/components/ui/use-server-table"
 import { searchFieldOf, type FilterSchema, type FilterValues } from "@/lib/filter-schema"
@@ -70,6 +71,22 @@ type ServerListProps<T, S extends FilterSchema> = Pick<
  * A List over a `PageSource` that grows as you scroll: ListItem rows, virtualized past 200, one tab stop with row
  * navigation, the next page when the end comes into view, and a Load more button for keyboards and agents.
  */
+// Rows shaped like a ListItem's title and subtitle, enough to push the footer out of view as the first page will, so
+// the page loads without moving it.
+function ServerListLoading({ rows, label }: { rows: number; label: string }) {
+  return (
+    <div data-slot="server-list-loading" aria-busy="true" className="flex min-w-0 flex-col">
+      <output className="sr-only">{label}</output>
+      {Array.from({ length: rows }, (_, row) => (
+        <div key={row} aria-hidden="true" className="flex flex-col gap-inline px-inset-item py-inset-item">
+          <Skeleton className="h-lh w-2/3 max-w-80" />
+          <Skeleton className="h-4 w-1/3 max-w-40" />
+        </div>
+      ))}
+    </div>
+  )
+}
+
 function ServerList<T, S extends FilterSchema = Record<never, never>>({
   "aria-label": label,
   source,
@@ -134,6 +151,7 @@ function ServerList<T, S extends FilterSchema = Record<never, never>>({
         error={rows.error}
         onRetry={rows.retry}
         labels={labels}
+        loading={<ServerListLoading rows={Math.min(pageSize, 20)} label={labels.loading} />}
       >
         {(items) => (
           <div aria-busy={(rows.fetching && !rows.loadingMore) || undefined} className="flex min-w-0 flex-col">

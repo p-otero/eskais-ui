@@ -123,6 +123,18 @@ test("loading marks the button busy, keeps focus and ignores presses and submits
   expect(submit).toHaveBeenCalledOnce()
 })
 
+test("an idle button renders no spinner; one appears while it's busy", async () => {
+  const user = userEvent.setup()
+  const pending = Promise.withResolvers<void>()
+  render(<Button onClick={() => pending.promise}>Save</Button>)
+  const button = screen.getByRole("button", { name: "Save" })
+  expect(button.querySelector("[data-slot=spinner]")).toBeNull()
+  await user.click(button)
+  expect(button.querySelector("[data-slot=spinner]")).not.toBeNull()
+  await act(async () => pending.resolve())
+  expect(button.querySelector("[data-slot=spinner]")).toBeNull()
+})
+
 test("the spinner takes the leading icon's place, so the width holds", () => {
   const { container } = render(
     <Button loading>

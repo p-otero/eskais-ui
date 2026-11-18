@@ -1,0 +1,2965 @@
+{
+  "date": "2026-11-18T12:58:51.011Z",
+  "network": "4g",
+  "repeat": 3,
+  "rows": [
+    {
+      "source": "normal@s14",
+      "cpu": "1×",
+      "target": "shell",
+      "runs": 3,
+      "ttfb": 150.9,
+      "fcp": 3380,
+      "lcp": 3380,
+      "cls": 0,
+      "clsMax": 0,
+      "inp": 24,
+      "lcpElement": "p[page-header-description]",
+      "shifts": []
+    },
+    {
+      "source": "normal@s14",
+      "cpu": "1×",
+      "target": "dashboard-grid",
+      "runs": 3,
+      "ttfb": 150.9,
+      "fcp": 3444,
+      "lcp": 3444,
+      "cls": 0,
+      "clsMax": 0,
+      "inp": 24,
+      "lcpElement": "div[card-description]",
+      "shifts": [
+        {
+          "at": 3639,
+          "value": 0,
+          "sources": ["li[chart-legend-item]"]
+        }
+      ]
+    },
+    {
+      "source": "normal@s14",
+      "cpu": "1×",
+      "target": "settings-page",
+      "runs": 3,
+      "ttfb": 150.9,
+      "fcp": 3384,
+      "lcp": 3384,
+      "cls": 0.0001,
+      "clsMax": 0.0001,
+      "inp": 16,
+      "lcpElement": "p[field-description]#ui-sdk-_r_f_-description",
+      "shifts": [
+        {
+          "at": 3586,
+          "value": 0.0001,
+          "sources": ["div", "div"]
+        }
+      ]
+    },
+    {
+      "source": "normal@s14",
+      "cpu": "1×",
+      "target": "document-workspace",
+      "runs": 3,
+      "ttfb": 150.8,
+      "fcp": 3428,
+      "lcp": 3428,
+      "cls": 0.0011,
+      "clsMax": 0.0011,
+      "inp": 16,
+      "lcpElement": "div",
+      "shifts": [
+        {
+          "at": 3622,
+          "value": 0.0001,
+          "sources": ["#text"]
+        },
+        {
+          "at": 3630,
+          "value": 0.001,
+          "sources": ["#text", "#text", "#text", "#text", "#text"]
+        }
+      ]
+    },
+    {
+      "source": "normal@s14",
+      "cpu": "1×",
+      "target": "master-detail",
+      "runs": 3,
+      "ttfb": 150.9,
+      "fcp": 3368,
+      "lcp": 3368,
+      "cls": 0.0001,
+      "clsMax": 0.0001,
+      "inp": 16,
+      "lcpElement": "div[empty-description]",
+      "shifts": [
+        {
+          "at": 3535,
+          "value": 0.0001,
+          "sources": ["div[empty-header]", "span[badge]"]
+        }
+      ]
+    },
+    {
+      "source": "normal@s14",
+      "cpu": "1×",
+      "target": "server-data-table",
+      "runs": 3,
+      "ttfb": 150.8,
+      "fcp": 3368,
+      "lcp": 4184,
+      "cls": 0.0727,
+      "clsMax": 0.0727,
+      "inp": 16,
+      "lcpElement": "td[table-cell]",
+      "shifts": [
+        {
+          "at": 3544,
+          "value": 0.0002,
+          "sources": ["th[table-head]", "td[table-cell]", "td[table-cell]", "td[table-cell]", "td[table-cell]"]
+        },
+        {
+          "at": 4175,
+          "value": 0.0725,
+          "sources": ["div[server-data-table-footer]", "th[table-head]", "th[table-head]", "th[table-head]"]
+        }
+      ]
+    },
+    {
+      "source": "normal@s14",
+      "cpu": "1×",
+      "target": "server-list",
+      "runs": 3,
+      "ttfb": 150.9,
+      "fcp": 3348,
+      "lcp": 4176,
+      "cls": 0.0214,
+      "clsMax": 0.0214,
+      "inp": 16,
+      "lcpElement": "span[list-item-title]",
+      "shifts": [
+        {
+          "at": 4156,
+          "value": 0.0214,
+          "sources": ["div[server-list-footer]"]
+        }
+      ]
+    },
+    {
+      "source": "normal@s14",
+      "cpu": "4×",
+      "target": "shell",
+      "runs": 3,
+      "ttfb": 150.9,
+      "fcp": 4096,
+      "lcp": 4096,
+      "cls": 0,
+      "clsMax": 0,
+      "inp": 80,
+      "lcpElement": "p[page-header-description]",
+      "shifts": []
+    },
+    {
+      "source": "normal@s14",
+      "cpu": "4×",
+      "target": "dashboard-grid",
+      "runs": 3,
+      "ttfb": 150.9,
+      "fcp": 4496,
+      "lcp": 4496,
+      "cls": 0,
+      "clsMax": 0,
+      "inp": 48,
+      "lcpElement": "div[card-description]",
+      "shifts": [
+        {
+          "at": 4717,
+          "value": 0,
+          "sources": ["li[chart-legend-item]"]
+        }
+      ]
+    },
+    {
+      "source": "normal@s14",
+      "cpu": "4×",
+      "target": "settings-page",
+      "runs": 3,
+      "ttfb": 150.9,
+      "fcp": 4180,
+      "lcp": 4180,
+      "cls": 0.0001,
+      "clsMax": 0.0001,
+      "inp": 16,
+      "lcpElement": "p[field-description]#ui-sdk-_r_f_-description",
+      "shifts": [
+        {
+          "at": 4417,
+          "value": 0.0001,
+          "sources": ["div", "div"]
+        }
+      ]
+    },
+    {
+      "source": "normal@s14",
+      "cpu": "4×",
+      "target": "document-workspace",
+      "runs": 3,
+      "ttfb": 150.9,
+      "fcp": 4512,
+      "lcp": 4512,
+      "cls": 0.0011,
+      "clsMax": 0.0011,
+      "inp": 16,
+      "lcpElement": "div",
+      "shifts": [
+        {
+          "at": 4754,
+          "value": 0.0001,
+          "sources": ["#text"]
+        },
+        {
+          "at": 4798,
+          "value": 0.001,
+          "sources": ["#text", "#text", "#text", "#text", "#text"]
+        }
+      ]
+    },
+    {
+      "source": "normal@s14",
+      "cpu": "4×",
+      "target": "master-detail",
+      "runs": 3,
+      "ttfb": 150.9,
+      "fcp": 4096,
+      "lcp": 4096,
+      "cls": 0.0001,
+      "clsMax": 0.0001,
+      "inp": 24,
+      "lcpElement": "div[empty-description]",
+      "shifts": [
+        {
+          "at": 4280,
+          "value": 0.0001,
+          "sources": ["div[empty-header]", "span[badge]"]
+        }
+      ]
+    },
+    {
+      "source": "normal@s14",
+      "cpu": "4×",
+      "target": "server-data-table",
+      "runs": 3,
+      "ttfb": 150.9,
+      "fcp": 4116,
+      "lcp": 5136,
+      "cls": 0.0727,
+      "clsMax": 0.0727,
+      "inp": 24,
+      "lcpElement": "td[table-cell]",
+      "shifts": [
+        {
+          "at": 4276,
+          "value": 0.0002,
+          "sources": ["th[table-head]", "td[table-cell]", "td[table-cell]", "td[table-cell]", "td[table-cell]"]
+        },
+        {
+          "at": 5114,
+          "value": 0.0725,
+          "sources": ["div[server-data-table-footer]", "th[table-head]", "th[table-head]", "th[table-head]"]
+        }
+      ]
+    },
+    {
+      "source": "normal@s14",
+      "cpu": "4×",
+      "target": "server-list",
+      "runs": 3,
+      "ttfb": 150.8,
+      "fcp": 3916,
+      "lcp": 4944,
+      "cls": 0.0214,
+      "clsMax": 0.0214,
+      "inp": 24,
+      "lcpElement": "span[list-item-title]",
+      "shifts": [
+        {
+          "at": 4972,
+          "value": 0.0214,
+          "sources": ["div[server-list-footer]"]
+        }
+      ]
+    },
+    {
+      "source": "normal@s15",
+      "cpu": "1×",
+      "target": "shell",
+      "runs": 3,
+      "ttfb": 150.9,
+      "fcp": 3376,
+      "lcp": 3376,
+      "cls": 0,
+      "clsMax": 0,
+      "inp": 24,
+      "lcpElement": "p[page-header-description]",
+      "shifts": []
+    },
+    {
+      "source": "normal@s15",
+      "cpu": "1×",
+      "target": "dashboard-grid",
+      "runs": 3,
+      "ttfb": 150.9,
+      "fcp": 3420,
+      "lcp": 3420,
+      "cls": 0,
+      "clsMax": 0,
+      "inp": 24,
+      "lcpElement": "div[card-description]",
+      "shifts": [
+        {
+          "at": 3619,
+          "value": 0,
+          "sources": ["li[chart-legend-item]"]
+        }
+      ]
+    },
+    {
+      "source": "normal@s15",
+      "cpu": "1×",
+      "target": "settings-page",
+      "runs": 3,
+      "ttfb": 150.9,
+      "fcp": 3368,
+      "lcp": 3368,
+      "cls": 0.0001,
+      "clsMax": 0.0001,
+      "inp": 16,
+      "lcpElement": "p[field-description]#ui-sdk-_r_f_-description",
+      "shifts": [
+        {
+          "at": 3558,
+          "value": 0.0001,
+          "sources": ["div", "div"]
+        }
+      ]
+    },
+    {
+      "source": "normal@s15",
+      "cpu": "1×",
+      "target": "document-workspace",
+      "runs": 3,
+      "ttfb": 150.9,
+      "fcp": 3424,
+      "lcp": 3424,
+      "cls": 0.0011,
+      "clsMax": 0.0011,
+      "inp": 16,
+      "lcpElement": "div",
+      "shifts": [
+        {
+          "at": 3587,
+          "value": 0.0001,
+          "sources": ["#text"]
+        },
+        {
+          "at": 3595,
+          "value": 0.001,
+          "sources": ["#text", "#text", "#text", "#text", "#text"]
+        }
+      ]
+    },
+    {
+      "source": "normal@s15",
+      "cpu": "1×",
+      "target": "master-detail",
+      "runs": 3,
+      "ttfb": 150.8,
+      "fcp": 3364,
+      "lcp": 3364,
+      "cls": 0.0001,
+      "clsMax": 0.0001,
+      "inp": 16,
+      "lcpElement": "div[empty-description]",
+      "shifts": [
+        {
+          "at": 3536,
+          "value": 0.0001,
+          "sources": ["div[empty-header]", "span[badge]"]
+        }
+      ]
+    },
+    {
+      "source": "normal@s15",
+      "cpu": "1×",
+      "target": "server-data-table",
+      "runs": 3,
+      "ttfb": 150.9,
+      "fcp": 3392,
+      "lcp": 4184,
+      "cls": 0.0051,
+      "clsMax": 0.0051,
+      "inp": 24,
+      "lcpElement": "td[table-cell]",
+      "shifts": [
+        {
+          "at": 3551,
+          "value": 0.0009,
+          "sources": ["td[table-cell]", "td[table-cell]", "td[table-cell]", "td[table-cell]", "td[table-cell]"]
+        },
+        {
+          "at": 4166,
+          "value": 0.0043,
+          "sources": ["th[table-head]", "th[table-head]", "th[table-head]"]
+        }
+      ]
+    },
+    {
+      "source": "normal@s15",
+      "cpu": "1×",
+      "target": "server-list",
+      "runs": 3,
+      "ttfb": 150.9,
+      "fcp": 3336,
+      "lcp": 4160,
+      "cls": 0,
+      "clsMax": 0,
+      "inp": 16,
+      "lcpElement": "span[list-item-title]",
+      "shifts": []
+    },
+    {
+      "source": "normal@s15",
+      "cpu": "4×",
+      "target": "shell",
+      "runs": 3,
+      "ttfb": 150.9,
+      "fcp": 4156,
+      "lcp": 4156,
+      "cls": 0,
+      "clsMax": 0,
+      "inp": 88,
+      "lcpElement": "p[page-header-description]",
+      "shifts": []
+    },
+    {
+      "source": "normal@s15",
+      "cpu": "4×",
+      "target": "dashboard-grid",
+      "runs": 3,
+      "ttfb": 150.9,
+      "fcp": 4584,
+      "lcp": 4584,
+      "cls": 0,
+      "clsMax": 0,
+      "inp": 40,
+      "lcpElement": "div[card-description]",
+      "shifts": [
+        {
+          "at": 4814,
+          "value": 0,
+          "sources": ["li[chart-legend-item]"]
+        }
+      ]
+    },
+    {
+      "source": "normal@s15",
+      "cpu": "4×",
+      "target": "settings-page",
+      "runs": 3,
+      "ttfb": 151,
+      "fcp": 4288,
+      "lcp": 4288,
+      "cls": 0.0001,
+      "clsMax": 0.0001,
+      "inp": 16,
+      "lcpElement": "p[field-description]#ui-sdk-_r_f_-description",
+      "shifts": [
+        {
+          "at": 4511,
+          "value": 0.0001,
+          "sources": ["div", "div"]
+        }
+      ]
+    },
+    {
+      "source": "normal@s15",
+      "cpu": "4×",
+      "target": "document-workspace",
+      "runs": 3,
+      "ttfb": 150.8,
+      "fcp": 4528,
+      "lcp": 4528,
+      "cls": 0.0011,
+      "clsMax": 0.0011,
+      "inp": 24,
+      "lcpElement": "div",
+      "shifts": [
+        {
+          "at": 10644,
+          "value": 0.0011,
+          "sources": ["#text", "#text", "#text", "#text", "#text"]
+        }
+      ]
+    },
+    {
+      "source": "normal@s15",
+      "cpu": "4×",
+      "target": "master-detail",
+      "runs": 3,
+      "ttfb": 150.8,
+      "fcp": 4148,
+      "lcp": 4148,
+      "cls": 0.0001,
+      "clsMax": 0.0001,
+      "inp": 24,
+      "lcpElement": "div[empty-description]",
+      "shifts": [
+        {
+          "at": 4350,
+          "value": 0.0001,
+          "sources": ["div[empty-header]", "span[badge]"]
+        }
+      ]
+    },
+    {
+      "source": "normal@s15",
+      "cpu": "4×",
+      "target": "server-data-table",
+      "runs": 3,
+      "ttfb": 150.8,
+      "fcp": 4104,
+      "lcp": 5076,
+      "cls": 0.0051,
+      "clsMax": 0.0051,
+      "inp": 24,
+      "lcpElement": "td[table-cell]",
+      "shifts": [
+        {
+          "at": 4336,
+          "value": 0.0009,
+          "sources": ["td[table-cell]", "td[table-cell]", "td[table-cell]", "td[table-cell]", "td[table-cell]"]
+        },
+        {
+          "at": 5043,
+          "value": 0.0043,
+          "sources": ["th[table-head]", "th[table-head]", "th[table-head]"]
+        }
+      ]
+    },
+    {
+      "source": "normal@s15",
+      "cpu": "4×",
+      "target": "server-list",
+      "runs": 3,
+      "ttfb": 150.9,
+      "fcp": 4024,
+      "lcp": 5024,
+      "cls": 0,
+      "clsMax": 0,
+      "inp": 16,
+      "lcpElement": "span[list-item-title]",
+      "shifts": []
+    },
+    {
+      "source": "site@s14",
+      "cpu": "1×",
+      "target": "site:landing",
+      "runs": 3,
+      "ttfb": 150.9,
+      "fcp": 2164,
+      "lcp": 4480,
+      "cls": 0.0001,
+      "clsMax": 0.0001,
+      "inp": 16,
+      "lcpElement": "h1[hero-title]#_r_h_",
+      "shifts": [
+        {
+          "at": 2468,
+          "value": 0,
+          "sources": ["li[navigation-menu-item]", "svg"]
+        },
+        {
+          "at": 4583,
+          "value": 0.0001,
+          "sources": ["#text"]
+        }
+      ]
+    },
+    {
+      "source": "site@s14",
+      "cpu": "1×",
+      "target": "site:data-table",
+      "runs": 3,
+      "ttfb": 150.8,
+      "fcp": 2144,
+      "lcp": 2996,
+      "cls": 0.0324,
+      "clsMax": 0.0324,
+      "inp": 40,
+      "lcpElement": "p",
+      "shifts": [
+        {
+          "at": 3278,
+          "value": 0.0009,
+          "sources": ["#text", "#text", "#text", "code[code]", "code[code]"]
+        },
+        {
+          "at": 3412,
+          "value": 0.0271,
+          "sources": ["div", "section", "section", "button[button]"]
+        },
+        {
+          "at": 3715,
+          "value": 0.0044,
+          "sources": ["li", "li", "li"]
+        }
+      ]
+    },
+    {
+      "source": "site@s14",
+      "cpu": "1×",
+      "target": "site:server-data",
+      "runs": 3,
+      "ttfb": 150.9,
+      "fcp": 2140,
+      "lcp": 3272,
+      "cls": 0.0562,
+      "clsMax": 0.0562,
+      "inp": 32,
+      "lcpElement": "li",
+      "shifts": [
+        {
+          "at": 3254,
+          "value": 0.0497,
+          "sources": ["nav[docs-pager]"]
+        },
+        {
+          "at": 3258,
+          "value": 0.0006,
+          "sources": ["li", "li", "li", "li", "li"]
+        },
+        {
+          "at": 3452,
+          "value": 0.0059,
+          "sources": ["div[code-block]", "li", "li", "li", "#text"]
+        }
+      ]
+    },
+    {
+      "source": "site@s14",
+      "cpu": "4×",
+      "target": "site:landing",
+      "runs": 3,
+      "ttfb": 150.8,
+      "fcp": 2396,
+      "lcp": 5060,
+      "cls": 0,
+      "clsMax": 0.0001,
+      "inp": 40,
+      "lcpElement": "h1[hero-title]#_r_h_",
+      "shifts": [
+        {
+          "at": 2614,
+          "value": 0,
+          "sources": ["li[navigation-menu-item]", "svg"]
+        },
+        {
+          "at": 5071,
+          "value": 0.0001,
+          "sources": ["#text"]
+        }
+      ]
+    },
+    {
+      "source": "site@s14",
+      "cpu": "4×",
+      "target": "site:data-table",
+      "runs": 3,
+      "ttfb": 150.7,
+      "fcp": 2304,
+      "lcp": 3472,
+      "cls": 0.0321,
+      "clsMax": 0.0321,
+      "inp": 176,
+      "lcpElement": "p",
+      "shifts": [
+        {
+          "at": 3609,
+          "value": 0.0271,
+          "sources": ["div", "section", "section", "button[button]"]
+        },
+        {
+          "at": 3651,
+          "value": 0.0006,
+          "sources": ["#text", "code[code]", "code[code]", "a[link]", "code[code]"]
+        },
+        {
+          "at": 3913,
+          "value": 0.0044,
+          "sources": ["li", "li", "li"]
+        }
+      ]
+    },
+    {
+      "source": "site@s14",
+      "cpu": "4×",
+      "target": "site:server-data",
+      "runs": 3,
+      "ttfb": 150.8,
+      "fcp": 2312,
+      "lcp": 3616,
+      "cls": 0.0562,
+      "clsMax": 0.0562,
+      "inp": 144,
+      "lcpElement": "li",
+      "shifts": [
+        {
+          "at": 3585,
+          "value": 0.0497,
+          "sources": ["nav[docs-pager]"]
+        },
+        {
+          "at": 3612,
+          "value": 0.0006,
+          "sources": ["li", "li", "li", "li", "li"]
+        },
+        {
+          "at": 3864,
+          "value": 0.0059,
+          "sources": ["div[code-block]", "li", "li", "li", "#text"]
+        }
+      ]
+    },
+    {
+      "source": "site@s15",
+      "cpu": "1×",
+      "target": "site:landing",
+      "runs": 3,
+      "ttfb": 150.8,
+      "fcp": 2156,
+      "lcp": 4496,
+      "cls": 0.0001,
+      "clsMax": 0.0001,
+      "inp": 16,
+      "lcpElement": "h1[hero-title]#_r_h_",
+      "shifts": [
+        {
+          "at": 2472,
+          "value": 0,
+          "sources": ["li[navigation-menu-item]", "svg"]
+        },
+        {
+          "at": 4599,
+          "value": 0.0001,
+          "sources": ["#text"]
+        }
+      ]
+    },
+    {
+      "source": "site@s15",
+      "cpu": "1×",
+      "target": "site:data-table",
+      "runs": 3,
+      "ttfb": 150.9,
+      "fcp": 2136,
+      "lcp": 2956,
+      "cls": 0.005,
+      "clsMax": 0.005,
+      "inp": 40,
+      "lcpElement": "p",
+      "shifts": [
+        {
+          "at": 3618,
+          "value": 0.0044,
+          "sources": ["li", "li", "li"]
+        },
+        {
+          "at": 3626,
+          "value": 0.0006,
+          "sources": ["#text", "code[code]", "code[code]", "a[link]", "code[code]"]
+        }
+      ]
+    },
+    {
+      "source": "site@s15",
+      "cpu": "1×",
+      "target": "site:server-data",
+      "runs": 3,
+      "ttfb": 150.9,
+      "fcp": 2132,
+      "lcp": 3264,
+      "cls": 0.0065,
+      "clsMax": 0.0065,
+      "inp": 40,
+      "lcpElement": "li",
+      "shifts": [
+        {
+          "at": 3262,
+          "value": 0.0006,
+          "sources": ["li", "li", "li", "li", "li"]
+        },
+        {
+          "at": 3451,
+          "value": 0.0059,
+          "sources": ["div[code-block]", "li", "li", "li", "#text"]
+        }
+      ]
+    },
+    {
+      "source": "site@s15",
+      "cpu": "4×",
+      "target": "site:landing",
+      "runs": 3,
+      "ttfb": 150.8,
+      "fcp": 2388,
+      "lcp": 5008,
+      "cls": 0,
+      "clsMax": 0,
+      "inp": 48,
+      "lcpElement": "h1[hero-title]#_r_h_",
+      "shifts": [
+        {
+          "at": 2604,
+          "value": 0,
+          "sources": ["li[navigation-menu-item]", "svg"]
+        }
+      ]
+    },
+    {
+      "source": "site@s15",
+      "cpu": "4×",
+      "target": "site:data-table",
+      "runs": 3,
+      "ttfb": 150.8,
+      "fcp": 2320,
+      "lcp": 3308,
+      "cls": 0.0092,
+      "clsMax": 0.0092,
+      "inp": 168,
+      "lcpElement": "p",
+      "shifts": [
+        {
+          "at": 4044,
+          "value": 0.0092,
+          "sources": ["#text", "li", "li", "li", "code[code]"]
+        }
+      ]
+    },
+    {
+      "source": "site@s15",
+      "cpu": "4×",
+      "target": "site:server-data",
+      "runs": 3,
+      "ttfb": 150.8,
+      "fcp": 2332,
+      "lcp": 3600,
+      "cls": 0.0065,
+      "clsMax": 0.0065,
+      "inp": 144,
+      "lcpElement": "li",
+      "shifts": [
+        {
+          "at": 3593,
+          "value": 0.0006,
+          "sources": ["li", "li", "li", "li", "li"]
+        },
+        {
+          "at": 3856,
+          "value": 0.0059,
+          "sources": ["div[code-block]", "li", "li", "li", "#text"]
+        }
+      ]
+    }
+  ],
+  "raw": {
+    "normal@s14|1×|shell": [
+      {
+        "ttfb": 151,
+        "fcp": 3412,
+        "lcp": 3412,
+        "lcpElement": "p[page-header-description]",
+        "cls": 0,
+        "shifts": [],
+        "inp": 48
+      },
+      {
+        "ttfb": 150.9000000357628,
+        "fcp": 3348,
+        "lcp": 3348,
+        "lcpElement": "p[page-header-description]",
+        "cls": 0,
+        "shifts": [],
+        "inp": 24
+      },
+      {
+        "ttfb": 150.89999997615814,
+        "fcp": 3380,
+        "lcp": 3380,
+        "lcpElement": "p[page-header-description]",
+        "cls": 0,
+        "shifts": [],
+        "inp": 24
+      }
+    ],
+    "normal@s14|1×|dashboard-grid": [
+      {
+        "ttfb": 150.9000000357628,
+        "fcp": 3464,
+        "lcp": 3464,
+        "lcpElement": "div[card-description]",
+        "cls": 0.0000017547607421875,
+        "shifts": [
+          {
+            "at": 3639,
+            "value": 0,
+            "sources": ["li[chart-legend-item]"]
+          }
+        ],
+        "inp": 80
+      },
+      {
+        "ttfb": 151,
+        "fcp": 3408,
+        "lcp": 3408,
+        "lcpElement": "div[card-description]",
+        "cls": 0.0000017547607421875,
+        "shifts": [
+          {
+            "at": 3598,
+            "value": 0,
+            "sources": ["li[chart-legend-item]"]
+          }
+        ],
+        "inp": 24
+      },
+      {
+        "ttfb": 150.9000000357628,
+        "fcp": 3444,
+        "lcp": 3444,
+        "lcpElement": "div[card-description]",
+        "cls": 0.0000017547607421875,
+        "shifts": [
+          {
+            "at": 3637,
+            "value": 0,
+            "sources": ["li[chart-legend-item]"]
+          }
+        ],
+        "inp": 24
+      }
+    ],
+    "normal@s14|1×|settings-page": [
+      {
+        "ttfb": 150.89999997615814,
+        "fcp": 3404,
+        "lcp": 3404,
+        "lcpElement": "p[field-description]#ui-sdk-_r_f_-description",
+        "cls": 0.00005768296983506944,
+        "shifts": [
+          {
+            "at": 3586,
+            "value": 0.0001,
+            "sources": ["div", "div"]
+          }
+        ],
+        "inp": 16
+      },
+      {
+        "ttfb": 151,
+        "fcp": 3384,
+        "lcp": 3384,
+        "lcpElement": "p[field-description]#ui-sdk-_r_f_-description",
+        "cls": 0.00005768296983506944,
+        "shifts": [
+          {
+            "at": 3568,
+            "value": 0.0001,
+            "sources": ["div", "div"]
+          }
+        ],
+        "inp": 24
+      },
+      {
+        "ttfb": 150.89999997615814,
+        "fcp": 3368,
+        "lcp": 3368,
+        "lcpElement": "p[field-description]#ui-sdk-_r_f_-description",
+        "cls": 0.00005768296983506944,
+        "shifts": [
+          {
+            "at": 3557,
+            "value": 0.0001,
+            "sources": ["div", "div"]
+          }
+        ],
+        "inp": 16
+      }
+    ],
+    "normal@s14|1×|document-workspace": [
+      {
+        "ttfb": 150.69999998807907,
+        "fcp": 3488,
+        "lcp": 3488,
+        "lcpElement": "div",
+        "cls": 0.001065185907151964,
+        "shifts": [
+          {
+            "at": 3622,
+            "value": 0.0001,
+            "sources": ["#text"]
+          },
+          {
+            "at": 3630,
+            "value": 0.001,
+            "sources": ["#text", "#text", "#text", "#text", "#text"]
+          }
+        ],
+        "inp": 16
+      },
+      {
+        "ttfb": 150.80000001192093,
+        "fcp": 3428,
+        "lcp": 3428,
+        "lcpElement": "div",
+        "cls": 0.001065185907151964,
+        "shifts": [
+          {
+            "at": 3604,
+            "value": 0.0001,
+            "sources": ["#text"]
+          },
+          {
+            "at": 3612,
+            "value": 0.001,
+            "sources": ["#text", "#text", "#text", "#text", "#text"]
+          }
+        ],
+        "inp": 24
+      },
+      {
+        "ttfb": 150.79999995231628,
+        "fcp": 3424,
+        "lcp": 3424,
+        "lcpElement": "div",
+        "cls": 0.001065185907151964,
+        "shifts": [
+          {
+            "at": 3601,
+            "value": 0.0001,
+            "sources": ["#text"]
+          },
+          {
+            "at": 3609,
+            "value": 0.001,
+            "sources": ["#text", "#text", "#text", "#text", "#text"]
+          }
+        ],
+        "inp": 16
+      }
+    ],
+    "normal@s14|1×|master-detail": [
+      {
+        "ttfb": 150.89999997615814,
+        "fcp": 3384,
+        "lcp": 3384,
+        "lcpElement": "div[empty-description]",
+        "cls": 0.0000787841796875,
+        "shifts": [
+          {
+            "at": 3535,
+            "value": 0.0001,
+            "sources": ["div[empty-header]", "span[badge]"]
+          }
+        ],
+        "inp": 16
+      },
+      {
+        "ttfb": 150.9000000357628,
+        "fcp": 3368,
+        "lcp": 3368,
+        "lcpElement": "div[empty-description]",
+        "cls": 0.0000787841796875,
+        "shifts": [
+          {
+            "at": 3535,
+            "value": 0.0001,
+            "sources": ["div[empty-header]", "span[badge]"]
+          }
+        ],
+        "inp": 16
+      },
+      {
+        "ttfb": 150.89999997615814,
+        "fcp": 3368,
+        "lcp": 3368,
+        "lcpElement": "div[empty-description]",
+        "cls": 0.0000787841796875,
+        "shifts": [
+          {
+            "at": 3536,
+            "value": 0.0001,
+            "sources": ["div[empty-header]", "span[badge]"]
+          }
+        ],
+        "inp": 16
+      }
+    ],
+    "normal@s14|1×|server-data-table": [
+      {
+        "ttfb": 150.80000001192093,
+        "fcp": 3384,
+        "lcp": 4184,
+        "lcpElement": "td[table-cell]",
+        "cls": 0.07272687572903103,
+        "shifts": [
+          {
+            "at": 3544,
+            "value": 0.0002,
+            "sources": ["th[table-head]", "td[table-cell]", "td[table-cell]", "td[table-cell]", "td[table-cell]"]
+          },
+          {
+            "at": 4175,
+            "value": 0.0725,
+            "sources": ["div[server-data-table-footer]", "th[table-head]", "th[table-head]", "th[table-head]"]
+          }
+        ],
+        "inp": 24
+      },
+      {
+        "ttfb": 150.80000001192093,
+        "fcp": 3368,
+        "lcp": 4192,
+        "lcpElement": "td[table-cell]",
+        "cls": 0.07272687572903103,
+        "shifts": [
+          {
+            "at": 3528,
+            "value": 0.0002,
+            "sources": ["th[table-head]", "td[table-cell]", "td[table-cell]", "td[table-cell]", "td[table-cell]"]
+          },
+          {
+            "at": 4169,
+            "value": 0.0725,
+            "sources": ["div[server-data-table-footer]", "th[table-head]", "th[table-head]", "th[table-head]"]
+          }
+        ],
+        "inp": 16
+      },
+      {
+        "ttfb": 150.79999995231628,
+        "fcp": 3348,
+        "lcp": 4172,
+        "lcpElement": "td[table-cell]",
+        "cls": 0.07272687572903103,
+        "shifts": [
+          {
+            "at": 3516,
+            "value": 0.0002,
+            "sources": ["th[table-head]", "td[table-cell]", "td[table-cell]", "td[table-cell]", "td[table-cell]"]
+          },
+          {
+            "at": 4153,
+            "value": 0.0725,
+            "sources": ["div[server-data-table-footer]", "th[table-head]", "th[table-head]", "th[table-head]"]
+          }
+        ],
+        "inp": 16
+      }
+    ],
+    "normal@s14|1×|server-list": [
+      {
+        "ttfb": 150.9000000357628,
+        "fcp": 3352,
+        "lcp": 4176,
+        "lcpElement": "span[list-item-title]",
+        "cls": 0.021388888888888888,
+        "shifts": [
+          {
+            "at": 4156,
+            "value": 0.0214,
+            "sources": ["div[server-list-footer]"]
+          }
+        ],
+        "inp": 16
+      },
+      {
+        "ttfb": 150.89999997615814,
+        "fcp": 3340,
+        "lcp": 4172,
+        "lcpElement": "span[list-item-title]",
+        "cls": 0.021388888888888888,
+        "shifts": [
+          {
+            "at": 4161,
+            "value": 0.0214,
+            "sources": ["div[server-list-footer]"]
+          }
+        ],
+        "inp": 16
+      },
+      {
+        "ttfb": 150.70000004768372,
+        "fcp": 3348,
+        "lcp": 4188,
+        "lcpElement": "span[list-item-title]",
+        "cls": 0.021388888888888888,
+        "shifts": [
+          {
+            "at": 4161,
+            "value": 0.0214,
+            "sources": ["div[server-list-footer]"]
+          }
+        ],
+        "inp": 16
+      }
+    ],
+    "normal@s14|4×|shell": [
+      {
+        "ttfb": 150.80000001192093,
+        "fcp": 4096,
+        "lcp": 4096,
+        "lcpElement": "p[page-header-description]",
+        "cls": 0,
+        "shifts": [],
+        "inp": 80
+      },
+      {
+        "ttfb": 150.9000000357628,
+        "fcp": 4176,
+        "lcp": 4176,
+        "lcpElement": "p[page-header-description]",
+        "cls": 0,
+        "shifts": [],
+        "inp": 104
+      },
+      {
+        "ttfb": 150.89999997615814,
+        "fcp": 4020,
+        "lcp": 4020,
+        "lcpElement": "p[page-header-description]",
+        "cls": 0,
+        "shifts": [],
+        "inp": 80
+      }
+    ],
+    "normal@s14|4×|dashboard-grid": [
+      {
+        "ttfb": 150.9000000357628,
+        "fcp": 4496,
+        "lcp": 4496,
+        "lcpElement": "div[card-description]",
+        "cls": 0.0000017547607421875,
+        "shifts": [
+          {
+            "at": 4717,
+            "value": 0,
+            "sources": ["li[chart-legend-item]"]
+          }
+        ],
+        "inp": 48
+      },
+      {
+        "ttfb": 150.89999997615814,
+        "fcp": 4528,
+        "lcp": 4528,
+        "lcpElement": "div[card-description]",
+        "cls": 0.0000017547607421875,
+        "shifts": [
+          {
+            "at": 4749,
+            "value": 0,
+            "sources": ["li[chart-legend-item]"]
+          }
+        ],
+        "inp": 56
+      },
+      {
+        "ttfb": 150.80000001192093,
+        "fcp": 4208,
+        "lcp": 4208,
+        "lcpElement": "div[card-description]",
+        "cls": 0.0000017547607421875,
+        "shifts": [
+          {
+            "at": 4431,
+            "value": 0,
+            "sources": ["li[chart-legend-item]"]
+          }
+        ],
+        "inp": 40
+      }
+    ],
+    "normal@s14|4×|settings-page": [
+      {
+        "ttfb": 150.89999997615814,
+        "fcp": 4192,
+        "lcp": 4192,
+        "lcpElement": "p[field-description]#ui-sdk-_r_f_-description",
+        "cls": 0.00005768296983506944,
+        "shifts": [
+          {
+            "at": 4417,
+            "value": 0.0001,
+            "sources": ["div", "div"]
+          }
+        ],
+        "inp": 16
+      },
+      {
+        "ttfb": 150.9000000357628,
+        "fcp": 4180,
+        "lcp": 4180,
+        "lcpElement": "p[field-description]#ui-sdk-_r_f_-description",
+        "cls": 0.00005768296983506944,
+        "shifts": [
+          {
+            "at": 4395,
+            "value": 0.0001,
+            "sources": ["div", "div"]
+          }
+        ],
+        "inp": 16
+      },
+      {
+        "ttfb": 150.79999995231628,
+        "fcp": 4144,
+        "lcp": 4144,
+        "lcpElement": "p[field-description]#ui-sdk-_r_f_-description",
+        "cls": 0.00005768296983506944,
+        "shifts": [
+          {
+            "at": 4380,
+            "value": 0.0001,
+            "sources": ["div", "div"]
+          }
+        ],
+        "inp": 24
+      }
+    ],
+    "normal@s14|4×|document-workspace": [
+      {
+        "ttfb": 150.80000001192093,
+        "fcp": 4600,
+        "lcp": 4600,
+        "lcpElement": "div",
+        "cls": 0.001065185907151964,
+        "shifts": [
+          {
+            "at": 4754,
+            "value": 0.0001,
+            "sources": ["#text"]
+          },
+          {
+            "at": 4798,
+            "value": 0.001,
+            "sources": ["#text", "#text", "#text", "#text", "#text"]
+          }
+        ],
+        "inp": 24
+      },
+      {
+        "ttfb": 150.9000000357628,
+        "fcp": 4512,
+        "lcp": 4512,
+        "lcpElement": "div",
+        "cls": 0.001065185907151964,
+        "shifts": [
+          {
+            "at": 4668,
+            "value": 0.0001,
+            "sources": ["#text"]
+          },
+          {
+            "at": 4727,
+            "value": 0.001,
+            "sources": ["#text", "#text", "#text", "#text", "#text"]
+          }
+        ],
+        "inp": 16
+      },
+      {
+        "ttfb": 150.9000000357628,
+        "fcp": 4488,
+        "lcp": 4488,
+        "lcpElement": "div",
+        "cls": 0.001065185907151964,
+        "shifts": [
+          {
+            "at": 4639,
+            "value": 0.0001,
+            "sources": ["#text"]
+          },
+          {
+            "at": 4686,
+            "value": 0.001,
+            "sources": ["#text", "#text", "#text", "#text", "#text"]
+          }
+        ],
+        "inp": 16
+      }
+    ],
+    "normal@s14|4×|master-detail": [
+      {
+        "ttfb": 150.80000001192093,
+        "fcp": 4096,
+        "lcp": 4096,
+        "lcpElement": "div[empty-description]",
+        "cls": 0.0000787841796875,
+        "shifts": [
+          {
+            "at": 4280,
+            "value": 0.0001,
+            "sources": ["div[empty-header]", "span[badge]"]
+          }
+        ],
+        "inp": 32
+      },
+      {
+        "ttfb": 150.89999997615814,
+        "fcp": 4160,
+        "lcp": 4160,
+        "lcpElement": "div[empty-description]",
+        "cls": 0.0000787841796875,
+        "shifts": [
+          {
+            "at": 4342,
+            "value": 0.0001,
+            "sources": ["div[empty-header]", "span[badge]"]
+          }
+        ],
+        "inp": 24
+      },
+      {
+        "ttfb": 150.89999997615814,
+        "fcp": 4092,
+        "lcp": 4092,
+        "lcpElement": "div[empty-description]",
+        "cls": 0.0000787841796875,
+        "shifts": [
+          {
+            "at": 4264,
+            "value": 0.0001,
+            "sources": ["div[empty-header]", "span[badge]"]
+          }
+        ],
+        "inp": 24
+      }
+    ],
+    "normal@s14|4×|server-data-table": [
+      {
+        "ttfb": 150.9000000357628,
+        "fcp": 4116,
+        "lcp": 5136,
+        "lcpElement": "td[table-cell]",
+        "cls": 0.07272687572903103,
+        "shifts": [
+          {
+            "at": 4276,
+            "value": 0.0002,
+            "sources": ["th[table-head]", "td[table-cell]", "td[table-cell]", "td[table-cell]", "td[table-cell]"]
+          },
+          {
+            "at": 5114,
+            "value": 0.0725,
+            "sources": ["div[server-data-table-footer]", "th[table-head]", "th[table-head]", "th[table-head]"]
+          }
+        ],
+        "inp": 24
+      },
+      {
+        "ttfb": 150.9000000357628,
+        "fcp": 4184,
+        "lcp": 5168,
+        "lcpElement": "td[table-cell]",
+        "cls": 0.07272687572903103,
+        "shifts": [
+          {
+            "at": 4332,
+            "value": 0.0002,
+            "sources": ["th[table-head]", "td[table-cell]", "td[table-cell]", "td[table-cell]", "td[table-cell]"]
+          },
+          {
+            "at": 5135,
+            "value": 0.0725,
+            "sources": ["div[server-data-table-footer]", "th[table-head]", "th[table-head]", "th[table-head]"]
+          }
+        ],
+        "inp": 24
+      },
+      {
+        "ttfb": 150.69999998807907,
+        "fcp": 4076,
+        "lcp": 5004,
+        "lcpElement": "td[table-cell]",
+        "cls": 0.07272687572903103,
+        "shifts": [
+          {
+            "at": 4237,
+            "value": 0.0002,
+            "sources": ["th[table-head]", "td[table-cell]", "td[table-cell]", "td[table-cell]", "td[table-cell]"]
+          },
+          {
+            "at": 4981,
+            "value": 0.0725,
+            "sources": ["div[server-data-table-footer]", "th[table-head]", "th[table-head]", "th[table-head]"]
+          }
+        ],
+        "inp": 16
+      }
+    ],
+    "normal@s14|4×|server-list": [
+      {
+        "ttfb": 150.89999997615814,
+        "fcp": 4000,
+        "lcp": 5008,
+        "lcpElement": "span[list-item-title]",
+        "cls": 0.021388888888888888,
+        "shifts": [
+          {
+            "at": 4972,
+            "value": 0.0214,
+            "sources": ["div[server-list-footer]"]
+          }
+        ],
+        "inp": 24
+      },
+      {
+        "ttfb": 150.80000001192093,
+        "fcp": 3916,
+        "lcp": 4944,
+        "lcpElement": "span[list-item-title]",
+        "cls": 0.021388888888888888,
+        "shifts": [
+          {
+            "at": 4908,
+            "value": 0.0214,
+            "sources": ["div[server-list-footer]"]
+          }
+        ],
+        "inp": 24
+      },
+      {
+        "ttfb": 150.79999995231628,
+        "fcp": 3880,
+        "lcp": 4876,
+        "lcpElement": "span[list-item-title]",
+        "cls": 0.021388888888888888,
+        "shifts": [
+          {
+            "at": 4842,
+            "value": 0.0214,
+            "sources": ["div[server-list-footer]"]
+          }
+        ],
+        "inp": 16
+      }
+    ],
+    "normal@s15|1×|shell": [
+      {
+        "ttfb": 150.9000000357628,
+        "fcp": 3376,
+        "lcp": 3376,
+        "lcpElement": "p[page-header-description]",
+        "cls": 0,
+        "shifts": [],
+        "inp": 24
+      },
+      {
+        "ttfb": 150.89999997615814,
+        "fcp": 3372,
+        "lcp": 3372,
+        "lcpElement": "p[page-header-description]",
+        "cls": 0,
+        "shifts": [],
+        "inp": 24
+      },
+      {
+        "ttfb": 150.9000000357628,
+        "fcp": 3380,
+        "lcp": 3380,
+        "lcpElement": "p[page-header-description]",
+        "cls": 0,
+        "shifts": [],
+        "inp": 24
+      }
+    ],
+    "normal@s15|1×|dashboard-grid": [
+      {
+        "ttfb": 150.89999997615814,
+        "fcp": 3420,
+        "lcp": 3420,
+        "lcpElement": "div[card-description]",
+        "cls": 0.0000017547607421875,
+        "shifts": [
+          {
+            "at": 3619,
+            "value": 0,
+            "sources": ["li[chart-legend-item]"]
+          }
+        ],
+        "inp": 16
+      },
+      {
+        "ttfb": 150.89999997615814,
+        "fcp": 3420,
+        "lcp": 3420,
+        "lcpElement": "div[card-description]",
+        "cls": 0.0000017547607421875,
+        "shifts": [
+          {
+            "at": 3610,
+            "value": 0,
+            "sources": ["li[chart-legend-item]"]
+          }
+        ],
+        "inp": 24
+      },
+      {
+        "ttfb": 150.80000001192093,
+        "fcp": 3416,
+        "lcp": 3416,
+        "lcpElement": "div[card-description]",
+        "cls": 0.0000017547607421875,
+        "shifts": [
+          {
+            "at": 3608,
+            "value": 0,
+            "sources": ["li[chart-legend-item]"]
+          }
+        ],
+        "inp": 24
+      }
+    ],
+    "normal@s15|1×|settings-page": [
+      {
+        "ttfb": 150.9000000357628,
+        "fcp": 3368,
+        "lcp": 3368,
+        "lcpElement": "p[field-description]#ui-sdk-_r_f_-description",
+        "cls": 0.00005768296983506944,
+        "shifts": [
+          {
+            "at": 3558,
+            "value": 0.0001,
+            "sources": ["div", "div"]
+          }
+        ],
+        "inp": 16
+      },
+      {
+        "ttfb": 150.80000001192093,
+        "fcp": 3384,
+        "lcp": 3384,
+        "lcpElement": "p[field-description]#ui-sdk-_r_f_-description",
+        "cls": 0.00005768296983506944,
+        "shifts": [
+          {
+            "at": 3571,
+            "value": 0.0001,
+            "sources": ["div", "div"]
+          }
+        ],
+        "inp": 16
+      },
+      {
+        "ttfb": 150.89999997615814,
+        "fcp": 3344,
+        "lcp": 3344,
+        "lcpElement": "p[field-description]#ui-sdk-_r_f_-description",
+        "cls": 0.00005768296983506944,
+        "shifts": [
+          {
+            "at": 3535,
+            "value": 0.0001,
+            "sources": ["div", "div"]
+          }
+        ],
+        "inp": 16
+      }
+    ],
+    "normal@s15|1×|document-workspace": [
+      {
+        "ttfb": 150.89999997615814,
+        "fcp": 3412,
+        "lcp": 3412,
+        "lcpElement": "div",
+        "cls": 0.001065185907151964,
+        "shifts": [
+          {
+            "at": 3587,
+            "value": 0.0001,
+            "sources": ["#text"]
+          },
+          {
+            "at": 3595,
+            "value": 0.001,
+            "sources": ["#text", "#text", "#text", "#text", "#text"]
+          }
+        ],
+        "inp": 16
+      },
+      {
+        "ttfb": 150.80000001192093,
+        "fcp": 3424,
+        "lcp": 3424,
+        "lcpElement": "div",
+        "cls": 0.001065185907151964,
+        "shifts": [
+          {
+            "at": 3598,
+            "value": 0.0001,
+            "sources": ["#text"]
+          },
+          {
+            "at": 3610,
+            "value": 0.001,
+            "sources": ["#text", "#text", "#text", "#text", "#text"]
+          }
+        ],
+        "inp": 16
+      },
+      {
+        "ttfb": 150.89999997615814,
+        "fcp": 3428,
+        "lcp": 3428,
+        "lcpElement": "div",
+        "cls": 0.001065185907151964,
+        "shifts": [
+          {
+            "at": 3607,
+            "value": 0.0001,
+            "sources": ["#text"]
+          },
+          {
+            "at": 3615,
+            "value": 0.001,
+            "sources": ["#text", "#text", "#text", "#text", "#text"]
+          }
+        ],
+        "inp": 16
+      }
+    ],
+    "normal@s15|1×|master-detail": [
+      {
+        "ttfb": 150.89999997615814,
+        "fcp": 3364,
+        "lcp": 3364,
+        "lcpElement": "div[empty-description]",
+        "cls": 0.0000787841796875,
+        "shifts": [
+          {
+            "at": 3536,
+            "value": 0.0001,
+            "sources": ["div[empty-header]", "span[badge]"]
+          }
+        ],
+        "inp": 16
+      },
+      {
+        "ttfb": 150.80000001192093,
+        "fcp": 3384,
+        "lcp": 3384,
+        "lcpElement": "div[empty-description]",
+        "cls": 0.0000787841796875,
+        "shifts": [
+          {
+            "at": 3550,
+            "value": 0.0001,
+            "sources": ["div[empty-header]", "span[badge]"]
+          }
+        ],
+        "inp": 24
+      },
+      {
+        "ttfb": 150.80000001192093,
+        "fcp": 3360,
+        "lcp": 3360,
+        "lcpElement": "div[empty-description]",
+        "cls": 0.0000787841796875,
+        "shifts": [
+          {
+            "at": 3525,
+            "value": 0.0001,
+            "sources": ["div[empty-header]", "span[badge]"]
+          }
+        ],
+        "inp": 16
+      }
+    ],
+    "normal@s15|1×|server-data-table": [
+      {
+        "ttfb": 150.89999997615814,
+        "fcp": 3392,
+        "lcp": 4184,
+        "lcpElement": "td[table-cell]",
+        "cls": 0.00512546615600586,
+        "shifts": [
+          {
+            "at": 3551,
+            "value": 0.0009,
+            "sources": ["td[table-cell]", "td[table-cell]", "td[table-cell]", "td[table-cell]", "td[table-cell]"]
+          },
+          {
+            "at": 4166,
+            "value": 0.0043,
+            "sources": ["th[table-head]", "th[table-head]", "th[table-head]"]
+          }
+        ],
+        "inp": 24
+      },
+      {
+        "ttfb": 150.70000004768372,
+        "fcp": 3412,
+        "lcp": 4204,
+        "lcpElement": "td[table-cell]",
+        "cls": 0.00512546615600586,
+        "shifts": [
+          {
+            "at": 3555,
+            "value": 0.0009,
+            "sources": ["td[table-cell]", "td[table-cell]", "td[table-cell]", "td[table-cell]", "td[table-cell]"]
+          },
+          {
+            "at": 4184,
+            "value": 0.0043,
+            "sources": ["th[table-head]", "th[table-head]", "th[table-head]"]
+          }
+        ],
+        "inp": 16
+      },
+      {
+        "ttfb": 150.9000000357628,
+        "fcp": 3384,
+        "lcp": 4176,
+        "lcpElement": "td[table-cell]",
+        "cls": 0.00512546615600586,
+        "shifts": [
+          {
+            "at": 3528,
+            "value": 0.0009,
+            "sources": ["td[table-cell]", "td[table-cell]", "td[table-cell]", "td[table-cell]", "td[table-cell]"]
+          },
+          {
+            "at": 4158,
+            "value": 0.0043,
+            "sources": ["th[table-head]", "th[table-head]", "th[table-head]"]
+          }
+        ],
+        "inp": 24
+      }
+    ],
+    "normal@s15|1×|server-list": [
+      {
+        "ttfb": 150.89999997615814,
+        "fcp": 3340,
+        "lcp": 4160,
+        "lcpElement": "span[list-item-title]",
+        "cls": 0,
+        "shifts": [],
+        "inp": 16
+      },
+      {
+        "ttfb": 150.89999997615814,
+        "fcp": 3336,
+        "lcp": 4172,
+        "lcpElement": "span[list-item-title]",
+        "cls": 0,
+        "shifts": [],
+        "inp": 16
+      },
+      {
+        "ttfb": 150.80000001192093,
+        "fcp": 3324,
+        "lcp": 4140,
+        "lcpElement": "span[list-item-title]",
+        "cls": 0,
+        "shifts": [],
+        "inp": 16
+      }
+    ],
+    "normal@s15|4×|shell": [
+      {
+        "ttfb": 150.9000000357628,
+        "fcp": 4144,
+        "lcp": 4144,
+        "lcpElement": "p[page-header-description]",
+        "cls": 0,
+        "shifts": [],
+        "inp": 88
+      },
+      {
+        "ttfb": 150.89999997615814,
+        "fcp": 4172,
+        "lcp": 4172,
+        "lcpElement": "p[page-header-description]",
+        "cls": 0,
+        "shifts": [],
+        "inp": 104
+      },
+      {
+        "ttfb": 150.9000000357628,
+        "fcp": 4156,
+        "lcp": 4156,
+        "lcpElement": "p[page-header-description]",
+        "cls": 0,
+        "shifts": [],
+        "inp": 72
+      }
+    ],
+    "normal@s15|4×|dashboard-grid": [
+      {
+        "ttfb": 151,
+        "fcp": 4584,
+        "lcp": 4584,
+        "lcpElement": "div[card-description]",
+        "cls": 0.0000017547607421875,
+        "shifts": [
+          {
+            "at": 4814,
+            "value": 0,
+            "sources": ["li[chart-legend-item]"]
+          }
+        ],
+        "inp": 40
+      },
+      {
+        "ttfb": 150.9000000357628,
+        "fcp": 4524,
+        "lcp": 4524,
+        "lcpElement": "div[card-description]",
+        "cls": 0.0000017547607421875,
+        "shifts": [
+          {
+            "at": 4756,
+            "value": 0,
+            "sources": ["li[chart-legend-item]"]
+          }
+        ],
+        "inp": 40
+      },
+      {
+        "ttfb": 150.79999995231628,
+        "fcp": 5916,
+        "lcp": 5916,
+        "lcpElement": "div[card-description]",
+        "cls": 0.0000017547607421875,
+        "shifts": [
+          {
+            "at": 6229,
+            "value": 0,
+            "sources": ["li[chart-legend-item]"]
+          }
+        ],
+        "inp": 168
+      }
+    ],
+    "normal@s15|4×|settings-page": [
+      {
+        "ttfb": 150.80000001192093,
+        "fcp": 4288,
+        "lcp": 4288,
+        "lcpElement": "p[field-description]#ui-sdk-_r_f_-description",
+        "cls": 0.00005768296983506944,
+        "shifts": [
+          {
+            "at": 4511,
+            "value": 0.0001,
+            "sources": ["div", "div"]
+          }
+        ],
+        "inp": 16
+      },
+      {
+        "ttfb": 151,
+        "fcp": 4176,
+        "lcp": 4176,
+        "lcpElement": "p[field-description]#ui-sdk-_r_f_-description",
+        "cls": 0.00005768296983506944,
+        "shifts": [
+          {
+            "at": 4400,
+            "value": 0.0001,
+            "sources": ["div", "div"]
+          }
+        ],
+        "inp": 16
+      },
+      {
+        "ttfb": 151.10000002384186,
+        "fcp": 7904,
+        "lcp": 7904,
+        "lcpElement": "p[field-description]#ui-sdk-_r_f_-description",
+        "cls": 0.00005768296983506944,
+        "shifts": [
+          {
+            "at": 8300,
+            "value": 0.0001,
+            "sources": ["div", "div"]
+          }
+        ],
+        "inp": 32
+      }
+    ],
+    "normal@s15|4×|document-workspace": [
+      {
+        "ttfb": 150.80000001192093,
+        "fcp": 4468,
+        "lcp": 4468,
+        "lcpElement": "div",
+        "cls": 0.001065185907151964,
+        "shifts": [
+          {
+            "at": 4624,
+            "value": 0.0001,
+            "sources": ["#text"]
+          },
+          {
+            "at": 4680,
+            "value": 0.001,
+            "sources": ["#text", "#text", "#text", "#text", "#text"]
+          }
+        ],
+        "inp": 24
+      },
+      {
+        "ttfb": 150.80000001192093,
+        "fcp": 4528,
+        "lcp": 4528,
+        "lcpElement": "div",
+        "cls": 0.001065185907151964,
+        "shifts": [
+          {
+            "at": 4691,
+            "value": 0.0001,
+            "sources": ["#text"]
+          },
+          {
+            "at": 4751,
+            "value": 0.001,
+            "sources": ["#text", "#text", "#text", "#text", "#text"]
+          }
+        ],
+        "inp": 24
+      },
+      {
+        "ttfb": 150.9000000357628,
+        "fcp": 10032,
+        "lcp": 10032,
+        "lcpElement": "div",
+        "cls": 0.0011073520448472765,
+        "shifts": [
+          {
+            "at": 10644,
+            "value": 0.0011,
+            "sources": ["#text", "#text", "#text", "#text", "#text"]
+          }
+        ],
+        "inp": 104
+      }
+    ],
+    "normal@s15|4×|master-detail": [
+      {
+        "ttfb": 150.80000001192093,
+        "fcp": 4148,
+        "lcp": 4148,
+        "lcpElement": "div[empty-description]",
+        "cls": 0.0000787841796875,
+        "shifts": [
+          {
+            "at": 4350,
+            "value": 0.0001,
+            "sources": ["div[empty-header]", "span[badge]"]
+          }
+        ],
+        "inp": 24
+      },
+      {
+        "ttfb": 150.79999995231628,
+        "fcp": 3964,
+        "lcp": 3964,
+        "lcpElement": "div[empty-description]",
+        "cls": 0.0000787841796875,
+        "shifts": [
+          {
+            "at": 4148,
+            "value": 0.0001,
+            "sources": ["div[empty-header]", "span[badge]"]
+          }
+        ],
+        "inp": 24
+      },
+      {
+        "ttfb": 151,
+        "fcp": 7296,
+        "lcp": 7296,
+        "lcpElement": "div[empty-description]",
+        "cls": 0.0000787841796875,
+        "shifts": [
+          {
+            "at": 7481,
+            "value": 0.0001,
+            "sources": ["div[empty-header]", "span[badge]"]
+          }
+        ],
+        "inp": 24
+      }
+    ],
+    "normal@s15|4×|server-data-table": [
+      {
+        "ttfb": 150.80000001192093,
+        "fcp": 4216,
+        "lcp": 5076,
+        "lcpElement": "td[table-cell]",
+        "cls": 0.00512546615600586,
+        "shifts": [
+          {
+            "at": 4336,
+            "value": 0.0009,
+            "sources": ["td[table-cell]", "td[table-cell]", "td[table-cell]", "td[table-cell]", "td[table-cell]"]
+          },
+          {
+            "at": 5043,
+            "value": 0.0043,
+            "sources": ["th[table-head]", "th[table-head]", "th[table-head]"]
+          }
+        ],
+        "inp": 32
+      },
+      {
+        "ttfb": 150.80000001192093,
+        "fcp": 4104,
+        "lcp": 5084,
+        "lcpElement": "td[table-cell]",
+        "cls": 0.00512546615600586,
+        "shifts": [
+          {
+            "at": 4261,
+            "value": 0.0009,
+            "sources": ["td[table-cell]", "td[table-cell]", "td[table-cell]", "td[table-cell]", "td[table-cell]"]
+          },
+          {
+            "at": 5063,
+            "value": 0.0043,
+            "sources": ["th[table-head]", "th[table-head]", "th[table-head]"]
+          }
+        ],
+        "inp": 24
+      },
+      {
+        "ttfb": 151.0999999642372,
+        "fcp": 4044,
+        "lcp": 4876,
+        "lcpElement": "td[table-cell]",
+        "cls": 0.00512546615600586,
+        "shifts": [
+          {
+            "at": 4176,
+            "value": 0.0009,
+            "sources": ["td[table-cell]", "td[table-cell]", "td[table-cell]", "td[table-cell]", "td[table-cell]"]
+          },
+          {
+            "at": 4845,
+            "value": 0.0043,
+            "sources": ["th[table-head]", "th[table-head]", "th[table-head]"]
+          }
+        ],
+        "inp": 16
+      }
+    ],
+    "normal@s15|4×|server-list": [
+      {
+        "ttfb": 150.89999997615814,
+        "fcp": 4052,
+        "lcp": 5032,
+        "lcpElement": "span[list-item-title]",
+        "cls": 0,
+        "shifts": [],
+        "inp": 16
+      },
+      {
+        "ttfb": 150.80000001192093,
+        "fcp": 4024,
+        "lcp": 5024,
+        "lcpElement": "span[list-item-title]",
+        "cls": 0,
+        "shifts": [],
+        "inp": 16
+      },
+      {
+        "ttfb": 150.9000000357628,
+        "fcp": 3972,
+        "lcp": 4996,
+        "lcpElement": "span[list-item-title]",
+        "cls": 0,
+        "shifts": [],
+        "inp": 16
+      }
+    ],
+    "site@s14|1×|site:landing": [
+      {
+        "ttfb": 150.89999997615814,
+        "fcp": 2224,
+        "lcp": 4480,
+        "lcpElement": "h1[hero-title]#_r_h_",
+        "cls": 0.00006255669063991971,
+        "shifts": [
+          {
+            "at": 2468,
+            "value": 0,
+            "sources": ["li[navigation-menu-item]", "svg"]
+          },
+          {
+            "at": 4583,
+            "value": 0.0001,
+            "sources": ["#text"]
+          }
+        ],
+        "inp": 24
+      },
+      {
+        "ttfb": 150.9000000357628,
+        "fcp": 2164,
+        "lcp": 4492,
+        "lcpElement": "h1[hero-title]#_r_h_",
+        "cls": 0.00006255669063991971,
+        "shifts": [
+          {
+            "at": 2476,
+            "value": 0,
+            "sources": ["li[navigation-menu-item]", "svg"]
+          },
+          {
+            "at": 4603,
+            "value": 0.0001,
+            "sources": ["#text"]
+          }
+        ],
+        "inp": 16
+      },
+      {
+        "ttfb": 150.80000001192093,
+        "fcp": 2152,
+        "lcp": 4480,
+        "lcpElement": "h1[hero-title]#_r_h_",
+        "cls": 0.00006255669063991971,
+        "shifts": [
+          {
+            "at": 2467,
+            "value": 0,
+            "sources": ["li[navigation-menu-item]", "svg"]
+          },
+          {
+            "at": 4585,
+            "value": 0.0001,
+            "sources": ["#text"]
+          }
+        ],
+        "inp": 16
+      }
+    ],
+    "site@s14|1×|site:data-table": [
+      {
+        "ttfb": 150.80000001192093,
+        "fcp": 2136,
+        "lcp": 3000,
+        "lcpElement": "p",
+        "cls": 0.03235307460361057,
+        "shifts": [
+          {
+            "at": 3278,
+            "value": 0.0009,
+            "sources": ["#text", "#text", "#text", "code[code]", "code[code]"]
+          },
+          {
+            "at": 3412,
+            "value": 0.0271,
+            "sources": ["div", "section", "section", "button[button]"]
+          },
+          {
+            "at": 3715,
+            "value": 0.0044,
+            "sources": ["li", "li", "li"]
+          }
+        ],
+        "inp": 48
+      },
+      {
+        "ttfb": 150.9000000357628,
+        "fcp": 2144,
+        "lcp": 2992,
+        "lcpElement": "p",
+        "cls": 0.03235307460361057,
+        "shifts": [
+          {
+            "at": 3284,
+            "value": 0.0009,
+            "sources": ["#text", "#text", "#text", "code[code]", "code[code]"]
+          },
+          {
+            "at": 3417,
+            "value": 0.0271,
+            "sources": ["div", "section", "section", "button[button]"]
+          },
+          {
+            "at": 3720,
+            "value": 0.0044,
+            "sources": ["li", "li", "li"]
+          }
+        ],
+        "inp": 40
+      },
+      {
+        "ttfb": 150.80000001192093,
+        "fcp": 2144,
+        "lcp": 2996,
+        "lcpElement": "p",
+        "cls": 0.03235307460361057,
+        "shifts": [
+          {
+            "at": 3287,
+            "value": 0.0009,
+            "sources": ["#text", "#text", "#text", "code[code]", "code[code]"]
+          },
+          {
+            "at": 3432,
+            "value": 0.0271,
+            "sources": ["div", "section", "section", "button[button]"]
+          },
+          {
+            "at": 3733,
+            "value": 0.0044,
+            "sources": ["li", "li", "li"]
+          }
+        ],
+        "inp": 40
+      }
+    ],
+    "site@s14|1×|site:server-data": [
+      {
+        "ttfb": 150.89999997615814,
+        "fcp": 2148,
+        "lcp": 3280,
+        "lcpElement": "li",
+        "cls": 0.05622930556403266,
+        "shifts": [
+          {
+            "at": 3254,
+            "value": 0.0497,
+            "sources": ["nav[docs-pager]"]
+          },
+          {
+            "at": 3258,
+            "value": 0.0006,
+            "sources": ["li", "li", "li", "li", "li"]
+          },
+          {
+            "at": 3452,
+            "value": 0.0059,
+            "sources": ["div[code-block]", "li", "li", "li", "#text"]
+          }
+        ],
+        "inp": 32
+      },
+      {
+        "ttfb": 150.89999997615814,
+        "fcp": 2132,
+        "lcp": 3272,
+        "lcpElement": "li",
+        "cls": 0.05622930556403266,
+        "shifts": [
+          {
+            "at": 3252,
+            "value": 0.0497,
+            "sources": ["nav[docs-pager]"]
+          },
+          {
+            "at": 3260,
+            "value": 0.0006,
+            "sources": ["li", "li", "li", "li", "li"]
+          },
+          {
+            "at": 3447,
+            "value": 0.0059,
+            "sources": ["div[code-block]", "li", "li", "li", "#text"]
+          }
+        ],
+        "inp": 40
+      },
+      {
+        "ttfb": 150.80000001192093,
+        "fcp": 2140,
+        "lcp": 3268,
+        "lcpElement": "li",
+        "cls": 0.05622930556403266,
+        "shifts": [
+          {
+            "at": 3247,
+            "value": 0.0497,
+            "sources": ["nav[docs-pager]"]
+          },
+          {
+            "at": 3259,
+            "value": 0.0006,
+            "sources": ["li", "li", "li", "li", "li"]
+          },
+          {
+            "at": 3449,
+            "value": 0.0059,
+            "sources": ["div[code-block]", "li", "li", "li", "#text"]
+          }
+        ],
+        "inp": 32
+      }
+    ],
+    "site@s14|4×|site:landing": [
+      {
+        "ttfb": 150.79999995231628,
+        "fcp": 2400,
+        "lcp": 5060,
+        "lcpElement": "h1[hero-title]#_r_h_",
+        "cls": 0.00006255669063991971,
+        "shifts": [
+          {
+            "at": 2614,
+            "value": 0,
+            "sources": ["li[navigation-menu-item]", "svg"]
+          },
+          {
+            "at": 5071,
+            "value": 0.0001,
+            "sources": ["#text"]
+          }
+        ],
+        "inp": 40
+      },
+      {
+        "ttfb": 150.80000001192093,
+        "fcp": 2396,
+        "lcp": 5060,
+        "lcpElement": "h1[hero-title]#_r_h_",
+        "cls": 0.000011664326985677081,
+        "shifts": [
+          {
+            "at": 2612,
+            "value": 0,
+            "sources": ["li[navigation-menu-item]", "svg"]
+          }
+        ],
+        "inp": 24
+      },
+      {
+        "ttfb": 150.9000000357628,
+        "fcp": 2384,
+        "lcp": 5052,
+        "lcpElement": "h1[hero-title]#_r_h_",
+        "cls": 0.000011664326985677081,
+        "shifts": [
+          {
+            "at": 2605,
+            "value": 0,
+            "sources": ["li[navigation-menu-item]", "svg"]
+          }
+        ],
+        "inp": 48
+      }
+    ],
+    "site@s14|4×|site:data-table": [
+      {
+        "ttfb": 150.69999998807907,
+        "fcp": 2304,
+        "lcp": 3488,
+        "lcpElement": "p",
+        "cls": 0.03147658284505208,
+        "shifts": [
+          {
+            "at": 3721,
+            "value": 0.0271,
+            "sources": ["div", "section", "section", "#text", "#text"]
+          },
+          {
+            "at": 4014,
+            "value": 0.0044,
+            "sources": ["li", "li", "li"]
+          }
+        ],
+        "inp": 168
+      },
+      {
+        "ttfb": 150.70000004768372,
+        "fcp": 2296,
+        "lcp": 3472,
+        "lcpElement": "p",
+        "cls": 0.03210487628512912,
+        "shifts": [
+          {
+            "at": 3609,
+            "value": 0.0271,
+            "sources": ["div", "section", "section", "button[button]"]
+          },
+          {
+            "at": 3651,
+            "value": 0.0006,
+            "sources": ["#text", "code[code]", "code[code]", "a[link]", "code[code]"]
+          },
+          {
+            "at": 3913,
+            "value": 0.0044,
+            "sources": ["li", "li", "li"]
+          }
+        ],
+        "inp": 176
+      },
+      {
+        "ttfb": 150.80000001192093,
+        "fcp": 2304,
+        "lcp": 3376,
+        "lcpElement": "p",
+        "cls": 0.03210487628512912,
+        "shifts": [
+          {
+            "at": 3579,
+            "value": 0.0271,
+            "sources": ["div", "section", "section", "button[button]"]
+          },
+          {
+            "at": 3654,
+            "value": 0.0006,
+            "sources": ["#text", "code[code]", "code[code]", "a[link]", "code[code]"]
+          },
+          {
+            "at": 3894,
+            "value": 0.0044,
+            "sources": ["li", "li", "li"]
+          }
+        ],
+        "inp": 280
+      }
+    ],
+    "site@s14|4×|site:server-data": [
+      {
+        "ttfb": 150.89999997615814,
+        "fcp": 2312,
+        "lcp": 3616,
+        "lcpElement": "li",
+        "cls": 0.05622930556403266,
+        "shifts": [
+          {
+            "at": 3585,
+            "value": 0.0497,
+            "sources": ["nav[docs-pager]"]
+          },
+          {
+            "at": 3612,
+            "value": 0.0006,
+            "sources": ["li", "li", "li", "li", "li"]
+          },
+          {
+            "at": 3864,
+            "value": 0.0059,
+            "sources": ["div[code-block]", "li", "li", "li", "#text"]
+          }
+        ],
+        "inp": 144
+      },
+      {
+        "ttfb": 150.80000001192093,
+        "fcp": 2336,
+        "lcp": 3652,
+        "lcpElement": "li",
+        "cls": 0.05622930556403266,
+        "shifts": [
+          {
+            "at": 3612,
+            "value": 0.0497,
+            "sources": ["nav[docs-pager]"]
+          },
+          {
+            "at": 3655,
+            "value": 0.0006,
+            "sources": ["li", "li", "li", "li", "li"]
+          },
+          {
+            "at": 3864,
+            "value": 0.0059,
+            "sources": ["div[code-block]", "li", "li", "li", "#text"]
+          }
+        ],
+        "inp": 152
+      },
+      {
+        "ttfb": 150.80000001192093,
+        "fcp": 2296,
+        "lcp": 3564,
+        "lcpElement": "li",
+        "cls": 0.05622930556403266,
+        "shifts": [
+          {
+            "at": 3533,
+            "value": 0.0497,
+            "sources": ["nav[docs-pager]"]
+          },
+          {
+            "at": 3566,
+            "value": 0.0006,
+            "sources": ["li", "li", "li", "li", "li"]
+          },
+          {
+            "at": 3837,
+            "value": 0.0059,
+            "sources": ["div[code-block]", "li", "li", "li", "#text"]
+          }
+        ],
+        "inp": 144
+      }
+    ],
+    "site@s15|1×|site:landing": [
+      {
+        "ttfb": 150.89999997615814,
+        "fcp": 2156,
+        "lcp": 4496,
+        "lcpElement": "h1[hero-title]#_r_h_",
+        "cls": 0.00006255669063991971,
+        "shifts": [
+          {
+            "at": 2472,
+            "value": 0,
+            "sources": ["li[navigation-menu-item]", "svg"]
+          },
+          {
+            "at": 4599,
+            "value": 0.0001,
+            "sources": ["#text"]
+          }
+        ],
+        "inp": 16
+      },
+      {
+        "ttfb": 150.80000001192093,
+        "fcp": 2164,
+        "lcp": 4496,
+        "lcpElement": "h1[hero-title]#_r_h_",
+        "cls": 0.00006255669063991971,
+        "shifts": [
+          {
+            "at": 2478,
+            "value": 0,
+            "sources": ["li[navigation-menu-item]", "svg"]
+          },
+          {
+            "at": 4617,
+            "value": 0.0001,
+            "sources": ["#text"]
+          }
+        ],
+        "inp": 16
+      },
+      {
+        "ttfb": 150.80000001192093,
+        "fcp": 2152,
+        "lcp": 4516,
+        "lcpElement": "h1[hero-title]#_r_h_",
+        "cls": 0.00006255669063991971,
+        "shifts": [
+          {
+            "at": 2475,
+            "value": 0,
+            "sources": ["li[navigation-menu-item]", "svg"]
+          },
+          {
+            "at": 4598,
+            "value": 0.0001,
+            "sources": ["#text"]
+          }
+        ],
+        "inp": 16
+      }
+    ],
+    "site@s15|1×|site:data-table": [
+      {
+        "ttfb": 150.89999997615814,
+        "fcp": 2136,
+        "lcp": 2956,
+        "lcpElement": "p",
+        "cls": 0.005029335106743707,
+        "shifts": [
+          {
+            "at": 3618,
+            "value": 0.0044,
+            "sources": ["li", "li", "li"]
+          },
+          {
+            "at": 3626,
+            "value": 0.0006,
+            "sources": ["#text", "code[code]", "code[code]", "a[link]", "code[code]"]
+          }
+        ],
+        "inp": 40
+      },
+      {
+        "ttfb": 150.80000001192093,
+        "fcp": 2136,
+        "lcp": 2952,
+        "lcpElement": "p",
+        "cls": 0.005029335106743707,
+        "shifts": [
+          {
+            "at": 3618,
+            "value": 0.0044,
+            "sources": ["li", "li", "li"]
+          },
+          {
+            "at": 3628,
+            "value": 0.0006,
+            "sources": ["#text", "code[code]", "code[code]", "a[link]", "code[code]"]
+          }
+        ],
+        "inp": 40
+      },
+      {
+        "ttfb": 150.89999997615814,
+        "fcp": 2136,
+        "lcp": 2956,
+        "lcpElement": "p",
+        "cls": 0.005029335106743707,
+        "shifts": [
+          {
+            "at": 3624,
+            "value": 0.0044,
+            "sources": ["li", "li", "li"]
+          },
+          {
+            "at": 3634,
+            "value": 0.0006,
+            "sources": ["#text", "code[code]", "code[code]", "a[link]", "code[code]"]
+          }
+        ],
+        "inp": 40
+      }
+    ],
+    "site@s15|1×|site:server-data": [
+      {
+        "ttfb": 150.89999997615814,
+        "fcp": 2132,
+        "lcp": 3264,
+        "lcpElement": "li",
+        "cls": 0.006500138897365995,
+        "shifts": [
+          {
+            "at": 3262,
+            "value": 0.0006,
+            "sources": ["li", "li", "li", "li", "li"]
+          },
+          {
+            "at": 3451,
+            "value": 0.0059,
+            "sources": ["div[code-block]", "li", "li", "li", "#text"]
+          }
+        ],
+        "inp": 40
+      },
+      {
+        "ttfb": 150.9000000357628,
+        "fcp": 2136,
+        "lcp": 3264,
+        "lcpElement": "li",
+        "cls": 0.006500138897365995,
+        "shifts": [
+          {
+            "at": 3264,
+            "value": 0.0006,
+            "sources": ["li", "li", "li", "li", "li"]
+          },
+          {
+            "at": 3454,
+            "value": 0.0059,
+            "sources": ["div[code-block]", "li", "li", "li", "#text"]
+          }
+        ],
+        "inp": 40
+      },
+      {
+        "ttfb": 150.70000004768372,
+        "fcp": 2132,
+        "lcp": 3264,
+        "lcpElement": "li",
+        "cls": 0.006500138897365995,
+        "shifts": [
+          {
+            "at": 3254,
+            "value": 0.0006,
+            "sources": ["li", "li", "li", "li", "li"]
+          },
+          {
+            "at": 3446,
+            "value": 0.0059,
+            "sources": ["div[code-block]", "li", "li", "li", "#text"]
+          }
+        ],
+        "inp": 48
+      }
+    ],
+    "site@s15|4×|site:landing": [
+      {
+        "ttfb": 150.80000001192093,
+        "fcp": 2388,
+        "lcp": 4996,
+        "lcpElement": "h1[hero-title]#_r_h_",
+        "cls": 0.000011664326985677081,
+        "shifts": [
+          {
+            "at": 2604,
+            "value": 0,
+            "sources": ["li[navigation-menu-item]", "svg"]
+          }
+        ],
+        "inp": 48
+      },
+      {
+        "ttfb": 150.69999998807907,
+        "fcp": 2396,
+        "lcp": 5016,
+        "lcpElement": "h1[hero-title]#_r_h_",
+        "cls": 0.000011664326985677081,
+        "shifts": [
+          {
+            "at": 2612,
+            "value": 0,
+            "sources": ["li[navigation-menu-item]", "svg"]
+          }
+        ],
+        "inp": 48
+      },
+      {
+        "ttfb": 150.80000001192093,
+        "fcp": 2384,
+        "lcp": 5008,
+        "lcpElement": "h1[hero-title]#_r_h_",
+        "cls": 0.000011664326985677081,
+        "shifts": [
+          {
+            "at": 2603,
+            "value": 0,
+            "sources": ["li[navigation-menu-item]", "svg"]
+          }
+        ],
+        "inp": 40
+      }
+    ],
+    "site@s15|4×|site:data-table": [
+      {
+        "ttfb": 150.80000001192093,
+        "fcp": 2304,
+        "lcp": 3316,
+        "lcpElement": "p",
+        "cls": 0.009245713975694445,
+        "shifts": [
+          {
+            "at": 4044,
+            "value": 0.0092,
+            "sources": ["#text", "li", "li", "li", "code[code]"]
+          }
+        ],
+        "inp": 240
+      },
+      {
+        "ttfb": 150.80000001192093,
+        "fcp": 2320,
+        "lcp": 3308,
+        "lcpElement": "p",
+        "cls": 0.005029335106743707,
+        "shifts": [
+          {
+            "at": 3964,
+            "value": 0.0006,
+            "sources": ["#text", "code[code]", "code[code]", "a[link]", "code[code]"]
+          },
+          {
+            "at": 4003,
+            "value": 0.0044,
+            "sources": ["li", "li", "li"]
+          }
+        ],
+        "inp": 168
+      },
+      {
+        "ttfb": 150.80000001192093,
+        "fcp": 2328,
+        "lcp": 3252,
+        "lcpElement": "p",
+        "cls": 0.009245713975694445,
+        "shifts": [
+          {
+            "at": 3954,
+            "value": 0.0092,
+            "sources": ["#text", "li", "li", "li", "code[code]"]
+          }
+        ],
+        "inp": 168
+      }
+    ],
+    "site@s15|4×|site:server-data": [
+      {
+        "ttfb": 150.79999995231628,
+        "fcp": 2332,
+        "lcp": 3600,
+        "lcpElement": "li",
+        "cls": 0.006500138897365995,
+        "shifts": [
+          {
+            "at": 3593,
+            "value": 0.0006,
+            "sources": ["li", "li", "li", "li", "li"]
+          },
+          {
+            "at": 3856,
+            "value": 0.0059,
+            "sources": ["div[code-block]", "li", "li", "li", "#text"]
+          }
+        ],
+        "inp": 144
+      },
+      {
+        "ttfb": 150.79999995231628,
+        "fcp": 2340,
+        "lcp": 3604,
+        "lcpElement": "li",
+        "cls": 0.006500138897365995,
+        "shifts": [
+          {
+            "at": 3595,
+            "value": 0.0006,
+            "sources": ["li", "li", "li", "li", "li"]
+          },
+          {
+            "at": 3844,
+            "value": 0.0059,
+            "sources": ["div[code-block]", "li", "li", "li", "#text"]
+          }
+        ],
+        "inp": 144
+      },
+      {
+        "ttfb": 150.9000000357628,
+        "fcp": 2308,
+        "lcp": 3592,
+        "lcpElement": "li",
+        "cls": 0.006500138897365995,
+        "shifts": [
+          {
+            "at": 3584,
+            "value": 0.0006,
+            "sources": ["li", "li", "li", "li", "li"]
+          },
+          {
+            "at": 3823,
+            "value": 0.0059,
+            "sources": ["div[code-block]", "li", "li", "li", "#text"]
+          }
+        ],
+        "inp": 144
+      }
+    ]
+  }
+}

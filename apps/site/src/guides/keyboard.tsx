@@ -103,12 +103,56 @@ export default function Keyboard() {
       <Pre code={listCode} />
       <Pre code={tableCode} />
 
+      <H2 id="cells">Table cells</H2>
+      <P>
+        With <Code>navigation="cells"</Code>, a <Code>DataTable</Code> moves by cell, as a spreadsheet does, on UI SDK's
+        grid focus: the table takes the <Code>grid</Code> role and its cells one tab stop. A move renders only the cell
+        left and the cell reached, and a row a virtualized table hasn't rendered is scrolled in first.
+      </P>
+      <DocTable
+        label="Cell keys"
+        head={["Key", "Does"]}
+        rows={[
+          [<Code key="k">← / →</Code>, "Previous and next cell in the row, following the text direction"],
+          [<Code key="k">↑ / ↓</Code>, "The same column in the row above or below"],
+          [<Code key="k">Home / End</Code>, "First and last cell of the row"],
+          [<Code key="k">Ctrl or ⌘ + Home / End</Code>, "First and last cell of the table"],
+          [<Code key="k">PageUp / PageDown</Code>, "Ten rows up or down"],
+          [<Code key="k">Space</Code>, "Toggles the row's selection, where the table has one"],
+          [<Code key="k">Enter</Code>, "The table's onRowOpen"],
+        ]}
+      />
+
+      <H2 id="board">Board</H2>
+      <P>
+        A <Code>Board</Code>'s cards are one tab stop, as on Linear: the AgentTaskBoard's cards take part through{" "}
+        <Code>TaskCard</Code>, and a card of your own through <Code>{"<BoardCard id render={<Button …/>} />"}</Code> on
+        its primary control. Tab from the focused card reaches that card's own controls (links, chips, approve and
+        reject), then leaves the board; the other cards' controls are out of the tab order until their card is focused.
+        A move renders two cards.
+      </P>
+      <DocTable
+        label="Board keys"
+        head={["Key", "Does"]}
+        rows={[
+          [<Code key="k">↓ or j / ↑ or k</Code>, "Next and previous card in the column"],
+          [<Code key="k">← / →</Code>, "The next column, at the same row or its last card"],
+          [<Code key="k">Home / End</Code>, "First and last card of the column"],
+          [<Code key="k">Ctrl or ⌘ + Home / End</Code>, "First and last card of the board"],
+          [<Code key="k">Enter</Code>, "Opens the card"],
+        ]}
+      />
+      <P>
+        Agents don't use these keys: they select and act on cards and rows through the board's and the table's own
+        actions, whether or not the card or row has focus.
+      </P>
+
       <H2 id="virtualization">Virtualization</H2>
       <P>
         <Code>List</Code> with <Code>items</Code> and <Code>renderItem</Code>, and <Code>DataTable</Code>, render only
         the rows in view past 200 rows (<Code>virtualize="auto"</Code>; <Code>true</Code> or <Code>false</Code> to force
-        it, <Code>estimateSize</Code> for the row height before it is measured). It uses TanStack Virtual, installed
-        with the item.
+        it, <Code>estimateSize</Code> for the row height before it is measured; the first row measured sets it for the
+        rest). It uses UI SDK's virtualizer and renders again only when the rows in view change, not on every scroll.
       </P>
       <Ul>
         <li>

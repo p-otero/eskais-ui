@@ -21,13 +21,15 @@ import { useListItemRegistration, useTruncated } from "@/components/ui/use-list-
 import type { Tone } from "@/lib/tone"
 import { cn } from "@/lib/utils"
 
+// A row paints only inside itself (`contain-content`): moving focus repaints that row, not the rows around it. Its
+// focus ring is drawn inset for that reason. A card keeps its shadow and selection ring outside, so it isn't contained.
 const rowClassNames = {
-  row: "rounded-control hover:bg-accent/60 data-checked:bg-accent/60 data-selected:bg-accent data-selected:text-accent-foreground",
+  row: "rounded-control contain-content hover:bg-accent/60 data-checked:bg-accent/60 data-selected:bg-accent data-selected:text-accent-foreground",
   card: "rounded-lg border bg-card/(--glass-opacity) text-card-foreground shadow-surface backdrop-surface hover:border-ring data-selected:border-ring data-selected:bg-accent data-selected:text-accent-foreground data-selected:ring-3 data-selected:ring-ring/25",
 } satisfies Record<ListVariant, string>
 
 const stretchedClassNames = {
-  row: "after:rounded-control",
+  row: "after:rounded-control focus-visible:after:ring-inset",
   card: "after:rounded-lg",
 } satisfies Record<ListVariant, string>
 
@@ -193,11 +195,13 @@ function ListItem({
       } as Record<string, unknown>)
   let heading: ReactNode = titleText
   if (pressable) {
-    // Always mounted, so the trigger keeps its element (and focus) when the title starts or stops fitting.
+    // The root and trigger are always mounted, so the trigger keeps its element (and focus) when the title starts
+    // or stops fitting. The content, most of a tooltip's components, mounts only while the title is cut off: most
+    // rows fit, and a tooltip per row was a third of a long list's components.
     heading = (
       <Tooltip type="label" disabled={!truncated}>
         <NavigableRow id={id} render={<TooltipTrigger render={element} />} />
-        <TooltipContent>{title}</TooltipContent>
+        {truncated && <TooltipContent>{title}</TooltipContent>}
       </Tooltip>
     )
   }

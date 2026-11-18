@@ -10,11 +10,20 @@ import { markdownParser, type WikilinkResolver } from "@/components/ui/markdown-
 
 type FrontmatterDisplay = "hide" | "properties" | "raw"
 
+type ImageSize = { width: number; height?: number }
+/** `alt|300x200` or `alt|300`, as Obsidian writes an image's size in its alt text. */
+function sizeInAlt(text: string): { alt: string; size?: ImageSize } {
+  const [, alt = "", width, height] = /^(.*?)\|(\d+)(?:x(\d+))?$/.exec(text) ?? []
+  if (width === undefined) return { alt: text }
+  return { alt: alt.trim(), size: { width: Number(width), ...(height ? { height: Number(height) } : {}) } }
+}
+
 type RenderOptions = {
   resolveWikilink?: WikilinkResolver
   wikilinkHref?: (slug: string) => string | undefined
   onWikilinkClick?: (target: string, event: Event | undefined) => void
   renderEmbed?: (target: string, alias: string | undefined) => ReactNode
+  imageSize?: (src: string, alt: string) => ImageSize | undefined
   frontmatter?: FrontmatterDisplay
   renderFrontmatter?: (frontmatter: Frontmatter) => ReactNode
   frontmatterLabel?: string
@@ -137,13 +146,20 @@ function renderInline(cx: Context, node: SyntaxNode): ReactNode {
         new Set(["LinkMark", "URL", "LinkTitle", "LinkLabel"]),
       )
       if (node.name === "Image") {
+        // With a width and height the box is reserved before the image loads (CSS keeps `height: auto`), so text
+        // below it doesn't move when it arrives.
+        const written = sizeInAlt(cx.src.slice(parts.labelFrom, parts.labelTo))
+        const size = written.size ?? (parts.href ? cx.imageSize?.(parts.href, written.alt) : undefined)
         return (
           <img
             key={key}
             src={parts.href}
-            alt={cx.src.slice(parts.labelFrom, parts.labelTo)}
+            alt={written.alt}
             title={parts.title}
+            width={size?.width}
+            height={size?.height}
             loading="lazy"
+            decoding="async"
           />
         )
       }
