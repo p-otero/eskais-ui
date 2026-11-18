@@ -168,6 +168,28 @@ test("isEmpty decides what counts as empty", () => {
   expect(screen.getByText("No results")).toBeTruthy()
 })
 
+test("DataState forwards its root's attributes and keeps its own state attributes", () => {
+  render(
+    <DataState
+      status="pending"
+      data={undefined}
+      data-testid="projects-state"
+      id="projects"
+      aria-label="Projects"
+      data-status="ignored"
+      labels={{ errorTitle: "Failed", emptyTitle: "No results" }}
+    >
+      {(page: string[]) => <p>{page.length}</p>}
+    </DataState>,
+  )
+  const root = screen.getByTestId("projects-state")
+  expect(root.id).toBe("projects")
+  expect(root.getAttribute("aria-label")).toBe("Projects")
+  expect(root.dataset.slot).toBe("data-state")
+  expect(root.dataset.status).toBe("pending")
+  expect(root.hasAttribute("labels")).toBe(false)
+})
+
 type Page = { items: Project[]; loaded: boolean }
 
 function PagedProjects({ status, data, placeholderData }: { status: DataStatus; data?: Page; placeholderData?: Page }) {
