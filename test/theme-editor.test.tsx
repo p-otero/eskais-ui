@@ -54,6 +54,8 @@ afterEach(() => {
   html.removeAttribute("data-palette")
   html.removeAttribute("data-density")
   html.removeAttribute("data-radius")
+  html.removeAttribute("data-theme")
+  document.getElementById("theme-editor-glass")?.remove()
 })
 
 test("the link colour has an area, a hue slider and a field, like the brand", async () => {
@@ -182,4 +184,54 @@ test("an agent sets the density and the radius by their labels", async () => {
   expect(result.ok, result.error?.message).toBe(true)
   expect(html.getAttribute("data-density")).toBe("compact")
   expect(html.getAttribute("data-radius")).toBe("none")
+})
+
+test("glass turns on for the whole page, its strength is a rule on glass scopes, and both reach the CSS", async () => {
+  const user = userEvent.setup()
+  const { appearance } = renderEditor()
+  await settle()
+  expect(screen.queryByRole("slider", { name: "Glass strength" })).toBeNull()
+  await user.click(screen.getByRole("switch", { name: "Glass" }))
+  expect(html.getAttribute("data-theme")).toBe("glass")
+  expect(editorText()).toContain('On <html>: data-theme="glass"')
+  expect(editorText()).toContain("--glass-opacity: 60%;")
+  const strength = screen.getByRole("slider", { name: "Glass strength" })
+  expect((strength as HTMLInputElement).value).toBe("40")
+  strength.focus()
+  await user.keyboard("{ArrowRight}{ArrowRight}")
+  const rule = document.getElementById("theme-editor-glass")?.textContent
+  expect(rule).toBe('[data-theme="glass"] { --glass-opacity: 50%; --glass-blur: 25px; }')
+  // Never inline on <html>: outside glass, --glass-opacity keeps the fills opaque.
+  expect(html.style.getPropertyValue("--glass-opacity")).toBe("")
+  expect(editorText()).toContain("--glass-blur: 25px;")
+  expect(JSON.parse(localStorage.getItem(key) ?? "{}")).toEqual({ glass: 50 })
+
+  await user.click(screen.getByRole("switch", { name: "Glass" }))
+  expect(appearance.theme.get().value).toBe("default")
+  expect(editorText()).not.toContain("--glass-opacity")
+  await user.click(screen.getByRole("switch", { name: "Glass" }))
+  await user.click(screen.getByRole("button", { name: "Reset" }))
+  expect(html.hasAttribute("data-theme")).toBe(false)
+  expect(document.getElementById("theme-editor-glass")).toBeNull()
+})
+
+test("picking a preset keeps the glass strength", async () => {
+  const user = userEvent.setup()
+  const { store } = renderEditor()
+  await settle()
+  act(() => store.set({ glass: 70, brand: "oklch(0.5 0.1 140)" }))
+  await user.click(screen.getByRole("radio", { name: "Blue" }))
+  expect(store.get()).toEqual({ glass: 70 })
+})
+
+test("an agent turns glass on and sets its strength", async () => {
+  const { store } = renderEditor()
+  await settle()
+  const on = await act(() => agent.act({ steps: [{ ref: "Glass", action: "toggle" }] }))
+  expect(on.ok, on.error?.message).toBe(true)
+  expect(html.getAttribute("data-theme")).toBe("glass")
+  await settle()
+  const set = await act(() => agent.act({ steps: [{ ref: "Glass strength", action: "setValue", args: [80] }] }))
+  expect(set.ok, set.error?.message).toBe(true)
+  expect(store.get().glass).toBe(80)
 })

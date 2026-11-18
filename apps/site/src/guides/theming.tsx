@@ -127,8 +127,11 @@ appearance.radius.set("full")`}
       </P>
       <P>
         Tune glass live by setting <Code>--glass-opacity</Code> (and <Code>--glass-blur</Code>) on the element that has{" "}
-        <Code>data-theme="glass"</Code> or on a descendant. Glass falls back to solid surfaces when the browser lacks{" "}
-        <Code>backdrop-filter</Code> or the person asks for reduced transparency.
+        <Code>data-theme="glass"</Code> or on a descendant. The editor above turns glass on for the whole site, and its
+        strength (40% by default: 60% opaque, a 20px blur) goes into the CSS as a <Code>[data-theme="glass"]</Code>{" "}
+        rule. Dialogs and drawers stay opaque at any strength: a translucent fill over the dimmed backdrop reads grey.
+        Glass falls back to solid surfaces when the browser lacks <Code>backdrop-filter</Code> or the person asks for
+        reduced transparency.
       </P>
 
       <H2 id="dark-mode">Dark mode</H2>

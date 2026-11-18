@@ -306,6 +306,35 @@ async function checkThemeEditor(browser, origin) {
       await page.waitForLoadState("networkidle")
       await page.getByRole("button", { name: "Reset", exact: true }).click()
       if ((await read()).primary !== start.primary) failures.push(`${scope}: reset doesn't restore --primary`)
+
+      // Glass from the editor: the sidebar turns translucent at full strength, dialogs stay opaque, Reset turns it off.
+      const alpha = (selector) =>
+        page.evaluate((query) => {
+          const canvas = document.createElement("canvas").getContext("2d")
+          canvas.fillStyle = getComputedStyle(document.querySelector(query)).backgroundColor
+          canvas.fillRect(0, 0, 1, 1)
+          return canvas.getImageData(0, 0, 1, 1).data[3]
+        }, selector)
+      await page.getByRole("switch", { name: "Glass" }).click()
+      await page.getByRole("slider", { name: "Glass strength" }).focus()
+      await page.keyboard.press("End")
+      const glass = await page.evaluate(() => ({
+        theme: document.documentElement.dataset.theme,
+        opacity: getComputedStyle(document.documentElement).getPropertyValue("--glass-opacity").trim(),
+      }))
+      if (glass.theme !== "glass" || glass.opacity !== "0%")
+        failures.push(`${scope}: glass at full strength is ${JSON.stringify(glass)}`)
+      if ((await alpha('[data-slot="sidebar"]')) === 255)
+        failures.push(`${scope}: the docs sidebar stays opaque under glass`)
+      await page.getByRole("button", { name: "Search docs" }).first().click()
+      await page.getByRole("dialog", { name: "Search the docs" }).waitFor()
+      await page.waitForTimeout(300)
+      if ((await alpha('[role="dialog"]')) !== 255) failures.push(`${scope}: a dialog turns translucent under glass`)
+      await page.keyboard.press("Escape")
+      await page.getByRole("dialog", { name: "Search the docs" }).waitFor({ state: "hidden" })
+      await page.getByRole("button", { name: "Reset", exact: true }).click()
+      if (await page.evaluate(() => document.documentElement.hasAttribute("data-theme")))
+        failures.push(`${scope}: Reset leaves the glass theme on`)
     }
     await context.close()
   }
