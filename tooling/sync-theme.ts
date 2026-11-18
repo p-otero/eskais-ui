@@ -133,7 +133,9 @@ item("theme").css = oneSelectorPerRule({
   ".dark [data-palette], [data-palette].dark": prefixed(derivedDark),
   ...Object.fromEntries(
     Object.entries(theme).filter(([selector]) =>
-      ["@utility ", "@supports ", "@media ", "[data-elevation"].some((prefix) => selector.startsWith(prefix)),
+      ["@utility ", "@supports ", "@media ", "[data-elevation", "[data-radius"].some((prefix) =>
+        selector.startsWith(prefix),
+      ),
     ),
   ),
   "@layer components": theme["@layer components"] ?? {},

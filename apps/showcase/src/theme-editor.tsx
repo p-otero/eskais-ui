@@ -23,6 +23,7 @@ import { StatusPill } from "@/components/ui/status-pill"
 
 import { measure, useThemeMeasurements } from "./hooks/use-theme-measurements"
 import type { Overrides, ThemeEditorStore } from "./theme-editor-store"
+import { ShapeControls } from "./theme-editor-shape"
 import { themeSnippet } from "./theme-snippet"
 
 const CUSTOM = "custom"
@@ -133,11 +134,13 @@ function ThemeEditor<Theme extends string, Palette extends string>({
   store: ThemeEditorStore
 }) {
   const { value: palette } = usePreference(appearance.palette)
+  const { value: density } = usePreference(appearance.density)
+  const { value: radius } = usePreference(appearance.radius)
   const overrides = useSyncExternalStore(store.subscribe, store.get, store.get)
   const [{ seeds, primary, text, link }, setMeasured] = useThemeMeasurements(appearance, store)
 
   const customised = Object.keys(overrides).length > 0
-  const snippet = themeSnippet(seeds)
+  const snippet = themeSnippet(seeds, { density, radius })
   const override = (next: Overrides) => {
     const merged = Object.values(next).every((value) => value === undefined) ? {} : { ...overrides, ...next }
     store.set(merged)
@@ -146,6 +149,8 @@ function ThemeEditor<Theme extends string, Palette extends string>({
   const reset = () => {
     store.reset()
     appearance.palette.set(appearance.palette.defaultValue)
+    appearance.density.set(appearance.density.defaultValue)
+    appearance.radius.set(appearance.radius.defaultValue)
     setMeasured(measure())
   }
 
@@ -199,15 +204,7 @@ function ThemeEditor<Theme extends string, Palette extends string>({
             step={0.002}
             format={(value) => value.toFixed(3)}
           />
-          <SeedSlider
-            label="Radius"
-            value={seeds.radius}
-            onChange={(radius) => override({ radius })}
-            min={0}
-            max={1.5}
-            step={0.125}
-            format={(value) => `${value}rem`}
-          />
+          <ShapeControls appearance={appearance} />
         </div>
         <div className="flex min-w-0 flex-col gap-group">
           <section

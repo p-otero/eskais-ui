@@ -16,13 +16,13 @@ export default function Theming() {
       <DocTitle
         eyebrow="Getting started"
         title="Theming"
-        description="A handful of seed tokens derive every colour in light and dark. Palettes, density and glass are attribute scopes you can nest anywhere."
+        description="A handful of seed tokens derive every colour in light and dark. Palettes, density, corner radius and glass are attribute scopes you can nest anywhere."
       />
 
       <H2 id="editor">Theme editor</H2>
       <P>
-        Pick a preset or a brand colour, tint the greys and set the radius. The whole site follows, on every page and on
-        your next visit, until you press Reset; copy the CSS when you like it.
+        Pick a preset, a brand and a link colour, tint the greys, and choose the density and the corner radius. The
+        whole site follows, on every page and on your next visit, until you press Reset; copy the CSS when you like it.
       </P>
       <section
         aria-label="Theme editor"
@@ -62,6 +62,47 @@ export default function Theming() {
         through <Code>createAppearance({"{ palette }"})</Code>.
       </P>
 
+      <H2 id="density-and-radius">Density and radius</H2>
+      <P>
+        Two axes, each an attribute on <Code>&lt;html&gt;</Code> or any element, that every component follows through
+        its tokens. Choose them apart: a compact table with square corners, a roomy page of pills.
+      </P>
+      <DocTable
+        label="Density and radius"
+        head={["Attribute", "Values", "What it changes"]}
+        rows={[
+          [
+            <Code key="a">data-density</Code>,
+            <Code key="v">default | compact</Code>,
+            "Control heights and padding, every spacing role and the type steps. Needs the theme-compact item.",
+          ],
+          [
+            <Code key="a">data-radius</Code>,
+            <Code key="v">none | sm | md | lg | full</Code>,
+            "The radius of controls, choices, surfaces and floating UI. Without it the shape derives from --radius (lg).",
+          ],
+          [
+            <Code key="a">data-theme="compact"</Code>,
+            "alias",
+            "Compact density with the md radius and flatter surfaces, as before the axes split. data-density or data-radius on the same element wins.",
+          ],
+        ]}
+      />
+      <Pre
+        code={`const appearance = createAppearance({
+  density: "compact",
+  radius: "sm",
+  storage: {
+    density: createLocalStorage("density"),
+    radius: createLocalStorage("radius"),
+  },
+})
+
+appearance.radius.set("full")`}
+        language="ts"
+        title="src/appearance.ts"
+      />
+
       <H2 id="themes">Compact and glass</H2>
       <DocTable
         label="Themes"
@@ -70,8 +111,8 @@ export default function Theming() {
           [<Code key="i">theme</Code>, "none", "Semantic colours, shape, density and surface tokens."],
           [
             <Code key="i">theme-compact</Code>,
-            <Code key="a">data-theme="compact"</Code>,
-            "Denser controls, tighter radii, spacing and type, at any width.",
+            <Code key="a">data-density="compact"</Code>,
+            'Compact density at any width, and the data-theme="compact" alias (compact density with the md radius).',
           ],
           [
             <Code key="i">theme-glass</Code>,
@@ -94,11 +135,12 @@ export default function Theming() {
       <Ul>
         <li>
           <Code>createAppearance({'{ colorScheme: "system" }'})</Code> and <Code>&lt;Appearance&gt;</Code> keep{" "}
-          <Code>.dark</Code>, <Code>data-color-scheme</Code>, <Code>data-theme</Code> and <Code>data-palette</Code> on{" "}
-          <Code>&lt;html&gt;</Code> in sync. Call <Code>appearance.apply()</Code> before the first render to avoid a
-          flash. <Code>appearance.colorScheme.set("dark")</Code> and <Code>appearance.theme.set("compact")</Code> change
-          them, and <Code>storage: {"{ colorScheme, theme }"}</Code> (from <Code>createLocalStorage</Code>) keeps them
-          between visits. It needs no server, so it works in a static <Code>file://</Code> page.
+          <Code>.dark</Code>, <Code>data-color-scheme</Code>, <Code>data-theme</Code>, <Code>data-palette</Code>,{" "}
+          <Code>data-density</Code> and <Code>data-radius</Code> on <Code>&lt;html&gt;</Code> in sync. Call{" "}
+          <Code>appearance.apply()</Code> before the first render to avoid a flash.{" "}
+          <Code>appearance.colorScheme.set("dark")</Code> and <Code>appearance.theme.set("compact")</Code> change them,
+          and <Code>storage: {"{ colorScheme, theme, density, radius }"}</Code> (from <Code>createLocalStorage</Code>)
+          keeps them between visits. It needs no server, so it works in a static <Code>file://</Code> page.
         </li>
         <li>
           Before any script runs, the theme follows <Code>prefers-color-scheme: dark</Code>, unless{" "}

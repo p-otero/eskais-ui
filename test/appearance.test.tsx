@@ -1,4 +1,5 @@
 import { act, render } from "@testing-library/react"
+import { createLocalStorage } from "@ui-sdk/core"
 import { afterEach, expect, test } from "vitest"
 
 import { Appearance, createAppearance } from "@/components/ui/appearance"
@@ -31,6 +32,9 @@ afterEach(() => {
   html.removeAttribute("data-theme")
   html.removeAttribute("data-palette")
   html.removeAttribute("data-color-scheme")
+  html.removeAttribute("data-density")
+  html.removeAttribute("data-radius")
+  localStorage.clear()
 })
 
 test("system follows the browser's color scheme as it changes", () => {
@@ -91,4 +95,33 @@ test("apply() marks an explicit light choice, which opts out of the CSS dark fal
   appearance.apply()
   expect(dark()).toBe(true)
   expect(html.getAttribute("data-color-scheme")).toBe("system")
+})
+
+test("density and radius are two attributes on <html>, each set on its own, and default leaves them off", () => {
+  const appearance = createAppearance({ density: "compact", radius: "sm" })
+  render(<Appearance appearance={appearance} />)
+  expect(html.getAttribute("data-density")).toBe("compact")
+  expect(html.getAttribute("data-radius")).toBe("sm")
+  act(() => void appearance.radius.set("full"))
+  expect(html.getAttribute("data-density")).toBe("compact")
+  expect(html.getAttribute("data-radius")).toBe("full")
+  act(() => void appearance.density.set("default"))
+  expect(html.hasAttribute("data-density")).toBe(false)
+  expect(html.getAttribute("data-radius")).toBe("full")
+  act(() => void appearance.radius.set("default"))
+  expect(html.hasAttribute("data-radius")).toBe(false)
+})
+
+test("density and radius are kept between visits, and a value that isn't a step is ignored", () => {
+  const storage = { density: createLocalStorage("test-density"), radius: createLocalStorage("test-radius") }
+  const first = createAppearance({ storage })
+  act(() => void first.density.set("compact"))
+  act(() => void first.radius.set("none"))
+  createAppearance({ storage }).apply()
+  expect(html.getAttribute("data-density")).toBe("compact")
+  expect(html.getAttribute("data-radius")).toBe("none")
+  localStorage.setItem("test-radius", "huge")
+  html.removeAttribute("data-radius")
+  createAppearance({ storage }).apply()
+  expect(html.hasAttribute("data-radius")).toBe(false)
 })

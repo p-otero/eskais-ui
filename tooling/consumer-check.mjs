@@ -898,7 +898,9 @@ const scenarios = {
     builtCss: [
       '[data-theme="compact"]',
       '[data-theme="glass"]',
-      '[data-density="auto"]',
+      '[data-board-density="auto"]',
+      '[data-density="compact"]',
+      '[data-radius="md"]',
       ".h-control{",
       ".backdrop-surface{",
       "--glass-opacity",

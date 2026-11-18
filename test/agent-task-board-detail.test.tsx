@@ -85,9 +85,9 @@ describe("other presentations and density", () => {
 
   test("density scopes the board's tokens; auto by default", async () => {
     const { unmount } = renderBoard()
-    expect(scope()?.getAttribute("data-density")).toBe("auto")
+    expect(scope()?.getAttribute("data-board-density")).toBe("auto")
     unmount()
     renderBoard({ density: "compact" })
-    expect(scope()?.getAttribute("data-density")).toBe("compact")
+    expect(scope()?.getAttribute("data-board-density")).toBe("compact")
   })
 })

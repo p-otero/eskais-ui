@@ -3,7 +3,7 @@ import userEvent from "@testing-library/user-event"
 import { createAgent } from "@ui-sdk/react/agent"
 import { afterEach, expect, test, vi } from "vitest"
 
-import { createAppearance } from "@/components/ui/appearance"
+import { Appearance, createAppearance } from "@/components/ui/appearance"
 
 import { ThemeEditor } from "../apps/showcase/src/theme-editor"
 import { createThemeEditorStore, type ThemeEditorStore } from "../apps/showcase/src/theme-editor-store"
@@ -24,10 +24,19 @@ window.matchMedia ??= ((media: string) => ({
 })) as unknown as typeof window.matchMedia
 
 const key = "theme-editor-test"
+const editorText = () => document.querySelector("[data-slot=theme-editor]")?.textContent ?? ""
 
 function renderEditor(store: ThemeEditorStore = createThemeEditorStore({ storageKey: key })) {
   const appearance = createAppearance({ palette: "neutral", palettes })
-  return { store, appearance, ...render(<ThemeEditor appearance={appearance} palettes={palettes} store={store} />) }
+  return {
+    store,
+    appearance,
+    ...render(
+      <Appearance appearance={appearance}>
+        <ThemeEditor appearance={appearance} palettes={palettes} store={store} />
+      </Appearance>,
+    ),
+  }
 }
 
 async function typeColour(name: string, colour: string) {
@@ -43,6 +52,8 @@ afterEach(() => {
   localStorage.clear()
   html.removeAttribute("style")
   html.removeAttribute("data-palette")
+  html.removeAttribute("data-density")
+  html.removeAttribute("data-radius")
 })
 
 test("the link colour has an area, a hue slider and a field, like the brand", async () => {
@@ -122,8 +133,8 @@ test("Reset returns to the defaults and clears storage", async () => {
 test("storage that throws or holds junk leaves the editor working", async () => {
   localStorage.setItem(key, "{not json")
   expect(createThemeEditorStore({ storageKey: key }).get()).toEqual({})
-  localStorage.setItem(key, JSON.stringify({ brand: 12, linkBrand: "url(evil)", tint: "x", radius: 0.5 }))
-  expect(createThemeEditorStore({ storageKey: key }).get()).toEqual({ radius: 0.5 })
+  localStorage.setItem(key, JSON.stringify({ brand: 12, linkBrand: "url(evil)", tint: 0.01, radius: 0.5 }))
+  expect(createThemeEditorStore({ storageKey: key }).get()).toEqual({ tint: 0.01 })
   vi.spyOn(Storage.prototype, "getItem").mockImplementation(() => {
     throw new Error("blocked")
   })
@@ -135,4 +146,40 @@ test("storage that throws or holds junk leaves the editor working", async () => 
   await settle()
   await typeColour("Link colour in OKLCH", "oklch(0.5 0.1 140)")
   expect(linkBrand()).toBe("oklch(0.5 0.1 140)")
+})
+
+test("density and corner radius are separate choices on <html>, in the CSS, and Reset clears both", async () => {
+  const user = userEvent.setup()
+  renderEditor()
+  await settle()
+  expect(editorText()).toContain("--radius:")
+  await user.click(screen.getByRole("radio", { name: "Compact" }))
+  expect(html.getAttribute("data-density")).toBe("compact")
+  expect(html.hasAttribute("data-radius")).toBe(false)
+  await user.click(screen.getByRole("radio", { name: "Small" }))
+  expect(html.getAttribute("data-radius")).toBe("sm")
+  expect(html.getAttribute("data-density")).toBe("compact")
+  expect(editorText()).toContain('On <html>: data-density="compact" data-radius="sm"')
+  expect(editorText()).not.toContain("--radius:")
+  await user.click(screen.getByRole("button", { name: "Reset" }))
+  expect(html.hasAttribute("data-density")).toBe(false)
+  expect(html.hasAttribute("data-radius")).toBe(false)
+})
+
+test("an agent sets the density and the radius by their labels", async () => {
+  renderEditor()
+  await settle()
+  const labels = agent.snapshot().map((entry) => entry.label)
+  expect(labels).toEqual(expect.arrayContaining(["Density", "Corner radius"]))
+  const result = await act(() =>
+    agent.act({
+      steps: [
+        { ref: "Density", action: "setValue", args: ["compact"] },
+        { ref: "Corner radius", action: "setValue", args: ["none"] },
+      ],
+    }),
+  )
+  expect(result.ok, result.error?.message).toBe(true)
+  expect(html.getAttribute("data-density")).toBe("compact")
+  expect(html.getAttribute("data-radius")).toBe("none")
 })
