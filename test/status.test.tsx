@@ -51,6 +51,51 @@ test("a status pill exposes its tone and draws a decorative dot that pulses only
   expect(pill("Draft").querySelector("[data-slot=status-pill-dot]")).toBeNull()
 })
 
+test("a pulse pings three times and runs again when the status changes; pulse=always keeps pinging", () => {
+  const { rerender } = render(
+    <>
+      <StatusPill tone="info" dot pulse>
+        Syncing
+      </StatusPill>
+      <StatusPill tone="info" dot pulse="always">
+        Live
+      </StatusPill>
+    </>,
+  )
+  const ping = () => pill("Syncing").querySelector<HTMLElement>("[data-slot=status-ping]")!
+  const first = ping()
+  // A ping that never stops keeps a transform animation running, and the page promotes what follows it to layers.
+  expect(first.style.animationIterationCount).toBe("3")
+  expect(pill("Syncing").getAttribute("data-pulse")).toBe("")
+  const always = pill("Live").querySelector<HTMLElement>("[data-slot=status-ping]")!
+  expect(always.style.animationIterationCount).toBe("")
+  expect(pill("Live").getAttribute("data-pulse")).toBe("always")
+
+  rerender(
+    <>
+      <StatusPill tone="info" dot pulse>
+        Syncing
+      </StatusPill>
+      <StatusPill tone="info" dot pulse="always">
+        Live
+      </StatusPill>
+    </>,
+  )
+  expect(ping()).toBe(first)
+  rerender(
+    <>
+      <StatusPill tone="warning" dot pulse>
+        Syncing
+      </StatusPill>
+      <StatusPill tone="info" dot pulse="always">
+        Live
+      </StatusPill>
+    </>,
+  )
+  expect(ping()).not.toBe(first)
+  expect(ping().style.animationIterationCount).toBe("3")
+})
+
 test("chips without onSelect are plain list items with the full label in title", () => {
   render(<DependencyChips aria-label="Blocked by" items={blockers} />)
   const list = screen.getByRole("list", { name: "Blocked by" })

@@ -1,4 +1,4 @@
-import { createElement, lazy, Suspense, use, useRef, type ComponentType, type RefObject } from "react"
+import { createElement, Suspense, use, useRef, type RefObject } from "react"
 
 import { Code, CodeBlock } from "@/components/ui/code-block"
 import { Link } from "@/components/ui/link"
@@ -11,25 +11,20 @@ import { categoryOf } from "../content/categories"
 import { itemNotes } from "../content/items"
 import { findItem, type RegistryItem } from "../registry"
 import { componentPath } from "../routes"
+import { loadExample } from "../preload"
 import { linkTo } from "../router"
 import { AgentPanel } from "./agent-panel"
 import { ApiSection, importSnippet, useItemApi } from "./api-section"
 import { DocTitle, H2, P, Ul } from "./prose"
 
-const exampleModules = import.meta.glob<{ default: ComponentType }>("../examples/*.tsx")
 const exampleSources = import.meta.glob<string>("../examples/*.tsx", { query: "?raw", import: "default" })
 
-const exampleComponents = new Map<string, ComponentType>()
 const sourceCache = new Map<string, Promise<string>>()
 
-function exampleComponent(name: string) {
-  let component = exampleComponents.get(name)
-  const load = exampleModules[`../examples/${name}.tsx`]
-  if (!component && load) {
-    component = lazy(load)
-    exampleComponents.set(name, component)
-  }
-  return component
+// Read through `use` from the preload cache: an example preloaded on hover renders without a fallback.
+function Example({ name }: { name: string }) {
+  const module = loadExample(name)
+  return module ? createElement(use(module).default) : null
 }
 
 function exampleSource(name: string) {
@@ -54,7 +49,6 @@ function ExampleSource({ name }: { name: string }) {
 const installCommand = (name: string) => `npx shadcn@latest add @eskais/${name}`
 
 function Preview({ item, preview }: { item: RegistryItem; preview: RefObject<HTMLDivElement | null> }) {
-  const example = exampleComponent(item.name)
   return (
     <Tabs defaultValue="preview" className="flex flex-col gap-items">
       <h2 className="sr-only">Example</h2>
@@ -72,7 +66,7 @@ function Preview({ item, preview }: { item: RegistryItem; preview: RefObject<HTM
           <div className="pointer-events-none absolute inset-0 bg-grid-lines opacity-60" aria-hidden="true" />
           <div className="relative flex w-full min-w-0 justify-center">
             <Suspense fallback={<Spinner label="Loading example" />}>
-              {example ? createElement(example) : null}
+              <Example name={item.name} />
             </Suspense>
           </div>
         </div>
@@ -135,13 +129,37 @@ function Dependencies({ item }: { item: RegistryItem }) {
 }
 
 function ItemPage({ item }: { item: RegistryItem }) {
+  return (
+    <>
+      <DocTitle eyebrow={categoryOf(item.name)} title={item.title ?? item.name} description={item.description} />
+      <Suspense fallback={<ItemBodyPending />}>
+        <ItemBody item={item} />
+      </Suspense>
+    </>
+  )
+}
+
+// While the example loads, a box as tall as the viewport keeps everything after it out of view, so nothing the reader
+// sees moves when the example and the sections under it arrive together (no layout shift). The title above shows at once.
+function ItemBodyPending() {
+  return (
+    <div className="flex min-h-dvh flex-col">
+      <div className="flex min-h-64 items-center justify-center rounded-surface border bg-card">
+        <Spinner label="Loading example" />
+      </div>
+    </div>
+  )
+}
+
+function ItemBody({ item }: { item: RegistryItem }) {
+  // An example preloaded on intent is already here, and this doesn't suspend.
+  const example = loadExample(item.name)
+  if (example) use(example)
   const notes = itemNotes[item.name]
-  const category = categoryOf(item.name)
   const related = notes?.related ?? []
   const preview = useRef<HTMLDivElement>(null)
   return (
     <>
-      <DocTitle eyebrow={category} title={item.title ?? item.name} description={item.description} />
       <Preview item={item} preview={preview} />
 
       <section className="flex flex-col gap-items" aria-labelledby="installation">
@@ -205,4 +223,4 @@ function ItemPage({ item }: { item: RegistryItem }) {
   )
 }
 
-export { exampleComponent, installCommand, ItemPage }
+export { installCommand, ItemPage }

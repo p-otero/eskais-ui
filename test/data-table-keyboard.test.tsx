@@ -39,7 +39,15 @@ afterEach(() => {
   vi.restoreAllMocks()
 })
 
-function Invoices({ count = 20, onOpen }: { count?: number; onOpen?: (invoice: Invoice) => void }) {
+function Invoices({
+  count = 20,
+  onOpen,
+  navigation,
+}: {
+  count?: number
+  onOpen?: (invoice: Invoice) => void
+  navigation?: "rows" | "cells"
+}) {
   const [selection, setSelection] = useState<string[]>([])
   return (
     <>
@@ -53,6 +61,7 @@ function Invoices({ count = 20, onOpen }: { count?: number; onOpen?: (invoice: I
         selection={selection}
         onSelectionChange={setSelection}
         onRowOpen={onOpen}
+        navigation={navigation}
         virtualize={count > 200 ? "auto" : false}
       />
       <output>{selection.join(" ")}</output>
@@ -113,4 +122,57 @@ test("past 200 rows the table virtualizes with row indexes, and agents still sel
   const result = await agent.act({ steps: [{ ref: "Invoices", action: "setSelection", args: [["INV-1999"]] }] })
   expect(result.ok, result.error?.message).toBe(true)
   expect(screen.getByRole("status").textContent).toBe("INV-1999")
+})
+
+const focusedCell = () => {
+  const cell = document.activeElement
+  const row = cell?.closest("tr")?.getAttribute("data-row-id")
+  return row && cell ? `${row}:${String([...(cell.parentElement?.children ?? [])].indexOf(cell))}` : undefined
+}
+
+test('navigation="cells" makes the cells one tab stop: arrows by cell, Home/End, Space selects, Enter opens', async () => {
+  const user = userEvent.setup()
+  const onOpen = vi.fn()
+  render(<Invoices navigation="cells" onOpen={onOpen} />)
+  expect(screen.getByRole("grid", { name: "Invoices" })).toBeTruthy()
+  const stops = [...document.querySelectorAll<HTMLElement>('[role="gridcell"]')].filter((cell) => cell.tabIndex === 0)
+  expect(stops).toHaveLength(1)
+  expect(stops[0]?.dataset.slot).toBe("table-cell")
+  expect(document.querySelectorAll('tr[tabindex="0"]')).toHaveLength(0)
+  expect(document.querySelectorAll('tbody [role="checkbox"][tabindex="0"], tbody button[tabindex="0"]')).toHaveLength(0)
+
+  stops[0]?.focus()
+  expect(focusedCell()).toBe("INV-1:0")
+  await user.keyboard("{ArrowRight}{ArrowRight}{ArrowDown}")
+  expect(focusedCell()).toBe("INV-2:2")
+  await user.keyboard("{End}")
+  expect(focusedCell()).toBe("INV-2:3")
+  await user.keyboard("{Home}")
+  expect(focusedCell()).toBe("INV-2:0")
+  await user.keyboard("{Control>}{End}{/Control}")
+  expect(focusedCell()).toBe("INV-20:3")
+  await user.keyboard(" ")
+  expect(screen.getByText("INV-20", { selector: "output" })).toBeTruthy()
+  await user.keyboard("{Enter}")
+  expect(onOpen).toHaveBeenCalledWith(expect.objectContaining({ id: "INV-20" }))
+})
+
+test("cells reach rows a virtualized table hasn't rendered", async () => {
+  // The table scrolls with the window here: let a reveal scroll it, so the row renders and its cell takes focus.
+  Object.defineProperty(document.documentElement, "scrollHeight", { configurable: true, value: 1000 * 41 + 800 })
+  vi.mocked(globalThis.scrollTo).mockImplementation(((options?: ScrollToOptions | number, y?: number) => {
+    const top = typeof options === "number" ? (y ?? 0) : (options?.top ?? globalThis.scrollY)
+    Object.defineProperty(globalThis, "scrollY", { configurable: true, value: top })
+    globalThis.dispatchEvent(new Event("scroll"))
+  }) as typeof globalThis.scrollTo)
+  const user = userEvent.setup()
+  render(<Invoices count={1000} navigation="cells" />)
+  await settle()
+  const start = [...document.querySelectorAll<HTMLElement>('[role="gridcell"]')].find((cell) => cell.tabIndex === 0)
+  start?.focus()
+  await user.keyboard("{ArrowRight}{Control>}{End}{/Control}")
+  await settle()
+  expect(focusedCell()).toBe("INV-1000:3")
+  Object.defineProperty(globalThis, "scrollY", { configurable: true, value: 0 })
+  Reflect.deleteProperty(document.documentElement, "scrollHeight")
 })

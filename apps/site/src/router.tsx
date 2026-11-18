@@ -1,4 +1,6 @@
-import { useSyncExternalStore, type MouseEvent } from "react"
+import { useSyncExternalStore } from "react"
+
+import { preloadRoute } from "./preload"
 
 // The built entry lives in <site>/assets/, so its parent folder is the site root wherever it's hosted.
 const basePath = import.meta.env.DEV ? "/" : new URL("../", import.meta.url).pathname
@@ -43,25 +45,21 @@ function navigate(route: string) {
   else window.scrollTo({ top: 0 })
 }
 
-function isPlainClick(event: MouseEvent) {
-  return event.button === 0 && !event.metaKey && !event.ctrlKey && !event.shiftKey && !event.altKey
-}
-
-/** Props for a registry Link (or SidebarItem, NavigationMenuLink) that routes on the client. */
+/**
+ * Props for a registry Link (or SidebarItem, NavigationMenuLink, ButtonLink) that routes on the client: on a mouse
+ * press, a click or Enter, and preloads the route's code when someone is about to follow it.
+ */
 function linkTo(route: string) {
   return {
     href: hrefFor(route),
-    onClick: (event: MouseEvent) => {
-      if (event.defaultPrevented || !isPlainClick(event)) return
-      event.preventDefault()
-      navigate(route)
-    },
+    onNavigate: () => navigate(route),
+    onIntent: () => preloadRoute(route),
   }
 }
 
 /** Like linkTo, and also offers agents a `follow` action; keep it for the few links an agent should follow. */
 function followTo(route: string) {
-  return { href: hrefFor(route), onFollow: () => navigate(route) }
+  return { href: hrefFor(route), onFollow: () => navigate(route), onIntent: () => preloadRoute(route) }
 }
 
 export { basePath, followTo, hrefFor, linkTo, navigate, routeFromPathname, useRoute }

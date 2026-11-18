@@ -10,10 +10,18 @@ import { AgentApproval } from "./agent"
 import { appearance } from "./appearance"
 import { SiteHeader } from "./header"
 import { useDocumentTitle } from "./hooks/use-document-title"
-import { useRoute } from "./router"
+import { routeGuide } from "./preload"
+import { routeFromPathname, useRoute } from "./router"
 
 const Landing = lazy(() => import("./landing/landing").then((module) => ({ default: module.Landing })))
-const DocsRoutes = lazy(() => import("./docs/docs-routes").then((module) => ({ default: module.DocsRoutes })))
+// On a guide, the docs routes resolve once the guide has loaded too, so the page shows in one reveal: a second
+// suspension inside them held the guide back about 300 ms more (React's Suspense reveal throttle).
+const DocsRoutes = lazy(() =>
+  Promise.all([
+    import("./docs/docs-routes"),
+    routeGuide(routeFromPathname(location.pathname))?.catch(() => undefined),
+  ]).then(([module]) => ({ default: module.DocsRoutes })),
+)
 const NotFound = lazy(() => import("./not-found").then((module) => ({ default: module.NotFound })))
 
 function Loading() {

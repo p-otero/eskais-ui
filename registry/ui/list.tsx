@@ -29,7 +29,7 @@ import {
 
 import { list, type ListEntry, type ListOptions } from "@/components/ui/list-primitive"
 import { RowNavigationProvider, useRowNavigation } from "@/components/ui/row-navigation"
-import { GapFindStubs, useVirtualRows, type Virtualize } from "@/components/ui/virtual-rows"
+import { useVirtualRows, type Virtualize } from "@/components/ui/virtual-rows"
 import { cn } from "@/lib/utils"
 
 type ListVariant = "row" | "card"
@@ -45,7 +45,12 @@ type ListContextValue = {
 }
 
 /** Where a data row sits among all rows, while the list is virtualized. */
-type ListItemPosition = { index: number; setsize: number; measure?: (node: HTMLElement | null) => void }
+type ListItemPosition = {
+  index: number
+  setsize: number
+  /** The virtualizer's ref for the row; it returns the cleanup that stops measuring. */
+  measure?: (node: HTMLElement | null) => (() => void) | undefined
+}
 
 const ListContext = createContext<ListContextValue | null>(null)
 const PositionContext = createContext<ListItemPosition | null>(null)
@@ -216,11 +221,17 @@ function List<Item = unknown>({
     [data, ids, itemText],
   )
 
+  const keyAt = useCallback((index: number) => ids?.[index] ?? String(index), [ids])
+  const textAt = useCallback(
+    (index: number) => (data?.[index] === undefined ? "" : itemText(data[index])),
+    [data, itemText],
+  )
   const { anchor, ...virtual } = useVirtualRows({
     count: data?.length ?? 0,
+    findable: textAt,
     virtualize: renderItem && variant === "row" ? virtualize : false,
     estimateSize,
-    getKey: (index) => ids?.[index] ?? String(index),
+    getKey: keyAt,
   })
 
   // Data rows name themselves; registering only keeps their handles, since re-rendering here re-registers them.
@@ -283,27 +294,12 @@ function List<Item = unknown>({
     [variant, selectable, checked, refresh, handle],
   )
 
-  const textAt = useCallback(
-    (index: number) => (data?.[index] === undefined ? "" : itemText(data[index])),
-    [data, itemText],
-  )
-
   let rows: ReactNode = children
   if (data && renderItem) {
     const GapTag = selectable ? "div" : "li"
     rows = virtual.segments.map((segment) => {
       if (segment.type === "gap") {
-        return (
-          <GapTag key={segment.key} aria-hidden="true" data-slot="list-gap" style={{ height: segment.size }}>
-            <GapFindStubs
-              from={segment.from}
-              to={segment.to}
-              text={textAt}
-              offsetOf={virtual.offsetOf}
-              onFound={virtual.scrollToIndex}
-            />
-          </GapTag>
-        )
+        return <GapTag key={segment.key} aria-hidden="true" data-slot="list-gap" style={{ height: segment.size }} />
       }
       const item = data[segment.index]
       if (item === undefined) return null

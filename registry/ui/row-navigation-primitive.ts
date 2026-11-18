@@ -1,4 +1,4 @@
-import { createRovingFocus, definePrimitive, type RovingFocusMoveContext } from "@ui-sdk/core"
+import { createRovingFocus, definePrimitive, selects, type RovingFocusMoveContext } from "@ui-sdk/core"
 
 type RowNavigationOptions = {
   /** Every row's id in order, including rows a virtualized collection hasn't rendered. Defaults to the rendered rows. */
@@ -109,6 +109,9 @@ const rowNavigation = definePrimitive({
     root: slot({}),
     row: slot<{ value: string }>({
       props: { value: "string" },
+      // A move changes two rows: only the one losing and the one taking `active` hear it, so a key press costs
+      // the same with 50 rows or 10,000. While nothing is active every row may claim the stop, so all hear `null`.
+      selects: selects({ active: ({ key }) => [key, null] }),
       attrs: (state, part) => ({
         tabindex: part.api.roving.tabIndex(state, part),
         "data-active": state.active === part.key ? "" : undefined,

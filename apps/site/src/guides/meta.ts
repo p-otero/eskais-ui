@@ -48,6 +48,12 @@ const guides: GuideMeta[] = [
     covers: ["row-navigation", "virtual-rows"],
   },
   {
+    slug: "performance",
+    title: "Performance",
+    description:
+      "What a key press may cost, the budgets CI holds, the bun run perf harness and how to measure your own screens.",
+  },
+  {
     slug: "server-data",
     title: "Server data",
     description:

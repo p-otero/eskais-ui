@@ -10,6 +10,11 @@ const fromRoot = (path: string) => fileURLToPath(new URL(`../../${path}`, import
 
 export default defineConfig({
   plugins: [react(), process.env.REACT_COMPILER === "1" && reactCompiler(), tailwindcss()],
+  // tooling/perf builds into its own folders, and keeps component names so its render counts can name them.
+  build: {
+    outDir: process.env.SHOWCASE_OUT_DIR ?? "dist",
+    rolldownOptions: { output: { keepNames: process.env.SHOWCASE_KEEP_NAMES === "1" } },
+  },
   resolve: {
     alias: [
       { find: /^@\/components\/ui\/(.*)$/, replacement: `${fromRoot("registry/ui")}/$1` },

@@ -1,6 +1,6 @@
 import { createChange, createController, definePrimitive, type ChangeDetails, type ChangeOptions } from "@ui-sdk/core"
 
-import type { DataTableSort, SortDirection } from "@/lib/data-table-model"
+import { toggleIds, type DataTableSort, type SortDirection } from "@/lib/data-table-model"
 
 type DataTableSortChangeReason = "item-press" | "imperative"
 type DataTableSelectionChangeReason = "press" | "select-all" | "imperative"
@@ -37,6 +37,15 @@ interface DataTableController {
     options?: ChangeOptions<DataTableSortChangeReason>,
   ) => boolean | undefined
   setSelection: (ids: string[], options?: ChangeOptions<DataTableSelectionChangeReason>) => boolean | undefined
+  /**
+   * Checks (`true`) or unchecks (`false`) rows on top of the latest selection, including one an earlier call chose
+   * that hasn't rendered yet. Without `checked`, one row flips and several are checked unless all already are.
+   */
+  toggleRows: (
+    ids: readonly string[],
+    checked?: boolean,
+    options?: ChangeOptions<DataTableSelectionChangeReason>,
+  ) => boolean | undefined
   setPage: (page: number, options?: ChangeOptions<DataTablePageChangeReason>) => boolean | undefined
 }
 
@@ -77,6 +86,19 @@ const dataTable = definePrimitive({
   controlled: ["sort", "selection", "page"],
   api: (context) => {
     const change = createChange(context)
+    // A controlled selection reaches the store only once the table renders again, and agent steps run back to back
+    // without one: a toggle builds on what the previous call chose while the store still shows the same selection.
+    let chosen: { shown: readonly string[]; next: string[] } | null = null
+    const latest = () => {
+      const shown = context.store.get().selection
+      return chosen !== null && chosen.shown === shown ? chosen.next : shown
+    }
+    const select = (next: string[], options?: ChangeOptions<DataTableSelectionChangeReason>) => {
+      const shown = context.store.get().selection
+      const changed = change("selection", next, reasonOf(options))
+      if (changed !== false) chosen = { shown, next }
+      return changed
+    }
     return {
       sortBy(columnId: unknown, direction?: unknown, options?: ChangeOptions<DataTableSortChangeReason>) {
         if (columnId === null) return change("sort", null, reasonOf(options))
@@ -98,7 +120,12 @@ const dataTable = definePrimitive({
         if (!Array.isArray(ids) || ids.some((id) => typeof id !== "string" || !known.has(id))) {
           throw new RangeError("setSelection takes a list of row ids from the table.")
         }
-        return change("selection", [...new Set(ids as string[])], reasonOf(options))
+        return select([...new Set(ids as string[])], options)
+      },
+      toggleRows(ids: readonly string[], checked?: boolean, options?: ChangeOptions<DataTableSelectionChangeReason>) {
+        const current = latest()
+        const check = checked ?? !ids.every((id) => current.includes(id))
+        return select(toggleIds(current, ids, check), options)
       },
       setPage(page: unknown, options?: ChangeOptions<DataTablePageChangeReason>) {
         const pageCount = context.options().pageCount ?? 1

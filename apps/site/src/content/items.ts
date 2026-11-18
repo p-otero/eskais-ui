@@ -814,7 +814,9 @@ const itemNotes: Record<string, ItemNotes> = {
     related: ["alert", "button"],
   },
   "status-pill": {
-    a11y: ["StatusDot takes a screen-reader label; its pulse stops under reduced motion."],
+    a11y: [
+      "StatusDot takes a screen-reader label; its pulse pings three times when the status changes and stops under reduced motion.",
+    ],
     related: ["badge", "tone", "liveness-indicator"],
   },
   spinner: {

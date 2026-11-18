@@ -61,7 +61,6 @@ function crumbsFor(route: string): { label: string; route: string }[] {
 function SiteDocsLayout({ route, children }: { route: string; children: ReactNode }) {
   const article = useRef<HTMLDivElement>(null)
   const headings = useTocItems(article, "[data-toc]")
-  const { previous, next } = neighbours(route)
   const crumbs = crumbsFor(route)
   const sidebar = useSidebarState({ storageKey: "eskais-site-sidebar" })
   return (
@@ -82,12 +81,22 @@ function SiteDocsLayout({ route, children }: { route: string; children: ReactNod
       <div ref={article} className="flex min-w-0 flex-col gap-section">
         {children}
       </div>
-      <DocsPager
-        previous={previous && { title: previous.title, ...linkTo(previous.route) }}
-        next={next && { title: next.title, ...linkTo(next.route) }}
-      />
     </DocsLayout>
   )
 }
 
-export { SiteDocsLayout }
+/**
+ * The previous and next pages. The routes render it inside the page's Suspense boundary, so it appears with the
+ * page instead of under its loading spinner, where the page would push it down when it arrives (a layout shift).
+ */
+function SiteDocsPager({ route }: { route: string }) {
+  const { previous, next } = neighbours(route)
+  return (
+    <DocsPager
+      previous={previous && { title: previous.title, ...linkTo(previous.route) }}
+      next={next && { title: next.title, ...linkTo(next.route) }}
+    />
+  )
+}
+
+export { SiteDocsLayout, SiteDocsPager }

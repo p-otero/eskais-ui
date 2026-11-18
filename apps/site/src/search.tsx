@@ -1,15 +1,6 @@
 import { SearchIcon } from "lucide-react"
-import { useState } from "react"
+import { lazy, Suspense, useState } from "react"
 
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandGroupLabel,
-  CommandInput,
-  CommandItem,
-  CommandList,
-} from "@/components/ui/command"
 import {
   CommandDialog,
   CommandDialogContent,
@@ -18,9 +9,17 @@ import {
   CommandDialogTrigger,
   createCommandDialogController,
 } from "@/components/ui/command-dialog"
+import { Spinner } from "@/components/ui/spinner"
 
-import { docSections } from "./pages"
-import { hrefFor, navigate } from "./router"
+// Loaded after the page, while the browser is idle, so the first page's code doesn't wait for the palette and ⌘K
+// still finds it ready.
+const loadResults = () => import("./search-results")
+const SearchResults = lazy(() => loadResults().then((module) => ({ default: module.SearchResults })))
+if (typeof window !== "undefined") {
+  addEventListener("load", () => (globalThis.requestIdleCallback ?? setTimeout)(() => void loadResults()), {
+    once: true,
+  })
+}
 
 // The labelled trigger keeps ⌘K and the name agents open the dialog by while it is hidden on narrow screens, where
 // an icon button opens the same dialog through the controller.
@@ -45,31 +44,15 @@ function SiteSearch() {
         <SearchIcon />
       </CommandDialogOpenButton>
       <CommandDialogContent title="Search the docs">
-        <Command>
-          <CommandInput aria-label="Search pages" placeholder="Search components and guides" />
-          <CommandEmpty>No pages found.</CommandEmpty>
-          <CommandList className="max-h-96">
-            {docSections.map((section) => (
-              <CommandGroup key={section.name}>
-                <CommandGroupLabel>{section.name}</CommandGroupLabel>
-                {section.pages.map((page) => (
-                  <CommandItem
-                    key={page.route}
-                    value={page.route}
-                    keywords={[page.title, ...page.keywords]}
-                    href={hrefFor(page.route)}
-                    onFollow={() => {
-                      search.close()
-                      navigate(page.route)
-                    }}
-                  >
-                    {page.title}
-                  </CommandItem>
-                ))}
-              </CommandGroup>
-            ))}
-          </CommandList>
-        </Command>
+        <Suspense
+          fallback={
+            <div className="flex justify-center py-section">
+              <Spinner label="Loading search" />
+            </div>
+          }
+        >
+          <SearchResults onFollow={() => search.close()} />
+        </Suspense>
       </CommandDialogContent>
     </CommandDialog>
   )

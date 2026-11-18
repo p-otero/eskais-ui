@@ -15,16 +15,28 @@ import {
   CommandShortcut as CommandShortcutPrimitive,
   CommandStatus as CommandStatusPrimitive,
   createCommandController,
+  type CommandData,
+  type CommandDataItem,
 } from "@ui-sdk/react/command"
 import { mergeProps } from "@ui-sdk/react/primitive"
-import { createContext, use, useCallback, useState, type ComponentProps } from "react"
+import { createContext, memo, use, useCallback, useState, type ComponentProps, type ReactNode } from "react"
 import { SearchIcon } from "lucide-react"
 
 import { isHashRoute, useFastLink } from "@/components/ui/fast-link"
 import { Kbd } from "@/components/ui/kbd"
 import { isPlainClick } from "@/components/ui/link-primitive"
-import { cn, cnState } from "@/lib/utils"
+import {
+  COMMAND_VIRTUALIZE_THRESHOLD,
+  createCommandHighlight,
+  useCommandRows,
+  type CommandHighlight,
+  type CommandRow as CommandRowData,
+} from "@/components/ui/use-command-rows"
 import { useHighlightFirstOnOpen } from "@/components/ui/use-command-reset"
+import type { Virtualize } from "@/components/ui/virtual-rows"
+import { cn, cnState } from "@/lib/utils"
+
+const HighlightContext = createContext<CommandHighlight | null>(null)
 
 type CommandHost = {
   /** Whether the dialog around the command list is open. */
@@ -72,12 +84,14 @@ function Command({
   defaultPages = noPages,
   onPagesChange,
   onAction,
+  onValueChange,
   controller: controllerProp,
   autoHighlight,
   ref,
   ...props
 }: CommandProps) {
   const host = use(CommandHostContext)
+  const [highlight] = useState(createCommandHighlight)
   const [ownController] = useState(createCommandController)
   const controller = controllerProp ?? ownController
   const [root, setRoot] = useState<HTMLElement | null>(null)
@@ -106,31 +120,37 @@ function Command({
   const hosted = host !== null
   useHighlightFirstOnOpen(open, hosted && autoHighlight !== false && props.value === undefined, controller, root)
   return (
-    <CommandPrimitive
-      className={cnState(
-        "flex w-full flex-col overflow-hidden rounded-surface bg-popover/(--glass-opacity) text-popover-foreground in-data-[slot=dialog-content]:rounded-none in-data-[slot=dialog-content]:bg-transparent",
-        className,
-      )}
-      query={queryProp ?? (hosted ? ownQuery : undefined)}
-      defaultQuery={hosted ? undefined : defaultQuery}
-      onQueryChange={(query, details) => {
-        if (escapeClosesHost(host, details)) return
-        onQueryChange?.(query, details)
-        if (!details.canceled) setOwnQuery(query)
-      }}
-      pages={pagesProp ?? (hosted ? ownPages : undefined)}
-      defaultPages={hosted ? undefined : defaultPages}
-      onPagesChange={(pages, details) => {
-        if (escapeClosesHost(host, details)) return
-        onPagesChange?.(pages, details)
-        if (!details.canceled) setOwnPages(pages)
-      }}
-      onAction={(value, details) => (isModifiedLinkPress(details.event) ? undefined : onAction?.(value, details))}
-      controller={controller}
-      autoHighlight={autoHighlight}
-      ref={rootRef}
-      {...props}
-    />
+    <HighlightContext value={highlight}>
+      <CommandPrimitive
+        className={cnState(
+          "flex w-full flex-col overflow-hidden rounded-surface bg-popover/(--glass-opacity) text-popover-foreground in-data-[slot=dialog-content]:rounded-none in-data-[slot=dialog-content]:bg-transparent",
+          className,
+        )}
+        query={queryProp ?? (hosted ? ownQuery : undefined)}
+        defaultQuery={hosted ? undefined : defaultQuery}
+        onQueryChange={(query, details) => {
+          if (escapeClosesHost(host, details)) return
+          onQueryChange?.(query, details)
+          if (!details.canceled) setOwnQuery(query)
+        }}
+        pages={pagesProp ?? (hosted ? ownPages : undefined)}
+        defaultPages={hosted ? undefined : defaultPages}
+        onPagesChange={(pages, details) => {
+          if (escapeClosesHost(host, details)) return
+          onPagesChange?.(pages, details)
+          if (!details.canceled) setOwnPages(pages)
+        }}
+        onAction={(value, details) => (isModifiedLinkPress(details.event) ? undefined : onAction?.(value, details))}
+        onValueChange={(value, details) => {
+          highlight.set(details.index, details.reason)
+          onValueChange?.(value, details)
+        }}
+        controller={controller}
+        autoHighlight={autoHighlight}
+        ref={rootRef}
+        {...props}
+      />
+    </HighlightContext>
   )
 }
 
@@ -184,12 +204,7 @@ function CommandGroup({ className, ...props }: ComponentProps<typeof CommandGrou
 }
 
 function CommandGroupLabel({ className, ...props }: ComponentProps<typeof CommandGroupLabelPrimitive>) {
-  return (
-    <CommandGroupLabelPrimitive
-      className={cnState("px-inset-item py-inline text-xs font-medium text-muted-foreground", className)}
-      {...props}
-    />
-  )
+  return <CommandGroupLabelPrimitive className={cnState(groupLabelClass, className)} {...props} />
 }
 
 const commandItemClassName =
@@ -288,6 +303,105 @@ function CommandLinkItem({
   )
 }
 
+const groupLabelClass = "px-inset-item py-inline text-xs font-medium text-muted-foreground"
+
+type CommandRowsProps<Item extends CommandDataItem> = {
+  /** The commands to show: `CommandList`'s `state.items`, with `items` passed to `Command`. */
+  items: CommandData
+  /** What a command shows. Its label by default. */
+  children?: (item: Item) => ReactNode
+  /** `"auto"` renders only the commands in view past 50; `true` always, `false` never. */
+  virtualize?: Virtualize
+}
+
+/**
+ * Renders the commands of `Command`'s `items` as styled `CommandItem`s. Past 50 commands only those in view mount,
+ * with the highlighted one, so a long palette opens on the next frame; typing, the arrow keys and agents still reach
+ * every command through the data. Groups keep their labels, as plain text in a long list.
+ */
+function CommandRows<Item extends CommandDataItem = CommandDataItem>({
+  items,
+  children,
+  virtualize = "auto",
+}: CommandRowsProps<Item>) {
+  const { rows, anchor, virtual, ready } = useCommandRows<Item>(items, use(HighlightContext), virtualize)
+  if (!ready) return null
+  const command = (row: CommandRowData<Item>, at: number) => (
+    <CommandRow key={row.key} row={row} at={at} measure={virtual.measureElement} render={children} />
+  )
+  if (!virtual.enabled) {
+    const out: ReactNode[] = []
+    const groups = new Map<string, ReactNode[]>()
+    for (const [at, row] of rows.entries()) {
+      if (row.type === "separator") out.push(<CommandSeparator key={row.key} />)
+      else if (row.type === "item")
+        (row.group === undefined ? out : (groups.get(row.group) ?? out)).push(command(row, at))
+      else {
+        const members: ReactNode[] = []
+        groups.set(row.key, members)
+        out.push(
+          <CommandGroup key={row.key}>
+            {row.label && <CommandGroupLabel>{row.label}</CommandGroupLabel>}
+            {members}
+          </CommandGroup>,
+        )
+      }
+    }
+    return out
+  }
+  return (
+    <div ref={anchor} role="presentation" data-slot="command-rows">
+      {virtual.segments.map((segment) => {
+        if (segment.type === "gap")
+          return <div key={segment.key} aria-hidden="true" data-slot="command-gap" style={{ height: segment.size }} />
+        const row = rows[segment.index]
+        return row ? command(row, segment.index) : null
+      })}
+    </div>
+  )
+}
+
+const commandProps = ({ value, label, keywords, disabled, shortcut }: CommandDataItem) => ({
+  value,
+  label,
+  keywords,
+  disabled,
+  shortcut,
+})
+
+type CommandRowProps<Item extends CommandDataItem> = {
+  row: CommandRowData<Item>
+  at: number
+  measure: ((node: HTMLElement | null) => (() => void) | undefined) | undefined
+  render: ((item: Item) => ReactNode) | undefined
+}
+
+// Memoized: moving the highlight or scrolling renders only the rows that come into view.
+const CommandRow = memo(function CommandRow<Item extends CommandDataItem>(props: CommandRowProps<Item>) {
+  const { row, at, measure, render } = props
+  if (row.type === "separator")
+    return (
+      <div ref={measure} data-index={at} role="presentation" className="py-inline">
+        <div className="-mx-inline h-px bg-border" />
+      </div>
+    )
+  if (row.type === "group")
+    return (
+      <div ref={measure} data-index={at} role="presentation" className={row.first ? undefined : "pt-inline"}>
+        {row.label && (
+          <div data-slot="command-group-label" className={groupLabelClass}>
+            {row.label}
+          </div>
+        )}
+      </div>
+    )
+  return (
+    <CommandItem ref={measure} data-index={at} {...commandProps(row.item)} index={row.index}>
+      {render?.(row.item) ?? <CommandItemText />}
+    </CommandItem>
+  )
+}) as <Item extends CommandDataItem>(props: CommandRowProps<Item>) => ReactNode
+
 function CommandItemIcon({ className, ...props }: ComponentProps<typeof CommandItemIconPrimitive>) {
   return (
     <CommandItemIconPrimitive
@@ -341,9 +455,11 @@ export {
   CommandItemText,
   CommandList,
   CommandPage,
+  CommandRows,
   CommandSeparator,
   CommandShortcut,
   CommandStatus,
+  COMMAND_VIRTUALIZE_THRESHOLD,
   createCommandController,
 }
-export type { CommandHost, CommandItemFollowDetails, CommandItemProps, CommandProps }
+export type { CommandData, CommandDataItem, CommandHost, CommandItemFollowDetails, CommandItemProps, CommandProps }

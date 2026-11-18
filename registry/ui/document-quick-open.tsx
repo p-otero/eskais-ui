@@ -2,17 +2,18 @@
 
 import { useAsyncOptions, type AsyncOptionsStatus } from "@ui-sdk/react/async-options"
 import type { SearchFilter } from "@ui-sdk/react/command"
-import { useRef, type ReactNode } from "react"
+import { useMemo, useRef, type ReactNode } from "react"
 
 import {
   Command,
   CommandEmpty,
-  CommandGroup,
-  CommandGroupLabel,
   CommandInput,
-  CommandItem,
+  CommandItemText,
   CommandList,
+  CommandRows,
   CommandStatus,
+  type CommandData,
+  type CommandDataItem,
 } from "@/components/ui/command"
 import { CommandDialog, CommandDialogContent } from "@/components/ui/command-dialog"
 import { useDocumentWorkspace } from "@/components/ui/document-workspace-context"
@@ -94,21 +95,29 @@ type QuickOpenListProps = {
   onLoadMore?: () => void
 }
 
+type QuickOpenCommand = CommandDataItem & { description?: string }
+
+// Items with a group are listed under it, groups in the order their first item comes.
+function quickOpenData(items: readonly DocumentQuickOpenItem[]): CommandData {
+  const groups = new Map<string, QuickOpenCommand[]>()
+  for (const { group = "", keywords, ...item } of items) {
+    const command: QuickOpenCommand = { ...item, ...(keywords && { keywords: [...keywords] }) }
+    groups.set(group, [...(groups.get(group) ?? []), command])
+  }
+  return [...groups].flatMap(([group, entries]): CommandData =>
+    group ? [{ type: "group", label: group, items: entries }] : entries,
+  )
+}
+
+// The items go to Command as data and render through CommandRows: past 50, only the rows in view mount, so a vault
+// of notes opens on the next frame, while typing, the arrows and agents still reach every one.
 function QuickOpenList({ items, labels, onOpen, status, ...search }: QuickOpenListProps) {
   const workspace = useDocumentWorkspace()
-  const groups = new Map<string, DocumentQuickOpenItem[]>()
-  for (const item of items) groups.set(item.group ?? "", [...(groups.get(item.group ?? "") ?? []), item])
+  const data = useMemo(() => quickOpenData(items), [items])
   const empty = (query: string) => (typeof labels.empty === "function" ? labels.empty(query) : labels.empty)
-  const row = (item: DocumentQuickOpenItem) => (
-    <CommandItem key={item.value} value={item.value} label={item.label} keywords={item.keywords && [...item.keywords]}>
-      <span className="truncate">{item.label}</span>
-      {item.description && (
-        <span className="ms-auto shrink-0 truncate text-caption text-muted-foreground">{item.description}</span>
-      )}
-    </CommandItem>
-  )
   return (
     <Command
+      items={data}
       status={status}
       {...search}
       onAction={(value) => {
@@ -131,15 +140,19 @@ function QuickOpenList({ items, labels, onOpen, status, ...search }: QuickOpenLi
         }
       </CommandEmpty>
       <CommandList>
-        {[...groups].map(([group, entries]) =>
-          group ? (
-            <CommandGroup key={group}>
-              <CommandGroupLabel>{group}</CommandGroupLabel>
-              {entries.map(row)}
-            </CommandGroup>
-          ) : (
-            entries.map(row)
-          ),
+        {(state) => (
+          <CommandRows<QuickOpenCommand> items={state.items}>
+            {(item) => (
+              <>
+                <CommandItemText className="truncate" />
+                {item.description && (
+                  <span className="ms-auto shrink-0 truncate text-caption text-muted-foreground">
+                    {item.description}
+                  </span>
+                )}
+              </>
+            )}
+          </CommandRows>
         )}
       </CommandList>
     </Command>

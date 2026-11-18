@@ -55,7 +55,9 @@ function isTab(node: unknown): node is HTMLElement {
 const noEdges: Edges = { left: false, right: false }
 
 // The subscription also keeps the selected tab in view: on mount, after each resize (tabs change width as fonts load
-// or labels change), on focus and on selection.
+// or labels change), on focus and on selection. Geometry is read only where layout is already clean (the resize
+// observer, scroll events, an animation frame), never in the focus or key event: a list that fits does nothing on an
+// arrow press, and one that scrolls reveals its tab in the next frame.
 function createEdgesStore() {
   let edges = noEdges
   return {
@@ -63,11 +65,26 @@ function createEdgesStore() {
     getServerSnapshot: () => noEdges,
     watch(element: HTMLElement | null, onChange: () => void) {
       if (!element) return () => {}
+      let overflows = false
+      let frame = 0
+      let pending: { tab: HTMLElement; smooth: boolean } | null = null
       const update = () => {
+        overflows = element.scrollWidth - element.clientWidth > 1
         const next = readEdges(element)
         if (next.left === edges.left && next.right === edges.right) return
         edges = next
         onChange()
+      }
+      const reveal = (tab: HTMLElement, smooth: boolean) => {
+        if (!overflows) return
+        pending = { tab, smooth: pending?.smooth === false ? false : smooth }
+        if (frame) return
+        frame = requestAnimationFrame(() => {
+          frame = 0
+          const target = pending
+          pending = null
+          if (target?.tab.isConnected) revealTab(element, target.tab, target.smooth)
+        })
       }
       const revealSelected = () => {
         const selected = element.querySelector<HTMLElement>('[role="tab"][aria-selected="true"]')
@@ -86,14 +103,14 @@ function createEdgesStore() {
       update()
 
       const onFocus = (event: FocusEvent) => {
-        if (isTab(event.target)) revealTab(element, event.target, true)
+        if (isTab(event.target)) reveal(event.target, true)
       }
       const selection =
         typeof MutationObserver === "function"
           ? new MutationObserver((records) => {
               for (const record of records) {
                 if (isTab(record.target) && record.target.getAttribute("aria-selected") === "true") {
-                  revealTab(element, record.target, true)
+                  reveal(record.target, true)
                 }
               }
             })
@@ -102,6 +119,7 @@ function createEdgesStore() {
       element.addEventListener("focusin", onFocus)
       revealSelected()
       return () => {
+        cancelAnimationFrame(frame)
         observer?.disconnect()
         selection?.disconnect()
         element.removeEventListener("scroll", update)

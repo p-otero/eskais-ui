@@ -97,7 +97,8 @@ const ringVariants = cva("relative inline-grid shrink-0 place-items-center", {
 })
 
 const arcClassName =
-  "stroke-primary transition-all duration-panel ease-standard motion-reduce:transition-none group-data-[tone=destructive]/gauge:stroke-destructive group-data-[tone=info]/gauge:stroke-info group-data-[tone=neutral]/gauge:stroke-muted-foreground group-data-[tone=success]/gauge:stroke-success group-data-[tone=violet]/gauge:stroke-violet group-data-[tone=warning]/gauge:stroke-warning"
+  // oxlint-disable-next-line shadcn/no-arbitrary-values -- transitions only the properties that move; transition-all also eased every colour and shadow change
+  "stroke-primary transition-[stroke-dasharray,stroke] duration-panel ease-standard motion-reduce:transition-none group-data-[tone=destructive]/gauge:stroke-destructive group-data-[tone=info]/gauge:stroke-info group-data-[tone=neutral]/gauge:stroke-muted-foreground group-data-[tone=success]/gauge:stroke-success group-data-[tone=violet]/gauge:stroke-violet group-data-[tone=warning]/gauge:stroke-warning"
 
 // A circle of circumference 100, so the arc's dash length is the percentage itself. Mirrored in right to left, so
 // it fills the other way round.

@@ -227,6 +227,9 @@ function ServerDataTable<T, S extends FilterSchema = Record<never, never>>({
       secondarySorts={sorts.slice(1)}
       onSortChange={onSortChange}
       loading={loading}
+      // Enough placeholder rows to push what's below the table out of view, where the page that replaces them
+      // will put it too, so the first page loads without moving the footer.
+      loadingRows={tableProps.loadingRows ?? Math.min(state.size, 25)}
       busy={view.fetching && !loading}
       empty={empty}
       renderPagination={() => null}

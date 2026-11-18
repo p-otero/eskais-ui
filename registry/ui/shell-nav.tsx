@@ -20,10 +20,12 @@ const ShellSidebarItem = memo(function ShellSidebarItem({
   route,
   current,
   navigate,
+  intent,
 }: {
   route: ShellRoute
   current: boolean
   navigate: NavigateTo
+  intent?: NavigateTo
 }) {
   return (
     <SidebarItem
@@ -33,6 +35,7 @@ const ShellSidebarItem = memo(function ShellSidebarItem({
       badge={route.badge}
       // Always set, so agents can follow every route; without onNavigate it loads the href like a plain link.
       onFollow={() => navigate(route.id)}
+      onIntent={intent ? () => intent(route.id) : undefined}
     >
       {route.label}
     </SidebarItem>
@@ -43,15 +46,24 @@ function ShellSidebarSections({
   sections,
   currentId,
   navigate,
+  intent,
 }: {
   sections: readonly ShellRouteSection[]
   currentId: string | undefined
   navigate: NavigateTo
+  /** Preloads a route by id when someone is about to follow it. Stable, like `navigate`. */
+  intent?: NavigateTo
 }) {
   return sections.map((section) => (
     <SidebarGroup key={section.id} label={section.label} tone={section.tone}>
       {section.routes.map((route) => (
-        <ShellSidebarItem key={route.id} route={route} current={route.id === currentId} navigate={navigate} />
+        <ShellSidebarItem
+          key={route.id}
+          route={route}
+          current={route.id === currentId}
+          navigate={navigate}
+          intent={intent}
+        />
       ))}
     </SidebarGroup>
   ))

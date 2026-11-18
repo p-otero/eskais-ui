@@ -25,6 +25,7 @@ import { SidePanelCheck } from "./checks/side-panel-check"
 import { TableCheck } from "./checks/table-check"
 import { ServerDataCheck } from "./checks/server-data-check"
 import { AgentWorkspace } from "./sections/agent-workspace"
+import { PerfPage } from "./perf/perf-page"
 import { DocumentWorkspacePage } from "./sections/document-workspace"
 import { CommitBranchesDemo, CommitTrailDemo } from "./sections/git"
 import { InboxDemo } from "./sections/inbox"
@@ -41,7 +42,7 @@ if (!root) throw new Error("Missing #root element")
 // ?demo=page, site, shell, inbox, list-bench, shell-block, master-detail, dashboard-grid, settings-page,
 // document-workspace, agent-workspace and commit-history render one demo alone; ?demo=<name>-check pages are the
 // fixtures of tooling/<name>-check.mjs (shell-check's: card-header, description-list, field-placement, gauge,
-// mobile-nav, palette-reopen, side-panel, table, master-detail); *-bench and perf pages are the benchmarks'.
+// mobile-nav, palette-reopen, side-panel, table, master-detail); *-bench and ?demo=perf pages are the benchmarks'.
 const params = new URLSearchParams(location.search)
 const status = demoStatuses.find((name) => name === params.get("status")) ?? "success"
 const demo = params.get("demo")
@@ -77,6 +78,7 @@ const standalone = new Set([
   "commit-branches",
   "commit-bench",
   "git-tree-bench",
+  "perf",
 ])
 
 function Demo() {
@@ -134,6 +136,7 @@ function Demo() {
       </main>
     )
   }
+  if (demo === "perf") return <PerfPage />
   return demo === "shell" ? <ShellDemo /> : <SiteDemo />
 }
 

@@ -66,7 +66,7 @@ const docs = [
 ]
 
 test("the scan finds the registry's exports and its deprecated ones", () => {
-  expect(exported).toContain("GapFindStubs")
+  expect(exported).toContain("useVirtualRows")
   expect(exported).toContain("SidebarTrigger")
   expect(deprecated).toEqual(new Set(["ChevronIcon", "PanelIcon"]))
 })

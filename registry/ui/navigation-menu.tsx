@@ -13,10 +13,12 @@ import {
 } from "@ui-sdk/react/navigation-menu"
 import { mergeProps } from "@ui-sdk/react/primitive"
 import { cva, type VariantProps } from "class-variance-authority"
-import type { ComponentProps } from "react"
+import type { ComponentProps, MouseEvent } from "react"
 import { ChevronDownIcon } from "lucide-react"
 
 import { useFastLink } from "@/components/ui/fast-link"
+import { isPlainClick } from "@/components/ui/link-primitive"
+import { useLinkIntent } from "@/components/ui/use-link-intent"
 import { floatingSurfaceClassName } from "@/components/ui/popover"
 import { cnState } from "@/lib/utils"
 
@@ -94,14 +96,37 @@ type NavigationMenuLinkProps = ComponentProps<typeof NavigationMenuLinkPrimitive
   VariantProps<typeof navigationMenuLinkVariants> & {
     /** Follows on a primary mouse press, like `Link` (default `true`); off for a `render`ed router link or `onClick`. */
     fast?: boolean
+    /** Routes on the client on press, click or Enter, like `Link onNavigate`. */
+    onNavigate?: (href: string, event: Event) => void
+    /** Runs when someone is about to follow the link, to preload the route, like `Link onIntent`. */
+    onIntent?: (href: string) => void
   }
 
-function NavigationMenuLink({ className, variant, fast = true, ...props }: NavigationMenuLinkProps) {
-  const ref = useFastLink<HTMLAnchorElement>({ enabled: fast && !props.render && !props.onClick })
+function NavigationMenuLink({
+  className,
+  variant,
+  fast = true,
+  onNavigate,
+  onIntent,
+  ...props
+}: NavigationMenuLinkProps) {
+  const ref = useFastLink<HTMLAnchorElement>({
+    enabled: fast && !props.render && (onNavigate !== undefined || !props.onClick),
+    onFollow: onNavigate ? (href, { event }) => onNavigate(href, event) : undefined,
+  })
+  const intent = useLinkIntent(props.href, onIntent)
+  const route = onNavigate && {
+    onClick: (event: MouseEvent<HTMLAnchorElement>) => {
+      const href = event.currentTarget.getAttribute("href")
+      if (event.defaultPrevented || !isPlainClick(event.nativeEvent) || href === null) return
+      event.preventDefault()
+      onNavigate(href, event.nativeEvent)
+    },
+  }
   return (
     <NavigationMenuLinkPrimitive
       className={cnState(navigationMenuLinkVariants({ variant }), className)}
-      {...mergeProps({ ref }, props)}
+      {...mergeProps({ ref }, intent, route ?? {}, props)}
     />
   )
 }
@@ -119,7 +144,8 @@ function NavigationMenuIndicator({ className, ...props }: ComponentProps<typeof 
   return (
     <NavigationMenuIndicatorPrimitive
       className={cnState(
-        "pointer-events-none absolute bottom-(--active-item-bottom) left-(--active-item-left) h-0.5 w-(--active-item-width) rounded-full bg-primary opacity-0 transition-all duration-panel ease-standard data-visible:opacity-100 motion-reduce:transition-none",
+        // oxlint-disable-next-line shadcn/no-arbitrary-values -- transitions only the properties that move; transition-all also eased every colour and shadow change
+        "pointer-events-none absolute bottom-(--active-item-bottom) left-(--active-item-left) h-0.5 w-(--active-item-width) rounded-full bg-primary opacity-0 transition-[left,bottom,width,opacity] duration-panel ease-standard data-visible:opacity-100 motion-reduce:transition-none",
         className,
       )}
       {...props}

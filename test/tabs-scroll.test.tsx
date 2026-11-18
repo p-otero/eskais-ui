@@ -192,7 +192,8 @@ test("a tab an agent selects is revealed", async () => {
     agent.act({ steps: [{ ref: "Project views", action: "setValue", args: ["Secrets"] }] }),
   )
   expect(result.ok, result.error?.message).toBe(true)
-  await settle()
+  // The reveal reads the list's geometry in the next frame, never in the event that selected the tab.
+  await settle(50)
   expect(secrets.getAttribute("aria-selected")).toBe("true")
   expect(scrollTo).toHaveBeenCalledWith(expect.objectContaining({ left: 490 }))
 })

@@ -9,6 +9,10 @@ const lightOnlyClassName =
 const darkOnlyClassName =
   "hidden [:where(.dark)_&]:block [@media(prefers-color-scheme:dark)]:[:root:not(.light,[data-color-scheme=light])_&]:block"
 
+/**
+ * Pass `width` and `height` (the image's own size, in pixels): with the theme's `height: auto` the box is reserved at
+ * that ratio before the image loads, so nothing below it moves when it arrives.
+ */
 type ThemedImageProps = Omit<ImgHTMLAttributes<HTMLImageElement>, "src"> & {
   src: string
   /** Shown instead of `src` while the page is dark. Both are rendered and CSS picks one, so nothing flashes. */

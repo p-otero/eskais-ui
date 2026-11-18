@@ -4,7 +4,12 @@ import { createAgent } from "@ui-sdk/react/agent"
 import { useState } from "react"
 import { expect, test, vi } from "vitest"
 
-import { DataTable, type DataTableColumn, type DataTableSort } from "@/components/ui/data-table"
+import {
+  createDataTableController,
+  DataTable,
+  type DataTableColumn,
+  type DataTableSort,
+} from "@/components/ui/data-table"
 
 import { axeViolations } from "./axe"
 import { settle } from "./overlay-helpers"
@@ -205,6 +210,25 @@ test("an agent sorts the table, selects rows and changes page", async () => {
   )
   expect(paged.ok, paged.error?.message).toBe(true)
   expect(names()).toEqual(["Eridanus", "Borealis"])
+})
+
+test("toggleRows builds on the selection an earlier call chose before the table renders it", async () => {
+  const controller = createDataTableController()
+  const onSelectionChange = vi.fn()
+  render(<Deployments selectable controller={controller} onSelectionChange={onSelectionChange} />)
+  await settle()
+  act(() => {
+    controller.toggleRows(["d1"], true)
+    controller.toggleRows(["d2"], true)
+  })
+  expect(onSelectionChange).toHaveBeenLastCalledWith(["d1", "d2"], expect.anything())
+  // Without `checked`, a single row flips.
+  act(() => {
+    controller.toggleRows(["d1"])
+  })
+  expect(onSelectionChange).toHaveBeenLastCalledWith(["d2"], expect.anything())
+  expect(screen.getByRole("checkbox", { name: "Select Borealis" }).getAttribute("aria-checked")).toBe("true")
+  expect(screen.getByRole("checkbox", { name: "Select Atlas" }).getAttribute("aria-checked")).toBe("false")
 })
 
 test("renders 1,000 rows with pagination", () => {

@@ -4,6 +4,8 @@ Versions follow [semver](https://semver.org). Before 1.0, a minor version can br
 
 ## Unreleased
 
+The performance work is measured with the new harness (`bun run perf`, `bun run perf:vitals`, `docs/perf/REPORT.md`). Its numbers are from a desktop CPU and Chrome's 4× slowdown; the report has the before and after of each change.
+
 ### Added
 
 - `inline-edit` (definePrimitive on UI SDK's `createInlineEdit`): rename in place. The text is a button; a press (or a double click with `startOn="double-click"`), Enter, F2 or typing turns it into a field named by `label`. Enter and Tab save, Escape puts the text back without closing a surrounding dialog, focus returns to the text, and leaving the field saves (`blur="commit"`) or cancels (`blur="cancel"`). `validate` returning `false` keeps editing; `onValueChange` reports the reason through `createChange` and can cancel. An optional pencil button (`editButton`, `labels.edit`) shows on hover, focus and touch. Agents get `rename(text)` and `cancel`.
@@ -53,6 +55,15 @@ Versions follow [semver](https://semver.org). Before 1.0, a minor version can br
 - `DocumentWorkspace documentId`: when the open document's id changes, the narrow layout's explorer drawer closes and focus goes to the document. The drawer closed only on an `a[href]` click inside it, so a tree of buttons, quick open or a wikilink left it open over the new note. `useDocumentWorkspace().closeExplorer()` closes the drawer from a control of your own (the wide column stays), and `explorerOpen`/`onExplorerOpenChange` control it as before. `node tooling/document-workspace-check.mjs` opens a note from a button in the drawer at 320px.
 - `extractHeadings` gives each heading a `slug`, unique in the document (GitHub's rule, `-1`, `-2`… after a repeat), and `MarkdownView` renders the same slug on each heading as `data-slug`.
 - `DocumentQuickOpen` searches on the server. `source` (a `PageSource<T, { q?: string }>`, as `ServerCombobox` takes) with `getItem` sends the query as `filter.q` once typing pauses (`debounce`), aborts the request a newer query replaces, keeps the server's matches and order and loads the next page at the end of the list, all through UI SDK's `useAsyncOptions` and only while the dialog is open. For a search of your own, `items` now go with `filter` (`false` to list them as they are), `onQueryChange` and `status`. Before, it filtered fixed `items` by their title, so a note that matched on its body was hidden. Loading and errors show in the list and are read out (`labels.loading`, `labels.error`, `labels.count`), and `labels.empty` can be a function of the query. The item depends on `@eskais/page-source`.
+- `bun run perf` measures key to next paint, held keys, overlays, mount, site navigation and bundles in Chrome, on the normal and React Compiler builds, at 1× and 4× CPU. `bun run perf:ci` checks exact budgets (components rendered and forced layouts per key press, composited layers, gzip KB per item) from `tooling/perf/budgets.json`, in CI and in `test:browser`.
+- `Link`, `NavigationMenuLink`, `SidebarItem`, `ButtonLink` and `Shell` take `onNavigate(href, event)`, which hands a followed link to your router (pressed or clicked), and `onIntent(href)`, which runs on a 65 ms hover, focus or a mouse press so a route can start loading its code and data. On the docs site a page that wasn't loaded yet now finishes about 20 ms after the press, against about 415 ms.
+- `CommandRows` (`command`): renders `Command`'s `items` data as styled commands. Past 50 commands only the rows in view mount, plus the highlighted one; typing, the arrows and agents still reach every command. `DocumentQuickOpen` uses it.
+- `DataTable navigation="cells"`: the cells are one tab stop, as in a spreadsheet (UI SDK grid focus, `role="grid"`): ←/→ along a row, ↑/↓ keeping the column, Home/End and Ctrl/⌘ with them, PageUp/PageDown, Space selects the row, Enter calls `onRowOpen`. A move renders two cells; rows a virtualized table hasn't rendered scroll in first.
+- `Board` cards are one tab stop with Linear-style keys: ↓/j and ↑/k in a column, ←/→ to the next column at the same row (or its last card), Home/End to a column's ends and Ctrl/⌘ with them to the board's. `TaskCard` takes part on its own; `BoardCard id render` (`board-navigation`) adds a card of your own. Tab from the focused card reaches that card's controls, then leaves the board.
+- `StatusPill`, `StatusDot` and the liveness chips take `pulse="always"`; `pulse` now pings three times when the status changes, then rests.
+- `layers.mjs --settle=<ms>` counts composited layers after animations end.
+- `bun run perf:vitals` loads pages cold on a slow 4G profile and reports TTFB, FCP, LCP, CLS and INP, with the elements each layout shift moved. `perf:ci` holds CLS at 0.01 or less and LCP under a budget on the showcase blocks and server-data fixtures.
+- `MarkdownView` reserves an image's box before it loads when its size is known: `![A chart|640x360](chart.png)` (or `|640`) in the Markdown, as Obsidian writes it, or `imageSize(src, alt)`.
 
 ### Changed
 
@@ -71,6 +82,14 @@ Versions follow [semver](https://semver.org). Before 1.0, a minor version can br
   - Pickers and popups: a `DatePicker` opens on the selected date (else today) every time, and days outside `min`/`max` can't be focused. A label click on a `Combobox` focuses its input without opening the list. Hover popovers close when another opens, and anchored popups sit on the pixel grid. A modal no longer writes `--scrollbar-width` on `<html>` when the page has no scrollbar gutter (read it as `var(--scrollbar-width, 0px)`).
   - `Pagination` passes UI SDK's new `disabled` through, and page links now look disabled with it, like the steps.
   - Known: in development, UI SDK 0.1.0-beta.10 logs one warning when its pagination module loads (its `link` slot declares a role without `focus`); it's harmless. Two issues remain from beta.5: a `Drawer` still drops a press on the page while it slides out, and a second `CommandDialogTrigger` still drops the dialog's agent label (keep `CommandDialogOpenButton`).
+- Moving through `List`, `DataTable`, the AgentTaskBoard table and backlog renders only the row losing focus and the row taking it (UI SDK `selects` on row navigation).
+- `DataTable` rows are memoized; a key press renders about 150 components instead of 1,125. `createDataTableController` gains `toggleRows(ids, checked?)`.
+- `virtual-rows` runs on UI SDK's virtualizer; `@tanstack/react-virtual` is no longer a dependency. Rows are measured after the browser's own layout, the first measured row sets the size of the rest, and find in page reaches unrendered rows through UI SDK's findable layers (`useVirtualRows({ findable })`), which mount a 10,000-row list in 44 ms instead of 117. `GapFindStubs` is gone: pass `findable` instead.
+- `List` rows are `contain: content` with an inset focus ring; a `ListItem` mounts its tooltip content only when its title is truncated; a `Button` renders its spinner only while loading.
+- `TabsScroll` reads no layout on a key press.
+- A `backdrop-surface` inside another one no longer blurs: cards in a glass board column show it through their own fill (a 200-card glass board: 142 composited layers to 26).
+- Accordion, Collapsible, Sidebar, Progress, Meter, SegmentedControl and NavigationMenu transition only the properties that move instead of `transition-all`.
+- Loading states keep the size of what replaces them: `DataTable` placeholder rows are one text line high, `ServerDataTable` shows as many as its page holds (up to 25) and `ServerList` list-shaped placeholders instead of a spinner, so the first page lands without moving the footer (CLS 0.073 → 0.005 and 0.021 → 0).
 
 ### Fixed
 

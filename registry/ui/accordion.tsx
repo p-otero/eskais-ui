@@ -52,7 +52,8 @@ function AccordionPanel({ className, children, ...props }: ComponentProps<typeof
   return (
     <AccordionPanelPrimitive
       className={cnState(
-        "h-(--accordion-panel-height) text-sm transition-all duration-panel ease-standard data-ending-style:h-0 data-ending-style:overflow-hidden data-starting-style:h-0 data-starting-style:overflow-hidden motion-reduce:transition-none",
+        // oxlint-disable-next-line shadcn/no-arbitrary-values -- transitions only the properties that move; transition-all also eased every colour and shadow change
+        "h-(--accordion-panel-height) text-sm transition-[height] duration-panel ease-standard data-ending-style:h-0 data-ending-style:overflow-hidden data-starting-style:h-0 data-starting-style:overflow-hidden motion-reduce:transition-none",
         className,
       )}
       {...props}

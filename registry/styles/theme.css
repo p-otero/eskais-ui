@@ -669,9 +669,15 @@
   --ease-standard: cubic-bezier(0.2, 0, 0, 1);
 }
 
+/* A surface inside another, like a card in a board column, shows it through its own translucent fill without a
+   second blur: each blur is a composited layer, and a board's cards made over a hundred. */
 @utility backdrop-surface {
   -webkit-backdrop-filter: var(--surface-backdrop);
   backdrop-filter: var(--surface-backdrop);
+  .backdrop-surface & {
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
 }
 
 @utility backdrop-floating {
