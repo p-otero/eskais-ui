@@ -11,11 +11,6 @@ const root = fileURLToPath(new URL("../..", import.meta.url))
 // Registry functions React Compiler may leave uncompiled. Any other diagnostic in registry/ fails the build.
 const allowed = [
   {
-    file: "registry/ui/use-flow-rows.ts",
-    category: "IncompatibleLibrary",
-    reason: "TanStack Virtual's instance is read during render by design; the compiler skips useFlowRows only",
-  },
-  {
     file: "registry/ui/use-last-success.ts",
     category: "Refs",
     reason: "reads its ref while rendering on purpose; the compiler skips the hook and DataState still compiles",

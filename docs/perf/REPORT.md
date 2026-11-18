@@ -1150,3 +1150,167 @@ What to look at:
   machine's; a slower CI runner may need `--update` once.
 - **Shared machine**: 8 to 18 processes of other sessions ran during batch 4's measurements; every A/B is interleaved
   with 3 to 5 runs, and the ranges are in the commit messages.
+
+## 11. Virtualizer parity
+
+After step 9, `CommitHistory` and `GitTree` were the one place our virtualizer lost to TanStack Virtual: a held
+arrow on 50,000 commits had a better median but reached the 95th percentile at 21 ms instead of 12 (83 instead of
+21 at 4×). Integration put them back on TanStack (`use-flow-rows.ts`). This section finds why, fixes it in
+`use-virtual-rows.ts`, and drops `@tanstack/react-virtual` again.
+
+### 11.1 Where the time went
+
+Measured on the git-bench pages: a CPU profile and a Chrome trace of 150 held ArrowDown presses, each waiting for
+its paint, plus counts per press from the perf probe (commits, rendered components, ResizeObserver callbacks,
+`getBoundingClientRect`, `scrollTo`).
+
+| Per press, 50,000 commits, 1× | TanStack | ours (before) |
+| ----------------------------- | -------- | ------------- |
+| React commits                 | 1.8      | 1.1           |
+| components rendered           | 15.4     | 13.3          |
+| `scrollTo` calls              | 1        | 0             |
+| `getBoundingClientRect`       | 0        | 1.7           |
+| rows the list scrolls         | 1        | 0, then 14    |
+| slow presses (> 1.6 × median) | 0 of 150 | 9 of 150      |
+
+The slow presses came every 14th press: 26, 40, 54, and so on. Two causes made them slow, and one made each fast
+press cost more at 4×:
+
+1. **The browser's focus scroll.** UI SDK's Tree focuses the next row, and Chrome scrolls a focused element that
+   is out of view to the _centre_: half a page, 14 rows, at once. Then `onHighlight` asks the virtualizer to
+   scroll the row into view. UI SDK's `scrollToIndex` reads the live position, finds the row already in view,
+   and does nothing. So 13 presses scrolled nothing at all, which explains the better median, and the 14th mounted
+   and unmounted 14 rows in one frame. TanStack's `scrollToIndex` reads the position cached at its last scroll
+   event, from before the focus moved, so it scrolls the row back to the bottom edge: one row per press, every
+   press. It got this right only because its cached position was stale.
+2. **A full layout per measured row.** UI SDK's virtualizer keeps measured sizes by key. When a key it hasn't seen
+   reports a size, it marks the list dirty, even if the size equals the estimate. The next read then rebuilds the
+   start of every row, reading `getKey` and its size map for all of them. That is 50,000 calls for one row, 14
+   times in the jump frame. At 4× the profile shows UI SDK's `layout()` at 210 ms self over the 150 presses,
+   plus 38 ms in its size lookup and 34 ms in `getKey`, all in the jump frames. Our ResizeObserver handed every
+   row to `measure` on its first callback, so every row paid for this.
+3. **Synchronous range changes.** `useSyncExternalStore` always renders synchronously. A range change inside the
+   key press mounts the row that comes in as overscan before the frame paints. TanStack re-renders after its
+   scroll event at normal priority, so that render lands after the paint. At 1× the work fits in the frame; at 4×
+   it pushed some presses into the next one.
+
+None of the other candidates mattered:
+
+- **Key churn and per-row style objects:** the rows are memoized and their keys are stable. Renders per press
+  matched TanStack once the scroll was one row.
+- **Forced layouts:** about 250 ms over 150 presses at 4× in both. Most of it is the Tree's `focus()`; the rest is
+  one read after scrolling (TanStack's in `offsetHeight`, ours in `scrollTop`).
+- **Range recomputation:** a binary search and a 40-row snapshot, about 0.08 ms per press at 4×.
+- **Overscan:** 8 either way.
+
+### 11.2 The fix, in `use-virtual-rows.ts`
+
+- **Scroll from where the list was.** The hook follows the scroller's scroll events itself. `scrollToIndex` aligns
+  a rendered row to the nearest edge from that position, which cancels the browser's centring, and scrolls
+  through UI SDK's `scrollToIndex` with an explicit `start` or `end`. That call reads the list again at once, so a
+  row coming into view renders in the same commit as the focus move: one commit per press instead of 1.8. A row
+  that isn't rendered still goes to UI SDK's `auto`.
+- **Measure only what differs.** One ResizeObserver watches every row and reads `borderBoxSize`, so there is no
+  `getBoundingClientRect`. A row goes to UI SDK's `measure` only when its size differs from the one the
+  virtualizer already has (the learned size or what it was given before), and from then on UI SDK follows that
+  row's resizes. Rows of one size never cause a full layout. Findable rows, in List and DataTable, still all go
+  to `measure`: find in page reveals a row through the elements it registers.
+- **Defer what nobody sees.** A range change that only moves rows already rendered out of view, at the same starts
+  and sizes and with the same total, reaches React after the next paint. A change that brings a row into view, a
+  size change, new data or `renderNow` renders at once.
+- **CommitHistory's branch select.** Not the virtualizer: it got a new `onFocus` on every render, which defeated
+  its `memo` and re-rendered its 200 options on every key press, 2,020 components per press. It now gets a stable
+  callback. TanStack paid the same cost, so the 200-branch rows below include this fix.
+
+UI SDK's engine stays. Its per-press cost is now the scroll read and the range snapshot, under 0.1 ms at 4×. The
+findable layers need it, and the time went into how we fed it. Upstream asks are in §11.4.
+
+### 11.3 Before and after
+
+git-bench pages, 150 held presses, 3 interleaved runs, median [range]. Mount is first paint in ms; arrows are
+key-to-paint in ms. TanStack is f8fcac0 (`use-flow-rows`), ours is f8fcac0 with trail rows on `useVirtualRows`,
+and ours-optimized is this branch. Bold marks a regression against TanStack.
+
+| Scenario, CPU      | Metric | TanStack         | ours (before)           | ours-optimized   |
+| ------------------ | ------ | ---------------- | ----------------------- | ---------------- |
+| 50,000 commits, 1× | mount  | 90.3 [86.5–99.9] | **108.4** [108.2–109.8] | 89.4 [87.8–95.5] |
+|                    | p50    | 10.7 [10.7–10.8] | 9.5 [8.3–9.6]           | 9.5 [9.5–9.6]    |
+|                    | p95    | 11.8 [11.6–11.9] | **21.5** [20.8–21.9]    | 10.3 [10.2–10.3] |
+| 50,000 commits, 4× | mount  | 522 [513–559]    | **562** [497–569]       | 524 [507–548]    |
+|                    | p50    | 17.9 [17.7–18.1] | 11.6 [10.5–11.8]        | 13.6 [12.5–18.3] |
+|                    | p95    | 21 [19.7–28.3]   | **82.8** [81.1–87.1]    | 19.5 [19.4–26.1] |
+| merges open, 1×    | mount  | 90.9 [90.2–93.2] | **115.5** [114.7–119.2] | 90.1 [85.1–96.5] |
+|                    | p50    | 10.7 [10.7–10.8] | 9.5 [8.3–9.5]           | 9.6 [9.5–9.6]    |
+|                    | p95    | 11.8 [11.6–12]   | **26.1** [25.2–26.6]    | 10.2 [10.1–10.2] |
+| merges open, 4×    | mount  | 497 [467–509]    | **662** [642–668]       | 522 [505–567]    |
+|                    | p50    | 18.5 [17.7–19.3] | 12 [11.5–12.4]          | 18.7 [18.7–18.7] |
+|                    | p95    | 22.6 [22.1–26.6] | **105.6** [103–107]     | 20.4 [19.5–21.2] |
+| 100,000 files, 1×  | mount  | 157.5 [148–172]  | 163.8 [156–172]         | 164.8 [164–219]  |
+|                    | p50    | 10.2 [10.2–10.3] | 9.3 [8.2–9.4]           | 9.4 [9.4–9.4]    |
+|                    | p95    | 11 [10.9–11.5]   | **14.9** [13.8–15.1]    | 10 [10–10.1]     |
+| 100,000 files, 4×  | mount  | 947 [921–1002]   | 912 [869–925]           | 943 [870–981]    |
+|                    | p50    | 16.5 [16.4–16.6] | 10.9 [10.8–11]          | 11.1 [11–11.1]   |
+|                    | p95    | 18.5 [18.3–18.7] | **43** [42.6–45.7]      | 12.4 [12.1–12.5] |
+| 200 branches, 1×   | mount  | 125.7 [116–136]  | **145.6** [143–155]     | 129.1 [122–129]  |
+|                    | p50    | 17 [16.1–17.3]   | 9.6 [8.3–9.7]           | 9.5 [9.5–9.6]    |
+|                    | p95    | 19.7 [18.5–22.8] | **36.2** [35.2–36.3]    | 10.2 [10.1–10.2] |
+| 200 branches, 4×   | mount  | 832 [783–878]    | 790 [790–832]           | 758 [703–803]    |
+|                    | p50    | 82.5 [75.2–91]   | 11.9 [11.8–12]          | 18.6 [18.5–18.8] |
+|                    | p95    | 139.5 [134–140]  | **157.3** [150–166]     | 22.7 [21.1–23]   |
+
+Ours-optimized matches or beats TanStack on every p50 and p95, at 1× and 4×. Three cells are level rather than
+better: merges open p50 at 4× (18.7 against 18.5), and the mounts of 100,000 files at 1× and merges open at 4×,
+whose medians are 5% higher but whose ranges overlap TanStack's. A second, separate git-bench run (2 reps, End and
+Home included) agrees: End and Home are equal or faster in every default scenario.
+
+The p50 of ours (before) is the lowest at 4× because 13 of every 14 presses scrolled nothing; the 14th carried the
+whole page. Ours-optimized scrolls one row on every press, as TanStack does, and still keeps its p50 below or level
+with TanStack's.
+
+The findable scenarios run on `use-findable-rows` in both builds, so they don't move, and their spread shows the
+noise on this shared machine. Five to eleven other sessions' processes ran during these measurements.
+
+The same change on the lists, in the perf harness: before is f8fcac0, which already ran these lists on our
+virtualizer, before this fix. 3 interleaved runs, medians:
+
+| Scenario         | p50 1×    | p95 1×      | p95 4×      | renders/press | held lag 4× |
+| ---------------- | --------- | ----------- | ----------- | ------------- | ----------- |
+| List 10k         | 5.7 → 5.4 | 10.4 → 9.7  | 16.6 → 11.1 | 36 → 10       | 18 → 11.2   |
+| DataTable        | 9.7 → 7.8 | 11.9 → 10.3 | 26.2 → 15   | 95 → 30       | 25.9 → 12.5 |
+| ServerList       | 3.9 → 5.3 | 10.3 → 9.7  | 14.8 → 11.5 | 33 → 10       | 16.5 → 11.1 |
+| ServerDataTable  | 7.1 → 6   | 10.5 → 9.5  | 16.1 → 17.3 | 30 → 30       | 13.1 → 13.8 |
+| MasterDetail     | 5.1 → 3.9 | 10.3 → 9.6  | 16.5 → 11.9 | 34 → 10       | 16.2 → 11.5 |
+| Command (↓)      | 6.9 → 5.3 | 10.2 → 9.3  | 13.6 → 10.6 | 6 → 0         | 13.6 → 10.7 |
+| Command (typing) | 3.2 → 2.9 | 9.6 → 8.4   | 38.6 → 32.2 | 25 → 25       |             |
+
+Three cells look worse, and all three are noise:
+
+- **ServerList p50 at 1×:** both builds span 3.8–5.7 ms across runs.
+- **ServerDataTable p95 at 4×:** 13.5–18.3 against 14.3–16.7 ms.
+- **Command typing at 4×:** the 5-run rerun that the table shows, 29.7–46.3 against 29.9–46.6 ms.
+
+Mounts are equal or faster, except List 1k and ServerDataTable at 4× (+3% and +4%), whose ranges overlap.
+
+Bundle, gzip with everything an item imports (`tooling/perf/bundle.mjs`), f8fcac0 → this branch: `commit-history`
+124.1 → 113.8 KB, `git-tree` 58.5 → 48.4 KB, `server-commit-history` 139.9 → 129.6 KB. UI SDK's virtualizer was
+already in them, for `findable`.
+
+### 11.4 Upstream to UI SDK
+
+1. **`record()` should skip a size equal to the estimate it already used**, or relayout from the changed index
+   only. Today the first size of every row lays out all of them again: O(count) per row that scrolls in.
+2. **`scrollToIndex` from a known position.** Focusing a row makes Chrome centre it, and `align: "auto"` then reads
+   the centred position. An option to align from the position before focus, or a documented recipe, would save
+   every list built on `createVirtualizer` and a focus-moving collection from this.
+3. **A non-urgent `subscribe`**, or `items()` with the visible range, so an adapter can tell a change that brings a
+   row into view from one that only moves overscan.
+4. **The Tree's visible list on every key press** (`tree.visible(expanded).filter(…)`): 57–217 ms over 150 presses
+   at 4× on 50,000 commits, the same on both virtualizers. It is the largest script cost left in a press.
+
+### 11.5 Checks
+
+All green on this branch: `bun run verify`, `bun run test:browser` (perf:ci and diff-bench included),
+`bun run test:compiler` (no allowed entry for a virtualizer any more) and `node tooling/git-bench.mjs`: at 1×, p95
+10.3, 10.2 and 10.1 ms on 50,000 commits, merges open and 100,000 files, against its 16 ms gate. perf:ci's budgets
+hold the gain: renders per press List 10k 36 → 10, DataTable 95 → 30, MasterDetail 34 → 10, ServerList 33 → 10,
+Command arrows 6 → 0, and the three bundles above.

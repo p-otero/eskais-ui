@@ -66,7 +66,7 @@ type GitTreeProps = Omit<PartProps<"div">, "children" | "onSelect" | "defaultVal
   /**
    * Find in page reaches files and folders scrolled out of view, by name, through UI SDK's virtualizer and its
    * findable layers, built once the page is idle after its first paint. Off by default: on 100,000 files it costs
-   * up to a frame on some held-arrow presses (p95 about 16 ms against 12 ms).
+   * up to a frame on some held-arrow presses (p95 about 16 ms against 10 ms).
    */
   findable?: boolean
 }

@@ -85,7 +85,7 @@ A new `filter` starts again from the newest commit. See `references/server-data.
 
 ### Find in page
 
-Rows out of view aren't in the page, so the browser's find doesn't see them. `findable` adds UI SDK's findable layers, built once the page is idle after its first paint: find in page then counts every subject (the file and branch chips included), and a match scrolls its row into view and highlights it in the row. It's off by default because it costs: on 50,000 commits about a frame on some held-arrow presses (p95 22–27 ms against 12 ms) and 10–40% more on the first paint. With it, the history's scroller is capped at `--commit-history-height` (40rem); set the variable to `none` when a parent bounds it. `GitTree findable` does the same for names (p95 about 16 ms against 12 ms on 100,000 files).
+Rows out of view aren't in the page, so the browser's find doesn't see them. `findable` adds UI SDK's findable layers, built once the page is idle after its first paint: find in page then counts every subject (the file and branch chips included), and a match scrolls its row into view and highlights it in the row. It's off by default because it costs: on 50,000 commits about a frame on some held-arrow presses (p95 22–27 ms against 10 ms) and 10–40% more on the first paint. With it, the history's scroller is capped at `--commit-history-height` (40rem); set the variable to `none` when a parent bounds it. `GitTree findable` does the same for names (p95 about 16 ms against 10 ms on 100,000 files).
 
 ### Agents
 

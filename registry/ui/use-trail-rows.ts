@@ -1,7 +1,7 @@
 import { useCallback } from "react"
 
 import { useFindableRows } from "@/components/ui/use-findable-rows"
-import { useFlowRows } from "@/components/ui/use-flow-rows"
+import { useVirtualRows } from "@/components/ui/virtual-rows"
 
 type TrailRowsOptions = {
   count: number
@@ -20,12 +20,12 @@ type TrailSegment = { type: "row"; index: number; top?: number } | { type: "gap"
 const noop = () => {}
 
 /**
- * The rows of a long trail or tree. By default TanStack Virtual's rows in document flow (`use-flow-rows`), the
- * fastest to move through; with `findable`, UI SDK's virtualizer, whose findable layers let find in page reach the
- * rows that aren't rendered, at a cost `tooling/git-bench.mjs` measures. Only one of them ever holds rows.
+ * The rows of a long trail or tree. By default `virtual-rows`, rows in document flow; with `findable`, UI SDK's
+ * virtualizer with absolutely positioned rows, whose findable layers let find in page reach the rows that aren't
+ * rendered, at a cost `tooling/git-bench.mjs` measures. Only one of them ever holds rows.
  */
 function useTrailRows({ count, estimate, getKey, text, findable }: TrailRowsOptions) {
-  const flow = useFlowRows({ count: findable ? 0 : count, estimateSize: estimate, getKey })
+  const flow = useVirtualRows({ count: findable ? 0 : count, estimateSize: estimate, getKey })
   const { setScroller, ...layered } = useFindableRows({
     count: findable ? count : 0,
     estimate,
@@ -49,8 +49,7 @@ function useTrailRows({ count, estimate, getKey, text, findable }: TrailRowsOpti
   const measure = useCallback(
     (index: number, el: HTMLElement | null) => {
       if (absolute) return measureLayered(index, el)
-      measureElement?.(el)
-      return noop
+      return measureElement?.(el) ?? noop
     },
     [absolute, measureLayered, measureElement],
   )
