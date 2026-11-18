@@ -14,7 +14,7 @@ import { MarkdownView, type MarkdownViewProps } from "@/components/ui/markdown-v
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { useRequestMeasure } from "@/components/ui/use-markdown-editor"
 
-type ViewOptions = Pick<MarkdownViewProps, "resolveWikilink" | "taskLabel">
+type ViewOptions = Pick<MarkdownViewProps, "resolveWikilink" | "taskLabel" | "renderEmbed">
 
 function fenceAt(view: EditorView, host: HTMLElement) {
   const pos = view.posAtDOM(host)
@@ -79,6 +79,17 @@ function CodeLanguage({
   )
 }
 
+function EmbedPreview({ entry, options }: { entry: Extract<PortalEntry, { kind: "embed" }>; options: ViewOptions }) {
+  useRequestMeasure(entry.view)
+  if (options.renderEmbed) return options.renderEmbed(entry.target, entry.alias)
+  const exists = options.resolveWikilink?.(entry.target).exists ?? true
+  return (
+    <span data-slot="markdown-embed" data-unresolved={exists ? undefined : ""}>
+      {entry.alias ?? options.resolveWikilink?.(entry.target).label ?? entry.target}
+    </span>
+  )
+}
+
 function TableBlock({ entry, options }: { entry: Extract<PortalEntry, { kind: "table" }>; options: ViewOptions }) {
   useRequestMeasure(entry.view)
   return (
@@ -110,6 +121,8 @@ function MarkdownEditorPortals({
     createPortal(
       entry.kind === "table" ? (
         <TableBlock entry={entry} options={options} />
+      ) : entry.kind === "embed" ? (
+        <EmbedPreview entry={entry} options={options} />
       ) : (
         <CodeLanguage entry={entry} labels={labels} />
       ),

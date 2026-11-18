@@ -2,10 +2,20 @@
 
 import { EditorView } from "@codemirror/view"
 import type { TextEditorAdapter } from "@ui-sdk/react/trigger-menu"
-import { useEffect, useEffectEvent, useLayoutEffect, useRef, useState, type RefObject } from "react"
+import {
+  useEffect,
+  useEffectEvent,
+  useImperativeHandle,
+  useLayoutEffect,
+  useRef,
+  useState,
+  type Ref,
+  type RefObject,
+} from "react"
 
 import type { MarkdownEditorProps } from "@/components/ui/markdown-editor"
 import { createAdapterBridge } from "@/components/ui/markdown-editor-adapter"
+import { createEditorHandle, type MarkdownEditorHandle } from "@/components/ui/markdown-editor-handle"
 import { createEditorState, reconfigure, type EditorSettings } from "@/components/ui/markdown-editor-state"
 import { useMarkdownSync } from "@/components/ui/markdown-editor-sync"
 
@@ -35,7 +45,10 @@ function useMarkdownEditorView(props: MarkdownEditorProps, settings: EditorSetti
     const hooks = {
       bridge: bridge.extension,
       onUpdate: sync.onUpdate,
-      openWikilink: (slug: string) => latest.current.onOpenWikilink?.(slug),
+      openWikilink: (slug: string, event: Event | undefined) => {
+        latest.current.onWikilinkClick?.(slug, event)
+        latest.current.onOpenWikilink?.(slug)
+      },
     }
     const initial = latest.current.value ?? latest.current.defaultValue ?? ""
     const languages = latest.current.codeLanguages
@@ -67,6 +80,15 @@ function useMarkdownEditorView(props: MarkdownEditorProps, settings: EditorSetti
   return { hostRef, view, adapter, sync }
 }
 
+/** Gives `ref` the editor's handle once CodeMirror has mounted, and `null` before and after. */
+function useEditorHandle(ref: Ref<MarkdownEditorHandle | null> | undefined, view: EditorView | undefined) {
+  useImperativeHandle<MarkdownEditorHandle | null, MarkdownEditorHandle | null>(
+    ref,
+    () => (view ? createEditorHandle(view) : null),
+    [view],
+  )
+}
+
 /** Calls `onResize` with the element each time ResizeObserver reports it, starting with its first size. */
 function useResizeObserver<Element extends HTMLElement>(
   ref: RefObject<Element | null>,
@@ -87,4 +109,4 @@ function useRequestMeasure(view: EditorView) {
   useLayoutEffect(() => view.requestMeasure())
 }
 
-export { useMarkdownEditorView, useRequestMeasure, useResizeObserver }
+export { useEditorHandle, useMarkdownEditorView, useRequestMeasure, useResizeObserver }

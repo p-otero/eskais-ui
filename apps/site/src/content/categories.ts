@@ -127,6 +127,7 @@ const categories = [
       "master-detail",
       "dashboard-grid",
       "settings-page",
+      "document-workspace",
       "hero",
       "section-heading",
       "bento",

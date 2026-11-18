@@ -3802,7 +3802,7 @@
       "name": "markdown-view",
       "type": "registry:ui",
       "title": "Markdown View",
-      "description": "Renders Markdown (CommonMark, GFM tables, tasks and strikethrough, and [[wikilinks]]) to React elements with the Lezer parser, fenced code as a highlighted CodeBlock: raw HTML shows as text, only http, https, mailto and tel links become links, and each top-level block is memoised so long notes re-render only what changed.",
+      "description": "Renders Markdown (CommonMark, GFM tables, tasks and strikethrough, [[wikilinks]] and ![[embeds]]) to React elements with the Lezer parser, fenced code as a highlighted CodeBlock: raw HTML shows as text, only http, https, mailto and tel links become links, leading YAML frontmatter is hidden or shown as properties, and each top-level block is memoised so long notes re-render only what changed. Also extractHeadings for an outline and parseFrontmatter.",
       "dependencies": [
         "@lezer/common@1.5.5",
         "@lezer/markdown@1.8.1"
@@ -3815,7 +3815,19 @@
       ],
       "files": [
         {
+          "path": "registry/ui/markdown-frontmatter.ts",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/markdown-outline.ts",
+          "type": "registry:ui"
+        },
+        {
           "path": "registry/ui/markdown-syntax.ts",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/markdown-view-links.tsx",
           "type": "registry:ui"
         },
         {
@@ -3826,14 +3838,15 @@
           "path": "registry/ui/markdown-view.tsx",
           "type": "registry:ui"
         }
-      ]
+      ],
+      "docs": "Wikilinks: `resolveWikilink(target)` returns `{ exists, label }` (an unresolved link is dashed), `wikilinkHref(target)` its address, and `onWikilinkClick(target, event)` takes plain clicks and agents' `follow` for client routing (modified clicks stay with the browser). A wikilink with an address renders through `Link`, so it follows on press and hash routes (`#/note/x`) work; one without an address but with `onWikilinkClick` is a button. Both carry `data-wikilink` (`link` or `embed`) and `data-target`. Embeds: `![[target]]` and `![[target|alias]]` render `renderEmbed(target, alias)`, as a block when the embed is alone in its paragraph; without it, a dashed link-like chip. Frontmatter: a `---` block on the first line, closed by `---` or `...`, is hidden by default (`frontmatter=\"hide\"`), a `<dl>` of its `key: value` lines and lists with `frontmatter=\"properties\"` (named by `frontmatterLabel`, \"Properties\"), or its YAML with `\"raw\"`; `renderFrontmatter({ raw, properties, from, to })` draws your own. `parseFrontmatter(markdown)` reads it without a YAML dependency: plain `key: value` lines, `- item` and `[a, b]` lists, `|` and `>` blocks; nested maps are skipped, and `raw` is there for a real YAML parser. `extractHeadings(markdown)` lists `{ level, text, line, from, to, textFrom }`, frontmatter and code left out, for an outline. Keep the callbacks stable (module-level or `useCallback`): a new function re-renders every block."
     },
     {
       "name": "markdown-editor",
       "type": "registry:ui",
       "title": "Markdown Editor",
-      "description": "A Markdown editor on CodeMirror 6 with a Typora-like live preview: the document is the Markdown text, so loading and saving keep every byte. Marks show only while the caret is inside their span; headings, bullets and quotes never show theirs; tables render as tables off the caret. Slash and [[ menus, a one-row toolbar with an overflow menu, English and Spanish labels, and agent actions (getMarkdown, insertText, replaceSelection, insertWikilink, toggleFormat, setHeading, toggleTask; setMarkdown needs approval).",
-      "docs": "The value is plain Markdown: `value`/`onChange` (debounced by `changeDelay`, 300 ms; flushed on blur and unmount) or `defaultValue`. Loading never fires `onChange`. A `value` that arrives while edits are still waiting for `onChange` calls `onConflict({ local, remote })`: return the text to keep, or nothing to take the remote; without it the local text goes out through `onChange` first and then the remote applies. Code languages are opt-in: `npx shadcn add @eskais/markdown-editor-languages` and pass `codeLanguages={markdownCodeLanguages}`. Pass `cspNonce` under a strict Content Security Policy (CodeMirror injects a style element). Spanish labels: `labels={markdownEditorLabelsEs}`. Shortcuts: Mod+B/I/E, Mod+Shift+X, Mod+Alt+0..6 for paragraph and heading levels, Tab/Shift+Tab to nest list items, Mod+Enter to toggle a task; Escape then Tab leaves the editor.",
+      "description": "A Markdown editor on CodeMirror 6 with a Typora-like live preview: the document is the Markdown text, so loading and saving keep every byte. Marks show only while the caret is inside their span; headings, bullets and quotes never show theirs; tables render as tables off the caret; frontmatter stays as written. Slash and [[ menus, a one-row toolbar with an overflow menu, a ref handle for host menus and outlines, English and Spanish labels, and agent actions (getMarkdown, insertText, replaceSelection, insertWikilink, toggleFormat, setHeading, toggleTask; setMarkdown needs approval).",
+      "docs": "The value is plain Markdown: `value`/`onChange` (debounced by `changeDelay`, 300 ms; flushed on blur and unmount) or `defaultValue`. Loading never fires `onChange`. A `value` that arrives while edits are still waiting for `onChange` calls `onConflict({ local, remote })`: return the text to keep, or nothing to take the remote; without it the local text goes out through `onChange` first and then the remote applies. A `ref` gets a `MarkdownEditorHandle` once the editor mounts (`null` before): `focus()`, `getValue()`, `getSelection()` and `setSelection(anchor, head?)` in offsets of the Markdown string, `insertText`, `insertWikilink(target, alias?)`, `insertLink(href, text?)`, `wrapSelection(before, after?)`, `runCommand(name)` for the toolbar's formats and levels (`bold`, `quote`, `taskList`, `heading2`, `paragraph`…), `scrollToLine(line)` and `getScrollLine()`; writes return `false` when read-only, and no CodeMirror type is part of it. Line commands (toolbar, slash menu, handle) leave the caret after the marker they add. Wikilinks and `![[embeds]]`: Ctrl/Cmd+click, or Enter inside one, calls `onWikilinkClick(target, event)` (and `onOpenWikilink(target)`); `embedPreview` shows an embed off the caret as `renderEmbed(target, alias)` or a placeholder. A leading `---` YAML block stays as written, in a muted monospace block. The slash menu stays open with `labels.noMatches` while nothing matches, until Escape or a space. Code languages are opt-in: `npx shadcn add @eskais/markdown-editor-languages` and pass `codeLanguages={markdownCodeLanguages}`. Pass `cspNonce` under a strict Content Security Policy (CodeMirror injects a style element). Spanish labels: `labels={markdownEditorLabelsEs}`. Shortcuts: Mod+B/I/E, Mod+Shift+X, Mod+Alt+0..6 for paragraph and heading levels, Tab/Shift+Tab to nest list items, Mod+Enter to toggle a task; Escape then Tab leaves the editor. Installing it also installs `@eskais/dropdown-menu` (the toolbar's menus: `DropdownMenu`, `DropdownMenuContent`, `DropdownMenuItem`, `DropdownMenuItemIcon`, `DropdownMenuItemIndicator`, `DropdownMenuRadioGroup`, `DropdownMenuRadioItem`), with `button`, `input`, `popover` and `tooltip`, into your `ui` folder. If you already have a `dropdown-menu.tsx` there, shadcn asks before overwriting it: keeping yours means the toolbar imports your file, so it must export those parts with the same props, or the editor breaks at build time. Add with `--overwrite`, or put your own menu under another name.",
       "dependencies": [
         "@codemirror/commands@6.11.1",
         "@codemirror/lang-markdown@6.5.2",
@@ -3872,6 +3885,10 @@
         },
         {
           "path": "registry/ui/markdown-editor-commands.ts",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/markdown-editor-handle.ts",
           "type": "registry:ui"
         },
         {
@@ -4434,6 +4451,47 @@
           "path": "skills/eskais-ui/references/data-display.md",
           "type": "registry:file",
           "target": "~/.agents/skills/eskais-ui/references/data-display.md"
+        }
+      ]
+    },
+    {
+      "name": "document-workspace",
+      "type": "registry:block",
+      "title": "Document Workspace",
+      "description": "A notes or docs workspace: an explorer, tabs, breadcrumb, toolbar, the document (edit or read), an aside for backlinks, properties and the outline, a status bar with the save state, an alert slot and Ctrl/Cmd+P quick open. Resizable, collapsible columns when its container is wide, drawers when narrow; named landmarks and toggles agents can press. Also DocumentOutline and DocumentQuickOpen.",
+      "docs": "`<DocumentWorkspace document={mode === \"edit\" ? <MarkdownEditor ref={editor} …/> : <MarkdownView …/>} explorer tabs breadcrumb toolbar statusBar aside alert quickOpen={<DocumentQuickOpen items onOpen />} mode onModeChange editorRef={editor} headings={extractHeadings(markdown)} saveState storageKey>`. It fills its parent (`--document-workspace-height`, 100% by default) and decides its layout from its own width, never the viewport, so it works inside an app shell's `<main>`: at `narrow` (760 px) or less, the explorer and the aside are 20rem drawers that start closed; wider, they are resizable columns (`Resize files`, `Resize details` handles) that collapse from their toggles or the handle. `explorerOpen`/`onExplorerOpenChange` and `asideOpen`/`onAsideOpenChange` follow what is shown; turning narrow closes them and turning wide brings back the columns. `storageKey` remembers the columns' state and widths in localStorage (the drawers always start closed). Landmarks: the explorer is a `nav`, the aside an `aside`, the document a named region (`documentAs=\"main\"` when the workspace is the page's main content); the toggles carry `aria-expanded` and `aria-controls`. The mode switch is a SegmentedControl; switching keeps the reading position by heading (from the editor's `getScrollLine` to the read view's headings and back). `saveState` (`saved`, `saving`, `unsaved`, `error`) is a polite `<output>` in the status bar; `alert` sits in an assertive region that is always there, so a conflict is read once when it appears (pass an `Alert` without `live`). `quickOpen` adds a Quick open button and `quickOpenShortcut` (`mod+p`, `false` to turn it off). `DocumentOutline` lists `headings`: in edit mode an entry puts the caret at the heading (`setSelection`, `scrollToLine`) and focuses the editor; in read mode it scrolls to the heading and focuses it. Drawers, quick open and menus give focus back to the document unless the action moved it: pass `useDocumentWorkspace().documentFocusTarget` as `finalFocus` to your own menus in `toolbar`. `editorRef` takes any `DocumentEditor` (`focus`, `scrollToLine`, `setSelection`, `getScrollLine`), which `MarkdownEditorHandle` is. All text is in `labels`.",
+      "dependencies": [
+        "@ui-sdk/core@0.1.0-beta.5",
+        "@ui-sdk/react@0.1.0-beta.5",
+        "lucide-react@1.68.0"
+      ],
+      "registryDependencies": [
+        "@eskais/utils",
+        "@eskais/theme",
+        "@eskais/tone",
+        "@eskais/button",
+        "@eskais/command",
+        "@eskais/drawer",
+        "@eskais/resizable",
+        "@eskais/segmented-control",
+        "@eskais/status-pill"
+      ],
+      "files": [
+        {
+          "path": "registry/ui/document-workspace-context.ts",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/document-workspace-parts.tsx",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/document-workspace.tsx",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/use-document-workspace.ts",
+          "type": "registry:ui"
         }
       ]
     }

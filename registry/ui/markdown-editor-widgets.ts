@@ -3,6 +3,7 @@ import { WidgetType, type EditorView } from "@codemirror/view"
 type PortalEntry =
   | { kind: "code-language"; host: HTMLElement; view: EditorView; info: string }
   | { kind: "table"; host: HTMLElement; view: EditorView; source: string }
+  | { kind: "embed"; host: HTMLElement; view: EditorView; target: string; alias: string | undefined }
 
 /** Widgets whose content React renders through portals, so their controls are UI SDK parts. */
 class PortalStore {
@@ -135,5 +136,28 @@ class TableWidget extends WidgetType {
   }
 }
 
-export { BulletWidget, CodeLanguageWidget, LabelWidget, PortalStore, TableWidget, TaskWidget }
+class EmbedWidget extends WidgetType {
+  constructor(
+    readonly target: string,
+    readonly alias: string | undefined,
+    readonly store: PortalStore,
+  ) {
+    super()
+  }
+  override eq(other: EmbedWidget) {
+    return other.target === this.target && other.alias === this.alias && other.store === this.store
+  }
+  toDOM(view: EditorView) {
+    const host = document.createElement("span")
+    host.dataset.slot = "markdown-embed-widget"
+    host.contentEditable = "false"
+    this.store.set({ kind: "embed", host, view, target: this.target, alias: this.alias })
+    return host
+  }
+  override destroy(dom: HTMLElement) {
+    this.store.delete(dom)
+  }
+}
+
+export { BulletWidget, CodeLanguageWidget, EmbedWidget, LabelWidget, PortalStore, TableWidget, TaskWidget }
 export type { PortalEntry }

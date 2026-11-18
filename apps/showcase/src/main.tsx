@@ -18,6 +18,7 @@ import { OverlayCheck } from "./checks/overlay-check"
 import { PressCheck } from "./checks/press-check"
 import { SidePanelCheck } from "./checks/side-panel-check"
 import { TableCheck } from "./checks/table-check"
+import { DocumentWorkspacePage } from "./sections/document-workspace"
 import { InboxDemo } from "./sections/inbox"
 import { DashboardGridDemo, MasterDetailDemo, SettingsPageDemo } from "./sections/layout-blocks"
 import { demoStatuses, PageDemo, type DemoStatus } from "./sections/page"
@@ -32,7 +33,7 @@ if (!root) throw new Error("Missing #root element")
 // ?demo=page, site and shell render one demo alone, for phone-width screenshots; ?demo=<name>-check pages are the
 // fixtures of tooling/<name>-check.mjs (shell-check.mjs's: card-header, description-list, field-placement, gauge,
 // mobile-nav, side-panel, table); ?demo=inbox, list-bench (list-bench.mjs), shell-block (Shell), master-detail,
-// dashboard-grid and settings-page render one demo alone.
+// dashboard-grid, settings-page and document-workspace render one demo alone.
 const params = new URLSearchParams(location.search)
 const status = demoStatuses.find((name) => name === params.get("status")) ?? "success"
 const demo = params.get("demo")
@@ -58,6 +59,7 @@ const standalone = new Set([
   "dashboard-grid",
   "settings-page",
   "shell-block",
+  "document-workspace",
 ])
 
 function Demo() {
@@ -86,6 +88,7 @@ function Demo() {
   if (demo === "dashboard-grid") return <DashboardGridDemo />
   if (demo === "settings-page") return <SettingsPageDemo />
   if (demo === "shell-block") return <ShellBlockDemo />
+  if (demo === "document-workspace") return <DocumentWorkspacePage />
   return demo === "shell" ? <ShellDemo /> : <SiteDemo />
 }
 

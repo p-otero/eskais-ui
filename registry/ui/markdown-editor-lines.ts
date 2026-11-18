@@ -1,5 +1,5 @@
 import { syntaxTree } from "@codemirror/language"
-import type { ChangeSpec, EditorState, Line } from "@codemirror/state"
+import { EditorSelection, type ChangeSet, type ChangeSpec, type EditorState, type Line } from "@codemirror/state"
 import type { EditorView } from "@codemirror/view"
 import type { SyntaxNode } from "@lezer/common"
 
@@ -15,6 +15,30 @@ function selectedLines(state: EditorState) {
     }
   }
   return [...lines.values()]
+}
+
+/**
+ * Maps the selection through a change to line markers. An end that sat at or before a line's text moves to after
+ * its new marker, so typing lands in the text: plain mapping keeps it before an insertion at that spot.
+ */
+function selectionAfterMarkers(state: EditorState, changes: ChangeSet) {
+  const map = (pos: number) => {
+    const start = lineStructure(state, state.doc.lineAt(pos)).contentStart
+    return pos <= start ? changes.mapPos(start, 1) : changes.mapPos(pos)
+  }
+  const ranges = state.selection.ranges.map((range) => EditorSelection.range(map(range.anchor), map(range.head)))
+  return EditorSelection.create(ranges, state.selection.mainIndex)
+}
+
+function dispatchLineChanges(view: EditorView, specs: readonly ChangeSpec[]) {
+  const { state } = view
+  const changes = state.changes(specs)
+  view.dispatch({
+    changes,
+    selection: selectionAfterMarkers(state, changes),
+    userEvent: "input.format",
+    scrollIntoView: true,
+  })
 }
 
 function headingAt(state: EditorState, line: Line): SyntaxNode | null {
@@ -66,8 +90,7 @@ function setHeading(view: EditorView, level: number) {
       changes.push({ from: structure.contentStart, insert: prefix })
     }
   }
-  if (!changes.length) return true
-  view.dispatch({ changes, userEvent: "input.format", scrollIntoView: true })
+  if (changes.length) dispatchLineChanges(view, changes)
   return true
 }
 
@@ -172,4 +195,4 @@ function deleteMarker(view: EditorView) {
   return quote ? dispatch(quote.from, quote.to) : false
 }
 
-export { deleteMarker, headingLevel, indentList, outdentList, setHeading }
+export { deleteMarker, dispatchLineChanges, headingLevel, indentList, outdentList, setHeading }

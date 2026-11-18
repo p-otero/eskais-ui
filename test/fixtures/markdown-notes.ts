@@ -83,4 +83,12 @@ export const markdownNotes: Record<string, string> = {
   "lone surrogate": "broken \ud83d text\n",
   "deep nesting": Array.from({ length: 20 }, (_, depth) => `${"  ".repeat(depth)}- level ${depth}`).join("\n") + "\n",
   "wikilink edge cases": "[[a]] [[a|]] [[|b]] [[ spaced ]] [[a|b|c]] [[]] [[a]]]] [[[a]]] `[[code]]`\n",
+  embeds:
+    "![[diagram.png]]\n\nInline ![[notes/plan|the plan]] and ![[ x ]] beside ![image](a.png) and ![[]] and !![[two]]\n\n- ![[in a list]]\n> ![[quoted|Quote]]\n",
+  "frontmatter, lists and blocks":
+    '---\ntitle: "Plan: Q3"\naliases:\n  - plan\n  - \'q3 plan\'\ntags: [a, "b, c"]\nsummary: |\n  Two lines\n  of text\n# comment\nempty:\n---\n# After\n\nBody ![[embed]]\n',
+  "frontmatter, CRLF and dots": "---\r\ntitle: x\r\n...\r\nText\r\n",
+  "frontmatter, empty": "---\n---\n# Heading\n",
+  "frontmatter, unclosed": "---\ntitle: x\n\nNot frontmatter: the rule and a paragraph.\n",
+  "frontmatter, not first": "\n---\ntitle: x\n---\n",
 }

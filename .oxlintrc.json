@@ -176,7 +176,9 @@
         "tooling/list-bench.mjs",
         "tooling/touch-check.mjs",
         "tooling/calendar-check.mjs",
-        "tooling/press-check.mjs"
+        "tooling/press-check.mjs",
+        "tooling/markdown-check.mjs",
+        "tooling/document-workspace-check.mjs"
       ],
       "rules": {
         "no-await-in-loop": "off"

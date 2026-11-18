@@ -112,6 +112,9 @@ function MarkdownEditorMenus({
       {
         char: "/",
         boundary: "word",
+        // The default pattern ends the match at punctuation such as ? or ), which closed the menu mid-query; any
+        // character but a space keeps it open, with the empty state, until Escape or a space.
+        pattern: /\S/u,
         type: "command",
         items: slashCommands.map(({ value, label, keywords }) => ({ value, label, keywords })),
       },

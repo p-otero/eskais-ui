@@ -1,7 +1,7 @@
 import { EditorSelection, EditorState, type Annotation, type ChangeSpec, type Extension } from "@codemirror/state"
 import { EditorView } from "@codemirror/view"
 
-import { headingLevel, setHeading } from "@/components/ui/markdown-editor-lines"
+import { dispatchLineChanges, headingLevel, setHeading } from "@/components/ui/markdown-editor-lines"
 import { wikilinkText } from "@/components/ui/markdown-syntax"
 
 type InlineFormat = "bold" | "italic" | "strikethrough" | "code"
@@ -123,7 +123,7 @@ function toggleLines(view: EditorView, format: LineFormat) {
       ?.match.exec(entry.text)?.[0]
     return { from: entry.from, to: entry.from + (other?.length ?? 0), insert: add }
   })
-  view.dispatch({ changes, userEvent: "input.format", scrollIntoView: true })
+  dispatchLineChanges(view, changes)
 }
 
 function toggleFormat(view: EditorView, format: MarkdownFormat) {
@@ -175,10 +175,44 @@ function insertWikilink(view: EditorView, slug: string, label?: string) {
   return insertAtCaret(view, wikilinkText(slug, label), "input.wikilink")
 }
 
+/** Puts `before` and `after` around every selection range and keeps the wrapped text selected. */
+function wrapSelection(view: EditorView, before: string, after = before) {
+  const { state } = view
+  if (state.readOnly) return false
+  const open = toDocText(state, before)
+  const close = toDocText(state, after)
+  const size = state.toText(open).length
+  view.dispatch(
+    state.changeByRange((range) => ({
+      changes: [
+        { from: range.from, insert: open },
+        { from: range.to, insert: close },
+      ],
+      range: EditorSelection.range(range.anchor + size, range.head + size),
+    })),
+    { userEvent: "input.format", scrollIntoView: true },
+  )
+  return true
+}
+
+const linkDestination = (href: string) => (/[\s()<>]/.test(href) ? `<${href.replace(/[<>]/g, encodeURI)}>` : href)
+const linkLabel = (text: string) => text.replace(/([[\]\\])/g, "\\$1")
+
+/** Replaces the selection with `[text](href)`; without `text`, the selected text (or the address) is the label. */
+function insertLink(view: EditorView, href: string, text?: string) {
+  if (!href.trim() || /[\r\n]/.test(href)) throw new RangeError(`"${href}" isn't a valid link address.`)
+  const { state } = view
+  if (state.readOnly) return false
+  const range = state.selection.main
+  const label = text ?? (state.sliceDoc(range.from, range.to) || href)
+  return insertAtSelection(view, `[${linkLabel(label)}](${linkDestination(href.trim())})`, "input.link")
+}
+
 export {
   FORMATS,
   insertAtCaret,
   insertAtSelection,
+  insertLink,
   insertWikilink,
   lineSeparatorExtension,
   lineSeparatorOf,
@@ -186,5 +220,6 @@ export {
   replaceDocument,
   toDocText,
   toggleFormat,
+  wrapSelection,
 }
 export type { MarkdownFormat }

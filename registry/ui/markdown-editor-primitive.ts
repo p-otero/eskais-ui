@@ -2,7 +2,7 @@ import { definePrimitive } from "@ui-sdk/core"
 
 import type { MarkdownFormat } from "@/components/ui/markdown-editor-commands"
 
-type MarkdownEditorHandle = {
+type MarkdownEditorActions = {
   getMarkdown: () => string
   insertText: (text: string) => boolean
   replaceSelection: (text: string) => boolean
@@ -13,7 +13,7 @@ type MarkdownEditorHandle = {
   setMarkdown: (markdown: string) => boolean
 }
 
-type MarkdownEditorOptions = { editor?: MarkdownEditorHandle; readOnly?: boolean }
+type MarkdownEditorOptions = { editor?: MarkdownEditorActions; readOnly?: boolean }
 
 function handleOf(options: () => MarkdownEditorOptions, write: boolean) {
   const { editor, readOnly } = options()
@@ -84,4 +84,4 @@ const markdownDocument = definePrimitive({
 })
 
 export { markdownDocument, markdownEditor }
-export type { MarkdownEditorHandle, MarkdownEditorOptions }
+export type { MarkdownEditorActions, MarkdownEditorOptions }

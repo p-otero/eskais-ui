@@ -37,7 +37,7 @@ type EditorSettings = {
 type EditorHooks = {
   bridge: Extension
   onUpdate: (update: ViewUpdate) => void
-  openWikilink: (slug: string) => void
+  openWikilink: (slug: string, event: Event | undefined) => void
 }
 
 const supports = new WeakMap<CodeLanguages, LanguageSupport>()
@@ -87,7 +87,7 @@ function wikilinkAt(state: EditorState, pos: number) {
       node;
       node = node.parent
     ) {
-      if (node.name !== "Wikilink") continue
+      if (node.name !== "Wikilink" && node.name !== "Embed") continue
       const target = node.getChild("WikilinkTarget")
       if (target) return { slug: state.sliceDoc(target.from, target.to).trim(), from: node.from, to: node.to }
     }
@@ -112,7 +112,7 @@ function editorKeymap(hooks: EditorHooks): KeyBinding[] {
         const { main } = view.state.selection
         const link = main.empty ? wikilinkAt(view.state, main.head) : null
         if (!link || main.head <= link.from || main.head >= link.to) return false
-        hooks.openWikilink(link.slug)
+        hooks.openWikilink(link.slug, undefined)
         return true
       },
     },
@@ -162,7 +162,7 @@ function createEditorState(doc: string, settings: EditorSettings, hooks: EditorH
           const pos = view.posAtCoords({ x: event.clientX, y: event.clientY })
           const link = pos === null ? null : wikilinkAt(view.state, pos)
           if (!link) return false
-          hooks.openWikilink(link.slug)
+          hooks.openWikilink(link.slug, event)
           return true
         },
       }),

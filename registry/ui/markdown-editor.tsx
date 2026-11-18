@@ -1,7 +1,7 @@
 "use client"
 
 import { createParts } from "@ui-sdk/react/primitive"
-import { useId, useMemo, useState } from "react"
+import { useId, useMemo, useState, type ReactNode, type Ref } from "react"
 
 import { setMenuOpen } from "@/components/ui/markdown-editor-adapter"
 import {
@@ -23,15 +23,20 @@ import {
   type SlashCommand,
   type SuggestWikilinks,
 } from "@/components/ui/markdown-editor-menus"
+import type {
+  MarkdownEditorCommand,
+  MarkdownEditorHandle,
+  MarkdownSelection,
+} from "@/components/ui/markdown-editor-handle"
 import { MarkdownEditorPortals } from "@/components/ui/markdown-editor-portals"
-import { markdownDocument, markdownEditor, type MarkdownEditorHandle } from "@/components/ui/markdown-editor-primitive"
+import { markdownDocument, markdownEditor, type MarkdownEditorActions } from "@/components/ui/markdown-editor-primitive"
 import { toggleTaskOnLine, type CodeLanguages, type EditorSettings } from "@/components/ui/markdown-editor-state"
 import type { MarkdownConflict } from "@/components/ui/markdown-editor-sync"
 import { MarkdownEditorToolbar } from "@/components/ui/markdown-editor-toolbar"
 import { PortalStore } from "@/components/ui/markdown-editor-widgets"
 import type { WikilinkResolver } from "@/components/ui/markdown-syntax"
 import { fieldSurfaceClassName } from "@/components/ui/input"
-import { useMarkdownEditorView } from "@/components/ui/use-markdown-editor"
+import { useEditorHandle, useMarkdownEditorView } from "@/components/ui/use-markdown-editor"
 import { cn } from "@/lib/utils"
 
 const { Root: EditorRoot } = createParts(markdownEditor, { root: "div" })
@@ -56,7 +61,14 @@ type MarkdownEditorProps = {
   placeholder?: string
   resolveWikilink?: WikilinkResolver
   suggestWikilinks?: SuggestWikilinks
+  /** Ctrl/Cmd+click on a wikilink or an embed, or Enter with the caret inside one. `event` is the click. */
+  onWikilinkClick?: (target: string, event: Event | undefined) => void
+  /** Like `onWikilinkClick`, with the target only. */
   onOpenWikilink?: (slug: string) => void
+  /** Shows `![[target]]` off the caret as a preview: `renderEmbed`, or a link-like placeholder. Read at mount. */
+  embedPreview?: boolean
+  /** What an embed preview shows. Keep it stable (module-level or `useCallback`). */
+  renderEmbed?: (target: string, alias: string | undefined) => ReactNode
   slashCommands?: SlashCommand[]
   /** Languages for fenced code, loaded when a block first uses one; read once, at mount. */
   codeLanguages?: CodeLanguages
@@ -65,10 +77,19 @@ type MarkdownEditorProps = {
   toolbar?: boolean
   labels?: Partial<MarkdownEditorLabels>
   className?: string
+  /** Gets a `MarkdownEditorHandle` once the editor has mounted, for a host's menus and an outline. */
+  ref?: Ref<MarkdownEditorHandle | null>
 }
 
-function MarkdownEditor(props: MarkdownEditorProps) {
+// React Compiler treats every prop read beside `props.ref` as a ref, and can't memoize from a rest object, so the
+// body takes the ref as `handle`.
+function MarkdownEditor({ ref, ...props }: MarkdownEditorProps) {
+  return <MarkdownEditorBody {...props} handle={ref} />
+}
+
+function MarkdownEditorBody(props: Omit<MarkdownEditorProps, "ref"> & { handle: MarkdownEditorProps["ref"] }) {
   const { label, readOnly = false, placeholder, resolveWikilink, cspNonce, toolbar = true, className } = props
+  const { embedPreview = false, renderEmbed } = props
   const labels = useMemo(() => ({ ...markdownEditorLabelsEn, ...props.labels }), [props.labels])
   const slashCommands = useMemo(
     () => props.slashCommands ?? markdownSlashCommands(labels),
@@ -84,13 +105,14 @@ function MarkdownEditor(props: MarkdownEditorProps) {
       readOnly,
       placeholder,
       cspNonce,
-      preview: { resolve: resolveWikilink, taskLabel: labels.task, portals },
+      preview: { resolve: resolveWikilink, taskLabel: labels.task, portals, embeds: embedPreview },
     }),
-    [label, hintId, readOnly, placeholder, cspNonce, resolveWikilink, labels.task, portals],
+    [label, hintId, readOnly, placeholder, cspNonce, resolveWikilink, labels.task, portals, embedPreview],
   )
   const { hostRef, view, adapter, sync } = useMarkdownEditorView(props, settings)
+  useEditorHandle(props.handle, view)
 
-  const handle = useMemo<MarkdownEditorHandle | undefined>(() => {
+  const handle = useMemo<MarkdownEditorActions | undefined>(() => {
     if (!view) return undefined
     return {
       getMarkdown: () => view.state.sliceDoc(),
@@ -146,7 +168,11 @@ function MarkdownEditor(props: MarkdownEditorProps) {
       <p id={hintId} hidden>
         {labels.usageHint}
       </p>
-      <MarkdownEditorPortals store={portals} labels={labels} options={{ resolveWikilink, taskLabel: labels.task }} />
+      <MarkdownEditorPortals
+        store={portals}
+        labels={labels}
+        options={{ resolveWikilink, renderEmbed, taskLabel: labels.task }}
+      />
       {!readOnly && (
         <MarkdownEditorMenus
           adapter={adapter}
@@ -162,4 +188,13 @@ function MarkdownEditor(props: MarkdownEditorProps) {
 }
 
 export { MarkdownEditor, markdownEditorLabelsEn, markdownEditorLabelsEs, markdownSlashCommands }
-export type { MarkdownConflict, MarkdownEditorLabels, MarkdownEditorProps, SlashCommand, SuggestWikilinks }
+export type {
+  MarkdownConflict,
+  MarkdownEditorCommand,
+  MarkdownEditorHandle,
+  MarkdownEditorLabels,
+  MarkdownEditorProps,
+  MarkdownSelection,
+  SlashCommand,
+  SuggestWikilinks,
+}
