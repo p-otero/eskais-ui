@@ -11,6 +11,7 @@ Versions follow [semver](https://semver.org). Before 1.0, a minor version can br
 - `MarkdownEditor frontmatter="readonly"`: a note whose closing fence ends the file (`"---
   a: 1
   ---"`, no trailing newline) takes a body again. Typing, a paste, `insertText`, `insertWikilink`, `insertBlock` or an attachment inserted right after `---` was dropped; the text now goes in on a new line (the note's own line break, CRLF included) and the fence keeps every byte. Edits inside the block, on its fences and before the opening one are still dropped.
+- `MarkdownEditorHandle.openWikilinkSuggestions()` called from a slash command's `run` opens the suggestions. It did nothing: the trigger menu closes once more after `run` returns, which shut the list it had just opened. A request made during `run` now waits for that and opens in a microtask, behind the same provisional `[[`, so a "Link to a note" slash command is `run: (view, range) => { view.dispatch({ changes: range }); editor.current?.openWikilinkSuggestions() }`.
 
 ## 0.2.2 (2026-11-18)
 
