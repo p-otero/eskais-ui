@@ -26,107 +26,17 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Link } from "@/components/ui/link"
-import { MarkdownEditor, type MarkdownEditorHandle } from "@/components/ui/markdown-editor"
+import {
+  MarkdownEditor,
+  markdownSlashCommands,
+  type MarkdownEditorHandle,
+  type SlashCommand,
+} from "@/components/ui/markdown-editor"
 import { extractHeadings, MarkdownView, parseFrontmatter } from "@/components/ui/markdown-view"
 import { SegmentedControl, SegmentedControlIndicator, SegmentedControlItem } from "@/components/ui/segmented-control"
 import { Tabs, TabsIndicator, TabsList, TabsTab } from "@/components/ui/tabs"
 
-type Note = { slug: string; title: string; folder: string; markdown: string }
-
-const initialNotes: Note[] = [
-  {
-    slug: "launch-plan",
-    title: "Launch plan",
-    folder: "Projects",
-    markdown: `---
-status: active
-owner: Ines
-tags: [launch, q3]
----
-# Launch plan
-
-The launch follows the [[goals|quarter's goals]] and keeps an eye on [[risks]].
-
-![[timeline]]
-
-## Milestones
-
-- [x] Freeze the scope
-- [ ] Beta to the first ten teams
-- [ ] Public launch
-
-## Open questions
-
-Who owns the migration guide? See [[goals#owners]] and the **support** rota.
-
-## Rollout
-
-| Week | Teams | Gate |
-| :--- | ---: | :--- |
-| 36 | 10 | Error rate under 1% |
-| 38 | 40 | Support load flat |
-| 40 | all | Sign-off from the [[goals]] owners |
-
-## Notes
-
-Long notes scroll inside the document; the outline jumps between headings in both modes, and switching between
-Edit and Read keeps the heading you were reading at the top.
-
-The beta teams get a short survey after their first week. Their answers decide whether the migration guide needs
-a video, and whether the importer should keep the folder structure of the old tool.
-
-Support keeps a shared list of the questions that come up twice. Anything on it by week 38 goes into the guide
-before the public launch.
-
-Pricing stays as it is for the launch; the review comes with the next quarter's plan.
-
-Week 36: the first ten teams move their notes with the importer. Each gets a named contact in support.
-
-Week 37: we read the survey answers together and decide on the video for the migration guide.
-
-Week 38: forty teams. The error budget is reviewed daily; a breach pauses the rollout, not the launch date.
-
-Week 39: the guide is frozen. Translations start for Spanish and German.
-
-Week 40: everyone. The old tool stays read-only for a quarter, then exports its archive.
-
-After the launch, the retro goes in [[risks]] with what slipped and why.
-`,
-  },
-  {
-    slug: "goals",
-    title: "Goals",
-    folder: "Projects",
-    markdown: `---
-status: agreed
----
-# Goals
-
-1. Ship the beta in September.
-2. Halve the time to the first document.
-
-## Owners
-
-Ines leads the launch; Kofi the [[launch-plan|plan]]'s migration guide.
-`,
-  },
-  {
-    slug: "risks",
-    title: "Risks",
-    folder: "Archive",
-    markdown: `# Risks
-
-| Risk | Owner | Status |
-| :--- | :--- | ---: |
-| Migration slips | Kofi | watching |
-| Support load | Ines | planned |
-
-> Back to the [[launch-plan]].
-`,
-  },
-]
-
-const titleOf = (notes: Note[], slug: string) => notes.find((note) => note.slug === slug.split("#")[0])?.title
+import { initialNotes, snippetOf, titleOf } from "./document-workspace-notes"
 
 function Timeline({ alias }: { alias?: string }) {
   return (
@@ -215,6 +125,21 @@ export default function DocumentWorkspaceDemo({ className = "h-144 w-full" }: { 
         .map((entry) => ({ slug: entry.slug, label: entry.title })),
     [notes],
   )
+
+  // Link to a note calls the handle from `run`: the suggestions open once the slash menu has closed.
+  const slashCommands: SlashCommand[] = [
+    ...markdownSlashCommands(),
+    {
+      value: "note",
+      label: "Link to a note",
+      keywords: ["wikilink"],
+      hint: "[[",
+      run: (view, range) => {
+        view.dispatch({ changes: range, selection: { anchor: range.from }, userEvent: "input.complete" })
+        editor.current?.openWikilinkSuggestions()
+      },
+    },
+  ]
 
   const save = (markdown: string) => {
     setNotes((all) => all.map((entry) => (entry.slug === current ? { ...entry, markdown } : entry)))
@@ -353,6 +278,7 @@ export default function DocumentWorkspaceDemo({ className = "h-144 w-full" }: { 
               resolveWikilink={resolveWikilink}
               onWikilinkClick={onWikilinkClick}
               suggestWikilinks={suggestWikilinks}
+              slashCommands={slashCommands}
               embedPreview
               renderEmbed={renderEmbed}
               className="min-h-0 flex-1 rounded-none border-0 bg-transparent shadow-none has-[.cm-focused]:ring-0"
@@ -419,6 +345,7 @@ export default function DocumentWorkspaceDemo({ className = "h-144 w-full" }: { 
               value: entry.slug,
               label: entry.title,
               description: entry.folder,
+              snippet: snippetOf(entry.markdown),
             }))}
             onOpen={openNote}
             labels={{ placeholder: "Go to a note" }}
