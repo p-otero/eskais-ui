@@ -69,6 +69,8 @@ type FilterFieldProps = {
 }
 
 const legendClassName = "text-body-sm font-medium"
+// A part of a grouped field (From, Value) reads quieter than the group's legend, so the hierarchy shows.
+const subLabelClassName = "font-normal text-muted-foreground"
 
 function TextControl({ field, value, onValueChange, onSubmit, className }: FilterFieldProps) {
   return (
@@ -184,7 +186,7 @@ function NumberBox({
 }) {
   return (
     <Field className="min-w-0 flex-1">
-      <FieldLabel>{label}</FieldLabel>
+      <FieldLabel className={subLabelClassName}>{label}</FieldLabel>
       <NumberInput
         value={value ?? null}
         min={field.min}
@@ -237,7 +239,7 @@ function NumberControl({
       <div className={cn("flex flex-col gap-items", op !== "between" && "@xs:flex-row")}>
         {operators.length > 1 && (
           <Field className="min-w-0 flex-1">
-            <FieldLabel>{labels.comparison}</FieldLabel>
+            <FieldLabel className={subLabelClassName}>{labels.comparison}</FieldLabel>
             <Select
               options={operators.map((operator) => ({ value: operator, label: labels.operators[operator] }))}
               value={op}
@@ -312,7 +314,7 @@ function DateControl({
       <FieldLegend className={legendClassName}>{field.label}</FieldLegend>
       <div className="grid gap-items @sm:grid-cols-2">
         <Field className="min-w-0">
-          <FieldLabel>{labels.from}</FieldLabel>
+          <FieldLabel className={subLabelClassName}>{labels.from}</FieldLabel>
           <DatePicker
             clearable
             hint={false}
@@ -321,7 +323,7 @@ function DateControl({
           />
         </Field>
         <Field className="min-w-0">
-          <FieldLabel>{labels.to}</FieldLabel>
+          <FieldLabel className={subLabelClassName}>{labels.to}</FieldLabel>
           <DatePicker
             clearable
             hint={false}
