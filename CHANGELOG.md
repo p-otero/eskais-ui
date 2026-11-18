@@ -4,6 +4,11 @@ Versions follow [semver](https://semver.org). Before 1.0, a minor version can br
 
 ## Unreleased
 
+### Added
+
+- `DocumentQuickOpenItem.snippet`: a passage of the note, like the one a server's search matched, shown as a second line under the label (`text-caption`, muted, cut at two lines) with every word of the query marked, case and accents folded as the command filter folds them (UI SDK's `matchRanges` and `matchSegments`). It is plain text, never markup. It works with `items` and with `source` (from `getItem`), and the rows stay on `CommandRows`, virtualized past 50. Agents and screen readers read an item as its label, folder and snippet, now separated by commas (`"Launch plan, Projects, The budget for…"`) where the folder used to run into the label.
+- `CommandRows estimateItemSize(item)`: a command's height before it's measured, for rows taller than `h-control-sm`.
+
 ### Fixed
 
 - `MarkdownEditor`: dismissing the suggestions `openWikilinkSuggestions()` opened no longer leaves `[[` in the note. The `[[` it types, and the query typed after it, are provisional: a `markdown-editor-provisional` state field tracks them, `onChange`, the dirty state and undo history skip them, and Escape, a click away, leaving the editor or any other close puts the note and the selection back byte for byte, with no `onChange`. Choosing an item inserts the wikilink as one undo step from the original note. A `[[` the user typed stays when the menu closes, and so does a query the user finished by hand (`[[idea]]`).

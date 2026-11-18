@@ -76,12 +76,19 @@ function useCommandRows<Item extends CommandDataItem>(
   items: CommandData,
   highlight: CommandHighlight | null,
   virtualize: Virtualize,
+  estimateItem?: (item: Item) => number | undefined,
 ) {
   const { rows, commands } = useMemo(() => rowsOf<Item>(items), [items])
   const enabled = virtualize === "auto" ? commands > COMMAND_VIRTUALIZE_THRESHOLD : virtualize
   const rowOf = useMemo(() => rows.flatMap((row, at) => (row.type === "item" ? [at] : [])), [rows])
   const getKey = useCallback((at: number) => rows[at]?.key ?? String(at), [rows])
-  const estimateSize = useCallback((at: number) => estimates[rows[at]?.type ?? "item"], [rows])
+  const estimateSize = useCallback(
+    (at: number) => {
+      const row = rows[at]
+      return (row?.type === "item" ? estimateItem?.(row.item) : undefined) ?? estimates[row?.type ?? "item"]
+    },
+    [rows, estimateItem],
+  )
   const { anchor, ...virtual } = useVirtualRows({
     count: rows.length,
     virtualize: enabled,
