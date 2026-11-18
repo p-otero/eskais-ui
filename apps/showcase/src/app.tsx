@@ -45,7 +45,7 @@ import { Spinner } from "@/components/ui/spinner"
 import { agent, approval, type ApprovalRequest } from "./agent"
 import { AppearanceControls, appearance, palettes } from "./appearance"
 import { Section } from "./section"
-import { BoardSection } from "./sections/board"
+import { BoardSection, SortableSection } from "./sections/board"
 import { NavigationSection } from "./sections/navigation"
 import { SiteHeaderSection } from "./sections/site-header"
 import { TopbarSection } from "./sections/topbar"
@@ -412,6 +412,7 @@ function App() {
           <ValuesSection />
 
           <BoardSection />
+          <SortableSection />
 
           <AttemptsSection />
 

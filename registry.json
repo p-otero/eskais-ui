@@ -2440,10 +2440,44 @@
       "docs": "`<DescriptionList layout columns labels>` renders a `dl` of `DescriptionItem`s, each a `div` holding a `DescriptionTerm` (`dt`) and its `DescriptionDetails` (`dd`). `layout=\"stacked\"` (default) puts each term above its details, `gap-group` between items; `\"inline\"` puts them side by side, the term at `--description-term-width` (33%), divided by rules, and stacks them again once the list's own width drops under 24rem (a container query, so it works in a side panel); `\"grid\"` lays the items out in as many columns as fit at `--description-column-min` (12rem), never more than `columns` (3). Spacing comes from the role tokens, so `data-theme=\"compact\"` tightens it. An empty `DescriptionDetails` (nothing, `null` or `\"\"`) shows an `aria-hidden` dash and reads `labels.empty` (\"Not set\"). `mono` sets the value in the monospace face (ids, hashes). `copyable` adds a copy button after the value (`copyValue` when the details aren't plain text, `onCopy`), as CodeBlock does: the value is a group named by its term with a `copy` action for agents, the button is hidden from them, and \"Copied\" (`labels.copied`) is announced. Override `labels={{ empty, copy, copied }}` in the page's language."
     },
     {
+      "name": "sortable",
+      "type": "registry:ui",
+      "title": "Sortable",
+      "description": "Reorder a list or grid by drag, keyboard and agents, built with definePrimitive over UI SDK's createReorder: a controlled string[] order, a draft while an item moves, an optional drag handle, checked items that move together, announcements with overridable labels, a FLIP slide on the motion tokens, and agent actions move(id, index) and reorder(order).",
+      "docs": "`Sortable aria-label` holds `SortableItem value`s, rendered from its children function `({ order }) => …` so the items follow the draft while one moves; `value`/`defaultValue` and `onValueChange(order, details)` own the order (`details.reason` is `drag`, `move-key` or `imperative`, and `details.cancel()` or a controlled value that doesn't change keeps the old one). Without `handle` the root is a listbox and each item an option, one tab stop: arrows move focus, Space or Enter lifts the focused item, arrows, Home and End move it, Space or Enter drops it and Escape puts it back. With `handle`, the root is a list, each item a list item and its `SortableHandle` (named `labels.handle(label)`, a grip icon by default) the one tab stop and the drag target, so the item's own buttons stay clickable. `variant` is `card` (separate bordered items, the default), `row` (rows edge to edge in one bordered box) or `plain` (no surface); `orientation` is `vertical`, `horizontal` or `grid`. `selected` (or Ctrl/Cmd+Space and Ctrl/Cmd/Shift+click) checks items that move together; `disabledKeys` can't be picked up; `preview` drags a copy so a scrolling list neither clips the item nor grows, and scrolls near its edges (`autoScroll`); both are read on mount. Style from `data-moving`, `data-grabbed` (a pointer drag, translated by core's `--drag-x`/`--drag-y`), `data-checked` and `data-disabled` on items and `data-moving`/`data-dragging` on the root: nothing re-renders per pointer move. `labels` overrides the role descriptions, the handle's name, the keyboard instructions every item is described by and the announcements (English by default). Agents see the sortable by its label, with `move(id, index)` and `reorder(order)` and its items named by `itemLabel` or their text; `agentMoves={false}` hides them, for a host that offers its own confirmed action. `useFlip(ref, selector, trigger)` slides elements to their new places with the root's `duration-panel` and `ease-standard`, and does nothing under reduced motion.",
+      "dependencies": [
+        "@ui-sdk/core@0.1.0-beta.10",
+        "@ui-sdk/react@0.1.0-beta.10",
+        "lucide-react"
+      ],
+      "registryDependencies": [
+        "@eskais/utils",
+        "@eskais/theme"
+      ],
+      "files": [
+        {
+          "path": "registry/ui/sortable-primitive.ts",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/sortable-labels.ts",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/sortable.tsx",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/use-flip.ts",
+          "type": "registry:ui"
+        }
+      ]
+    },
+    {
       "name": "board",
       "type": "registry:ui",
       "title": "Board",
-      "description": "Generic kanban layout: a named, horizontally scrolling list of columns with headers, counts, actions, collapsible columns agents can toggle by name, groups and an empty slot.",
+      "description": "Generic kanban layout: a named, horizontally scrolling list of columns with headers, counts, actions, collapsible columns agents can toggle by name, groups and an empty slot. With a value, cards move between columns by drag, keyboard and agents (UI SDK's createTransfer).",
       "dependencies": [
         "@ui-sdk/core@0.1.0-beta.10",
         "@ui-sdk/react@0.1.0-beta.10",
@@ -2457,7 +2491,8 @@
         "@eskais/scroll-area",
         "@eskais/empty",
         "@eskais/tooltip",
-        "@eskais/tone"
+        "@eskais/tone",
+        "@eskais/sortable"
       ],
       "files": [
         {
@@ -2475,8 +2510,17 @@
         {
           "path": "registry/ui/board-navigation.tsx",
           "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/board-transfer-primitive.ts",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/board-transfer.tsx",
+          "type": "registry:ui"
         }
-      ]
+      ],
+      "docs": "Give `Board` a `value` (or `defaultValue`), a `Record<string, string[]>` of card ids by column, and `onValueChange(lists, details)` to move cards: each `BoardColumn value` renders its list's ids from a children function as `BoardItem value`s (`variant` `card` or `plain`), in the draft's order while a card moves, and counts them. Space lifts a card, Up and Down place it, Left and Right change columns (`order` sets their order and `accepts(id, list)` skips a column that won't take it), Space drops it and Escape puts it back; a pointer drags a copy and scrolls the board near its edges. `details` has `key`, `from`, `to` and `index`. `handle` moves cards by their `BoardItemHandle` only, so a card's buttons stay clickable: the handles are one tab stop of their own, or with `handleFocus=\"card\"` each is a control of a card that is already one of the board's stops (`BoardCard id render`). Agents get `move(id, list, index)` on the board's label (`agentMoves={false}` hides it); `labels`, `itemLabel` and `listLabel` set what screen readers hear."
     },
     {
       "name": "status-pill",
@@ -2707,6 +2751,10 @@
         {
           "path": "registry/ui/agent-task-board-root.tsx",
           "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/agent-task-moves-primitive.ts",
+          "type": "registry:ui"
         }
       ]
     },
@@ -2846,7 +2894,7 @@
       "name": "agent-task-board",
       "type": "registry:ui",
       "title": "Agent Task Board",
-      "description": "The full board for AI agent tasks: filters, search, a board or sortable table view, a summary, collapsible status columns with ready and waiting groups, a detail dialog, drawer or side panel, compact density on narrow hosts, snapshot and live modes, English and Spanish labels, and agent actions to select, filter, switch views, open threads and decide proposals.",
+      "description": "The full board for AI agent tasks: filters, search, a board or sortable table view, a summary, collapsible status columns with ready and waiting groups, a detail dialog, drawer or side panel, compact density on narrow hosts, snapshot and live modes, English and Spanish labels, and agent actions to select, filter, switch views, open threads, decide proposals and move tasks between columns.",
       "dependencies": [
         "@ui-sdk/core@0.1.0-beta.10",
         "@ui-sdk/react@0.1.0-beta.10",
@@ -4589,7 +4637,7 @@
       "type": "registry:ui",
       "title": "List Item",
       "description": "Dense, Linear-style rows that also work as entity cards: List, ListGroup (label and count), ListItem with leading, title, subtitle, status, meta, trailing and actions, plus ListItemTitle, ListItemMeta, ListItemActions and IconTile. Agents get select(id).",
-      "docs": "`List aria-label` holds `ListItem`s, optionally inside `ListGroup label count`. The name goes on the list itself: a `ul` (`role=\"list\"`), or the listbox when rows are selectable, with no group around it. A row selects through a stretched link (`href`, `aria-current=\"page\"` when `selected`) or a stretched UI SDK Button (`onSelect`), and its actions, chips and status stay their own targets. Give `List` a `value`, `defaultValue` or `onValueChange` and the rows become options of a UI SDK Listbox (arrow keys, one tab stop); options can't hold controls, so `actions` are ignored there. `variant=\"card\"` lays rows out as cards in a responsive grid. Titles wrap to two lines, then show the full title in a tooltip; a status pill wraps below a narrow title, and trailing content and actions drop to their own line on a narrow row. `List onSelect(id, details)` runs before a row is chosen, for people and agents, and `details.cancel()` stops it. Agents see the list by its label with `select(id)`; a selectable list also shows its listbox under the same name with `setValue`, and each action resolves to one of them. Rows of a non-selectable list are one tab stop: arrows or j/k move, Home/End and PageUp/PageDown jump, Enter opens the row through its link or button, and the moved-to row scrolls into view with the least scrolling; a selectable list takes j/k and the page keys as its own arrows. Pass `items` with `renderItem` (and `getItemId`, `itemText`) to render rows from data, or give a row list `ListItem id` children directly (each child an element with a string `id`; `title` is its text), which the list reads as the same data: past 200 rows (`virtualize=\"auto\"`, `estimateSize`) only the rows in view render, with `aria-setsize`/`aria-posinset`, every row reachable by keyboard and by agents' `select`, and find in page through hidden stubs. `checkedIds` with `onCheckedIdsChange` checks rows for a bulk action: Space or x toggles the focused row, each row shows a checkbox outside the tab order (`checkLabel` names it).",
+      "docs": "`List aria-label` holds `ListItem`s, optionally inside `ListGroup label count`. The name goes on the list itself: a `ul` (`role=\"list\"`), or the listbox when rows are selectable, with no group around it. A row selects through a stretched link (`href`, `aria-current=\"page\"` when `selected`) or a stretched UI SDK Button (`onSelect`), and its actions, chips and status stay their own targets. Give `List` a `value`, `defaultValue` or `onValueChange` and the rows become options of a UI SDK Listbox (arrow keys, one tab stop); options can't hold controls, so `actions` are ignored there. `variant=\"card\"` lays rows out as cards in a responsive grid. Titles wrap to two lines, then show the full title in a tooltip; a status pill wraps below a narrow title, and trailing content and actions drop to their own line on a narrow row. `List onSelect(id, details)` runs before a row is chosen, for people and agents, and `details.cancel()` stops it. Agents see the list by its label with `select(id)`; a selectable list also shows its listbox under the same name with `setValue`, and each action resolves to one of them. Rows of a non-selectable list are one tab stop: arrows or j/k move, Home/End and PageUp/PageDown jump, Enter opens the row through its link or button, and the moved-to row scrolls into view with the least scrolling; a selectable list takes j/k and the page keys as its own arrows. Pass `items` with `renderItem` (and `getItemId`, `itemText`) to render rows from data, or give a row list `ListItem id` children directly (each child an element with a string `id`; `title` is its text), which the list reads as the same data: past 200 rows (`virtualize=\"auto\"`, `estimateSize`) only the rows in view render, with `aria-setsize`/`aria-posinset`, every row reachable by keyboard and by agents' `select`, and find in page through hidden stubs. `checkedIds` with `onCheckedIdsChange` checks rows for a bulk action: Space or x toggles the focused row, each row shows a checkbox outside the tab order (`checkLabel` names it). `sortable` with `onReorder(ids, details)` reorders the rows of a non-selectable list from data: each row gets a drag handle named after its title (`sortableLabels`), the row's link or button keeps its own tab stop, checked rows move together, and agents get `move` and `reorder` on a sortable named like the list. A sortable list renders every row instead of virtualizing.",
       "dependencies": [
         "@ui-sdk/core@0.1.0-beta.10",
         "@ui-sdk/react@0.1.0-beta.10"
@@ -4601,7 +4649,8 @@
         "@eskais/tooltip",
         "@eskais/checkbox",
         "@eskais/row-navigation",
-        "@eskais/virtual-rows"
+        "@eskais/virtual-rows",
+        "@eskais/sortable"
       ],
       "files": [
         {
@@ -4618,6 +4667,10 @@
         },
         {
           "path": "registry/ui/use-list-item.ts",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/list-sortable.tsx",
           "type": "registry:ui"
         }
       ]

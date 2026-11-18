@@ -12,7 +12,7 @@ Read a component's own file before you use it: the props, variants and the comme
 | Read                                      | When                                                                                    |
 | ----------------------------------------- | --------------------------------------------------------------------------------------- |
 | `references/forms.md`                     | any form: fields, validation, server errors, dialogs, steps, floating labels            |
-| `references/lists-and-navigation.md`      | links, keyboard shortcuts, long lists and tables, a ⌘K search                           |
+| `references/lists-and-navigation.md`      | links, keyboard shortcuts, long lists and tables, reordering, a ⌘K search               |
 | `references/styling.md`                   | spacing, tone, elevation, layers, motion, touch targets, narrow screens, type and icons |
 | `references/toasts-and-testing.md`        | toasts, and testing toasts and alerts with Testing Library                              |
 | `references/data-display.md`              | description lists, stat deltas, ring meters and value formats, table cells, chart data  |
@@ -80,7 +80,8 @@ Each line is a need, then what to use. Props are listed by name; read the compon
 - **Pass/fail criteria**: `AcceptanceList`, and `AcceptanceBar` with `countAcceptance` for a compact summary
 - **Summary figures**: `StatGroup` of `Stat` parts; `StatDelta value comparison invert` for a change, read in words; see `references/data-display.md`
 - **An entity's properties**: `DescriptionList layout columns labels` (`stacked`, `inline`, `grid`) of `DescriptionItem` > `DescriptionTerm` + `DescriptionDetails mono copyable`; an empty value reads `labels.empty`; see `references/data-display.md`
-- **Columns of items**: `Board` with `BoardColumn` (collapsible, groups, `empty`); no drag and drop. Cards are one tab stop with Linear-style arrows and j/k: wrap a card's primary control in `BoardCard id render`
+- **Columns of items**: `Board` with `BoardColumn` (collapsible, groups, `empty`); with `value`/`onValueChange`, `BoardColumn value` renders `BoardItem`s that move between columns by drag, keyboard and agents (`references/lists-and-navigation.md`). Cards are one tab stop with Linear-style arrows and j/k: wrap a card's primary control in `BoardCard id render`
+- **Reorder a list**: `Sortable aria-label value onValueChange` of `SortableItem value` (from its `({ order }) =>` children), `handle` + `SortableHandle` when items hold buttons; or `List sortable onReorder`. Agents get `move(id, index)` and `reorder(ids)`; see `references/lists-and-navigation.md`
 - **Which agent ran**: `AgentBadge agent requested?`: a provider avatar (initials on a stable color, or your `avatars`), long model ids truncate in the middle, a marker when what ran differs
 - **Is an agent alive**: `LivenessIndicator` with `liveness` from your data; it never infers it from times
 - **Task or attempt status**: `TaskStatusPill`, `AttemptStatusPill`, `ContextModePill`

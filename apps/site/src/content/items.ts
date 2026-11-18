@@ -721,8 +721,15 @@ const itemNotes: Record<string, ItemNotes> = {
     related: ["lightbox", "attachments"],
   },
   board: {
-    a11y: ["A named, horizontally scrolling list of columns; each column is a region named by its title."],
-    related: ["agent-task-board", "card"],
+    usage: "Give it value and onValueChange to move cards between columns; each BoardColumn value renders its cards.",
+    a11y: [
+      "A named, horizontally scrolling list of columns; each column is a region named by its title.",
+      "Moving cards, each column's cards are a list named by its title. Space lifts a card, Up and Down place it, Left and Right change columns, Space drops it and Escape puts it back; every step is announced.",
+      "With handle, a card moves by its BoardItemHandle, one tab stop for all of them, so the card's own buttons stay clickable.",
+    ],
+    agent:
+      "Agents get move(id, list, index) on the board's label, and are told the lists and the range when an argument is wrong; agentMoves={false} hides it for a host with its own confirmed action.",
+    related: ["agent-task-board", "sortable", "card"],
   },
   table: {
     a11y: ["Semantic table parts; headers take aria-sort; truncated cells keep their full text in title."],
@@ -765,8 +772,22 @@ const itemNotes: Record<string, ItemNotes> = {
       "A row selects through a stretched link or button, while its own actions stay separate targets.",
       "With value or onValueChange, rows become listbox options with one tab stop.",
     ],
-    agent: "Agents see the list by its label with select(id).",
-    related: ["stage-track", "status-pill", "card"],
+    agent:
+      "Agents see the list by its label with select(id); a sortable list adds move(id, index) and reorder(ids) under the same name.",
+    related: ["stage-track", "status-pill", "card", "sortable"],
+  },
+  sortable: {
+    usage:
+      "Reorder a short list or grid by drag, keyboard and agents. For rows with links or buttons, use List sortable or a SortableHandle.",
+    a11y: [
+      "Without a handle, a listbox of options with one tab stop: arrows move focus, Space or Enter lifts, the arrows, Home and End move, Space or Enter drops, Escape puts it back.",
+      "With a handle, a list whose handles are one tab stop and the drag targets, so each item's own controls stay clickable.",
+      "Every item or handle is described by the keyboard instructions, and each pickup, move and drop is announced; labels overrides the words.",
+      "The neighbours slide into place with the panel motion token, and stay still under reduced motion.",
+    ],
+    agent:
+      "Agents get move(id, index) and reorder(ids), with items named by itemLabel; wrong ids or indexes come back with what is allowed.",
+    related: ["list-item", "board", "agent-task-board"],
   },
   "stage-track": {
     a11y: [
@@ -853,9 +874,11 @@ const itemNotes: Record<string, ItemNotes> = {
     a11y: [
       "Board, table and backlog views, each keyboard reachable; columns collapse and keep their order.",
       "Task detail opens as a dialog, drawer or side panel with focus handled.",
+      "With onMoveTask, each card has a drag handle: Space lifts it, Left and Right change columns, Up and Down place it.",
     ],
-    agent: "Agents filter, switch views, open tasks and decide proposals; approve and reject need a person.",
-    related: ["task-card", "task-detail-panel", "agent-task-board-core"],
+    agent:
+      "Agents filter, switch views, open tasks, decide proposals and move tasks with moveTask(id, status, index); approve, reject and moves need a person by default.",
+    related: ["task-card", "task-detail-panel", "agent-task-board-core", "board"],
   },
   "agent-task-board-core": {
     usage: "Use the model functions to build your own task views on the same filtering, grouping and summary logic.",
