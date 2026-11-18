@@ -740,7 +740,10 @@ async function checkShell(page) {
   const sidebar = page.getByRole("navigation", { name: "Main" })
   await sidebar.getByRole("link", { name: "Archive" }).click()
   await page.waitForFunction(() => location.hash === "#/archive")
-  await sidebar.locator('[aria-current="page"]', { hasText: "Archive" }).waitFor({ timeout: 2000 }).catch(() => {})
+  await sidebar
+    .locator('[aria-current="page"]', { hasText: "Archive" })
+    .waitFor({ timeout: 2000 })
+    .catch(() => {})
   const archived = await page.getByRole("main").getByRole("heading", { level: 1 }).textContent()
   const marked = await sidebar.getByRole("link", { name: "Archive" }).getAttribute("aria-current")
   check(
@@ -753,7 +756,10 @@ async function checkShell(page) {
   await bar.getByRole("link", { name: "Calendar" }).click()
   await page.waitForFunction(() => location.hash === "#/calendar")
   // The hash changes before React re-renders the bar, so wait for the mark instead of reading it once.
-  await bar.locator('[aria-current="page"]', { hasText: "Calendar" }).waitFor({ timeout: 2000 }).catch(() => {})
+  await bar
+    .locator('[aria-current="page"]', { hasText: "Calendar" })
+    .waitFor({ timeout: 2000 })
+    .catch(() => {})
   const calendar = await bar.getByRole("link", { name: "Calendar" }).getAttribute("aria-current")
   check("Shell hash router 390px: the bottom bar routes and marks the route", calendar === "page", calendar)
 }
