@@ -43,7 +43,7 @@ import { SkipLink } from "@/components/ui/skip-link"
 import { Spinner } from "@/components/ui/spinner"
 
 import { agent, approval, type ApprovalRequest } from "./agent"
-import { AppearanceControls, appearance, palettes } from "./appearance"
+import { AppearanceControls, appearance, palettes, themeEditor } from "./appearance"
 import { Section } from "./section"
 import { BoardSection, SortableSection } from "./sections/board"
 import { NavigationSection } from "./sections/navigation"
@@ -263,7 +263,7 @@ function App() {
             title="Theme"
             description="Seed tokens: pick a preset or a brand colour, tint the greys, set the radius, then copy the CSS."
           >
-            <ThemeEditor appearance={appearance} palettes={palettes} />
+            <ThemeEditor appearance={appearance} palettes={palettes} store={themeEditor} />
           </Section>
           <Section
             title="Button"

@@ -9,6 +9,7 @@ import { SegmentedControl, SegmentedControlIndicator, SegmentedControlItem } fro
 import { Slider, SliderControl, SliderIndicator, SliderThumb, SliderTrack, SliderValue } from "@/components/ui/slider"
 
 import { useGlassOpacity } from "./hooks/use-glass-opacity"
+import { createThemeEditorStore } from "./theme-editor-store"
 
 const themes = ["default", "compact", "glass"] as const
 type Theme = (typeof themes)[number]
@@ -22,6 +23,8 @@ const appearance = createAppearance({
   storage: { theme: createLocalStorage("eskais-showcase-theme") },
 })
 const { theme } = appearance
+// In memory only, so the browser checks always start from the default theme.
+const themeEditor = createThemeEditorStore()
 
 function ThemePicker() {
   const { value } = usePreference(theme)
@@ -91,4 +94,4 @@ function AppearanceControls() {
   )
 }
 
-export { AppearanceControls, appearance, palettes }
+export { AppearanceControls, appearance, palettes, themeEditor }

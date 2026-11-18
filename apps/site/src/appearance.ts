@@ -2,6 +2,8 @@ import { createLocalStorage } from "@ui-sdk/core"
 
 import { createAppearance } from "@/components/ui/appearance"
 
+import { createThemeEditorStore } from "../../showcase/src/theme-editor-store"
+
 const themes = ["default", "compact", "glass"] as const
 const palettes = ["neutral", "blue", "violet", "green", "orange"] as const
 type Theme = (typeof themes)[number]
@@ -19,5 +21,8 @@ const appearance = createAppearance<Theme, Palette>({
   },
 })
 
-export { appearance, palettes, themes }
+// The Theming page's editor writes here; main.tsx applies it before the first render, so every page shows it.
+const themeEditor = createThemeEditorStore({ storageKey: "eskais-site-theme-editor" })
+
+export { appearance, palettes, themeEditor, themes }
 export type { Palette, Theme }

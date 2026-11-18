@@ -271,7 +271,7 @@ async function checkThemeEditor(browser, origin) {
           card: getComputedStyle(document.querySelector('[data-slot="theme-editor-card"]')).backgroundColor,
         }))
       const start = await read()
-      const area = await page.locator('[data-slot="color-picker-area"]').boundingBox()
+      const area = await page.locator('[data-slot="color-picker-area"]').first().boundingBox()
       await page.mouse.click(area.x + area.width * 0.6, area.y + area.height * 0.4)
       const dragged = await read()
       if (dragged.primary === start.primary)
@@ -292,7 +292,19 @@ async function checkThemeEditor(browser, origin) {
       for (let step = 0; step < 10; step++) await page.keyboard.press("ArrowRight")
       const tinted = await read()
       if (tinted.card === typed.card) failures.push(`${scope}: the neutral tint leaves the card at ${typed.card}`)
-      await page.getByRole("button", { name: "Reset to preset" }).click()
+      // The choices follow the reader to another page from the sidebar, and come back after a reload.
+      const brandOf = () =>
+        page.evaluate(() => getComputedStyle(document.documentElement).getPropertyValue("--brand").trim())
+      const edited = await brandOf()
+      await page.getByRole("link", { name: "Installation", exact: true }).first().click()
+      await page.waitForURL(/\/docs\/installation\/?$/)
+      if ((await brandOf()) !== edited) failures.push(`${scope}: leaving Theming drops the brand ${edited}`)
+      await page.reload()
+      await page.waitForLoadState("networkidle")
+      if ((await brandOf()) !== edited) failures.push(`${scope}: a reload drops the brand ${edited}`)
+      await page.goto(`${origin}docs/theming/`)
+      await page.waitForLoadState("networkidle")
+      await page.getByRole("button", { name: "Reset", exact: true }).click()
       if ((await read()).primary !== start.primary) failures.push(`${scope}: reset doesn't restore --primary`)
     }
     await context.close()
