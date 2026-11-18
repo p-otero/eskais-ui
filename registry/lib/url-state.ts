@@ -1,5 +1,7 @@
 import { useCallback, useMemo, useSyncExternalStore } from "react"
 
+import type { UrlRouter } from "@/lib/url-router"
+
 type UrlWriteOptions = { replace: boolean }
 
 /** Where a screen keeps its state in the URL, whatever the router: the query string, the hash, or memory. */
@@ -93,6 +95,20 @@ function hashUrlState(target: UrlStateWindow | undefined = browserWindow()): Url
   }
 }
 
+/**
+ * The query of a `UrlRouter`'s location: `routerUrlState(hashRouter())` for `#/tasks?status=open`, or one over your
+ * router's own API. Writes keep the path and go through the router.
+ */
+function routerUrlState(router: UrlRouter): UrlStateAdapter {
+  return {
+    read: () => router.read().params,
+    write(params, { replace }) {
+      router.navigate({ path: router.read().path, params: new URLSearchParams(params) }, { replace })
+    },
+    subscribe: (callback) => router.subscribe(callback),
+  }
+}
+
 type MemoryUrlState = UrlStateAdapter & {
   /** Every write, newest last, for tests: `{ query, replace }`. */
   readonly history: readonly { query: string; replace: boolean }[]
@@ -133,5 +149,5 @@ function useUrlState(adapter: UrlStateAdapter) {
   return [params, setParams] as const
 }
 
-export { hashUrlState, historyUrlState, memoryUrlState, useUrlState }
+export { hashUrlState, historyUrlState, memoryUrlState, routerUrlState, useUrlState }
 export type { MemoryUrlState, UrlStateAdapter, UrlStateWindow, UrlWriteOptions }

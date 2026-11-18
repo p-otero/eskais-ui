@@ -3608,11 +3608,27 @@
       ]
     },
     {
+      "name": "url-router",
+      "type": "registry:lib",
+      "title": "URL Router",
+      "description": "A router adapter for blocks that keep state in the URL: read the location, navigate, build an href and follow changes. hashRouter keeps a hash route's path (#/devices?device=a1), historyRouter the path and query string, memoryRouter is for tests; wrap your own router's API in the same shape.",
+      "docs": "A `UrlRouter` is `{ read(): { path, params }, navigate(to, { replace }), href(to), subscribe(listener) }`. `hashRouter()` reads `#/path?query`, changes the query without touching the path and builds `#/path?query` hrefs, which fast links follow as hash routes; `historyRouter()` does the same with `location.pathname` and `location.search` and keeps the hash on writes. Both keep `history.state` and notify each other. `memoryRouter(\"/settings\")` records `entries` for tests. `withParam(location, name, value)` sets or removes one param. Pass a router to `createUrlParam(name, { router })` (`master-detail`, `settings-page`) or `routerUrlState(router)` (`url-state`). When your router has a contract of its own (a path segment like `#/devices/<id>`), wrap its API in this shape, or skip the adapter and control the block (`selectedId` and `onSelectedIdChange`, `currentSection` and `onSectionChange`) from the route.",
+      "files": [
+        {
+          "path": "registry/lib/url-router.ts",
+          "type": "registry:lib"
+        }
+      ]
+    },
+    {
       "name": "url-state",
       "type": "registry:lib",
       "title": "URL State",
       "description": "Router-agnostic URL state: one UrlStateAdapter shape over the query string (historyUrlState), a hash router's query (hashUrlState) or memory (memoryUrlState), and useUrlState to read and write it.",
-      "docs": "An adapter is `{ read(), write(params, { replace }), subscribe(callback) }`. `historyUrlState()` edits `location.search` with `replaceState` or `pushState` and follows `popstate`; `hashUrlState()` edits the query inside `#/route?…` and keeps the route; `memoryUrlState(initial)` keeps it in memory and records `history`, for tests and server rendering. A write through an adapter notifies its own subscribers too. `const [params, setParams] = useUrlState(adapter)` reads it with `useSyncExternalStore` (empty on the server) and writes with `replace` unless told otherwise. Wrap your router's own API in the same shape to use it instead.",
+      "docs": "An adapter is `{ read(), write(params, { replace }), subscribe(callback) }`. `historyUrlState()` edits `location.search` with `replaceState` or `pushState` and follows `popstate`; `hashUrlState()` edits the query inside `#/route?…` and keeps the route; `memoryUrlState(initial)` keeps it in memory and records `history`, for tests and server rendering. A write through an adapter notifies its own subscribers too. `const [params, setParams] = useUrlState(adapter)` reads it with `useSyncExternalStore` (empty on the server) and writes with `replace` unless told otherwise. `routerUrlState(router)` goes through a `UrlRouter` from `url-router` (`hashRouter()`, `historyRouter()` or one over your router's API). Wrap your router's own API in the same shape to use it instead.",
+      "registryDependencies": [
+        "@eskais/url-router"
+      ],
       "files": [
         {
           "path": "registry/lib/url-state.ts",
@@ -4637,7 +4653,8 @@
         "@eskais/button",
         "@eskais/resizable",
         "@eskais/scroll-area",
-        "@eskais/shortcuts"
+        "@eskais/shortcuts",
+        "@eskais/url-router"
       ],
       "files": [
         {
@@ -4661,7 +4678,7 @@
           "type": "registry:ui"
         }
       ],
-      "docs": "`<MasterDetail label=\"Devices\" renderList={(state) => <List aria-label=\"Devices\">{devices.map((d) => <ListItem key={d.id} title={d.name} {...state.itemProps(d.id)} />)}</List>} renderDetail={(id) => ({ title, description, actions, content })} emptyDetail={<Empty … />} />`. It fills its parent's height (`--master-detail-height`, 100% by default), so give it a bounded box, like an app shell's main column; in a page that scrolls, `height=\"auto\"` sizes it to its content between `--master-detail-min-height` (16rem) and `--master-detail-max-height` (40rem) with the panes scrolling inside, instead of a hard-coded height (to fit what is left of the window, set the max from your app's own CSS). `idleDetail=\"visible\"` keeps `emptyDetail` (a monitor, a summary) under the list on containers under 42rem, capped at `--master-detail-idle-height` (50%), with a button that collapses it to its bar (beside the list too with `collapsible`); `emptyDetailTitle` titles that bar and names the pane. `selectedId`, `defaultSelectedId` and `onSelectedIdChange` (cancel with `details.cancel()`); `url={createUrlParam(\"device\")}` from `@/lib/url-param` keeps it in the URL (`{ in: \"hash\" }` for a hash route's query); `followFocus` opens the row that j/k move to; `collapsible`, `resizable` and `storageKey` for the detail's width. Every label is in `labels`."
+      "docs": "`<MasterDetail label=\"Devices\" renderList={(state) => <List aria-label=\"Devices\">{devices.map((d) => <ListItem key={d.id} title={d.name} {...state.itemProps(d.id)} />)}</List>} renderDetail={(id) => ({ title, description, actions, content })} emptyDetail={<Empty … />} />`. It fills its parent's height (`--master-detail-height`, 100% by default), so give it a bounded box, like an app shell's main column; in a page that scrolls, `height=\"auto\"` sizes it to its content between `--master-detail-min-height` (16rem) and `--master-detail-max-height` (40rem) with the panes scrolling inside, instead of a hard-coded height (to fit what is left of the window, set the max from your app's own CSS). `idleDetail=\"visible\"` keeps `emptyDetail` (a monitor, a summary) under the list on containers under 42rem, capped at `--master-detail-idle-height` (50%), with a button that collapses it to its bar (beside the list too with `collapsible`); `emptyDetailTitle` titles that bar and names the pane. `selectedId`, `defaultSelectedId` and `onSelectedIdChange` (cancel with `details.cancel()`); `url={createUrlParam(\"device\")}` from `@/lib/url-param` keeps it in the URL (`{ in: \"hash\" }` for a hash route's query, `{ router: hashRouter() }` to go through a `UrlRouter` from `url-router` or your router's own API); for a route of your own shape (`#/devices/<id>`), control `selectedId` from the route instead; `followFocus` opens the row that j/k move to; `collapsible`, `resizable` and `storageKey` for the detail's width. Every label is in `labels`."
     },
     {
       "name": "dashboard-grid",
@@ -4706,7 +4723,8 @@
         "@eskais/description-list",
         "@eskais/field",
         "@eskais/link",
-        "@eskais/select"
+        "@eskais/select",
+        "@eskais/url-router"
       ],
       "files": [
         {
