@@ -154,7 +154,8 @@ describe("line diff", () => {
     const next = old.map((line, index) => (index % 50 === 0 ? `${line} changed` : line))
     const start = performance.now()
     const diff = diffText(old.join("\n"), next.join("\n"))
-    expect(performance.now() - start).toBeLessThan(1000)
+    // Guards against a quadratic blowup (minutes), loose for shared CI runners; diff-bench times it for real.
+    expect(performance.now() - start).toBeLessThan(5000)
     expect(diff.additions).toBe(400)
     expect(diff.deletions).toBe(400)
   })
