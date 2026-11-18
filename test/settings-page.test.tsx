@@ -216,3 +216,41 @@ test('SettingsPage: navigation="buttons" scrolls by button, and agents press the
   expect(result.ok, result.error?.message).toBe(true)
   expect(scrolled.at(-1)).toBe("danger")
 })
+
+test("SettingsDangerAction: disabled and pending reach the trigger; agents still need approval once it's enabled", async () => {
+  const onConfirm = vi.fn()
+  const action = (state: { disabled?: boolean; pending?: boolean }) => (
+    <SettingsDangerZone id="danger" title="Danger zone">
+      <SettingsDangerAction
+        data-testid="reset-row"
+        label="Reset device"
+        trigger="Reset device"
+        title="Reset this device?"
+        confirmLabel="Reset now"
+        agentConfirm="Erases the device's settings"
+        onConfirm={onConfirm}
+        {...state}
+      />
+    </SettingsDangerZone>
+  )
+  const { rerender } = render(action({ disabled: true }))
+  expect(screen.getByTestId("reset-row").dataset.slot).toBe("settings-row")
+  expect(screen.getByRole("button", { name: "Reset device" }).hasAttribute("disabled")).toBe(true)
+  rerender(action({ pending: true }))
+  const trigger = screen.getByRole("button", { name: "Reset device" })
+  expect(trigger.getAttribute("aria-busy")).toBe("true")
+  expect(trigger.hasAttribute("data-pending")).toBe(true)
+
+  rerender(action({}))
+  await settle()
+  let allowed = false
+  const agent = createAgent({ allow: (step) => !step.confirm || allowed })
+  const press = { steps: [{ ref: "Reset device", action: "press", args: ["Reset now"] }] }
+  let result = await agent.act(press)
+  expect(result.ok).toBe(false)
+  expect(onConfirm).not.toHaveBeenCalled()
+  allowed = true
+  result = await agent.act(press)
+  expect(result.ok, result.error?.message).toBe(true)
+  expect(onConfirm).toHaveBeenCalledOnce()
+})

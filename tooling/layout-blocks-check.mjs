@@ -288,6 +288,30 @@ async function settingsPage(page, check, shot, width, scheme) {
   await page.waitForTimeout(400)
   const marked = wide ? await nav.locator('[aria-current="location"]').textContent() : await picker.textContent()
   check(`${tag}: scrolling marks the section being read`, marked?.includes("Security"), marked)
+
+  if (width !== 1440 || scheme !== "light") return
+  // The demo keeps "Forget device" pending after the confirmation, like work that runs on.
+  const forget = page.getByRole("button", { name: "Forget device" })
+  const before = await box(forget)
+  await forget.click()
+  await page.getByRole("alertdialog").getByRole("button", { name: "Forget it" }).click()
+  await page.getByRole("alertdialog").waitFor({ state: "detached" })
+  await page.locator('[data-slot="settings-row"] [data-pending]').waitFor()
+  const pending = await forget.evaluate((element) => {
+    const spinner = element.querySelector('[data-slot="spinner"]')
+    return {
+      busy: element.getAttribute("aria-busy"),
+      spinner: spinner !== null && spinner.checkVisibility(),
+      width: element.getBoundingClientRect().width,
+    }
+  })
+  check(`${tag}: a pending danger trigger is busy with a spinner`, pending.busy === "true" && pending.spinner)
+  check(`${tag}: and keeps its width`, Math.abs(pending.width - before.width) < 1, `${before.width} → ${pending.width}`)
+  await forget.click({ force: true })
+  check(`${tag}: and doesn't open the dialog`, (await page.getByRole("alertdialog").count()) === 0)
+  const busy = await axe(page)
+  check(`${tag} pending: axe`, busy.length === 0, busy.join(", "))
+  await shot(page, "settings-page-pending.png")
 }
 
 function visiblePanes(root) {

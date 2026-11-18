@@ -332,7 +332,7 @@ function SettingsRow({ label, description, field = true, className, children, ..
   )
 }
 
-type SettingsDangerActionProps = {
+type SettingsDangerActionProps = Omit<SettingsRowProps, "label" | "description" | "children" | "field"> & {
   label: ReactNode
   description?: ReactNode
   /** The button that opens the confirmation. */
@@ -348,6 +348,10 @@ type SettingsDangerActionProps = {
   onConfirm: () => unknown
   /** The cancel button, in the page's language. */
   cancelLabel?: ReactNode
+  /** The trigger can't be pressed, like while the action isn't allowed. */
+  disabled?: boolean
+  /** The action is running elsewhere: the trigger shows a spinner, is `aria-busy` and ignores presses. */
+  pending?: boolean
 }
 
 /** A row of a danger zone: a destructive button that asks first, and that agents need a person's approval for. */
@@ -361,12 +365,17 @@ function SettingsDangerAction({
   agentConfirm,
   onConfirm,
   cancelLabel,
+  disabled,
+  pending,
+  ...props
 }: SettingsDangerActionProps) {
   return (
-    <SettingsRow field={false} label={label} description={description}>
+    <SettingsRow field={false} label={label} description={description} {...props}>
       <ConfirmDialog
         trigger={trigger}
         triggerVariant="destructive"
+        triggerDisabled={disabled}
+        triggerPending={pending}
         tone="destructive"
         title={title}
         description={consequence}

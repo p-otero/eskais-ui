@@ -351,6 +351,7 @@ const itemNotes: Record<string, ItemNotes> = {
       "Going to a section scrolls by id and moves focus to its heading, without touching location.hash, so hash routers keep their route.",
       'Section links take their href from the url adapter (#/settings?section=id through a hash router), so a new tab opens the route; navigation="buttons" scrolls without an address.',
       "Each section is a region named by its title and described by its description; each row's label names its control.",
+      "SettingsDangerAction disabled and pending reach its trigger: disabled, or busy with a spinner while it keeps focus; the dialog doesn't open, for agents either.",
     ],
     agent:
       "Agents follow a section's link or set the section picker by name, set each row's control by its label, and need a person's approval to confirm a danger action.",

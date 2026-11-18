@@ -33,6 +33,8 @@ const device = [
 
 export default function SettingsPageDemo() {
   const [signOutAfter, setSignOutAfter] = useState<string | null>("8h")
+  // The confirmation only queues the work; the trigger stays pending until it finishes.
+  const [forgetting, setForgetting] = useState(false)
   return (
     <SettingsPage className="w-full" style={{ "--settings-top": "var(--docs-top, 0px)" } as CSSProperties}>
       <SettingsSection id="account" title="Account" description="How you appear to your team.">
@@ -102,7 +104,11 @@ export default function SettingsPageDemo() {
           consequence="You will need your password and a code to sign in here again."
           confirmLabel="Forget it"
           agentConfirm="Signs this browser out and removes its saved keys"
-          onConfirm={() => wait(800)}
+          pending={forgetting}
+          onConfirm={() => {
+            setForgetting(true)
+            void wait(2500).then(() => setForgetting(false))
+          }}
         />
         <SettingsDangerAction
           label="Delete account"

@@ -99,6 +99,7 @@ const overlaySpinnerVariants = cva("absolute inset-0 m-auto", {
 
 // A leading icon is swapped for the spinner, so the width holds. Text alone stays in place with transparent colour
 // under a centered spinner. It stays a direct child: Chrome drops text inside a wrapper from a busy button's name.
+// Button-like triggers that take `buttonVariants` and `data-pending` use it too.
 function withSpinner(children: ReactNode, iconOnly: boolean, variant: ButtonVariants["variant"]) {
   const items = Children.toArray(children)
   const leadingIcon = isValidElement(items[0]) && (items.length > 1 || iconOnly)
@@ -184,5 +185,5 @@ function Button({
   )
 }
 
-export { Button, buttonVariants }
+export { Button, buttonVariants, withSpinner as withPendingSpinner }
 export type { ButtonLookProps, ButtonProps }
