@@ -4,8 +4,8 @@
   "title": "Context Menu",
   "description": "UI SDK Menu opened by right-click, long press or Shift+F10 on a focusable area, with the dropdown menu's items.",
   "dependencies": [
-    "@ui-sdk/core@0.1.0-beta.5",
-    "@ui-sdk/react@0.1.0-beta.5",
+    "@ui-sdk/core@0.1.0-beta.10",
+    "@ui-sdk/react@0.1.0-beta.10",
     "class-variance-authority@0.7.1"
   ],
   "registryDependencies": [

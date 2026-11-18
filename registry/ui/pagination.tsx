@@ -90,7 +90,7 @@ function PaginationLink({ className, ...props }: ComponentProps<typeof Paginatio
   return (
     <PaginationLinkPrimitive
       className={cnState(
-        `${buttonVariants({ variant: "ghost", size: "icon" })} tabular-nums data-current:border data-current:border-input data-current:bg-background/(--glass-opacity)`,
+        `${buttonVariants({ variant: "ghost", size: "icon" })} tabular-nums data-current:border data-current:border-input data-current:bg-background/(--glass-opacity) data-disabled:cursor-not-allowed data-disabled:opacity-50 data-disabled:hover:bg-transparent`,
         className,
       )}
       {...props}

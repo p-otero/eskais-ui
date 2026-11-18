@@ -4,8 +4,8 @@
   "title": "Filter Chips",
   "description": "Filters as chips in a FilterBar: one chip per active filter that opens an editor for its field, a button that removes it, Add filter for the others, and reset. Picks apply at once; typed values on Enter or when the editor closes.",
   "dependencies": [
-    "@ui-sdk/core@0.1.0-beta.5",
-    "@ui-sdk/react@0.1.0-beta.5",
+    "@ui-sdk/core@0.1.0-beta.10",
+    "@ui-sdk/react@0.1.0-beta.10",
     "lucide-react"
   ],
   "registryDependencies": [

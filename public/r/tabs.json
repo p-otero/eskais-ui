@@ -4,8 +4,8 @@
   "title": "Tabs",
   "description": "UI SDK Tabs: arrow-key navigation, automatic or manual activation, controller support, a selected state that reads at 3:1, and a list that scrolls when its tabs don't fit, with edge fades and pointer-only scroll buttons.",
   "dependencies": [
-    "@ui-sdk/core@0.1.0-beta.5",
-    "@ui-sdk/react@0.1.0-beta.5",
+    "@ui-sdk/core@0.1.0-beta.10",
+    "@ui-sdk/react@0.1.0-beta.10",
     "lucide-react"
   ],
   "registryDependencies": [

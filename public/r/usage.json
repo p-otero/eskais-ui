@@ -4,7 +4,7 @@
   "title": "Usage",
   "description": "Token, time and cost usage of an agent task: UsageStat for a card and UsageTable on Table, with compact counts, the exact value in the title, honest unknown and estimated values, and summaries side by side as columns.",
   "dependencies": [
-    "@ui-sdk/react@0.1.0-beta.5"
+    "@ui-sdk/react@0.1.0-beta.10"
   ],
   "registryDependencies": [
     "@eskais/utils",

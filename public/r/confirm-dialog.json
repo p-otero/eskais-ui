@@ -4,8 +4,8 @@
   "title": "Confirm Dialog",
   "description": "UI SDK AlertDialog with an async confirm action: pending, no double submit, closes on success, inline error on failure, data-agent-confirm for destructive actions.",
   "dependencies": [
-    "@ui-sdk/core@0.1.0-beta.5",
-    "@ui-sdk/react@0.1.0-beta.5"
+    "@ui-sdk/core@0.1.0-beta.10",
+    "@ui-sdk/react@0.1.0-beta.10"
   ],
   "registryDependencies": [
     "@eskais/utils",

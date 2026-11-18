@@ -4,8 +4,8 @@
   "title": "Data Table",
   "description": "Generic typed table: sortable columns with aria-sort, optional row selection with a mixed select-all, loading and empty states, and pagination through renderPagination. Sort, selection and page are controlled or not, and agents can sort, select and page it.",
   "dependencies": [
-    "@ui-sdk/core@0.1.0-beta.5",
-    "@ui-sdk/react@0.1.0-beta.5",
+    "@ui-sdk/core@0.1.0-beta.10",
+    "@ui-sdk/react@0.1.0-beta.10",
     "class-variance-authority@0.7.1",
     "lucide-react"
   ],

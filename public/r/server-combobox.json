@@ -4,8 +4,8 @@
   "title": "Server Combobox",
   "description": "A Combobox whose options come from a PageSource, searched on the server as you type: requests wait for typing to pause and are aborted when replaced, the next page loads at the end of the list, and the server's order is kept. With multiple, choices show as chips.",
   "dependencies": [
-    "@ui-sdk/core@0.1.0-beta.5",
-    "@ui-sdk/react@0.1.0-beta.5",
+    "@ui-sdk/core@0.1.0-beta.10",
+    "@ui-sdk/react@0.1.0-beta.10",
     "lucide-react"
   ],
   "registryDependencies": [

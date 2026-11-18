@@ -4,8 +4,8 @@
   "title": "Form Dialog",
   "description": "A Form inside a Dialog: a scrolling body with a sticky footer, Escape and outside presses blocked while pending, closes on success and returns focus, asks before discarding unsaved changes, and an optional review step before submitting.",
   "dependencies": [
-    "@ui-sdk/core@0.1.0-beta.5",
-    "@ui-sdk/react@0.1.0-beta.5",
+    "@ui-sdk/core@0.1.0-beta.10",
+    "@ui-sdk/react@0.1.0-beta.10",
     "@standard-schema/spec@1.1.0",
     "class-variance-authority@0.7.1"
   ],

@@ -4,8 +4,8 @@
   "title": "Sidebar",
   "description": "App navigation: a named landmark with groups and items (href or a router link), the current page marked with aria-current, collapsing to an icon rail with tooltips (or hiding, with collapse=\"hide\") and opening in a drawer on narrow screens. Agents collapse and expand it by name. A SidebarTrigger toggles it from elsewhere, like a Topbar, through its controller; useSidebarState wires both and remembers the state.",
   "dependencies": [
-    "@ui-sdk/core@0.1.0-beta.5",
-    "@ui-sdk/react@0.1.0-beta.5",
+    "@ui-sdk/core@0.1.0-beta.10",
+    "@ui-sdk/react@0.1.0-beta.10",
     "class-variance-authority@0.7.1",
     "lucide-react"
   ],

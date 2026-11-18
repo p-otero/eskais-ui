@@ -4,8 +4,8 @@
   "title": "Stage Track",
   "description": "Where a piece of work is in a configurable pipeline (branch, PR, dev, prod): StageTrack shows every stage in a row, reached ones filled and the current one emphasised, or only the current one as a StagePill. StageFilter is a toggle group with a count per stage.",
   "dependencies": [
-    "@ui-sdk/core@0.1.0-beta.5",
-    "@ui-sdk/react@0.1.0-beta.5"
+    "@ui-sdk/core@0.1.0-beta.10",
+    "@ui-sdk/react@0.1.0-beta.10"
   ],
   "registryDependencies": [
     "@eskais/utils",

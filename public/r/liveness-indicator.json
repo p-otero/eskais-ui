@@ -4,7 +4,7 @@
   "title": "Liveness Indicator",
   "description": "A toned dot and label for an agent's computed liveness (running pulses, suspect_dead is destructive) and the time since its last activity, with now, locale and timeZone passed through.",
   "dependencies": [
-    "@ui-sdk/react@0.1.0-beta.5"
+    "@ui-sdk/react@0.1.0-beta.10"
   ],
   "registryDependencies": [
     "@eskais/utils",

@@ -43,7 +43,7 @@ type ComboboxProps<T = string, Multiple extends boolean | undefined = false> = W
   items?: readonly ListData<T>[number][]
 }
 
-// UI SDK 0.1.0-beta.5 types `items` as a mutable array, though it only reads it.
+// UI SDK 0.1.0-beta.10 types `items` as a mutable array, though it only reads it.
 /** UI SDK's Combobox, taking `items` as a readonly array too. */
 function Combobox<T = string, Multiple extends boolean | undefined = false>({
   items,

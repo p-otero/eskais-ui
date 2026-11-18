@@ -4,7 +4,7 @@
   "title": "Breadcrumb",
   "description": "Presentational breadcrumb trail: a navigation named Breadcrumb, an ordered list and aria-current on the current page.",
   "dependencies": [
-    "@ui-sdk/react@0.1.0-beta.5",
+    "@ui-sdk/react@0.1.0-beta.10",
     "lucide-react"
   ],
   "registryDependencies": [

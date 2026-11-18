@@ -4,8 +4,8 @@
   "title": "Select",
   "description": "UI SDK Select: trigger, popup list, items with a check indicator, groups and separators, or `options` as data with a clearable none choice. Works inside Field; agents choose by label.",
   "dependencies": [
-    "@ui-sdk/core@0.1.0-beta.5",
-    "@ui-sdk/react@0.1.0-beta.5",
+    "@ui-sdk/core@0.1.0-beta.10",
+    "@ui-sdk/react@0.1.0-beta.10",
     "lucide-react"
   ],
   "registryDependencies": [

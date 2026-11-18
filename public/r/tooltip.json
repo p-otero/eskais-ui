@@ -4,8 +4,8 @@
   "title": "Tooltip",
   "description": "UI SDK Tooltip parts: names or describes its trigger, opens on hover and keyboard focus, Escape closes it, optional shortcut and arrow. ControlTooltip gives an icon-only control its name in a tooltip.",
   "dependencies": [
-    "@ui-sdk/core@0.1.0-beta.5",
-    "@ui-sdk/react@0.1.0-beta.5"
+    "@ui-sdk/core@0.1.0-beta.10",
+    "@ui-sdk/react@0.1.0-beta.10"
   ],
   "registryDependencies": [
     "@eskais/utils",

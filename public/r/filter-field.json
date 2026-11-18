@@ -4,8 +4,8 @@
   "title": "Filter Field",
   "description": "The control for one filter schema field, named by its label: an input for text, a select or checkboxes for options, a select for a boolean, a comparison and numbers, date pickers, or a ServerCombobox for remote options.",
   "dependencies": [
-    "@ui-sdk/core@0.1.0-beta.5",
-    "@ui-sdk/react@0.1.0-beta.5"
+    "@ui-sdk/core@0.1.0-beta.10",
+    "@ui-sdk/react@0.1.0-beta.10"
   ],
   "registryDependencies": [
     "@eskais/utils",

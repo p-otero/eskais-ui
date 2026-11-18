@@ -66,7 +66,7 @@ type CommandDialogOpenButtonProps = ComponentProps<typeof Button> & {
   controller: { open: () => unknown }
 }
 
-// A second CommandDialogTrigger on the same controller makes UI SDK 0.1.0-beta.5 drop the dialog's agent label
+// A second CommandDialogTrigger on the same controller makes UI SDK 0.1.0-beta.10 drop the dialog's agent label
 // (docs/research/08-command-dialog-second-trigger.md). This one opens through the controller and stays hidden from
 // agents, who use the main trigger.
 /** Another way for people to open a CommandDialog, like a Topbar's `centerCompact` icon. Name it with `aria-label`. */

@@ -4,7 +4,7 @@
   "title": "Proposal Actions",
   "description": "Approve and Reject for one task proposal: async pending with no double submit, inline errors, an on-screen reject confirmation, and agent access set by agentApproval (confirm, allow or deny). Renders nothing in snapshot mode.",
   "dependencies": [
-    "@ui-sdk/react@0.1.0-beta.5"
+    "@ui-sdk/react@0.1.0-beta.10"
   ],
   "registryDependencies": [
     "@eskais/utils",

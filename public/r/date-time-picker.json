@@ -4,8 +4,8 @@
   "title": "Date Time Picker",
   "description": "A date from the calendar and a time of day as one local \"YYYY-MM-DDTHH:mm\" value, composed from UI SDK DatePicker and TimeInput, with min/max, a time zone suffix and locale formatting.",
   "dependencies": [
-    "@ui-sdk/core@0.1.0-beta.5",
-    "@ui-sdk/react@0.1.0-beta.5"
+    "@ui-sdk/core@0.1.0-beta.10",
+    "@ui-sdk/react@0.1.0-beta.10"
   ],
   "registryDependencies": [
     "@eskais/utils",

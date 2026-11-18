@@ -131,8 +131,8 @@ beforeAll(() => {
         private: true,
         type: "module",
         dependencies: {
-          "@ui-sdk/core": "0.1.0-beta.5",
-          "@ui-sdk/react": "0.1.0-beta.5",
+          "@ui-sdk/core": "0.1.0-beta.10",
+          "@ui-sdk/react": "0.1.0-beta.10",
           "class-variance-authority": "0.7.1",
           clsx: "2.1.1",
           react: "19.3.1",

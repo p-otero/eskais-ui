@@ -4,8 +4,8 @@
   "title": "Native Select",
   "description": "A styled native <select> for mobile-heavy forms, with the same options shape as Select, a placeholder and a clearable none choice. A small primitive reports it to agents, which a bare <select> is not.",
   "dependencies": [
-    "@ui-sdk/core@0.1.0-beta.5",
-    "@ui-sdk/react@0.1.0-beta.5",
+    "@ui-sdk/core@0.1.0-beta.10",
+    "@ui-sdk/react@0.1.0-beta.10",
     "lucide-react"
   ],
   "registryDependencies": [

@@ -4,8 +4,8 @@
   "title": "Popover",
   "description": "UI SDK Popover parts on a glass-ready surface: focus moves in, Escape and outside presses close it, focus returns to the trigger.",
   "dependencies": [
-    "@ui-sdk/core@0.1.0-beta.5",
-    "@ui-sdk/react@0.1.0-beta.5",
+    "@ui-sdk/core@0.1.0-beta.10",
+    "@ui-sdk/react@0.1.0-beta.10",
     "class-variance-authority@0.7.1"
   ],
   "registryDependencies": [
