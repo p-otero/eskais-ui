@@ -32,6 +32,7 @@ const guideItems = [
   "eskais-ui-skill",
   "eskais-mockup-skill",
   "eskais-perf-skill",
+  "locale",
 ]
 
 const componentItems = items.filter((item) => !guideItems.includes(item.name))

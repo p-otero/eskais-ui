@@ -833,6 +833,9 @@
       "body": {
         "@apply bg-background text-foreground": {}
       },
+      "[tabindex=\"-1\"]:focus": {
+        "outline": "none"
+      },
       "[data-slot=\"button\"]:not([data-pending]) [data-show=\"pending\"]": {
         "display": "none"
       },

@@ -1,12 +1,15 @@
+"use client"
+
 import { renderElement, type PartProps } from "@ui-sdk/react/primitive"
 
 import { cn } from "@/lib/utils"
+import { useLocale } from "@/lib/locale"
 import { formatQuantity, type FormatQuantityOptions, type Quantity } from "@/lib/quantity"
 
 type QuantityValueProps = Omit<PartProps<"span">, "children"> & FormatQuantityOptions & { value: Quantity }
 
 function QuantityValue({ value, format, locale, labels, className, render, ...props }: QuantityValueProps) {
-  const { text, srText, title, quality } = formatQuantity(value, { format, locale, labels })
+  const { text, srText, title, quality } = formatQuantity(value, { format, locale: useLocale(locale), labels })
   return renderElement(
     "span",
     {

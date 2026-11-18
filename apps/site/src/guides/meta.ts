@@ -64,6 +64,7 @@ const guides: GuideMeta[] = [
     title: "Internationalization",
     description:
       "No default copy in a specific language: labels, form messages, dates and numbers in the reader's locale.",
+    covers: ["locale"],
   },
   {
     slug: "agent-skills",

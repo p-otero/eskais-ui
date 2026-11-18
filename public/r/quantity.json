@@ -8,7 +8,8 @@
   ],
   "registryDependencies": [
     "@eskais/utils",
-    "@eskais/theme"
+    "@eskais/theme",
+    "@eskais/locale"
   ],
   "files": [
     {
@@ -18,7 +19,7 @@
     },
     {
       "path": "registry/ui/quantity-value.tsx",
-      "content": "import { renderElement, type PartProps } from \"@ui-sdk/react/primitive\"\n\nimport { cn } from \"@/lib/utils\"\nimport { formatQuantity, type FormatQuantityOptions, type Quantity } from \"@/lib/quantity\"\n\ntype QuantityValueProps = Omit<PartProps<\"span\">, \"children\"> & FormatQuantityOptions & { value: Quantity }\n\nfunction QuantityValue({ value, format, locale, labels, className, render, ...props }: QuantityValueProps) {\n  const { text, srText, title, quality } = formatQuantity(value, { format, locale, labels })\n  return renderElement(\n    \"span\",\n    {\n      \"data-slot\": \"quantity\",\n      \"data-quality\": quality,\n      title,\n      className: cn(\"tabular-nums data-[quality=unknown]:text-muted-foreground\", className),\n      ...props,\n      children: (\n        <>\n          <span aria-hidden=\"true\">{text}</span>\n          <span className=\"sr-only\">{srText}</span>\n        </>\n      ),\n    },\n    render,\n  )\n}\n\nexport { QuantityValue }\nexport type { QuantityValueProps }\n",
+      "content": "\"use client\"\n\nimport { renderElement, type PartProps } from \"@ui-sdk/react/primitive\"\n\nimport { cn } from \"@/lib/utils\"\nimport { useLocale } from \"@/lib/locale\"\nimport { formatQuantity, type FormatQuantityOptions, type Quantity } from \"@/lib/quantity\"\n\ntype QuantityValueProps = Omit<PartProps<\"span\">, \"children\"> & FormatQuantityOptions & { value: Quantity }\n\nfunction QuantityValue({ value, format, locale, labels, className, render, ...props }: QuantityValueProps) {\n  const { text, srText, title, quality } = formatQuantity(value, { format, locale: useLocale(locale), labels })\n  return renderElement(\n    \"span\",\n    {\n      \"data-slot\": \"quantity\",\n      \"data-quality\": quality,\n      title,\n      className: cn(\"tabular-nums data-[quality=unknown]:text-muted-foreground\", className),\n      ...props,\n      children: (\n        <>\n          <span aria-hidden=\"true\">{text}</span>\n          <span className=\"sr-only\">{srText}</span>\n        </>\n      ),\n    },\n    render,\n  )\n}\n\nexport { QuantityValue }\nexport type { QuantityValueProps }\n",
       "type": "registry:ui"
     }
   ],

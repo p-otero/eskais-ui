@@ -1,0 +1,14 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "locale",
+  "title": "Locale",
+  "description": "useLocale(locale?): the locale components format numbers and dates in, an explicit locale or else the page's <html lang>, followed as it changes and skipped on the server and first render so hydration matches.",
+  "files": [
+    {
+      "path": "registry/lib/locale.ts",
+      "content": "import { useSyncExternalStore } from \"react\"\n\n/** The page's language: `<html lang>`, or undefined when it has none or there is no document. */\nfunction pageLocale(): string | undefined {\n  if (typeof document === \"undefined\") return undefined\n  return document.documentElement.lang || undefined\n}\n\nfunction subscribe(notify: () => void) {\n  if (typeof MutationObserver === \"undefined\" || typeof document === \"undefined\") return () => {}\n  const observer = new MutationObserver(notify)\n  observer.observe(document.documentElement, { attributes: true, attributeFilter: [\"lang\"] })\n  return () => observer.disconnect()\n}\n\nconst onServer = () => undefined\n\n/**\n * The locale to format numbers and dates in: `locale` when given, else the page's `<html lang>`, followed as it\n * changes. Without either, undefined, which `Intl` reads as the runtime's default. The server and the first client\n * render skip the page's language, so hydration matches, as UI SDK's Meter and Progress do.\n */\nfunction useLocale(locale?: string): string | undefined {\n  const page = useSyncExternalStore(subscribe, pageLocale, onServer)\n  return locale ?? page\n}\n\nexport { pageLocale, useLocale }\n",
+      "type": "registry:lib"
+    }
+  ],
+  "type": "registry:lib"
+}

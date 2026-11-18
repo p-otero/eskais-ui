@@ -3,6 +3,7 @@
 import type { CSSProperties, ReactNode } from "react"
 import type { TooltipPayloadEntry } from "recharts"
 
+import { useLocale } from "@/lib/locale"
 import { chartSwatchColor, formatChartValue, resolveChartSeries, type ChartFormatOptions } from "@/lib/chart-config"
 import { cn } from "@/lib/utils"
 import { useChart } from "@/components/ui/chart-context"
@@ -42,7 +43,7 @@ function ChartTooltipContent({
   hideLabel = false,
   hideIndicator = false,
   color,
-  locale,
+  locale: localeProp,
   format,
   labelFormatter,
   formatter,
@@ -50,6 +51,7 @@ function ChartTooltipContent({
   labelClassName,
 }: ChartTooltipContentProps) {
   const { config } = useChart()
+  const locale = useLocale(localeProp)
   const items = (payload ?? []).filter((item) => item.type !== "none")
   if (!active || items.length === 0) return null
 

@@ -15,6 +15,7 @@ import {
   type TaskFilters,
 } from "@/lib/agent-task-board-model"
 import type { AgentTaskBoardProps, ColumnAccent } from "@/components/ui/agent-task-board-props"
+import { useLocale } from "@/lib/locale"
 import { cn } from "@/lib/utils"
 import {
   AgentTaskBoardRoot,
@@ -42,10 +43,6 @@ function useControllable<T>(value: T | undefined, initial: T) {
   return [value === undefined ? own : value, setOwn] as const
 }
 
-function pageLocale() {
-  return typeof document === "undefined" ? undefined : document.documentElement.lang || undefined
-}
-
 function AgentTaskBoard(props: AgentTaskBoardProps) {
   const { tasks, mode, generatedAt, formatCurrency, timeZone, agentApproval = "confirm" } = props
   const { onApproveProposal, onRejectProposal, renderThreadLink, onOpenThread } = props
@@ -55,7 +52,7 @@ function AgentTaskBoard(props: AgentTaskBoardProps) {
   const tones = useMemo(() => ({ ...taskStatusAccentTones, ...props.columnTones }), [props.columnTones])
   const labels = useMemo(() => resolveLabels(props.labels), [props.labels])
   const now = useNow({ now: mode === "snapshot" ? generatedAt : props.now })
-  const locale = props.locale ?? pageLocale()
+  const locale = useLocale(props.locale)
   const [controller] = useState(createAgentTaskBoardController)
   const [view, setView] = useControllable(props.view, props.defaultView ?? "board")
   const [filters, setFilters] = useControllable(props.filters, props.defaultFilters ?? NO_FILTERS)

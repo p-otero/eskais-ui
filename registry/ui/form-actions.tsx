@@ -33,7 +33,7 @@ function FormRootError({ title, className }: FormRootErrorProps) {
       live
       tabIndex={-1}
       data-slot="form-root-error"
-      className={cn("outline-none focus-visible:ring-2 focus-visible:ring-ring", className)}
+      className={cn("focus:outline-none", className)}
     >
       <CircleExclamationPointIcon />
       {title === undefined ? null : <AlertTitle>{title}</AlertTitle>}

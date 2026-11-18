@@ -10,6 +10,7 @@ import { formatShortcutSteps, ShortcutHint } from "@/components/ui/shortcuts"
 import { ShortcutsDialog } from "@/components/ui/shortcuts-dialog"
 import { SidePanel } from "@/components/ui/side-panel"
 import { StatusDot } from "@/components/ui/status-pill"
+import { useLocale } from "@/lib/locale"
 import { cn } from "@/lib/utils"
 
 // Every string the block shows, in one place to translate or rewrite.
@@ -56,7 +57,8 @@ function primaryOf(root: HTMLElement | null, id: string | null) {
  * A keyboard-first inbox: j/k move through thousands of messages, Enter opens one in a side panel whose actions
  * have single-key shortcuts, Escape closes it, x selects for a bulk action and ? lists every key.
  */
-function Inbox({ items: initialItems, locale, timeZone, className }: InboxProps) {
+function Inbox({ items: initialItems, locale: localeProp, timeZone, className }: InboxProps) {
+  const locale = useLocale(localeProp)
   const [items, setItems] = useState(initialItems)
   const [openId, setOpenId] = useState<string | null>(null)
   const [checked, setChecked] = useState<string[]>([])

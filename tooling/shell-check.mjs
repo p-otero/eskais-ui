@@ -1,11 +1,12 @@
 // Drives the showcase where layout decides what shows: the Topbar's ⌘K dialog and Sidebar drawer, tabs and MobileNav
-// at phone widths; CardHeader and SidePanel headers, SidePanel's narrow modes, a Form's floating label, a wrapping
-// DataTable column, DescriptionList, ring meters, stat deltas (?demo=<name>-check); ?demo=shell-block at 3 widths.
-// Usage: node tooling/shell-check.mjs [--screenshots=<dir>] (after `bun run build:showcase`)
+// labels at phone widths; CardHeader and SidePanel headers; SidePanel's narrow modes; a Form's floating label; a
+// wrapping table column; DescriptionList layouts; ring meters; stat deltas; ?demo=shell-block; the layout blocks.
+// Usage: node tooling/shell-check.mjs [--screenshots=<dir>] [--only=layout] (after `bun run build:showcase`)
 import { mkdirSync } from "node:fs"
 import { createRequire } from "node:module"
 import { join, resolve } from "node:path"
 
+import { checkLayoutBlocks } from "./layout-blocks-check.mjs"
 import { withShowcase } from "./showcase-browser.mjs"
 
 const failures = []
@@ -13,6 +14,7 @@ const axePath = createRequire(import.meta.url).resolve("axe-core/axe.min.js")
 const shotsArg = process.argv.find((arg) => arg.startsWith("--screenshots="))
 const shots = shotsArg ? resolve(shotsArg.slice("--screenshots=".length)) : undefined
 if (shots) mkdirSync(shots, { recursive: true })
+const onlyLayout = process.argv.includes("--only=layout")
 
 function check(label, ok, detail = "") {
   console.log(`${ok ? "ok  " : "FAIL"} ${label}${detail ? `: ${detail}` : ""}`)
@@ -637,6 +639,8 @@ async function checkShell(page) {
 }
 
 await withShowcase(async (page) => {
+  await checkLayoutBlocks(page, check, shot)
+  if (onlyLayout) return
   await checkShell(page)
   await shell(page, 375)
   const search = page.getByRole("dialog", { name: "Search the workspace" })

@@ -1,7 +1,7 @@
 // Installs registry items into fresh Vite apps with npm or pnpm (no Bun), builds them and checks them in Chrome.
-// Usage: node tooling/consumer-check.mjs [npm|pnpm] [scenario…] (default: all). Scenarios: fresh, init, aliases
-// (`~/` aliases and the agent skills), imports, imports-flat, imports-tsx (must fail to type-check) and release-age
-// (pnpm); each one says what it checks below.
+// Usage: node tooling/consumer-check.mjs [npm|pnpm] [scenario…] (default: all). Scenarios: fresh, init, layouts
+// (the layout blocks, driven), aliases (`~/` aliases and the agent skills), imports, imports-flat, imports-tsx (must
+// fail to type-check) and release-age (pnpm); each one says what it checks below.
 import { spawn } from "node:child_process"
 import { createReadStream, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, writeFileSync } from "node:fs"
 import { createServer } from "node:http"
@@ -132,6 +132,9 @@ const allItems = [
   "virtual-rows",
   "side-panel",
   "inbox",
+  "master-detail",
+  "dashboard-grid",
+  "settings-page",
   "shell",
 ]
 const versions = {
@@ -643,6 +646,64 @@ function App() {
 createRoot(document.getElementById("root")!).render(<App />)
 `
 
+// The layout blocks together, as a consumer composes them, with the URL adapter they share.
+const layoutsMain = `import { createRoot } from "react-dom/client"
+import { Bar, BarChart } from "recharts"
+import { DashboardCard, DashboardChart, DashboardGrid, DashboardMeter, DashboardStat, DashboardStats } from "@/components/ui/dashboard-grid"
+import { DescriptionDetails, DescriptionItem, DescriptionTerm } from "@/components/ui/description-list"
+import { List, ListItem } from "@/components/ui/list-item"
+import { MasterDetail } from "@/components/ui/master-detail"
+import { SettingsDangerAction, SettingsDangerZone, SettingsFacts, SettingsPage, SettingsRow, SettingsSection } from "@/components/ui/settings-page"
+import { Switch } from "@/components/ui/switch"
+import { createUrlParam } from "@/lib/url-param"
+import { cn } from "@/lib/utils"
+import "./index.css"
+${probes}
+const devices = [{ id: "d1", name: "Kitchen sensor" }, { id: "d2", name: "Hall camera" }] as const
+const deviceParam = createUrlParam("device", { in: "hash" })
+const sectionParam = createUrlParam("section", { history: "replace" })
+
+function App() {
+  return (
+    <main className="flex flex-col gap-section p-inset-surface">
+      <MasterDetail
+        label="Devices"
+        className="h-96 rounded-surface border"
+        url={deviceParam}
+        items={devices.map((device) => ({ id: device.id, label: device.name }))}
+        renderList={(state) => (
+          <List aria-label="All devices">
+            {devices.map((device) => <ListItem key={device.id} title={device.name} {...state.itemProps(device.id)} />)}
+          </List>
+        )}
+        renderDetail={(id) => ({ title: devices.find((device) => device.id === id)?.name ?? id, content: <p>Online</p> })}
+        emptyDetail={<p>Pick a device</p>}
+      />
+      <DashboardGrid stats={<DashboardStats aria-label="Week"><DashboardStat label="Runs" value={12} /></DashboardStats>}>
+        <DashboardCard title="Runs" span={2} status="success" data={[{ day: "Mon", runs: 3 }]}>
+          {(data) => <DashboardChart config={{ runs: { label: "Runs", color: "var(--chart-1)" } }}><BarChart data={data}><Bar dataKey="runs" /></BarChart></DashboardChart>}
+        </DashboardCard>
+        <DashboardCard title="Quota"><DashboardMeter label="Hours used" value={40} /></DashboardCard>
+      </DashboardGrid>
+      <SettingsPage url={sectionParam}>
+        <SettingsSection id="account" title="Account">
+          <SettingsRow label="Email updates"><Switch /></SettingsRow>
+        </SettingsSection>
+        <SettingsSection id="device" title="This device">
+          <SettingsFacts aria-label="This device"><DescriptionItem><DescriptionTerm>Browser</DescriptionTerm><DescriptionDetails>Chrome</DescriptionDetails></DescriptionItem></SettingsFacts>
+        </SettingsSection>
+        <SettingsDangerZone id="danger" title="Danger zone">
+          <SettingsDangerAction label="Delete account" trigger="Delete account" title="Delete it?" confirmLabel="Delete forever" agentConfirm="Deletes the account" onConfirm={() => {}} />
+        </SettingsDangerZone>
+      </SettingsPage>
+      <Probes />
+    </main>
+  )
+}
+
+createRoot(document.getElementById("root")!).render(<App />)
+`
+
 // A dialog and an icon button: dialog brings button and link, which depend on lucide-react.
 const releaseAgeMain = `import { createRoot } from "react-dom/client"
 import { XIcon } from "lucide-react"
@@ -663,6 +724,28 @@ function App() {
 
 createRoot(document.getElementById("root")!).render(<App />)
 `
+
+async function checkLayouts(page) {
+  await page.getByRole("button", { name: "Hall camera" }).click()
+  await page.getByRole("region", { name: "Hall camera" }).waitFor()
+  const focused = await page.evaluate(() => document.activeElement?.getAttribute("data-slot"))
+  if (focused !== "master-detail-title") throw new Error(`MasterDetail focused ${String(focused)}, not the title`)
+  if (!page.url().includes("device=d2")) throw new Error(`MasterDetail didn't write the URL: ${page.url()}`)
+  await page.getByRole("button", { name: "Close detail" }).click()
+  const back = await page.evaluate(() => document.activeElement?.textContent)
+  if (back !== "Hall camera") throw new Error(`Closing returned focus to ${String(back)}`)
+  const cards = await page
+    .locator('[data-slot="dashboard-card"]')
+    .evaluateAll((all) => all.map((card) => Math.round(card.getBoundingClientRect().height)))
+  if (cards.length !== 2 || cards[0] !== cards[1]) throw new Error(`Dashboard cards in a row differ: ${cards.join()}`)
+  if (!(await page.getByRole("meter", { name: "Hours used" }).isVisible())) throw new Error("No ring meter")
+  const nav = page.getByRole("navigation", { name: "Settings sections" })
+  await nav.getByRole("link", { name: "Danger zone" }).click()
+  const heading = await page.evaluate(() => document.activeElement?.textContent)
+  if (heading !== "Danger zone") throw new Error(`Going to a section focused ${String(heading)}`)
+  if (!page.url().includes("section=danger")) throw new Error(`SettingsPage didn't write the URL: ${page.url()}`)
+  console.log("layouts: master-detail, dashboard-grid and settings-page work in the consumer")
+}
 
 const scenarios = {
   fresh: {
@@ -701,6 +784,15 @@ const scenarios = {
     builtCss: ["--brand", "oklch(from var(--brand)", "Geist Variable", ".text-title{"],
     fonts: true,
     check: async () => {},
+  },
+  layouts: {
+    css: `@layer ui-sdk;
+@import "tailwindcss";
+`,
+    items: ["theme", "master-detail", "dashboard-grid", "settings-page", "list-item", "switch", "description-list"],
+    main: layoutsMain,
+    builtCss: ["@container", ".text-title{"],
+    check: checkLayouts,
   },
   aliases: {
     css: `@layer ui-sdk;\n@import "tailwindcss";\n`,

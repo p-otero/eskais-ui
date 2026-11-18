@@ -32,6 +32,18 @@
       ]
     },
     {
+      "name": "locale",
+      "type": "registry:lib",
+      "title": "Locale",
+      "description": "useLocale(locale?): the locale components format numbers and dates in, an explicit locale or else the page's <html lang>, followed as it changes and skipped on the server and first render so hydration matches.",
+      "files": [
+        {
+          "path": "registry/lib/locale.ts",
+          "type": "registry:lib"
+        }
+      ]
+    },
+    {
       "name": "test-utils",
       "type": "registry:lib",
       "title": "Test utils",
@@ -615,6 +627,9 @@
           },
           "body": {
             "@apply bg-background text-foreground": {}
+          },
+          "[tabindex=\"-1\"]:focus": {
+            "outline": "none"
           },
           "[data-slot=\"button\"]:not([data-pending]) [data-show=\"pending\"]": {
             "display": "none"
@@ -2123,7 +2138,8 @@
       ],
       "registryDependencies": [
         "@eskais/utils",
-        "@eskais/theme"
+        "@eskais/theme",
+        "@eskais/locale"
       ],
       "files": [
         {
@@ -2145,7 +2161,8 @@
         "@ui-sdk/react@0.1.0-beta.5"
       ],
       "registryDependencies": [
-        "@eskais/utils"
+        "@eskais/utils",
+        "@eskais/locale"
       ],
       "files": [
         {
@@ -2198,7 +2215,8 @@
         "@eskais/utils",
         "@eskais/theme",
         "@eskais/tone",
-        "@eskais/quantity"
+        "@eskais/quantity",
+        "@eskais/locale"
       ],
       "files": [
         {
@@ -2668,7 +2686,8 @@
         "@eskais/attachments",
         "@eskais/proposal-actions",
         "@eskais/toggle-group",
-        "@eskais/row-navigation"
+        "@eskais/row-navigation",
+        "@eskais/locale"
       ],
       "files": [
         {
@@ -3518,7 +3537,8 @@
       "registryDependencies": [
         "@eskais/utils",
         "@eskais/theme",
-        "@eskais/table"
+        "@eskais/table",
+        "@eskais/locale"
       ],
       "files": [
         {
@@ -3597,7 +3617,8 @@
         "@eskais/utils",
         "@eskais/theme",
         "@eskais/lightbox",
-        "@eskais/link"
+        "@eskais/link",
+        "@eskais/locale"
       ],
       "files": [
         {
@@ -4228,7 +4249,8 @@
         "@eskais/shortcuts",
         "@eskais/shortcuts-dialog",
         "@eskais/side-panel",
-        "@eskais/status-pill"
+        "@eskais/status-pill",
+        "@eskais/locale"
       ],
       "files": [
         {
@@ -4240,6 +4262,108 @@
           "type": "registry:component"
         }
       ]
+    },
+    {
+      "name": "master-detail",
+      "type": "registry:block",
+      "title": "Master Detail",
+      "description": "MasterDetail: a list with a detail pane, side by side on wide containers and stacked below 42rem with a Back button. Controlled or uncontrolled selection, optional URL sync through a router-agnostic adapter (hash routers included), j/k that follow focus, a detail that collapses to a rail or resizes, remembered under a storageKey, and focus that moves to the detail's heading and back to the row. Agents open and close items by the block's name.",
+      "dependencies": [
+        "@ui-sdk/core@0.1.0-beta.5",
+        "@ui-sdk/react@0.1.0-beta.5",
+        "lucide-react@1.68.0"
+      ],
+      "registryDependencies": [
+        "@eskais/utils",
+        "@eskais/theme",
+        "@eskais/button",
+        "@eskais/resizable",
+        "@eskais/shortcuts"
+      ],
+      "files": [
+        {
+          "path": "registry/lib/url-param.ts",
+          "type": "registry:lib"
+        },
+        {
+          "path": "registry/ui/master-detail-primitive.ts",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/use-master-detail.ts",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/master-detail-parts.tsx",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/master-detail.tsx",
+          "type": "registry:ui"
+        }
+      ],
+      "docs": "`<MasterDetail label=\"Devices\" renderList={(state) => <List aria-label=\"Devices\">{devices.map((d) => <ListItem key={d.id} title={d.name} {...state.itemProps(d.id)} />)}</List>} renderDetail={(id) => ({ title, description, actions, content })} emptyDetail={<Empty … />} />`. It fills its parent's height (`--master-detail-height`, 100% by default), so give it a bounded box, like an app shell's main column. `selectedId`, `defaultSelectedId` and `onSelectedIdChange` (cancel with `details.cancel()`); `url={createUrlParam(\"device\")}` from `@/lib/url-param` keeps it in the URL (`{ in: \"hash\" }` for a hash route's query); `followFocus` opens the row that j/k move to; `collapsible`, `resizable` and `storageKey` for the detail's width. Every label is in `labels`."
+    },
+    {
+      "name": "dashboard-grid",
+      "type": "registry:block",
+      "title": "Dashboard Grid",
+      "description": "DashboardGrid: a row of stats over a container-query grid of cards (one column, two from 42rem, `columns` from 64rem) where rows are at least one height and cards in a row share it, so they line up, keep their size from loading to loaded and grow their row rather than clip. DashboardCard spans columns and rows and loads through DataState (a skeleton, the error with Retry, an empty title); DashboardChart fills a card and is named by its title; DashboardMeter centres a ring meter in one; DashboardStats and DashboardStat (with a StatDelta in `delta`) draw placeholders of the value's height.",
+      "dependencies": [
+        "@ui-sdk/react@0.1.0-beta.5"
+      ],
+      "registryDependencies": [
+        "@eskais/utils",
+        "@eskais/theme",
+        "@eskais/card",
+        "@eskais/chart",
+        "@eskais/states",
+        "@eskais/empty",
+        "@eskais/meter",
+        "@eskais/skeleton",
+        "@eskais/stat"
+      ],
+      "files": [
+        {
+          "path": "registry/ui/dashboard-grid.tsx",
+          "type": "registry:ui"
+        }
+      ],
+      "docs": "`<DashboardGrid columns={3} labels={{ errorTitle, emptyTitle }} stats={<DashboardStats aria-label=\"This week\" loading={pending}><DashboardStat label=\"Runs\" value={261} delta={<StatDelta value={0.12} comparison=\"vs. last week\" />} loading={pending} /></DashboardStats>}><DashboardCard title=\"Runs\" span={2} status={query.status} data={query.data} error={query.error} onRetry={query.refetch}>{(data) => <DashboardChart config={config}><BarChart data={data}>…</BarChart></DashboardChart>}</DashboardCard></DashboardGrid>`. Rows are at least `--dashboard-row-height` (20rem) tall and cards in a row share the height; a card whose content is taller grows its row, never clips it, so set the row height to fit your cards to keep loading and loaded the same height. Without `status`, a card shows its children as they are; `DashboardMeter label value hint` centres a ring meter in it. `retry`, `loading` and `refreshing` default to English and every label is overridable on the grid or a card."
+    },
+    {
+      "name": "settings-page",
+      "type": "registry:block",
+      "title": "Settings Page",
+      "description": "SettingsPage: a section navigation that sticks beside the sections on wide containers and becomes a section picker on narrow ones, marking the section being read (IntersectionObserver). Going to a section scrolls by id and focuses its heading, so it works under hash routers; the section can live in the URL through createUrlParam. SettingsSection, SettingsRow (a label, a description and the control on the right, stacking when narrow), SettingsFacts (a DescriptionList for read-only facts) and SettingsDangerZone with SettingsDangerAction rows that confirm through ConfirmDialog and need a person's approval for agents.",
+      "dependencies": [
+        "@ui-sdk/core@0.1.0-beta.5",
+        "@ui-sdk/react@0.1.0-beta.5"
+      ],
+      "registryDependencies": [
+        "@eskais/utils",
+        "@eskais/theme",
+        "@eskais/confirm-dialog",
+        "@eskais/description-list",
+        "@eskais/field",
+        "@eskais/link",
+        "@eskais/select"
+      ],
+      "files": [
+        {
+          "path": "registry/lib/url-param.ts",
+          "type": "registry:lib"
+        },
+        {
+          "path": "registry/ui/use-settings-page.ts",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/settings-page.tsx",
+          "type": "registry:ui"
+        }
+      ],
+      "docs": "`<SettingsPage url={createUrlParam(\"section\")} style={{ \"--settings-top\": \"var(--topbar-height)\" }}><SettingsSection id=\"security\" title=\"Security\" description=\"…\" actions={…}><SettingsRow label=\"Two-factor authentication\" description=\"…\"><Switch /></SettingsRow></SettingsSection><SettingsSection id=\"device\" title=\"This device\"><SettingsFacts aria-label=\"This device\"><DescriptionItem>…</DescriptionItem></SettingsFacts></SettingsSection><SettingsDangerZone id=\"danger\" title=\"Danger zone\"><SettingsDangerAction label trigger title confirmLabel agentConfirm onConfirm /></SettingsDangerZone></SettingsPage>`. The navigation lists every direct `SettingsSection` child with a text title (`navLabel` otherwise), or pass `sections`. `--settings-top` is the height of anything sticky above the page and `--settings-height` the box that scrolls it. `currentSection` and `onSectionChange` (reason `scroll`, `nav` or `url`) follow your own state. A `SettingsRow` is a `Field` that names a UI SDK control; `field={false}` for a button. Labels `nav` and `jump` are overridable."
     },
     {
       "name": "eskais-mockup-skill",

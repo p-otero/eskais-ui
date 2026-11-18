@@ -71,6 +71,7 @@ Use the first level that can express the design, and never skip one:
 ## The files
 
 - `screen.tsx` default-exports a component taking its data as props: `{ members = sampleMembers }: { members?: Member[] }`. Presentational only: no fetching, no `window`, no router. Behaviour is React state plus `setTimeout` promises for a saving or deleting state.
+- **Start a screen from a layout block** when one fits, and fill its slots instead of laying out the page by hand: `@registry/master-detail` for a list with a detail pane, `@registry/dashboard-grid` for a dashboard, `@registry/settings-page` for a settings page.
 - `fixtures.ts` types the data and exports a sample of it. Reuse the project's own types when they import cleanly through an alias.
 - `parts/<part>.tsx`, `gaps.ts`: levels 3–5 above.
 - `.mockups/wrapper.tsx` (optional, shared by every mockup) is `({ children }) => providers`, for a theme, i18n or query provider the app entry installs.

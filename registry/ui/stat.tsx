@@ -1,6 +1,9 @@
+"use client"
+
 import { renderElement, type PartProps } from "@ui-sdk/react/primitive"
 import { Children, isValidElement, type ReactNode } from "react"
 
+import { useLocale } from "@/lib/locale"
 import { formatQuantity, isQuantity, type FormatQuantityOptions, type Quantity } from "@/lib/quantity"
 import { cn } from "@/lib/utils"
 import { QuantityValue } from "@/components/ui/quantity-value"
@@ -28,7 +31,7 @@ const StatHint = part("stat-hint", "text-xs text-muted-foreground")
 type StatValueProps = PartProps<"div"> & FormatQuantityOptions & { value?: number | Quantity }
 
 function StatValue({ value, format, locale, labels, className, render, children, ...props }: StatValueProps) {
-  const options = { format, locale, labels }
+  const options = { format, locale: useLocale(locale), labels }
   const numeric = isQuantity(value) || typeof value === "number"
   let content = children
   if (isQuantity(value)) content = <QuantityValue value={value} {...options} />

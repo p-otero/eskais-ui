@@ -182,7 +182,7 @@ function StepFormContent({
               id={headingId}
               tabIndex={-1}
               data-slot="step-form-title"
-              className="text-title-sm tracking-tight outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              className="text-title-sm tracking-tight focus:outline-none"
             >
               {step.title}
             </Heading>

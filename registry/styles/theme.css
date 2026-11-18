@@ -751,6 +751,10 @@
   body {
     @apply bg-background text-foreground;
   }
+  /* A heading or region focused from script (a skip link's target, an opened detail) is not a control: no ring. */
+  [tabindex="-1"]:focus {
+    outline: none;
+  }
   [data-slot="button"]:not([data-pending]) [data-show="pending"],
   [data-slot="button"][data-pending] [data-show="idle"],
   [data-slot="alert-dialog-close"]:not([data-pending]) [data-show="pending"],

@@ -228,7 +228,7 @@ function Shell<Route extends ShellRoute>({
           data-slot="shell-main"
           // Anchors, focus and scrollIntoView stop below the topbar and above the bottom bar.
           className={cn(
-            "flex min-w-0 flex-1 flex-col self-stretch outline-none **:scroll-mt-(--shell-scroll-margin)",
+            "flex min-w-0 flex-1 flex-col self-stretch focus:outline-none **:scroll-mt-(--shell-scroll-margin)",
             hasMobileNav && "narrow:**:scroll-mb-(--mobile-nav-offset)",
           )}
         >

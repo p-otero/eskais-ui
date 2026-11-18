@@ -124,6 +124,9 @@ const categories = [
     items: [
       "landing-page",
       "inbox",
+      "master-detail",
+      "dashboard-grid",
+      "settings-page",
       "hero",
       "section-heading",
       "bento",
