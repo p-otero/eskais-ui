@@ -86,5 +86,28 @@ function formatInstant(value: Instant, options: FormatInstantOptions = {}) {
   return name ? `${text} ${name}` : text
 }
 
-export { formatInstant, formatRelative, toISO, toTime }
+const elapsedFormats = new Map<string, Intl.NumberFormat>()
+
+/**
+ * How long ago, in the largest whole unit and the locale's narrowest form ("26m", "3h", "2d"), for a dense column
+ * beside a full date in a tooltip or an accessible name. Future instants read as 0 of the smallest unit.
+ */
+function formatElapsed(value: Instant, options: Pick<FormatRelativeOptions, "now" | "locale"> = {}) {
+  const time = toTime(value)
+  const now = options.now === undefined ? Date.now() : toTime(options.now)
+  if (Number.isNaN(time) || Number.isNaN(now)) return INVALID_TEXT
+  const diff = Math.max(0, now - time)
+  const [unit, size] = diff < MINUTE ? (["second", SECOND] as const) : unitFor(diff)
+  const key = `${options.locale ?? ""}|${unit}`
+  let format = elapsedFormats.get(key)
+  if (!format) {
+    // English narrows both minutes and months to "m"; months keep the short form.
+    const unitDisplay = unit === "month" ? "short" : "narrow"
+    format = new Intl.NumberFormat(options.locale, { style: "unit", unit, unitDisplay })
+    elapsedFormats.set(key, format)
+  }
+  return format.format(Math.floor(diff / size))
+}
+
+export { formatElapsed, formatInstant, formatRelative, toISO, toTime }
 export type { FormatInstantOptions, FormatRelativeOptions, Instant }

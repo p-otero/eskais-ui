@@ -948,6 +948,44 @@ const itemNotes: Record<string, ItemNotes> = {
     agent: "Agents select a row through the list's select(id) and press Load more by name.",
     related: ["list-item", "server-data-table", "server-data"],
   },
+  "commit-history": {
+    usage:
+      "Use it for a branch's history: one line per commit, merges folded until opened, details inline. Give it a bounded height.",
+    a11y: [
+      "A tree with one tab stop: arrows, Home/End and typeahead move; Right and Left open and close a merge; Enter opens a commit's details.",
+      'Each row is named in full, like "Merge invoice-pdf into main, 38 minutes ago, Release"; the graph is decorative.',
+      "Dimmed rows use muted-foreground, which keeps 4.5:1; the spinner and every transition stop under reduced motion.",
+      "Find in page sees the rows in view; findable adds UI SDK's findable layers for the rest, at a cost to held arrow keys.",
+      "In the branches view each lane is named by its pill and in the branch select, never by colour alone.",
+    ],
+    agent:
+      "Agents get expandDetails, collapseDetails, expand, collapse, copyHash (it returns the hash), openCommit and selectBranch, by id, hash or subject.",
+    related: ["server-commit-history", "git-tree", "git-chip", "commit-graph"],
+  },
+  "server-commit-history": {
+    usage: "Use it when the history comes from an API a page at a time, like git log with a cursor.",
+    a11y: ["Older pages arrive below without moving focus; Load more reaches them from the keyboard."],
+    agent: "The CommitHistory actions, plus Load more by name.",
+    related: ["commit-history", "page-source", "server-data"],
+  },
+  "git-tree": {
+    usage: "Use it for a repository's files at a commit, with what changed marked.",
+    a11y: [
+      "UI SDK's tree pattern: arrows, typeahead, Left and Right to fold, Enter to open a file.",
+      "A changed file's status is part of its name, not only its colour or letter.",
+    ],
+    agent: "Agents open, expand and collapse by path; the files are listed for query().",
+    related: ["commit-history", "git-chip"],
+  },
+  "git-chip": {
+    usage: "Use the chips for file paths and branch names inside a sentence, like a commit message.",
+    a11y: ["The icons are decorative; the chip reads as its text."],
+    related: ["commit-history", "badge"],
+  },
+  "commit-graph": {
+    usage: "Use the model on its own for a graph of your own, or to lay out commits on the server.",
+    related: ["commit-history"],
+  },
   "filter-search": {
     usage: "Put it in a ServerDataTable toolbar, or in a FilterScope beside any view on a page controller.",
     a11y: ["A search landmark named by the field's label; Escape clears only when there is text."],

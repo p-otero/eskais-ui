@@ -79,6 +79,7 @@ import { DiffSection } from "./sections/diff"
 import { AttachmentsSection, LightboxSection } from "./sections/media"
 import { StagesSection } from "./sections/stages"
 import { ListsSection } from "./sections/lists"
+import { GitSection } from "./sections/git"
 import { InboxSection } from "./sections/inbox"
 import { DocumentWorkspaceSection } from "./sections/document-workspace"
 import { ThemeEditor } from "./theme-editor"
@@ -440,6 +441,7 @@ function App() {
           <StagesSection />
 
           <ListsSection />
+          <GitSection />
           <InboxSection />
 
           <AgentPanel />

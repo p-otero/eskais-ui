@@ -71,6 +71,8 @@ This section holds the numbers Eskais measures today. More budgets and a measuri
 | j/k in a 2,000-row list to the next paint        | under 16 ms at the 95th percentile on a desktop CPU                               |
 | A 20,000-line `TextDiff` or a 500-file `GitDiff` | first paint about 150 ms; j/k to the next hunk under 20 ms at the 95th percentile |
 | A frame                                          | 16 ms at 60 Hz: any interaction that misses it shows as jank                      |
+| First paint of a 50,000-commit history           | about 70 ms; 100,000 files in a `GitTree`, about 140 ms                           |
+| A held arrow in either, to the next paint        | under 13 ms at the 95th percentile on a desktop CPU                               |
 
 Those come from a benchmark in the Eskais repository on a production build. Measure your own screen the same way, in a production build (a development build is several times slower and misleads):
 
