@@ -325,6 +325,7 @@ const itemNotes: Record<string, ItemNotes> = {
       "The list and the detail are named regions; the open row has aria-current.",
       "Opening moves focus to the detail's heading, and Close, Back or Escape return it to the row that opened it.",
       "Below 42rem of container the panes stack: the list, or the open item with a Back button. Nothing overlays.",
+      'With idleDetail="visible" the idle detail stays under the list, with a Collapse/Expand button that keeps focus and says aria-expanded.',
     ],
     agent:
       "Agents open and close items through the block by its label (open(id), close()), with the items you pass listed as choices; Back, Close, Collapse and Expand are buttons they press by name.",

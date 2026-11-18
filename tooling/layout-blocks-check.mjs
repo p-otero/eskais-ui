@@ -1,4 +1,4 @@
-// The layout blocks (?demo=master-detail, ?demo=dashboard-grid, ?demo=settings-page) at 1440, 768 and 390px, light
+// The layout blocks (?demo=master-detail and master-detail-check, ?demo=dashboard-grid, ?demo=settings-page) at 1440, 768 and 390px, light
 // and dark: axe, no horizontal overflow, no overlapping panes, stacking on narrow screens, focus moves and sticky
 // navigation. Run by tooling/shell-check.mjs.
 import { createRequire } from "node:module"
@@ -290,11 +290,85 @@ async function settingsPage(page, check, shot, width, scheme) {
   check(`${tag}: scrolling marks the section being read`, marked?.includes("Security"), marked)
 }
 
+function visiblePanes(root) {
+  return root.evaluate((element) =>
+    [...element.querySelectorAll('[data-slot="master-detail-list"], [data-slot="master-detail-detail"]')]
+      .filter((pane) => pane.checkVisibility())
+      .map((pane) => pane.getBoundingClientRect().toJSON()),
+  )
+}
+
+// ?demo=master-detail-check: `idleDetail="visible"` in a container under 42rem on a wide window.
+async function masterDetailModes(page, check, shot, scheme) {
+  const tag = `master-detail modes ${scheme}`
+  await page.setViewportSize({ width: 1440, height: 900 })
+  await page.goto(`${new URL(page.url()).origin}/?demo=master-detail-check`)
+  await page.locator('[data-slot="master-detail"]').first().waitFor()
+  await page.evaluate((dark) => {
+    localStorage.clear()
+    document.documentElement.classList.toggle("dark", dark)
+    document.documentElement.classList.toggle("light", !dark)
+    document.documentElement.dataset.colorScheme = dark ? "dark" : "light"
+  }, scheme === "dark")
+  await settle(page)
+
+  const idle = page.getByRole("group", { name: "Monitored devices" })
+  const block = await idle.evaluate((element) => element.getBoundingClientRect().toJSON())
+  const stacked = await visiblePanes(idle)
+  const [list, detail] = stacked
+  check(
+    `${tag}: a narrow container stacks the list over a visible idle detail`,
+    stacked.length === 2 &&
+      !overlaps(stacked) &&
+      detail.top >= list.bottom - 1 &&
+      Math.abs(detail.width - list.width) < 2,
+    JSON.stringify(stacked.map((pane) => Math.round(pane.top))),
+  )
+  check(
+    `${tag}: the idle detail takes at most half the block`,
+    detail.height <= block.height / 2 + 2,
+    `${detail.height}px`,
+  )
+  check(
+    `${tag}: both panes stay inside the block`,
+    detail.bottom <= block.bottom + 1,
+    `${detail.bottom} > ${block.bottom}`,
+  )
+  const violations = await axe(page)
+  check(`${tag}: axe`, violations.length === 0, violations.join(", "))
+  if (scheme === "light") await shot(page, "master-detail-idle-visible.png")
+
+  const collapse = idle.getByRole("button", { name: "Collapse detail" })
+  await collapse.click()
+  await idle.getByRole("button", { name: "Expand detail" }).waitFor()
+  const folded = await visiblePanes(idle)
+  check(
+    `${tag}: collapsing leaves a bar under the list`,
+    folded.length === 2 && folded[1].height < 64 && folded[0].height > block.height - 80,
+    `${folded[1]?.height}px`,
+  )
+  const focused = await page.evaluate(() => document.activeElement?.getAttribute("aria-label"))
+  check(`${tag}: focus stays on the toggle`, focused === "Expand detail", focused)
+  await idle.getByRole("button", { name: "Expand detail" }).click()
+
+  await idle.getByRole("button", { name: "Device 3" }).click()
+  await idle.getByRole("region", { name: "Device 3" }).waitFor()
+  const opened = await visiblePanes(idle)
+  check(
+    `${tag}: an open item fills the narrow block`,
+    opened.length === 1 && opened[0].height > block.height - 4,
+    `${opened[0]?.height}px`,
+  )
+  await idle.getByRole("button", { name: "Back" }).click()
+}
+
 async function checkLayoutBlocks(page, check, shot) {
   for (const width of widths) {
     // oxlint-disable-next-line eslint/no-await-in-loop -- one page drives the steps, in order
     for (const scheme of schemes) await masterDetail(page, check, shot, width, scheme)
   }
+  // oxlint-disable-next-line eslint/no-await-in-loop -- one page drives the steps, in order
+  for (const scheme of schemes) await masterDetailModes(page, check, shot, scheme)
   for (const width of widths) {
     // oxlint-disable-next-line eslint/no-await-in-loop -- one page drives the steps, in order
     for (const scheme of schemes) await dashboardGrid(page, check, shot, width, scheme)

@@ -17,6 +17,7 @@ Versions follow [semver](https://semver.org). Before 1.0, a minor version can br
 - `shell`: the palette's Go to commands are link commands (`CommandItem href`): each is an anchor to the route's `href`, so Ctrl/Cmd+click opens it in a new tab, and Enter, a click or a mouse press close the palette and go through `onNavigate` (or load the href, or set a `#/route` hash). `onCommand` runs only your `commandGroups`.
 - `command`: `CommandFooter`, a line under the list for hints like the keys that move and close, in caption text over a top border.
 - `shell`: `searchFooter` renders at the bottom of the palette in a `CommandFooter`, like `<Kbd>↑</Kbd><Kbd>↓</Kbd>` and your words for them. Nothing by default, and no copy of its own.
+- `MasterDetail idleDetail="visible"`: on a container under 42rem, the detail stays under the list while nothing is open instead of hiding, for a live pane like a monitor. It sits at its content's height up to `--master-detail-idle-height` (50%), scrolls by keyboard, and its bar has a Collapse/Expand button (`labels.collapse`/`expand`, with a tooltip and `aria-expanded`) that folds it to the bar and keeps focus; with `collapsible` the idle detail gets the same button beside the list and folds to the rail. `emptyDetailTitle` titles the bar and names the pane. The collapsed state is the one `storageKey` remembers.
 
 ### Changed
 

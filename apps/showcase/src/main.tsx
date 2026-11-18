@@ -13,6 +13,7 @@ import { DescriptionListCheck } from "./checks/description-list-check"
 import { FieldPlacementCheck } from "./checks/field-placement-check"
 import { GaugeCheck } from "./checks/gauge-check"
 import { IconTooltipCheck } from "./checks/icon-tooltip-check"
+import { MasterDetailCheck } from "./checks/master-detail-check"
 import { MobileNavCheck } from "./checks/mobile-nav-check"
 import { ListBench } from "./checks/list-bench"
 import { OverlayCheck } from "./checks/overlay-check"
@@ -32,10 +33,10 @@ import "./index.css"
 const root = document.getElementById("root")
 if (!root) throw new Error("Missing #root element")
 
-// ?demo=page, site and shell render one demo alone, for phone-width screenshots; ?demo=<name>-check pages are the
-// fixtures of tooling/<name>-check.mjs (shell-check.mjs's: card-header, description-list, field-placement, gauge,
-// mobile-nav, palette-reopen, side-panel, table; server-data-check takes ?ui=search|chips|panel|list); ?demo=inbox, list-bench,
-// shell-block, master-detail, dashboard-grid, settings-page and document-workspace render one demo alone.
+// ?demo=page, site, shell, inbox, list-bench, shell-block, master-detail, dashboard-grid, settings-page and
+// document-workspace render one demo alone (phone-width screenshots); ?demo=<name>-check pages are tooling/<name>-
+// check.mjs fixtures (shell-check's: card-header, description-list, field-placement, gauge, mobile-nav, palette-reopen,
+// side-panel, table, master-detail); server-data-check takes ?ui=search|chips|panel|list.
 const params = new URLSearchParams(location.search)
 const status = demoStatuses.find((name) => name === params.get("status")) ?? "success"
 const demo = params.get("demo")
@@ -59,6 +60,7 @@ const standalone = new Set([
   "description-list-check",
   "gauge-check",
   "master-detail",
+  "master-detail-check",
   "dashboard-grid",
   "settings-page",
   "shell-block",
@@ -90,6 +92,7 @@ function Demo() {
   if (demo === "description-list-check") return <DescriptionListCheck />
   if (demo === "gauge-check") return <GaugeCheck />
   if (demo === "master-detail") return <MasterDetailDemo />
+  if (demo === "master-detail-check") return <MasterDetailCheck />
   if (demo === "dashboard-grid") return <DashboardGridDemo />
   if (demo === "settings-page") return <SettingsPageDemo />
   if (demo === "shell-block") return <ShellBlockDemo />

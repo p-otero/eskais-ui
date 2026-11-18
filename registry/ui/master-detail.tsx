@@ -7,6 +7,7 @@ import { useId, useState, type CSSProperties, type ReactNode } from "react"
 import {
   MasterDetailContext,
   MasterDetailDetailHeader,
+  MasterDetailIdle,
   MasterDetailListPane,
   MasterDetailRail,
   masterDetailLabels,
@@ -48,8 +49,16 @@ type MasterDetailProps = Omit<PartProps<"div">, "children" | "aria-label" | "sty
   renderList?: (state: MasterDetailState) => ReactNode
   /** The open item's view, or null when the id is unknown (then `emptyDetail` shows). */
   renderDetail: (id: string) => MasterDetailView | null
-  /** Shown beside the list while nothing is open, on wide containers. */
+  /** Shown beside the list while nothing is open, on wide containers (and stacked ones with `idleDetail="visible"`). */
   emptyDetail?: ReactNode
+  /** A title for `emptyDetail`, in a bar above it that also holds its collapse button; it names the pane. */
+  emptyDetailTitle?: ReactNode
+  /**
+   * What a stacked container (under 42rem) shows while nothing is open: `hidden` (default) only the list; `visible`
+   * keeps `emptyDetail` under the list, like a live monitor, with a button that collapses it to its bar. With
+   * `collapsible`, the idle detail also gets that button beside the list, where it collapses to the rail.
+   */
+  idleDetail?: "hidden" | "visible"
   /** Above the list, like a title and a count. */
   header?: ReactNode
   /** Under the header, like a search field or filters. */
@@ -82,7 +91,10 @@ type MasterDetailProps = Omit<PartProps<"div">, "children" | "aria-label" | "sty
   /** The `ShortcutScope` that Escape belongs to. */
   scope?: string
   labels?: Partial<MasterDetailLabels>
-  /** `--master-detail-height` (100% by default) and `--master-detail-list-width` set the block's size. */
+  /**
+   * `--master-detail-height` (100% by default) and `--master-detail-list-width` set the block's size;
+   * `--master-detail-idle-height` (50%) caps a stacked idle detail.
+   */
   style?: CSSProperties
 }
 
@@ -93,6 +105,9 @@ const railSize = "3.25rem"
 const stackedClassNames = {
   list: "@max-2xl/master-detail:w-full @max-2xl/master-detail:!flex-auto @max-2xl/master-detail:border-e-0 @max-2xl/master-detail:data-covered:hidden",
   detail: "@max-2xl/master-detail:w-full @max-2xl/master-detail:!flex-auto @max-2xl/master-detail:data-idle:hidden",
+  // Stacked and idle, the detail sits under the list at its content's height, capped, rather than sharing it.
+  idleDetail:
+    "@max-2xl/master-detail:w-full @max-2xl/master-detail:!flex-auto @max-2xl/master-detail:data-idle:!flex-none @max-2xl/master-detail:data-idle:max-h-(--master-detail-idle-height) @max-2xl/master-detail:data-idle:border-t @max-2xl/master-detail:data-idle:data-collapsed:max-h-none",
 }
 
 function rootAttributes(label: string, narrow: boolean, style: CSSProperties | undefined) {
@@ -102,6 +117,7 @@ function rootAttributes(label: string, narrow: boolean, style: CSSProperties | u
     "data-stacked": narrow ? "" : undefined,
     style: {
       "--master-detail-height": "100%",
+      "--master-detail-idle-height": "50%",
       "--master-detail-list-width": "clamp(16rem, 38%, 26rem)",
       ...style,
     } as CSSProperties,
@@ -124,6 +140,8 @@ function MasterDetail({
   renderList,
   renderDetail,
   emptyDetail,
+  emptyDetailTitle,
+  idleDetail = "hidden",
   header,
   toolbar,
   selectedId: selectedIdProp,
@@ -152,6 +170,7 @@ function MasterDetail({
   const [listPane, setListPane] = useState<HTMLElement | null>(null)
   const [detailPane, setDetailPane] = useState<HTMLElement | null>(null)
   const titleId = useId()
+  const idleTitleId = useId()
   const generatedId = useId()
   const detailPanel = `${storageKey ?? generatedId}-detail`
   const [resize] = useState(createResizableController)
@@ -163,6 +182,7 @@ function MasterDetail({
     defaultCollapsed,
   )
   const collapsed = collapsible && storedCollapsed && !narrow
+  const idleVisible = idleDetail === "visible"
   const setCollapsed = (next: boolean) => {
     if (next === storedCollapsed) return
     storeCollapsed(next)
@@ -235,10 +255,19 @@ function MasterDetail({
     </MasterDetailListPane>
   )
 
+  const idleCollapsed = idleVisible && narrow && storedCollapsed && view === null
+  const idleToggle = idleVisible && (narrow || collapsible)
   let detailContent: ReactNode = (
-    <div data-slot="master-detail-empty" className="flex min-h-0 flex-1 flex-col overflow-y-auto p-inset-surface">
+    <MasterDetailIdle
+      title={emptyDetailTitle}
+      titleId={idleTitleId}
+      labels={labels}
+      stacked={narrow}
+      collapsed={idleCollapsed}
+      onToggle={idleToggle ? () => setCollapsed(!storedCollapsed) : undefined}
+    >
       {emptyDetail}
-    </div>
+    </MasterDetailIdle>
   )
   if (collapsed) {
     detailContent = <MasterDetailRail label={labels.expand} onExpand={() => setCollapsed(false)} />
@@ -264,11 +293,14 @@ function MasterDetail({
     )
   }
   const named = view !== null && !collapsed
+  let labelledBy: string | undefined
+  if (named) labelledBy = titleId
+  else if (view === null && !collapsed && emptyDetailTitle !== undefined) labelledBy = idleTitleId
   const detailSection = (
     <section
       ref={setDetailPane}
-      aria-labelledby={named ? titleId : undefined}
-      aria-label={named ? undefined : labels.detail}
+      aria-labelledby={labelledBy}
+      aria-label={labelledBy === undefined ? labels.detail : undefined}
       data-slot="master-detail-detail"
       className="flex size-full min-h-0 min-w-0 flex-col"
     >
@@ -278,10 +310,14 @@ function MasterDetail({
 
   const covered = selectedId === null ? undefined : ""
   const idle = view === null ? "" : undefined
-  const flag = collapsed ? "" : undefined
+  const flag = collapsed || idleCollapsed ? "" : undefined
+  const detailStacking = idleVisible ? stackedClassNames.idleDetail : stackedClassNames.detail
+  // The group lays its panes out in a row with an inline style, so the stacked column needs `!`.
+  const stackColumn = idleVisible ? "@max-2xl/master-detail:!flex-col" : undefined
   const body = resizable ? (
     <Resizable
       controller={resize}
+      className={stackColumn}
       autoSaveId={storageKey === undefined ? undefined : `${storageKey}:layout`}
       onLayoutChange={(_layout, details) => {
         if (details.reason !== "imperative" && collapsible) setCollapsed(resize.isCollapsed(detailPanel))
@@ -304,7 +340,7 @@ function MasterDetail({
         collapsedSize={railSize}
         data-idle={idle}
         data-collapsed={flag}
-        className={cn("flex overflow-hidden", stackedClassNames.detail)}
+        className={cn("flex overflow-hidden", detailStacking)}
       >
         {detailSection}
       </ResizablePanel>
@@ -327,7 +363,7 @@ function MasterDetail({
         className={cn(
           "flex min-h-0 min-w-0",
           collapsed ? "w-(--sidebar-rail-width) shrink-0" : "flex-1",
-          stackedClassNames.detail,
+          detailStacking,
         )}
       >
         {detailSection}
@@ -349,7 +385,7 @@ function MasterDetail({
       ),
       children: (
         <MasterDetailContext value={state}>
-          <ShortcutScope name={scope} className="flex min-h-0 min-w-0 flex-1">
+          <ShortcutScope name={scope} className={cn("flex min-h-0 min-w-0 flex-1", !resizable && stackColumn)}>
             {body}
           </ShortcutScope>
         </MasterDetailContext>

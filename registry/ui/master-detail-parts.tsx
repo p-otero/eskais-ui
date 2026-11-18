@@ -1,9 +1,17 @@
 "use client"
 
 import { createContext, use, type ReactNode } from "react"
-import { ArrowLeftIcon, PanelRightCloseIcon, PanelRightOpenIcon, XIcon } from "lucide-react"
+import {
+  ArrowLeftIcon,
+  PanelBottomCloseIcon,
+  PanelBottomOpenIcon,
+  PanelRightCloseIcon,
+  PanelRightOpenIcon,
+  XIcon,
+} from "lucide-react"
 
 import { Button } from "@/components/ui/button"
+import { ScrollArea, ScrollAreaScrollbar, ScrollAreaThumb, ScrollAreaViewport } from "@/components/ui/scroll-area"
 
 type MasterDetailLabels = {
   /** Names the list's region. */
@@ -174,9 +182,73 @@ function MasterDetailRail({ label, onExpand }: { label: string; onExpand: () => 
   )
 }
 
+type IdleDetailProps = {
+  title?: ReactNode
+  titleId: string
+  labels: MasterDetailLabels
+  /** Stacked under the list, so it collapses to a bar; beside it, it collapses to the rail. */
+  stacked: boolean
+  collapsed: boolean
+  /** Shows the collapse button. */
+  onToggle?: () => void
+  children: ReactNode
+}
+
+/** The detail while nothing is open: `emptyDetail`, with a bar that collapses it when it stays on screen. */
+function MasterDetailIdle({ title, titleId, labels, stacked, collapsed, onToggle, children }: IdleDetailProps) {
+  const hasBar = title !== undefined || onToggle !== undefined
+  const CollapseIcon = stacked ? PanelBottomCloseIcon : PanelRightCloseIcon
+  return (
+    <>
+      {hasBar && (
+        <div
+          data-slot="master-detail-idle-bar"
+          className="flex min-h-control items-center gap-items border-b px-inset-item py-inline in-data-collapsed:border-b-0"
+        >
+          {title !== undefined && (
+            <div id={titleId} data-slot="master-detail-idle-title" className="min-w-0 flex-1 truncate text-title-sm">
+              {title}
+            </div>
+          )}
+          {onToggle && (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="ms-auto"
+              aria-label={collapsed ? labels.expand : labels.collapse}
+              aria-expanded={!collapsed}
+              onClick={onToggle}
+            >
+              {collapsed ? <PanelBottomOpenIcon /> : <CollapseIcon className="rtl:-scale-x-100" />}
+            </Button>
+          )}
+        </div>
+      )}
+      {!collapsed && (
+        // A viewport that scrolls with nothing focusable inside becomes a tab stop, so a capped monitor still scrolls by keyboard.
+        <ScrollArea
+          aria-labelledby={title === undefined ? undefined : titleId}
+          aria-label={title === undefined ? labels.detail : undefined}
+          className="flex min-h-0 flex-1 flex-col"
+        >
+          <ScrollAreaViewport>
+            <div data-slot="master-detail-empty" className="flex min-h-full flex-col p-inset-surface">
+              {children}
+            </div>
+          </ScrollAreaViewport>
+          <ScrollAreaScrollbar>
+            <ScrollAreaThumb />
+          </ScrollAreaScrollbar>
+        </ScrollArea>
+      )}
+    </>
+  )
+}
+
 export {
   MasterDetailContext,
   MasterDetailDetailHeader,
+  MasterDetailIdle,
   MasterDetailListPane,
   MasterDetailRail,
   masterDetailLabels,
