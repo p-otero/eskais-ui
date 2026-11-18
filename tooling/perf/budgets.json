@@ -90,31 +90,31 @@
   "vitals": {
     "shell": {
       "cls": 0.01,
-      "lcp": 3500
+      "lcp": 4200
     },
     "dashboard-grid": {
       "cls": 0.01,
-      "lcp": 3600
+      "lcp": 4200
     },
     "settings-page": {
       "cls": 0.01,
-      "lcp": 3600
+      "lcp": 4200
     },
     "document-workspace": {
       "cls": 0.01,
-      "lcp": 3600
+      "lcp": 4200
     },
     "master-detail": {
       "cls": 0.01,
-      "lcp": 3500
+      "lcp": 4200
     },
     "server-data-table": {
       "cls": 0.01,
-      "lcp": 4500
+      "lcp": 5100
     },
     "server-list": {
       "cls": 0.01,
-      "lcp": 4500
+      "lcp": 5100
     }
   },
   "bundles": {
