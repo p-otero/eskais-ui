@@ -15,7 +15,7 @@ import {
 
 import type { MarkdownEditorProps } from "@/components/ui/markdown-editor"
 import { createAdapterBridge } from "@/components/ui/markdown-editor-adapter"
-import { createEditorHandle, type MarkdownEditorHandle } from "@/components/ui/markdown-editor-handle"
+import { createEditorHandle, type HandleMenus, type MarkdownEditorHandle } from "@/components/ui/markdown-editor-handle"
 import { createEditorState, reconfigure, type EditorSettings } from "@/components/ui/markdown-editor-state"
 import { useMarkdownSync } from "@/components/ui/markdown-editor-sync"
 
@@ -53,11 +53,11 @@ function useMarkdownEditorView(props: MarkdownEditorProps, settings: EditorSetti
     const initial = latest.current.value ?? latest.current.defaultValue ?? ""
     const languages = latest.current.codeLanguages
     const editor = new EditorView({
-      state: createEditorState(initial, settingsRef.current, hooks, languages),
+      state: createEditorState(initial, settingsRef.current, hooks, languages, latest.current.initialCaret),
       parent: host,
     })
     const detach = sync.attach(editor, initial, (markdown) =>
-      editor.setState(createEditorState(markdown, settingsRef.current, hooks, languages)),
+      editor.setState(createEditorState(markdown, settingsRef.current, hooks, languages, latest.current.initialCaret)),
     )
     const attached = bridge.attach(editor)
     setView(editor)
@@ -81,11 +81,15 @@ function useMarkdownEditorView(props: MarkdownEditorProps, settings: EditorSetti
 }
 
 /** Gives `ref` the editor's handle once CodeMirror has mounted, and `null` before and after. */
-function useEditorHandle(ref: Ref<MarkdownEditorHandle | null> | undefined, view: EditorView | undefined) {
+function useEditorHandle(
+  ref: Ref<MarkdownEditorHandle | null> | undefined,
+  view: EditorView | undefined,
+  menus: HandleMenus,
+) {
   useImperativeHandle<MarkdownEditorHandle | null, MarkdownEditorHandle | null>(
     ref,
-    () => (view ? createEditorHandle(view) : null),
-    [view],
+    () => (view ? createEditorHandle(view, menus) : null),
+    [view, menus],
   )
 }
 

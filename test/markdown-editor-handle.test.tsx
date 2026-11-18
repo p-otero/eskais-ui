@@ -1,5 +1,5 @@
 import { EditorView } from "@codemirror/view"
-import { act, render } from "@testing-library/react"
+import { act, fireEvent, render, within } from "@testing-library/react"
 import { createRef } from "react"
 import { beforeAll, expect, test, vi } from "vitest"
 
@@ -115,4 +115,101 @@ test("scrollToLine scrolls a line to the top without moving the caret", async ()
   for (const [spec] of dispatch.mock.calls) expect(spec).toMatchObject({ effects: expect.anything() })
   expect(handle.getSelection().head).toBe(2)
   expect(handle.getScrollLine()).toBe(1)
+})
+
+const suggest = vi.fn(async (query: string) =>
+  ["roadmap", "risks"].filter((slug) => slug.includes(query)).map((slug) => ({ slug })),
+)
+
+async function mountWithSuggestions(doc: string) {
+  const ref = createRef<MarkdownEditorHandle>()
+  render(<MarkdownEditor ref={ref} label="Note" defaultValue={doc} suggestWikilinks={suggest} />)
+  await settle()
+  if (!ref.current) throw new Error("no handle")
+  return ref.current
+}
+
+const suggestions = () =>
+  document.querySelector<HTMLElement>("[data-slot=trigger-menu-content][data-open] [role=listbox]")
+
+const waitForListbox = async () => {
+  for (let tries = 0; tries < 20 && !suggestions()?.querySelector("[role=option]"); tries++) {
+    await act(() => new Promise((resolve) => setTimeout(resolve, 10)))
+  }
+  return suggestions()
+}
+
+test("insertText with a typing userEvent opens the wikilink suggestions; a plain insert doesn't", async () => {
+  const handle = await mountWithSuggestions("see \n")
+  run(() => handle.focus())
+  run(() => handle.setSelection(4))
+  run(() => handle.insertText("[["))
+  expect(await waitForListbox()).toBeNull()
+  run(() => handle.insertText(" [[", { userEvent: "input.type" }))
+  const listbox = await waitForListbox()
+  expect(listbox).not.toBeNull()
+  expect(
+    within(listbox!)
+      .getAllByRole("option")
+      .map((option) => option.textContent),
+  ).toEqual(["roadmap", "risks"])
+  expect(handle.getValue()).toBe("see [[ [[\n")
+})
+
+test("openWikilinkSuggestions types [[ and opens the listbox, or reuses a [[ before the caret", async () => {
+  const handle = await mountWithSuggestions("see \n")
+  run(() => handle.setSelection(4))
+  expect(run(() => handle.openWikilinkSuggestions())).toBe(true)
+  expect(await waitForListbox()).not.toBeNull()
+  expect(handle.getValue()).toBe("see [[\n")
+  expect(editorView().hasFocus).toBe(true)
+  fireEvent.keyDown(editorView().contentDOM, { key: "Escape" })
+  await settle()
+
+  run(() => handle.setSelection(6))
+  expect(run(() => handle.openWikilinkSuggestions())).toBe(true)
+  expect(await waitForListbox()).not.toBeNull()
+  expect(handle.getValue()).toBe("see [[\n")
+})
+
+test("openWikilinkSuggestions refuses without suggestWikilinks or when read-only", async () => {
+  const { handle, unmount } = await mount("text\n")
+  expect(run(() => handle.openWikilinkSuggestions())).toBe(false)
+  unmount()
+  const readOnly = await mount("text\n", { readOnly: true })
+  expect(run(() => readOnly.handle.openWikilinkSuggestions())).toBe(false)
+  expect(readOnly.handle.getValue()).toBe("text\n")
+})
+
+test("runCommand and insertBlock insert the slash menu's blocks", async () => {
+  const { handle } = await mount("intro\n")
+  run(() => handle.setSelection(5))
+  expect(run(() => handle.runCommand("table"))).toBe(true)
+  expect(handle.getValue()).toBe("intro\n\n|  |  |\n| --- | --- |\n|  |  |\n")
+  expect(handle.getSelection().head).toBe("intro\n\n| ".length)
+
+  run(() => handle.setSelection(handle.getValue().length))
+  run(() => handle.runCommand("codeBlock"))
+  expect(handle.getValue()).toMatch(/\n```\n\n```$/)
+  expect(handle.getSelection().head).toBe(handle.getValue().length - 4)
+
+  run(() => handle.setSelection(handle.getValue().length))
+  run(() => handle.insertBlock("divider"))
+  expect(handle.getValue()).toMatch(/```\n\n---\n$/)
+  // @ts-expect-error -- not a block
+  expect(() => handle.insertBlock("chart")).toThrow(/Unknown block "chart"/)
+})
+
+test("a block replaces the selection, and a CRLF note keeps CRLF", async () => {
+  const { handle } = await mount("one\r\ntwo\r\n")
+  run(() => handle.setSelection(5, 8))
+  run(() => handle.insertBlock("divider"))
+  expect(handle.getValue()).toBe("one\r\n---\r\n\r\n")
+})
+
+test("a read-only editor refuses blocks", async () => {
+  const { handle } = await mount("text\n", { readOnly: true })
+  expect(run(() => handle.runCommand("table"))).toBe(false)
+  expect(run(() => handle.insertBlock("codeBlock"))).toBe(false)
+  expect(handle.getValue()).toBe("text\n")
 })

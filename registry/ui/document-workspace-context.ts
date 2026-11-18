@@ -7,7 +7,14 @@ type DocumentWorkspaceMode = "edit" | "read"
 type DocumentSaveState = "saved" | "saving" | "unsaved" | "error"
 
 /** A heading of the open document, as `extractHeadings` (from `markdown-view`) returns it. */
-type DocumentHeading = { level: number; text: string; line: number; textFrom: number }
+type DocumentHeading = {
+  level: number
+  text: string
+  line: number
+  textFrom: number
+  /** The anchor `MarkdownView` puts on the rendered heading (`data-slug`); read mode finds the heading by it. */
+  slug?: string
+}
 
 /** What the workspace needs from an editor: `MarkdownEditorHandle` (from `markdown-editor`) has it. */
 type DocumentEditor = {
@@ -73,10 +80,20 @@ type DocumentWorkspaceContextValue = {
   focusDocument: () => void
   /** After a popup closed: focuses the document if focus was left nowhere in particular. */
   refocusDocument: () => void
-  /** Read mode: scrolls the `index`th heading of the document to the top and moves focus to it. */
-  revealHeading: (index: number) => void
+  /**
+   * Read mode: scrolls a heading to the top and moves focus to it. Pass a heading from `extractHeadings`, found by
+   * its `slug` (a filtered list still finds the right one), or by its text without one; a number is the index among
+   * the rendered headings.
+   */
+  revealHeading: (heading: DocumentHeading | number) => void
   quickOpen: CommandDialogController
+  /** Shows or hides the explorer: its column when wide, its drawer when narrow. */
   setExplorerOpen: (open: boolean) => void
+  /**
+   * Closes the explorer drawer in the narrow layout, as a link in it does; the wide layout's column stays. Call it
+   * when a button in your tree opens a document, or pass `documentId` to the workspace instead.
+   */
+  closeExplorer: () => void
   setAsideOpen: (open: boolean) => void
   labels: DocumentWorkspaceLabels
 }
@@ -98,11 +115,22 @@ function readHeadings(root: HTMLElement | null) {
   )
 }
 
+/** The rendered heading for `heading`: by its slug, else the first with its text; a number is an index. */
+function findHeading(root: HTMLElement | null, heading: DocumentHeading | number) {
+  const rendered = readHeadings(root)
+  if (typeof heading === "number") return rendered[heading]
+  if (heading.slug !== undefined) {
+    const bySlug = rendered.find((element) => element.dataset.slug === heading.slug)
+    if (bySlug) return bySlug
+  }
+  return rendered.find((element) => element.textContent.replace(/\s+/g, " ").trim() === heading.text)
+}
+
 function textBoxIn(root: HTMLElement | null) {
   return root?.querySelector<HTMLElement>("[contenteditable=true], [role=textbox], textarea") ?? null
 }
 
-export { DocumentWorkspaceContext, documentWorkspaceLabels, readHeadings, textBoxIn, useDocumentWorkspace }
+export { DocumentWorkspaceContext, documentWorkspaceLabels, findHeading, readHeadings, textBoxIn, useDocumentWorkspace }
 export type {
   DocumentEditor,
   DocumentHeading,

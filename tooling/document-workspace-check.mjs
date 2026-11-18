@@ -1,6 +1,6 @@
 // Drives ?demo=document-workspace in Chrome: the columns collapse and come back, Ctrl+P opens quick open, the
 // outline moves the caret or focus, a mode switch keeps the reading position, menus and drawers give focus back
-// to the document, and on a phone the explorer and the aside are drawers.
+// to the document, and on a phone the explorer and the aside are drawers that close when a note opens.
 // Usage: node tooling/document-workspace-check.mjs [--screenshots=<dir>] (after `bun run build:showcase`)
 import { mkdirSync } from "node:fs"
 import { join, resolve } from "node:path"
@@ -146,6 +146,20 @@ async function wide(page) {
   await page.waitForTimeout(300)
   check("a toolbar menu gives focus back to the editor", await editorHasFocus(page))
 
+  await page.getByRole("button", { name: "Insert" }).click()
+  await page.getByRole("menuitem", { name: "Link to a note…" }).click()
+  const suggestions = page.locator("[data-slot=trigger-menu-content][data-open]").getByRole("option")
+  await suggestions
+    .first()
+    .waitFor({ timeout: 2000 })
+    .catch(() => {})
+  check(
+    "Link to a note opens the wikilink suggestions from the handle",
+    (await suggestions.count()) === 3 && (await editorHasFocus(page)),
+    `${String(await suggestions.count())} options`,
+  )
+  await page.keyboard.press("Escape")
+
   await page.getByRole("radio", { name: "Conflicts" }).click()
   await page.locator(".cm-content").click()
   await page.keyboard.type(" edited")
@@ -198,6 +212,30 @@ async function narrow(page) {
   check("narrow: nothing overflows the page", overflow <= 0, `${overflow}px`)
 }
 
+// A tree of buttons, not links: the drawer closes because the workspace's documentId changes.
+async function phone(page) {
+  await open(page, 320)
+  await page.getByRole("button", { name: "Files", exact: true }).click()
+  const drawer = page.getByRole("dialog", { name: "Files" })
+  await drawer.waitFor()
+  await drawer.getByRole("button", { name: "Goals" }).click()
+  await page.waitForTimeout(500)
+  check("320px: a button in the explorer that opens a note closes the drawer", !(await drawer.isVisible()))
+  check(
+    "320px: the note opens",
+    (await page.getByRole("tab", { name: "Goals" }).getAttribute("aria-selected")) === "true",
+  )
+  check("320px: focus goes back to the editor", await editorHasFocus(page))
+  check(
+    "320px: the Files toggle says it's collapsed",
+    (await page.getByRole("button", { name: "Files", exact: true }).getAttribute("aria-expanded")) === "false",
+  )
+  const overflow = await page.evaluate(
+    () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
+  )
+  check("320px: nothing overflows the page", overflow <= 0, `${overflow}px`)
+}
+
 async function screenshots(page) {
   for (const scheme of ["light", "dark"]) {
     for (const width of [1440, 900, 390]) {
@@ -231,6 +269,7 @@ async function screenshots(page) {
 await withShowcase(async (page) => {
   await wide(page)
   await narrow(page)
+  await phone(page)
   await screenshots(page)
 })
 

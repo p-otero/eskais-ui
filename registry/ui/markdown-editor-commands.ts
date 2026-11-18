@@ -195,6 +195,48 @@ function wrapSelection(view: EditorView, before: string, after = before) {
   return true
 }
 
+/** Blocks the slash menu and the handle insert: a fenced code block, a two-column table and a thematic break. */
+type MarkdownBlockKind = "codeBlock" | "table" | "divider"
+
+const BLOCKS: Record<MarkdownBlockKind, { text: string; caret: number }> = {
+  codeBlock: { text: "```\n\n```", caret: 4 },
+  table: { text: "|  |  |\n| --- | --- |\n|  |  |", caret: 2 },
+  divider: { text: "---\n", caret: 4 },
+}
+
+const BLOCK_KINDS = Object.keys(BLOCKS) as MarkdownBlockKind[]
+
+/**
+ * Replaces `range` (the selection by default) with a block, after a blank line when text comes before it on the
+ * line, and puts the caret inside it: in the code fence, the first cell, or after the rule.
+ */
+function insertBlock(
+  view: EditorView,
+  kind: MarkdownBlockKind,
+  range: { from: number; to: number } = view.state.selection.main,
+  userEvent = "input",
+) {
+  if (!BLOCK_KINDS.includes(kind)) {
+    throw new RangeError(`Unknown block "${String(kind)}". Blocks: ${BLOCK_KINDS.join(", ")}.`)
+  }
+  const block = BLOCKS[kind]
+  const { state } = view
+  if (state.readOnly) return false
+  const { from, to } = range
+  const line = state.doc.lineAt(from)
+  const lead = state.sliceDoc(line.from, from).trim() ? "\n\n" : ""
+  const text = lead + block.text
+  const insert = toDocText(state, text)
+  const offset = toDocText(state, text.slice(0, lead.length + block.caret)).length
+  view.dispatch({
+    changes: { from, to, insert },
+    selection: { anchor: from + state.toText(insert.slice(0, offset)).length },
+    userEvent,
+    scrollIntoView: true,
+  })
+  return true
+}
+
 const linkDestination = (href: string) => (/[\s()<>]/.test(href) ? `<${href.replace(/[<>]/g, encodeURI)}>` : href)
 const linkLabel = (text: string) => text.replace(/([[\]\\])/g, "\\$1")
 
@@ -209,7 +251,9 @@ function insertLink(view: EditorView, href: string, text?: string) {
 }
 
 export {
+  BLOCK_KINDS,
   FORMATS,
+  insertBlock,
   insertAtCaret,
   insertAtSelection,
   insertLink,
@@ -222,4 +266,4 @@ export {
   toggleFormat,
   wrapSelection,
 }
-export type { MarkdownFormat }
+export type { MarkdownBlockKind, MarkdownFormat }

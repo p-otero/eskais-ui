@@ -150,6 +150,7 @@ function InsertMenu({ editor }: { editor: RefObject<MarkdownEditorHandle | null>
         if (!handle) return
         if (value === "link") handle.insertLink("https://eskais.dev", "Eskais")
         if (value === "wikilink") handle.insertWikilink("risks", "the risks")
+        if (value === "note") handle.openWikilinkSuggestions()
         if (value === "embed") handle.insertText("![[timeline]]")
         if (value === "highlight") handle.wrapSelection("==")
       }}
@@ -161,6 +162,7 @@ function InsertMenu({ editor }: { editor: RefObject<MarkdownEditorHandle | null>
       <DropdownMenuContent align="end" finalFocus={workspace.documentFocusTarget}>
         <DropdownMenuItem value="link">Link</DropdownMenuItem>
         <DropdownMenuItem value="wikilink">Wikilink</DropdownMenuItem>
+        <DropdownMenuItem value="note">Link to a note…</DropdownMenuItem>
         <DropdownMenuItem value="embed">
           <DropdownMenuItemIcon>
             <ImageIcon />
@@ -206,6 +208,13 @@ export default function DocumentWorkspaceDemo({ className = "h-144 w-full" }: { 
     [notes],
   )
   const onWikilinkClick = useCallback((slug: string) => openNote(slug), [openNote])
+  const suggestWikilinks = useCallback(
+    async (query: string) =>
+      notes
+        .filter((entry) => entry.title.toLowerCase().includes(query.toLowerCase()))
+        .map((entry) => ({ slug: entry.slug, label: entry.title })),
+    [notes],
+  )
 
   const save = (markdown: string) => {
     setNotes((all) => all.map((entry) => (entry.slug === current ? { ...entry, markdown } : entry)))
@@ -236,6 +245,7 @@ export default function DocumentWorkspaceDemo({ className = "h-144 w-full" }: { 
       </div>
       <DocumentWorkspace
         className="min-h-0 flex-1 rounded-surface border"
+        documentId={current}
         mode={mode}
         onModeChange={setMode}
         storageKey="eskais-demo-workspace"
@@ -259,6 +269,26 @@ export default function DocumentWorkspaceDemo({ className = "h-144 w-full" }: { 
         }
         explorer={
           <div className="flex flex-col gap-group px-inset-item py-inset-item">
+            <section aria-labelledby="recent-notes" className="flex flex-col gap-inline">
+              <h3 id="recent-notes" className="text-meta tracking-meta text-muted-foreground uppercase">
+                Recent
+              </h3>
+              <ul className="flex flex-col">
+                {open.map((slug) => (
+                  <li key={slug}>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      aria-current={slug === current ? "page" : undefined}
+                      onClick={() => openNote(slug)}
+                      className="w-full justify-start font-normal aria-[current]:bg-accent aria-[current]:text-accent-foreground"
+                    >
+                      {titleOf(notes, slug)}
+                    </Button>
+                  </li>
+                ))}
+              </ul>
+            </section>
             {folders.map((folder) => (
               <section key={folder} aria-label={folder} className="flex flex-col gap-inline">
                 <h3 className="flex items-center gap-inline text-meta tracking-meta text-muted-foreground uppercase">
@@ -322,6 +352,7 @@ export default function DocumentWorkspaceDemo({ className = "h-144 w-full" }: { 
               onDirtyChange={(dirty) => dirty && setSaveState("unsaved")}
               resolveWikilink={resolveWikilink}
               onWikilinkClick={onWikilinkClick}
+              suggestWikilinks={suggestWikilinks}
               embedPreview
               renderEmbed={renderEmbed}
               className="min-h-0 flex-1 rounded-none border-0 bg-transparent shadow-none has-[.cm-focused]:ring-0"

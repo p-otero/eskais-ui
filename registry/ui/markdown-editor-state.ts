@@ -18,7 +18,7 @@ import { blockPreview } from "@/components/ui/markdown-editor-blocks"
 import { lineSeparatorExtension, toggleFormat } from "@/components/ui/markdown-editor-commands"
 import { deleteMarker, indentList, outdentList, setHeading } from "@/components/ui/markdown-editor-lines"
 import { livePreview, previewConfig, toggleTaskAt, type PreviewConfig } from "@/components/ui/markdown-editor-preview"
-import { caretOutOfPrefix } from "@/components/ui/markdown-editor-structure"
+import { caretOutOfPrefix, frontmatterEnd } from "@/components/ui/markdown-editor-structure"
 import { markdownEditorTheme } from "@/components/ui/markdown-editor-theme"
 import { markdownExtensions } from "@/components/ui/markdown-syntax"
 
@@ -26,8 +26,13 @@ import { markdownExtensions } from "@/components/ui/markdown-syntax"
 const fromValue = Annotation.define<boolean>()
 
 type CodeLanguages = readonly LanguageDescription[]
+/** `"readonly"` keeps a leading YAML block as it is: edits inside it, or that would break its fences, are dropped. */
+type FrontmatterEditing = "editable" | "readonly"
+/** Where the caret starts: after a leading YAML block (on the line below its closing fence), or at the very start. */
+type InitialCaret = "afterFrontmatter" | "start"
 type EditorSettings = {
   label: string
+  frontmatter?: FrontmatterEditing
   describedBy?: string
   readOnly: boolean
   placeholder?: string
@@ -67,6 +72,27 @@ const attributesSlot = new Compartment()
 const previewSlot = new Compartment()
 const placeholderSlot = new Compartment()
 const nonceSlot = new Compartment()
+const frontmatterSlot = new Compartment()
+
+/**
+ * Drops the part of an edit that falls in the frontmatter or on the line break after its closing fence, so the
+ * block keeps every byte. Text from `value` still replaces it. Typing at the very start, or after a closing fence
+ * that ends the document, would also break a fence, so such a transaction is dropped whole.
+ */
+const protectFrontmatter = EditorState.changeFilter.of((transaction) => {
+  if (!transaction.docChanged || transaction.annotation(fromValue)) return true
+  const { startState } = transaction
+  const end = frontmatterEnd(startState)
+  if (end < 0) return true
+  const guard = Math.min(end + 1, startState.doc.length)
+  let breaksFence = false
+  transaction.changes.iterChangedRanges((from, to) => {
+    if ((from === 0 && to === 0) || (guard === end && from === end)) breaksFence = true
+  })
+  return breaksFence ? false : [0, guard]
+})
+const frontmatterExtension = (editing: FrontmatterEditing = "editable") =>
+  editing === "readonly" ? protectFrontmatter : []
 
 const readOnlyExtension = (readOnly: boolean) => EditorState.readOnly.of(readOnly)
 const attributesExtension = ({ label, describedBy, readOnly }: EditorSettings) =>
@@ -137,8 +163,14 @@ function editorKeymap(hooks: EditorHooks): KeyBinding[] {
   ]
 }
 
-function createEditorState(doc: string, settings: EditorSettings, hooks: EditorHooks, languages = NO_LANGUAGES) {
-  return EditorState.create({
+function createEditorState(
+  doc: string,
+  settings: EditorSettings,
+  hooks: EditorHooks,
+  languages = NO_LANGUAGES,
+  caret: InitialCaret = "afterFrontmatter",
+) {
+  const state = EditorState.create({
     doc,
     extensions: [
       lineSeparatorExtension(doc),
@@ -156,6 +188,7 @@ function createEditorState(doc: string, settings: EditorSettings, hooks: EditorH
       attributesSlot.of(attributesExtension(settings)),
       previewSlot.of(previewConfig.of(settings.preview)),
       placeholderSlot.of(placeholderExtension(settings.placeholder)),
+      frontmatterSlot.of(frontmatterExtension(settings.frontmatter)),
       EditorView.domEventHandlers({
         mousedown(event, view) {
           if (!(event.metaKey || event.ctrlKey) || event.button !== 0) return false
@@ -170,6 +203,9 @@ function createEditorState(doc: string, settings: EditorSettings, hooks: EditorH
       hooks.bridge,
     ],
   })
+  const end = caret === "afterFrontmatter" ? frontmatterEnd(state) : -1
+  if (end < 0) return state
+  return state.update({ selection: { anchor: Math.min(end + 1, state.doc.length) } }).state
 }
 
 function reconfigure(view: EditorView, settings: EditorSettings) {
@@ -180,9 +216,10 @@ function reconfigure(view: EditorView, settings: EditorSettings) {
       previewSlot.reconfigure(previewConfig.of(settings.preview)),
       placeholderSlot.reconfigure(placeholderExtension(settings.placeholder)),
       nonceSlot.reconfigure(nonceExtension(settings.cspNonce)),
+      frontmatterSlot.reconfigure(frontmatterExtension(settings.frontmatter)),
     ],
   })
 }
 
 export { createEditorState, fromValue, reconfigure, toggleTaskOnLine, wikilinkAt }
-export type { CodeLanguages, EditorHooks, EditorSettings }
+export type { CodeLanguages, EditorHooks, EditorSettings, FrontmatterEditing, InitialCaret }

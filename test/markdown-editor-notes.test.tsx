@@ -111,3 +111,60 @@ test("Ctrl/Cmd+click on a wikilink or an embed calls onWikilinkClick with the cl
   expect(onWikilinkClick).toHaveBeenLastCalledWith("roadmap", undefined)
   expect(view.state.sliceDoc()).toBe(note)
 })
+
+const type = (view: EditorView, from: number, to: number, insert: string, userEvent = "input.type") =>
+  act(() => view.dispatch({ changes: { from, to, insert }, userEvent }))
+
+test("the caret starts on the line after the frontmatter, or at the start with initialCaret", async () => {
+  const { unmount } = render(<MarkdownEditor label="Note" defaultValue={note} />)
+  await settle()
+  const after = note.indexOf("# Atlas")
+  // The heading's "# " is a hidden prefix, so the caret lands on its text.
+  expect(editorView().state.selection.main.head).toBe(after + 2)
+  unmount()
+
+  const { unmount: second } = render(<MarkdownEditor label="Note" defaultValue={note} initialCaret="start" />)
+  await settle()
+  expect(editorView().state.selection.main.head).toBe(0)
+  second()
+
+  render(<MarkdownEditor label="Note" defaultValue={"---\r\na: 1\r\n---\r\nbody\r\n"} />)
+  await settle()
+  const view = editorView()
+  expect(view.state.sliceDoc(view.state.selection.main.head)).toBe("body\r\n")
+})
+
+test('frontmatter="readonly" drops edits inside the block and keeps every byte', async () => {
+  const onChange = vi.fn()
+  render(<MarkdownEditor label="Note" defaultValue={note} frontmatter="readonly" onChange={onChange} changeDelay={0} />)
+  await settle()
+  const view = editorView()
+  const end = note.indexOf("\n# Atlas")
+  type(view, 4, 9, "name")
+  type(view, 0, 0, "x")
+  type(view, end, end, "x")
+  type(view, end, end + 1, "", "delete.backward")
+  expect(view.state.sliceDoc()).toBe(note)
+
+  // A change that spans the fence keeps the part outside it.
+  type(view, end - 3, end + 4, "", "delete.selection")
+  expect(view.state.sliceDoc()).toBe(`${note.slice(0, end + 1)}tlas${note.slice(end + 8)}`)
+  type(view, end + 1, end + 1, "# A")
+  expect(view.state.sliceDoc().slice(0, end + 1)).toBe(note.slice(0, end + 1))
+  await act(() => new Promise((resolve) => setTimeout(resolve, 10)))
+  expect(onChange.mock.lastCall?.[0].startsWith(note.slice(0, end + 1))).toBe(true)
+})
+
+test("a new value still replaces readonly frontmatter", async () => {
+  const { rerender } = render(<MarkdownEditor label="Note" value={note} frontmatter="readonly" />)
+  await settle()
+  const next = note.replace("title: Atlas", "title: Atlas 2")
+  rerender(<MarkdownEditor label="Note" value={next} frontmatter="readonly" />)
+  await settle()
+  expect(editorView().state.sliceDoc()).toBe(next)
+  rerender(<MarkdownEditor label="Note" value={next} frontmatter="editable" />)
+  await settle()
+  const view = editorView()
+  type(view, 4, 9, "name")
+  expect(view.state.sliceDoc().startsWith("---\nname: Atlas 2")).toBe(true)
+})

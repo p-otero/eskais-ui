@@ -65,6 +65,7 @@ const Block = memo(
   ({ block }: BlockProps) => block.render(),
   (previous, next) =>
     previous.block.text === next.block.text &&
+    previous.block.anchors === next.block.anchors &&
     previous.references === next.references &&
     previous.options === next.options,
 )

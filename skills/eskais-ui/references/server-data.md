@@ -97,6 +97,7 @@ Every serializer escapes for its grammar, or throws `FilterSerializeError` for w
 - `filterUi`: `"search"` (default with a text field), `"chips"`, `"panel"`; or `toolbar` with your own composition of `FilterSearch`, `FilterChips`, `FilterPanelTrigger`, which find the schema and controller from the table.
 - To drive it from outside: `const { state, controller } = usePageController(source, options)` and pass `controller`.
 - `ServerList` (infinite list of `ListItem` rows) and `ServerCombobox` (remote options, `multiple` chips) follow the same rules.
+- `DocumentQuickOpen source={notes} getItem={(note) => ({ value: note.id, label: note.title, description: note.folder })} onOpen` takes the same source for a notes app's Ctrl/Cmd+P: the query goes out as `filter.q`, debounced, a newer one aborts the last, the server's matches and order are kept (a note found by its body shows although its title lacks the query) and the next page loads at the end. A search that isn't a `PageSource` passes `items`, `filter={false}`, `onQueryChange` and `status` instead.
 
 ## Locale
 

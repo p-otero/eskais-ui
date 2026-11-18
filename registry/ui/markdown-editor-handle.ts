@@ -2,22 +2,34 @@ import { EditorSelection, type EditorState } from "@codemirror/state"
 import { EditorView } from "@codemirror/view"
 
 import {
+  BLOCK_KINDS,
   FORMATS,
   insertAtCaret,
+  insertBlock,
   insertLink,
   insertWikilink,
   toggleFormat,
   wrapSelection,
+  type MarkdownBlockKind,
   type MarkdownFormat,
 } from "@/components/ui/markdown-editor-commands"
 import { setHeading } from "@/components/ui/markdown-editor-lines"
 
 const LEVELS = ["paragraph", "heading1", "heading2", "heading3", "heading4", "heading5", "heading6"] as const
 
-/** The toolbar's commands: its formats and the levels of its text style menu. */
-type MarkdownEditorCommand = MarkdownFormat | (typeof LEVELS)[number]
+/** The toolbar's and the slash menu's commands: formats, levels (`paragraph`, `heading1`…) and blocks. */
+type MarkdownEditorCommand = MarkdownFormat | (typeof LEVELS)[number] | MarkdownBlockKind
 
-const COMMANDS: readonly MarkdownEditorCommand[] = [...FORMATS, ...LEVELS]
+const COMMANDS: readonly MarkdownEditorCommand[] = [...FORMATS, ...LEVELS, ...BLOCK_KINDS]
+
+/** How `insertText` reports the edit. `"input.type"` counts as typing, so a trigger such as `[[` opens its menu. */
+type InsertTextOptions = { userEvent?: string }
+
+/** What the handle needs from the editor's menus. */
+type HandleMenus = {
+  /** Opens the wikilink listbox, typing `[[` at the caret unless one is there; false without `suggestWikilinks`. */
+  openWikilinkSuggestions: () => boolean
+}
 
 /** Offsets count characters of the Markdown string, as `getValue()` returns it, line breaks included. */
 type MarkdownSelection = { anchor: number; head: number; from: number; to: number; text: string }
@@ -32,15 +44,32 @@ type MarkdownEditorHandle = {
   getSelection: () => MarkdownSelection
   /** Selects from `anchor` to `head` (a caret when `head` is left out), clamped to the text, and scrolls to it. */
   setSelection: (anchor: number, head?: number) => void
-  /** Inserts at the caret without replacing the selection, and puts the caret after it. */
-  insertText: (text: string) => boolean
+  /**
+   * Inserts at the caret without replacing the selection, and puts the caret after it. The edit is a plain
+   * `"input"` unless `userEvent` says otherwise: `{ userEvent: "input.type" }` counts as typing, so a trigger such
+   * as `[[` or `/` opens its menu.
+   */
+  insertText: (text: string, options?: InsertTextOptions) => boolean
+  /**
+   * Focuses the editor and opens the wikilink suggestions at the caret, typing `[[` first unless the caret already
+   * follows one. Returns false, and changes nothing, when the editor is read-only or has no `suggestWikilinks`.
+   */
+  openWikilinkSuggestions: () => boolean
   insertWikilink: (target: string, alias?: string) => boolean
   /** Replaces the selection with `[text](href)`; without `text`, the selected text or the address is the label. */
   insertLink: (href: string, text?: string) => boolean
   /** Puts `before` and `after` (`before` again when left out) around the selection, which stays on the text. */
   wrapSelection: (before: string, after?: string) => boolean
-  /** Runs a toolbar command: a format (`bold`, `quote`, `taskList`…) or a level (`paragraph`, `heading1`…). */
+  /**
+   * Runs a command of the toolbar or the slash menu: a format (`bold`, `quote`, `taskList`…), a level
+   * (`paragraph`, `heading1`…) or a block (`codeBlock`, `table`, `divider`). Throws a RangeError on any other name.
+   */
   runCommand: (name: MarkdownEditorCommand) => boolean
+  /**
+   * Inserts a block as the slash menu does, in place of the selection: after a blank line when text comes before
+   * it, with the caret in the code fence, the first cell, or after the rule.
+   */
+  insertBlock: (kind: MarkdownBlockKind) => boolean
   /** Scrolls a line (from 1) to the top of the editor, without moving the caret. */
   scrollToLine: (line: number) => void
   /** The first line in view, from 1. */
@@ -78,11 +107,12 @@ function runCommand(view: EditorView, name: MarkdownEditorCommand) {
   if (!COMMANDS.includes(name)) {
     throw new RangeError(`Unknown command "${String(name)}". Commands: ${COMMANDS.join(", ")}.`)
   }
+  if ((BLOCK_KINDS as readonly string[]).includes(name)) return insertBlock(view, name as MarkdownBlockKind)
   const level = (LEVELS as readonly string[]).indexOf(name)
   return level >= 0 ? setHeading(view, level) : toggleFormat(view, name as MarkdownFormat)
 }
 
-function createEditorHandle(view: EditorView): MarkdownEditorHandle {
+function createEditorHandle(view: EditorView, menus: HandleMenus): MarkdownEditorHandle {
   return {
     focus: () => view.focus(),
     getValue: () => view.state.sliceDoc(),
@@ -105,11 +135,13 @@ function createEditorHandle(view: EditorView): MarkdownEditorHandle {
         scrollIntoView: true,
       })
     },
-    insertText: (text) => insertAtCaret(view, String(text)),
+    insertText: (text, options) => insertAtCaret(view, String(text), options?.userEvent ?? "input"),
+    openWikilinkSuggestions: () => menus.openWikilinkSuggestions(),
     insertWikilink: (target, alias) => insertWikilink(view, String(target), alias),
     insertLink: (href, text) => insertLink(view, String(href), text),
     wrapSelection: (before, after) => wrapSelection(view, String(before), after),
     runCommand: (name) => runCommand(view, name),
+    insertBlock: (kind) => insertBlock(view, kind),
     scrollToLine: (line) => {
       const { doc } = view.state
       const number = Math.max(1, Math.min(Math.trunc(Number(line)) || 1, doc.lines))
@@ -124,4 +156,5 @@ function createEditorHandle(view: EditorView): MarkdownEditorHandle {
 }
 
 export { createEditorHandle, runCommand, toEditorPos, toOffset }
-export type { MarkdownEditorCommand, MarkdownEditorHandle, MarkdownSelection }
+export type { MarkdownBlockKind }
+export type { HandleMenus, InsertTextOptions, MarkdownEditorCommand, MarkdownEditorHandle, MarkdownSelection }

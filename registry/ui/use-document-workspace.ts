@@ -4,6 +4,7 @@ import { useEffect, useEffectEvent, useLayoutEffect, useRef, useState, type RefO
 
 import type { ResizableController } from "@/components/ui/resizable"
 import {
+  findHeading,
   readHeadings,
   type DocumentEditor,
   type DocumentHeading,
@@ -115,6 +116,17 @@ function usePanel({ narrow, open, setOpen, controller, panelId }: PanelOptions) 
   return { drawerOpen: narrow && open && allowed }
 }
 
+/** Calls `onChange` after a render where `key` differs from the one before; never on mount. */
+function useOnKeyChange(key: unknown, onChange: () => void) {
+  const changed = useEffectEvent(onChange)
+  const previous = useRef(key)
+  useEffect(() => {
+    if (Object.is(previous.current, key)) return
+    previous.current = key
+    changed()
+  }, [key])
+}
+
 type ModeScrollOptions = {
   mode: DocumentWorkspaceMode
   headings: readonly DocumentHeading[]
@@ -166,8 +178,8 @@ function eachFrame(step: () => boolean) {
   return () => cancelAnimationFrame(frame)
 }
 
-function revealHeading(container: HTMLElement | null, index: number) {
-  const target = readHeadings(container)[index]
+function revealHeading(container: HTMLElement | null, heading: DocumentHeading | number) {
+  const target = findHeading(container, heading)
   if (!container || !target) return
   scrollToElement(container, target)
   if (!target.hasAttribute("tabindex")) target.tabIndex = -1
@@ -190,7 +202,11 @@ function useModeScroll({ mode, headings, editorRef, documentRef }: ModeScrollOpt
     const container = documentRef.current
     if (!container) return
     const top = container.getBoundingClientRect().top + 4
-    pending.current = readHeadings(container).findLastIndex((heading) => heading.getBoundingClientRect().top <= top)
+    const rendered = readHeadings(container)
+    const index = rendered.findLastIndex((heading) => heading.getBoundingClientRect().top <= top)
+    const slug = rendered[index]?.dataset.slug
+    const bySlug = slug === undefined ? -1 : headings.findIndex((heading) => heading.slug === slug)
+    pending.current = bySlug >= 0 ? bySlug : index
   }
 
   const restore = useEffectEvent((index: number, to: DocumentWorkspaceMode) => {
@@ -198,7 +214,7 @@ function useModeScroll({ mode, headings, editorRef, documentRef }: ModeScrollOpt
     return eachFrame(() => {
       if (to === "read") {
         const container = documentRef.current
-        const target = readHeadings(container)[index]
+        const target = index >= 0 ? findHeading(container, headings[index] ?? index) : undefined
         if (!container || (!target && index >= 0)) return false
         if (target) scrollToElement(container, target)
         else container.scrollTop = 0
@@ -229,6 +245,7 @@ export {
   useContainerNarrow,
   useControllable,
   useModeScroll,
+  useOnKeyChange,
   usePanel,
   watchLostFocus,
   writePanels,
