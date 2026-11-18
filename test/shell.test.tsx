@@ -562,3 +562,40 @@ test('main="fill" gives main the column height, and a route\'s main overrides it
   rerender(<TestShell routes={editorRoutes} currentHref="/inbox" />)
   expect(main.getAttribute("data-main")).toBe("flow")
 })
+
+test("searchFooter sits at the bottom of the palette, after the list; there is none by default", async () => {
+  const user = userEvent.setup()
+  const { unmount } = render(<TestShell />)
+  await settle()
+  await user.keyboard("{Control>}k{/Control}")
+  await settle()
+  expect(document.querySelector("[data-slot=command-footer]")).toBeNull()
+  unmount()
+
+  const { baseElement } = render(
+    <TestShell
+      searchFooter={
+        <>
+          <span>
+            <kbd>↑</kbd> <kbd>↓</kbd> move
+          </span>
+          <span>
+            <kbd>Esc</kbd> close
+          </span>
+        </>
+      }
+    />,
+  )
+  await settle()
+  await user.keyboard("{Control>}k{/Control}")
+  await settle()
+  const dialog = screen.getByRole("dialog")
+  const footer = dialog.querySelector("[data-slot=command-footer]")!
+  expect(footer.textContent).toBe("↑ ↓ moveEsc close")
+  const list = within(dialog).getByRole("listbox")
+  expect(list.compareDocumentPosition(footer)).toBe(Node.DOCUMENT_POSITION_FOLLOWING)
+  expect(await axeViolations(baseElement)).toEqual([])
+  await user.keyboard("{Escape}")
+  await settle(50)
+  expect(screen.queryByRole("dialog")).toBeNull()
+})

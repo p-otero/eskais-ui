@@ -7,6 +7,7 @@ import type { ShellRouteSection } from "@/components/ui/shell-routes"
 import {
   Command,
   CommandEmpty,
+  CommandFooter,
   CommandGroup,
   CommandGroupLabel,
   CommandInput,
@@ -35,6 +36,8 @@ type ShellSearchProps = {
   /** The search text each open starts from, when `query` doesn't control it. Empty by default. */
   defaultQuery?: string
   onQueryChange?: CommandProps["onQueryChange"]
+  /** Under the list, like key hints. Nothing by default. */
+  footer?: ReactNode
 }
 
 function ShellSearch({
@@ -48,6 +51,7 @@ function ShellSearch({
   query,
   defaultQuery,
   onQueryChange,
+  footer,
 }: ShellSearchProps) {
   const run = async (value: string) => {
     if (value.startsWith(goToPrefix)) {
@@ -99,6 +103,7 @@ function ShellSearch({
             </CommandGroup>
             {commandGroups}
           </CommandList>
+          {footer !== undefined && <CommandFooter>{footer}</CommandFooter>}
         </Command>
       </CommandDialogContent>
     </CommandDialog>

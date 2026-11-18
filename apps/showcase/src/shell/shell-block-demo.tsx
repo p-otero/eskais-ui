@@ -16,6 +16,7 @@ import { Shell, type ShellRoute, type ShellRouteGroup } from "@/components/ui/sh
 import { Button } from "@/components/ui/button"
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { DocumentWorkspace } from "@/components/ui/document-workspace"
+import { Kbd } from "@/components/ui/kbd"
 import { CommandGroup, CommandGroupLabel, CommandItem, CommandItemIcon } from "@/components/ui/command"
 import { PageHeader } from "@/components/ui/page-header"
 import { PageLayout } from "@/components/ui/page-layout"
@@ -70,6 +71,19 @@ function ShellBlockDemo() {
         storageKey="showcase-shell"
         sidebarShortcut="mod+b"
         main={fillMode ? "fill" : "flow"}
+        searchFooter={
+          <>
+            <span className="inline-flex items-center gap-inline">
+              <Kbd>↑</Kbd>
+              <Kbd>↓</Kbd>
+              navigate
+            </span>
+            <span className="inline-flex items-center gap-inline">
+              <Kbd>Esc</Kbd>
+              close
+            </span>
+          </>
+        }
         sidebarHeader={<p className="truncate px-inset-item text-caption text-muted-foreground">Acme workspace</p>}
         labels={{ searchPlaceholder: "Pages and commands" }}
         brand={<span className="text-title-sm narrow:sr-only">Acme</span>}

@@ -23,7 +23,7 @@ import { SearchIcon } from "lucide-react"
 import { isHashRoute, useFastLink } from "@/components/ui/fast-link"
 import { Kbd } from "@/components/ui/kbd"
 import { isPlainClick } from "@/components/ui/link-primitive"
-import { cnState } from "@/lib/utils"
+import { cn, cnState } from "@/lib/utils"
 
 type CommandHost = {
   /** Whether the dialog around the command list is open. */
@@ -245,6 +245,20 @@ function CommandSeparator({ className, ...props }: ComponentProps<typeof Command
   return <CommandSeparatorPrimitive className={cnState("-mx-inline my-inline h-px bg-border", className)} {...props} />
 }
 
+/** A line under the list, for hints like the keys that move and close. Plain content, not a control. */
+function CommandFooter({ className, ...props }: ComponentProps<"div">) {
+  return (
+    <div
+      data-slot="command-footer"
+      className={cn(
+        "flex flex-wrap items-center gap-x-group gap-y-inline border-t px-control-x py-inset-item text-caption text-muted-foreground",
+        className,
+      )}
+      {...props}
+    />
+  )
+}
+
 function CommandShortcut({ className, ...props }: ComponentProps<typeof CommandShortcutPrimitive>) {
   return (
     <CommandShortcutPrimitive
@@ -258,6 +272,7 @@ function CommandShortcut({ className, ...props }: ComponentProps<typeof CommandS
 export {
   Command,
   CommandEmpty,
+  CommandFooter,
   CommandGroup,
   CommandGroupLabel,
   CommandHostContext,

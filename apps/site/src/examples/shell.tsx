@@ -13,6 +13,7 @@ import {
 
 import { Shell, type ShellRoute, type ShellRouteGroup } from "@/components/ui/shell"
 import { Button } from "@/components/ui/button"
+import { Kbd } from "@/components/ui/kbd"
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Field, FieldLabel } from "@/components/ui/field"
 import { PageHeader } from "@/components/ui/page-header"
@@ -90,6 +91,19 @@ export default function ShellDemo() {
           // The docs site already opens its own search with ⌘K.
           searchShortcut={false}
           brand={<span className="text-title-sm narrow:sr-only">Acme</span>}
+          searchFooter={
+            <>
+              <span className="inline-flex items-center gap-inline">
+                <Kbd>↑</Kbd>
+                <Kbd>↓</Kbd>
+                navigate
+              </span>
+              <span className="inline-flex items-center gap-inline">
+                <Kbd>Esc</Kbd>
+                close
+              </span>
+            </>
+          }
           sidebarHeader={<p className="truncate px-inset-item text-caption text-muted-foreground">Acme workspace</p>}
           actions={
             <Button variant="ghost" size="icon" aria-label="Notifications (example)">

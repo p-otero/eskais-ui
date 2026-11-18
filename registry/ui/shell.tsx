@@ -128,6 +128,8 @@ type ShellProps<Route extends ShellRoute = ShellRoute> = Omit<ComponentProps<"di
   /** The search text each open of the palette starts from, when `searchQuery` doesn't control it. */
   defaultSearchQuery?: string
   onSearchQueryChange?: ShellSearchProps["onQueryChange"]
+  /** At the bottom of the palette, like key hints (`<Kbd>↑</Kbd><Kbd>↓</Kbd>` and their words). Nothing by default. */
+  searchFooter?: ReactNode
   /**
    * `fill` gives `<main>` the height left under the topbar and above the bottom bar (`--shell-column-height`), so a
    * page like a DocumentWorkspace fills it with `h-full`; its content scrolls inside. `flow` (default) lets the page
@@ -178,6 +180,7 @@ function Shell<Route extends ShellRoute>({
   searchQuery,
   defaultSearchQuery,
   onSearchQueryChange,
+  searchFooter,
   main = "flow",
   mainId = "main",
   as: Main = "main",
@@ -266,6 +269,7 @@ function Shell<Route extends ShellRoute>({
           query={searchQuery}
           defaultQuery={defaultSearchQuery}
           onQueryChange={onSearchQueryChange}
+          footer={searchFooter}
         />
         <div data-slot="shell-body" className="flex min-w-0 flex-1 items-start" style={columns}>
           <div
