@@ -132,6 +132,8 @@ const categories = [
   {
     name: "Agent tasks",
     items: [
+      "conversation",
+      "activity-log",
       "agent-task-board",
       "agent-task-board-core",
       "task-card",

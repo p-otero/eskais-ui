@@ -4855,6 +4855,72 @@
       ]
     },
     {
+      "name": "conversation",
+      "type": "registry:ui",
+      "title": "Conversation",
+      "description": "A chat or agent thread: a role=\"log\" that follows new messages while the reader is at the end, stops when they scroll up and shows a \"new below\" pill that jumps back (smooth unless reduced motion), keeps a streaming message in view, loads older messages above without moving the view, and server renders. ConversationMessage is an article named by its author, with avatar, relative time and data-from (user, assistant, agent, system, tool); ConversationComposer composes Textarea and Button. Agents read messages and call jumpToLatest.",
+      "docs": "`<Conversation label=\"Thread with Atlas\" composer={<ConversationComposer onSend={send} />}>{messages.map((m) => <ConversationMessage key={m.id} messageId={m.id} from={m.from} author={m.author} avatar={…} time={m.at} now={now} streaming={m.streaming}>{m.text}</ConversationMessage>)}</Conversation>`. Give it a bounded height (it fills its parent). It renders every message: keep a window of the newest few hundred in state and pass `hasOlder` and `onLoadOlder` (add the older ones in one update) for longer threads. A streaming message sets `aria-busy`, so screen readers read it once it is whole. `useConversation()` inside it returns `jumpToLatest`, `release` and `loadOlder`. Labels (`newBelow(count)`, `jumpToLatest`, `loadOlder`, the composer's `message` and `send`, and the screen-reader names per role) are overridable.",
+      "dependencies": [
+        "@ui-sdk/core@0.1.0-beta.5",
+        "@ui-sdk/react@0.1.0-beta.5",
+        "lucide-react@^1.68.0"
+      ],
+      "registryDependencies": [
+        "@eskais/utils",
+        "@eskais/theme",
+        "@eskais/button",
+        "@eskais/textarea",
+        "@eskais/relative-time"
+      ],
+      "files": [
+        {
+          "path": "registry/ui/conversation-primitive.ts",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/conversation.tsx",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/conversation-composer.tsx",
+          "type": "registry:ui"
+        }
+      ]
+    },
+    {
+      "name": "activity-log",
+      "type": "registry:ui",
+      "title": "Activity Log",
+      "description": "Who changed what, and when, with undo: createActivityLog records the page's UI SDK control changes (from people, agents and the app) and the app's own records, and steps back and forward through them. ActivityLog lists them newest first; pressing an entry seeks to it, Undo and Redo bind Cmd/Ctrl+Z and Shift+Cmd/Ctrl+Z outside text fields, and undoToast shows a toast with Undo. Agents call undo, redo and seek; a seek that undoes more than confirmAbove entries needs a person (data-agent-confirm).",
+      "docs": "Create the log once in the browser, with the app's agent bridge, before the controls render: `const log = createActivityLog(agent, { within, describe })`. Then `<ActivityLog log={log} label=\"Activity\" header={…} />`. `log.record({ label, description, actor, undo, redo })` adds a change of the app's own, like a task an agent moved. `log.undo()`, `redo()`, `seek(n)` (0 is the start) and `undoActor(\"agent\")` resolve with what they couldn't put back; restoring goes through the bridge, so permissions and change callbacks still apply, and a password, card or one-time-code field is never put back. It wraps UI SDK's experimental history helpers behind its own types. Entries read UI SDK's English sentences unless you pass `describe`; every label is overridable.",
+      "dependencies": [
+        "@ui-sdk/core@0.1.0-beta.5",
+        "@ui-sdk/react@0.1.0-beta.5",
+        "lucide-react@^1.68.0"
+      ],
+      "registryDependencies": [
+        "@eskais/utils",
+        "@eskais/theme",
+        "@eskais/button",
+        "@eskais/relative-time",
+        "@eskais/toast"
+      ],
+      "files": [
+        {
+          "path": "registry/ui/activity-log-store.ts",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/activity-log-primitive.ts",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/activity-log.tsx",
+          "type": "registry:ui"
+        }
+      ]
+    },
+    {
       "name": "inbox",
       "type": "registry:block",
       "title": "Inbox",
@@ -5062,6 +5128,11 @@
           "path": "skills/eskais-ui/references/server-data.md",
           "type": "registry:file",
           "target": "~/.agents/skills/eskais-ui/references/server-data.md"
+        },
+        {
+          "path": "skills/eskais-ui/references/conversation-and-activity.md",
+          "type": "registry:file",
+          "target": "~/.agents/skills/eskais-ui/references/conversation-and-activity.md"
         }
       ]
     },

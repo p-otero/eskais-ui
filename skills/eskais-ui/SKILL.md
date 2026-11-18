@@ -9,15 +9,16 @@ Eskais UI components are UI SDK parts styled with Tailwind v4 and semantic token
 
 Read a component's own file before you use it: the props, variants and the comment at the top are the API. This file says which component to reach for; the references say how the bigger ones work.
 
-| Read                                 | When                                                                                    |
-| ------------------------------------ | --------------------------------------------------------------------------------------- |
-| `references/forms.md`                | any form: fields, validation, server errors, dialogs, steps, floating labels            |
-| `references/lists-and-navigation.md` | links, keyboard shortcuts, long lists and tables, a ⌘K search                           |
-| `references/styling.md`              | spacing, tone, elevation, layers, motion, touch targets, narrow screens, type and icons |
-| `references/toasts-and-testing.md`   | toasts, and testing toasts and alerts with Testing Library                              |
-| `references/data-display.md`         | description lists, stat deltas, ring meters and value formats, table cells, chart data  |
-| `references/agent-task-board.md`     | the AgentTaskBoard and its pieces                                                       |
-| `references/server-data.md`          | tables, lists and comboboxes over a backend: sources, filters, wire formats, the URL    |
+| Read                                      | When                                                                                    |
+| ----------------------------------------- | --------------------------------------------------------------------------------------- |
+| `references/forms.md`                     | any form: fields, validation, server errors, dialogs, steps, floating labels            |
+| `references/lists-and-navigation.md`      | links, keyboard shortcuts, long lists and tables, a ⌘K search                           |
+| `references/styling.md`                   | spacing, tone, elevation, layers, motion, touch targets, narrow screens, type and icons |
+| `references/toasts-and-testing.md`        | toasts, and testing toasts and alerts with Testing Library                              |
+| `references/data-display.md`              | description lists, stat deltas, ring meters and value formats, table cells, chart data  |
+| `references/agent-task-board.md`          | the AgentTaskBoard and its pieces                                                       |
+| `references/conversation-and-activity.md` | a chat or agent thread, and an activity log with undo                                   |
+| `references/server-data.md`               | tables, lists and comboboxes over a backend: sources, filters, wire formats, the URL    |
 
 Keeping screens fast (long lists, effects, React Compiler, motion) has its own skill, `eskais-perf`; building a throwaway mockup of a screen has `eskais-mockup`. Both install with `npx shadcn@latest add @eskais/eskais-perf-skill @eskais/eskais-mockup-skill`.
 
@@ -84,6 +85,8 @@ Each line is a need, then what to use. Props are listed by name; read the compon
 - **Tokens and cost**: `UsageGrid` (dense tiles, for a detail view), `UsageTable` (rows, side-by-side columns) or `UsageStat`; unknown stays `—`
 - **An agent task's attempts**: `AttemptTimeline`; older attempts collapse past five
 - **Approve or reject a proposal**: `ProposalActions` with `agentApproval` (`"confirm"` by default, `"allow"`, `"deny"`)
+- **A chat or agent thread**: `Conversation label composer` of `ConversationMessage from author avatar time streaming`, `ConversationComposer onSend`: follows the newest message, a new-below pill when scrolled up; see `references/conversation-and-activity.md`
+- **Who changed what, with undo**: `createActivityLog(agent, { within })` once in the browser, `ActivityLog log label`, `log.record(…)` for your own data, `undoToast`; agents get `undo`, `redo`, `seek`; see `references/conversation-and-activity.md`
 - **A whole board of agent tasks**: `AgentTaskBoard` with `tasks` and `mode`; see `references/agent-task-board.md`
 - **One agent task, compact**: `TaskCard` (selects through a stretched button; chips and proposal buttons stay their own tab stops)
 - **One agent task, in full**: `TaskDetailDialog` (modal, or `presentation="drawer"`) or `TaskDetailPanel` (non-modal); Escape and a close button call `onClose`
