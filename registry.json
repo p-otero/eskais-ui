@@ -1266,6 +1266,31 @@
       ]
     },
     {
+      "name": "password-input",
+      "type": "registry:ui",
+      "title": "Password Input",
+      "description": "UI SDK PasswordInput styled as a field: a reveal toggle as an icon button with a tooltip that keeps its name while aria-pressed says whether the password shows, floating labels and FormField binding.",
+      "docs": "`<PasswordInput autoComplete>` in a `Field`: with no children it renders `PasswordInputControl` and `PasswordInputToggle`; compose them to pass input attributes such as `placeholder`. `autoComplete=\"current-password\"` to sign in, `\"new-password\"` to sign up. The toggle is named \"Show password\" (override with `aria-label`) and keeps that name while `aria-pressed` says the password shows; the icon swaps between an eye and a struck eye. A pointer press keeps focus in the field. Submitting, resetting or leaving the page hides it again. `data-capslock` marks the field while Caps Lock is on, for a warning of your own. `labelPlacement=\"in\"`/`\"on\"` float the Field's label, and `FormField` binds the value.",
+      "dependencies": [
+        "@ui-sdk/core@0.1.0-beta.5",
+        "@ui-sdk/react@0.1.0-beta.5",
+        "lucide-react@^1.68.0"
+      ],
+      "registryDependencies": [
+        "@eskais/utils",
+        "@eskais/theme",
+        "@eskais/field",
+        "@eskais/input",
+        "@eskais/tooltip"
+      ],
+      "files": [
+        {
+          "path": "registry/ui/password-input.tsx",
+          "type": "registry:ui"
+        }
+      ]
+    },
+    {
       "name": "search-field",
       "type": "registry:ui",
       "title": "Search Field",
@@ -1286,6 +1311,33 @@
         },
         {
           "path": "registry/ui/search-field.tsx",
+          "type": "registry:ui"
+        }
+      ]
+    },
+    {
+      "name": "inline-edit",
+      "type": "registry:ui",
+      "title": "Inline Edit",
+      "description": "Rename in place, built with definePrimitive on UI SDK's createInlineEdit: a press, Enter, F2 or typing turns the text into a field; Enter and Tab save, Escape puts it back, blur saves or cancels; validate keeps editing; agents rename(text) and cancel.",
+      "docs": "`<InlineEdit label value defaultValue onValueChange validate blur startOn editButton labels size>` for a title, a list item or a tab's name. The text is a button described by `labels.hint` (\"Press Enter or F2 to rename\"); a press (or only a double click with `startOn=\"double-click\"`, leaving a press to the row), Enter, F2 or a printable key turns it into a field named by `label`, filled with the text and selected. Enter and Tab save, Escape puts the text back, and focus returns to the text after Enter or Escape. Leaving the field saves (`blur=\"commit\"`, the default) or puts the text back (`blur=\"cancel\"`). `validate(text)` returning `false` keeps editing. `onValueChange(value, details)` reports `enter-key`, `tab-key`, `focus-out` or, for an agent, `imperative` with `source: \"agent\"`, and can cancel. `size` (`body`, `title-sm`, `title`) sizes the text and the field alike, so nothing moves. `editButton` adds a pencil named by `labels.edit(label)` with a tooltip, shown on hover and focus and always on touch. Agents find it by `label` and call `rename(text)` or `cancel`. Inside a tab or a row that is itself a button, compose `InlineEditRoot`, `InlineEditDisplay` (with `render`), `InlineEditInput` and `InlineEditTrigger` so controls don't nest.",
+      "dependencies": [
+        "@ui-sdk/core@0.1.0-beta.5",
+        "@ui-sdk/react@0.1.0-beta.5",
+        "lucide-react@^1.68.0"
+      ],
+      "registryDependencies": [
+        "@eskais/utils",
+        "@eskais/theme",
+        "@eskais/tooltip"
+      ],
+      "files": [
+        {
+          "path": "registry/ui/inline-edit-primitive.ts",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/inline-edit.tsx",
           "type": "registry:ui"
         }
       ]
@@ -1340,6 +1392,33 @@
         }
       ],
       "docs": "`<ConfirmDialog trigger title description confirmLabel onConfirm>`: a returned Promise keeps it open and pending, a rejection shows its message (`renderError`). `tone=\"destructive\"` requires `agentConfirm`. Children render as a callout under the description, an Alert in the dialog's tone (`destructive`, or `info` for the default tone; `calloutTone` overrides) that screen readers hear with the description. `labels={{ cancel }}` names the cancel button, \"Cancel\" by default; `cancelLabel` is deprecated. `triggerDisabled` stops the trigger and `triggerPending` shows `Button loading`'s spinner with `aria-busy` while the trigger keeps focus, for work already running; while either is set the dialog refuses to open, an agent's `setOpen` included."
+    },
+    {
+      "name": "confirm-button",
+      "type": "registry:ui",
+      "title": "Confirm Button",
+      "description": "A button that asks twice, built with definePrimitive: the first press arms it (data-armed, its text and name become labels.armed, announced), the second runs onConfirm; it disarms on a timeout, Escape or blur with change reasons, can confirm on a hold, and carries data-agent-confirm.",
+      "docs": "`<ConfirmButton agentConfirm onConfirm timeout hold variant size labels>` with the idle content as children. The first press arms it: `data-armed`, the destructive fill, and the text (and so the name) becomes `armedChildren` or `labels.armed` (\"Press again to confirm\"), read politely to screen readers; both contents share one grid cell, so the width holds. The second press runs `onConfirm({ reason, event })`; a returned Promise sets `aria-busy` and `data-pending` with a spinner until it settles. `onArmedChange(armed, details)` reports `trigger-press`, `timeout` (after `timeout` ms, 4000 by default, 0 for never), `escape-key` (Escape only while armed, so a dialog around an idle button still closes), `focus-out` and `confirm`; `details.cancel()` keeps it idle, and `armed`/`defaultArmed` control it. `hold={ms}` also confirms on a held pointer, Enter or Space, filling the button over `--confirm-hold-duration`; a second press still works, for people who can't hold. `agentConfirm` becomes `data-agent-confirm`, so an agent's `confirm` waits for a person through `allow`. For a decision that needs explaining, use `ConfirmDialog`.",
+      "dependencies": [
+        "@ui-sdk/core@0.1.0-beta.5",
+        "@ui-sdk/react@0.1.0-beta.5"
+      ],
+      "registryDependencies": [
+        "@eskais/utils",
+        "@eskais/theme",
+        "@eskais/button",
+        "@eskais/spinner"
+      ],
+      "files": [
+        {
+          "path": "registry/ui/confirm-button-primitive.ts",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/confirm-button.tsx",
+          "type": "registry:ui"
+        }
+      ]
     },
     {
       "name": "form",
@@ -2029,6 +2108,32 @@
       "files": [
         {
           "path": "registry/ui/combobox.tsx",
+          "type": "registry:ui"
+        }
+      ]
+    },
+    {
+      "name": "autocomplete",
+      "type": "registry:ui",
+      "title": "Autocomplete",
+      "description": "UI SDK Autocomplete styled as a field: free text with suggestions that filter as you type, matches marked, Clear and Trigger buttons with tooltips, async suggestions through useAsyncOptions, floating labels and FormField binding.",
+      "docs": "`<Autocomplete items>` with `<AutocompleteControl>` (the field's box) around `AutocompleteInput`, `AutocompleteClear` and `AutocompleteTrigger`, then `<AutocompleteContent>` with `AutocompleteEmpty`, `AutocompleteStatus` and `AutocompleteList` (renders `items`, or your `AutocompleteItem`s with `AutocompleteItemText`, which marks the match). The value is the text: any text is valid, a suggestion only fills it in; use `Combobox` when the value must be an option. `autoHighlight`, `inlineComplete`, `openOnFocus`, `emptyItems` (recent searches) and `submitOnSelect` with `onSubmit` are UI SDK's. For a server, `useAsyncOptions(load, { debounce })` (re-exported here): pass its `items` and `status`, `filter={false}`, and `setQuery` in `onValueChange`. In a `Field` the label names the input and `labelPlacement=\"in\"`/`\"on\"` float it; `FormField` binds the text. Clear and Trigger are named \"Clear\" and \"Show suggestions\", overridable with `aria-label`.",
+      "dependencies": [
+        "@ui-sdk/core@0.1.0-beta.5",
+        "@ui-sdk/react@0.1.0-beta.5",
+        "lucide-react@^1.68.0"
+      ],
+      "registryDependencies": [
+        "@eskais/utils",
+        "@eskais/theme",
+        "@eskais/field",
+        "@eskais/input",
+        "@eskais/select",
+        "@eskais/tooltip"
+      ],
+      "files": [
+        {
+          "path": "registry/ui/autocomplete.tsx",
           "type": "registry:ui"
         }
       ]
@@ -2984,6 +3089,28 @@
       ]
     },
     {
+      "name": "rating",
+      "type": "registry:ui",
+      "title": "Rating",
+      "description": "UI SDK Rating styled as stars that fill to the score: half stars, averages that fill part of a star, a pointer preview, sizes and 44px stars on touch screens.",
+      "docs": "`<Rating defaultValue step max deselectable size>` in a `Field` (the label names the radio group), or with `aria-label`. Each star is `icon` (lucide's star by default) drawn twice, an outline in `input-strong` and a filled copy in the warning colour clipped to `--rating-fill`, so `step={0.5}` and a read-only average like 4.2 fill part of a star (from the inline end in right to left). `size` is `sm`, `md` or `lg`; on a coarse pointer each star is a 44px box. `readOnly` with `getValueLabel` shows a score as one image. Children (`RatingItem icon`, or your own) replace the stars. In UI SDK 0.1.0-beta.5 a read-only rating keeps hidden radio buttons inside its image, which axe reports as nested-interactive.",
+      "dependencies": [
+        "@ui-sdk/core@0.1.0-beta.5",
+        "@ui-sdk/react@0.1.0-beta.5",
+        "lucide-react@^1.68.0"
+      ],
+      "registryDependencies": [
+        "@eskais/utils",
+        "@eskais/theme"
+      ],
+      "files": [
+        {
+          "path": "registry/ui/rating.tsx",
+          "type": "registry:ui"
+        }
+      ]
+    },
+    {
       "name": "toggle",
       "type": "registry:ui",
       "title": "Toggle",
@@ -3208,6 +3335,53 @@
       "files": [
         {
           "path": "registry/ui/date-picker.tsx",
+          "type": "registry:ui"
+        }
+      ]
+    },
+    {
+      "name": "date-input",
+      "type": "registry:ui",
+      "title": "Date Input",
+      "description": "UI SDK DateInput styled as a field: a date typed segment by segment in the locale's order, ISO values, min, max and unavailable dates marked invalid, floating labels and FormField binding.",
+      "docs": "`<DateInput defaultValue min max unavailable locale granularity>` in a `Field`: the label names the group, each segment is a small input in the locale's order (`locale`, or the page's), and the value is an ISO date (`\"2026-11-02\"`, or `\"2026-11-02T14:30\"` with `granularity=\"minute\"`), `null` until every segment is filled. A date outside `min`/`max` or on an `unavailable` date sets `data-invalid` and the destructive edge. Paste a whole date into any segment. `labelPlacement=\"in\"`/`\"on\"` float the Field's label (the empty segments' placeholders show only while one is focused) and `FormField` binds the value. Use `DatePicker` when people should also pick from a calendar.",
+      "dependencies": [
+        "@ui-sdk/core@0.1.0-beta.5",
+        "@ui-sdk/react@0.1.0-beta.5"
+      ],
+      "registryDependencies": [
+        "@eskais/utils",
+        "@eskais/theme",
+        "@eskais/field",
+        "@eskais/input"
+      ],
+      "files": [
+        {
+          "path": "registry/ui/date-input.tsx",
+          "type": "registry:ui"
+        }
+      ]
+    },
+    {
+      "name": "color-picker",
+      "type": "registry:ui",
+      "title": "Color Picker",
+      "description": "UI SDK ColorPicker styled: an area (painted on a canvas in OKLCH), hue and alpha sliders, a swatch, a text field for any CSS colour, channel inputs, presets and an eye dropper with a tooltip.",
+      "docs": "`<ColorPicker defaultValue space format gamut>` in a `Field`, or with `aria-label`. With no children it renders an area (with `ColorPickerAreaCanvas` when `space=\"oklch\"`), a hue slider, a swatch and a text field named by `labels.value` (\"Colour value\"). Compose `ColorPickerArea`, `ColorPickerAreaThumb`, `ColorPickerSlider channel orientation`, `ColorPickerSliderThumb`, `ColorPickerSwatch`, `ColorPickerInput`, `ColorPickerChannelInput channel`, `ColorPickerSwatches` of `ColorPickerSwatchItem value` (presets, 44px on touch) and `ColorPickerEyeDropper` (hidden where the browser can't pick from the screen). `onValueChange` runs on every step of a drag, `onValueCommit` once it ends, for saving.",
+      "dependencies": [
+        "@ui-sdk/core@0.1.0-beta.5",
+        "@ui-sdk/react@0.1.0-beta.5",
+        "lucide-react@^1.68.0"
+      ],
+      "registryDependencies": [
+        "@eskais/utils",
+        "@eskais/theme",
+        "@eskais/input",
+        "@eskais/tooltip"
+      ],
+      "files": [
+        {
+          "path": "registry/ui/color-picker.tsx",
           "type": "registry:ui"
         }
       ]
@@ -3960,6 +4134,29 @@
       ]
     },
     {
+      "name": "image-cropper",
+      "type": "registry:ui",
+      "title": "Image Cropper",
+      "description": "UI SDK ImageCropper styled: a selection that dims the rest of the image with a grid while dragging and eight handles, or a round frame the image pans and zooms under, with zoom, rotate and flip, and cropImage.",
+      "docs": "`<ImageCropper aria-label src alt aspectRatio mode shape maxZoom crop onCropChange onCropCommit>`: with no children it renders the viewport (the image's ratio, or a square frame), the image, a selection that dims the rest through a spread `--overlay` shadow, shows a grid at the thirds while dragging and has eight handles (none in `mode=\"frame\"`), then a zoom slider and Rotate, Flip horizontally and Flip vertically buttons with icons and their names from `labels`. Rotate and flip show their label because they're disabled until the image loads, when a tooltip couldn't show. `cropImage(src, crop, { width, shape })` (re-exported) makes the file; save in `onCropCommit`. In UI SDK 0.1.0-beta.5 the handles sit inside the selection's slider, which axe reports as nested-interactive; a frame has no handles.",
+      "dependencies": [
+        "@ui-sdk/core@0.1.0-beta.5",
+        "@ui-sdk/react@0.1.0-beta.5",
+        "lucide-react@^1.68.0"
+      ],
+      "registryDependencies": [
+        "@eskais/utils",
+        "@eskais/theme",
+        "@eskais/button"
+      ],
+      "files": [
+        {
+          "path": "registry/ui/image-cropper.tsx",
+          "type": "registry:ui"
+        }
+      ]
+    },
+    {
       "name": "attachments",
       "type": "registry:ui",
       "title": "Attachments",
@@ -3988,6 +4185,32 @@
         },
         {
           "path": "registry/ui/attachments.tsx",
+          "type": "registry:ui"
+        }
+      ]
+    },
+    {
+      "name": "file-input",
+      "type": "registry:ui",
+      "title": "File Input",
+      "description": "UI SDK FileInput styled as a drop zone with a browse button: accept, size and count limits, the chosen files as attachment chips with remove buttons, and why any were left out in the destructive tone.",
+      "docs": "`<FileUpload title description browseLabel accept maxSize minSize maxFiles multiple validate name labels locale>` inside a `Field`: the field's label names the browse button (the field's control), drops, pastes inside the zone and the picker all go through the same checks, the chosen files show as `AttachmentThumb` chips (name, type, size from `formatFileSize`) with a remove button each, and rejected files are listed under the zone with their first reason (`labels.rejected`). `title`, `description` and `browseLabel` are your copy; `labels` (`list`, `remove`, `rejected`) default to English. Compose the parts (`FileInput`, `FileInputDropzone`, `FileInputTrigger variant size`, `FileInputFiles`, `FileInputRejections`, `FileInputList`, `FileInputItem`, `FileInputItemRemove`) for a button alone, a page-wide drop (`target=\"document\"`) or a folder (`directory`). The value is `File[]`, so `FormField` binds it as is. With `name` it submits through a native file input.",
+      "dependencies": [
+        "@ui-sdk/core@0.1.0-beta.5",
+        "@ui-sdk/react@0.1.0-beta.5",
+        "lucide-react@^1.68.0"
+      ],
+      "registryDependencies": [
+        "@eskais/utils",
+        "@eskais/theme",
+        "@eskais/button",
+        "@eskais/tooltip",
+        "@eskais/attachments",
+        "@eskais/locale"
+      ],
+      "files": [
+        {
+          "path": "registry/ui/file-input.tsx",
           "type": "registry:ui"
         }
       ]
@@ -4098,6 +4321,29 @@
         },
         {
           "path": "registry/ui/use-list-item.ts",
+          "type": "registry:ui"
+        }
+      ]
+    },
+    {
+      "name": "tree",
+      "type": "registry:ui",
+      "title": "Tree",
+      "description": "UI SDK Tree styled as indented rows with guide lines: a file explorer from paths with folder and file icons, checkable trees with mixed branches, lazy branches, links and a flat list for virtualizing.",
+      "docs": "`<Tree aria-label paths>` (or `items`) renders every row for you: an indicator, `checkable` checkboxes, an icon from `icon` (`treeFileIcon` by default: open or closed folders, file icons by extension; a function of the item and its state, or `false`) and the label. Compose `TreeItem` > `TreeItemLabel` (+ `TreeItemIndicator`, `TreeItemCheckbox`) and `TreeGroup` yourself, or `TreeNodes items icon checkable`, to render your own rows while the tree keeps the whole hierarchy. Rows indent by `--tree-level` and each open group draws a guide through its parent's indicator. Selection (`mode`, `value`, `activation`), expansion (`expanded`), checks (`checked`, `checkStrategy`) and `onAction` are UI SDK's; `toggleTreeItem(items, checked, value, strategy)` computes a checked value you keep yourself. Items with `href` render as links that follow on press (`onFollow` for a client router). For thousands of rows, keep `items` on the tree and render only the rows in view from `visibleTreeRows(items, expanded)`, scrolling in `onHighlight`; every item sets `--tree-level`, so flat rows indent the same.",
+      "dependencies": [
+        "@ui-sdk/core@0.1.0-beta.5",
+        "@ui-sdk/react@0.1.0-beta.5",
+        "lucide-react@^1.68.0"
+      ],
+      "registryDependencies": [
+        "@eskais/utils",
+        "@eskais/theme",
+        "@eskais/link"
+      ],
+      "files": [
+        {
+          "path": "registry/ui/tree.tsx",
           "type": "registry:ui"
         }
       ]

@@ -123,6 +123,107 @@ const itemNotes: Record<string, ItemNotes> = {
     ],
     related: ["slider", "input", "field"],
   },
+  tree: {
+    usage:
+      "Reach for it for nested items people expand and collapse: a file explorer, nested settings, a table of contents. For a flat list use List.",
+    a11y: [
+      "The WAI-ARIA tree: one tab stop, arrows move and expand, Home/End, typeahead, * expands siblings.",
+      "Every row says its level and place among its siblings; checkable trees report mixed branches.",
+      "Icons are decorative; the label names each item.",
+    ],
+    agent: "Agents find the tree by its aria-label and expand, collapse, select or check items by value.",
+    related: ["list-item", "sidebar", "document-workspace"],
+  },
+  "file-input": {
+    usage: "Reach for it to attach or upload files; FileUpload is the drop zone, the list and the errors in one.",
+    a11y: [
+      "The browse button is the field's control, so the Field's label names it and Enter or Space opens the picker; dropping is never the only way.",
+      "The file list has one tab stop: arrows move between files and Delete removes one; remove buttons are named for their file.",
+      "Added, removed and rejected files are announced in a polite live region; the reasons also show in the destructive tone.",
+    ],
+    agent: "Agents find it by its label and can clear it or remove a file; picking files stays with a person.",
+    related: ["attachments", "field", "form"],
+  },
+  autocomplete: {
+    usage:
+      "Reach for it when any text is valid and suggestions only help: a search box, a city, a tag name. When the value must be an option, use Combobox.",
+    a11y: [
+      "An input with the combobox role; arrows highlight a suggestion while focus stays in the input, Enter fills it in, Escape closes.",
+      "The matched part of each suggestion is marked in a heavier weight, not only a colour.",
+      "Clear and Show suggestions are icon buttons named for agents and screen readers, with the name in a tooltip.",
+    ],
+    agent: "Agents find it by its label and set any text with setValue.",
+    related: ["combobox", "search-field", "field", "form"],
+  },
+  "password-input": {
+    a11y: [
+      "A native password field named by its Field label, so password managers and autofill work.",
+      'The toggle is a toggle button named "Show password" whose aria-pressed says whether the password shows; its name never flips.',
+      "A pointer press on the toggle keeps the caret in the field; submitting or leaving the page hides the password again.",
+    ],
+    agent: "Agents find it by its label, set the value and show or hide it with toggleVisible.",
+    related: ["input", "field", "form"],
+  },
+  rating: {
+    a11y: [
+      'A radio group: arrow keys change the score, Space checks the focused star; each score is a radio named like "3 stars".',
+      "Stars fill in the warning colour over an input-strong outline, so the score shows by shape and fill, not hue alone.",
+      "Read-only, it is one image named by getValueLabel.",
+    ],
+    agent: "Agents find it by its label and set a score with setValue.",
+    related: ["radio-group", "slider", "field"],
+  },
+  "date-input": {
+    usage: "Reach for it for a date people know and type, like a birthday or a start date; DatePicker adds a calendar.",
+    a11y: [
+      "A group named by its Field label; each segment is a spin button named by its unit in the page's language.",
+      "Typing fills a segment and moves on, arrows step it, and a pasted date fills them all.",
+    ],
+    agent: "Agents find it by its label and set an ISO date with setValue.",
+    related: ["date-picker", "date-time-picker", "field"],
+  },
+  "color-picker": {
+    a11y: [
+      "The area's thumb is a slider screen readers hear as both channels; each slider names its channel; arrow keys step them.",
+      "The text field takes any CSS colour on Enter or blur, and goes back to the value when the text isn't one.",
+      "Presets are one tab stop with arrow keys between them; the eye dropper is an icon button with a tooltip, hidden where unsupported.",
+    ],
+    agent: "Agents find it by its label and set any CSS colour with setValue.",
+    related: ["slider", "input", "popover"],
+  },
+  "image-cropper": {
+    usage:
+      'Reach for it to crop an upload before saving: a cover image with a box, an avatar with mode="frame" and shape="circle".',
+    a11y: [
+      "The selection is a slider: arrow keys move it, and R rotates, Shift+R back.",
+      "Zoom is a range input; rotate and flip are buttons with visible labels.",
+      "Until the image loads, the group is aria-busy and nothing can change.",
+    ],
+    agent: "Agents find it by its label and set the crop or the zoom.",
+    related: ["file-input", "avatar", "lightbox"],
+  },
+  "confirm-button": {
+    usage:
+      "Reach for it for a quick, reversible-by-undo destructive action in a row or toolbar; ConfirmDialog when the consequence needs explaining.",
+    a11y: [
+      "A native button: once armed, its text and name become the armed label, which is also announced politely.",
+      "Escape (only while armed), a timeout and focus leaving disarm it; holding is never the only way, since a second press confirms.",
+      "While onConfirm's Promise runs, it is aria-busy and ignores presses.",
+    ],
+    agent: "Agents call confirm, which carries data-agent-confirm, so it waits for a person's approval through allow.",
+    related: ["confirm-dialog", "button"],
+  },
+  "inline-edit": {
+    usage:
+      "Reach for it to rename a title, a list item or a tab without a dialog; a Form or FormDialog for anything with more than one field.",
+    a11y: [
+      "The text is a button described by the hint; the field is named by label; Enter and Escape return focus to the text.",
+      "Escape inside the field never closes a dialog around it; validate keeps the field open on an invalid name.",
+      "The edit button is an icon button with its name in a tooltip, always visible on touch screens.",
+    ],
+    agent: "Agents find it by its label and call rename with the new text, or cancel an edit in progress.",
+    related: ["input", "list-item", "tabs"],
+  },
   "otp-input": {
     a11y: [
       "One native input shown as slots, so paste, autofill and one-time-code all work.",

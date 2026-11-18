@@ -1,3 +1,10 @@
+import { usePreference } from "@ui-sdk/react/preferences"
+import { useState } from "react"
+
+import type { AppearanceState } from "@/components/ui/appearance"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import { CodeBlock } from "@/components/ui/code-block"
 import {
   ColorPicker,
   ColorPickerArea,
@@ -7,14 +14,7 @@ import {
   ColorPickerSlider,
   ColorPickerSliderThumb,
   ColorPickerSwatch,
-} from "@ui-sdk/react/color-picker"
-import { usePreference } from "@ui-sdk/react/preferences"
-import { useState } from "react"
-
-import type { AppearanceState } from "@/components/ui/appearance"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { CodeBlock } from "@/components/ui/code-block"
+} from "@/components/ui/color-picker"
 import { Field, FieldDescription, FieldLabel } from "@/components/ui/field"
 import { SegmentedControl, SegmentedControlIndicator, SegmentedControlItem } from "@/components/ui/segmented-control"
 import { Slider, SliderControl, SliderIndicator, SliderThumb, SliderTrack, SliderValue } from "@/components/ui/slider"
@@ -25,19 +25,11 @@ import { themeSnippet } from "./theme-snippet"
 
 const CUSTOM = "custom"
 
-const thumb =
-  "size-4 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-background bg-(--color-picker-color) shadow-sm ring-1 ring-foreground/50 outline-none focus-visible:ring-3 focus-visible:ring-ring"
-
 // A fixed rainbow rather than the picker's own track, which draws the hue at the current chroma: a grey brand would
 // get a flat grey bar that disappears in dark mode.
 const hueTrack = {
   background: `linear-gradient(to right, ${[0, 60, 120, 180, 240, 300, 360].map((hue) => `oklch(0.65 0.18 ${hue})`).join(", ")})`,
 }
-
-const swatch = "size-control shrink-0 rounded-choice border border-input-strong bg-(--color-picker-color)"
-
-const colorInput =
-  "h-control w-full min-w-0 rounded-control border border-input bg-field px-control-x font-mono text-body-sm outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
 
 function ContrastRow({ label, ratio }: { label: string; ratio: number | null }) {
   const pass = ratio !== null && ratio >= 4.5
@@ -143,26 +135,17 @@ function ThemeEditor<Theme extends string, Palette extends string>({
           </Field>
           <Field>
             <FieldLabel>Brand colour</FieldLabel>
-            <ColorPicker
-              space="oklch"
-              value={seeds.brand}
-              onValueChange={(brand) => override({ brand })}
-              className="flex flex-col gap-items"
-            >
-              <ColorPickerArea className="relative h-36 w-full touch-none rounded-choice border bg-muted">
-                <ColorPickerAreaCanvas className="absolute inset-0 size-full rounded-choice" />
-                <ColorPickerAreaThumb aria-label="Brand chroma and lightness" className={thumb} />
+            <ColorPicker space="oklch" value={seeds.brand} onValueChange={(brand) => override({ brand })}>
+              <ColorPickerArea>
+                <ColorPickerAreaCanvas />
+                <ColorPickerAreaThumb aria-label="Brand chroma and lightness" />
               </ColorPickerArea>
-              <ColorPickerSlider
-                channel="hue"
-                className="relative h-3 w-full touch-none rounded-full border border-input"
-                style={hueTrack}
-              >
-                <ColorPickerSliderThumb aria-label="Brand hue" className={`${thumb} top-1/2`} />
+              <ColorPickerSlider channel="hue" style={hueTrack}>
+                <ColorPickerSliderThumb aria-label="Brand hue" />
               </ColorPickerSlider>
               <div className="flex items-center gap-items">
-                <ColorPickerSwatch className={swatch} />
-                <ColorPickerInput aria-label="Brand colour in OKLCH" className={colorInput} />
+                <ColorPickerSwatch />
+                <ColorPickerInput aria-label="Brand colour in OKLCH" />
               </div>
             </ColorPicker>
             <FieldDescription>
@@ -175,10 +158,10 @@ function ThemeEditor<Theme extends string, Palette extends string>({
               space="oklch"
               value={seeds.linkBrand}
               onValueChange={(linkBrand) => override({ linkBrand })}
-              className="flex items-center gap-items"
+              className="flex-row items-center"
             >
-              <ColorPickerSwatch className={swatch} />
-              <ColorPickerInput aria-label="Link colour in OKLCH" className={colorInput} />
+              <ColorPickerSwatch />
+              <ColorPickerInput aria-label="Link colour in OKLCH" />
             </ColorPicker>
             <FieldDescription>
               Links and the editor caret derive from it, capped in lightness to keep 4.5:1.

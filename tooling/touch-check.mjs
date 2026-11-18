@@ -18,7 +18,6 @@ function check(label, ok, detail = "") {
 
 const phone = { viewport: { width: 390, height: 844 }, deviceScaleFactor: 3, hasTouch: true, isMobile: true }
 
-// The theme editor's colour fields are UI SDK's ColorPicker in the showcase's own chrome, not a registry control.
 async function entryFontSizes(page) {
   await page.evaluate(async () => {
     for (let y = 0; y < document.body.scrollHeight; y += innerHeight / 2) {
@@ -37,7 +36,6 @@ async function entryFontSizes(page) {
     ].join(", ")
     return [...document.querySelectorAll(selector)]
       .filter((element) => element.checkVisibility() && !element.closest("[aria-hidden=true], [inert]"))
-      .filter((element) => element.getAttribute("data-slot") !== "color-picker-input")
       .map((element) => ({
         control: `${element.tagName.toLowerCase()}[${element.getAttribute("data-slot") ?? element.className.split(" ")[0]}]`,
         size: Number.parseFloat(getComputedStyle(element).fontSize),
@@ -61,8 +59,11 @@ const kinds = [
   "textarea[textarea]",
   "button[select-trigger]",
   "input[combobox-input]",
+  "input[autocomplete-input]",
+  "input[password-input-control]",
   "input[number-input-control]",
   "input[otp-input-control]",
+  "input[color-picker-input]",
   "input[date-picker-input]",
   "input[time-input-segment]",
   "select[native-select]",
