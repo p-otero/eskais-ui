@@ -14,12 +14,15 @@ import {
   ColorPickerSwatches as ColorPickerSwatchesPrimitive,
   ColorPickerSwatchItem as ColorPickerSwatchItemPrimitive,
   createColorPickerController,
+  type ColorPickerState,
 } from "@ui-sdk/react/color-picker"
-import type { ComponentProps } from "react"
+import { createContext, use, useRef, type ComponentProps } from "react"
 import { PipetteIcon } from "lucide-react"
 
 import { fieldSurfaceClassName } from "@/components/ui/input"
 import { ControlTooltip, type ControlTooltipOption } from "@/components/ui/tooltip"
+import { useColorAreaCanvas } from "@/components/ui/use-color-area-canvas"
+import type { AreaGamut } from "@/lib/oklch-gamut"
 import { cnState } from "@/lib/utils"
 
 type ColorPickerLabels = {
@@ -28,6 +31,10 @@ type ColorPickerLabels = {
 }
 
 const colorPickerLabels: ColorPickerLabels = { value: "Colour value" }
+
+const GamutContext = createContext<AreaGamut>("srgb")
+// The area's state, inside an OKLCH area across chroma and up lightness: the one ColorPickerAreaCanvas paints itself.
+const OklchAreaContext = createContext<ColorPickerState | null>(null)
 
 type ColorPickerProps = ComponentProps<typeof ColorPickerPrimitive> & { labels?: Partial<ColorPickerLabels> }
 
@@ -38,43 +45,70 @@ type ColorPickerProps = ComponentProps<typeof ColorPickerPrimitive> & { labels?:
 function ColorPicker({ className, children, labels, ...props }: ColorPickerProps) {
   const oklch = props.space === "oklch"
   return (
-    <ColorPickerPrimitive className={cnState("flex w-full flex-col gap-items", className)} {...props}>
-      {children ?? (
-        <>
-          <ColorPickerArea>
-            {oklch ? <ColorPickerAreaCanvas /> : null}
-            <ColorPickerAreaThumb />
-          </ColorPickerArea>
-          <ColorPickerSlider channel="hue">
-            <ColorPickerSliderThumb />
-          </ColorPickerSlider>
-          <div className="flex items-center gap-items">
-            <ColorPickerSwatch />
-            <ColorPickerInput aria-label={labels?.value ?? colorPickerLabels.value} />
-          </div>
-        </>
-      )}
-    </ColorPickerPrimitive>
+    <GamutContext value={props.gamut === "p3" ? "p3" : "srgb"}>
+      <ColorPickerPrimitive className={cnState("flex w-full flex-col gap-items", className)} {...props}>
+        {children ?? (
+          <>
+            <ColorPickerArea>
+              {oklch ? <ColorPickerAreaCanvas /> : null}
+              <ColorPickerAreaThumb />
+            </ColorPickerArea>
+            <ColorPickerSlider channel="hue">
+              <ColorPickerSliderThumb />
+            </ColorPickerSlider>
+            <div className="flex items-center gap-items">
+              <ColorPickerSwatch />
+              <ColorPickerInput aria-label={labels?.value ?? colorPickerLabels.value} />
+            </div>
+          </>
+        )}
+      </ColorPickerPrimitive>
+    </GamutContext>
   )
 }
 
-function ColorPickerArea({ className, ...props }: ComponentProps<typeof ColorPickerAreaPrimitive>) {
+function ColorPickerArea({ className, children, x, y, ...props }: ComponentProps<typeof ColorPickerAreaPrimitive>) {
+  const chromaByLightness = (x ?? "chroma") === "chroma" && (y ?? "lightness") === "lightness"
   return (
     <ColorPickerAreaPrimitive
+      x={x}
+      y={y}
       className={cnState(
         "relative h-36 w-full shrink-0 touch-none rounded-choice border bg-(--color-area-background) has-[canvas]:bg-muted data-disabled:opacity-50",
         className,
       )}
       {...props}
-    />
+    >
+      {(state: ColorPickerState) => (
+        <OklchAreaContext value={state.space === "oklch" && chromaByLightness ? state : null}>
+          {typeof children === "function" ? children(state) : children}
+        </OklchAreaContext>
+      )}
+    </ColorPickerAreaPrimitive>
   )
 }
 
+const canvasClassName = "pointer-events-none absolute inset-0 size-full rounded-choice"
+
+/**
+ * Paints the area pixel by pixel. In an OKLCH area across chroma and up lightness, a point past the gamut's edge
+ * shows the colour the picker holds there (the same lightness and hue at the most chroma the gamut allows), so the
+ * whole box is colour and the thumb always sits on the colour chosen. Other channels use UI SDK's canvas.
+ */
 function ColorPickerAreaCanvas({ className, ...props }: ComponentProps<typeof ColorPickerAreaCanvasPrimitive>) {
+  const area = use(OklchAreaContext)
+  const gamut = use(GamutContext)
+  const canvas = useRef<HTMLCanvasElement>(null)
+  useColorAreaCanvas(area ? canvas : null, area?.color.coords[2] ?? 0, gamut)
+  const classes = cnState(canvasClassName, className)
+  if (!area) return <ColorPickerAreaCanvasPrimitive className={classes} {...props} />
   return (
-    <ColorPickerAreaCanvasPrimitive
-      className={cnState("pointer-events-none absolute inset-0 size-full rounded-choice", className)}
-      {...props}
+    <canvas
+      ref={canvas}
+      aria-hidden="true"
+      data-slot="color-picker-area-canvas"
+      // UI SDK places the thumb from the inline start, so the canvas mirrors with it in right to left.
+      className={`${typeof classes === "function" ? classes(area) : classes} rtl:-scale-x-100`}
     />
   )
 }
