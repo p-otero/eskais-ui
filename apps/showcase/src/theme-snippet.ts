@@ -1,12 +1,29 @@
 type Seeds = { brand: string; linkBrand: string; neutralHue: number; neutralChroma: number; radius: number }
 
-function themeSnippet(seeds: Seeds) {
-  return `:root {
+type Attributes = { density: string; radius: string }
+
+// A chosen density or radius step is an attribute, not a seed; with no step, --radius is the seed of the shape.
+function themeSnippet(seeds: Seeds, attributes: Attributes = { density: "default", radius: "default" }) {
+  const steps = [
+    attributes.density === "default" ? "" : `data-density="${attributes.density}"`,
+    attributes.radius === "default" ? "" : `data-radius="${attributes.radius}"`,
+  ].filter(Boolean)
+  const html =
+    steps.length > 0
+      ? `/* On <html>: ${steps.join(" ")} */
+
+`
+      : ""
+  const radius =
+    attributes.radius === "default"
+      ? `
+  --radius: ${seeds.radius}rem;`
+      : ""
+  return `${html}:root {
   --brand: ${seeds.brand};
   --link-brand: ${seeds.linkBrand};
   --neutral-hue: ${seeds.neutralHue};
-  --neutral-chroma: ${seeds.neutralChroma};
-  --radius: ${seeds.radius}rem;
+  --neutral-chroma: ${seeds.neutralChroma};${radius}
 }
 
 /* .dark derives from the same seeds.

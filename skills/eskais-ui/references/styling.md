@@ -4,7 +4,7 @@ Part of the `eskais-ui` skill.
 
 ## Spacing
 
-Pick spacing by the relationship between the things it separates, never by a number; each role tightens under `data-theme="compact"`.
+Pick spacing by the relationship between the things it separates, never by a number; each role tightens under `data-density="compact"` (or the `data-theme="compact"` alias).
 
 | Utility                           | Role                                                                             |
 | --------------------------------- | -------------------------------------------------------------------------------- |
@@ -31,6 +31,10 @@ Status meaning has one vocabulary across Badge, Alert, StatusPill, StatusDot, Pr
 
 Surfaces (cards, columns, panels) use `shadow-surface`. Anything that floats (popover, menu, list popup, toast, dialog, a `Floating` bar) uses the floating level: `surface-floating`, or its parts `shadow-floating`, `rounded-floating`, `bg-floating`, `backdrop-floating`, `border-floating-border`. Tokens: `--floating-shadow`, `--floating-radius`, `--floating-backdrop`, `--floating-opacity`, `--floating-border`, `--floating-offset`. The fill is translucent and blurred by default, opaque without `backdrop-filter` or with reduced transparency. `data-elevation="flat"` on any ancestor removes the depth. Never use viewport-height units (`vh`, `dvh`, `h-screen`) to place floating UI; it takes its position from its container.
 
+## Density and radius
+
+Two separate axes, each an attribute on `<html>` or any element: `data-density="default|compact"` (controls, spacing and type; the `theme-compact` item) and `data-radius="none|sm|md|lg|full"` (controls, choices, surfaces and floating UI; without it the shape derives from `--radius`, which is `lg`). `data-theme="compact"` still works: compact density with the `md` radius, and a `data-density` or `data-radius` on the same element wins. Set them with `createAppearance({ density, radius, storage: { density, radius } })` and `appearance.density.set("compact")`, `appearance.radius.set("sm")`; components follow through tokens, so never branch on either. An `AgentTaskBoard`'s own `density` is `data-board-density`.
+
 ## Current page
 
 The current page in a sidebar or a navigation menu uses `nav-current` (`aria-[current=page]:nav-current`): a soft translucent fill (`--nav-current`, the foreground at 6%, 9% in dark mode), a hairline inside its edge (`--nav-current-border`), the foreground text and a medium weight over the items' normal one, so it never rests on colour alone. `SidebarItem` (and so `Shell` and `DocsLayout`) and `NavigationMenuLink variant="top"` use it; reuse it for your own nav rather than a solid `bg-primary` pill.
@@ -45,7 +49,7 @@ On touch screens (`pointer: coarse`) buttons, toggles, tabs, segmented items, ch
 
 ## Narrow screens
 
-`narrow:` applies at 760px viewport width and below (`flex-row narrow:flex-col`). It is unrelated to the `compact` density theme, which changes sizes at any width. Prefer container queries for components placed in panels of different widths.
+`narrow:` applies at 760px viewport width and below (`flex-row narrow:flex-col`). It is unrelated to compact density (`data-density="compact"`), which changes sizes at any width. Prefer container queries for components placed in panels of different widths.
 
 `SidePanel narrow` decides where an inspector goes at that width: `"stack"` (default) keeps it in the page flow, full width, and wraps its flex parent so it lands below the list, hiding nothing and trapping no focus; `"overlay"` covers its positioned parent, for a panel that should show instead of the list (a tall scroller in a bounded column); `"sheet"` opens it as a modal bottom `Drawer` that takes focus and returns it to `returnFocus()` on close.
 

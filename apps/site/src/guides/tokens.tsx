@@ -53,7 +53,7 @@ export default function Tokens() {
       <DocTitle
         eyebrow="Getting started"
         title="Spacing and tokens"
-        description="Spacing, type, elevation and motion are chosen by role, never by number. The values change with the theme, so compact tightens everything at once."
+        description='Spacing, type, elevation and motion are chosen by role, never by number. The values change with the density, so data-density="compact" tightens everything at once, and the corner radius is an axis of its own.'
       />
 
       <H2 id="spacing">Spacing roles</H2>
@@ -61,6 +61,8 @@ export default function Tokens() {
         Choose by relationship, not by look: parts of the same thing use <Code>gap-inline</Code> or{" "}
         <Code>gap-items</Code>, distinct groups <Code>gap-group</Code>, separate surfaces <Code>gap-section</Code>.
         Every spacing utility takes the roles: <Code>p-inline</Code>, <Code>pb-group</Code>, <Code>-mx-inline</Code>.
+        The Compact column is <Code>data-density="compact"</Code> (or the <Code>data-theme="compact"</Code> alias), at
+        any radius; <A to="/docs/theming#density-and-radius">Theming</A> covers both axes.
       </P>
       <DocTable
         label="Spacing roles"

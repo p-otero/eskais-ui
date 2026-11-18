@@ -46,7 +46,8 @@ async function withShowcase(run, pageOptions = {}) {
 }
 
 async function setAppearance(page, theme, mode, palette) {
-  await page.getByRole("radio", { name: theme }).click()
+  // Scoped to the Theme picker: the theme editor has its own Compact (density) and preset radios.
+  await page.getByRole("radiogroup", { name: "Theme", exact: true }).getByRole("radio", { name: theme }).click()
   if (palette) await page.getByRole("radio", { name: palette, exact: false }).click()
   const dark = page.getByRole("button", { name: "Dark mode" })
   if ((mode === "dark") !== ((await dark.getAttribute("aria-pressed")) === "true")) await dark.click()

@@ -1,12 +1,12 @@
-[data-theme="compact"] {
-  --radius: 0.5rem;
-  --control-radius: 0.5rem;
+/* Compact density: tighter controls, spacing and type at any width, on <html> or any element. data-theme="compact"
+   is an alias that adds the md radius (unless the element sets data-radius) and flatter surfaces; set
+   data-density="default" beside it to keep only that shape. */
+[data-density="compact"],
+[data-theme="compact"]:not([data-density]) {
   --control-height: 2rem;
   --control-height-sm: 1.75rem;
   --control-height-lg: 2.25rem;
   --control-padding: 0.625rem;
-  --choice-radius: 0.25rem;
-  --surface-radius: 0.75rem;
   --surface-padding: 1rem;
   --gap-inline: 0.25rem;
   --gap-items: 0.375rem;
@@ -16,9 +16,7 @@
   --chip-padding-y: 0.125rem;
   --item-padding-x: 0.5rem;
   --item-padding-y: 0.375rem;
-  --floating-radius: 0.75rem;
   --floating-offset: 0.75rem;
-  --surface-shadow: 0 1px 2px oklch(0 0 0 / 0.05);
   --board-column-min-width: 14rem;
   --board-column-max-width: 18rem;
   --task-panel-width: 22rem;
@@ -39,17 +37,62 @@
   --type-display-leading: 1.75rem;
 }
 
-/* An AgentTaskBoard's density: the compact shape and spacing without its flatter shadow, so glass keeps its depth,
-   and narrower columns, so four fit a 1100px host. */
-[data-density="compact"] {
+/* The default density inside a compact one: the values of :where(:root) in the theme. */
+[data-density="default"] {
+  --control-height: 2.25rem;
+  --control-height-sm: 2rem;
+  --control-height-lg: 2.5rem;
+  --control-padding: 0.875rem;
+  --surface-padding: 1.5rem;
+  --gap-inline: 0.375rem;
+  --gap-items: 0.5rem;
+  --gap-group: 1rem;
+  --gap-section: 1.5rem;
+  --chip-padding-x: 0.5rem;
+  --chip-padding-y: 0.125rem;
+  --item-padding-x: 0.625rem;
+  --item-padding-y: 0.5rem;
+  --floating-offset: 1rem;
+  --board-column-min-width: 16rem;
+  --board-column-max-width: 22rem;
+  --task-panel-width: 26rem;
+  --sidebar-width: 16rem;
+  --type-caption-size: 0.75rem;
+  --type-caption-leading: 1rem;
+  --type-body-sm-size: 0.8125rem;
+  --type-body-sm-leading: 1.125rem;
+  --type-body-size: 0.875rem;
+  --type-body-leading: 1.25rem;
+  --type-title-sm-size: 0.9375rem;
+  --type-title-sm-leading: 1.25rem;
+  --type-title-size: 1.125rem;
+  --type-title-leading: 1.5rem;
+  --type-display-sm-size: 1.5rem;
+  --type-display-sm-leading: 1.75rem;
+  --type-display-size: 1.75rem;
+  --type-display-leading: 2rem;
+}
+
+/* data-theme="compact"'s shape, the md radius, where the element doesn't choose one with data-radius. */
+[data-theme="compact"]:not([data-radius]) {
   --radius: 0.5rem;
   --control-radius: 0.5rem;
+  --choice-radius: 0.25rem;
+  --surface-radius: 0.75rem;
+  --floating-radius: 0.75rem;
+}
+
+[data-theme="compact"] {
+  --surface-shadow: 0 1px 2px oklch(0 0 0 / 0.05);
+}
+
+/* An AgentTaskBoard's density: compact spacing and controls without the smaller type or the flatter shadow, so
+   glass keeps its depth, and narrower columns, so four fit a 1100px host. The radius follows the page's. */
+[data-board-density="compact"] {
   --control-height: 2rem;
   --control-height-sm: 1.75rem;
   --control-height-lg: 2.25rem;
   --control-padding: 0.625rem;
-  --choice-radius: 0.25rem;
-  --surface-radius: 0.75rem;
   --surface-padding: 1rem;
   --gap-inline: 0.25rem;
   --gap-items: 0.375rem;
@@ -59,7 +102,6 @@
   --chip-padding-y: 0.125rem;
   --item-padding-x: 0.5rem;
   --item-padding-y: 0.375rem;
-  --floating-radius: 0.75rem;
   --floating-offset: 0.75rem;
   --board-column-min-width: 13rem;
   --board-column-max-width: 15rem;
@@ -68,15 +110,11 @@
 }
 
 @container agent-task-board (width <= 75rem) {
-  [data-density="auto"] {
-    --radius: 0.5rem;
-    --control-radius: 0.5rem;
+  [data-board-density="auto"] {
     --control-height: 2rem;
     --control-height-sm: 1.75rem;
     --control-height-lg: 2.25rem;
     --control-padding: 0.625rem;
-    --choice-radius: 0.25rem;
-    --surface-radius: 0.75rem;
     --surface-padding: 1rem;
     --gap-inline: 0.25rem;
     --gap-items: 0.375rem;
@@ -86,7 +124,6 @@
     --chip-padding-y: 0.125rem;
     --item-padding-x: 0.5rem;
     --item-padding-y: 0.375rem;
-    --floating-radius: 0.75rem;
     --floating-offset: 0.75rem;
     --board-column-min-width: 13rem;
     --board-column-max-width: 15rem;

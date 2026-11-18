@@ -18,6 +18,8 @@ const appearance = createAppearance<Theme, Palette>({
     colorScheme: createLocalStorage("eskais-site-scheme"),
     theme: createLocalStorage("eskais-site-theme"),
     palette: createLocalStorage("eskais-site-palette"),
+    density: createLocalStorage("eskais-site-density"),
+    radius: createLocalStorage("eskais-site-radius"),
   },
 })
 

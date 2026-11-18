@@ -199,6 +199,100 @@ async function checkSegments(page) {
   await shot(page, "time-input-segments.png")
 }
 
+// Density and radius are separate axes that every component follows through tokens: each combination keeps the
+// shell inside the viewport, a compact density shortens controls whatever the radius, and a radius step reaches
+// buttons, sidebar items and cards whatever the density. data-theme="compact" is compact density with the md radius,
+// unless data-radius says otherwise.
+async function axesAt(page, attributes) {
+  return page.evaluate((next) => {
+    const html = document.documentElement
+    for (const name of ["data-theme", "data-density", "data-radius"]) {
+      if (next[name]) html.setAttribute(name, next[name])
+      else html.removeAttribute(name)
+    }
+    // The first visible button, sidebar item (in a drawer on a phone, so absent) and card.
+    const [button, item, card] = ['[data-slot="button"]', '[data-slot="sidebar-item"]', '[data-slot="card"]'].map(
+      (selector) =>
+        [...document.querySelectorAll(selector)].find((element) => element.getBoundingClientRect().height > 0) ?? null,
+    )
+    const [buttonRadius, itemRadius, cardRadius] = [button, item, card].map((element) =>
+      element ? Number.parseFloat(getComputedStyle(element).borderTopLeftRadius) : null,
+    )
+    return {
+      overflow: document.documentElement.scrollWidth - innerWidth,
+      control: button.getBoundingClientRect().height,
+      button: buttonRadius,
+      item: itemRadius,
+      card: cardRadius,
+    }
+  }, attributes)
+}
+
+async function checkThemeAxes(page) {
+  for (const width of [1100, 390]) {
+    await shell(page, width)
+    const results = {}
+    for (const density of ["default", "compact"]) {
+      for (const radius of ["none", "sm", "md", "lg", "full"]) {
+        const attributes = { "data-density": density === "default" ? undefined : density, "data-radius": radius }
+        const result = await axesAt(page, attributes)
+        results[`${density}/${radius}`] = result
+        check(
+          `${width}px ${density}/${radius}: the shell fits the viewport`,
+          result.overflow <= 0,
+          `${result.overflow}px over`,
+        )
+      }
+    }
+    const pairs = ["none", "sm", "md", "lg", "full"].map((radius) => [
+      results[`default/${radius}`],
+      results[`compact/${radius}`],
+    ])
+    check(
+      `${width}px: compact density shortens controls at every radius`,
+      pairs.every(([normal, compact]) => compact.control < normal.control),
+      pairs.map(([normal, compact]) => `${normal.control}→${compact.control}`).join(", "),
+    )
+    for (const density of ["default", "compact"]) {
+      const none = results[`${density}/none`]
+      const full = results[`${density}/full`]
+      const sm = results[`${density}/sm`]
+      check(
+        `${width}px ${density}: radius none squares buttons, items and cards; full makes pills`,
+        none.button === 0 &&
+          (none.item ?? 0) === 0 &&
+          (none.card ?? 0) === 0 &&
+          full.button >= full.control / 2 &&
+          sm.button > 0,
+        JSON.stringify({ none, full: { button: full.button, control: full.control } }),
+      )
+      check(
+        `${width}px ${density}: the radius doesn't change the density`,
+        new Set(["none", "sm", "md", "lg", "full"].map((radius) => results[`${density}/${radius}`].control)).size === 1,
+      )
+    }
+    const alias = await axesAt(page, { "data-theme": "compact" })
+    const md = results["compact/md"]
+    check(
+      `${width}px: data-theme="compact" is compact density with the md radius`,
+      alias.control === md.control && alias.button === md.button && alias.card === md.card,
+      JSON.stringify({ alias, md }),
+    )
+    const aliasLarge = await axesAt(page, { "data-theme": "compact", "data-radius": "full" })
+    check(
+      `${width}px: data-radius beside data-theme="compact" wins`,
+      aliasLarge.button === results["compact/full"].button && aliasLarge.control === md.control,
+    )
+    const aliasDefault = await axesAt(page, { "data-theme": "compact", "data-density": "default" })
+    check(
+      `${width}px: data-density="default" beside data-theme="compact" keeps the default density`,
+      aliasDefault.control === results["default/md"].control && aliasDefault.button === md.button,
+    )
+    await shot(page, `theme-axes-${width}.png`)
+    await axesAt(page, {})
+  }
+}
+
 async function checkCardHeaders(page) {
   await page.setViewportSize({ width: 1100, height: 900 })
   await page.goto(`${new URL(page.url()).origin}/?demo=card-header-check`)
@@ -883,6 +977,7 @@ await withShowcase(async (page) => {
   await checkMobileNav(page)
   await checkFieldPlacement(page)
   await checkSegments(page)
+  await checkThemeAxes(page)
 })
 
 if (failures.length > 0) {

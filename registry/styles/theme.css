@@ -460,6 +460,48 @@
   }
 }
 
+/* Corner radius, apart from density: data-radius on <html> or any element. Without it the shape derives from
+   --radius (lg). md is what data-theme="compact" has always used. */
+[data-radius="none"] {
+  --radius: 0rem;
+  --control-radius: 0rem;
+  --choice-radius: 0rem;
+  --surface-radius: 0rem;
+  --floating-radius: 0rem;
+}
+
+[data-radius="sm"] {
+  --radius: 0.25rem;
+  --control-radius: 0.375rem;
+  --choice-radius: 0.125rem;
+  --surface-radius: 0.5rem;
+  --floating-radius: 0.5rem;
+}
+
+[data-radius="md"] {
+  --radius: 0.5rem;
+  --control-radius: 0.5rem;
+  --choice-radius: 0.25rem;
+  --surface-radius: 0.75rem;
+  --floating-radius: 0.75rem;
+}
+
+[data-radius="lg"] {
+  --radius: 1rem;
+  --control-radius: calc(var(--radius) * 2);
+  --choice-radius: calc(var(--radius) / 2);
+  --surface-radius: calc(var(--radius) * 1.25);
+  --floating-radius: calc(min(var(--control-radius), var(--control-height-sm) / 2) + var(--gap-inline));
+}
+
+[data-radius="full"] {
+  --radius: 1.25rem;
+  --control-radius: 9999px;
+  --choice-radius: 0.375rem;
+  --surface-radius: 1.5rem;
+  --floating-radius: calc(var(--control-height-sm) / 2 + var(--gap-inline));
+}
+
 /* A flat look: floating UI keeps its border but loses depth and translucency. The second selector outranks a
    theme scope (glass) inside the flat one. */
 [data-elevation="flat"],

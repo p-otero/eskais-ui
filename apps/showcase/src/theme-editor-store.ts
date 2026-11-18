@@ -1,9 +1,9 @@
 import { readSeeds } from "./hooks/use-theme-measurements"
 
-type Overrides = { brand?: string; linkBrand?: string; tint?: number; radius?: number }
+type Overrides = { brand?: string; linkBrand?: string; tint?: number }
 
 const colourKeys = ["brand", "linkBrand"] as const
-const numberKeys = ["tint", "radius"] as const
+const numberKeys = ["tint"] as const
 
 // Saved state comes from an earlier version or another tab, so keep only the fields that still make sense.
 function sanitize(value: unknown): Overrides {
@@ -31,7 +31,6 @@ function applyOverrides(overrides: Overrides) {
   set("--link-brand", overrides.linkBrand)
   set("--neutral-chroma", overrides.tint === undefined ? undefined : String(overrides.tint))
   set("--neutral-hue", overrides.tint === undefined ? undefined : String(hueOf(overrides.brand ?? readSeeds().brand)))
-  set("--radius", overrides.radius === undefined ? undefined : `${overrides.radius}rem`)
 }
 
 function readStorage(key: string | undefined): Overrides {

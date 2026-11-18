@@ -220,7 +220,7 @@ function AgentTaskBoard(props: AgentTaskBoardProps) {
       }
       className={cn("@container/agent-task-board min-w-0", props.className)}
     >
-      <div data-slot="agent-task-board-density" data-density={density} className="flex flex-col gap-section">
+      <div data-slot="agent-task-board-density" data-board-density={density} className="flex flex-col gap-section">
         <AgentTaskBoardDetail
           header={
             <>

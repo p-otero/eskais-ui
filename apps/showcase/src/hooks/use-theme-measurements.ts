@@ -37,14 +37,17 @@ const remeasure = (set: (measured: Measured) => void) => requestAnimationFrame((
 type Subscribable = { subscribe: (listener: () => void) => () => void }
 
 /**
- * The theme's seeds and contrast ratios as rendered, read again whenever the color scheme, the palette or the
- * editor's store changes. The editor's choices stay on <html> after it unmounts.
+ * The theme's seeds and contrast ratios as rendered, read again whenever the color scheme, palette, density, radius
+ * or the editor's store changes. The editor's choices stay on <html> after it unmounts.
  */
-function useThemeMeasurements(appearance: { colorScheme: Subscribable; palette: Subscribable }, store: Subscribable) {
+type Sources = { colorScheme: Subscribable; palette: Subscribable; density: Subscribable; radius: Subscribable }
+
+function useThemeMeasurements(appearance: Sources, store: Subscribable) {
   const [measured, setMeasured] = useState(measure)
   useEffect(() => {
     const frame = remeasure(setMeasured)
-    const stops = [appearance.colorScheme, appearance.palette, store].map((source) =>
+    const { colorScheme, palette, density, radius } = appearance
+    const stops = [colorScheme, palette, density, radius, store].map((source) =>
       source.subscribe(() => remeasure(setMeasured)),
     )
     return () => {

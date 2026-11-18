@@ -37,7 +37,7 @@ Eskais UI is a shadcn-style registry of React components built on Vercel UI SDK 
 
 ## Spacing
 
-Spacing is chosen by role. The values change with the theme (compact is tighter), so never hand-pick a number.
+Spacing is chosen by role. The values change with the density (compact is tighter, see "Density and radius"), so never hand-pick a number.
 
 | Utility                           | Role                                                                            | Default           | Compact             |
 | --------------------------------- | ------------------------------------------------------------------------------- | ----------------- | ------------------- |
@@ -68,18 +68,33 @@ Spacing is chosen by role. The values change with the theme (compact is tighter)
 4. `node tooling/consumer-check.mjs` installs the theme into the stylesheet `shadcn init` writes (`tooling/fixtures`) and fails on a self-reference, a leftover radius, a duplicated base rule or a second `add` that changes the file, also after Prettier has formatted it.
 5. shadcn merges a rule by its exact selector or at-rule params, and formatters put each selector of a list on its own line and wrap past 80 columns. So sync-theme writes one rule per selector, and every key in an item's `css` fits in 80 columns at four spaces per level; a test fails otherwise. Write a long `@supports not (a or b)` as two nested `@supports not`.
 
+## Density and radius
+
+Two independent axes, each an attribute on `<html>` or any element, nested freely. Every component follows both through tokens: never branch on them.
+
+| Attribute              | Values                           | Sets                                                                                                                                    | Item            |
+| ---------------------- | -------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- | --------------- |
+| `data-density`         | `default` (or none), `compact`   | control heights and padding, every spacing role, the type steps, `--floating-offset`, sidebar, board and panel widths                   | `theme-compact` |
+| `data-radius`          | `none`, `sm`, `md`, `lg`, `full` | `--radius`, `--control-radius`, `--choice-radius`, `--surface-radius`, `--floating-radius`; without it they derive from `--radius` (lg) | `theme`         |
+| `data-theme="compact"` | alias                            | compact density (unless `data-density` is set), the md radius (unless `data-radius` is set) and a flatter `--surface-shadow`            | `theme-compact` |
+| `data-board-density`   | `comfortable`, `compact`, `auto` | an `AgentTaskBoard`'s own density (its `density` prop): compact spacing and controls, narrower columns, the page's type and radius      | `theme-compact` |
+
+1. `createAppearance({ density, radius, storage: { density, radius } })` and `<Appearance>` keep both on `<html>` (`appearance.density.set("compact")`, `appearance.radius.set("sm")`); `"default"` leaves the attribute off.
+2. `data-radius` wins over `data-theme="compact"` on the same element, and `data-density="default"` beside it keeps only its shape. `[data-density="default"]` restores the defaults inside a compact scope; a test keeps it equal to `:where(:root)`.
+3. `node tooling/shell-check.mjs` renders every density × radius pair at 1100px and 390px: nothing overflows, compact shortens controls at every radius, and `none` and `full` reach buttons, sidebar items and cards at both densities.
+
 ## Elevation
 
 Two levels: surfaces (`shadow-surface`, `rounded-surface`, `backdrop-surface`) and floating UI.
 
-| Token                 | Utility                                      | Default                                                          | Compact / glass / dark                                |
-| --------------------- | -------------------------------------------- | ---------------------------------------------------------------- | ----------------------------------------------------- |
-| `--floating-shadow`   | `shadow-floating`                            | three layers, up to `0 16px 36px -8px` at 14%                    | dark: deeper, with a 5% top highlight; glass: its own |
-| `--floating-radius`   | `rounded-floating`                           | a `-sm` item's radius plus `gap-inline` (22px), concentric       | compact: 0.75rem                                      |
-| `--floating-backdrop` | `backdrop-floating`                          | `blur(16px) saturate(1.5)`                                       | glass: 1.5 × `--glass-blur`                           |
-| `--floating-opacity`  | `bg-floating` (popover colour at this alpha) | 85%; 100% without `backdrop-filter` or with reduced transparency | glass: `--glass-opacity` + 15%                        |
-| `--floating-border`   | `border-floating-border`                     | foreground at 10% (light), white at 12% (dark)                   |                                                       |
-| `--floating-offset`   | `bottom-floating`, `p-floating`…             | 1rem: a `Floating` bar's distance from its container's edge      | compact: 0.75rem                                      |
+| Token                 | Utility                                      | Default                                                          | Compact / glass / dark                                 |
+| --------------------- | -------------------------------------------- | ---------------------------------------------------------------- | ------------------------------------------------------ |
+| `--floating-shadow`   | `shadow-floating`                            | three layers, up to `0 16px 36px -8px` at 14%                    | dark: deeper, with a 5% top highlight; glass: its own  |
+| `--floating-radius`   | `rounded-floating`                           | a `-sm` item's radius plus `gap-inline` (22px), concentric       | `data-radius`: from 0 (none) to the item's pill (full) |
+| `--floating-backdrop` | `backdrop-floating`                          | `blur(16px) saturate(1.5)`                                       | glass: 1.5 × `--glass-blur`                            |
+| `--floating-opacity`  | `bg-floating` (popover colour at this alpha) | 85%; 100% without `backdrop-filter` or with reduced transparency | glass: `--glass-opacity` + 15%                         |
+| `--floating-border`   | `border-floating-border`                     | foreground at 10% (light), white at 12% (dark)                   |                                                        |
+| `--floating-offset`   | `bottom-floating`, `p-floating`…             | 1rem: a `Floating` bar's distance from its container's edge      | compact density: 0.75rem                               |
 
 `surface-floating` combines them (border, radius, popover fill, shadow, backdrop, popover text colour); popovers, menus, select and combobox lists, date picker, hover card, navigation menu and toasts use it. Dialogs and drawers take the shadow, border and radius but are opaque reading surfaces (`bg-popover`, no backdrop blur) in every theme, glass included: a translucent fill over the dimmed backdrop reads grey and drops text below 4.5:1. Glass stays on chrome: popovers, menus, toasts, sidebar and cards. Tooltips take `shadow-floating`.
 
@@ -150,7 +165,7 @@ Never add a component-specific word for these (`error`, `danger`, `positive`); m
 
 ## Typography
 
-Text is sized by role. Each `text-*` step sets size and line height, and the meta, title and display steps a weight too; compact tightens them. Caption, body-sm and body set no weight, so the text keeps what it inherits or its element gives it: a `<strong>`, `<b>` or `<th>` stays bold.
+Text is sized by role. Each `text-*` step sets size and line height, and the meta, title and display steps a weight too; compact density tightens them. Caption, body-sm and body set no weight, so the text keeps what it inherits or its element gives it: a `<strong>`, `<b>` or `<th>` stays bold.
 
 | Utility           | Role                                                        | Default (size/line/weight) | Compact (size/line) |
 | ----------------- | ----------------------------------------------------------- | -------------------------- | ------------------- |
@@ -205,7 +220,7 @@ On a coarse pointer (`@media (pointer: coarse)`), controls reach a hit area of a
 
 `narrow:` is a variant for viewports 760px wide and below (`@custom-variant narrow (@media (width <= 47.5rem))`, shipped with `@eskais/theme`). Use it for layout that must change on a phone-sized screen: stack a row, hide a secondary column, let a dialog fill the width.
 
-1. It is about the viewport width, not density. The `compact` _theme_ (`data-theme="compact"`) tightens sizes and spacing at any width; `narrow:` never changes tokens. Combine them freely.
+1. It is about the viewport width, not density. Compact density (`data-density="compact"`, or the `data-theme="compact"` alias) tightens sizes and spacing at any width; `narrow:` never changes tokens. Combine them freely.
 2. Prefer container queries (`@container`, `@md:`) for a component that lives in panels of different widths; `narrow:` is for page layout.
 3. It is a max-width variant, so write the wide layout first and override it: `flex-row narrow:flex-col`.
 
