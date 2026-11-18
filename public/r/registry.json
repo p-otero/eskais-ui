@@ -4064,7 +4064,8 @@
       "dependencies": [
         "@ui-sdk/core@0.1.0-beta.10",
         "@ui-sdk/react@0.1.0-beta.10",
-        "lucide-react"
+        "lucide-react",
+        "@tanstack/react-virtual@3.14.24"
       ],
       "registryDependencies": [
         "@eskais/utils",
@@ -4105,6 +4106,10 @@
         },
         {
           "path": "registry/ui/use-trail-rows.ts",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/use-flow-rows.ts",
           "type": "registry:ui"
         },
         {
@@ -4152,7 +4157,8 @@
       "dependencies": [
         "@ui-sdk/core@0.1.0-beta.10",
         "@ui-sdk/react@0.1.0-beta.10",
-        "lucide-react"
+        "lucide-react",
+        "@tanstack/react-virtual@3.14.24"
       ],
       "registryDependencies": [
         "@eskais/utils",
@@ -4179,6 +4185,10 @@
         },
         {
           "path": "registry/ui/use-trail-rows.ts",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/use-flow-rows.ts",
           "type": "registry:ui"
         },
         {
