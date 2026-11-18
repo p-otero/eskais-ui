@@ -185,6 +185,8 @@ const tokenPairs = [
   ["violet", "card", 4.5],
   ["skeleton", "background", 1.15],
   ["skeleton", "card", 1.15],
+  // The current page in a sidebar (on muted) or a navigation menu: a fill you can see, under the foreground.
+  ...["muted", "background", "card"].map((surface) => ["nav-current", surface, 1.08]),
   // Code sits on muted; a highlighted line on code-highlight.
   ...["keyword", "string", "number", "comment", "function", "type", "property", "tag", "punctuation"].flatMap(
     (tone) => [
@@ -214,6 +216,9 @@ const tokenPairs = [
   ]),
 ]
 
+// Text on a translucent fill over a surface: [text, fill, surface, required ratio].
+const layeredPairs = ["muted", "background", "card"].map((surface) => ["foreground", "nav-current", surface, 4.5])
+
 // A translucent token (the skeleton) shows the surface under it, so it's measured composited over that surface.
 function over([r, g, b, alpha], back) {
   return [r, g, b].map((value, index) => (value * alpha + back[index] * (255 - alpha)) / 255)
@@ -237,12 +242,23 @@ async function checkTokens(page, scope) {
       probe.remove()
       return rgb
     },
-    [...new Set(tokenPairs.flatMap(([a, b]) => [a, b]))],
+    [
+      ...new Set([
+        ...tokenPairs.flatMap(([a, b]) => [a, b]),
+        ...layeredPairs.flat().filter((name) => typeof name === "string"),
+      ]),
+    ],
   )
   for (const [foreground, background, required] of tokenPairs) {
     const value = ratio(over(colors[foreground], colors[background]), colors[background])
     if (value < required)
       failures.push(`${scope} --${foreground} on --${background}: ${value.toFixed(2)} < ${required}`)
+  }
+  for (const [text, fill, surface, required] of layeredPairs) {
+    const back = over(colors[fill], colors[surface])
+    const value = ratio(over(colors[text], back), back)
+    if (value < required)
+      failures.push(`${scope} --${text} on --${fill} over --${surface}: ${value.toFixed(2)} < ${required}`)
   }
 }
 

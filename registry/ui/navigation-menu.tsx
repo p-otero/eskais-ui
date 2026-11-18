@@ -86,7 +86,7 @@ const navigationMenuLinkVariants = cva("outline-none [&_svg]:pointer-events-none
     variant: {
       panel:
         "flex flex-col gap-inline rounded-control px-inset-item py-inset-item text-sm transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:ring-2 focus-visible:ring-ring data-has-icon:flex-row data-has-icon:items-center data-current:font-semibold",
-      top: `${navigationMenuItemClassName} data-current:bg-accent data-current:text-accent-foreground`,
+      top: `${navigationMenuItemClassName} data-current:nav-current`,
     },
   },
   defaultVariants: { variant: "panel" },
