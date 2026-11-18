@@ -1,5 +1,5 @@
 import { ThemeEditor } from "../../../showcase/src/theme-editor"
-import { appearance, palettes } from "../appearance"
+import { appearance, palettes, themeEditor } from "../appearance"
 import { A, Article, Code, DocTable, DocTitle, H2, H3, P, Pre, Ul } from "../docs/prose"
 
 const seeds = `:root {
@@ -21,15 +21,15 @@ export default function Theming() {
 
       <H2 id="editor">Theme editor</H2>
       <P>
-        Pick a preset or a brand colour, tint the greys and set the radius. The whole site follows; copy the CSS when
-        you like it.
+        Pick a preset or a brand colour, tint the greys and set the radius. The whole site follows, on every page and on
+        your next visit, until you press Reset; copy the CSS when you like it.
       </P>
       <section
         aria-label="Theme editor"
         data-slot="theme-editor-card"
         className="min-w-0 rounded-surface border bg-card p-inset-surface narrow:p-group"
       >
-        <ThemeEditor appearance={appearance} palettes={palettes} />
+        <ThemeEditor appearance={appearance} palettes={palettes} store={themeEditor} />
       </section>
 
       <H2 id="seeds">Seeds</H2>

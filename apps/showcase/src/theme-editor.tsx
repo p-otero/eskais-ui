@@ -1,5 +1,6 @@
 import { usePreference } from "@ui-sdk/react/preferences"
-import { useState } from "react"
+import { RotateCcwIcon } from "lucide-react"
+import { useSyncExternalStore } from "react"
 
 import type { AppearanceState } from "@/components/ui/appearance"
 import { Badge } from "@/components/ui/badge"
@@ -20,7 +21,8 @@ import { SegmentedControl, SegmentedControlIndicator, SegmentedControlItem } fro
 import { Slider, SliderControl, SliderIndicator, SliderThumb, SliderTrack, SliderValue } from "@/components/ui/slider"
 import { StatusPill } from "@/components/ui/status-pill"
 
-import { applyOverrides, measure, useThemeMeasurements, type Overrides } from "./hooks/use-theme-measurements"
+import { measure, useThemeMeasurements } from "./hooks/use-theme-measurements"
+import type { Overrides, ThemeEditorStore } from "./theme-editor-store"
 import { themeSnippet } from "./theme-snippet"
 
 const CUSTOM = "custom"
@@ -117,26 +119,33 @@ function SeedColor({
 }
 
 /**
- * Edits the theme's seeds on `<html>` and shows the CSS to keep them. Two columns only when its container has room
+ * Edits the theme's seeds on `<html>` and shows the CSS to keep them. The choices live in `store`, so they stay
+ * while the reader moves around the site. Two columns only when its container has room
  * for both, so it fits a card in a docs column as well as a full-width showcase section.
  */
 function ThemeEditor<Theme extends string, Palette extends string>({
   appearance,
   palettes,
+  store,
 }: {
   appearance: AppearanceState<Theme, Palette>
   palettes: readonly Palette[]
+  store: ThemeEditorStore
 }) {
   const { value: palette } = usePreference(appearance.palette)
-  const [overrides, setOverrides] = useState<Overrides>({})
-  const [{ seeds, primary, text, link }, setMeasured] = useThemeMeasurements(appearance)
+  const overrides = useSyncExternalStore(store.subscribe, store.get, store.get)
+  const [{ seeds, primary, text, link }, setMeasured] = useThemeMeasurements(appearance, store)
 
   const customised = Object.keys(overrides).length > 0
   const snippet = themeSnippet(seeds)
   const override = (next: Overrides) => {
     const merged = Object.values(next).every((value) => value === undefined) ? {} : { ...overrides, ...next }
-    applyOverrides(merged)
-    setOverrides(merged)
+    store.set(merged)
+    setMeasured(measure())
+  }
+  const reset = () => {
+    store.reset()
+    appearance.palette.set(appearance.palette.defaultValue)
     setMeasured(measure())
   }
 
@@ -217,8 +226,9 @@ function ThemeEditor<Theme extends string, Palette extends string>({
           </section>
           <CodeBlock code={snippet} language="css" title="Theme CSS" wrap className="min-w-0" />
           <div className="flex flex-wrap items-center gap-items">
-            <Button variant="outline" onClick={() => override({})}>
-              Reset to preset
+            <Button variant="outline" onClick={reset}>
+              <RotateCcwIcon />
+              Reset
             </Button>
             <p className="min-w-0 flex-1 text-body-sm text-muted-foreground">
               Paste the CSS after the theme in your stylesheet.

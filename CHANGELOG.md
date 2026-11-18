@@ -101,6 +101,9 @@ Versions follow [semver](https://semver.org). Before 1.0, a minor version can br
 
 ### Fixed
 
+- The theme editor's link colour has the same controls as the brand: the OKLCH area, the hue track and a field, named "Link chroma and lightness", "Link hue" and "Link colour in OKLCH". Each change sets `--link-brand` on `<html>` and in the generated CSS.
+- The theme editor keeps its choices when you leave Theming. They live in a store outside React (`createThemeEditorStore` in the showcase), stay on `<html>` so every page previews them, and on the docs site are mirrored to localStorage (every read and write in try/catch, saved values validated) and applied before the first render. "Reset" (it was "Reset to preset") returns to the defaults and clears the saved choice.
+## 0.2.2 (2026-11-18)
 - `MarkdownEditor`: dismissing the suggestions `openWikilinkSuggestions()` opened no longer leaves `[[` in the note. The `[[` it types, and the query typed after it, are provisional: a `markdown-editor-provisional` state field tracks them, `onChange`, the dirty state and undo history skip them, and Escape, a click away, leaving the editor or any other close puts the note and the selection back byte for byte, with no `onChange`. Choosing an item inserts the wikilink as one undo step from the original note. A `[[` the user typed stays when the menu closes, and so does a query the user finished by hand (`[[idea]]`).
 - `MarkdownEditor frontmatter="readonly"`: a note whose closing fence ends the file (`"---
   a: 1
