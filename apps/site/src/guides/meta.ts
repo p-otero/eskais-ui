@@ -48,6 +48,12 @@ const guides: GuideMeta[] = [
     covers: ["row-navigation", "virtual-rows"],
   },
   {
+    slug: "server-data",
+    title: "Server data",
+    description:
+      "Tables, lists and comboboxes over any backend: pagination styles, wire formats, adapters, serializers and the URL.",
+  },
+  {
     slug: "agents",
     title: "Agents",
     description:

@@ -29,7 +29,8 @@ type ServerDataTableLabels = {
   /** Screen-reader text for a refetch behind the rows. */
   refreshing?: string
   pageSize?: string
-  pagination?: string
+  /** Names the page navigation after the table, so two tables on a page have distinct landmarks. */
+  pagination?: (label: string) => string
   previousPage?: string
   nextPage?: string
   page?: (page: number) => string
@@ -46,7 +47,7 @@ const serverDataTableLabels = {
   loading: pageStatusLabels.loading,
   refreshing: "Refreshing",
   pageSize: "Rows per page",
-  pagination: defaultPaginationLabels.navigation,
+  pagination: (label: string) => `${label} pages`,
   previousPage: defaultPaginationLabels.previous,
   nextPage: defaultPaginationLabels.next,
   page: defaultPaginationLabels.page,
@@ -60,6 +61,8 @@ const serverDataTableLabels = {
 type ResolvedLabels = typeof serverDataTableLabels & ServerDataTableLabels
 
 type ServerTableNavigationProps = {
+  /** The table's label, for the navigation's name. */
+  label: string
   navigation: Navigation
   page: number
   pageCount: number
@@ -71,6 +74,7 @@ type ServerTableNavigationProps = {
 }
 
 function ServerTableNavigation({
+  label,
   navigation,
   page,
   pageCount,
@@ -81,11 +85,12 @@ function ServerTableNavigation({
   labels,
 }: ServerTableNavigationProps) {
   const paginationLabels = {
-    navigation: labels.pagination,
+    navigation: labels.pagination(label),
     previous: labels.previousPage,
     next: labels.nextPage,
     page: labels.page,
   }
+  // Agents page through the table's own `setPage`; a second component with the table's name would be ambiguous.
   if (navigation === "pages") {
     if (pageCount <= 1) return null
     return (
@@ -94,6 +99,7 @@ function ServerTableNavigation({
         pageCount={pageCount}
         onPageChange={(next) => onPageChange(next)}
         labels={paginationLabels}
+        data-agent-hidden=""
         className="w-auto"
       />
     )
@@ -106,7 +112,8 @@ function ServerTableNavigation({
         page={page}
         pageCount={pageCount}
         onPageChange={(next) => onPageChange(next)}
-        aria-label={labels.pagination}
+        aria-label={labels.pagination(label)}
+        data-agent-hidden=""
         className="w-auto"
       >
         <PaginationList>

@@ -298,6 +298,7 @@ function ServerDataTable<T, S extends FilterSchema = Record<never, never>>({
                 />
               )}
               <ServerTableNavigation
+                label={label}
                 navigation={navigation}
                 page={index}
                 pageCount={pageCount}
