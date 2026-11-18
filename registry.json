@@ -1346,7 +1346,7 @@
       "dependencies": [
         "@ui-sdk/core@0.1.0-beta.10",
         "@ui-sdk/react@0.1.0-beta.10",
-        "lucide-react@^1.68.0"
+        "lucide-react"
       ],
       "registryDependencies": [
         "@eskais/utils",
@@ -1396,7 +1396,7 @@
       "dependencies": [
         "@ui-sdk/core@0.1.0-beta.10",
         "@ui-sdk/react@0.1.0-beta.10",
-        "lucide-react@^1.68.0"
+        "lucide-react"
       ],
       "registryDependencies": [
         "@eskais/utils",
@@ -2193,7 +2193,7 @@
       "dependencies": [
         "@ui-sdk/core@0.1.0-beta.10",
         "@ui-sdk/react@0.1.0-beta.10",
-        "lucide-react@^1.68.0"
+        "lucide-react"
       ],
       "registryDependencies": [
         "@eskais/utils",
@@ -3169,7 +3169,7 @@
       "dependencies": [
         "@ui-sdk/core@0.1.0-beta.10",
         "@ui-sdk/react@0.1.0-beta.10",
-        "lucide-react@^1.68.0"
+        "lucide-react"
       ],
       "registryDependencies": [
         "@eskais/utils",
@@ -3443,7 +3443,7 @@
       "dependencies": [
         "@ui-sdk/core@0.1.0-beta.10",
         "@ui-sdk/react@0.1.0-beta.10",
-        "lucide-react@^1.68.0"
+        "lucide-react"
       ],
       "registryDependencies": [
         "@eskais/utils",
@@ -3984,7 +3984,7 @@
       "docs": "`<GitFileChip path=\"src/routes.ts\" />` and `<GitBranchChip name=\"main\" />` sit inline in a sentence, like a commit message: quiet tokens in caption mono, no taller than the line, with a size-3 icon and muted text on a translucent fill that shows on a hovered or selected row as on the card (an outline appears only in forced-colors mode). `textRef` renders the name empty for a virtualizer's `findableText`. Both take `render` and any span prop.",
       "dependencies": [
         "@ui-sdk/react@0.1.0-beta.10",
-        "lucide-react@^1.68.0"
+        "lucide-react"
       ],
       "registryDependencies": [
         "@eskais/utils",
@@ -4035,7 +4035,7 @@
       "dependencies": [
         "@ui-sdk/core@0.1.0-beta.10",
         "@ui-sdk/react@0.1.0-beta.10",
-        "lucide-react@^1.68.0"
+        "lucide-react"
       ],
       "registryDependencies": [
         "@eskais/utils",
@@ -4123,7 +4123,7 @@
       "dependencies": [
         "@ui-sdk/core@0.1.0-beta.10",
         "@ui-sdk/react@0.1.0-beta.10",
-        "lucide-react@^1.68.0"
+        "lucide-react"
       ],
       "registryDependencies": [
         "@eskais/utils",
@@ -4396,7 +4396,7 @@
       "dependencies": [
         "@ui-sdk/core@0.1.0-beta.10",
         "@ui-sdk/react@0.1.0-beta.10",
-        "lucide-react@^1.68.0"
+        "lucide-react"
       ],
       "registryDependencies": [
         "@eskais/utils",
@@ -4452,7 +4452,7 @@
       "dependencies": [
         "@ui-sdk/core@0.1.0-beta.10",
         "@ui-sdk/react@0.1.0-beta.10",
-        "lucide-react@^1.68.0"
+        "lucide-react"
       ],
       "registryDependencies": [
         "@eskais/utils",
@@ -4588,7 +4588,7 @@
       "dependencies": [
         "@ui-sdk/core@0.1.0-beta.10",
         "@ui-sdk/react@0.1.0-beta.10",
-        "lucide-react@^1.68.0"
+        "lucide-react"
       ],
       "registryDependencies": [
         "@eskais/utils",
@@ -4946,7 +4946,7 @@
         "@ui-sdk/react@0.1.0-beta.10",
         "@lezer/common@1.5.5",
         "@lezer/highlight@1.2.5",
-        "lucide-react@^1.68.0"
+        "lucide-react"
       ],
       "registryDependencies": [
         "@eskais/utils",
@@ -5041,7 +5041,7 @@
       "dependencies": [
         "@ui-sdk/core@0.1.0-beta.10",
         "@ui-sdk/react@0.1.0-beta.10",
-        "lucide-react@^1.68.0"
+        "lucide-react"
       ],
       "registryDependencies": [
         "@eskais/utils",
@@ -5276,7 +5276,7 @@
       "dependencies": [
         "@ui-sdk/core@0.1.0-beta.10",
         "@ui-sdk/react@0.1.0-beta.10",
-        "lucide-react@^1.68.0"
+        "lucide-react"
       ],
       "registryDependencies": [
         "@eskais/utils",
@@ -5309,7 +5309,7 @@
       "dependencies": [
         "@ui-sdk/core@0.1.0-beta.10",
         "@ui-sdk/react@0.1.0-beta.10",
-        "lucide-react@^1.68.0"
+        "lucide-react"
       ],
       "registryDependencies": [
         "@eskais/utils",
