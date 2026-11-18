@@ -99,6 +99,7 @@ Two levels: surfaces (`shadow-surface`, `rounded-surface`, `backdrop-surface`) a
 2. Both reach 4.5:1 on `background`, `card` and `muted` in every palette and mode; `bun run test:browser` checks it. A custom `--link-brand` keeps that, since the lightness is clamped.
 3. `--accent` is a surface (hover and selected fills) with `accent-foreground` on it, and nothing else: never a text colour (`text-accent`) or a stroke (`border-accent`, `ring-accent`, `outline-accent`, `stroke-`, `fill-`, `decoration-`, `divide-accent`). It is a near-background tint with no contrast guarantee. For a stroke use `border-input-strong` (a control's edge, 3:1), `border-primary` or `ring-ring` (selected or focused); for coloured text, `text-link`. A unit test greps `registry/**`.
 4. Pair a link colour with an underline (at rest or on hover) so it doesn't rely on colour alone.
+5. The current page in a nav takes `nav-current`: the `--nav-current` fill (foreground at 6%, 9% dark), a `--nav-current-border` hairline inside the edge, the foreground text and a medium weight over the items' normal one. `SidebarItem` (so the Shell and docs sidebars) and `NavigationMenuLink variant="top"` use it. `bun run test:browser` checks the fill shows on muted, background and card and keeps the text at 4.5:1.
 
 ## Dark mode
 

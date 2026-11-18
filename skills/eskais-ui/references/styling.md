@@ -31,6 +31,10 @@ Status meaning has one vocabulary across Badge, Alert, StatusPill, StatusDot, Pr
 
 Surfaces (cards, columns, panels) use `shadow-surface`. Anything that floats (popover, menu, list popup, toast, dialog, a `Floating` bar) uses the floating level: `surface-floating`, or its parts `shadow-floating`, `rounded-floating`, `bg-floating`, `backdrop-floating`, `border-floating-border`. Tokens: `--floating-shadow`, `--floating-radius`, `--floating-backdrop`, `--floating-opacity`, `--floating-border`, `--floating-offset`. The fill is translucent and blurred by default, opaque without `backdrop-filter` or with reduced transparency. `data-elevation="flat"` on any ancestor removes the depth. Never use viewport-height units (`vh`, `dvh`, `h-screen`) to place floating UI; it takes its position from its container.
 
+## Current page
+
+The current page in a sidebar or a navigation menu uses `nav-current` (`aria-[current=page]:nav-current`): a soft translucent fill (`--nav-current`, the foreground at 6%, 9% in dark mode), a hairline inside its edge (`--nav-current-border`), the foreground text and a medium weight over the items' normal one, so it never rests on colour alone. `SidebarItem` (and so `Shell` and `DocsLayout`) and `NavigationMenuLink variant="top"` use it; reuse it for your own nav rather than a solid `bg-primary` pill.
+
 ## Layers and motion
 
 Stack with `z-sticky` < `z-overlay` (dialogs) < `z-popover` < `z-toast`, never a number. Time transitions with `duration-micro` (140ms: hover, popovers, tooltips), `duration-panel` (180ms: accordion, sidebar, toasts) or `duration-dialog` (200ms), with `ease-standard`. Reduced motion is handled globally by the theme.
