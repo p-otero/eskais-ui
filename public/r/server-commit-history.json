@@ -1,0 +1,24 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "server-commit-history",
+  "title": "Server Commit History",
+  "description": "A CommitHistory over a PageSource: older commits load as the end scrolls into view and from a Load more button, the header counts the source's total, and the graph carries on across pages.",
+  "dependencies": [
+    "@ui-sdk/react@0.1.0-beta.5"
+  ],
+  "registryDependencies": [
+    "@eskais/commit-history",
+    "@eskais/server-data",
+    "@eskais/states",
+    "@eskais/page-source"
+  ],
+  "files": [
+    {
+      "path": "registry/ui/server-commit-history.tsx",
+      "content": "\"use client\"\n\nimport type { ReactNode } from \"react\"\n\nimport { CommitHistory, type CommitHistoryProps } from \"@/components/ui/commit-history\"\nimport { DataState } from \"@/components/ui/data-state\"\nimport { useServerInfinite } from \"@/components/ui/use-server-data\"\nimport type { Commit } from \"@/lib/commit-graph\"\nimport type { PageSource, SortSpec } from \"@/lib/page-source\"\n\ntype ServerCommitHistoryLabels = NonNullable<CommitHistoryProps[\"labels\"]> & {\n  errorTitle: ReactNode\n  retry: ReactNode\n  emptyTitle: ReactNode\n  emptyDescription?: ReactNode\n  refreshing?: string\n}\n\ntype ServerCommitHistoryProps<F> = Omit<\n  CommitHistoryProps,\n  \"commits\" | \"hasMore\" | \"loadingMore\" | \"onLoadMore\" | \"labels\" | \"count\"\n> & {\n  /** Pages of commits, newest first; each page continues the last, as `git log --skip` or a cursor does. */\n  source: PageSource<Commit, F>\n  /** What the source filters on, like the branch: a new filter starts again from the newest commit. */\n  filter: F\n  sort?: readonly SortSpec[]\n  /** Commits per request. Default 100. */\n  pageSize?: number\n  labels: ServerCommitHistoryLabels\n}\n\nconst NO_SORT: readonly SortSpec[] = []\n\n/**\n * A CommitHistory over a `PageSource`: older pages load as the end scrolls into view and from a Load more button,\n * the header counts the source's total when it gives one, and the graph carries on across pages without being\n * laid out again.\n */\nfunction ServerCommitHistory<F>({\n  source,\n  filter,\n  sort = NO_SORT,\n  pageSize = 100,\n  labels,\n  ...props\n}: ServerCommitHistoryProps<F>) {\n  const pages = useServerInfinite(source, { filter, sort, size: pageSize })\n  const total = pages.total.kind === \"none\" ? undefined : pages.total.value\n  return (\n    <DataState\n      status={pages.status}\n      data={pages.status === \"success\" ? pages.items : undefined}\n      error={pages.error}\n      onRetry={pages.retry}\n      fetching={pages.fetching && !pages.loadingMore}\n      labels={labels}\n    >\n      {(commits) => (\n        <CommitHistory\n          {...props}\n          commits={commits}\n          count={total}\n          hasMore={pages.hasMore}\n          loadingMore={pages.loadingMore}\n          onLoadMore={pages.loadMore}\n          labels={labels}\n        />\n      )}\n    </DataState>\n  )\n}\n\nexport { ServerCommitHistory }\nexport type { ServerCommitHistoryLabels, ServerCommitHistoryProps }\n",
+      "type": "registry:ui"
+    }
+  ],
+  "docs": "`<ServerCommitHistory aria-label source filter labels={{ errorTitle, retry, emptyTitle }} />` inside a `DataProvider`. `source` is any `PageSource<Commit>` (`cursorSource` for a `git log` API that returns a cursor, `pagedSource`, or `arraySource` in memory) and `filter` what it filters on, like `{ branch }`: a new filter starts again from the newest commit. `pageSize` (100) commits per request through `useServerInfinite`; `DataState` covers loading, error with retry and empty. Every other `CommitHistory` prop passes through.",
+  "type": "registry:ui"
+}

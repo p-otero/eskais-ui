@@ -126,6 +126,10 @@ const categories = [
     ],
   },
   {
+    name: "Git",
+    items: ["commit-history", "server-commit-history", "git-tree", "git-chip", "commit-graph"],
+  },
+  {
     name: "Feedback",
     items: ["alert", "toast", "status-pill", "spinner", "skeleton", "progress", "meter", "empty", "states"],
   },

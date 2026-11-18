@@ -1,0 +1,23 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "git-chip",
+  "title": "Git Chip",
+  "description": "Inline chips for git names in text: GitFileChip (a file icon and the path in mono) and GitBranchChip (a branch icon and the name).",
+  "dependencies": [
+    "@ui-sdk/react@0.1.0-beta.5",
+    "lucide-react@^1.68.0"
+  ],
+  "registryDependencies": [
+    "@eskais/utils",
+    "@eskais/theme"
+  ],
+  "files": [
+    {
+      "path": "registry/ui/git-chip.tsx",
+      "content": "import { renderElement, type PartProps } from \"@ui-sdk/react/primitive\"\nimport { FileIcon, GitBranchIcon } from \"lucide-react\"\nimport type { Ref } from \"react\"\n\nimport { cn } from \"@/lib/utils\"\n\n// A quiet inline token: caption mono on a translucent fill, so it shows on a hovered or selected row as on the\n// card, and no taller than the line it sits in. The border is\n// transparent so it shows only in forced-colors mode, where the fill is dropped.\nconst chipClassName =\n  \"inline-flex max-w-full min-w-0 items-center gap-inline rounded-sm border border-transparent bg-foreground/8 px-inline py-px align-baseline font-mono text-caption leading-none text-muted-foreground [&>svg]:size-3 [&>svg]:shrink-0\"\n\ntype ChipTextProps = {\n  /**\n   * Renders the name empty with this ref, for a list that fills it itself, like a virtualizer's `findableText`\n   * keeping a row findable while it isn't rendered.\n   */\n  textRef?: Ref<HTMLSpanElement>\n}\n\ntype GitFileChipProps = Omit<PartProps<\"span\">, \"children\"> & ChipTextProps & { path: string }\n\n/** A file path inline in text, like a commit message: a file icon and the path in mono. */\nfunction GitFileChip({ path, textRef, className, render, ...props }: GitFileChipProps) {\n  return renderElement(\n    \"span\",\n    {\n      \"data-slot\": \"git-file-chip\",\n      title: path,\n      className: cn(chipClassName, className),\n      ...props,\n      children: (\n        <>\n          <FileIcon />\n          {textRef ? <span ref={textRef} className=\"truncate\" /> : <span className=\"truncate\">{path}</span>}\n        </>\n      ),\n    },\n    render,\n  )\n}\n\ntype GitBranchChipProps = Omit<PartProps<\"span\">, \"children\"> & ChipTextProps & { name: string }\n\n/** A branch name inline in text, like \"Merge invoice-pdf into main\". */\nfunction GitBranchChip({ name, textRef, className, render, ...props }: GitBranchChipProps) {\n  return renderElement(\n    \"span\",\n    {\n      \"data-slot\": \"git-branch-chip\",\n      className: cn(chipClassName, className),\n      ...props,\n      children: (\n        <>\n          <GitBranchIcon />\n          {textRef ? <span ref={textRef} className=\"truncate\" /> : <span className=\"truncate\">{name}</span>}\n        </>\n      ),\n    },\n    render,\n  )\n}\n\nexport { GitBranchChip, GitFileChip }\nexport type { GitBranchChipProps, GitFileChipProps }\n",
+      "type": "registry:ui"
+    }
+  ],
+  "docs": "`<GitFileChip path=\"src/routes.ts\" />` and `<GitBranchChip name=\"main\" />` sit inline in a sentence, like a commit message: quiet tokens in caption mono, no taller than the line, with a size-3 icon and muted text on a translucent fill that shows on a hovered or selected row as on the card (an outline appears only in forced-colors mode). `textRef` renders the name empty for a virtualizer's `findableText`. Both take `render` and any span prop.",
+  "type": "registry:ui"
+}

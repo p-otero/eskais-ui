@@ -17,6 +17,7 @@ import { GaugeCheck } from "./checks/gauge-check"
 import { IconTooltipCheck } from "./checks/icon-tooltip-check"
 import { MasterDetailCheck } from "./checks/master-detail-check"
 import { MobileNavCheck } from "./checks/mobile-nav-check"
+import { GitBench } from "./checks/git-bench"
 import { ListBench } from "./checks/list-bench"
 import { OverlayCheck } from "./checks/overlay-check"
 import { PressCheck } from "./checks/press-check"
@@ -25,6 +26,7 @@ import { TableCheck } from "./checks/table-check"
 import { ServerDataCheck } from "./checks/server-data-check"
 import { AgentWorkspace } from "./sections/agent-workspace"
 import { DocumentWorkspacePage } from "./sections/document-workspace"
+import { CommitBranchesDemo, CommitTrailDemo } from "./sections/git"
 import { InboxDemo } from "./sections/inbox"
 import { DashboardGridDemo, MasterDetailDemo, SettingsPageDemo } from "./sections/layout-blocks"
 import { demoStatuses, PageDemo, type DemoStatus } from "./sections/page"
@@ -71,6 +73,10 @@ const standalone = new Set([
   "document-workspace",
   "server-data-check",
   "agent-workspace",
+  "commit-history",
+  "commit-branches",
+  "commit-bench",
+  "git-tree-bench",
 ])
 
 function Demo() {
@@ -109,6 +115,22 @@ function Demo() {
       <main className="p-inset-surface">
         <AgentWorkspace />
         <ToastStack />
+      </main>
+    )
+  }
+  if (demo === "commit-bench") return <GitBench kind="commits" />
+  if (demo === "git-tree-bench") return <GitBench kind="files" />
+  if (demo === "commit-branches") {
+    return (
+      <main className="flex min-h-dvh items-start justify-center bg-background p-inset-surface">
+        <CommitBranchesDemo />
+      </main>
+    )
+  }
+  if (demo === "commit-history") {
+    return (
+      <main className="flex min-h-dvh items-start justify-center bg-background p-inset-surface">
+        <CommitTrailDemo />
       </main>
     )
   }
