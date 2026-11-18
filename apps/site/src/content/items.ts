@@ -484,7 +484,7 @@ const itemNotes: Record<string, ItemNotes> = {
   },
   "document-workspace": {
     usage:
-      "For any notes or docs app: put a MarkdownEditor (edit) or MarkdownView (read) in document, your file tree in explorer, DocumentOutline and backlinks in aside, and DocumentQuickOpen in quickOpen: items to filter in the browser, or a PageSource as source to search notes on the server, bodies included. Pass the editor's ref as editorRef, extractHeadings(markdown) as headings and the open note's id as documentId, so the narrow explorer drawer closes when any control opens a note. In a Shell, main fill (on the Shell or the route) lets it fill the height left.",
+      "For any notes or docs app: put a MarkdownEditor (edit) or MarkdownView (read) in document, your file tree in explorer, DocumentOutline and backlinks in aside, and DocumentQuickOpen in quickOpen: items to filter in the browser, or a PageSource as source to search notes on the server, bodies included; an item's snippet shows the passage that matched under its title, with the query's words marked. Pass the editor's ref as editorRef, extractHeadings(markdown) as headings and the open note's id as documentId, so the narrow explorer drawer closes when any control opens a note. In a Shell, main fill (on the Shell or the route) lets it fill the height left.",
     a11y: [
       "The explorer is a navigation landmark, the document a named region (or main) and the aside a complementary landmark; the Files and Details toggles carry aria-expanded and aria-controls.",
       "It lays out by its own width: resizable, collapsible columns when wide, drawers when narrow. Drawers, quick open and menus give focus back to the document.",
@@ -492,7 +492,7 @@ const itemNotes: Record<string, ItemNotes> = {
       "Ctrl/Cmd+P opens quick open; the outline moves the caret to a heading in edit mode and focus to it in read mode, and switching modes keeps the heading you were reading at the top.",
     ],
     agent:
-      "Agents switch the Mode segmented control, press Files, Details and Quick open by name, run a quick open item, follow wikilinks and use the editor's own actions.",
+      "Agents switch the Mode segmented control, press Files, Details and Quick open by name, read a quick open item as its title, folder and snippet, run one, follow wikilinks and use the editor's own actions.",
     related: ["markdown-editor", "markdown-view", "resizable", "drawer", "command"],
   },
   "side-panel": {
@@ -927,7 +927,7 @@ const itemNotes: Record<string, ItemNotes> = {
   },
   "markdown-editor": {
     usage:
-      "Pass a ref for a host's Insert or Link menu and an outline: MarkdownEditorHandle runs the toolbar's commands, inserts links and wikilinks, opens the wikilink suggestions (openWikilinkSuggestions) and moves the caret, without importing CodeMirror.",
+      "Pass a ref for a host's Insert or Link menu and an outline: MarkdownEditorHandle runs the toolbar's commands, inserts links and wikilinks, opens the wikilink suggestions (openWikilinkSuggestions, also from a slash command's run) and moves the caret, without importing CodeMirror. The [[ that openWikilinkSuggestions types is provisional: dismissing the list leaves the note as it was, with no onChange, and choosing a note is one undo step. frontmatter=\"readonly\" keeps the YAML block byte for byte and leaves the body editable, also when the closing fence ends the file.",
     a11y: [
       "Named by label; the toolbar is one tab stop with arrow keys, and what doesn't fit moves into More.",
       "Escape then Tab leaves the editor. Shortcuts: Mod+B/I/E, Mod+Alt+0..6 for headings.",
