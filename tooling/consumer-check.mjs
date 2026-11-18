@@ -1,7 +1,7 @@
 // Installs registry items into fresh Vite apps with npm or pnpm (no Bun), builds them and checks them in Chrome.
 // Usage: node tooling/consumer-check.mjs [npm|pnpm] [scenario…] (default: all). Scenarios: fresh, init, layouts
 // (the layout blocks, driven), aliases (`~/` aliases and the agent skills), imports, imports-flat, imports-tsx (must
-// fail to type-check), release-age (pnpm) and server-data; each one says what it checks below.
+// fail to type-check), release-age (pnpm), existing-lucide and server-data; each one says what it checks below.
 import { spawn } from "node:child_process"
 import { createReadStream, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, writeFileSync } from "node:fs"
 import { createServer } from "node:http"
@@ -11,7 +11,7 @@ import { dirname, extname, join, normalize, resolve } from "node:path"
 import { createRequire } from "node:module"
 import { pathToFileURL } from "node:url"
 
-import { youngDependencyExceptions } from "./check-dependency-age.mjs"
+import { unversionedDependencies, youngDependencyExceptions } from "./check-dependency-age.mjs"
 
 const pm = process.argv[2] ?? "npm"
 if (pm !== "npm" && pm !== "pnpm") throw new Error(`Unsupported package manager: ${pm}`)
@@ -165,7 +165,7 @@ const versions = {
   cn: "0.5.2",
   prettier: "3.9.10",
   zod: "4.6.7",
-  // Newer than the registry's lucide-react floor, as a consumer that already uses lucide may be.
+  // Newer than the registry's lucide-react floor, as a consumer that already uses lucide may be (existing-lucide).
   "lucide-react": "1.70.0",
 }
 const devDependencies = [
@@ -1026,10 +1026,9 @@ const scenarios = {
   },
   // A consumer whose pnpm holds back releases younger than 7 days. shadcn installs dependencies before it writes any
   // file, so one young pin (lucide-react 1.73.0 in 0.2.0) fails the whole add with ERR_PNPM_NO_MATURE_MATCHING_VERSION.
-  // It already depends on a newer lucide-react than the registry's floor, which the caret range must keep.
+  // Its lucide-react is the newest release the age allows, never older than the registry's floor.
   "release-age": {
     packageManagers: ["pnpm"],
-    dependencies: ["lucide-react"],
     releaseAge: {
       minutes: 7 * 24 * 60,
       // Only the documented exceptions of check-dependency-age.mjs, and this app's own build tools, which aren't
@@ -1040,18 +1039,45 @@ const scenarios = {
     items: ["theme", "dialog"],
     main: releaseAgeMain,
     builtCss: ["--brand", ".text-title{"],
-    check: async (page) => {
-      const icon = await page.locator('[data-slot="button"][aria-label="Close"] svg.lucide').count()
-      if (icon !== 1) throw new Error("The lucide icon didn't render in the button")
-    },
-    // Still 1.70.0 or newer within major 1: the registry's ^1.68.0 didn't move it back down.
-    installed: {
-      "lucide-react": (version) => {
-        const [major, minor] = version.split(".").map(Number)
-        return major === 1 && minor >= 70
-      },
-    },
+    check: checkLucideIcon,
   },
+  // A consumer already on a newer lucide-react than the registry's floor. An item that listed it with any version
+  // made shadcn reinstall it: an exact pin wrote that pin back, npm moved a range to the latest release. Listed
+  // without one, shadcn skips it, and package.json and node_modules keep 1.70.0.
+  "existing-lucide": {
+    dependencies: ["lucide-react"],
+    css: `@layer ui-sdk;\n@import "tailwindcss";\n`,
+    items: ["theme", "dialog"],
+    main: releaseAgeMain,
+    builtCss: ["--brand", ".text-title{"],
+    check: checkLucideIcon,
+  },
+}
+
+async function checkLucideIcon(page) {
+  const icon = await page.locator('[data-slot="button"][aria-label="Close"] svg.lucide').count()
+  if (icon !== 1) throw new Error("The lucide icon didn't render in the button")
+}
+
+const compareVersions = (a, b) => {
+  const [x, y] = [a, b].map((version) => version.split(".").map(Number))
+  return x[0] - y[0] || x[1] - y[1] || x[2] - y[2]
+}
+
+// What `add` left in package.json and node_modules: an app that had lucide-react keeps its spec and install; any
+// other gets `^<installed>`, at or above the registry's floor.
+function checkLucideDependency(app, scenario) {
+  const spec = JSON.parse(readFileSync(join(app, "package.json"), "utf8")).dependencies?.["lucide-react"]
+  const manifest = join(app, "node_modules", "lucide-react", "package.json")
+  const installed = existsSync(manifest) ? JSON.parse(readFileSync(manifest, "utf8")).version : undefined
+  if (spec === undefined && installed === undefined) return
+  const floor = unversionedDependencies["lucide-react"]
+  const had = (scenario.dependencies ?? []).includes("lucide-react")
+  const expected = had ? versions["lucide-react"] : installed === undefined ? undefined : `^${installed}`
+  if (spec !== expected || installed === undefined || (had && installed !== versions["lucide-react"]))
+    throw new Error(`lucide-react: package.json has ${String(spec)} and ${String(installed)} is installed`)
+  if (compareVersions(installed, floor) < 0) throw new Error(`lucide-react ${installed} is older than ${floor}`)
+  console.log(`lucide-react: package.json ${spec}, installed ${installed} (floor ${floor})`)
 }
 
 // Where shadcn put the files and what the imports point at, for a scenario with its own aliases.
@@ -1188,12 +1214,7 @@ export default defineConfig({
   const items = [...scenario.items, ...(scenario.skills ?? [])]
   const add = () => exec(["shadcn", "add", ...items.map((item) => `@eskais/${item}`), "--yes", "--overwrite"])
   await add()
-  // An exact version, or a predicate on the installed one.
-  for (const [dependency, expected] of Object.entries(scenario.installed ?? {})) {
-    const found = JSON.parse(readFileSync(join(app, "node_modules", dependency, "package.json"), "utf8")).version
-    const ok = typeof expected === "function" ? expected(found) : found === expected
-    if (!ok) throw new Error(`${dependency} ${found} is installed, not ${String(expected)}`)
-  }
+  checkLucideDependency(app, scenario)
   const readStylesheet = () => readFileSync(join(app, "src", "index.css"), "utf8")
   checkStylesheet(readStylesheet())
   const addAgain = async (message, format = async () => {}) => {

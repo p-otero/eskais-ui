@@ -1,6 +1,6 @@
 // Fails when an npm dependency pinned in registry.json is younger than 7 days: shadcn installs dependencies before
 // it writes any file, so a consumer with a minimum release age (pnpm `minimumReleaseAge`) can't add the item at all.
-// A caret range, allowed only for `caretRangeDependencies`, is checked at its floor.
+// A dependency listed without a version, allowed only for `unversionedDependencies`, is checked at its floor.
 // Usage: node tooling/check-dependency-age.mjs [--require-network]. Offline it skips, unless --require-network.
 import { readFileSync } from "node:fs"
 import { join } from "node:path"
@@ -18,10 +18,14 @@ export const youngDependencyExceptions = {
     "UI SDK's first release is from 2026-11-12, so no version is 7 days old yet; the components are built on it",
 }
 
-// Dependencies that may be a caret range (`name@^1.2.3`). shadcn runs `npm install name@<spec>`, so an exact pin
-// moves a consumer already on a newer release back down to it. Fine for lucide-react, which only adds icons within a
-// major; the floor stays the oldest release with every icon in use.
-export const caretRangeDependencies = ["lucide-react"]
+// Dependencies items list without a version, each with its floor, the exact pin in the root package.json. shadcn
+// 4.23 skips a versionless dependency the consumer already has and reinstalls any spec with a version, rewriting the
+// consumer's (an exact pin downgrades). A new install gets the newest release its minimum release age allows, never
+// older than the floor once the floor is 7 days old.
+const rootPackage = JSON.parse(readFileSync(join(import.meta.dirname, "..", "package.json"), "utf8"))
+export const unversionedDependencies = Object.fromEntries(
+  ["lucide-react"].map((name) => [name, rootPackage.dependencies[name]]),
+)
 
 // "name@1.2.3" or "@scope/name@1.2.3"; anything that isn't a registry version (github:, a URL) is not checked.
 export function parseDependency(spec) {
@@ -38,7 +42,6 @@ export function registryDependencies(registry) {
 }
 
 const exactVersion = /^\d+\.\d+\.\d+(?:-[\w.]+)?$/
-const caretVersion = /^\^(\d+\.\d+\.\d+)$/
 const notOnNpm = /^(?:github:|git\+|git:|https?:|file:|link:|workspace:)/
 
 // `published` maps each "name@version" to its ISO publish time from the npm registry. Returns the pins that fail
@@ -47,7 +50,7 @@ export function findYoungDependencies(
   specs,
   published,
   now,
-  { minimumDays = minimumAgeDays, exceptions = youngDependencyExceptions, ranges = caretRangeDependencies } = {},
+  { minimumDays = minimumAgeDays, exceptions = youngDependencyExceptions, unversioned = unversionedDependencies } = {},
 ) {
   const problems = []
   const matured = []
@@ -56,8 +59,12 @@ export function findYoungDependencies(
   for (const spec of specs) {
     const { name, version: written } = parseDependency(spec)
     if (written !== undefined && notOnNpm.test(written)) continue
-    const floor = ranges.includes(name) ? caretVersion.exec(written ?? "")?.[1] : undefined
+    const floor = written === undefined && Object.hasOwn(unversioned, name) ? unversioned[name] : undefined
     const version = floor ?? written
+    if (floor !== undefined && !exactVersion.test(floor)) {
+      problems.push({ spec, reason: `its floor in package.json, ${String(floor)}, isn't an exact version` })
+      continue
+    }
     if (version === undefined || !exactVersion.test(version)) {
       problems.push({ spec, reason: "not pinned to an exact version, so its age can't be checked" })
       continue
@@ -72,7 +79,9 @@ export function findYoungDependencies(
     if (young && !(spec in exceptions))
       problems.push({
         spec,
-        reason: `published ${time.slice(0, 10)}, ${age.toFixed(1)} days ago (minimum ${String(minimumDays)})`,
+        reason:
+          `${floor === undefined ? "" : `its floor ${floor} was `}published ${time.slice(0, 10)}, ` +
+          `${age.toFixed(1)} days ago (minimum ${String(minimumDays)})`,
       })
     if (!young && spec in exceptions) matured.push(spec)
   }

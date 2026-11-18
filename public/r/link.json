@@ -8,7 +8,7 @@
     "@ui-sdk/react@0.1.0-beta.5",
     "class-variance-authority@0.7.1",
     "@fast-link/core@0.0.2",
-    "lucide-react@^1.68.0"
+    "lucide-react"
   ],
   "registryDependencies": [
     "@eskais/utils",

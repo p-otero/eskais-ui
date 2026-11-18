@@ -31,29 +31,28 @@ test("a release younger than 7 days fails, an older one passes", () => {
 
 test("ranges, missing versions and stale exceptions fail; non-npm sources are skipped", () => {
   const { problems } = findYoungDependencies(
-    ["lucide-react", "@ui-sdk/react@^0.1.0-beta.5", "lucide-react@9.9.9", "tool@github:owner/tool#0123abc"],
+    ["@ui-sdk/react", "lucide-react@^1.68.0", "lucide-react@9.9.9", "tool@github:owner/tool#0123abc"],
     published,
     now,
-    { exceptions: { "gone@1.0.0": "no longer used" } },
+    { exceptions: { "gone@1.0.0": "no longer used" }, unversioned: { "lucide-react": "1.68.0" } },
   )
   expect(problems.map((problem) => problem.spec)).toEqual([
     "gone@1.0.0",
-    "lucide-react",
-    "@ui-sdk/react@^0.1.0-beta.5",
+    "@ui-sdk/react",
+    "lucide-react@^1.68.0",
     "lucide-react@9.9.9",
   ])
 })
 
-test("lucide-react alone may be a caret range, whose floor must be 7 days old", () => {
-  const specs = ["lucide-react@^1.68.0", "lucide-react@^1.73.0", "lucide-react@~1.68.0", "lucide-react@^1"]
-  const { problems } = findYoungDependencies(specs, published, now, { exceptions: {} })
-  expect(problems.map((problem) => [problem.spec, problem.reason.split(",")[0]])).toEqual([
-    ["lucide-react@^1.73.0", "published 2026-11-14"],
-    ["lucide-react@~1.68.0", "not pinned to an exact version"],
-    ["lucide-react@^1", "not pinned to an exact version"],
-  ])
-  const exact = findYoungDependencies(["lucide-react@^1.68.0"], published, now, { exceptions: {}, ranges: [] })
-  expect(exact.problems.map((problem) => problem.spec)).toEqual(["lucide-react@^1.68.0"])
+test("an unversioned dependency is checked at its floor, which must be 7 days old", () => {
+  const check = (floor: string) =>
+    findYoungDependencies(["lucide-react"], published, now, { exceptions: {}, unversioned: { "lucide-react": floor } })
+  expect(check("1.68.0").problems).toEqual([])
+  expect(check("1.73.0").problems[0]?.reason).toMatch(/^its floor 1\.73\.0 was published 2026-11-14/)
+  expect(check("^1.68.0").problems[0]?.reason).toMatch(/isn't an exact version/)
+  expect(findYoungDependencies(["lucide-react"], published, now, { exceptions: {}, unversioned: {} }).problems).toEqual(
+    [{ spec: "lucide-react", reason: "not pinned to an exact version, so its age can't be checked" }],
+  )
 })
 
 test("an exception allows that exact young pin, and is reported once it is old enough", () => {
@@ -68,7 +67,7 @@ test("an exception allows that exact young pin, and is reported once it is old e
   ])
 })
 
-test("every npm dependency in registry.json is pinned to an exact version, lucide-react to a caret range", () => {
+test("every npm dependency in registry.json is pinned to an exact version, or listed without one with a floor", () => {
   const { problems } = findYoungDependencies(registryDependencies(registry), new Map(), now, { exceptions: {} })
   expect(problems.filter((problem) => problem.reason.startsWith("not pinned"))).toEqual([])
 })
