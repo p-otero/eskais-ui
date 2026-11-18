@@ -70,6 +70,7 @@ import { StatusSection } from "./sections/status"
 import { AgentsSection } from "./sections/agents"
 import { AttemptsSection } from "./sections/attempts"
 import { AgentTaskBoardSection } from "./sections/agent-task-board"
+import { AgentWorkspaceSection } from "./sections/agent-workspace"
 import { DataSection } from "./sections/data"
 import { ChartsSection } from "./sections/charts"
 import { MarkdownSection } from "./sections/markdown"
@@ -419,6 +420,8 @@ function App() {
           <ProposalsSection />
 
           <AgentTaskBoardSection />
+
+          <AgentWorkspaceSection />
 
           <DataSection />
 

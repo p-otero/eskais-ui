@@ -3,6 +3,7 @@ import { createRoot } from "react-dom/client"
 
 import { Appearance } from "@/components/ui/appearance"
 import { SkipLink } from "@/components/ui/skip-link"
+import { ToastStack } from "@/components/ui/toast"
 
 import { App } from "./app"
 import { appearance } from "./appearance"
@@ -21,6 +22,7 @@ import { PressCheck } from "./checks/press-check"
 import { SidePanelCheck } from "./checks/side-panel-check"
 import { TableCheck } from "./checks/table-check"
 import { ServerDataCheck } from "./checks/server-data-check"
+import { AgentWorkspace } from "./sections/agent-workspace"
 import { DocumentWorkspacePage } from "./sections/document-workspace"
 import { InboxDemo } from "./sections/inbox"
 import { DashboardGridDemo, MasterDetailDemo, SettingsPageDemo } from "./sections/layout-blocks"
@@ -33,10 +35,10 @@ import "./index.css"
 const root = document.getElementById("root")
 if (!root) throw new Error("Missing #root element")
 
-// ?demo=page, site, shell, inbox, list-bench, shell-block, master-detail, dashboard-grid, settings-page and
-// document-workspace render one demo alone, for phone-width screenshots. ?demo=<name>-check pages are the fixtures
-// of tooling/<name>-check.mjs (shell-check's: card-header, description-list, field-placement, gauge, mobile-nav,
-// palette-reopen, side-panel, table, master-detail); server-data-check takes ?ui=search|chips|panel|list.
+// ?demo=page, site, shell, inbox, list-bench, shell-block, master-detail, dashboard-grid, settings-page,
+// document-workspace, agent-workspace and commit-history render one demo alone; ?demo=<name>-check pages are the
+// fixtures of tooling/<name>-check.mjs (shell-check's: card-header, description-list, field-placement, gauge,
+// mobile-nav, palette-reopen, side-panel, table, master-detail); *-bench and perf pages are the benchmarks'.
 const params = new URLSearchParams(location.search)
 const status = demoStatuses.find((name) => name === params.get("status")) ?? "success"
 const demo = params.get("demo")
@@ -66,6 +68,7 @@ const standalone = new Set([
   "shell-block",
   "document-workspace",
   "server-data-check",
+  "agent-workspace",
 ])
 
 function Demo() {
@@ -98,6 +101,14 @@ function Demo() {
   if (demo === "shell-block") return <ShellBlockDemo />
   if (demo === "document-workspace") return <DocumentWorkspacePage />
   if (demo === "server-data-check") return <ServerDataCheck />
+  if (demo === "agent-workspace") {
+    return (
+      <main className="p-inset-surface">
+        <AgentWorkspace />
+        <ToastStack />
+      </main>
+    )
+  }
   return demo === "shell" ? <ShellDemo /> : <SiteDemo />
 }
 

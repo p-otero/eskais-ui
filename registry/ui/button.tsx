@@ -58,6 +58,8 @@ type ButtonBaseProps = Omit<ComponentProps<typeof ButtonPrimitive>, "aria-label"
   shortcutDescription?: string
   /** `false` binds the key without showing it. */
   shortcutHint?: boolean
+  /** Checked on every key press: `false` leaves the key to the page, like Cmd/Ctrl+Z to a focused text field. */
+  shortcutWhen?: () => boolean
   /**
    * An icon button shows its `aria-label`, and its shortcut, in a tooltip on hover and keyboard focus. `false` turns
    * it off when a visible label sits beside the button; a string or `{ content, side, align }` replaces or places it,
@@ -130,6 +132,7 @@ function Button({
   shortcut,
   shortcutDescription,
   shortcutHint = true,
+  shortcutWhen,
   tooltip,
   ref,
   children,
@@ -142,7 +145,8 @@ function Button({
     shortcutDescription ?? props["aria-label"] ?? (typeof children === "string" ? children : undefined)
   useShortcut(shortcut, () => element.current?.click(), {
     description,
-    when: () => element.current?.isConnected === true && !element.current.closest("[inert]"),
+    when: () =>
+      element.current?.isConnected === true && !element.current.closest("[inert]") && (shortcutWhen?.() ?? true),
   })
   const ariaKeyshortcuts = useAriaKeyshortcuts(shortcut)
   const hint =

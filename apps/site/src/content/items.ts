@@ -419,6 +419,30 @@ const itemNotes: Record<string, ItemNotes> = {
       "Agents select any message with the list's select(id), rendered or not, and press the panel's buttons by name.",
     related: ["list-item", "side-panel", "shortcuts-dialog"],
   },
+  conversation: {
+    usage:
+      "A chat or agent thread: messages in a log that follows the newest one, a pill when new ones arrive while the reader is scrolled up, and a composer.",
+    a11y: [
+      "The thread is a named role=log, so screen readers announce new messages; it takes focus to scroll from the keyboard.",
+      "Each message is an article named by its author and time; one without an author is named by its role for screen readers.",
+      "A streaming message is aria-busy, so it is read once it is whole rather than a word at a time.",
+      "The new-below pill moves focus to the log when pressed, and the jump is instant under reduced motion.",
+    ],
+    agent:
+      "Agents read the messages as the thread's items (author: text), call jumpToLatest and loadOlder, and send by setting the Message field and pressing Send.",
+    related: ["textarea", "avatar", "relative-time", "agent-task-board"],
+  },
+  "activity-log": {
+    usage:
+      "Show who changed what and when, and let people and agents step back: record the page's controls with createActivityLog, add your own changes with record, list them with ActivityLog.",
+    a11y: [
+      'The log is a named group; the current point in its history has aria-current="step", and undone entries say so to screen readers.',
+      "Undo and Redo bind Cmd/Ctrl+Z and Shift+Cmd/Ctrl+Z, listed in ShortcutsDialog, and leave those keys to a focused text field.",
+    ],
+    agent:
+      "Agents read the entries as items and call undo, redo and seek (by position or by an entry's sentence). A seek that undoes more than confirmAbove entries carries data-agent-confirm, so a person approves it.",
+    related: ["toast", "shortcuts-dialog", "agent-task-board"],
+  },
   "master-detail": {
     usage:
       "A list with a detail pane, for review queues, inspectors and device lists: pass the list and a detail(id) view, and let it handle selection, stacking and focus.",

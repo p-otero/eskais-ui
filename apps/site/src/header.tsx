@@ -31,7 +31,7 @@ const categoryBlurbs: Record<string, string> = {
   Layout: "Pages, sections, cards, boards.",
   Data: "Tables, charts, lists and values.",
   Feedback: "Alerts, toasts, states and progress.",
-  "Agent tasks": "The board, cards and proposals for AI agents.",
+  "Agent tasks": "Threads, activity with undo, the board and proposals for AI agents.",
   Editor: "Code, Markdown editing and rendering.",
   Blocks: "Hero, bento, steps, footer and docs layout.",
 }

@@ -252,7 +252,10 @@ const popups = [
   },
   {
     name: "task detail dialog",
-    open: (page) => page.getByRole("button", { name: "Open T-014 Index the docs for search" }),
+    open: (page) =>
+      page
+        .getByRole("region", { name: "AgentTaskBoard" })
+        .getByRole("button", { name: "Open T-014 Index the docs for search" }),
     selector: '[data-task-detail="dialog"]',
   },
   {
