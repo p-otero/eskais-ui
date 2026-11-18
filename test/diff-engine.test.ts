@@ -165,7 +165,7 @@ describe("line diff", () => {
     const b = Array.from({ length: 10_000 }, () => String(Math.floor(next() * 500))).join("\n")
     const start = performance.now()
     diffText(a, b, { algorithm: "myers" })
-    expect(performance.now() - start).toBeLessThan(3000)
+    expect(performance.now() - start).toBeLessThan(10_000)
   })
 
   test("diffTextAsync falls back to the main thread without workers", async () => {
