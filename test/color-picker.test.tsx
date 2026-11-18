@@ -5,6 +5,9 @@ import { expect, test, vi } from "vitest"
 
 import {
   ColorPicker,
+  ColorPickerArea,
+  ColorPickerAreaCanvas,
+  ColorPickerAreaThumb,
   ColorPickerChannelInput,
   ColorPickerEyeDropper,
   ColorPickerSwatches,
@@ -44,6 +47,42 @@ test("an oklch picker paints its area on a canvas, and labels translate the text
   )
   expect(document.querySelector("canvas[data-slot=color-picker-area-canvas]")).not.toBeNull()
   expect(screen.getByRole("textbox", { name: "Valor" })).toBeTruthy()
+})
+
+test("an OKLCH area paints its own canvas, mirrored in right to left, and keeps UI SDK's keyboard", async () => {
+  const user = userEvent.setup()
+  const onValueChange = vi.fn()
+  render(
+    <ColorPicker aria-label="Accent" space="oklch" defaultValue="oklch(0.5 0.1 250)" onValueChange={onValueChange}>
+      <ColorPickerArea>
+        <ColorPickerAreaCanvas />
+        <ColorPickerAreaThumb />
+      </ColorPickerArea>
+    </ColorPicker>,
+  )
+  const canvas = document.querySelector("canvas[data-slot=color-picker-area-canvas]")
+  expect(canvas?.getAttribute("aria-hidden")).toBe("true")
+  expect(canvas?.className).toContain("rtl:-scale-x-100")
+  screen.getByRole("slider", { name: "Chroma and lightness" }).focus()
+  await user.keyboard("{ArrowUp}")
+  expect(onValueChange).toHaveBeenLastCalledWith(
+    "oklch(0.501 0.1 250)",
+    expect.objectContaining({ reason: "step-key" }),
+  )
+})
+
+test("an area on other channels keeps UI SDK's canvas", () => {
+  render(
+    <ColorPicker aria-label="Background" space="hsl" defaultValue="hsl(220 60% 50%)">
+      <ColorPickerArea x="hue" y="lightness">
+        <ColorPickerAreaCanvas />
+        <ColorPickerAreaThumb />
+      </ColorPickerArea>
+    </ColorPicker>,
+  )
+  const canvas = document.querySelector("canvas[data-slot=color-picker-area-canvas]")
+  expect(canvas).not.toBeNull()
+  expect(canvas?.className).not.toContain("rtl:-scale-x-100")
 })
 
 test("presets select the matching colour, and channel inputs edit one channel", async () => {

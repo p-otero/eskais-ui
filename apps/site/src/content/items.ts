@@ -189,6 +189,8 @@ const itemNotes: Record<string, ItemNotes> = {
       "Presets are one tab stop with arrow keys between them; the eye dropper is an icon button with a tooltip, hidden where unsupported.",
     ],
     agent: "Agents find it by its label and set any CSS colour with setValue.",
+    usage:
+      "In OKLCH the area paints its whole box: inside the gamut each point is its own colour, and past the edge it shows the colour the picker holds there, so the thumb always sits on the colour chosen.",
     related: ["slider", "input", "popover"],
   },
   "image-cropper": {
