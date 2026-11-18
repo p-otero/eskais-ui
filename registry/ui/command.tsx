@@ -49,7 +49,18 @@ type CommandProps = ComponentProps<typeof CommandPrimitive>
  * Inside a CommandDialogContent, each open starts from `defaultQuery` (empty by default), on the first page with
  * nothing highlighted, unless `query` controls the search text.
  */
-function Command({ className, onQueryChange, onPagesChange, ...props }: CommandProps) {
+// A modified click on a link command stays native (a new tab), so CommandLinkItem can't cancel it, and UI SDK then
+// runs the command's onAction with that click. A link command never runs onAction.
+function isModifiedLinkPress(event: Event | undefined) {
+  return (
+    event instanceof MouseEvent &&
+    !isPlainClick(event) &&
+    event.target instanceof Element &&
+    event.target.closest("a[href]") !== null
+  )
+}
+
+function Command({ className, onQueryChange, onPagesChange, onAction, ...props }: CommandProps) {
   const host = use(CommandHostContext)
   // A closed dialog can stay mounted (keepMounted, or an exit animation that never ends), so opening remounts the
   // primitive rather than trusting the content to unmount.
@@ -73,6 +84,7 @@ function Command({ className, onQueryChange, onPagesChange, ...props }: CommandP
       onPagesChange={(pages, details) => {
         if (!escapeClosesHost(host, details)) onPagesChange?.(pages, details)
       }}
+      onAction={(value, details) => (isModifiedLinkPress(details.event) ? undefined : onAction?.(value, details))}
       {...props}
     />
   )

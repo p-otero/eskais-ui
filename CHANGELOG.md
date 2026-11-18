@@ -25,6 +25,7 @@ Versions follow [semver](https://semver.org). Before 1.0, a minor version can br
 ### Fixed
 
 - Ring `Meter` no longer overflows a narrow column: the `variant="ring"` root (`inline-flex w-fit`) grew to a long label's unwrapped width, so a `MeterLabel className="truncate"` pushed it past a 320px grid column. The root takes `max-w-full min-w-0` and `MeterLabel` `max-w-full min-w-0`, so a truncating label truncates; `node tooling/shell-check.mjs` measures it.
+- `CommandItem href`: a Ctrl/Cmd/Shift/Alt+click on a link command no longer runs `Command onAction`. The click stays native (a new tab or window), and UI SDK ran the command's action with it, so a palette that closes in `onAction` closed behind the new tab.
 - `command-dialog`: every open starts with an empty search. `CommandDialogContent` remounts its `Command` each time the dialog opens, so the search (or `defaultQuery`), the page stack and the highlight reset even when the closed content stays mounted (`keepMounted`, or an exit animation that never ends, as in some Electron windows). A `query` you control is left alone.
 - `command-dialog`: one Escape closes the palette and returns focus to its trigger, whatever the search holds. UI SDK's Command clears the search on the first Escape and goes back a page on the next; `CommandDialog escapeKey="clear"` keeps that order. A `dismissible={false}` dialog leaves Escape to the search. The close reports `escape-key` to `onOpenChange`.
 
