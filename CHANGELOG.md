@@ -17,6 +17,7 @@ Versions follow [semver](https://semver.org). Before 1.0, a minor version can br
   a: 1
   ---"`, no trailing newline) takes a body again. Typing, a paste, `insertText`, `insertWikilink`, `insertBlock` or an attachment inserted right after `---` was dropped; the text now goes in on a new line (the note's own line break, CRLF included) and the fence keeps every byte. Edits inside the block, on its fences and before the opening one are still dropped.
 - `MarkdownEditorHandle.openWikilinkSuggestions()` called from a slash command's `run` opens the suggestions. It did nothing: the trigger menu closes once more after `run` returns, which shut the list it had just opened. A request made during `run` now waits for that and opens in a microtask, behind the same provisional `[[`, so a "Link to a note" slash command is `run: (view, range) => { view.dispatch({ changes: range }); editor.current?.openWikilinkSuggestions() }`.
+- `SettingsPage url`: a section the URL names that renders later, like after its data loads (`#/settings?section=danger-zone`), is scrolled to and its heading focused when it mounts, once. Each `SettingsSection` reports its mount to the page through context; nothing watches the DOM and no timer runs. A pointer press, a key press, a wheel, a touch, a scroll or focus moving after the navigation cancels it, so the page stays where the person put it.
 
 ## 0.2.2 (2026-11-18)
 

@@ -19,7 +19,13 @@ import { DescriptionList, type DescriptionListProps } from "@/components/ui/desc
 import { Field, FieldDescription, FieldLabel } from "@/components/ui/field"
 import { Link } from "@/components/ui/link"
 import { Select } from "@/components/ui/select"
-import { useObservedSection, useUrlSection } from "@/components/ui/use-settings-page"
+import {
+  PendingSectionContext,
+  useObservedSection,
+  usePendingSection,
+  useSectionMounted,
+  useUrlSection,
+} from "@/components/ui/use-settings-page"
 import type { UrlParamAdapter } from "@/lib/url-param"
 import { cn } from "@/lib/utils"
 
@@ -46,7 +52,8 @@ type SettingsPageProps = Omit<ComponentProps<"div">, "onChange"> & {
   /**
    * Keeps the section in the URL and scrolls to it on load and on Back: `createUrlParam("section")` from
    * `@/lib/url-param`, which never touches `location.hash`, or `createUrlParam("section", { router: hashRouter() })`
-   * for `#/settings?section=id` inside a hash route. Its `href` builds the navigation's links.
+   * for `#/settings?section=id` inside a hash route. Its `href` builds the navigation's links. A section that
+   * renders later, like after its data loads, is scrolled to when it mounts, unless the person has acted since.
    */
   url?: UrlParamAdapter
   /**
@@ -91,9 +98,10 @@ function focusTitle(id: string) {
 
 function goTo(id: string, smooth: boolean, focus: boolean) {
   const section = document.getElementById(id)
-  if (!section) return
+  if (!section) return false
   section.scrollIntoView({ block: "start", behavior: smooth && !reducedMotion() ? "smooth" : "auto" })
   if (focus) focusTitle(id)
+  return true
 }
 
 const hashOf = (id: string) => `#${id}`
@@ -131,10 +139,18 @@ function SettingsPage({
   })
   const current = currentSection ?? observed ?? chosen ?? sections[0]?.id
 
+  const pending = usePendingSection()
+
   const jump = (id: string, reason: SettingsSectionChangeReason, focus = true) => {
+    pending.cancel()
     pin(id)
     setChosen(id)
-    goTo(id, reason !== "url", focus)
+    if (!goTo(id, reason !== "url", focus) && reason === "url") {
+      pending.wait(id, (arrived) => {
+        pin(arrived)
+        goTo(arrived, false, focus)
+      })
+    }
     onSectionChange?.(id, { reason })
   }
   const write = useUrlSection(url, (id) => jump(id, "url"))
@@ -212,7 +228,7 @@ function SettingsPage({
           />
         </div>
         <div data-slot="settings-sections" className="flex min-w-0 flex-1 flex-col gap-section">
-          {children}
+          <PendingSectionContext value={pending}>{children}</PendingSectionContext>
         </div>
       </div>
     </div>
@@ -250,6 +266,7 @@ function SettingsSection({
 }: SettingsSectionProps) {
   const titleId = useId()
   const descriptionId = useId()
+  useSectionMounted(id)
   const Heading = `h${String(headingLevel)}` as "h2"
   return (
     <section
