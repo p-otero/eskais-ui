@@ -24,6 +24,9 @@ Element.prototype.checkVisibility = () => true
 Element.prototype.getClientRects = () => [] as unknown as DOMRectList
 document.elementFromPoint = () => null
 document.elementsFromPoint = () => []
+// jsdom has no canvas: its getContext logs "not implemented" and returns null. Return null quietly, so callers that
+// feature-detect a 2D context (the theme editor's colour conversion) take their fallback without the noise.
+HTMLCanvasElement.prototype.getContext = (() => null) as typeof HTMLCanvasElement.prototype.getContext
 globalThis.ResizeObserver ??= class {
   observe() {}
   unobserve() {}

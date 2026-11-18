@@ -3,7 +3,27 @@
   "version": "0.2.1",
   "private": true,
   "description": "UI SDK-first, agent-native React components distributed as a shadcn-style registry.",
+  "keywords": [
+    "accessibility",
+    "agents",
+    "ai-agents",
+    "components",
+    "design-system",
+    "react",
+    "shadcn",
+    "shadcn-registry",
+    "tailwindcss",
+    "ui-sdk"
+  ],
+  "homepage": "https://p-otero.github.io/eskais-ui/",
+  "bugs": {
+    "url": "https://github.com/p-otero/eskais-ui/issues"
+  },
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/p-otero/eskais-ui.git"
+  },
   "workspaces": [
     "apps/*",
     "packages/*"

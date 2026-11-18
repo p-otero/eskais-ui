@@ -1,52 +1,27 @@
 # Eskais UI
 
-UI SDK-first, agent-native React components, distributed as a shadcn-style registry.
+Agent-native React components on [Vercel UI SDK](https://ui-sdk.dev), shipped as a shadcn registry: people and their agents operate the same accessible UI.
 
-- Built on [Vercel UI SDK](https://ui-sdk.dev) (`@ui-sdk/core`, `@ui-sdk/react`). Behavior, focus, ARIA and agent support come from UI SDK; Eskais UI adds styles, semantic tokens and a few composed components.
-- Agents can read and operate the components through `createAgent`. Destructive actions require a person's approval.
-- React 19, strict TypeScript, Tailwind CSS v4. Consumers need Node with npm or pnpm; Bun is only used to develop this repo.
+[![CI](https://github.com/p-otero/eskais-ui/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/p-otero/eskais-ui/actions/workflows/ci.yml?query=branch%3Amain)
+[![Release](https://img.shields.io/github/v/release/p-otero/eskais-ui)](https://github.com/p-otero/eskais-ui/releases)
+[![License: MIT](https://img.shields.io/github/license/p-otero/eskais-ui)](LICENSE)
 
-> Status: v0.1 in development. UI SDK is in beta (pinned to `0.1.0-beta.10`), so expect breaking changes.
+**[Live docs and demos](https://p-otero.github.io/eskais-ui/)** · [Components](https://p-otero.github.io/eskais-ui/docs/components/) · [Installation](https://p-otero.github.io/eskais-ui/docs/installation/) · [Changelog](CHANGELOG.md)
 
-## Catalog
+![The AgentTaskBoard: filters, stage chips, a summary and status columns, with a proposed task waiting for Approve or Reject](docs/images/agent-task-board.png)
 
-| Item             | Built on                                                                                                                     |
-| ---------------- | ---------------------------------------------------------------------------------------------------------------------------- |
-| `button`         | UI SDK `Button`: variants, async pending, focusable when disabled                                                            |
-| `field`, `input` | UI SDK `Field`, `Input`, `InputGroup`, `InputClear`                                                                          |
-| `search-field`   | Own primitive (`definePrimitive`) with a `submit` agent action                                                               |
-| `dialog`         | UI SDK `Dialog`                                                                                                              |
-| `confirm-dialog` | UI SDK `AlertDialog` with an async `action` and `data-agent-confirm`                                                         |
-| `card`, `badge`  | `renderElement`, presentational                                                                                              |
-| Overlays         | `tooltip`, `popover`, `drawer`, `dropdown-menu`, `toast`                                                                     |
-| Selection        | `select`, `combobox`, `segmented-control`, `checkbox`, `textarea`, `token-input` (removable tokens, labels mode)             |
-| Form controls    | `radio-group`, `switch`, `slider`, `toggle`, `toggle-group`, `label`                                                         |
-| Inputs, feedback | `otp-input`, `number-input`, `progress`, `meter`, `alert`                                                                    |
-| Structure        | `tabs`, `collapsible`, `scroll-area`, `separator`, `avatar`                                                                  |
-| Display          | `skeleton`, `empty`, `kbd`, `table` (sortable headers)                                                                       |
-| Status           | `status-pill`, `dependency-chips`, `acceptance-list`, `stat`                                                                 |
-| Values and time  | `quantity` (honest values), `relative-time` (`useNow`)                                                                       |
-| Layout           | `board` (columns, collapsible, groups)                                                                                       |
-| Agent tasks      | `agent-task-types`, `agent-badge` (provider avatars), `liveness-indicator`, `task-status` (pills, icons)                     |
-| Agent history    | `usage` (table, compact grid), `attempt-timeline`                                                                            |
-| Agent board core | `agent-task-board-core` (logic, labels, agent actions), `proposal-actions`                                                   |
-| Agent task board | `task-card`, `task-detail-panel`, `agent-task-board` (the full board)                                                        |
-| Data and layout  | `calendar`, `date-picker`, `carousel` (`CarouselStatus`: "1 of 3"), `resizable`, `sidebar`                                   |
-| Data tables      | `data-table` (sort, select, pages), `page-header`, `filter-bar`                                                              |
-| Charts           | `chart` (Recharts v3, `--chart-1`…`--chart-5`, tooltip, legend, `ChartDataTable`)                                            |
-| Navigation       | `accordion`, `hover-card`, `context-menu`, `menubar`, `navigation-menu`, `breadcrumb`, `pagination`, `command` (⌘K palette)  |
-| `theme`          | Color, shape, density and surface tokens; the default rounded look                                                           |
-| `theme-compact`  | Denser controls and tighter radii inside `data-theme="compact"`                                                              |
-| `theme-glass`    | Translucent, blurred surfaces inside `data-theme="glass"`                                                                    |
-| `palettes`       | Colour presets inside `data-palette="blue"` (also `neutral`, `violet`, `green`, `orange`)                                    |
-| `font-geist`     | Geist Variable from `@fontsource-variable/geist`, bundled (the default font); `font-inter` for Inter Variable                |
-| `appearance`     | `createAppearance` + `<Appearance>`: `.dark` and `data-theme` on `<html>`, following the system scheme                       |
-| `lint-rules`     | Optional oxlint config for consumers: `@p-otero/oxlint-rules` React and spacing presets plus `@shadcn/lint`                  |
-| `test-utils`     | Testing Library helpers that find toasts and alerts past UI SDK's live regions (`getToast`, `queryAlerts`, `resetAnnouncer`) |
+## What it is
 
-## Use it
+- **Built on UI SDK.** Behaviour, focus, keyboard and ARIA come from `@ui-sdk/react`; Eskais UI adds styles, semantic tokens, themes and composed components (a task board, data tables, an editor, app layouts). Every operable control is a UI SDK part, so nothing is invisible to an agent.
+- **Agents operate it, people approve.** `createAgent` reads the page by accessible names and acts on it. Destructive actions carry `data-agent-confirm` and wait for a person; tests cover the refused and approved paths.
+- **Accessibility checked in CI.** axe and pixel contrast in Chrome, in the default and compact themes, light and dark, and every colour palette; 44px touch targets and no zoom-on-focus on phones.
+- **Installs clean.** CI adds every item to a fresh npm app and a fresh pnpm app (no Bun), and every pinned dependency is at least 7 days old, for package managers that hold back young releases. Registry code imports nothing from Node or Bun.
+- **React Compiler-clean and fast by default.** The showcase builds with `babel-plugin-react-compiler` and runs the browser checks on it; long lists and tables virtualize past 200 rows and stay reachable by keyboard, agents and find in page.
+- **One design system.** Spacing, type, elevation, tone and motion are role tokens; compact, glass and colour palettes are runtime attributes, not reinstalls.
 
-The registry installs from GitHub. Add it once to `components.json`:
+## Quick start
+
+Add the registry to `components.json` (from `npx shadcn@latest init`):
 
 ```json
 {
@@ -56,144 +31,42 @@ The registry installs from GitHub. Add it once to `components.json`:
 }
 ```
 
-Pin a release through `refs/tags/<tag>`: raw.githubusercontent.com resolves a bare `<tag>` to a branch of the same name first. Change the tag to upgrade, or use `main` for unreleased changes. CI fails if a branch is ever named like a tag (`tooling/check-ref-names.mjs`).
-
-Registry files import `@/components/ui/…`, `@/lib/…` and `@/lib/utils`; shadcn writes each file through your aliases and rewrites those imports to them, so any prefix works (`~/`, `#/`, a monorepo package). It needs these `aliases` in `components.json`:
-
-```json
-{
-  "aliases": {
-    "components": "~/components",
-    "ui": "~/components/ui",
-    "utils": "~/lib/utils",
-    "lib": "~/lib"
-  }
-}
-```
-
-`components` and `utils` are required by shadcn; `ui` defaults to `<components>/ui` and `lib` to the folder of `utils`. Every alias must resolve through `compilerOptions.paths` in the **root** `tsconfig.json` (or `jsconfig.json`; `#` aliases through `imports` in `package.json`). shadcn reads no other file and doesn't follow `references`, so with Vite's template, which keeps `paths` in `tsconfig.app.json`, add them to `tsconfig.json` too. Otherwise shadcn writes the files into a folder literally named `@` (or `~`).
-
-Subpath imports in `package.json` work instead of `paths`, with no bundler alias: Node, TypeScript and Vite all read them.
-
-```json
-{
-  "imports": {
-    "#components/*": "./src/components/*",
-    "#ui/*": "./src/components/ui/*",
-    "#lib/*": "./src/lib/*",
-    "#hooks/*": "./src/hooks/*"
-  }
-}
-```
-
-Set the aliases to `#components`, `#ui`, `#lib/utils`, `#lib` and `#hooks`. shadcn then writes imports with their extension (`#ui/button.tsx`, `#ui/form-context.ts`, `#lib/utils.ts`), because Node resolves subpath imports to exact files, so add `"allowImportingTsExtensions": true` to `compilerOptions` (it needs `noEmit`, as in Vite's template). Write your own imports the same way: `import { Button } from "#ui/button.tsx"`.
-
-Keep the extension out of the mapping. `ui` holds `.ts` files next to the `.tsx` ones (`form-context.ts`, `form-messages.ts`, every `*-primitive.ts`), so a mapping that appends one, like `"#ui/components/*": "./src/components/ui/*.tsx"`, can't reach them: shadcn then writes `#ui/components/form-context` with no extension, and it resolves to a `.tsx` file that doesn't exist. No pattern fixes that, since an import without an extension doesn't say which file it means. `node tooling/consumer-check.mjs npm imports` checks the mapping above with `form`, and `imports-tsx` checks that the `.tsx` one still fails.
-
-A `ui/` folder isn't required: a flat layout, with every component in `src/components`, works too. Point both aliases at that folder:
-
-```json
-{
-  "imports": {
-    "#components/*": "./src/components/*",
-    "#ui/*": "./src/components/*",
-    "#lib/*": "./src/lib/*",
-    "#hooks/*": "./src/hooks/*"
-  }
-}
-```
-
-The aliases stay the same (`#components`, `#ui`, `#lib/utils`, `#lib`, `#hooks`), and shadcn writes the files into `src/components`. In the files it writes, it imports one component from another through the first alias that matches, `components`: `form-actions.tsx` imports `#components/form-context.ts`, not `#ui/form-context.ts`. Both resolve to the same file, so your own code can import either way (`#ui/button.tsx` or `#components/button.tsx`). With a `ui/` folder, as above, every import between components is `#ui/…`. `node tooling/consumer-check.mjs npm imports-flat` checks the flat layout with `form`.
-
-Two things to know when you run shadcn:
-
-- **Package manager.** shadcn installs dependencies with the manager it finds from your lockfile, or from `packageManager` in `package.json`. In a pnpm project without a lockfile yet, set `"packageManager": "pnpm@<version>"`, or shadcn falls back to npm.
-- **Windows paths with a dotted folder.** shadcn 4.23.0 on Windows drops everything after a folder whose name starts with a dot, so a project under `C:\Users\me\.t3\…` gets its files written to `C:\Users\me\`. Run shadcn from a path without dotted folders, or map the project to a drive letter first: `subst X: C:\Users\me\.t3\worktrees\app`, then `cd /d X:\` and run it there (`subst X: /d` removes the mapping).
-
-Replace `main` with a tag (`v0.1.0`) to pin a version. Then add `@layer ui-sdk;` as the first line of your global CSS and run:
+Put `@layer ui-sdk;` first in your global CSS, above `@import "tailwindcss"`, then add components:
 
 ```bash
-npx shadcn@latest add @eskais/theme @eskais/button @eskais/confirm-dialog
+npx shadcn@latest add @eskais/theme @eskais/font-geist @eskais/agent-task-board
 ```
 
-`theme` brings `utils`: its `cn` knows the theme's utilities (`text-meta`, `text-body`, `gap-items`, `rounded-surface`…), which another `cn` reads as colours or unknown classes, so `cn("text-meta", "text-muted-foreground")` would drop the size. If `shadcn init` already wrote `lib/utils.ts`, add with `--overwrite` (or answer yes when asked) so ours replaces it; without the flag shadcn skips files that exist.
+The [installation guide](https://p-otero.github.io/eskais-ui/docs/installation/) covers aliases and subpath imports, `utils`, fonts, the appearance setup and known shadcn caveats; [Theming](https://p-otero.github.io/eskais-ui/docs/theming/) covers seed tokens, palettes, compact and glass; [Agents](https://p-otero.github.io/eskais-ui/docs/agents/) covers the agent bridge. Requires React 19, Tailwind CSS v4 and Node with npm or pnpm.
 
-## Font
+## Status
 
-The theme asks for Geist Variable (`--font-sans`) and falls back to the system font. `npx shadcn@latest add @eskais/font-geist` installs `@fontsource-variable/geist` and adds `@import "@fontsource-variable/geist";` to your CSS, so the font ships with your bundle, with no CDN. `@eskais/font-inter` does the same for Inter Variable.
+Version **0.2.1**. Before 1.0 a minor version can break compatibility. UI SDK is in beta and pinned to an exact version (`0.1.0-beta.10`); see the [changelog](CHANGELOG.md) and [releases](https://github.com/p-otero/eskais-ui/releases). The URL above pins a release through `refs/tags/`; change the tag to upgrade.
 
-## Themes
+## Highlights
 
-Components read tokens (`rounded-control`, `h-control`, `p-inset-surface`, `gap-items`, `bg-card/(--glass-opacity)`), so a theme is only CSS. Install the themes you want and switch them at runtime with an attribute, no reinstall:
+The [full catalog](https://p-otero.github.io/eskais-ui/docs/components/) has 140+ registry items, each with a live demo, its API and the actions an agent can take.
 
-```bash
-npx shadcn@latest add @eskais/theme-compact @eskais/theme-glass
-```
+- **Agent work:** [agent-task-board](https://p-otero.github.io/eskais-ui/docs/components/agent-task-board/), [task-card](https://p-otero.github.io/eskais-ui/docs/components/task-card/), [attempt-timeline](https://p-otero.github.io/eskais-ui/docs/components/attempt-timeline/), [usage](https://p-otero.github.io/eskais-ui/docs/components/usage/), [proposal-actions](https://p-otero.github.io/eskais-ui/docs/components/proposal-actions/), [inbox](https://p-otero.github.io/eskais-ui/docs/components/inbox/)
+- **Data:** [server-data-table](https://p-otero.github.io/eskais-ui/docs/components/server-data-table/), [data-table](https://p-otero.github.io/eskais-ui/docs/components/data-table/), [filter-panel](https://p-otero.github.io/eskais-ui/docs/components/filter-panel/), [chart](https://p-otero.github.io/eskais-ui/docs/components/chart/), and the [server data guide](https://p-otero.github.io/eskais-ui/docs/server-data/)
+- **Layout blocks:** [shell](https://p-otero.github.io/eskais-ui/docs/components/shell/), [master-detail](https://p-otero.github.io/eskais-ui/docs/components/master-detail/), [dashboard-grid](https://p-otero.github.io/eskais-ui/docs/components/dashboard-grid/), [settings-page](https://p-otero.github.io/eskais-ui/docs/components/settings-page/), [document-workspace](https://p-otero.github.io/eskais-ui/docs/components/document-workspace/)
+- **Editing and forms:** [markdown-editor](https://p-otero.github.io/eskais-ui/docs/components/markdown-editor/), [form](https://p-otero.github.io/eskais-ui/docs/components/form/), [command](https://p-otero.github.io/eskais-ui/docs/components/command/), [confirm-dialog](https://p-otero.github.io/eskais-ui/docs/components/confirm-dialog/)
 
-```html
-<html data-theme="compact">
-  <section data-theme="glass">…</section>
-</html>
-```
+## Built with agents
 
-Themes nest: a glass zone inside a compact page stays compact. Tune glass live by setting `--glass-opacity` (and `--glass-blur`) on the element that has `data-theme="glass"` or on a descendant. Glass falls back to solid surfaces when the browser lacks `backdrop-filter` or the user asks for reduced transparency. Theme and color scheme are app-level choices, not component props. `npx shadcn@latest add @eskais/appearance` keeps them in sync on `<html>`:
-
-```tsx
-const appearance = createAppearance({ colorScheme: "system", theme: "default" })
-appearance.apply() // before the first render, so the page doesn't flash
-
-root.render(
-  <Appearance appearance={appearance}>
-    <App />
-  </Appearance>,
-)
-```
-
-`"system"` follows `prefers-color-scheme` live through `.dark`; `appearance.colorScheme.set("dark")` and `appearance.theme.set("compact")` change them, and `storage: { colorScheme, theme }` (from `createLocalStorage`) keeps them between visits. `"default"` leaves `data-theme` off. It needs no server, so it works in a static `file://` page. To avoid a flash before any script loads, put this in `<head>`:
-
-```html
-<script>
-  document.documentElement.classList.toggle("dark", matchMedia("(prefers-color-scheme: dark)").matches)
-</script>
-```
-
-## Theming
-
-Colours derive from a few seed tokens, in light and dark:
-
-```css
-:root {
-  --brand: oklch(0.5 0.2 262); /* primary, ring and accent */
-  --link-brand: oklch(0.55 0.2 260); /* links and the caret; a blue by default */
-  --neutral-hue: 262; /* tints the greys… */
-  --neutral-chroma: 0.008; /* …by this much; 0 keeps them neutral */
-  --radius: 1rem; /* control, checkbox and surface corners */
-}
-```
-
-- **Set `--link-brand`** to colour links apart from the brand. It defaults to a blue, so links keep a hue under the near-black neutral brand; their lightness is clamped to keep 4.5:1. The palettes set it to their brand.
-- **Set `--brand`.** `--primary-foreground` follows it, near-white or near-black, and reaches at least 4.5:1 on any sRGB colour. Dark mode lightens a dark brand on its own. Keep the brand itself at 4.5:1 on white, since links use it as text.
-- **Pick a preset.** `npx shadcn@latest add @eskais/palettes`, then put `data-palette="blue"` on `<html>` or on any element; it combines with `data-theme` and `.dark`. `createAppearance({ palette: "blue" })` keeps it on `<html>`. Every preset meets 4.5:1 for text and 3:1 for controls.
-- **Override any token.** Set `--primary`, `--muted` or any other token in `:root` or `.dark` to take it over completely.
-- The showcase has a Theme panel that edits the seeds live, checks contrast and copies the CSS.
-
-Derived colours use CSS relative colour syntax: Chrome 119, Firefox 128, Safari 18 and later. Older browsers keep the default neutral look.
-
-Notes while UI SDK is in beta:
-
-- `shadcn add` writes `^0.1.0-beta.10` for `@ui-sdk/*`. Change it to the exact version, since later betas can break.
-- pnpm 11+ refuses packages younger than `minimumReleaseAge`. Every other dependency the registry pins is at least 7 days old, but UI SDK's first release is from 2026-11-12: until its pinned beta is old enough, add `@ui-sdk/*` to `minimumReleaseAgeExclude` in `pnpm-workspace.yaml`.
+This repository is designed to be developed by coding agents. [AGENTS.md](AGENTS.md) holds the design-system rules (spacing and type roles, elevation, tone, icons, touch targets, accessibility) that lint rules and tests enforce, and the same conventions ship to consumers as [agent skills](https://p-otero.github.io/eskais-ui/docs/agent-skills/) installed with shadcn.
 
 ## Develop
 
 ```bash
 bun install
 bun run dev        # showcase
+bun run dev:site   # docs site
 bun run verify     # lint, format check, typecheck, tests, registry build
 ```
 
-See [AGENTS.md](AGENTS.md) for conventions and [docs/research](docs/research) for the decisions behind the design.
+See [AGENTS.md](AGENTS.md) for conventions and [docs/research](docs/research) for the decisions behind the design. `node tooling/readme-screenshots.mjs` regenerates the image above after `bun run build:showcase`.
 
 ## License
 
-MIT
+[MIT](LICENSE)
