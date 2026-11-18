@@ -2,7 +2,8 @@
 
 import { useAsyncOptions, type AsyncOptionsStatus } from "@ui-sdk/react/async-options"
 import type { SearchFilter } from "@ui-sdk/react/command"
-import { useMemo, useRef, type ReactNode } from "react"
+import { matchRanges, matchSegments, type MatchRange } from "@ui-sdk/react/text-match"
+import { useMemo, useRef, useState, type ReactNode } from "react"
 
 import {
   Command,
@@ -24,6 +25,11 @@ type DocumentQuickOpenItem = {
   label: string
   /** A folder or path, shown after the label. */
   description?: string
+  /**
+   * A passage of the note, like the one a search matched: a muted second line under the label, cut at two lines,
+   * with the query's words marked. Plain text; agents and screen readers read it with the label.
+   */
+  snippet?: string
   keywords?: readonly string[]
   /** Items with the same group are listed under it. */
   group?: string
@@ -95,7 +101,53 @@ type QuickOpenListProps = {
   onLoadMore?: () => void
 }
 
-type QuickOpenCommand = CommandDataItem & { description?: string }
+type QuickOpenCommand = CommandDataItem & { description?: string; snippet?: string }
+
+/** Every place each word of the query appears in `text`, matched as the command filter matches (case, accents). */
+function queryRanges(text: string, query: string) {
+  const ranges: MatchRange[] = []
+  for (const word of new Set(query.trim().split(/\s+/u).filter(Boolean))) {
+    let from = 0
+    while (from < text.length) {
+      const [range] = matchRanges(text.slice(from), word, "contains")
+      if (!range || range.end <= range.start) break
+      ranges.push({ start: from + range.start, end: from + range.end })
+      from += range.end
+    }
+  }
+  ranges.sort((a, b) => a.start - b.start)
+  const merged: MatchRange[] = []
+  for (const range of ranges) {
+    const last = merged.at(-1)
+    if (last && range.start <= last.end) last.end = Math.max(last.end, range.end)
+    else merged.push({ ...range })
+  }
+  return merged
+}
+
+function QuickOpenSnippet({ text, query }: { text: string; query: string }) {
+  const segments = useMemo(() => matchSegments(text, queryRanges(text, query)), [text, query])
+  return (
+    <span data-slot="quick-open-snippet" className="line-clamp-2 text-caption text-muted-foreground">
+      <span className="sr-only">, </span>
+      {segments.map((segment, at) =>
+        segment.match ? (
+          // oxlint-disable-next-line react/no-array-index-key -- the snippet's pieces have no identity beyond their place
+          <mark key={at} className="bg-transparent font-semibold text-current">
+            {segment.text}
+          </mark>
+        ) : (
+          segment.text
+        ),
+      )}
+    </span>
+  )
+}
+
+// A row with a snippet is the label's line and up to two of `text-caption`, measured once it renders.
+const snippetRows =
+  "[&_[data-slot=command-item]:has(>[data-slot=quick-open-snippet])]:h-auto [&_[data-slot=command-item]:has(>[data-slot=quick-open-snippet])]:flex-col [&_[data-slot=command-item]:has(>[data-slot=quick-open-snippet])]:items-stretch [&_[data-slot=command-item]:has(>[data-slot=quick-open-snippet])]:gap-0 [&_[data-slot=command-item]:has(>[data-slot=quick-open-snippet])]:py-inset-item"
+const snippetRowSize = (item: QuickOpenCommand) => (item.snippet ? 52 : undefined)
 
 // Items with a group are listed under it, groups in the order their first item comes.
 function quickOpenData(items: readonly DocumentQuickOpenItem[]): CommandData {
@@ -111,15 +163,22 @@ function quickOpenData(items: readonly DocumentQuickOpenItem[]): CommandData {
 
 // The items go to Command as data and render through CommandRows: past 50, only the rows in view mount, so a vault
 // of notes opens on the next frame, while typing, the arrows and agents still reach every one.
-function QuickOpenList({ items, labels, onOpen, status, ...search }: QuickOpenListProps) {
+function QuickOpenList({ items, labels, onOpen, status, onQueryChange, filter, onLoadMore }: QuickOpenListProps) {
   const workspace = useDocumentWorkspace()
   const data = useMemo(() => quickOpenData(items), [items])
-  const empty = (query: string) => (typeof labels.empty === "function" ? labels.empty(query) : labels.empty)
+  // CommandList's state has no query; the snippets mark what was typed.
+  const [query, setQuery] = useState("")
+  const empty = (text: string) => (typeof labels.empty === "function" ? labels.empty(text) : labels.empty)
   return (
     <Command
       items={data}
       status={status}
-      {...search}
+      filter={filter}
+      onLoadMore={onLoadMore}
+      onQueryChange={(next) => {
+        setQuery(next)
+        onQueryChange?.(next)
+      }}
       onAction={(value) => {
         workspace.quickOpen.close()
         onOpen(value)
@@ -139,19 +198,29 @@ function QuickOpenList({ items, labels, onOpen, status, ...search }: QuickOpenLi
           status === "error" ? labels.error : state.loading ? labels.loading : state.empty ? empty(state.query) : null
         }
       </CommandEmpty>
-      <CommandList>
+      <CommandList className={snippetRows}>
         {(state) => (
-          <CommandRows<QuickOpenCommand> items={state.items}>
-            {(item) => (
-              <>
-                <CommandItemText className="truncate" />
-                {item.description && (
-                  <span className="ms-auto shrink-0 truncate text-caption text-muted-foreground">
-                    {item.description}
-                  </span>
-                )}
-              </>
-            )}
+          <CommandRows<QuickOpenCommand> items={state.items} estimateItemSize={snippetRowSize}>
+            {(item) => {
+              const title = (
+                <>
+                  <CommandItemText className="truncate" />
+                  {item.description && (
+                    <span className="ms-auto shrink-0 truncate text-caption text-muted-foreground">
+                      <span className="sr-only">, </span>
+                      {item.description}
+                    </span>
+                  )}
+                </>
+              )
+              if (!item.snippet) return title
+              return (
+                <>
+                  <span className="flex min-w-0 items-center gap-inline">{title}</span>
+                  <QuickOpenSnippet text={item.snippet} query={query} />
+                </>
+              )
+            }}
           </CommandRows>
         )}
       </CommandList>

@@ -312,6 +312,8 @@ type CommandRowsProps<Item extends CommandDataItem> = {
   children?: (item: Item) => ReactNode
   /** `"auto"` renders only the commands in view past 50; `true` always, `false` never. */
   virtualize?: Virtualize
+  /** A command's height in px before it's measured, for rows taller than `h-control-sm`. Keep it stable. */
+  estimateItemSize?: (item: Item) => number | undefined
 }
 
 /**
@@ -323,8 +325,10 @@ function CommandRows<Item extends CommandDataItem = CommandDataItem>({
   items,
   children,
   virtualize = "auto",
+  estimateItemSize,
 }: CommandRowsProps<Item>) {
-  const { rows, anchor, virtual, ready } = useCommandRows<Item>(items, use(HighlightContext), virtualize)
+  const highlight = use(HighlightContext)
+  const { rows, anchor, virtual, ready } = useCommandRows<Item>(items, highlight, virtualize, estimateItemSize)
   if (!ready) return null
   const command = (row: CommandRowData<Item>, at: number) => (
     <CommandRow key={row.key} row={row} at={at} measure={virtual.measureElement} render={children} />
