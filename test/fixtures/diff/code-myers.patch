@@ -1,0 +1,41 @@
+diff --git a/old.ts b/new.ts
+index 62b5652..181cbe3 100644
+--- a/old.ts
++++ b/new.ts
+@@ -11,7 +11,8 @@ type RowNavigationOptions = {
+   reveal?: (id: string) => void
+ }
+ 
+-const fallbackPage = 10
++const fallbackPage = 12
++const minimumPage = 1
+ 
+ function isActivator(el: HTMLElement) {
+   return el instanceof HTMLAnchorElement || el instanceof HTMLButtonElement || el.getAttribute("role") === "button"
+@@ -25,6 +26,10 @@ function scrollParent(el: HTMLElement) {
+   return null
+ }
+ 
++function pageOf(el: HTMLElement) {
++  return rowsPerPage(el)
++}
++
+ function rowsPerPage(el: HTMLElement) {
+   const height = el.getBoundingClientRect().height
+   if (height <= 0) return fallbackPage
+@@ -41,8 +46,6 @@ function step(event: KeyboardEvent, el: HTMLElement): number | "first" | "last"
+     case "ArrowUp":
+     case "k":
+       return -1
+-    case "PageDown":
+-      return rowsPerPage(el)
+     case "PageUp":
+       return -rowsPerPage(el)
+     case "Home":
+@@ -125,5 +128,5 @@ const rowNavigation = definePrimitive({
+   agent: { actions: [], shown: () => false },
+ })
+ 
+-export { rowNavigation }
++export { pageOf, rowNavigation }
+ export type { RowNavigationOptions }

@@ -21,6 +21,10 @@ const registryDir = join(repo, "public", "r")
 const allItems = [
   "link",
   "code-block",
+  "diff",
+  "diff-view",
+  "text-diff",
+  "git-diff",
   "hero",
   "landing-page",
   "utils",
@@ -301,6 +305,17 @@ async function withPage(dist, callback) {
   const browser = await chromium.launch({ channel: "chrome" })
   try {
     const page = await browser.newPage()
+    // Counts workers, to prove TextDiff's Blob worker starts in a consumer's production build.
+    await page.addInitScript(() => {
+      const Native = globalThis.Worker
+      globalThis.workersStarted = 0
+      globalThis.Worker = class extends Native {
+        constructor(...args) {
+          super(...args)
+          globalThis.workersStarted += 1
+        }
+      }
+    })
     await page.goto(`http://127.0.0.1:${site.address().port}/`)
     await page.locator("[data-probe]").first().waitFor()
     await page.addStyleTag({ content: "*, ::before, ::after { transition: none !important; }" })
@@ -360,7 +375,22 @@ async function checkEverything(page) {
       }
       poll()
     })
+    const diffed = await new Promise((done) => {
+      const started = Date.now()
+      const poll = () => {
+        const cells = [...document.querySelectorAll('[aria-label="Worker diff"] [role="gridcell"]')]
+        const added = cells.find((cell) => cell.textContent.includes("Added, line 2"))
+        if (added || Date.now() - started > 5000) done(added?.textContent ?? null)
+        else setTimeout(poll, 100)
+      }
+      poll()
+    })
     return {
+      diff: {
+        worker: diffed,
+        workers: globalThis.workersStarted,
+        patch: document.querySelector('[aria-label="Patch diff"] [data-slot="diff-file-header"]')?.textContent ?? null,
+      },
       code: keyword ? { text: keyword.textContent, color: rgb(getComputedStyle(keyword).color) } : null,
       blocks: ["hero", "bento", "steps", "site-footer", "section-heading"].filter(
         (slot) => !document.querySelector(`[data-slot="${slot}"]`),
@@ -388,6 +418,10 @@ async function checkEverything(page) {
   console.log("In Chrome:", JSON.stringify(result))
   if (result.code?.text !== "const" || result.code.color === "0,0,0")
     throw new Error(`CodeBlock didn't highlight with the syntax tokens: ${JSON.stringify(result.code)}`)
+  if (!result.diff.worker?.includes("line five") || result.diff.workers < 1)
+    throw new Error(`TextDiff didn't diff in its worker: ${JSON.stringify(result.diff)}`)
+  if (!result.diff.patch?.includes("a.ts"))
+    throw new Error(`GitDiff didn't render its file: ${JSON.stringify(result.diff)}`)
   if (result.blocks.length > 0) throw new Error(`Blocks missing from the landing page: ${result.blocks.join(", ")}`)
   if (result.link !== "inline") throw new Error("Link didn't render")
   if (result.markdown !== "Notes") throw new Error(`MarkdownEditor didn't render its heading: ${result.markdown}`)
@@ -483,6 +517,8 @@ import { FormDialog } from "@/components/ui/form-dialog"
 import type { StandardSchemaV1 } from "@standard-schema/spec"
 import { Input } from "@/components/ui/input"
 import { CodeBlock } from "@/components/ui/code-block"
+import { GitDiff } from "@/components/ui/git-diff"
+import { TextDiff } from "@/components/ui/text-diff"
 import { Hero } from "@/components/ui/hero"
 import { Link } from "@/components/ui/link"
 import { LandingPage } from "@/components/landing-page"
@@ -579,6 +615,8 @@ function App() {
     </Card>
     <Hero headingLevel={2} title="Blocks" install="npx shadcn add @eskais/hero" actions={<Link href="#docs" onFollow={() => {}}>Docs</Link>} />
     <CodeBlock code={"const answer = 42"} language="ts" title="answer.ts" lineNumbers />
+    <TextDiff aria-label="Worker diff" oldText={"line 1\\nline 5\\n"} newText={"line 1\\nline five\\n"} language="ts" worker workerThreshold={1} className="h-40" />
+    <GitDiff aria-label="Patch diff" patch={"diff --git a/a.ts b/a.ts\\n--- a/a.ts\\n+++ b/a.ts\\n@@ -1 +1 @@\\n-const a = 1\\n+const a = 2\\n"} className="h-64" />
     <DocumentWorkspace className="h-96" document={<MarkdownView markdown={"# Plan\\n\\n## Goals\\n"} />} explorer={<p>Files</p>} aside={<DocumentOutline headings={extractHeadings("# Plan\\n\\n## Goals\\n")} />} quickOpen={<DocumentQuickOpen items={[{ value: "plan", label: "Plan" }]} onOpen={() => {}} />} saveState="saved" />
     <LandingPage as="div" />
     <div className="h-96 overflow-y-auto">

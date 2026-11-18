@@ -14,6 +14,7 @@ Eskais components are already built to stay cheap: rows virtualize, effects live
 - **Pass `estimateSize`** close to a row's real height in px, so the scrollbar doesn't jump while rows are measured.
 - **Keep `renderItem` cheap and stable.** Rows are memoized: scrolling renders only the rows that enter. Read data in the row, don't compute it there; pass callbacks that keep their identity (`renderCardActions` on `AgentTaskBoard`, `renderItem`), or every row re-renders on every parent render. React Compiler memoizes them for you; without it, use `useCallback`.
 - **Cards and grouped lists don't virtualize.** A board column or a `ListGroup` of hundreds of cards needs paging or a filter, not more cards.
+- **Diffs:** `TextDiff` and `GitDiff` put every file and line in one virtualized scroller, so never render one diff per file in a `.map()`. Keep them bounded (`TextDiff` grows to `--diff-max-height` and scrolls inside past it; `GitDiff` fills its parent), pass `labels` as a constant, leave `wrap` off for the largest diffs (unwrapped rows aren't measured), and let `TextDiff` move big inputs to its worker instead of diffing them yourself during render.
 - **Long pages of sections:** the theme's `content-auto` utility sets `content-visibility: auto` with an intrinsic height (`--intrinsic-height`, 24rem by default), so the browser skips rendering what's off screen.
 
 ## Effects stay out of components
@@ -64,11 +65,12 @@ Eskais components and hooks compile with `babel-plugin-react-compiler`. Keep you
 
 This section holds the numbers Eskais measures today. More budgets and a measuring harness may be added here later.
 
-| What                                      | Measured                                                      |
-| ----------------------------------------- | ------------------------------------------------------------- |
-| First paint of a 2,000-row `List`         | about 100 ms virtualized, against about 800 ms with every row |
-| j/k in a 2,000-row list to the next paint | under 16 ms at the 95th percentile on a desktop CPU           |
-| A frame                                   | 16 ms at 60 Hz: any interaction that misses it shows as jank  |
+| What                                             | Measured                                                                          |
+| ------------------------------------------------ | --------------------------------------------------------------------------------- |
+| First paint of a 2,000-row `List`                | about 100 ms virtualized, against about 800 ms with every row                     |
+| j/k in a 2,000-row list to the next paint        | under 16 ms at the 95th percentile on a desktop CPU                               |
+| A 20,000-line `TextDiff` or a 500-file `GitDiff` | first paint about 150 ms; j/k to the next hunk under 20 ms at the 95th percentile |
+| A frame                                          | 16 ms at 60 Hz: any interaction that misses it shows as jank                      |
 
 Those come from a benchmark in the Eskais repository on a production build. Measure your own screen the same way, in a production build (a development build is several times slower and misleads):
 

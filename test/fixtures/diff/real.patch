@@ -1,0 +1,87 @@
+diff --git a/added.txt b/added.txt
+new file mode 100644
+index 0000000..77c4b56
+--- /dev/null
++++ b/added.txt
+@@ -0,0 +1,2 @@
++brand
++new file
+diff --git "a/caf\303\251.md" "b/caf\303\251.md"
+index a9074c7..572eb43 100644
+--- "a/caf\303\251.md"
++++ "b/caf\303\251.md"
+@@ -1 +1 @@
+-caf
++café
+diff --git a/eof.txt b/eof.txt
+index 20cbb4d..7bcfef5 100644
+--- a/eof.txt
++++ b/eof.txt
+@@ -1 +1 @@
+-no newline
+\ No newline at end of file
++no newline
+diff --git a/gone.txt b/gone.txt
+deleted file mode 100644
+index 961d584..0000000
+--- a/gone.txt
++++ /dev/null
+@@ -1,2 +0,0 @@
+-remove me
+-please
+diff --git a/image.bin b/image.bin
+index 4912885..a94832b 100644
+Binary files a/image.bin and b/image.bin differ
+diff --git a/math.js b/math.js
+index 241be4f..0bd82db 100644
+--- a/math.js
++++ b/math.js
+@@ -2,6 +2,6 @@ export function add(a, b) {
+   return a + b
+ }
+ 
+-export function sub(a, b) {
++export function subtract(a, b) {
+   return a - b
+ }
+diff --git a/modify.txt b/modify.txt
+index 53f1df8..97528b1 100644
+--- a/modify.txt
++++ b/modify.txt
+@@ -1,4 +1,5 @@
+ line one
+-line two
++line 2
+ line three
+ line four
++line five
+diff --git a/pure-old.txt b/pure-new.txt
+similarity index 100%
+rename from pure-old.txt
+rename to pure-new.txt
+diff --git a/renamed-old.txt b/renamed-new.txt
+similarity index 93%
+rename from renamed-old.txt
+rename to renamed-new.txt
+index 1c99002..742bd57 100644
+--- a/renamed-old.txt
++++ b/renamed-new.txt
+@@ -17,7 +17,7 @@
+ 17
+ 18
+ 19
+-20
++twenty
+ 21
+ 22
+ 23
+diff --git a/script.sh b/script.sh
+old mode 100644
+new mode 100755
+diff --git a/with space.txt b/with space.txt
+index 1e17e05..28badd1 100644
+--- a/with space.txt	
++++ b/with space.txt	
+@@ -1 +1 @@
+-spaces
++spaces changed

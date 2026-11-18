@@ -116,7 +116,15 @@
           "--series-target": "color-mix(in oklab, var(--foreground) 80%, var(--background))",
           "--series-remaining": "color-mix(in oklab, var(--muted-foreground) 70%, var(--muted))",
           "--skeleton": "color-mix(in oklab, var(--foreground) 10%, transparent)",
-          "--code-highlight": "color-mix(in oklab, var(--foreground) 6%, var(--muted))"
+          "--code-highlight": "color-mix(in oklab, var(--foreground) 6%, var(--muted))",
+          "--diff-added": "color-mix(in oklab, var(--success) 9%, var(--background))",
+          "--diff-added-strong": "color-mix(in oklab, var(--success) 20%, var(--background))",
+          "--diff-added-gutter": "color-mix(in oklab, var(--success) 14%, var(--background))",
+          "--diff-added-foreground": "var(--success-soft-foreground)",
+          "--diff-removed": "color-mix(in oklab, var(--destructive) 8%, var(--background))",
+          "--diff-removed-strong": "color-mix(in oklab, var(--destructive) 18%, var(--background))",
+          "--diff-removed-gutter": "color-mix(in oklab, var(--destructive) 13%, var(--background))",
+          "--diff-removed-foreground": "var(--destructive-soft-foreground)"
         },
         ".dark": {
           "--floating-shadow": "inset 0 1px 0 oklch(1 0 0 / 0.05), 0 1px 2px oklch(0 0 0 / 0.3), 0 8px 20px -4px oklch(0 0 0 / 0.4), 0 24px 48px -12px oklch(0 0 0 / 0.55)",
@@ -126,7 +134,15 @@
           "--series-target": "color-mix(in oklab, var(--foreground) 80%, var(--background))",
           "--series-remaining": "color-mix(in oklab, var(--muted-foreground) 70%, var(--muted))",
           "--skeleton": "color-mix(in oklab, var(--foreground) 14%, transparent)",
-          "--code-highlight": "color-mix(in oklab, var(--foreground) 8%, var(--muted))"
+          "--code-highlight": "color-mix(in oklab, var(--foreground) 8%, var(--muted))",
+          "--diff-added": "color-mix(in oklab, var(--success) 14%, var(--background))",
+          "--diff-added-strong": "color-mix(in oklab, var(--success) 30%, var(--background))",
+          "--diff-added-gutter": "color-mix(in oklab, var(--success) 22%, var(--background))",
+          "--diff-added-foreground": "var(--success-soft-foreground)",
+          "--diff-removed": "color-mix(in oklab, var(--destructive) 14%, var(--background))",
+          "--diff-removed-strong": "color-mix(in oklab, var(--destructive) 30%, var(--background))",
+          "--diff-removed-gutter": "color-mix(in oklab, var(--destructive) 22%, var(--background))",
+          "--diff-removed-foreground": "var(--destructive-soft-foreground)"
         },
         ":where(:root)": {
           "--control-radius": "calc(var(--radius) * 2)",
@@ -226,7 +242,15 @@
           "--neutral-soft-foreground": "oklch(0.32 var(--neutral-chroma) var(--neutral-hue))",
           "--neutral-border": "oklch(0.86 var(--neutral-chroma) var(--neutral-hue))",
           "--skeleton": "color-mix(in oklab, var(--foreground) 10%, transparent)",
-          "--code-highlight": "color-mix(in oklab, var(--foreground) 6%, var(--muted))"
+          "--code-highlight": "color-mix(in oklab, var(--foreground) 6%, var(--muted))",
+          "--diff-added": "color-mix(in oklab, var(--success) 9%, var(--background))",
+          "--diff-added-strong": "color-mix(in oklab, var(--success) 20%, var(--background))",
+          "--diff-added-gutter": "color-mix(in oklab, var(--success) 14%, var(--background))",
+          "--diff-added-foreground": "var(--success-soft-foreground)",
+          "--diff-removed": "color-mix(in oklab, var(--destructive) 8%, var(--background))",
+          "--diff-removed-strong": "color-mix(in oklab, var(--destructive) 18%, var(--background))",
+          "--diff-removed-gutter": "color-mix(in oklab, var(--destructive) 13%, var(--background))",
+          "--diff-removed-foreground": "var(--destructive-soft-foreground)"
         },
         ".dark [data-palette]": {
           "--background": "oklch(0.145 var(--neutral-chroma) var(--neutral-hue))",
@@ -259,7 +283,15 @@
           "--neutral-soft-foreground": "oklch(0.9 var(--neutral-chroma) var(--neutral-hue))",
           "--neutral-border": "oklch(0.42 var(--neutral-chroma) var(--neutral-hue))",
           "--skeleton": "color-mix(in oklab, var(--foreground) 14%, transparent)",
-          "--code-highlight": "color-mix(in oklab, var(--foreground) 8%, var(--muted))"
+          "--code-highlight": "color-mix(in oklab, var(--foreground) 8%, var(--muted))",
+          "--diff-added": "color-mix(in oklab, var(--success) 14%, var(--background))",
+          "--diff-added-strong": "color-mix(in oklab, var(--success) 30%, var(--background))",
+          "--diff-added-gutter": "color-mix(in oklab, var(--success) 22%, var(--background))",
+          "--diff-added-foreground": "var(--success-soft-foreground)",
+          "--diff-removed": "color-mix(in oklab, var(--destructive) 14%, var(--background))",
+          "--diff-removed-strong": "color-mix(in oklab, var(--destructive) 30%, var(--background))",
+          "--diff-removed-gutter": "color-mix(in oklab, var(--destructive) 22%, var(--background))",
+          "--diff-removed-foreground": "var(--destructive-soft-foreground)"
         },
         "[data-palette].dark": {
           "--background": "oklch(0.145 var(--neutral-chroma) var(--neutral-hue))",
@@ -292,7 +324,15 @@
           "--neutral-soft-foreground": "oklch(0.9 var(--neutral-chroma) var(--neutral-hue))",
           "--neutral-border": "oklch(0.42 var(--neutral-chroma) var(--neutral-hue))",
           "--skeleton": "color-mix(in oklab, var(--foreground) 14%, transparent)",
-          "--code-highlight": "color-mix(in oklab, var(--foreground) 8%, var(--muted))"
+          "--code-highlight": "color-mix(in oklab, var(--foreground) 8%, var(--muted))",
+          "--diff-added": "color-mix(in oklab, var(--success) 14%, var(--background))",
+          "--diff-added-strong": "color-mix(in oklab, var(--success) 30%, var(--background))",
+          "--diff-added-gutter": "color-mix(in oklab, var(--success) 22%, var(--background))",
+          "--diff-added-foreground": "var(--success-soft-foreground)",
+          "--diff-removed": "color-mix(in oklab, var(--destructive) 14%, var(--background))",
+          "--diff-removed-strong": "color-mix(in oklab, var(--destructive) 30%, var(--background))",
+          "--diff-removed-gutter": "color-mix(in oklab, var(--destructive) 22%, var(--background))",
+          "--diff-removed-foreground": "var(--destructive-soft-foreground)"
         },
         "@media (pointer: coarse)": {
           ":where(:root)": {
@@ -373,7 +413,15 @@
             "--neutral-soft-foreground": "oklch(0.9 var(--neutral-chroma) var(--neutral-hue))",
             "--neutral-border": "oklch(0.42 var(--neutral-chroma) var(--neutral-hue))",
             "--skeleton": "color-mix(in oklab, var(--foreground) 14%, transparent)",
-            "--code-highlight": "color-mix(in oklab, var(--foreground) 8%, var(--muted))"
+            "--code-highlight": "color-mix(in oklab, var(--foreground) 8%, var(--muted))",
+            "--diff-added": "color-mix(in oklab, var(--success) 14%, var(--background))",
+            "--diff-added-strong": "color-mix(in oklab, var(--success) 30%, var(--background))",
+            "--diff-added-gutter": "color-mix(in oklab, var(--success) 22%, var(--background))",
+            "--diff-added-foreground": "var(--success-soft-foreground)",
+            "--diff-removed": "color-mix(in oklab, var(--destructive) 14%, var(--background))",
+            "--diff-removed-strong": "color-mix(in oklab, var(--destructive) 30%, var(--background))",
+            "--diff-removed-gutter": "color-mix(in oklab, var(--destructive) 22%, var(--background))",
+            "--diff-removed-foreground": "var(--destructive-soft-foreground)"
           },
           ":root:where(:not(.light, [data-color-scheme=\"light\"])) [data-palette]": {
             "--background": "oklch(0.145 var(--neutral-chroma) var(--neutral-hue))",
@@ -406,7 +454,15 @@
             "--neutral-soft-foreground": "oklch(0.9 var(--neutral-chroma) var(--neutral-hue))",
             "--neutral-border": "oklch(0.42 var(--neutral-chroma) var(--neutral-hue))",
             "--skeleton": "color-mix(in oklab, var(--foreground) 14%, transparent)",
-            "--code-highlight": "color-mix(in oklab, var(--foreground) 8%, var(--muted))"
+            "--code-highlight": "color-mix(in oklab, var(--foreground) 8%, var(--muted))",
+            "--diff-added": "color-mix(in oklab, var(--success) 14%, var(--background))",
+            "--diff-added-strong": "color-mix(in oklab, var(--success) 30%, var(--background))",
+            "--diff-added-gutter": "color-mix(in oklab, var(--success) 22%, var(--background))",
+            "--diff-added-foreground": "var(--success-soft-foreground)",
+            "--diff-removed": "color-mix(in oklab, var(--destructive) 14%, var(--background))",
+            "--diff-removed-strong": "color-mix(in oklab, var(--destructive) 30%, var(--background))",
+            "--diff-removed-gutter": "color-mix(in oklab, var(--destructive) 22%, var(--background))",
+            "--diff-removed-foreground": "var(--destructive-soft-foreground)"
           },
           ":root[data-palette]:where(:not(.light, [data-color-scheme=\"light\"]))": {
             "--background": "oklch(0.145 var(--neutral-chroma) var(--neutral-hue))",
@@ -439,7 +495,15 @@
             "--neutral-soft-foreground": "oklch(0.9 var(--neutral-chroma) var(--neutral-hue))",
             "--neutral-border": "oklch(0.42 var(--neutral-chroma) var(--neutral-hue))",
             "--skeleton": "color-mix(in oklab, var(--foreground) 14%, transparent)",
-            "--code-highlight": "color-mix(in oklab, var(--foreground) 8%, var(--muted))"
+            "--code-highlight": "color-mix(in oklab, var(--foreground) 8%, var(--muted))",
+            "--diff-added": "color-mix(in oklab, var(--success) 14%, var(--background))",
+            "--diff-added-strong": "color-mix(in oklab, var(--success) 30%, var(--background))",
+            "--diff-added-gutter": "color-mix(in oklab, var(--success) 22%, var(--background))",
+            "--diff-added-foreground": "var(--success-soft-foreground)",
+            "--diff-removed": "color-mix(in oklab, var(--destructive) 14%, var(--background))",
+            "--diff-removed-strong": "color-mix(in oklab, var(--destructive) 30%, var(--background))",
+            "--diff-removed-gutter": "color-mix(in oklab, var(--destructive) 22%, var(--background))",
+            "--diff-removed-foreground": "var(--destructive-soft-foreground)"
           }
         },
         "[data-elevation=\"flat\"]": {
@@ -762,6 +826,14 @@
           "color-syntax-tag": "var(--syntax-tag)",
           "color-syntax-punctuation": "var(--syntax-punctuation)",
           "color-code-highlight": "var(--code-highlight)",
+          "color-diff-added": "var(--diff-added)",
+          "color-diff-added-strong": "var(--diff-added-strong)",
+          "color-diff-added-gutter": "var(--diff-added-gutter)",
+          "color-diff-added-foreground": "var(--diff-added-foreground)",
+          "color-diff-removed": "var(--diff-removed)",
+          "color-diff-removed-strong": "var(--diff-removed-strong)",
+          "color-diff-removed-gutter": "var(--diff-removed-gutter)",
+          "color-diff-removed-foreground": "var(--diff-removed-foreground)",
           "radius-sm": "calc(var(--radius) - 4px)",
           "radius-md": "calc(var(--radius) - 2px)",
           "radius-lg": "var(--radius)",
@@ -4649,6 +4721,165 @@
       ]
     },
     {
+      "name": "diff",
+      "type": "registry:lib",
+      "title": "Diff engine",
+      "description": "Line diffs with histogram (default, git's most readable for code) or linear-space Myers with a cost cut, git's slider placement, hunks with context and the enclosing-definition heading, whitespace options, binary and size guards; changed words or characters within a line; a unified-diff parser for multi-file git patches (renames, copies, modes, new, deleted, binary, quoted paths); and diffTextAsync, which runs in a Web Worker past 200k characters. No dependencies.",
+      "docs": "`diffText(old, new, { algorithm, context, ignoreWhitespace, maxLines, maxChars })` returns `{ status, hunks, additions, deletions }`; its output matches `git diff --histogram` (or `--minimal` with `algorithm: \"myers\"`). `formatHunks(hunks)` prints them back as a unified diff. `parsePatch(text)` reads `git diff`, `git show` or `diff -u` output into `FileDiff`s. `intraline(oldLine, newLine, { mode: \"word\" | \"char\" })` gives the changed ranges, or null for a rewritten line. `diffTextAsync(old, new, { signal })` diffs in a Web Worker past `workerThreshold` (200k characters), on the main thread below it, without workers, or when a Content Security Policy refuses `blob:` workers: the worker is built from the engine's own source in a Blob, so it works in every bundler without a worker file.",
+      "files": [
+        {
+          "path": "registry/lib/diff-types.ts",
+          "type": "registry:lib"
+        },
+        {
+          "path": "registry/lib/diff-sequence.ts",
+          "type": "registry:lib"
+        },
+        {
+          "path": "registry/lib/diff-lines.ts",
+          "type": "registry:lib"
+        },
+        {
+          "path": "registry/lib/diff-intraline.ts",
+          "type": "registry:lib"
+        },
+        {
+          "path": "registry/lib/diff-patch.ts",
+          "type": "registry:lib"
+        },
+        {
+          "path": "registry/lib/diff-async.ts",
+          "type": "registry:lib"
+        }
+      ]
+    },
+    {
+      "name": "diff-view",
+      "type": "registry:ui",
+      "title": "Diff View",
+      "description": "The renderer behind TextDiff and GitDiff: every file's lines in one virtualized scroller (UI SDK createVirtualizer), unified or split, folded unchanged regions, changed-word highlights, Lezer syntax colours parsed in slices and applied only to the lines on screen, one tab stop over the lines (createGridFocus), j/k and n/p between hunks and files, Shift ranges for comments (onLineSelect), find in page across folded and off-screen lines, and agent actions.",
+      "docs": "`<DiffView files={toViewFiles(fileDiffs)} headers />` with `layout`/`defaultLayout`/`onLayoutChange` (`unified`, `split`), `wrap`, `viewed`/`onViewedChange`, `defaultCollapsed`, `onLineSelect(selection, details)` (`{ path, start: { side, line }, end, lines }`, or null) and `intraline` (`word`, `char`, false). `createDiffViewController()` drives it from outside (`openFile`, `nextHunk`, `markViewed`, `setLayout`…). Labels are overridable (`diffLabels`, `diffLabelsEs`); pass a constant. `height=\"auto\"` (default) grows to the diff up to `--diff-max-height` (40rem) and scrolls inside past it; `height=\"fill\"` fills a sized parent.",
+      "dependencies": [
+        "@ui-sdk/core@0.1.0-beta.5",
+        "@ui-sdk/react@0.1.0-beta.5",
+        "@lezer/common@1.5.5",
+        "@lezer/highlight@1.2.5",
+        "lucide-react@^1.68.0"
+      ],
+      "registryDependencies": [
+        "@eskais/utils",
+        "@eskais/theme",
+        "@eskais/tone",
+        "@eskais/diff",
+        "@eskais/code-block",
+        "@eskais/button",
+        "@eskais/badge",
+        "@eskais/checkbox",
+        "@eskais/label"
+      ],
+      "files": [
+        {
+          "path": "registry/ui/diff-labels.ts",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/diff-syntax.ts",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/diff-view-model.ts",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/diff-view-metrics.ts",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/diff-view-selection.ts",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/diff-view-document.ts",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/diff-view-primitive.ts",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/diff-view-rows.tsx",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/diff-stat.tsx",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/diff-file-header.tsx",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/diff-view.tsx",
+          "type": "registry:ui"
+        }
+      ]
+    },
+    {
+      "name": "text-diff",
+      "type": "registry:ui",
+      "title": "Text Diff",
+      "description": "Compares two strings: unified or split, line numbers, unchanged regions folded behind Expand N lines, changed words highlighted, syntax colours by language, word wrap, line selection and find in page; inputs past 200k characters diff in a Web Worker.",
+      "docs": "`<TextDiff oldText newText language=\"tsx\" />` takes the diff options (`algorithm`, `context`, `ignoreWhitespace`, `worker`, `workerThreshold`) and every DiffView prop. Small inputs diff during render; large ones in a worker, with `loading` shown before the first result and `aria-busy` while a newer one computes.",
+      "dependencies": [
+        "@ui-sdk/core@0.1.0-beta.5",
+        "@ui-sdk/react@0.1.0-beta.5"
+      ],
+      "registryDependencies": [
+        "@eskais/utils",
+        "@eskais/diff",
+        "@eskais/diff-view"
+      ],
+      "files": [
+        {
+          "path": "registry/ui/use-text-diff.ts",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/text-diff.tsx",
+          "type": "registry:ui"
+        }
+      ]
+    },
+    {
+      "name": "git-diff",
+      "type": "registry:ui",
+      "title": "Git Diff",
+      "description": "A patch or a list of file diffs for review: per-file headers (rename arrow, status chip, +/- counts and bar, mode change, collapse, viewed), a tree of changed files to jump between them, unified/split and wrap controls, one virtualized document for 500-file patches, j/k and n/p, line selection for comments, and agent actions openFile, nextHunk, previousHunk, markViewed and getHunk.",
+      "docs": "`<GitDiff patch={gitDiffOutput} />` or `files={fileDiffs}` (give `oldText`/`newText` to make unchanged regions expandable). `fileTree` and `toolbar` default to true; the tree hides on narrow screens. Marking a file viewed folds it. `onViewedChange` and `onLineSelect` report what the reviewer did; `details.source === \"agent\"` tells an agent's change apart. GitDiff fills its parent (`height=\"fill\"`), so give it a height; binary files and mode-only changes show `labels.binaryFile` or `labels.modeChange` instead of counts.",
+      "dependencies": [
+        "@ui-sdk/core@0.1.0-beta.5",
+        "@ui-sdk/react@0.1.0-beta.5",
+        "lucide-react@^1.68.0"
+      ],
+      "registryDependencies": [
+        "@eskais/utils",
+        "@eskais/diff",
+        "@eskais/diff-view",
+        "@eskais/segmented-control",
+        "@eskais/toggle"
+      ],
+      "files": [
+        {
+          "path": "registry/ui/git-diff-tree.tsx",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/git-diff.tsx",
+          "type": "registry:ui"
+        }
+      ]
+    },
+    {
       "name": "hero",
       "type": "registry:block",
       "title": "Hero",
@@ -5133,6 +5364,11 @@
           "path": "skills/eskais-ui/references/conversation-and-activity.md",
           "type": "registry:file",
           "target": "~/.agents/skills/eskais-ui/references/conversation-and-activity.md"
+        },
+        {
+          "path": "skills/eskais-ui/references/diffs.md",
+          "type": "registry:file",
+          "target": "~/.agents/skills/eskais-ui/references/diffs.md"
         }
       ]
     },

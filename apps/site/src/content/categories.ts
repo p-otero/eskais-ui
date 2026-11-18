@@ -170,6 +170,10 @@ const categories = [
     name: "Editor",
     items: ["code-block", "markdown-editor", "markdown-view", "markdown-editor-languages"],
   },
+  {
+    name: "Diff",
+    items: ["git-diff", "text-diff", "diff-view", "diff"],
+  },
 ] as const
 
 type CategoryName = (typeof categories)[number]["name"]

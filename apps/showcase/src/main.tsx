@@ -11,6 +11,7 @@ import { CalendarCheck } from "./checks/calendar-check"
 import { CardHeaderCheck } from "./checks/card-header-check"
 import { PaletteReopenCheck } from "./checks/palette-reopen-check"
 import { DescriptionListCheck } from "./checks/description-list-check"
+import { DiffBench } from "./checks/diff-bench"
 import { FieldPlacementCheck } from "./checks/field-placement-check"
 import { GaugeCheck } from "./checks/gauge-check"
 import { IconTooltipCheck } from "./checks/icon-tooltip-check"
@@ -55,6 +56,7 @@ const standalone = new Set([
   "icon-tooltip-check",
   "inbox",
   "list-bench",
+  "diff-bench",
   "calendar-check",
   "press-check",
   "side-panel-check",
@@ -88,6 +90,7 @@ function Demo() {
   if (demo === "icon-tooltip-check") return <IconTooltipCheck />
   if (demo === "inbox") return <InboxDemo />
   if (demo === "list-bench") return <ListBench />
+  if (demo === "diff-bench") return <DiffBench />
   if (demo === "calendar-check") return <CalendarCheck />
   if (demo === "press-check") return <PressCheck />
   if (demo === "side-panel-check") return <SidePanelCheck />

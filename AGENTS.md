@@ -248,17 +248,18 @@ The `lint-rules` item ships consumers the `react` and `ui-tailwind` presets with
 
 ## Commands
 
-| Task           | Command                                                          |
-| -------------- | ---------------------------------------------------------------- |
-| Lint           | `bun run lint`                                                   |
-| Format         | `bun run format`                                                 |
-| Typecheck      | `bun run typecheck`                                              |
-| Tests          | `bun run test`                                                   |
-| Registry       | `bun run registry:build`, then commit `public/r`                 |
-| Everything     | `bun run verify`                                                 |
-| Showcase       | `bun run dev`                                                    |
-| Clean consumer | `node tooling/consumer-check.mjs npm` (or `pnpm`)                |
-| Dependency age | `node tooling/check-dependency-age.mjs`: 7 days or older         |
-| Contrast (CI)  | `bun run test:browser`: axe and pixel contrast in Chrome         |
-| Contrast glass | `bun run test:browser:glass`: by hand, not in CI                 |
-| React Compiler | `bun run test:compiler`: compiler build, then the browser checks |
+| Task           | Command                                                                  |
+| -------------- | ------------------------------------------------------------------------ |
+| Lint           | `bun run lint`                                                           |
+| Format         | `bun run format`                                                         |
+| Typecheck      | `bun run typecheck`                                                      |
+| Tests          | `bun run test`                                                           |
+| Registry       | `bun run registry:build`, then commit `public/r`                         |
+| Everything     | `bun run verify`                                                         |
+| Showcase       | `bun run dev`                                                            |
+| Clean consumer | `node tooling/consumer-check.mjs npm` (or `pnpm`)                        |
+| Dependency age | `node tooling/check-dependency-age.mjs`: 7 days or older                 |
+| Contrast (CI)  | `bun run test:browser`: axe and pixel contrast in Chrome                 |
+| Contrast glass | `bun run test:browser:glass`: by hand, not in CI                         |
+| React Compiler | `bun run test:compiler`: compiler build, then the browser checks         |
+| Diff benchmark | `node tooling/diff-bench.mjs [--cpu=1,4]`; `--ci` runs in `test:browser` |

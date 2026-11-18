@@ -581,6 +581,45 @@ const itemNotes: Record<string, ItemNotes> = {
       "Sidebar items, crumbs and pager links are Links: pass onFollow where agents should follow them. Agents collapse and expand the sidebar through the trigger or the Sidebar's own actions.",
     related: ["topbar", "sidebar", "link", "breadcrumb", "page-layout"],
   },
+  "git-diff": {
+    usage:
+      "Use GitDiff to review a patch or a set of changed files: pass git diff output as patch, or FileDiffs with both texts so unchanged regions expand. The tree beside it jumps to a file; marking a file viewed folds it. onLineSelect gives the line or Shift range a comment would anchor to.",
+    a11y: [
+      "The lines of each file are a grid with one tab stop: arrows move by line (and side, in split), Page Up and Page Down by a screen, j/k to the next or previous hunk, n/p to the next or previous file; Enter or Space selects a line, Shift extends, Escape clears.",
+      "Every line carries its +/- sign and a screen-reader label (Added, line 12), so a change never rests on colour; diff fills and changed words keep every syntax colour at 4.5:1 in both modes and every palette.",
+      "Code stays left to right in a right-to-left page; headers follow the page. Find in page reaches lines that aren't rendered and opens a folded region or file it matches.",
+    ],
+    agent:
+      "The diff is one component named by its aria-label, with openFile(path), nextHunk(), previousHunk(), nextFile(), markViewed(path, viewed), getHunk(path, n) (read-only), expandGap, setLayout and setWrap; its items are the file paths. Viewed checkboxes, the layout control and the wrap toggle are UI SDK parts too.",
+    related: ["text-diff", "diff-view", "diff", "code-block"],
+  },
+  "text-diff": {
+    usage:
+      "Use TextDiff to compare two versions of one text: a config, a generated file, an edit before saving. language picks the syntax colours; context sets the unchanged lines around each change; inputs past 200k characters diff in a Web Worker.",
+    a11y: [
+      "One tab stop over the lines; arrows, j/k between changes, Enter to expand a folded region or select a line.",
+      "Signs, line numbers and screen-reader labels mark every change; changed words are highlighted on top of the line fill.",
+    ],
+    agent: "The same diff component and actions as GitDiff, with one file.",
+    related: ["git-diff", "diff-view", "diff"],
+  },
+  "diff-view": {
+    usage:
+      "DiffView renders file diffs you built yourself (toViewFiles over FileDiffs from parsePatch or diffText). TextDiff and GitDiff are DiffView with input handling and chrome; reach for it to add your own toolbar or side panel, driving it with createDiffViewController.",
+    a11y: [
+      "All files share one virtualized scroller and one tab stop; the focused line stays rendered when scrolled away.",
+      'It grows to the diff up to --diff-max-height (40rem) and scrolls inside past it; height="fill" fills a sized parent instead.',
+    ],
+    agent: "Same actions as GitDiff; a controller calls them from your own buttons.",
+    related: ["git-diff", "text-diff", "diff"],
+  },
+  diff: {
+    usage:
+      "The diff engine on its own: diffText for line hunks (histogram or Myers, matching git's output), intraline for changed words, parsePatch for git patches, formatHunks to print them back, and diffTextAsync to diff off the main thread.",
+    a11y: ["No interface: render its output with DiffView, TextDiff or GitDiff, or a CodeBlock in diff language."],
+    agent: "Not a component; agents act on the views that render it.",
+    related: ["text-diff", "git-diff", "code-block"],
+  },
   "code-block": {
     usage:
       "Use CodeBlock for any code you show: a filename title, copy, line numbers, highlighted lines, wrap and maxHeight. CodeTabs holds several files; Code is inline code.",

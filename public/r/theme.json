@@ -106,6 +106,14 @@
       "color-syntax-tag": "var(--syntax-tag)",
       "color-syntax-punctuation": "var(--syntax-punctuation)",
       "color-code-highlight": "var(--code-highlight)",
+      "color-diff-added": "var(--diff-added)",
+      "color-diff-added-strong": "var(--diff-added-strong)",
+      "color-diff-added-gutter": "var(--diff-added-gutter)",
+      "color-diff-added-foreground": "var(--diff-added-foreground)",
+      "color-diff-removed": "var(--diff-removed)",
+      "color-diff-removed-strong": "var(--diff-removed-strong)",
+      "color-diff-removed-gutter": "var(--diff-removed-gutter)",
+      "color-diff-removed-foreground": "var(--diff-removed-foreground)",
       "radius-sm": "calc(var(--radius) - 4px)",
       "radius-md": "calc(var(--radius) - 2px)",
       "radius-lg": "var(--radius)",
@@ -321,7 +329,15 @@
       "--series-target": "color-mix(in oklab, var(--foreground) 80%, var(--background))",
       "--series-remaining": "color-mix(in oklab, var(--muted-foreground) 70%, var(--muted))",
       "--skeleton": "color-mix(in oklab, var(--foreground) 10%, transparent)",
-      "--code-highlight": "color-mix(in oklab, var(--foreground) 6%, var(--muted))"
+      "--code-highlight": "color-mix(in oklab, var(--foreground) 6%, var(--muted))",
+      "--diff-added": "color-mix(in oklab, var(--success) 9%, var(--background))",
+      "--diff-added-strong": "color-mix(in oklab, var(--success) 20%, var(--background))",
+      "--diff-added-gutter": "color-mix(in oklab, var(--success) 14%, var(--background))",
+      "--diff-added-foreground": "var(--success-soft-foreground)",
+      "--diff-removed": "color-mix(in oklab, var(--destructive) 8%, var(--background))",
+      "--diff-removed-strong": "color-mix(in oklab, var(--destructive) 18%, var(--background))",
+      "--diff-removed-gutter": "color-mix(in oklab, var(--destructive) 13%, var(--background))",
+      "--diff-removed-foreground": "var(--destructive-soft-foreground)"
     },
     ".dark": {
       "--floating-shadow": "inset 0 1px 0 oklch(1 0 0 / 0.05), 0 1px 2px oklch(0 0 0 / 0.3), 0 8px 20px -4px oklch(0 0 0 / 0.4), 0 24px 48px -12px oklch(0 0 0 / 0.55)",
@@ -331,7 +347,15 @@
       "--series-target": "color-mix(in oklab, var(--foreground) 80%, var(--background))",
       "--series-remaining": "color-mix(in oklab, var(--muted-foreground) 70%, var(--muted))",
       "--skeleton": "color-mix(in oklab, var(--foreground) 14%, transparent)",
-      "--code-highlight": "color-mix(in oklab, var(--foreground) 8%, var(--muted))"
+      "--code-highlight": "color-mix(in oklab, var(--foreground) 8%, var(--muted))",
+      "--diff-added": "color-mix(in oklab, var(--success) 14%, var(--background))",
+      "--diff-added-strong": "color-mix(in oklab, var(--success) 30%, var(--background))",
+      "--diff-added-gutter": "color-mix(in oklab, var(--success) 22%, var(--background))",
+      "--diff-added-foreground": "var(--success-soft-foreground)",
+      "--diff-removed": "color-mix(in oklab, var(--destructive) 14%, var(--background))",
+      "--diff-removed-strong": "color-mix(in oklab, var(--destructive) 30%, var(--background))",
+      "--diff-removed-gutter": "color-mix(in oklab, var(--destructive) 22%, var(--background))",
+      "--diff-removed-foreground": "var(--destructive-soft-foreground)"
     },
     ":where(:root)": {
       "--control-radius": "calc(var(--radius) * 2)",
@@ -431,7 +455,15 @@
       "--neutral-soft-foreground": "oklch(0.32 var(--neutral-chroma) var(--neutral-hue))",
       "--neutral-border": "oklch(0.86 var(--neutral-chroma) var(--neutral-hue))",
       "--skeleton": "color-mix(in oklab, var(--foreground) 10%, transparent)",
-      "--code-highlight": "color-mix(in oklab, var(--foreground) 6%, var(--muted))"
+      "--code-highlight": "color-mix(in oklab, var(--foreground) 6%, var(--muted))",
+      "--diff-added": "color-mix(in oklab, var(--success) 9%, var(--background))",
+      "--diff-added-strong": "color-mix(in oklab, var(--success) 20%, var(--background))",
+      "--diff-added-gutter": "color-mix(in oklab, var(--success) 14%, var(--background))",
+      "--diff-added-foreground": "var(--success-soft-foreground)",
+      "--diff-removed": "color-mix(in oklab, var(--destructive) 8%, var(--background))",
+      "--diff-removed-strong": "color-mix(in oklab, var(--destructive) 18%, var(--background))",
+      "--diff-removed-gutter": "color-mix(in oklab, var(--destructive) 13%, var(--background))",
+      "--diff-removed-foreground": "var(--destructive-soft-foreground)"
     },
     ".dark [data-palette]": {
       "--background": "oklch(0.145 var(--neutral-chroma) var(--neutral-hue))",
@@ -464,7 +496,15 @@
       "--neutral-soft-foreground": "oklch(0.9 var(--neutral-chroma) var(--neutral-hue))",
       "--neutral-border": "oklch(0.42 var(--neutral-chroma) var(--neutral-hue))",
       "--skeleton": "color-mix(in oklab, var(--foreground) 14%, transparent)",
-      "--code-highlight": "color-mix(in oklab, var(--foreground) 8%, var(--muted))"
+      "--code-highlight": "color-mix(in oklab, var(--foreground) 8%, var(--muted))",
+      "--diff-added": "color-mix(in oklab, var(--success) 14%, var(--background))",
+      "--diff-added-strong": "color-mix(in oklab, var(--success) 30%, var(--background))",
+      "--diff-added-gutter": "color-mix(in oklab, var(--success) 22%, var(--background))",
+      "--diff-added-foreground": "var(--success-soft-foreground)",
+      "--diff-removed": "color-mix(in oklab, var(--destructive) 14%, var(--background))",
+      "--diff-removed-strong": "color-mix(in oklab, var(--destructive) 30%, var(--background))",
+      "--diff-removed-gutter": "color-mix(in oklab, var(--destructive) 22%, var(--background))",
+      "--diff-removed-foreground": "var(--destructive-soft-foreground)"
     },
     "[data-palette].dark": {
       "--background": "oklch(0.145 var(--neutral-chroma) var(--neutral-hue))",
@@ -497,7 +537,15 @@
       "--neutral-soft-foreground": "oklch(0.9 var(--neutral-chroma) var(--neutral-hue))",
       "--neutral-border": "oklch(0.42 var(--neutral-chroma) var(--neutral-hue))",
       "--skeleton": "color-mix(in oklab, var(--foreground) 14%, transparent)",
-      "--code-highlight": "color-mix(in oklab, var(--foreground) 8%, var(--muted))"
+      "--code-highlight": "color-mix(in oklab, var(--foreground) 8%, var(--muted))",
+      "--diff-added": "color-mix(in oklab, var(--success) 14%, var(--background))",
+      "--diff-added-strong": "color-mix(in oklab, var(--success) 30%, var(--background))",
+      "--diff-added-gutter": "color-mix(in oklab, var(--success) 22%, var(--background))",
+      "--diff-added-foreground": "var(--success-soft-foreground)",
+      "--diff-removed": "color-mix(in oklab, var(--destructive) 14%, var(--background))",
+      "--diff-removed-strong": "color-mix(in oklab, var(--destructive) 30%, var(--background))",
+      "--diff-removed-gutter": "color-mix(in oklab, var(--destructive) 22%, var(--background))",
+      "--diff-removed-foreground": "var(--destructive-soft-foreground)"
     },
     "@media (pointer: coarse)": {
       ":where(:root)": {
@@ -578,7 +626,15 @@
         "--neutral-soft-foreground": "oklch(0.9 var(--neutral-chroma) var(--neutral-hue))",
         "--neutral-border": "oklch(0.42 var(--neutral-chroma) var(--neutral-hue))",
         "--skeleton": "color-mix(in oklab, var(--foreground) 14%, transparent)",
-        "--code-highlight": "color-mix(in oklab, var(--foreground) 8%, var(--muted))"
+        "--code-highlight": "color-mix(in oklab, var(--foreground) 8%, var(--muted))",
+        "--diff-added": "color-mix(in oklab, var(--success) 14%, var(--background))",
+        "--diff-added-strong": "color-mix(in oklab, var(--success) 30%, var(--background))",
+        "--diff-added-gutter": "color-mix(in oklab, var(--success) 22%, var(--background))",
+        "--diff-added-foreground": "var(--success-soft-foreground)",
+        "--diff-removed": "color-mix(in oklab, var(--destructive) 14%, var(--background))",
+        "--diff-removed-strong": "color-mix(in oklab, var(--destructive) 30%, var(--background))",
+        "--diff-removed-gutter": "color-mix(in oklab, var(--destructive) 22%, var(--background))",
+        "--diff-removed-foreground": "var(--destructive-soft-foreground)"
       },
       ":root:where(:not(.light, [data-color-scheme=\"light\"])) [data-palette]": {
         "--background": "oklch(0.145 var(--neutral-chroma) var(--neutral-hue))",
@@ -611,7 +667,15 @@
         "--neutral-soft-foreground": "oklch(0.9 var(--neutral-chroma) var(--neutral-hue))",
         "--neutral-border": "oklch(0.42 var(--neutral-chroma) var(--neutral-hue))",
         "--skeleton": "color-mix(in oklab, var(--foreground) 14%, transparent)",
-        "--code-highlight": "color-mix(in oklab, var(--foreground) 8%, var(--muted))"
+        "--code-highlight": "color-mix(in oklab, var(--foreground) 8%, var(--muted))",
+        "--diff-added": "color-mix(in oklab, var(--success) 14%, var(--background))",
+        "--diff-added-strong": "color-mix(in oklab, var(--success) 30%, var(--background))",
+        "--diff-added-gutter": "color-mix(in oklab, var(--success) 22%, var(--background))",
+        "--diff-added-foreground": "var(--success-soft-foreground)",
+        "--diff-removed": "color-mix(in oklab, var(--destructive) 14%, var(--background))",
+        "--diff-removed-strong": "color-mix(in oklab, var(--destructive) 30%, var(--background))",
+        "--diff-removed-gutter": "color-mix(in oklab, var(--destructive) 22%, var(--background))",
+        "--diff-removed-foreground": "var(--destructive-soft-foreground)"
       },
       ":root[data-palette]:where(:not(.light, [data-color-scheme=\"light\"]))": {
         "--background": "oklch(0.145 var(--neutral-chroma) var(--neutral-hue))",
@@ -644,7 +708,15 @@
         "--neutral-soft-foreground": "oklch(0.9 var(--neutral-chroma) var(--neutral-hue))",
         "--neutral-border": "oklch(0.42 var(--neutral-chroma) var(--neutral-hue))",
         "--skeleton": "color-mix(in oklab, var(--foreground) 14%, transparent)",
-        "--code-highlight": "color-mix(in oklab, var(--foreground) 8%, var(--muted))"
+        "--code-highlight": "color-mix(in oklab, var(--foreground) 8%, var(--muted))",
+        "--diff-added": "color-mix(in oklab, var(--success) 14%, var(--background))",
+        "--diff-added-strong": "color-mix(in oklab, var(--success) 30%, var(--background))",
+        "--diff-added-gutter": "color-mix(in oklab, var(--success) 22%, var(--background))",
+        "--diff-added-foreground": "var(--success-soft-foreground)",
+        "--diff-removed": "color-mix(in oklab, var(--destructive) 14%, var(--background))",
+        "--diff-removed-strong": "color-mix(in oklab, var(--destructive) 30%, var(--background))",
+        "--diff-removed-gutter": "color-mix(in oklab, var(--destructive) 22%, var(--background))",
+        "--diff-removed-foreground": "var(--destructive-soft-foreground)"
       }
     },
     "[data-elevation=\"flat\"]": {
