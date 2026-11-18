@@ -9,7 +9,7 @@ Tables, lists and comboboxes over any backend. Four layers, each its own registr
 | Data layer            | `server-data`                                                                                                          | Hooks on TanStack Query 5 with return types of their own, `DataProvider`                           |
 | UI                    | `server-data-table`, `server-list`, `server-combobox`, `filter-search`, `filter-chips`, `filter-panel`, `filter-field` | Components built on the hooks                                                                      |
 
-`url-state` is a router-agnostic URL adapter (`historyUrlState`, `hashUrlState`, `memoryUrlState`, `useUrlState`) that the table uses and other screens can share.
+`url-state` is a router-agnostic URL adapter (`historyUrlState`, `hashUrlState`, `memoryUrlState`, `useUrlState`) that the table uses and other screens can share; `routerUrlState(router)` goes through a `UrlRouter` from `url-router` (`hashRouter()`, `historyRouter()` or your router's own API wrapped in `{ read, navigate, href, subscribe }`), so a router that owns the URL keeps it.
 
 ## 1. Wrap the endpoint in a source
 

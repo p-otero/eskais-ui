@@ -54,6 +54,12 @@ const guides: GuideMeta[] = [
       "Tables, lists and comboboxes over any backend: pagination styles, wire formats, adapters, serializers and the URL.",
   },
   {
+    slug: "routing",
+    title: "Routing and the URL",
+    description:
+      "A router adapter for blocks that keep state in the URL: hash and history routers, your own router's API, or controlled selection.",
+  },
+  {
     slug: "agents",
     title: "Agents",
     description:

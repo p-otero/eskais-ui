@@ -1,7 +1,7 @@
 import { act, render, screen, within } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { createAgent } from "@ui-sdk/react/agent"
-import { useState } from "react"
+import { useState, type CSSProperties } from "react"
 import { afterEach, beforeEach, expect, test, vi } from "vitest"
 
 import { List, ListItem } from "@/components/ui/list-item"
@@ -212,4 +212,69 @@ test("MasterDetail: agents open and close items by the block's name", async () =
   result = await act(() => agent.act({ steps: [{ ref: "Devices", action: "close" }] }))
   expect(result.ok, result.error?.message).toBe(true)
   expect(screen.queryByRole("region", { name: "Garage door" })).toBeNull()
+})
+
+test("MasterDetail: idleDetail visible keeps the idle detail under a stacked list, collapsible to its bar", async () => {
+  width = 390
+  const user = userEvent.setup()
+  render(<Devices idleDetail="visible" emptyDetailTitle="Monitor" storageKey="monitor" />)
+  const pane = screen.getByRole("region", { name: "Monitor" })
+  expect(pane.textContent).toContain("Pick a device")
+  expect(pane.parentElement?.className).not.toContain("data-idle:hidden")
+
+  const collapse = within(pane).getByRole("button", { name: "Collapse detail" })
+  expect(collapse.getAttribute("aria-expanded")).toBe("true")
+  await user.click(collapse)
+  expect(document.activeElement).toBe(collapse)
+  expect(collapse.getAttribute("aria-label")).toBe("Expand detail")
+  expect(collapse.getAttribute("aria-expanded")).toBe("false")
+  expect(screen.queryByText("Pick a device")).toBeNull()
+  expect(localStorage.getItem("monitor:collapsed")).toBe("true")
+
+  await user.click(row("Hall camera"))
+  expect(screen.getByRole("region", { name: "Hall camera" })).toBeTruthy()
+  await user.click(screen.getByRole("button", { name: "Back" }))
+  expect(screen.getByRole("button", { name: "Expand detail" })).toBeTruthy()
+  await user.click(screen.getByRole("button", { name: "Expand detail" }))
+  expect(screen.getByText("Pick a device")).toBeTruthy()
+})
+
+test("MasterDetail: by default a stacked idle detail is hidden and has no collapse button", () => {
+  width = 390
+  render(<Devices />)
+  expect(document.querySelector("[data-idle]")?.className).toContain("data-idle:hidden")
+  expect(screen.queryByRole("button", { name: "Collapse detail" })).toBeNull()
+})
+
+test("MasterDetail: beside the list, a visible collapsible idle detail collapses to the rail", async () => {
+  const user = userEvent.setup()
+  render(<Devices idleDetail="visible" collapsible labels={{ collapse: "Hide monitor", expand: "Show monitor" }} />)
+  await user.click(screen.getByRole("button", { name: "Hide monitor" }))
+  expect(document.querySelector('[data-slot="master-detail-rail"]')).toBeTruthy()
+  await user.click(screen.getByRole("button", { name: "Show monitor" }))
+  expect(screen.getByText("Pick a device")).toBeTruthy()
+})
+
+test("MasterDetail: agents collapse and expand a visible idle detail by name", async () => {
+  width = 390
+  render(<Devices idleDetail="visible" />)
+  await settle()
+  const agent = createAgent()
+  const components = agent.snapshot().filter((entry) => !entry.offPage && entry.component !== "more")
+  for (const entry of components) expect(entry.label, `${entry.component} ${entry.ref} has no name`).toBeTruthy()
+  let result = await act(() => agent.act({ steps: [{ ref: "Collapse detail", action: "press" }] }))
+  expect(result.ok, result.error?.message).toBe(true)
+  expect(screen.queryByText("Pick a device")).toBeNull()
+  result = await act(() => agent.act({ steps: [{ ref: "Expand detail", action: "press" }] }))
+  expect(result.ok, result.error?.message).toBe(true)
+  expect(screen.getByText("Pick a device")).toBeTruthy()
+})
+
+test("MasterDetail: height auto sizes to content between a min and a max", () => {
+  render(<Devices height="auto" style={{ "--master-detail-max-height": "30rem" } as CSSProperties} />)
+  const root = document.querySelector<HTMLElement>('[data-slot="master-detail"]')!
+  expect(root.dataset.height).toBe("auto")
+  expect(root.className).toContain("max-h-(--master-detail-max-height)")
+  expect(root.className).not.toContain("h-(--master-detail-height)")
+  expect(root.style.getPropertyValue("--master-detail-max-height")).toBe("30rem")
 })

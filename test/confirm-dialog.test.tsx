@@ -138,3 +138,52 @@ test("a default-tone callout is info; no children, no callout", async () => {
   expect(screen.getByRole("alertdialog").querySelector('[data-slot="confirm-dialog-callout"]')).toBeNull()
   expect(screen.getByRole("button", { name: "Cancel" })).toBeTruthy()
 })
+
+test("triggerDisabled and triggerPending stop the trigger, and agents can't open it either", async () => {
+  const user = userEvent.setup()
+  const onConfirm = vi.fn()
+  const props = {
+    trigger: "Delete project",
+    title: "Delete Apollo?",
+    confirmLabel: "Delete forever",
+    tone: "destructive" as const,
+    agentConfirm: "Deletes the project and its files",
+    onConfirm,
+  }
+  const { rerender, container } = render(<ConfirmDialog {...props} triggerDisabled />)
+  let trigger = screen.getByRole("button", { name: "Delete project" })
+  expect(trigger.hasAttribute("disabled")).toBe(true)
+  await user.click(trigger)
+  expect(screen.queryByRole("alertdialog")).toBeNull()
+
+  rerender(<ConfirmDialog {...props} triggerPending />)
+  trigger = screen.getByRole("button", { name: "Delete project" })
+  expect(trigger.hasAttribute("data-pending")).toBe(true)
+  expect(trigger.getAttribute("aria-busy")).toBe("true")
+  expect(trigger.getAttribute("aria-disabled")).toBe("true")
+  expect(trigger.querySelector('[data-slot="spinner"]')).toBeTruthy()
+  trigger.focus()
+  expect(document.activeElement).toBe(trigger)
+  await user.click(trigger)
+  await user.keyboard("{Enter}")
+  expect(screen.queryByRole("alertdialog")).toBeNull()
+  expect(await axeViolations(container)).toEqual([])
+
+  approve = true
+  let result = await agent.act({ steps: [{ ref: "Delete project", action: "press" }] })
+  expect(result.ok).toBe(false)
+  expect(result.error?.message).toContain("disabled")
+  result = await agent.act({ steps: [{ ref: "Delete project", action: "press", args: ["Delete forever"] }] })
+  expect(result.ok).toBe(false)
+  result = await act(() => agent.act({ steps: [{ ref: "Delete project", action: "setOpen", args: [true] }] }))
+  approve = false
+  expect(screen.queryByRole("alertdialog")).toBeNull()
+  expect(onConfirm).not.toHaveBeenCalled()
+
+  rerender(<ConfirmDialog {...props} triggerPending={false} />)
+  trigger = screen.getByRole("button", { name: "Delete project" })
+  expect(trigger.hasAttribute("data-pending")).toBe(false)
+  expect(trigger.hasAttribute("disabled")).toBe(false)
+  await user.click(trigger)
+  expect(screen.getByRole("alertdialog", { name: "Delete Apollo?" })).toBeTruthy()
+})

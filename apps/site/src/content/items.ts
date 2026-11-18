@@ -325,6 +325,7 @@ const itemNotes: Record<string, ItemNotes> = {
       "The list and the detail are named regions; the open row has aria-current.",
       "Opening moves focus to the detail's heading, and Close, Back or Escape return it to the row that opened it.",
       "Below 42rem of container the panes stack: the list, or the open item with a Back button. Nothing overlays.",
+      'With idleDetail="visible" the idle detail stays under the list, with a Collapse/Expand button that keeps focus and says aria-expanded.',
     ],
     agent:
       "Agents open and close items through the block by its label (open(id), close()), with the items you pass listed as choices; Back, Close, Collapse and Expand are buttons they press by name.",
@@ -348,7 +349,9 @@ const itemNotes: Record<string, ItemNotes> = {
     a11y: [
       "The navigation is a named landmark; the section being read has aria-current=location.",
       "Going to a section scrolls by id and moves focus to its heading, without touching location.hash, so hash routers keep their route.",
+      'Section links take their href from the url adapter (#/settings?section=id through a hash router), so a new tab opens the route; navigation="buttons" scrolls without an address.',
       "Each section is a region named by its title and described by its description; each row's label names its control.",
+      "SettingsDangerAction disabled and pending reach its trigger: disabled, or busy with a spinner while it keeps focus; the dialog doesn't open, for agents either.",
     ],
     agent:
       "Agents follow a section's link or set the section picker by name, set each row's control by its label, and need a person's approval to confirm a danger action.",

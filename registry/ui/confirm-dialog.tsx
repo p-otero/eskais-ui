@@ -13,7 +13,7 @@ import type { VariantProps } from "class-variance-authority"
 import type { ComponentProps, ReactNode } from "react"
 
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { buttonVariants } from "@/components/ui/button"
+import { buttonVariants, withPendingSpinner } from "@/components/ui/button"
 import { backdropClassName, contentClassName, useFocusReturn } from "@/components/ui/dialog"
 import { Spinner } from "@/components/ui/spinner"
 import type { Tone } from "@/lib/tone"
@@ -55,6 +55,13 @@ type ConfirmDialogProps = ConfirmTone & {
   /** Content of the button that opens the dialog. Omit it when opening through `open` or `controller`. */
   trigger?: ReactNode
   triggerVariant?: VariantProps<typeof buttonVariants>["variant"]
+  /** The trigger can't open the dialog, like while the action isn't allowed; nor can an agent or a controller. */
+  triggerDisabled?: boolean
+  /**
+   * Work the trigger stands for is running elsewhere, like a delete already sent: a spinner, `aria-busy`, and presses
+   * ignored while the trigger keeps focus, as `Button loading` does. The dialog doesn't open meanwhile.
+   */
+  triggerPending?: boolean
   renderError?: (error: unknown) => ReactNode
   className?: string
 } & Pick<
@@ -79,11 +86,15 @@ function ConfirmDialog({
   agentConfirm,
   trigger,
   triggerVariant,
+  triggerDisabled = false,
+  triggerPending,
   renderError = defaultRenderError,
   className,
   ...root
 }: ConfirmDialogProps) {
   const destructive = tone === "destructive"
+  const variant = triggerVariant ?? (destructive ? "destructive" : "outline")
+  const blocked = trigger !== undefined && (triggerDisabled || triggerPending === true)
   const { attach, finalFocus: returnFocus, wrap } = useFocusReturn(undefined)
   const cancel = labels?.cancel ?? cancelLabel ?? "Cancel"
   const callout =
@@ -97,12 +108,27 @@ function ConfirmDialog({
       </Alert>
     )
   return (
-    <AlertDialog {...root}>
+    <AlertDialog
+      {...root}
+      onOpenChange={(open, details) => {
+        // Agents open the dialog with setOpen, not through the trigger, so a blocked trigger refuses every open; a
+        // controlled `open` still wins.
+        if (open && blocked) {
+          details.cancel()
+          return
+        }
+        root.onOpenChange?.(open, details)
+      }}
+    >
       {trigger === undefined ? null : (
         <AlertDialogTrigger
-          className={buttonVariants({ variant: triggerVariant ?? (destructive ? "destructive" : "outline") })}
+          disabled={triggerDisabled || triggerPending === true}
+          focusableWhenDisabled={triggerPending === true}
+          data-pending={triggerPending ? "" : undefined}
+          aria-busy={triggerPending || undefined}
+          className={buttonVariants({ variant })}
         >
-          {trigger}
+          {triggerPending === undefined ? trigger : withPendingSpinner(trigger, false, variant)}
         </AlertDialogTrigger>
       )}
       <AlertDialogBackdrop className={backdropClassName} />

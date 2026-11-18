@@ -112,6 +112,7 @@ const categories = [
       "page-source",
       "filter-schema",
       "url-state",
+      "url-router",
     ],
   },
   {

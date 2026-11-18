@@ -1339,7 +1339,7 @@
           "type": "registry:ui"
         }
       ],
-      "docs": "`<ConfirmDialog trigger title description confirmLabel onConfirm>`: a returned Promise keeps it open and pending, a rejection shows its message (`renderError`). `tone=\"destructive\"` requires `agentConfirm`. Children render as a callout under the description, an Alert in the dialog's tone (`destructive`, or `info` for the default tone; `calloutTone` overrides) that screen readers hear with the description. `labels={{ cancel }}` names the cancel button, \"Cancel\" by default; `cancelLabel` is deprecated."
+      "docs": "`<ConfirmDialog trigger title description confirmLabel onConfirm>`: a returned Promise keeps it open and pending, a rejection shows its message (`renderError`). `tone=\"destructive\"` requires `agentConfirm`. Children render as a callout under the description, an Alert in the dialog's tone (`destructive`, or `info` for the default tone; `calloutTone` overrides) that screen readers hear with the description. `labels={{ cancel }}` names the cancel button, \"Cancel\" by default; `cancelLabel` is deprecated. `triggerDisabled` stops the trigger and `triggerPending` shows `Button loading`'s spinner with `aria-busy` while the trigger keeps focus, for work already running; while either is set the dialog refuses to open, an agent's `setOpen` included."
     },
     {
       "name": "form",
@@ -1691,7 +1691,7 @@
       "type": "registry:ui",
       "title": "States",
       "description": "Screen states that never lie: LoadingState (spinner or skeleton, busy, label for screen readers), ErrorState (alert, retry, collapsible details) and DataState, which picks loading, error, empty or your content from a status and never shows empty while pending or after an error.",
-      "docs": "One item, three components (`error-state`, `loading-state`, `data-state`), since DataState renders the other two and Empty by default. `<DataState status data error onRetry labels={{ errorTitle, retry, emptyTitle }}>{(data) => …}</DataState>` works with any data library: map its status to `pending`, `error` or `success`. Visible copy has no default: the types require `errorTitle` and `emptyTitle` (and `retry` with `onRetry`) unless you pass `renderError` and `empty`. `loading` and `refreshing` are screen-reader labels and default to English. It picks one state from `status`: `error` shows the error; `success` shows empty when `isEmpty(data)` holds and your content otherwise; `pending` shows the data of the last `success` (`keepPreviousData`, default true), else `placeholderData`, with `aria-busy` and a small spinner, and loading when neither is there or both are empty. `data` is read only with `success`: an initial value passed while pending (an `[]` default, a cache guess) never counts as a result, so the first load always shows loading; pass it as `placeholderData` to show it busy instead. Pass `fetching` for libraries whose status stays `success` during a refetch. `isEmpty` decides what counts as empty (an empty array, `null` or `undefined` by default). Every state takes `size`: `inline`, `panel` (default) or `page`.",
+      "docs": "One item, three components (`error-state`, `loading-state`, `data-state`), since DataState renders the other two and Empty by default. `<DataState status data error onRetry labels={{ errorTitle, retry, emptyTitle }}>{(data) => …}</DataState>` works with any data library: map its status to `pending`, `error` or `success`. Visible copy has no default: the types require `errorTitle` and `emptyTitle` (and `retry` with `onRetry`) unless you pass `renderError` and `empty`. `loading` and `refreshing` are screen-reader labels and default to English. It picks one state from `status`: `error` shows the error; `success` shows empty when `isEmpty(data)` holds and your content otherwise; `pending` shows the data of the last `success` (`keepPreviousData`, default true), else `placeholderData`, with `aria-busy` and a small spinner, and loading when neither is there or both are empty. `data` is read only with `success`: an initial value passed while pending (an `[]` default, a cache guess) never counts as a result, so the first load always shows loading; pass it as `placeholderData` to show it busy instead. Pass `fetching` for libraries whose status stays `success` during a refetch. `isEmpty` decides what counts as empty (an empty array, `null` or `undefined` by default). Every state takes `size`: `inline`, `panel` (default) or `page`. Any other prop (`data-testid`, `id`, `aria-label`) goes on DataState's root `div`, which keeps its own `data-slot`, `data-status` and `aria-busy`.",
       "dependencies": [
         "@ui-sdk/react@0.1.0-beta.5",
         "class-variance-authority@0.7.1",
@@ -3608,11 +3608,27 @@
       ]
     },
     {
+      "name": "url-router",
+      "type": "registry:lib",
+      "title": "URL Router",
+      "description": "A router adapter for blocks that keep state in the URL: read the location, navigate, build an href and follow changes. hashRouter keeps a hash route's path (#/devices?device=a1), historyRouter the path and query string, memoryRouter is for tests; wrap your own router's API in the same shape.",
+      "docs": "A `UrlRouter` is `{ read(): { path, params }, navigate(to, { replace }), href(to), subscribe(listener) }`. `hashRouter()` reads `#/path?query`, changes the query without touching the path and builds `#/path?query` hrefs, which fast links follow as hash routes; `historyRouter()` does the same with `location.pathname` and `location.search` and keeps the hash on writes. Both keep `history.state` and notify each other. `memoryRouter(\"/settings\")` records `entries` for tests. `withParam(location, name, value)` sets or removes one param. Pass a router to `createUrlParam(name, { router })` (`master-detail`, `settings-page`) or `routerUrlState(router)` (`url-state`). When your router has a contract of its own (a path segment like `#/devices/<id>`), wrap its API in this shape, or skip the adapter and control the block (`selectedId` and `onSelectedIdChange`, `currentSection` and `onSectionChange`) from the route.",
+      "files": [
+        {
+          "path": "registry/lib/url-router.ts",
+          "type": "registry:lib"
+        }
+      ]
+    },
+    {
       "name": "url-state",
       "type": "registry:lib",
       "title": "URL State",
       "description": "Router-agnostic URL state: one UrlStateAdapter shape over the query string (historyUrlState), a hash router's query (hashUrlState) or memory (memoryUrlState), and useUrlState to read and write it.",
-      "docs": "An adapter is `{ read(), write(params, { replace }), subscribe(callback) }`. `historyUrlState()` edits `location.search` with `replaceState` or `pushState` and follows `popstate`; `hashUrlState()` edits the query inside `#/route?…` and keeps the route; `memoryUrlState(initial)` keeps it in memory and records `history`, for tests and server rendering. A write through an adapter notifies its own subscribers too. `const [params, setParams] = useUrlState(adapter)` reads it with `useSyncExternalStore` (empty on the server) and writes with `replace` unless told otherwise. Wrap your router's own API in the same shape to use it instead.",
+      "docs": "An adapter is `{ read(), write(params, { replace }), subscribe(callback) }`. `historyUrlState()` edits `location.search` with `replaceState` or `pushState` and follows `popstate`; `hashUrlState()` edits the query inside `#/route?…` and keeps the route; `memoryUrlState(initial)` keeps it in memory and records `history`, for tests and server rendering. A write through an adapter notifies its own subscribers too. `const [params, setParams] = useUrlState(adapter)` reads it with `useSyncExternalStore` (empty on the server) and writes with `replace` unless told otherwise. `routerUrlState(router)` goes through a `UrlRouter` from `url-router` (`hashRouter()`, `historyRouter()` or one over your router's API). Wrap your router's own API in the same shape to use it instead.",
+      "registryDependencies": [
+        "@eskais/url-router"
+      ],
       "files": [
         {
           "path": "registry/lib/url-state.ts",
@@ -4636,7 +4652,9 @@
         "@eskais/theme",
         "@eskais/button",
         "@eskais/resizable",
-        "@eskais/shortcuts"
+        "@eskais/scroll-area",
+        "@eskais/shortcuts",
+        "@eskais/url-router"
       ],
       "files": [
         {
@@ -4660,7 +4678,7 @@
           "type": "registry:ui"
         }
       ],
-      "docs": "`<MasterDetail label=\"Devices\" renderList={(state) => <List aria-label=\"Devices\">{devices.map((d) => <ListItem key={d.id} title={d.name} {...state.itemProps(d.id)} />)}</List>} renderDetail={(id) => ({ title, description, actions, content })} emptyDetail={<Empty … />} />`. It fills its parent's height (`--master-detail-height`, 100% by default), so give it a bounded box, like an app shell's main column. `selectedId`, `defaultSelectedId` and `onSelectedIdChange` (cancel with `details.cancel()`); `url={createUrlParam(\"device\")}` from `@/lib/url-param` keeps it in the URL (`{ in: \"hash\" }` for a hash route's query); `followFocus` opens the row that j/k move to; `collapsible`, `resizable` and `storageKey` for the detail's width. Every label is in `labels`."
+      "docs": "`<MasterDetail label=\"Devices\" renderList={(state) => <List aria-label=\"Devices\">{devices.map((d) => <ListItem key={d.id} title={d.name} {...state.itemProps(d.id)} />)}</List>} renderDetail={(id) => ({ title, description, actions, content })} emptyDetail={<Empty … />} />`. It fills its parent's height (`--master-detail-height`, 100% by default), so give it a bounded box, like an app shell's main column; in a page that scrolls, `height=\"auto\"` sizes it to its content between `--master-detail-min-height` (16rem) and `--master-detail-max-height` (40rem) with the panes scrolling inside, instead of a hard-coded height (to fit what is left of the window, set the max from your app's own CSS). `idleDetail=\"visible\"` keeps `emptyDetail` (a monitor, a summary) under the list on containers under 42rem, capped at `--master-detail-idle-height` (50%), with a button that collapses it to its bar (beside the list too with `collapsible`); `emptyDetailTitle` titles that bar and names the pane. `selectedId`, `defaultSelectedId` and `onSelectedIdChange` (cancel with `details.cancel()`); `url={createUrlParam(\"device\")}` from `@/lib/url-param` keeps it in the URL (`{ in: \"hash\" }` for a hash route's query, `{ router: hashRouter() }` to go through a `UrlRouter` from `url-router` or your router's own API); for a route of your own shape (`#/devices/<id>`), control `selectedId` from the route instead; `followFocus` opens the row that j/k move to; `collapsible`, `resizable` and `storageKey` for the detail's width. Every label is in `labels`."
     },
     {
       "name": "dashboard-grid",
@@ -4705,7 +4723,8 @@
         "@eskais/description-list",
         "@eskais/field",
         "@eskais/link",
-        "@eskais/select"
+        "@eskais/select",
+        "@eskais/url-router"
       ],
       "files": [
         {
@@ -4721,7 +4740,7 @@
           "type": "registry:ui"
         }
       ],
-      "docs": "`<SettingsPage url={createUrlParam(\"section\")} style={{ \"--settings-top\": \"var(--topbar-height)\" }}><SettingsSection id=\"security\" title=\"Security\" description=\"…\" actions={…}><SettingsRow label=\"Two-factor authentication\" description=\"…\"><Switch /></SettingsRow></SettingsSection><SettingsSection id=\"device\" title=\"This device\"><SettingsFacts aria-label=\"This device\"><DescriptionItem>…</DescriptionItem></SettingsFacts></SettingsSection><SettingsDangerZone id=\"danger\" title=\"Danger zone\"><SettingsDangerAction label trigger title confirmLabel agentConfirm onConfirm /></SettingsDangerZone></SettingsPage>`. The navigation lists every direct `SettingsSection` child with a text title (`navLabel` otherwise), or pass `sections`. `--settings-top` is the height of anything sticky above the page and `--settings-height` the box that scrolls it. `currentSection` and `onSectionChange` (reason `scroll`, `nav` or `url`) follow your own state. A `SettingsRow` is a `Field` that names a UI SDK control; `field={false}` for a button. Labels `nav` and `jump` are overridable."
+      "docs": "`<SettingsPage url={createUrlParam(\"section\")} style={{ \"--settings-top\": \"var(--topbar-height)\" }}><SettingsSection id=\"security\" title=\"Security\" description=\"…\" actions={…}><SettingsRow label=\"Two-factor authentication\" description=\"…\"><Switch /></SettingsRow></SettingsSection><SettingsSection id=\"device\" title=\"This device\"><SettingsFacts aria-label=\"This device\"><DescriptionItem>…</DescriptionItem></SettingsFacts></SettingsSection><SettingsDangerZone id=\"danger\" title=\"Danger zone\"><SettingsDangerAction label trigger title confirmLabel agentConfirm onConfirm disabled pending /></SettingsDangerZone></SettingsPage>`. The navigation lists every direct `SettingsSection` child with a text title (`navLabel` otherwise), or pass `sections`. `--settings-top` is the height of anything sticky above the page and `--settings-height` the box that scrolls it. `currentSection` and `onSectionChange` (reason `scroll`, `nav` or `url`) follow your own state. The navigation's links take their href from the `url` adapter (`createUrlParam(\"section\", { router: hashRouter() })` gives `#/settings?section=id`, which opens the right route in a new tab), else `#id`; `getHref` overrides it, and `navigation=\"buttons\"` renders buttons that only scroll, for sections with no address. A `SettingsRow` is a `Field` that names a UI SDK control; `field={false}` for a button. Labels `nav` and `jump` are overridable."
     },
     {
       "name": "eskais-mockup-skill",

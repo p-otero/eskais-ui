@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/settings-page"
 import { Switch } from "@/components/ui/switch"
 import { createUrlParam } from "@/lib/url-param"
+import { hashRouter } from "@/lib/url-router"
 
 import { axeViolations } from "./axe"
 import { settle } from "./overlay-helpers"
@@ -175,4 +176,81 @@ test("SettingsPage: agents go to sections and need a person to confirm a danger 
   result = await agent.act(remove)
   expect(result.ok, result.error?.message).toBe(true)
   expect(onDelete).toHaveBeenCalledOnce()
+})
+
+test("SettingsPage: with a router adapter, section links are the app's route and a click keeps it", async () => {
+  const user = userEvent.setup()
+  history.replaceState(null, "", "/#/settings")
+  render(<Settings url={createUrlParam("section", { router: hashRouter() })} />)
+  const nav = screen.getByRole("navigation", { name: "Settings sections" })
+  const security = within(nav).getByRole("link", { name: "Security" })
+  expect(security.getAttribute("href")).toBe("#/settings?section=security")
+  await user.click(security)
+  expect(location.hash).toBe("#/settings?section=security")
+  expect(scrolled.at(-1)).toBe("security")
+})
+
+test("SettingsPage: without a url, links stay in-page anchors; getHref still wins", () => {
+  const { unmount } = render(<Settings />)
+  expect(screen.getByRole("link", { name: "Security" }).getAttribute("href")).toBe("#security")
+  unmount()
+  render(<Settings url={createUrlParam("section", { in: "hash" })} getHref={(id) => `#/prefs/${id}`} />)
+  expect(screen.getByRole("link", { name: "Security" }).getAttribute("href")).toBe("#/prefs/security")
+})
+
+test('SettingsPage: navigation="buttons" scrolls by button, and agents press them by name', async () => {
+  const user = userEvent.setup()
+  const onSectionChange = vi.fn()
+  render(<Settings navigation="buttons" onSectionChange={onSectionChange} />)
+  const nav = screen.getByRole("navigation", { name: "Settings sections" })
+  expect(within(nav).queryByRole("link")).toBeNull()
+  await user.click(within(nav).getByRole("button", { name: "Security" }))
+  expect(scrolled.at(-1)).toBe("security")
+  expect(within(nav).getByRole("button", { name: "Security" }).getAttribute("aria-current")).toBe("location")
+  expect(location.hash).toBe("")
+  expect(onSectionChange).toHaveBeenLastCalledWith("security", { reason: "nav" })
+
+  await settle()
+  const agent = createAgent()
+  const result = await act(() => agent.act({ steps: [{ ref: "Danger zone", action: "press" }] }))
+  expect(result.ok, result.error?.message).toBe(true)
+  expect(scrolled.at(-1)).toBe("danger")
+})
+
+test("SettingsDangerAction: disabled and pending reach the trigger; agents still need approval once it's enabled", async () => {
+  const onConfirm = vi.fn()
+  const action = (state: { disabled?: boolean; pending?: boolean }) => (
+    <SettingsDangerZone id="danger" title="Danger zone">
+      <SettingsDangerAction
+        data-testid="reset-row"
+        label="Reset device"
+        trigger="Reset device"
+        title="Reset this device?"
+        confirmLabel="Reset now"
+        agentConfirm="Erases the device's settings"
+        onConfirm={onConfirm}
+        {...state}
+      />
+    </SettingsDangerZone>
+  )
+  const { rerender } = render(action({ disabled: true }))
+  expect(screen.getByTestId("reset-row").dataset.slot).toBe("settings-row")
+  expect(screen.getByRole("button", { name: "Reset device" }).hasAttribute("disabled")).toBe(true)
+  rerender(action({ pending: true }))
+  const trigger = screen.getByRole("button", { name: "Reset device" })
+  expect(trigger.getAttribute("aria-busy")).toBe("true")
+  expect(trigger.hasAttribute("data-pending")).toBe(true)
+
+  rerender(action({}))
+  await settle()
+  let allowed = false
+  const agent = createAgent({ allow: (step) => !step.confirm || allowed })
+  const press = { steps: [{ ref: "Reset device", action: "press", args: ["Reset now"] }] }
+  let result = await agent.act(press)
+  expect(result.ok).toBe(false)
+  expect(onConfirm).not.toHaveBeenCalled()
+  allowed = true
+  result = await agent.act(press)
+  expect(result.ok, result.error?.message).toBe(true)
+  expect(onConfirm).toHaveBeenCalledOnce()
 })

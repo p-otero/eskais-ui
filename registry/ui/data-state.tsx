@@ -1,6 +1,6 @@
 "use client"
 
-import type { ReactNode } from "react"
+import type { ComponentProps, ReactNode } from "react"
 
 import { Empty, EmptyDescription, EmptyHeader, EmptyTitle, type EmptySize } from "@/components/ui/empty"
 import { ErrorState } from "@/components/ui/error-state"
@@ -31,7 +31,10 @@ type ErrorProps<E> =
 
 type EmptyProps = { empty: ReactNode } | { empty?: undefined; labels: { emptyTitle: ReactNode } }
 
-type DataStateProps<T, E> = {
+/** The root's own attributes, like `data-testid`, `id` or `aria-label`, go on its `div`. */
+type DataStateRootProps = Omit<ComponentProps<"div">, "children" | "className">
+
+type DataStateProps<T, E> = DataStateRootProps & {
   status: DataStatus
   /** The result. Read only while `status` is success: data passed while pending is not shown. */
   data: T | undefined
@@ -75,6 +78,11 @@ function DataState<T, E = unknown>(props: DataStateProps<T, E>) {
     size = "panel",
     className,
     children,
+    labels: _labels,
+    renderError: _renderError,
+    onRetry: _onRetry,
+    empty: _empty,
+    ...rest
   } = props
   const labels: Partial<DataStateLabels> & typeof defaultLabels = {
     ...defaultLabels,
@@ -121,6 +129,7 @@ function DataState<T, E = unknown>(props: DataStateProps<T, E>) {
 
   return (
     <div
+      {...rest}
       data-slot="data-state"
       data-status={status}
       data-busy={busy ? "" : undefined}
