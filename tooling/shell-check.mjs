@@ -128,6 +128,77 @@ async function checkTabs(page, dir) {
 // Beside the action, the title column keeps at least this much; below it the action wraps under the title.
 const comfortableTitle = 11 * 16
 
+// Date and time segments sit close, as typed text would ("09:38", "11/02/2026"), in both directions: under a
+// third of the font size between a segment's text and its separator, each segment a 24px target, none overlapping.
+async function checkSegmentsIn(page, dir) {
+  await page.evaluate((value) => document.documentElement.setAttribute("dir", value), dir)
+  const problems = await page.evaluate(() => {
+    const found = []
+    const roots = document.querySelectorAll('[data-slot="time-input"], [data-slot="date-input"]')
+    for (const root of roots) {
+      // Where the text itself sits: a segment centres its text in a box of at least 24px, its target.
+      const probe = document.createElement("span")
+      probe.style.cssText = "position:absolute;visibility:hidden;white-space:pre"
+      document.body.append(probe)
+      const segments = [...root.querySelectorAll("[data-type]")].map((segment) => {
+        const box = segment.getBoundingClientRect()
+        const style = getComputedStyle(segment)
+        probe.style.font = style.font
+        probe.style.fontVariantNumeric = style.fontVariantNumeric
+        probe.textContent = segment.value || segment.placeholder || segment.textContent
+        const width = segment.type === "literal" ? box.width : probe.getBoundingClientRect().width
+        const centre = box.left + box.width / 2
+        const half = segment.tagName === "INPUT" ? Math.min(width, box.width) / 2 : box.width / 2
+        return {
+          type: segment.dataset.type,
+          box,
+          left: centre - half,
+          right: centre + half,
+          size: Number.parseFloat(style.fontSize),
+        }
+      })
+      for (const [index, segment] of segments.entries()) {
+        if (segment.type !== "literal" && (segment.box.width < 24 || segment.box.height < 24))
+          found.push(
+            `${root.dataset.slot} ${segment.type} is a ${segment.box.width.toFixed(1)}x${segment.box.height.toFixed(1)}px target`,
+          )
+        const next = segments[index + 1]
+        if (!next) continue
+        if (
+          segment.box.right > next.box.left + 1.5 &&
+          next.box.right > segment.box.left + 1.5 &&
+          segment.type !== "literal" &&
+          next.type !== "literal"
+        )
+          found.push(`${root.dataset.slot} ${segment.type} and ${next.type} overlap`)
+        const rtl = getComputedStyle(root).direction === "rtl"
+        const gap = rtl ? segment.left - next.right : next.left - segment.right
+        // Two digits' targets can't be closer: 24px boxes around ~17px of text leave under 4px beside a separator.
+        if (gap > segment.size * 0.3 || gap < -1.5)
+          found.push(`${root.dataset.slot} ${segment.type}→${next.type} gap ${gap.toFixed(1)}px`)
+      }
+      probe.remove()
+    }
+    return { found, count: roots.length }
+  })
+  check(
+    `${dir}: ${problems.count} date and time inputs: segments sit close and are 24px targets`,
+    problems.count > 0 && problems.found.length === 0,
+    problems.found.slice(0, 4).join("; "),
+  )
+}
+
+async function checkSegments(page) {
+  await page.setViewportSize({ width: 1100, height: 900 })
+  await page.goto(`${new URL(page.url()).origin}/`)
+  await page.locator('[data-slot="time-input"]').first().waitFor()
+  await page.evaluate(() => document.fonts.ready)
+  await checkSegmentsIn(page, "ltr")
+  await checkSegmentsIn(page, "rtl")
+  await page.evaluate(() => document.documentElement.removeAttribute("dir"))
+  await shot(page, "time-input-segments.png")
+}
+
 async function checkCardHeaders(page) {
   await page.setViewportSize({ width: 1100, height: 900 })
   await page.goto(`${new URL(page.url()).origin}/?demo=card-header-check`)
@@ -811,6 +882,7 @@ await withShowcase(async (page) => {
   await checkGauges(page)
   await checkMobileNav(page)
   await checkFieldPlacement(page)
+  await checkSegments(page)
 })
 
 if (failures.length > 0) {

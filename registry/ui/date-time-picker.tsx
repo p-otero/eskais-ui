@@ -57,11 +57,18 @@ function zoneName(timeZone: string, locale?: string) {
   return part?.value ?? timeZone
 }
 
+// Segments are inputs, whose `size` left room for twice their digits, so "09" sat apart from its ":". Each takes
+// its text's width (field-sizing, or ch where a browser has none), at least 24px so it stays a target (WCAG 2.5.8),
+// and separators keep their spaces and sit a pixel into each neighbour: "09:38", with no two segments overlapping.
+const segmentWidths =
+  // oxlint-disable-next-line shadcn/no-arbitrary-values -- widths in ch: two digits, a year and a day period
+  "[&_input[data-type]]:w-[2ch] [&_input[data-type=year]]:w-[4ch] [&_input[data-type=dayPeriod]]:w-[3ch] supports-[field-sizing:content]:[&_input[data-type]]:w-auto supports-[field-sizing:content]:[&_input[data-type]]:field-sizing-content [&_input[data-type]]:min-w-6 [&_input[data-type]]:self-stretch [&_input[data-type]]:text-center [&_input[data-type]]:relative [&_input[data-type]]:z-10 [&_[data-type=literal]]:-mx-px [&_[data-type=literal]]:pointer-events-none [&_[data-type=literal]]:whitespace-pre"
+
 function TimeInput({ className, ...props }: ComponentProps<typeof TimeInputPrimitive>) {
   return (
     <TimeInputPrimitive
       className={cnState(
-        `${fieldSurfaceClassName} inline-flex h-field-control w-fit shrink-0 items-center rounded-control px-control-x text-entry tabular-nums has-focus-visible:ring-2 has-focus-visible:ring-ring aria-invalid:border-destructive data-invalid:border-destructive [&_[data-slot=time-input-segment]]:rounded-sm [&_[data-slot=time-input-segment]]:outline-none [&_[data-slot=time-input-segment][data-empty]]:text-muted-foreground [&_[data-slot=time-input-segment]:focus]:bg-accent [&_[data-slot=time-input-segment]:focus]:text-accent-foreground`,
+        `${fieldSurfaceClassName} inline-flex h-field-control w-fit shrink-0 items-center rounded-control px-control-x text-entry tabular-nums has-focus-visible:ring-2 has-focus-visible:ring-ring aria-invalid:border-destructive data-invalid:border-destructive [&_[data-slot=time-input-segment]]:rounded-sm [&_[data-slot=time-input-segment]]:outline-none [&_[data-slot=time-input-segment][data-empty]]:text-muted-foreground [&_[data-slot=time-input-segment]:focus]:bg-accent [&_[data-slot=time-input-segment]:focus]:text-accent-foreground [&_[data-slot=time-input-segment][data-type=literal]]:text-muted-foreground ${segmentWidths}`,
         className,
       )}
       {...props}
