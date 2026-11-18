@@ -51,10 +51,12 @@ The registry installs from GitHub. Add it once to `components.json`:
 ```json
 {
   "registries": {
-    "@eskais": "https://raw.githubusercontent.com/p-otero/eskais-ui/main/public/r/{name}.json"
+    "@eskais": "https://raw.githubusercontent.com/p-otero/eskais-ui/refs/tags/v0.2.1/public/r/{name}.json"
   }
 }
 ```
+
+Pin a release through `refs/tags/<tag>`: raw.githubusercontent.com resolves a bare `<tag>` to a branch of the same name first. Change the tag to upgrade, or use `main` for unreleased changes. CI fails if a branch is ever named like a tag (`tooling/check-ref-names.mjs`).
 
 Registry files import `@/components/ui/…`, `@/lib/…` and `@/lib/utils`; shadcn writes each file through your aliases and rewrites those imports to them, so any prefix works (`~/`, `#/`, a monorepo package). It needs these `aliases` in `components.json`:
 

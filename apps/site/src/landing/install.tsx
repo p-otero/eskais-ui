@@ -25,7 +25,7 @@ const stylesheet = `@layer ui-sdk;
 const steps = [
   {
     title: "Add the registry",
-    body: "One line in components.json. Pin a tag like v0.1.0 instead of main for repeatable installs.",
+    body: "One line in components.json. The URL pins a release tag through refs/tags/, for repeatable installs.",
     code: componentsJson,
     language: "json" as const,
     file: "components.json",

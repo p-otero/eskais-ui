@@ -53,6 +53,8 @@ jobs:
         run: git diff --exit-code -- public/r registry.json
       - name: Every pinned dependency is at least 7 days old, so consumers with a minimum release age can install it
         run: node tooling/check-dependency-age.mjs --require-network
+      - name: No branch is named like a tag, which raw.githubusercontent.com would serve instead of the tag
+        run: node tooling/check-ref-names.mjs
 
   consumer:
     needs: registry

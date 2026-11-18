@@ -141,7 +141,7 @@ async function loadSources(project: MockupProject): Promise<RegistrySource[]> {
   const entries = Object.entries(project.registries)
   if (entries.length === 0) {
     throw new EnvironmentError(
-      'components.json has no registries entry; add one, for example "registries": { "@eskais": "https://raw.githubusercontent.com/p-otero/eskais-ui/<ref>/public/r/{name}.json" }',
+      'components.json has no registries entry; add one, for example "registries": { "@eskais": "https://raw.githubusercontent.com/p-otero/eskais-ui/refs/tags/<tag>/public/r/{name}.json" }',
     )
   }
   return Promise.all(entries.map(([key, template]) => loadSource(project, key, template)))

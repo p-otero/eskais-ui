@@ -1,3 +1,4 @@
+import packageJson from "../../../package.json"
 import registry from "../../../registry.json"
 
 type RegistryFile = { path: string; type: string; target?: string }
@@ -37,11 +38,14 @@ const guideItems = [
 
 const componentItems = items.filter((item) => !guideItems.includes(item.name))
 
-const registryUrl = "https://raw.githubusercontent.com/p-otero/eskais-ui/main/public/r/{name}.json"
+// The site deploys only from a release, so its version is a published tag. `refs/tags/` keeps a branch with the
+// same name from shadowing the tag on raw.githubusercontent.com.
+const releaseTag = `v${packageJson.version}`
+const registryUrl = `https://raw.githubusercontent.com/p-otero/eskais-ui/refs/tags/${releaseTag}/public/r/{name}.json`
 
 function findItem(name: string) {
   return items.find((item) => item.name === name)
 }
 
-export { componentItems, findItem, guideItems, items, registryUrl }
+export { componentItems, findItem, guideItems, items, registryUrl, releaseTag }
 export type { RegistryFile, RegistryItem }
