@@ -33,7 +33,7 @@ function DocumentOutline({ headings: own, label = "Outline", maxLevel = 6, class
       editor.focus()
       return
     }
-    workspace.revealHeading(index)
+    workspace.revealHeading(heading)
   }
 
   return (

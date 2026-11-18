@@ -1,4 +1,4 @@
-import type { SyntaxNode } from "@lezer/common"
+import type { SyntaxNode, Tree } from "@lezer/common"
 
 import { frontmatterBounds } from "@/components/ui/markdown-frontmatter"
 import { markdownParser } from "@/components/ui/markdown-syntax"
@@ -7,6 +7,11 @@ type MarkdownHeading = {
   level: number
   /** The heading as plain text: marks dropped, a wikilink as its label. */
   text: string
+  /**
+   * Its anchor, unique in the document: the text lowercased, punctuation dropped, spaces as `-`, and `-1`, `-2`…
+   * after a repeat. `MarkdownView` puts it on the rendered heading as `data-slug`.
+   */
+  slug: string
   /** The line it starts on, from 1, as the editor counts lines. */
   line: number
   /** Offsets in the Markdown: the heading's start and end, and where its text starts after the `#` marks. */
@@ -46,9 +51,43 @@ function plainText(src: string, node: SyntaxNode, from = node.from, to = node.to
   return text + src.slice(pos, to)
 }
 
+// Headings sit at the top level or inside these; the walk skips everything else.
+const CONTAINERS = new Set(["Document", "Blockquote", "BulletList", "OrderedList", "ListItem"])
+
+// An empty heading still needs an anchor; it isn't shown anywhere.
+function slugify(text: string) {
+  const slug = text
+    .toLowerCase()
+    .replace(/[^\p{L}\p{M}\p{N}\s_-]/gu, "")
+    .trim()
+    .replace(/\s/g, "-")
+  return slug || "heading"
+}
+
+/** GitHub's rule: a slug already taken gets `-1`, `-2`… after it, in document order. */
+function createSlugger() {
+  const counts = new Map<string, number>()
+  return (text: string) => {
+    const base = slugify(text)
+    let slug = base
+    while (counts.has(slug)) {
+      const count = (counts.get(base) ?? 0) + 1
+      counts.set(base, count)
+      slug = `${base}-${String(count)}`
+    }
+    counts.set(slug, 0)
+    return slug
+  }
+}
+
 /** Every heading of a Markdown document in order, frontmatter left out, for an outline or a table of contents. */
 function extractHeadings(markdown: string): MarkdownHeading[] {
-  const tree = markdownParser.parse(markdown)
+  return headingsOf(markdown, markdownParser.parse(markdown))
+}
+
+/** The headings of `markdown` from its parse tree, as `extractHeadings` gives them. */
+function headingsOf(markdown: string, tree: Tree): MarkdownHeading[] {
+  const slug = createSlugger()
   const start = frontmatterBounds(markdown)?.to ?? 0
   const headings: MarkdownHeading[] = []
   let line = 1
@@ -69,7 +108,7 @@ function extractHeadings(markdown: string): MarkdownHeading[] {
     from: start,
     enter(ref) {
       const match = /^(ATX|Setext)Heading(\d)$/.exec(ref.name)
-      if (!match) return ref.name === "FencedCode" || ref.name === "CodeBlock" ? false : undefined
+      if (!match) return CONTAINERS.has(ref.name) ? undefined : false
       if (ref.from < start) return false
       const node = ref.node
       const marks = node.getChildren("HeaderMark")
@@ -79,9 +118,11 @@ function extractHeadings(markdown: string): MarkdownHeading[] {
       const contentStart = atx
         ? textFrom + (/^[ \t]*/.exec(markdown.slice(textFrom, textTo))?.[0].length ?? 0)
         : textFrom
+      const text = plainText(markdown, node, textFrom, textTo).replace(/\s+/g, " ").trim()
       headings.push({
         level: Number(match[2]),
-        text: plainText(markdown, node, textFrom, textTo).replace(/\s+/g, " ").trim(),
+        text,
+        slug: slug(text),
         line: lineAt(node.from),
         from: node.from,
         to: node.to,
@@ -93,5 +134,5 @@ function extractHeadings(markdown: string): MarkdownHeading[] {
   return headings
 }
 
-export { extractHeadings }
+export { extractHeadings, headingsOf }
 export type { MarkdownHeading }

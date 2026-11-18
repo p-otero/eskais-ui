@@ -27,6 +27,7 @@ Versions follow [semver](https://semver.org). Before 1.0, a minor version can br
 - `MarkdownEditorHandle.runCommand` runs the slash menu's blocks too (`codeBlock`, `table`, `divider`), and `insertBlock(kind)` inserts one in place of the selection; `runCommand("table")` threw `RangeError: Unknown command`. The slash menu and the handle share one implementation (`insertBlock` in `markdown-editor-commands`), so a block lands the same way from both: after a blank line when text comes before it, with the caret in the fence, the first cell or after the rule. `MarkdownEditorCommand` now includes `MarkdownBlockKind`.
 - `MarkdownEditor frontmatter="readonly"` protects a leading YAML block: an edit inside it or across its fences keeps only the part outside it (a CodeMirror change filter), and typing before the opening fence or after a fence that ends the document is dropped, so the note round-trips byte for byte. A new `value` still replaces the block. `initialCaret` (`"afterFrontmatter"` by default, or `"start"`) decides where the caret starts.
 - `DocumentWorkspace documentId`: when the open document's id changes, the narrow layout's explorer drawer closes and focus goes to the document. The drawer closed only on an `a[href]` click inside it, so a tree of buttons, quick open or a wikilink left it open over the new note. `useDocumentWorkspace().closeExplorer()` closes the drawer from a control of your own (the wide column stays), and `explorerOpen`/`onExplorerOpenChange` control it as before. `node tooling/document-workspace-check.mjs` opens a note from a button in the drawer at 320px.
+- `extractHeadings` gives each heading a `slug`, unique in the document (GitHub's rule, `-1`, `-2`… after a repeat), and `MarkdownView` renders the same slug on each heading as `data-slug`.
 
 ### Changed
 
@@ -36,6 +37,7 @@ Versions follow [semver](https://semver.org). Before 1.0, a minor version can br
 
 ### Fixed
 
+- `DocumentOutline` in read mode revealed the heading at the entry's index among the rendered headings, so a filtered `headings` list (an empty `## ` left out) focused the wrong one. It finds the heading by its `slug` now, or by its text for a heading without one; `revealHeading` takes the heading (an index still works) and a mode switch keeps to the slug too.
 - A note with frontmatter opened in `MarkdownEditor` put the caret before the opening `---`, so the first keystroke went into the YAML; the caret now starts on the line after the closing fence (`initialCaret="start"` keeps the old place).
 - Ring `Meter` no longer overflows a narrow column: the `variant="ring"` root (`inline-flex w-fit`) grew to a long label's unwrapped width, so a `MeterLabel className="truncate"` pushed it past a 320px grid column. The root takes `max-w-full min-w-0` and `MeterLabel` `max-w-full min-w-0`, so a truncating label truncates; `node tooling/shell-check.mjs` measures it.
 - `CommandItem href`: a Ctrl/Cmd/Shift/Alt+click on a link command no longer runs `Command onAction`. The click stays native (a new tab or window), and UI SDK ran the command's action with it, so a palette that closes in `onAction` closed behind the new tab.

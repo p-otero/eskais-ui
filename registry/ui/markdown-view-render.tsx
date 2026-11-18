@@ -4,6 +4,7 @@ import type { ReactNode } from "react"
 import { CodeBlock, type CodeBlockLabels } from "@/components/ui/code-block"
 import { Link } from "@/components/ui/link"
 import { parseFrontmatter, type Frontmatter } from "@/components/ui/markdown-frontmatter"
+import { headingsOf } from "@/components/ui/markdown-outline"
 import { renderFrontmatter, renderSoleEmbed, wikilink, wikilinkParts } from "@/components/ui/markdown-view-links"
 import { markdownParser, type WikilinkResolver } from "@/components/ui/markdown-syntax"
 
@@ -24,7 +25,12 @@ type RenderOptions = {
   sourcePositions?: boolean
 }
 
-type Context = RenderOptions & { src: string; refs: Map<string, { href: string; title?: string }> }
+type Context = RenderOptions & {
+  src: string
+  refs: Map<string, { href: string; title?: string }>
+  /** Each heading's slug, by its start: the same ones `extractHeadings` gives. */
+  slugs?: Map<number, string>
+}
 
 const ENTITIES: Record<string, string> = {
   amp: "&",
@@ -207,7 +213,11 @@ function renderBlock(cx: Context, node: SyntaxNode, tight = false): ReactNode {
     const marks = node.getChildren("HeaderMark")
     const from = heading[1] === "ATX" ? (marks[0]?.to ?? node.from) : node.from
     const to = heading[1] === "ATX" ? (marks[1]?.from ?? node.to) : (marks[0]?.from ?? node.to)
-    return <Tag key={key}>{trim(inline(cx, node, from, to, new Set(["HeaderMark"])))}</Tag>
+    return (
+      <Tag key={key} data-slug={cx.slugs?.get(node.from)}>
+        {trim(inline(cx, node, from, to, new Set(["HeaderMark"])))}
+      </Tag>
+    )
   }
   switch (node.name) {
     case "Paragraph":
@@ -345,7 +355,8 @@ function hash(text: string) {
   return (value >>> 0).toString(36)
 }
 
-type MarkdownBlock = { key: string; text: string; render: () => ReactNode }
+/** `anchors` are the slugs of the headings in the block, which a repeated heading elsewhere can change. */
+type MarkdownBlock = { key: string; text: string; anchors: string; render: () => ReactNode }
 
 /**
  * Parses once and returns the top-level blocks, each keyed by a hash of its source and how many identical
@@ -369,19 +380,35 @@ function parse(src: string, previous?: Parsed) {
 
 function markdownBlocks(src: string, options: RenderOptions, previous?: Parsed) {
   const tree = previous?.src === src ? previous.tree : parse(src, previous)
-  const cx: Context = { ...options, src, refs: new Map() }
+  const headings = headingsOf(src, tree)
+  const cx: Context = {
+    ...options,
+    src,
+    refs: new Map(),
+    slugs: new Map(headings.map((heading) => [heading.from, heading.slug])),
+  }
   collectReferences(cx, tree.topNode)
   const seen = new Map<string, number>()
-  const block = (text: string, render: () => ReactNode): MarkdownBlock => {
+  const block = (text: string, render: () => ReactNode, anchors = ""): MarkdownBlock => {
     const digest = hash(text)
     const count = seen.get(digest) ?? 0
     seen.set(digest, count + 1)
-    return { key: `${digest}.${String(count)}`, text, render }
+    return { key: `${digest}.${String(count)}`, text, anchors, render }
+  }
+  // Blocks and headings are both in document order, so one pass hands each block its headings.
+  let next = 0
+  const anchorsIn = (node: SyntaxNode) => {
+    const slugs: string[] = []
+    while (next < headings.length && headings[next]!.from < node.from) next++
+    for (; next < headings.length && headings[next]!.from < node.to; next++) slugs.push(headings[next]!.slug)
+    return slugs.join(" ")
   }
   // Leading YAML parses as a rule and a setext heading; those nodes are left out and it renders as one block.
   const frontmatter = parseFrontmatter(src)
   const nodes = children(tree.topNode).filter((node) => !frontmatter || node.to > frontmatter.to)
-  const list: MarkdownBlock[] = nodes.map((node) => block(slice(cx, node), () => renderBlock(cx, node)))
+  const list: MarkdownBlock[] = nodes.map((node) =>
+    block(slice(cx, node), () => renderBlock(cx, node), anchorsIn(node)),
+  )
   if (frontmatter && (cx.renderFrontmatter || (cx.frontmatter ?? "hide") !== "hide")) {
     const source = `${cx.frontmatter ?? "custom"}\n${src.slice(frontmatter.from, frontmatter.to)}`
     list.unshift(block(source, () => renderFrontmatter(cx, frontmatter)))

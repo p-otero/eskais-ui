@@ -456,3 +456,60 @@ test("an agent that opens a document from the explorer drawer leaves it closed",
   expect(screen.queryByRole("dialog", { name: "Files" })).toBeNull()
   rect.mockRestore()
 })
+
+const withEmpty = "# Plan\n\n## \n\nDraft\n\n## Goals\n\nText\n\n## Goals\n\nAgain\n\n## Risks\n\nMore\n"
+
+test("extractHeadings and MarkdownView give each heading the same unique slug", () => {
+  const found = extractHeadings(withEmpty)
+  expect(found.map((heading) => heading.slug)).toEqual(["plan", "heading", "goals", "goals-1", "risks"])
+  expect(
+    extractHeadings("# Ünïcode & co.\n\n# A  b_c-d!\n\n## Goals\n\n# Goals-1\n\n## Goals\n").map((h) => h.slug),
+  ).toEqual(["ünïcode--co", "a-b_c-d", "goals", "goals-1", "goals-2"])
+  render(<MarkdownView markdown={withEmpty} />)
+  expect([...document.querySelectorAll<HTMLElement>("h1, h2")].map((heading) => heading.dataset.slug)).toEqual([
+    "plan",
+    "heading",
+    "goals",
+    "goals-1",
+    "risks",
+  ])
+})
+
+test("read mode: a filtered outline (an empty heading left out) focuses the heading it names", async () => {
+  const filtered = extractHeadings(withEmpty).filter((heading) => heading.text !== "")
+  render(
+    <Harness narrow={-1} defaultMode="read" headings={filtered} document={<MarkdownView markdown={withEmpty} />} />,
+  )
+  await settle()
+  const outline = screen.getByRole("navigation", { name: "Outline" })
+  expect(
+    within(outline)
+      .getAllByRole("button")
+      .map((button) => button.textContent),
+  ).toEqual(["Plan", "Goals", "Goals", "Risks"])
+  fireEvent.click(within(outline).getByRole("button", { name: "Risks" }))
+  expect(document.activeElement?.textContent).toBe("Risks")
+  fireEvent.click(within(outline).getAllByRole("button", { name: "Goals" })[1]!)
+  expect((document.activeElement as HTMLElement).dataset.slug).toBe("goals-1")
+})
+
+function Reveal() {
+  const workspace = useDocumentWorkspace()
+  return (
+    <>
+      <Button onClick={() => workspace.revealHeading({ level: 2, text: "Risks", line: 0, textFrom: 0 })}>
+        by text
+      </Button>
+      <Button onClick={() => workspace.revealHeading(1)}>by index</Button>
+    </>
+  )
+}
+
+test("revealHeading falls back to a heading's text without a slug, and to an index", async () => {
+  render(<Harness narrow={-1} defaultMode="read" aside={<Reveal />} document={<MarkdownView markdown={withEmpty} />} />)
+  await settle()
+  fireEvent.click(screen.getByRole("button", { name: "by text" }))
+  expect(document.activeElement?.textContent).toBe("Risks")
+  fireEvent.click(screen.getByRole("button", { name: "by index" }))
+  expect((document.activeElement as HTMLElement).dataset.slug).toBe("heading")
+})
