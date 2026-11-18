@@ -20,6 +20,29 @@ interface ProposalLabels {
   agentConfirm: string
 }
 
+/** What a card's move is, for announcements: picked up, moved, dropped or put back. */
+interface TaskMoveMessage {
+  type: "grab" | "move" | "drop" | "cancel"
+  label: string
+  /** The column's name. */
+  list: string
+  position: number
+  total: number
+}
+
+interface MoveLabels {
+  /** Accessible name of the agent-only group that moves tasks. */
+  group: string
+  /** A card's drag handle. */
+  handle: (title: string) => string
+  /** The handle's `aria-roledescription`. */
+  item: string
+  instructions: string
+  message: (message: TaskMoveMessage) => string
+  /** The mark an agent shows a person before moving a task to another column. */
+  agentConfirm: string
+}
+
 /**
  * Labels of the pieces the board composes (AgentBadge, LivenessIndicator,
  * UsageTable, AttemptTimeline), keyed by component, each its own Partial labels.
@@ -124,6 +147,7 @@ interface AgentTaskBoardLabels {
     awaitingDecision: string
   }
   proposals: ProposalLabels
+  moves: MoveLabels
   snapshot: (date: string) => string
   empty: { board: string; column: string; filtered: string; attempts: string; backlog: string }
   errors: { approveFailed: string; rejectFailed: string; unknown: string }
@@ -182,6 +206,20 @@ const agentTaskBoardLabels: AgentTaskBoardLabels = {
     acceptedFirstPassValue: (accepted, rated) => `${accepted} of ${rated}`,
     cost: "Estimated cost",
     awaitingDecision: "Awaiting a decision",
+  },
+  moves: {
+    group: "Task moves",
+    handle: (title) => `Move ${title}`,
+    item: "draggable task",
+    instructions:
+      "Press Space to pick up. Use Up and Down to move within a column, Left and Right to change columns, Space to drop, Escape to cancel.",
+    message: ({ type, label, list, position, total }) => {
+      if (type === "grab") return `Picked up ${label}. ${list}, position ${String(position)} of ${String(total)}.`
+      if (type === "move") return `${label}: ${list}, position ${String(position)} of ${String(total)}.`
+      if (type === "drop") return `Dropped ${label} in ${list}, position ${String(position)} of ${String(total)}.`
+      return `Move canceled. ${label} is back in ${list}.`
+    },
+    agentConfirm: "Moves a task to another column, which changes its status",
   },
   proposals: {
     group: "Proposal decisions",
@@ -315,6 +353,20 @@ const agentTaskBoardLabelsEs: AgentTaskBoardLabels = {
     cost: "Coste estimado",
     awaitingDecision: "Pendientes de decisión",
   },
+  moves: {
+    group: "Movimientos de tareas",
+    handle: (title) => `Mover ${title}`,
+    item: "tarea arrastrable",
+    instructions:
+      "Pulsa Espacio para levantarla. Usa Arriba y Abajo para moverla en la columna, Izquierda y Derecha para cambiar de columna, Espacio para soltarla y Escape para cancelar.",
+    message: ({ type, label, list, position, total }) => {
+      if (type === "grab") return `${label} levantada. ${list}, posición ${String(position)} de ${String(total)}.`
+      if (type === "move") return `${label}: ${list}, posición ${String(position)} de ${String(total)}.`
+      if (type === "drop") return `${label} soltada en ${list}, posición ${String(position)} de ${String(total)}.`
+      return `Movimiento cancelado. ${label} vuelve a ${list}.`
+    },
+    agentConfirm: "Mueve una tarea a otra columna, lo que cambia su estado",
+  },
   proposals: {
     group: "Decisiones sobre propuestas",
     approve: "Aprobar",
@@ -439,6 +491,8 @@ function mergeLabels(
 
 export { agentTaskBoardLabels, agentTaskBoardLabelsEs, mergeLabels }
 export type {
+  MoveLabels,
+  TaskMoveMessage,
   AgentTaskBoardComponentLabels,
   AgentTaskBoardLabels,
   AgentTaskBoardLabelsInput,
