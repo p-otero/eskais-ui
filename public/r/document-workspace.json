@@ -4,8 +4,8 @@
   "title": "Document Workspace",
   "description": "A notes or docs workspace: an explorer, tabs, breadcrumb, toolbar, the document (edit or read), an aside for backlinks, properties and the outline, a status bar with the save state, an alert slot and Ctrl/Cmd+P quick open. Resizable, collapsible columns when its container is wide, drawers when narrow; named landmarks and toggles agents can press. Also DocumentOutline and DocumentQuickOpen.",
   "dependencies": [
-    "@ui-sdk/core@0.1.0-beta.5",
-    "@ui-sdk/react@0.1.0-beta.5",
+    "@ui-sdk/core@0.1.0-beta.10",
+    "@ui-sdk/react@0.1.0-beta.10",
     "lucide-react"
   ],
   "registryDependencies": [

@@ -4,8 +4,8 @@
   "title": "Lightbox",
   "description": "A UI SDK Dialog that shows one image of a set: previous and next (buttons and arrow keys), a counter, the caption, an open-original link and fit or actual size. Dark variants follow the theme with no flash; agents get next, previous and goTo.",
   "dependencies": [
-    "@ui-sdk/core@0.1.0-beta.5",
-    "@ui-sdk/react@0.1.0-beta.5",
+    "@ui-sdk/core@0.1.0-beta.10",
+    "@ui-sdk/react@0.1.0-beta.10",
     "lucide-react"
   ],
   "registryDependencies": [

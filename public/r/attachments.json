@@ -4,8 +4,8 @@
   "title": "Attachments",
   "description": "AttachmentStrip: a horizontally scrolling strip of image thumbnails and file chips (icon, name, type and size). Images open a Lightbox, files open their link, max adds a +N button. AttachmentThumb renders one. Agents get openAttachment(id).",
   "dependencies": [
-    "@ui-sdk/core@0.1.0-beta.5",
-    "@ui-sdk/react@0.1.0-beta.5",
+    "@ui-sdk/core@0.1.0-beta.10",
+    "@ui-sdk/react@0.1.0-beta.10",
     "lucide-react"
   ],
   "registryDependencies": [

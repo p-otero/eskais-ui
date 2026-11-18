@@ -4,8 +4,8 @@
   "title": "Docs Layout",
   "description": "DocsLayout, an app shell for documentation: a topbar slot, a sidebar that sticks under it at the full remaining height (a drawer on narrow screens), a breadcrumb slot above the page in the main column, the main landmark and a sticky table of contents. Also DocsToc (headings marked as you read with IntersectionObserver), DocsPager and DocsBreadcrumb.",
   "dependencies": [
-    "@ui-sdk/core@0.1.0-beta.5",
-    "@ui-sdk/react@0.1.0-beta.5",
+    "@ui-sdk/core@0.1.0-beta.10",
+    "@ui-sdk/react@0.1.0-beta.10",
     "lucide-react"
   ],
   "registryDependencies": [

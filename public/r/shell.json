@@ -4,8 +4,8 @@
   "title": "Shell",
   "description": "Shell, an application's whole frame from its routes: a skip link, a Topbar (sidebar trigger, brand, ⌘K search, actions), a grouped Sidebar that sticks under it, collapses (remembered) and is a drawer on narrow screens, a command palette whose Go to group reaches every route, a MobileNav bottom bar with More on narrow screens, and the main landmark. Router-agnostic: onNavigate for a history router, #/route hrefs for a hash router, or plain fast links.",
   "dependencies": [
-    "@ui-sdk/core@0.1.0-beta.5",
-    "@ui-sdk/react@0.1.0-beta.5",
+    "@ui-sdk/core@0.1.0-beta.10",
+    "@ui-sdk/react@0.1.0-beta.10",
     "lucide-react"
   ],
   "registryDependencies": [

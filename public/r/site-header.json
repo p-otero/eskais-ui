@@ -4,8 +4,8 @@
   "title": "Site Header",
   "description": "A floating pill header for public sites: brand, a named navigation whose links move into a More panel as the bar narrows (measured, in order, no breakpoint), dropdowns for grouped links, calls to action, and a drawer with every link on narrow screens. It sets data-scrolled once the page scrolls.",
   "dependencies": [
-    "@ui-sdk/core@0.1.0-beta.5",
-    "@ui-sdk/react@0.1.0-beta.5",
+    "@ui-sdk/core@0.1.0-beta.10",
+    "@ui-sdk/react@0.1.0-beta.10",
     "lucide-react"
   ],
   "registryDependencies": [

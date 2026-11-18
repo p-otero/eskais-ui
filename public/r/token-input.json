@@ -4,8 +4,8 @@
   "title": "Token Input",
   "description": "UI SDK Token Input styled as a field: removable token chips with undo, Backspace and arrow keys, and a labels mode where Enter or a comma commits and a paste splits; agents set it by label.",
   "dependencies": [
-    "@ui-sdk/core@0.1.0-beta.5",
-    "@ui-sdk/react@0.1.0-beta.5",
+    "@ui-sdk/core@0.1.0-beta.10",
+    "@ui-sdk/react@0.1.0-beta.10",
     "lucide-react"
   ],
   "registryDependencies": [

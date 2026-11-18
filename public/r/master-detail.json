@@ -4,8 +4,8 @@
   "title": "Master Detail",
   "description": "MasterDetail: a list with a detail pane, side by side on wide containers and stacked below 42rem with a Back button. Controlled or uncontrolled selection, optional URL sync through a router-agnostic adapter (hash routers included), j/k that follow focus, a detail that collapses to a rail or resizes, remembered under a storageKey, and focus that moves to the detail's heading and back to the row. Agents open and close items by the block's name.",
   "dependencies": [
-    "@ui-sdk/core@0.1.0-beta.5",
-    "@ui-sdk/react@0.1.0-beta.5",
+    "@ui-sdk/core@0.1.0-beta.10",
+    "@ui-sdk/react@0.1.0-beta.10",
     "lucide-react"
   ],
   "registryDependencies": [

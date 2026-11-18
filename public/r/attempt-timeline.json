@@ -4,8 +4,8 @@
   "title": "Attempt Timeline",
   "description": "An agent task's attempts on the UI SDK Timeline: kind, status, times, configured and executed route with earlier routes in a popover, context, repairs, checks, commits, blockers, thread links agents can press, usage per attempt and older attempts behind a toggle.",
   "dependencies": [
-    "@ui-sdk/core@0.1.0-beta.5",
-    "@ui-sdk/react@0.1.0-beta.5",
+    "@ui-sdk/core@0.1.0-beta.10",
+    "@ui-sdk/react@0.1.0-beta.10",
     "lucide-react"
   ],
   "registryDependencies": [

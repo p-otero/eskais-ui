@@ -4,8 +4,8 @@
   "title": "Collapsible",
   "description": "UI SDK Collapsible: disclosure with aria-expanded, animated height, controller support and a rotating chevron icon.",
   "dependencies": [
-    "@ui-sdk/core@0.1.0-beta.5",
-    "@ui-sdk/react@0.1.0-beta.5",
+    "@ui-sdk/core@0.1.0-beta.10",
+    "@ui-sdk/react@0.1.0-beta.10",
     "lucide-react"
   ],
   "registryDependencies": [

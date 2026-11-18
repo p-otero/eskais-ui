@@ -4,8 +4,8 @@
   "title": "Number Input",
   "description": "UI SDK NumberInput: typed, stepped and formatted numbers with step buttons, named by Field.",
   "dependencies": [
-    "@ui-sdk/core@0.1.0-beta.5",
-    "@ui-sdk/react@0.1.0-beta.5",
+    "@ui-sdk/core@0.1.0-beta.10",
+    "@ui-sdk/react@0.1.0-beta.10",
     "lucide-react"
   ],
   "registryDependencies": [
