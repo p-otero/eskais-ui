@@ -146,6 +146,20 @@ async function wide(page) {
   await page.waitForTimeout(300)
   check("a toolbar menu gives focus back to the editor", await editorHasFocus(page))
 
+  await page.getByRole("button", { name: "Insert" }).click()
+  await page.getByRole("menuitem", { name: "Link to a note…" }).click()
+  const suggestions = page.locator("[data-slot=trigger-menu-content][data-open]").getByRole("option")
+  await suggestions
+    .first()
+    .waitFor({ timeout: 2000 })
+    .catch(() => {})
+  check(
+    "Link to a note opens the wikilink suggestions from the handle",
+    (await suggestions.count()) === 3 && (await editorHasFocus(page)),
+    `${String(await suggestions.count())} options`,
+  )
+  await page.keyboard.press("Escape")
+
   await page.getByRole("radio", { name: "Conflicts" }).click()
   await page.locator(".cm-content").click()
   await page.keyboard.type(" edited")
