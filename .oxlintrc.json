@@ -178,7 +178,8 @@
         "tooling/calendar-check.mjs",
         "tooling/press-check.mjs",
         "tooling/markdown-check.mjs",
-        "tooling/document-workspace-check.mjs"
+        "tooling/document-workspace-check.mjs",
+        "tooling/server-data-check.mjs"
       ],
       "rules": {
         "no-await-in-loop": "off"

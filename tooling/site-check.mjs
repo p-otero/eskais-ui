@@ -23,6 +23,9 @@ const pages = [
   "docs/keyboard/",
   "docs/mockups/",
   "docs/agent-skills/",
+  "docs/server-data/",
+  "docs/components/server-data-table/",
+  "docs/components/filter-panel/",
 ]
 const viewports = [
   { width: 1440, height: 900 },

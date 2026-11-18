@@ -1,7 +1,7 @@
 // Installs registry items into fresh Vite apps with npm or pnpm (no Bun), builds them and checks them in Chrome.
 // Usage: node tooling/consumer-check.mjs [npm|pnpm] [scenario…] (default: all). Scenarios: fresh, init, layouts
 // (the layout blocks, driven), aliases (`~/` aliases and the agent skills), imports, imports-flat, imports-tsx (must
-// fail to type-check) and release-age (pnpm); each one says what it checks below.
+// fail to type-check), release-age (pnpm) and server-data; each one says what it checks below.
 import { spawn } from "node:child_process"
 import { createReadStream, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, writeFileSync } from "node:fs"
 import { createServer } from "node:http"
@@ -137,6 +137,17 @@ const allItems = [
   "settings-page",
   "shell",
   "document-workspace",
+  "page-source",
+  "filter-schema",
+  "url-state",
+  "server-data",
+  "server-data-table",
+  "filter-search",
+  "filter-field",
+  "filter-chips",
+  "filter-panel",
+  "server-combobox",
+  "server-list",
 ]
 const versions = {
   react: "19.3.1",
@@ -753,6 +764,92 @@ async function checkLayouts(page) {
   console.log("layouts: master-detail, dashboard-grid and settings-page work in the consumer")
 }
 
+// A server table with chips, a list that loads more and a remote combobox over in-memory sources, URL in the hash.
+const serverDataMain = `import { createRoot } from "react-dom/client"
+import { Field, FieldLabel } from "@/components/ui/field"
+import { ListItem } from "@/components/ui/list-item"
+import { ServerCombobox } from "@/components/ui/server-combobox"
+import { ServerDataTable } from "@/components/ui/server-data-table"
+import { ServerList } from "@/components/ui/server-list"
+import { arraySource } from "@/lib/array-source"
+import { matchesFilter } from "@/lib/filter-ast"
+import { rsql } from "@/lib/filter-rsql"
+import { defineFilters, toFilterAst, type FilterValues } from "@/lib/filter-schema"
+import { hashUrlState } from "@/lib/url-state"
+import { cn } from "@/lib/utils"
+import "./index.css"
+${probes}
+type Task = { id: string; title: string; status: "open" | "done" }
+const tasks: Task[] = Array.from({ length: 12 }, (_, index) => ({
+  id: "T-" + String(index + 1),
+  title: "Task " + String(index + 1),
+  status: index % 3 === 0 ? "done" : "open",
+}))
+const filters = defineFilters({
+  q: { kind: "text", label: "Search" },
+  status: { kind: "options", label: "Status", multiple: true, options: [{ value: "open", label: "Open" }, { value: "done", label: "Done" }] },
+})
+type Values = FilterValues<typeof filters>
+const source = arraySource<Task, Values>(tasks, {
+  delay: 50,
+  search: { fields: ["title"] },
+  filter: (task, values) => matchesFilter(toFilterAst(filters, values), task),
+})
+const options = arraySource<Task, { q?: string }>(tasks, { search: { fields: ["title"] } })
+const labels = { errorTitle: "Couldn't load", retry: "Retry", emptyTitle: "Nothing here" }
+
+function App() {
+  return (
+    <main className="flex flex-col gap-items p-inset-surface">
+      <p data-wire>{rsql(toFilterAst(filters, { status: ["done"] }))}</p>
+      <ServerDataTable
+        label="Tasks"
+        source={source}
+        filters={filters}
+        filterUi="chips"
+        urlState={hashUrlState()}
+        pageSize={5}
+        columns={[{ id: "title", header: "Title", cell: (task) => task.title, sortField: "title" }]}
+        labels={labels}
+      />
+      <ServerList<Task, typeof filters>
+        aria-label="Task list"
+        source={source}
+        pageSize={5}
+        infinite={false}
+        itemText={(task) => task.title}
+        renderItem={(task) => <ListItem id={task.id} title={task.title} />}
+        labels={labels}
+      />
+      <Field>
+        <FieldLabel>Blocked by</FieldLabel>
+        <ServerCombobox source={options} getLabel={(task) => task.title} />
+      </Field>
+      <Probes />
+    </main>
+  )
+}
+
+createRoot(document.getElementById("root")!).render(<App />)
+`
+
+async function checkServerData(page) {
+  const status = page.locator('[data-slot="server-data-table-footer"] output')
+  await status.filter({ hasText: "Showing 1–5 of 12" }).waitFor()
+  if ((await page.locator("[data-wire]").textContent()) !== 'status=in=("done")')
+    throw new Error("rsql wrote the wrong filter")
+  await page.getByRole("button", { name: "Next page" }).click()
+  await status.filter({ hasText: "Showing 6–10 of 12" }).waitFor()
+  if (!(await page.evaluate(() => location.hash)).includes("page=2")) throw new Error("The page isn't in the URL")
+  await page.getByRole("button", { name: "Add filter" }).click()
+  await page.getByRole("menuitem", { name: "Status" }).click()
+  await page.getByRole("checkbox", { name: "Done" }).click()
+  await status.filter({ hasText: "Showing 1–4 of 4" }).waitFor()
+  await page.keyboard.press("Escape")
+  await page.getByRole("button", { name: "Load more" }).click()
+  await page.locator('[data-slot="server-list-footer"] output').filter({ hasText: "Showing 1–10 of 12" }).waitFor()
+}
+
 const scenarios = {
   fresh: {
     css: `@layer ui-sdk;\n@import "tailwindcss";\n`,
@@ -915,6 +1012,15 @@ const scenarios = {
     check: async () => {},
     literals: ["@", "#components", "#ui", "#lib"],
     files: ["src/components/ui/form-context.ts"],
+  },
+  "server-data": {
+    css: `@layer ui-sdk;
+@import "tailwindcss";
+`,
+    items: ["theme", "server-data-table", "server-list", "server-combobox"],
+    main: serverDataMain,
+    builtCss: ["--brand", ".text-title{"],
+    check: checkServerData,
   },
   // A consumer whose pnpm holds back releases younger than 7 days. shadcn installs dependencies before it writes any
   // file, so one young pin (lucide-react 1.73.0 in 0.2.0) fails the whole add with ERR_PNPM_NO_MATURE_MATCHING_VERSION.

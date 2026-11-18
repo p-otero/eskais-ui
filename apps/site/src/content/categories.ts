@@ -99,6 +99,22 @@ const categories = [
     ],
   },
   {
+    name: "Server data",
+    items: [
+      "server-data-table",
+      "server-list",
+      "filter-search",
+      "filter-chips",
+      "filter-panel",
+      "filter-field",
+      "server-combobox",
+      "server-data",
+      "page-source",
+      "filter-schema",
+      "url-state",
+    ],
+  },
+  {
     name: "Feedback",
     items: ["alert", "toast", "status-pill", "spinner", "skeleton", "progress", "meter", "empty", "states"],
   },

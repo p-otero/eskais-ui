@@ -751,6 +751,90 @@ const itemNotes: Record<string, ItemNotes> = {
     usage: "Opt in when people write fenced code: the languages load lazily, per fence.",
     related: ["markdown-editor"],
   },
+  "server-data-table": {
+    usage:
+      "Wrap your endpoint in a PageSource, declare the filters once, and the table pages, sorts, filters and keeps it in the URL.",
+    a11y: [
+      'A polite status says what is shown after each load ("Showing 21–40 of 312"), and "Loading…" only once a load has taken 400 ms.',
+      "Focus stays on the control you pressed; new rows never take it. Row navigation starts again at the first row without moving focus.",
+      "While a page loads the table keeps its rows and is marked aria-busy; it never says empty while loading or after an error.",
+    ],
+    agent:
+      'Agents sort and page through the table\'s own actions (sortBy, setPage) and filter through the filters group: filter("Status", ["Open"]), clearFilters(). Every control is a named UI SDK part.',
+    related: ["data-table", "filter-search", "server-data", "page-source", "filter-schema"],
+  },
+  "server-list": {
+    usage: "Use it for a feed or an inbox on a server: rows come in as you scroll, and the button reaches every page.",
+    a11y: [
+      "Rows are one tab stop with arrows and j/k, virtualized past 200 rows without losing find in page.",
+      "New rows never take focus; Load more keeps it while it loads and once there is no more.",
+      "A polite status says how many rows are shown after each load.",
+    ],
+    agent: "Agents select a row through the list's select(id) and press Load more by name.",
+    related: ["list-item", "server-data-table", "server-data"],
+  },
+  "filter-search": {
+    usage: "Put it in a ServerDataTable toolbar, or in a FilterScope beside any view on a page controller.",
+    a11y: ["A search landmark named by the field's label; Escape clears only when there is text."],
+    agent: "Agents set the search by its label, and it commits at once; FilterScope adds filter(field, value).",
+    related: ["server-data-table", "filter-bar", "search-field"],
+  },
+  "filter-chips": {
+    usage: "Use chips when a few filters apply at a time and people should see them at a glance.",
+    a11y: [
+      "A UI SDK Toolbar: one tab stop, arrow keys between chips. Each chip's text is its name, and its remove button says which filter it removes.",
+      "Removing a chip moves focus to Add filter instead of losing it.",
+    ],
+    agent:
+      "Agents open a chip by its name and set the field inside; FilterScope's filter(field, value) does it in one step.",
+    related: ["filter-bar", "filter-field", "filter-panel", "server-data-table"],
+  },
+  "filter-panel": {
+    usage: "Use the panel when there are many filters, or people set several before looking at the results.",
+    a11y: [
+      "Wide: a non-modal complementary region; Escape closes it and returns focus to the trigger.",
+      "Narrow: a modal bottom sheet with a title, closed by Apply, Escape or the backdrop.",
+      "The trigger has aria-expanded and says how many filters apply.",
+    ],
+    agent: "Agents set each field by its label and press Apply filters.",
+    related: ["side-panel", "drawer", "filter-field", "filter-chips"],
+  },
+  "filter-field": {
+    usage: "Use it to edit one schema field anywhere: the chips and the panel are built on it.",
+    a11y: ["Every control is named by the field's label; groups of checkboxes and number pairs are labelled groups."],
+    related: ["filter-chips", "filter-panel", "filter-schema"],
+  },
+  "server-combobox": {
+    usage: "Use it when the options live on the server: people, tasks, anything too long to load at once.",
+    a11y: [
+      "A UI SDK Combobox: the list keeps the server's order, and a hidden status announces loading, errors and the count.",
+      "Each chip's remove button is named for its choice.",
+    ],
+    agent: "Agents choose an option by its label, as in any Combobox.",
+    related: ["combobox", "filter-schema", "page-source"],
+  },
+  "server-data": {
+    usage:
+      "Reach for the hooks when you build your own screen on a PageSource; the server table, list and combobox already use them.",
+    a11y: ["Pair the status with DataState: never empty while pending or after an error, busy during a refetch."],
+    related: ["page-source", "states", "filter-schema"],
+  },
+  "page-source": {
+    usage:
+      "Wrap your endpoint in the adapter that matches its paging, once per resource; components and hooks only see the PageSource.",
+    agent: "Nothing of its own: the table, list and combobox built on it expose paging, sorting and filtering by name.",
+    related: ["filter-schema", "url-state", "data-table"],
+  },
+  "filter-schema": {
+    usage:
+      "Declare the filters once; the same schema types the values, drives the filter UIs, writes the URL and serializes the request.",
+    a11y: ["Every field's label is required: it names the chip, the panel field and what agents set."],
+    related: ["page-source", "url-state", "filter-bar"],
+  },
+  "url-state": {
+    usage: "Pick the adapter that matches your router once, and pass it to every screen that keeps state in the URL.",
+    related: ["page-source", "filter-schema"],
+  },
 }
 
 export { itemNotes }

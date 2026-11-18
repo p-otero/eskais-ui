@@ -25,6 +25,8 @@ type DataTableColumn<Row> = {
   header: ReactNode
   cell: (row: Row) => ReactNode
   sortValue?: (row: Row) => SortValue
+  /** The field a server sorts by, in `manual` mode: the column sorts without a `sortValue`. */
+  sortField?: string
   align?: DataTableAlign
   /** Wraps the column's cells onto more lines; by default they stay on one line, cut with an ellipsis and a tooltip. */
   wrap?: boolean
@@ -41,7 +43,11 @@ type DataTableLabels = {
   previousPage: string
   nextPage: string
   pageStatus: (page: number, pageCount: number) => string
+  /** A secondary sort's place, read after the sort button's name: "sorted second". */
+  sortRank: (rank: number) => string
 }
+
+const ordinals = ["first", "second", "third", "fourth", "fifth"]
 
 const dataTableLabels: DataTableLabels = {
   sortBy: (header) => `Sort by ${header}`,
@@ -50,6 +56,7 @@ const dataTableLabels: DataTableLabels = {
   previousPage: "Previous page",
   nextPage: "Next page",
   pageStatus: (page, pageCount) => `Page ${page} of ${pageCount}`,
+  sortRank: (rank) => `sorted ${ordinals[rank - 1] ?? `${String(rank)}th`}`,
 }
 
 type DataTablePageOptions = { reason?: DataTablePageChangeReason; event?: Event }
@@ -68,40 +75,53 @@ function SortIcon({ direction }: { direction?: SortDirection }) {
   return <ChevronsUpDownIcon />
 }
 
+/** A sort after the first: its header shows the direction and its place; only the first sets `aria-sort`. */
+type DataTableSecondarySort = { direction: SortDirection; rank: number }
+
 function DataTableHeaderCell<Row>({
   column,
   sort,
-  sortLabel,
+  sortable,
+  secondary,
+  labels,
   onSort,
 }: {
   column: DataTableColumn<Row>
   sort: DataTableSort | null
-  sortLabel: DataTableLabels["sortBy"]
-  onSort: (event: Event) => void
+  sortable: boolean
+  secondary?: DataTableSecondarySort
+  labels: Pick<DataTableLabels, "sortBy" | "sortRank">
+  onSort: (event: MouseEvent) => void
 }) {
-  const direction = sort?.columnId === column.id ? sort.direction : undefined
+  const primary = sort?.columnId === column.id ? sort.direction : undefined
   const header = typeof column.header === "string" ? column.header : column.id
   // oxlint-disable-next-line shadcn/require-static-classes -- the column's own classes, passed through like className
   const headerClassName = cn("data-[align=center]:text-center data-[align=end]:text-end", column.headerClassName)
+  const name = secondary ? `${labels.sortBy(header)}, ${labels.sortRank(secondary.rank)}` : labels.sortBy(header)
   return (
     <TableHead
       scope="col"
-      aria-sort={column.sortValue ? (direction ?? "none") : undefined}
+      aria-sort={sortable ? (primary ?? "none") : undefined}
       data-align={column.align}
       className={headerClassName}
     >
-      {column.sortValue ? (
+      {sortable ? (
         <Button
           variant="ghost"
           size="sm"
-          aria-label={sortLabel(header)}
+          aria-label={name}
           render={(part) => <button {...part} data-slot="data-table-sort" />}
           data-align={column.align}
-          className="-mx-control-x gap-inline text-foreground data-[align=end]:flex-row-reverse [&_svg]:size-3.5"
+          className="-mx-(--item-padding-x) gap-inline px-(--item-padding-x) text-foreground data-[align=end]:flex-row-reverse [&_svg]:size-3.5"
           onClick={(event) => onSort(event.nativeEvent)}
         >
           {column.header}
-          <SortIcon direction={direction} />
+          <SortIcon direction={primary ?? secondary?.direction} />
+          {secondary && (
+            <span aria-hidden="true" className="text-caption text-muted-foreground tabular-nums">
+              {secondary.rank}
+            </span>
+          )}
         </Button>
       ) : (
         column.header
@@ -170,6 +190,19 @@ type DataTableProps<Row> = {
   defaultSelection?: readonly string[]
   onSelectionChange?: (selection: string[], details: ChangeDetails<DataTableSelectionChangeReason>) => void
   pageSize?: number
+  /**
+   * The server sorts and pages: `rows` is the current page as given, sort and page changes are only reported, and
+   * `pageCount` (or `total` with `pageSize`) sets the pages. Columns sort by `sortField`.
+   */
+  manual?: boolean
+  /** Every row on the server, in `manual` mode. */
+  total?: number
+  /** The number of pages in `manual` mode; wins over `total`. */
+  pageCount?: number
+  /** The sorts after `sort`, in `manual` mode: each header shows its place. */
+  secondarySorts?: readonly DataTableSort[]
+  /** The rows are being refreshed: `aria-busy` on the table while the current rows stay. */
+  busy?: boolean
   page?: number
   defaultPage?: number
   onPageChange?: (page: number, details: ChangeDetails<DataTablePageChangeReason>) => void
@@ -190,6 +223,7 @@ type DataTableProps<Row> = {
 }
 
 export type {
+  DataTableSecondarySort,
   DataTableAlign,
   DataTableColumn,
   DataTableLabels,

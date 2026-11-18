@@ -46,11 +46,22 @@ function useVisibleRows<Row>(
   sort: DataTableSort | null,
   page: number,
   pageSize: number | undefined,
+  manual: boolean,
 ) {
   return useMemo(() => {
+    if (manual) return rows
     const sortValue = columns.find((column) => column.id === sort?.columnId)?.sortValue
     return paginate(sortRows(rows, sort, sortValue), page, pageSize).rows
-  }, [rows, columns, sort, page, pageSize])
+  }, [rows, columns, sort, page, pageSize, manual])
+}
+
+function isSortable<Row>(column: DataTableColumn<Row>, manual: boolean) {
+  return column.sortValue !== undefined || (manual && column.sortField !== undefined)
+}
+
+function manualPageCount(pageCount: number | undefined, total: number | undefined, pageSize: number | undefined) {
+  if (pageCount !== undefined) return Math.max(1, Math.trunc(pageCount))
+  return total === undefined ? 1 : pageCountOf(total, pageSize)
 }
 
 function DataTable<Row>({
@@ -61,6 +72,11 @@ function DataTable<Row>({
   getRowLabel = getRowId,
   selectable = false,
   pageSize,
+  manual = false,
+  total,
+  pageCount: pageCountProp,
+  secondarySorts,
+  busy = false,
   renderPagination,
   loading = false,
   loadingRows = 5,
@@ -86,9 +102,9 @@ function DataTable<Row>({
   const latestSelection = () =>
     chosen.current !== null && chosen.current.shown === selection ? chosen.current.next : selection
 
-  const pageCount = pageCountOf(rows.length, pageSize)
+  const pageCount = manual ? manualPageCount(pageCountProp, total, pageSize) : pageCountOf(rows.length, pageSize)
   const page = clampPage(requestedPage, pageCount)
-  const visible = useVisibleRows(rows, columns, sort, page, pageSize)
+  const visible = useVisibleRows(rows, columns, sort, page, pageSize, manual)
   const visibleIds = useMemo(() => visible.map(getRowId), [visible, getRowId])
   const selected = new Set(selection)
   const pageSelection = selectionState(visibleIds, selected)
@@ -130,7 +146,7 @@ function DataTable<Row>({
     page,
     pageCount,
     pageSize: pageSize ?? rows.length,
-    total: rows.length,
+    total: manual ? (total ?? rows.length) : rows.length,
     onPageChange: (next: number, options?: DataTablePageOptions) =>
       controller.setPage(clampPage(next, pageCount), options),
   }
@@ -139,7 +155,7 @@ function DataTable<Row>({
     <DataTableRoot
       aria-label={label}
       controller={controller}
-      sortableColumns={columns.filter((column) => column.sortValue).map((column) => column.id)}
+      sortableColumns={columns.filter((column) => isSortable(column, manual)).map((column) => column.id)}
       rowItems={rowItems}
       pageCount={pageCount}
       sort={sort}
@@ -163,7 +179,7 @@ function DataTable<Row>({
     >
       <Table
         aria-label={label}
-        aria-busy={loading || undefined}
+        aria-busy={loading || busy || undefined}
         aria-rowcount={virtual.enabled ? visible.length + 1 : undefined}
         containerClassName="min-h-0"
         className={tableClassName}
@@ -185,15 +201,21 @@ function DataTable<Row>({
                 />
               </TableHead>
             )}
-            {columns.map((column) => (
-              <DataTableHeaderCell
-                key={column.id}
-                column={column}
-                sort={sort}
-                sortLabel={labels.sortBy}
-                onSort={(event) => controller.sortBy(column.id, undefined, { reason: "item-press", event })}
-              />
-            ))}
+            {columns.map((column) => {
+              const rank = secondarySorts?.findIndex((secondary) => secondary.columnId === column.id) ?? -1
+              const secondary = rank === -1 ? undefined : secondarySorts?.[rank]
+              return (
+                <DataTableHeaderCell
+                  key={column.id}
+                  column={column}
+                  sort={sort}
+                  sortable={isSortable(column, manual)}
+                  secondary={secondary && { direction: secondary.direction, rank: rank + 2 }}
+                  labels={labels}
+                  onSort={(event) => controller.sortBy(column.id, undefined, { reason: "item-press", event })}
+                />
+              )
+            })}
           </TableRow>
         </TableHeader>
         <TableBody ref={anchor} className={cn(virtual.enabled && "relative")}>
