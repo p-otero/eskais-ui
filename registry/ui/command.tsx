@@ -17,7 +17,7 @@ import {
   createCommandController,
 } from "@ui-sdk/react/command"
 import { mergeProps } from "@ui-sdk/react/primitive"
-import { useCallback, useState, type ComponentProps } from "react"
+import { createContext, use, useCallback, useState, type ComponentProps } from "react"
 import { SearchIcon } from "lucide-react"
 
 import { isHashRoute, useFastLink } from "@/components/ui/fast-link"
@@ -25,13 +25,54 @@ import { Kbd } from "@/components/ui/kbd"
 import { isPlainClick } from "@/components/ui/link-primitive"
 import { cnState } from "@/lib/utils"
 
-function Command({ className, ...props }: ComponentProps<typeof CommandPrimitive>) {
+type CommandHost = {
+  /** Whether the dialog around the command list is open. */
+  open: boolean
+  /** Set when Escape should close the dialog instead of clearing the search or going back a page. */
+  closeOnEscape?: (event: Event | undefined) => void
+}
+
+/** Set by CommandDialogContent, so a Command inside starts fresh on every open and Escape can close the dialog. */
+const CommandHostContext = createContext<CommandHost | null>(null)
+
+/** Whether an Escape that would clear the search or go back a page closes the dialog instead. */
+function escapeClosesHost(host: CommandHost | null, details: { reason: string; event?: Event; cancel: () => void }) {
+  if (details.reason !== "escape-key" || !host?.closeOnEscape) return false
+  details.cancel()
+  host.closeOnEscape(details.event)
+  return true
+}
+
+type CommandProps = ComponentProps<typeof CommandPrimitive>
+
+/**
+ * Inside a CommandDialogContent, each open starts from `defaultQuery` (empty by default), on the first page with
+ * nothing highlighted, unless `query` controls the search text.
+ */
+function Command({ className, onQueryChange, onPagesChange, ...props }: CommandProps) {
+  const host = use(CommandHostContext)
+  // A closed dialog can stay mounted (keepMounted, or an exit animation that never ends), so opening remounts the
+  // primitive rather than trusting the content to unmount.
+  const [opens, setOpens] = useState(0)
+  const [wasOpen, setWasOpen] = useState(host?.open ?? false)
+  const open = host?.open ?? false
+  if (open !== wasOpen) {
+    setWasOpen(open)
+    if (open) setOpens(opens + 1)
+  }
   return (
     <CommandPrimitive
+      key={opens}
       className={cnState(
         "flex w-full flex-col overflow-hidden rounded-surface bg-popover/(--glass-opacity) text-popover-foreground in-data-[slot=dialog-content]:rounded-none in-data-[slot=dialog-content]:bg-transparent",
         className,
       )}
+      onQueryChange={(query, details) => {
+        if (!escapeClosesHost(host, details)) onQueryChange?.(query, details)
+      }}
+      onPagesChange={(pages, details) => {
+        if (!escapeClosesHost(host, details)) onPagesChange?.(pages, details)
+      }}
       {...props}
     />
   )
@@ -219,6 +260,7 @@ export {
   CommandEmpty,
   CommandGroup,
   CommandGroupLabel,
+  CommandHostContext,
   CommandInput,
   CommandItem,
   CommandItemIcon,
@@ -230,4 +272,4 @@ export {
   CommandStatus,
   createCommandController,
 }
-export type { CommandItemFollowDetails, CommandItemProps }
+export type { CommandHost, CommandItemFollowDetails, CommandItemProps, CommandProps }

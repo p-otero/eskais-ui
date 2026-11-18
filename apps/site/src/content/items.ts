@@ -278,6 +278,7 @@ const itemNotes: Record<string, ItemNotes> = {
       "Typing filters; arrow keys move the highlight; Enter runs, or follows a link command.",
       "A link command stays an option of the listbox, rendered as an anchor, so modified clicks open a new tab.",
       "The ⌘K shortcut is opt-in on the trigger.",
+      'In a CommandDialog, each open starts with an empty search, and one Escape closes it and returns focus to the trigger; escapeKey="clear" clears the search first.',
     ],
     agent: "Agents search and highlight commands by name (setQuery, setValue); UI SDK offers no action that runs one.",
     related: ["combobox", "dropdown-menu", "kbd"],
@@ -431,7 +432,7 @@ const itemNotes: Record<string, ItemNotes> = {
     a11y: [
       "A skip link first, to the <main> landmark, which takes focus (tabIndex -1) without changing the URL, so hash routers keep their route.",
       'The sidebar and the bottom bar are navigation landmarks named by labels.sidebar and labels.mobileNav; the current route carries aria-current="page" in both, and in the palette.',
-      "On narrow screens the topbar's trigger opens the sidebar as a drawer; Escape closes it and focus returns to the trigger. The palette (Ctrl/⌘+K) returns focus the same way.",
+      "On narrow screens the topbar's trigger opens the sidebar as a drawer; Escape closes it and focus returns to the trigger. The palette (Ctrl/⌘+K) returns focus the same way: it opens with an empty search, and one Escape closes it whatever the search holds.",
       "The bottom bar is sticky at the end of the shell rather than fixed, so the page always ends above it, also inside a pane or an iframe; scroll margins keep focused elements clear of the topbar and the bar.",
     ],
     agent:

@@ -7,6 +7,7 @@ Versions follow [semver](https://semver.org). Before 1.0, a minor version can br
 ### Added
 
 - `CommandItem href`: a command that goes to a page renders as a link (an anchor that keeps the item's `data-slot`, styles and `option` role) and follows the repo's fast-link rules: Enter, a click, its `shortcut` or a primary mouse press follow it, a `#/…` hash route by setting `location.hash` and a same-origin path with `location.assign`, while other `#…` anchors and modified clicks stay native. A link command never runs `Command onAction`, which stays for actions. `onFollow(href, { event })` routes on the client (and closes the palette), `fast={false}` waits for the click, and `target`, `rel` and `download` reach the anchor. `useFastLink` takes `anchorRole` for an anchor root with a role other than link. The docs site's search uses link commands, so a page opens in a new tab on Ctrl/Cmd+click.
+- `shell`: `searchQuery`, `defaultSearchQuery` and `onSearchQueryChange` control the palette's search; `ShellSearch` takes them as `query`, `defaultQuery` and `onQueryChange`. Without them, every open of the palette starts empty.
 
 ### Changed
 
@@ -16,6 +17,8 @@ Versions follow [semver](https://semver.org). Before 1.0, a minor version can br
 ### Fixed
 
 - Ring `Meter` no longer overflows a narrow column: the `variant="ring"` root (`inline-flex w-fit`) grew to a long label's unwrapped width, so a `MeterLabel className="truncate"` pushed it past a 320px grid column. The root takes `max-w-full min-w-0` and `MeterLabel` `max-w-full min-w-0`, so a truncating label truncates; `node tooling/shell-check.mjs` measures it.
+- `command-dialog`: every open starts with an empty search. `CommandDialogContent` remounts its `Command` each time the dialog opens, so the search (or `defaultQuery`), the page stack and the highlight reset even when the closed content stays mounted (`keepMounted`, or an exit animation that never ends, as in some Electron windows). A `query` you control is left alone.
+- `command-dialog`: one Escape closes the palette and returns focus to its trigger, whatever the search holds. UI SDK's Command clears the search on the first Escape and goes back a page on the next; `CommandDialog escapeKey="clear"` keeps that order. A `dismissible={false}` dialog leaves Escape to the search. The close reports `escape-key` to `onOpenChange`.
 
 ## 0.2.1 (2026-11-18)
 

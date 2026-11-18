@@ -607,6 +607,24 @@ async function checkPalette(page, scope, file) {
     heading === "Reports" && current.length > 0 && current.every((text) => /Reports|More/.test(text ?? "")),
     `${heading}; current: ${current.join(", ")}`,
   )
+
+  await page.keyboard.press("ControlOrMeta+k")
+  const search = palette.getByRole("combobox", { name: "Find a page or command" })
+  await search.waitFor()
+  const reopened = await search.inputValue()
+  check(`${scope}: the palette reopens with an empty search`, reopened === "", JSON.stringify(reopened))
+  await page.keyboard.type("arch")
+  await page.keyboard.press("Escape")
+  await palette.waitFor({ state: "detached" })
+  const focused = await page.evaluate(() => ({
+    inTopbar: !!document.activeElement?.closest('[data-slot="topbar"]'),
+    name: document.activeElement?.getAttribute("aria-label") ?? document.activeElement?.textContent,
+  }))
+  check(
+    `${scope}: one Escape closes the palette with text in it, focus back in the topbar`,
+    focused.inTopbar,
+    focused.name,
+  )
 }
 
 async function checkShellAt(page, width, scheme) {

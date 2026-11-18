@@ -1,11 +1,12 @@
 "use client"
 
 import { DialogShortcut as DialogShortcutPrimitive, type DialogController } from "@ui-sdk/react/dialog"
-import type { ComponentProps, ReactNode } from "react"
+import { createContext, use, useMemo, useState, type ComponentProps, type ReactNode } from "react"
 
 import { Button } from "@/components/ui/button"
+import { CommandHostContext } from "@/components/ui/command"
 import {
-  Dialog as CommandDialog,
+  Dialog,
   DialogBackdrop,
   DialogContent,
   DialogTitle,
@@ -17,6 +18,43 @@ import { cnState } from "@/lib/utils"
 
 /** What `createCommandDialogController()` returns, to pass between the Topbar's triggers and the dialog. */
 type CommandDialogController = DialogController
+
+type CommandDialogProps = ComponentProps<typeof Dialog> & {
+  /**
+   * What Escape does while focus is in the search field. `close` closes the dialog whatever the field holds, and
+   * focus returns to the trigger. `clear` keeps UI SDK's Command order: the first Escape clears the search, the next
+   * goes back a page, and only an empty first page lets Escape close the dialog.
+   */
+  escapeKey?: "close" | "clear"
+}
+
+const CloseOnEscapeContext = createContext<((event: Event | undefined) => void) | undefined>(undefined)
+
+/**
+ * A Dialog for a command palette. Its CommandDialogContent remounts the Command on every open, so the search starts
+ * empty, and one Escape closes it (`escapeKey`).
+ */
+function CommandDialog({ controller, escapeKey = "close", dismissible, ...props }: CommandDialogProps) {
+  // Closing through a controller is how a Command's Escape reaches the dialog: UI SDK's Command claims the key
+  // (preventDefault) whenever the search holds text, even when the query change is canceled.
+  const [ownController] = useState(() => createCommandDialogController())
+  const dialog = controller ?? ownController
+  const closes = escapeKey === "close" && dismissible !== false
+  const closeOnEscape = useMemo(
+    () =>
+      closes
+        ? (event: Event | undefined) => {
+            dialog.close({ reason: "escape-key", event: event as KeyboardEvent | undefined })
+          }
+        : undefined,
+    [closes, dialog],
+  )
+  return (
+    <CloseOnEscapeContext value={closeOnEscape}>
+      <Dialog controller={dialog} dismissible={dismissible} {...props} />
+    </CloseOnEscapeContext>
+  )
+}
 
 // `shortcut="mod+k"` is opt-in: the trigger registers it only while mounted, so nothing listens by default.
 function CommandDialogTrigger({ className, ...props }: ComponentProps<typeof DialogTrigger>) {
@@ -45,15 +83,16 @@ type CommandDialogContentProps = ComponentProps<typeof DialogContent> & {
 }
 
 function CommandDialogContent({ className, children, title = "Command palette", ...props }: CommandDialogContentProps) {
+  const closeOnEscape = use(CloseOnEscapeContext)
   return (
     <>
       <DialogBackdrop />
       <DialogContent className={cnState("max-w-xl gap-0 overflow-hidden p-0", className)} {...props}>
         {(state) => (
-          <>
+          <CommandHostContext value={{ open: state.open, closeOnEscape }}>
             <DialogTitle className="sr-only">{title}</DialogTitle>
             {typeof children === "function" ? children(state) : children}
-          </>
+          </CommandHostContext>
         )}
       </DialogContent>
     </>
@@ -68,4 +107,4 @@ export {
   CommandDialogTrigger,
   createCommandDialogController,
 }
-export type { CommandDialogContentProps, CommandDialogController, CommandDialogOpenButtonProps }
+export type { CommandDialogContentProps, CommandDialogController, CommandDialogOpenButtonProps, CommandDialogProps }

@@ -5,7 +5,7 @@ import { SearchIcon } from "lucide-react"
 
 import { ShellSidebarSections, useMobileNavItems } from "@/components/ui/shell-nav"
 import type { ShellRoute, ShellRouteGroup, ShellCurrent } from "@/components/ui/shell-routes"
-import { ShellSearch } from "@/components/ui/shell-search"
+import { ShellSearch, type ShellSearchProps } from "@/components/ui/shell-search"
 import {
   CommandDialogOpenButton,
   CommandDialogShortcut,
@@ -92,6 +92,11 @@ type ShellProps<Route extends ShellRoute = ShellRoute> = Omit<ComponentProps<"di
   collapse?: "rail" | "hide"
   /** Opens the palette from anywhere; `false` when the page already uses it. */
   searchShortcut?: string | false
+  /** The palette's search text, to control it. Without it, every open starts empty (or from `defaultSearchQuery`). */
+  searchQuery?: string
+  /** The search text each open of the palette starts from, when `searchQuery` doesn't control it. */
+  defaultSearchQuery?: string
+  onSearchQueryChange?: ShellSearchProps["onQueryChange"]
   /** The id of the `<main>` landmark, the skip link's target. */
   mainId?: string
   /** `div` when the page already has its `<main>`, like a preview inside another page. */
@@ -129,6 +134,9 @@ function Shell<Route extends ShellRoute>({
   defaultCollapsed,
   collapse,
   searchShortcut = "mod+k",
+  searchQuery,
+  defaultSearchQuery,
+  onSearchQueryChange,
   mainId = "main",
   as: Main = "main",
   className,
@@ -204,6 +212,9 @@ function Shell<Route extends ShellRoute>({
         labels={labels}
         commandGroups={commandGroups}
         onCommand={onCommand}
+        query={searchQuery}
+        defaultQuery={defaultSearchQuery}
+        onQueryChange={onSearchQueryChange}
       />
       <div data-slot="shell-body" className="flex min-w-0 flex-1 items-start" style={columns}>
         <div

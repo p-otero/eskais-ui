@@ -149,3 +149,110 @@ test("an agent opens the search by its name and queries it", async () => {
   await settle(60)
   expect(screen.getAllByRole("option").map((option) => option.textContent)).toEqual(["Apollo"])
 })
+
+function Palette({
+  escapeKey,
+  dismissible,
+  open,
+  onOpenChange,
+}: {
+  escapeKey?: "close" | "clear"
+  dismissible?: boolean
+  open?: boolean
+  onOpenChange?: (open: boolean) => void
+}) {
+  return (
+    <CommandDialog escapeKey={escapeKey} dismissible={dismissible} open={open} onOpenChange={onOpenChange}>
+      <CommandDialogTrigger>Open palette</CommandDialogTrigger>
+      <CommandDialogContent title="Palette">
+        <Command>
+          <CommandInput aria-label="Find a command" />
+          <CommandList>
+            <CommandItem value="apollo">Apollo</CommandItem>
+            <CommandItem value="atlas">Atlas</CommandItem>
+          </CommandList>
+        </Command>
+      </CommandDialogContent>
+    </CommandDialog>
+  )
+}
+
+test("one Escape closes the palette while the search holds text, and focus returns to the trigger", async () => {
+  const user = userEvent.setup()
+  render(<Palette />)
+  const trigger = screen.getByRole("button", { name: "Open palette" })
+  await user.click(trigger)
+  await user.keyboard("atl")
+  expect(screen.getByRole<HTMLInputElement>("combobox", { name: "Find a command" }).value).toBe("atl")
+  await user.keyboard("{Escape}")
+  await settle(20)
+  expect(screen.queryByRole("dialog")).toBeNull()
+  expect(document.activeElement).toBe(trigger)
+})
+
+test("every open starts with an empty search, even when the content stays mounted", async () => {
+  const user = userEvent.setup()
+  render(
+    <CommandDialog>
+      <CommandDialogTrigger>Open palette</CommandDialogTrigger>
+      <CommandDialogContent title="Palette" keepMounted>
+        <Command onAction={() => {}}>
+          <CommandInput aria-label="Find a command" />
+          <CommandList>
+            <CommandItem value="apollo">Apollo</CommandItem>
+            <CommandItem value="atlas">Atlas</CommandItem>
+          </CommandList>
+        </Command>
+      </CommandDialogContent>
+    </CommandDialog>,
+  )
+  const trigger = screen.getByRole("button", { name: "Open palette" })
+  await user.click(trigger)
+  await user.keyboard("atl")
+  await user.keyboard("{Escape}")
+  await settle(20)
+  await user.click(trigger)
+  await settle(20)
+  const input = screen.getByRole<HTMLInputElement>("combobox", { name: "Find a command" })
+  expect(input.value).toBe("")
+  expect(screen.getAllByRole("option").map((option) => option.textContent)).toEqual(["Apollo", "Atlas"])
+})
+
+test("escapeKey clear keeps UI SDK's order: the first Escape clears the search, the second closes", async () => {
+  const user = userEvent.setup()
+  render(<Palette escapeKey="clear" />)
+  await user.click(screen.getByRole("button", { name: "Open palette" }))
+  await user.keyboard("atl{Escape}")
+  await settle(20)
+  expect(screen.getByRole<HTMLInputElement>("combobox", { name: "Find a command" }).value).toBe("")
+  expect(screen.getByRole("dialog")).toBeTruthy()
+  await user.keyboard("{Escape}")
+  await settle(20)
+  expect(screen.queryByRole("dialog")).toBeNull()
+})
+
+test("a palette that isn't dismissible keeps Escape for the search", async () => {
+  const user = userEvent.setup()
+  render(<Palette dismissible={false} />)
+  await user.click(screen.getByRole("button", { name: "Open palette" }))
+  await user.keyboard("atl{Escape}")
+  await settle(20)
+  expect(screen.getByRole("dialog")).toBeTruthy()
+  expect(screen.getByRole<HTMLInputElement>("combobox", { name: "Find a command" }).value).toBe("")
+})
+
+function ControlledPalette() {
+  const [open, setOpen] = useState(false)
+  return <Palette open={open} onOpenChange={setOpen} />
+}
+
+test("a controlled palette hears the Escape close through onOpenChange", async () => {
+  const user = userEvent.setup()
+  render(<ControlledPalette />)
+  const trigger = screen.getByRole("button", { name: "Open palette" })
+  await user.click(trigger)
+  await user.keyboard("atl{Escape}")
+  await settle(20)
+  expect(screen.queryByRole("dialog")).toBeNull()
+  expect(document.activeElement).toBe(trigger)
+})

@@ -13,6 +13,7 @@ import {
   CommandItem,
   CommandItemIcon,
   CommandList,
+  type CommandProps,
 } from "@/components/ui/command"
 import { CommandDialog, CommandDialogContent, type CommandDialogController } from "@/components/ui/command-dialog"
 
@@ -29,6 +30,11 @@ type ShellSearchProps = {
   labels: ShellSearchLabels
   commandGroups?: ReactNode
   onCommand?: (value: string) => unknown
+  /** The search text, to control it. Without it, every open starts from `defaultQuery`. */
+  query?: string
+  /** The search text each open starts from, when `query` doesn't control it. Empty by default. */
+  defaultQuery?: string
+  onQueryChange?: CommandProps["onQueryChange"]
 }
 
 function ShellSearch({
@@ -39,6 +45,9 @@ function ShellSearch({
   labels,
   commandGroups,
   onCommand,
+  query,
+  defaultQuery,
+  onQueryChange,
 }: ShellSearchProps) {
   const run = async (value: string) => {
     if (value.startsWith(goToPrefix)) {
@@ -53,7 +62,7 @@ function ShellSearch({
   return (
     <CommandDialog controller={controller}>
       <CommandDialogContent title={labels.palette}>
-        <Command onAction={run}>
+        <Command onAction={run} query={query} defaultQuery={defaultQuery} onQueryChange={onQueryChange}>
           <CommandInput aria-label={labels.search} placeholder={labels.searchPlaceholder} />
           <CommandEmpty>{labels.empty}</CommandEmpty>
           <CommandList>
@@ -97,4 +106,4 @@ function ShellSearch({
 }
 
 export { ShellSearch, goToPrefix }
-export type { ShellSearchLabels }
+export type { ShellSearchLabels, ShellSearchProps }
