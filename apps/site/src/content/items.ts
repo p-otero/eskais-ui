@@ -436,7 +436,7 @@ const itemNotes: Record<string, ItemNotes> = {
       "The bottom bar is sticky at the end of the shell rather than fixed, so the page always ends above it, also inside a pane or an iframe; scroll margins keep focused elements clear of the topbar and the bar.",
     ],
     agent:
-      "Every route is a sidebar Link with a follow action that calls onNavigate (or loads the href), so agents follow routes by name. The palette's Go to commands are listed under the palette once its Search trigger is pressed; agents collapse and expand the sidebar by its name. sidebarShortcut presses that same trigger, so it adds nothing new for agents.",
+      "Every route is a sidebar Link with a follow action that calls onNavigate (or loads the href), so agents follow routes by name. The palette's Go to commands (link commands to each route's href) are listed under the palette once its Search trigger is pressed; agents collapse and expand the sidebar by its name. sidebarShortcut presses that same trigger, so it adds nothing new for agents.",
     related: ["sidebar", "topbar", "command", "mobile-nav", "skip-link", "docs-layout"],
   },
   "docs-layout": {

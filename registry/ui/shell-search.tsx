@@ -53,15 +53,15 @@ function ShellSearch({
   onQueryChange,
   footer,
 }: ShellSearchProps) {
+  // Route commands are links, which never reach onAction; only the consumer's commands run here.
   const run = async (value: string) => {
-    if (value.startsWith(goToPrefix)) {
-      // Closed first, so focus is back on the trigger before the route changes.
-      controller.close()
-      navigate(value.slice(goToPrefix.length))
-      return
-    }
     await onCommand?.(value)
     controller.close()
+  }
+  const follow = (id: string) => {
+    // Closed first, so focus is back on the trigger before the route changes.
+    controller.close()
+    navigate(id)
   }
   return (
     <CommandDialog controller={controller}>
@@ -79,6 +79,8 @@ function ShellSearch({
                     <CommandItem
                       key={route.id}
                       value={`${goToPrefix}${route.id}`}
+                      href={route.href}
+                      onFollow={() => follow(route.id)}
                       label={route.label}
                       keywords={[...(route.keywords ?? []), ...(section.label === undefined ? [] : [section.label])]}
                       aria-current={current ? "page" : undefined}

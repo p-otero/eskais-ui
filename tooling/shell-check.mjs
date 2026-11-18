@@ -592,6 +592,10 @@ async function checkPalette(page, scope, file) {
   check(`${scope}: Ctrl+K opens the palette`, await onScreen(palette))
   const inbox = await palette.getByRole("option", { name: "Inbox" }).getAttribute("aria-current")
   check(`${scope}: the palette marks the current route`, inbox === "page", inbox)
+  const link = await palette
+    .getByRole("option", { name: "Archive" })
+    .evaluate((option) => `${option.tagName} ${option.getAttribute("href")}`)
+  check(`${scope}: the palette's routes are links to their hrefs`, link === "A /archive", link)
   await shot(page, file)
   await axeClean(page, `${scope} palette`)
   await page.keyboard.type("stats")

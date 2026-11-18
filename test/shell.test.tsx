@@ -599,3 +599,72 @@ test("searchFooter sits at the bottom of the palette, after the list; there is n
   await settle(50)
   expect(screen.queryByRole("dialog")).toBeNull()
 })
+
+test("the palette's routes are link commands: a click follows through onNavigate and closes, a modified click stays native", async () => {
+  const user = userEvent.setup()
+  const onNavigate = vi.fn()
+  render(<TestShell onNavigate={onNavigate} />)
+  await settle()
+  const trigger = document.querySelector<HTMLElement>("[data-slot=dialog-trigger]")!
+  await user.click(trigger)
+  await settle()
+  const archive = within(screen.getByRole("dialog")).getByRole("option", { name: "Archive" })
+  expect(archive.tagName).toBe("A")
+  expect(archive.getAttribute("href")).toBe("/legacy")
+
+  const native = vi.fn((event: MouseEvent) => event.preventDefault())
+  document.addEventListener("click", native)
+  await user.keyboard("{Control>}")
+  await user.click(archive)
+  await user.keyboard("{/Control}")
+  document.removeEventListener("click", native)
+  expect(native).toHaveBeenCalled()
+  expect(onNavigate).not.toHaveBeenCalled()
+  expect(screen.getByRole("dialog")).toBeTruthy()
+
+  await user.click(within(screen.getByRole("dialog")).getByRole("option", { name: "Archive" }))
+  await settle(50)
+  expect(onNavigate).toHaveBeenCalledTimes(1)
+  expect(onNavigate).toHaveBeenLastCalledWith("/legacy", expect.objectContaining({ id: "archive" }))
+  expect(screen.queryByRole("dialog")).toBeNull()
+  expect(document.activeElement).toBe(trigger)
+})
+
+test("without onNavigate, a palette route on a hash router sets the hash and closes the palette", async () => {
+  const user = userEvent.setup()
+  const hashRoutes = routes.map((route) => ({ ...route, href: `#${route.href}` }))
+  render(<TestShell routes={hashRoutes} currentHref="#/tasks" />)
+  await settle()
+  await user.keyboard("{Control>}k{/Control}")
+  await settle()
+  await user.keyboard("Calen{Enter}")
+  await settle(50)
+  expect(location.hash).toBe("#/calendar")
+  expect(screen.queryByRole("dialog")).toBeNull()
+  location.hash = ""
+})
+
+test("commandGroups still run through onCommand next to the link commands", async () => {
+  const user = userEvent.setup()
+  const onCommand = vi.fn()
+  const onNavigate = vi.fn()
+  render(
+    <TestShell
+      onNavigate={onNavigate}
+      onCommand={onCommand}
+      commandGroups={
+        <CommandGroup>
+          <CommandGroupLabel>Actions</CommandGroupLabel>
+          <CommandItem value="new-task">New task</CommandItem>
+        </CommandGroup>
+      }
+    />,
+  )
+  await settle()
+  await user.keyboard("{Control>}k{/Control}")
+  await settle()
+  await user.keyboard("New task{Enter}")
+  await settle(50)
+  expect(onCommand).toHaveBeenCalledWith("new-task")
+  expect(onNavigate).not.toHaveBeenCalled()
+})
