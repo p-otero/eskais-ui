@@ -39,6 +39,21 @@ export default function Theming() {
         brand at 4.5:1 on the background.
       </P>
       <Pre code={seeds} language="css" title="src/index.css" />
+      <Ul>
+        <li>
+          <Code>--primary-foreground</Code> follows <Code>--brand</Code>, near-white or near-black, and reaches at least
+          4.5:1 on any sRGB colour. Dark mode lightens a dark brand on its own.
+        </li>
+        <li>
+          <Code>--link-brand</Code> colours links apart from the brand. It defaults to a blue, so links keep a hue under
+          the near-black neutral brand, and their lightness is clamped to keep 4.5:1. The palettes set it to their
+          brand.
+        </li>
+        <li>
+          Derived colours use CSS relative colour syntax: Chrome 119, Firefox 128, Safari 18 and later. Older browsers
+          keep the default neutral look.
+        </li>
+      </Ul>
 
       <H2 id="palettes">Palettes</H2>
       <P>
@@ -69,6 +84,11 @@ export default function Theming() {
         A theme only sets tokens, so never branch on it in a component. Nest scopes freely: a compact table inside a
         default page, a glass toolbar over a photo.
       </P>
+      <P>
+        Tune glass live by setting <Code>--glass-opacity</Code> (and <Code>--glass-blur</Code>) on the element that has{" "}
+        <Code>data-theme="glass"</Code> or on a descendant. Glass falls back to solid surfaces when the browser lacks{" "}
+        <Code>backdrop-filter</Code> or the person asks for reduced transparency.
+      </P>
 
       <H2 id="dark-mode">Dark mode</H2>
       <Ul>
@@ -76,7 +96,9 @@ export default function Theming() {
           <Code>createAppearance({'{ colorScheme: "system" }'})</Code> and <Code>&lt;Appearance&gt;</Code> keep{" "}
           <Code>.dark</Code>, <Code>data-color-scheme</Code>, <Code>data-theme</Code> and <Code>data-palette</Code> on{" "}
           <Code>&lt;html&gt;</Code> in sync. Call <Code>appearance.apply()</Code> before the first render to avoid a
-          flash.
+          flash. <Code>appearance.colorScheme.set("dark")</Code> and <Code>appearance.theme.set("compact")</Code> change
+          them, and <Code>storage: {"{ colorScheme, theme }"}</Code> (from <Code>createLocalStorage</Code>) keeps them
+          between visits. It needs no server, so it works in a static <Code>file://</Code> page.
         </li>
         <li>
           Before any script runs, the theme follows <Code>prefers-color-scheme: dark</Code>, unless{" "}

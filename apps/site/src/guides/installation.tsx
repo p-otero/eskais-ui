@@ -29,6 +29,24 @@ const tsconfig = `{
   }
 }`
 
+const subpathImports = `{
+  "imports": {
+    "#components/*": "./src/components/*",
+    "#ui/*": "./src/components/ui/*",
+    "#lib/*": "./src/lib/*",
+    "#hooks/*": "./src/hooks/*"
+  }
+}`
+
+const flatImports = `{
+  "imports": {
+    "#components/*": "./src/components/*",
+    "#ui/*": "./src/components/*",
+    "#lib/*": "./src/lib/*",
+    "#hooks/*": "./src/hooks/*"
+  }
+}`
+
 const stylesheet = `@layer ui-sdk;
 @import "tailwindcss";
 /* shadcn adds the theme's tokens, base rules and @custom-variant dark below. */`
@@ -87,6 +105,39 @@ export default function Installation() {
       </Alert>
       <Pre code={tsconfig} language="json" title="tsconfig.json" />
 
+      <H3 id="subpath-imports">Subpath imports instead of paths</H3>
+      <P>
+        Subpath imports in <Code>package.json</Code> work instead of <Code>paths</Code>, with no bundler alias: Node,
+        TypeScript and Vite all read them. Set the aliases to <Code>#components</Code>, <Code>#ui</Code>,{" "}
+        <Code>#lib/utils</Code>, <Code>#lib</Code> and <Code>#hooks</Code>.
+      </P>
+      <Pre code={subpathImports} language="json" title="package.json" />
+      <P>
+        shadcn then writes imports with their extension (<Code>#ui/button.tsx</Code>, <Code>#lib/utils.ts</Code>),
+        because Node resolves subpath imports to exact files, so add <Code>"allowImportingTsExtensions": true</Code> to{" "}
+        <Code>compilerOptions</Code> (it needs <Code>noEmit</Code>, as in Vite's template) and write your own imports
+        the same way: <Code>import {"{ Button }"} from "#ui/button.tsx"</Code>.
+      </P>
+      <P>
+        Keep the extension out of the mapping. <Code>ui</Code> holds <Code>.ts</Code> files next to the{" "}
+        <Code>.tsx</Code> ones (<Code>form-context.ts</Code>, every <Code>*-primitive.ts</Code>), so a mapping that
+        appends one, like <Code>"#ui/components/*": "./src/components/ui/*.tsx"</Code>, can't reach them: shadcn writes{" "}
+        <Code>#ui/components/form-context</Code> with no extension, and it resolves to a <Code>.tsx</Code> file that
+        doesn't exist.
+      </P>
+
+      <H3 id="flat-layout">A flat layout</H3>
+      <P>
+        A <Code>ui/</Code> folder isn't required. To keep every component in <Code>src/components</Code>, point both
+        aliases at that folder; the aliases stay the same.
+      </P>
+      <Pre code={flatImports} language="json" title="package.json" />
+      <P>
+        Between components, shadcn writes imports through the first alias that matches, <Code>components</Code>:{" "}
+        <Code>form-actions.tsx</Code> imports <Code>#components/form-context.ts</Code>. Both aliases resolve to the same
+        file, so your own code can import either way.
+      </P>
+
       <H2 id="stylesheet">3. Declare the UI SDK layer</H2>
       <P>
         Put <Code>@layer ui-sdk;</Code> first in your global stylesheet, above <Code>@import "tailwindcss"</Code>, so
@@ -107,6 +158,36 @@ export default function Installation() {
         <li>
           <Code>font-geist</Code> bundles Geist and Geist Mono from npm (no font CDN). Without it the theme falls back
           to the system font. <Code>font-inter</Code> is the alternative.
+        </li>
+      </Ul>
+
+      <H3 id="running-shadcn">Running shadcn</H3>
+      <Ul>
+        <li>
+          <strong>Package manager.</strong> shadcn installs dependencies with the manager it finds from your lockfile,
+          or from <Code>packageManager</Code> in <Code>package.json</Code>. In a pnpm project without a lockfile yet,
+          set <Code>"packageManager": "pnpm@&lt;version&gt;"</Code>, or shadcn falls back to npm.
+        </li>
+        <li>
+          <strong>Windows paths with a dotted folder.</strong> shadcn 4.23.0 on Windows drops everything after a folder
+          whose name starts with a dot, so a project under <Code>{"C:\\Users\\me\\.config\\app"}</Code> gets its files
+          written to <Code>{"C:\\Users\\me\\"}</Code>. Run shadcn from a path without dotted folders, or map the project
+          to a drive letter first: <Code>{"subst X: C:\\Users\\me\\.config\\app"}</Code>, then run it from{" "}
+          <Code>{"X:\\"}</Code> (<Code>subst X: /d</Code> removes the mapping).
+        </li>
+      </Ul>
+
+      <H3 id="ui-sdk-beta">While UI SDK is in beta</H3>
+      <Ul>
+        <li>
+          <Code>shadcn add</Code> writes a caret range for <Code>@ui-sdk/*</Code>. Change it to the exact version the
+          registry pins, since later betas can break.
+        </li>
+        <li>
+          pnpm 11+ refuses packages younger than <Code>minimumReleaseAge</Code>. Every other dependency the registry
+          pins is at least 7 days old, but UI SDK's first release is from 2026-11-12: until its pinned beta is old
+          enough, add <Code>@ui-sdk/*</Code> to <Code>minimumReleaseAgeExclude</Code> in{" "}
+          <Code>pnpm-workspace.yaml</Code>.
         </li>
       </Ul>
 
