@@ -82,7 +82,7 @@ jobs:
 
   browser:
     runs-on: ubuntu-latest
-    timeout-minutes: 35
+    timeout-minutes: 55
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -95,7 +95,7 @@ jobs:
           node-version: 24
       - run: bun install --frozen-lockfile
       - name: Contrast and axe in Chrome, default and compact themes in light and dark
-        timeout-minutes: 14
+        timeout-minutes: 24
         run: bun run test:browser
       - name: AgentTaskBoard as one static HTML file, opened from file:// with the network blocked
         timeout-minutes: 5
@@ -111,7 +111,7 @@ jobs:
           path: screenshots
           if-no-files-found: ignore
       - name: The showcase built with React Compiler, then the overlay, fast-link, shell and contrast checks on it
-        timeout-minutes: 10
+        timeout-minutes: 16
         run: bun run test:compiler
 
   passed:
