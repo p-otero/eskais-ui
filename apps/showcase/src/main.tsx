@@ -8,6 +8,7 @@ import { App } from "./app"
 import { appearance } from "./appearance"
 import { CalendarCheck } from "./checks/calendar-check"
 import { CardHeaderCheck } from "./checks/card-header-check"
+import { PaletteReopenCheck } from "./checks/palette-reopen-check"
 import { DescriptionListCheck } from "./checks/description-list-check"
 import { FieldPlacementCheck } from "./checks/field-placement-check"
 import { GaugeCheck } from "./checks/gauge-check"
@@ -33,7 +34,7 @@ if (!root) throw new Error("Missing #root element")
 
 // ?demo=page, site and shell render one demo alone, for phone-width screenshots; ?demo=<name>-check pages are the
 // fixtures of tooling/<name>-check.mjs (shell-check.mjs's: card-header, description-list, field-placement, gauge,
-// mobile-nav, side-panel, table; server-data-check takes ?ui=search|chips|panel|list); ?demo=inbox, list-bench,
+// mobile-nav, palette-reopen, side-panel, table; server-data-check takes ?ui=search|chips|panel|list); ?demo=inbox, list-bench,
 // shell-block, master-detail, dashboard-grid, settings-page and document-workspace render one demo alone.
 const params = new URLSearchParams(location.search)
 const status = demoStatuses.find((name) => name === params.get("status")) ?? "success"
@@ -45,6 +46,7 @@ const standalone = new Set([
   "shell",
   "overlay-check",
   "card-header-check",
+  "palette-reopen-check",
   "field-placement-check",
   "mobile-nav-check",
   "icon-tooltip-check",
@@ -75,6 +77,7 @@ function Demo() {
   }
   if (demo === "overlay-check") return <OverlayCheck />
   if (demo === "card-header-check") return <CardHeaderCheck />
+  if (demo === "palette-reopen-check") return <PaletteReopenCheck />
   if (demo === "field-placement-check") return <FieldPlacementCheck />
   if (demo === "mobile-nav-check") return <MobileNavCheck />
   if (demo === "icon-tooltip-check") return <IconTooltipCheck />

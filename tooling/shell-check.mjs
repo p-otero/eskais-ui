@@ -615,6 +615,10 @@ async function checkPalette(page, scope, file) {
   await page.keyboard.press("ControlOrMeta+k")
   const search = palette.getByRole("combobox", { name: "Find a page or command" })
   await search.waitFor()
+  check(
+    `${scope}: after a route, Ctrl+K reopens the palette with focus in its search`,
+    await search.evaluate((input) => input === document.activeElement),
+  )
   const reopened = await search.inputValue()
   check(`${scope}: the palette reopens with an empty search`, reopened === "", JSON.stringify(reopened))
   await page.keyboard.type("arch")
@@ -669,6 +673,41 @@ async function checkFill(page, width) {
   )
 }
 
+// A palette kept mounted while closed, as some Electron windows leave it: open, run a command, reopen with Ctrl+K.
+async function checkPaletteReopen(page) {
+  await page.setViewportSize({ width: 1024, height: 700 })
+  await page.goto(`${new URL(page.url()).origin}/?demo=palette-reopen-check`)
+  const palette = page.getByRole("dialog", { name: "Palette" })
+  const search = palette.getByRole("combobox", { name: "Find a command" })
+  await page.getByRole("button", { name: /Open palette/ }).waitFor()
+  await page.keyboard.press("ControlOrMeta+k")
+  await search.waitFor()
+  const first = await search.elementHandle()
+  await page.keyboard.type("lab")
+  await page.keyboard.press("Enter")
+  await palette.waitFor({ state: "hidden" })
+  const ran = await page.getByRole("status", { name: "Last command" }).textContent()
+  check("Kept-mounted palette: Enter runs the command and closes it", ran === "lab", ran)
+
+  await page.keyboard.press("ControlOrMeta+k")
+  await search.waitFor()
+  await page.evaluate(() => new Promise((done) => requestAnimationFrame(() => requestAnimationFrame(done))))
+  const state = await search.evaluate(
+    (input, before) => ({
+      focused: input === document.activeElement,
+      same: input === before,
+      value: input.value,
+      highlighted: document.querySelector('[data-slot="command-item"][data-highlighted]')?.textContent,
+    }),
+    first,
+  )
+  check(
+    "Kept-mounted palette: Ctrl+K reopens it empty, the first command highlighted, focus in the same search field",
+    state.focused && state.same && state.value === "" && state.highlighted === "Apollo",
+    JSON.stringify(state),
+  )
+}
+
 async function checkShell(page) {
   const cases = ["light", "dark"].flatMap((scheme) => [1440, 768, 390].map((width) => ({ scheme, width })))
   // One page, so one case at a time.
@@ -720,6 +759,7 @@ await withShowcase(async (page) => {
   await checkLayoutBlocks(page, check, shot)
   if (onlyLayout) return
   await checkShell(page)
+  await checkPaletteReopen(page)
   await shell(page, 375)
   const search = page.getByRole("dialog", { name: "Search the workspace" })
   await page.getByRole("button", { name: "Search the workspace" }).click()

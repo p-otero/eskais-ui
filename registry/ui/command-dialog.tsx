@@ -31,8 +31,8 @@ type CommandDialogProps = ComponentProps<typeof Dialog> & {
 const CloseOnEscapeContext = createContext<((event: Event | undefined) => void) | undefined>(undefined)
 
 /**
- * A Dialog for a command palette. Its CommandDialogContent remounts the Command on every open, so the search starts
- * empty, and one Escape closes it (`escapeKey`).
+ * A Dialog for a command palette. A Command in its CommandDialogContent starts each open with an empty search on the
+ * first page, and one Escape closes it (`escapeKey`).
  */
 function CommandDialog({ controller, escapeKey = "close", dismissible, ...props }: CommandDialogProps) {
   // Closing through a controller is how a Command's Escape reaches the dialog: UI SDK's Command claims the key

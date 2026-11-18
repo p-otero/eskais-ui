@@ -24,6 +24,7 @@ import { isHashRoute, useFastLink } from "@/components/ui/fast-link"
 import { Kbd } from "@/components/ui/kbd"
 import { isPlainClick } from "@/components/ui/link-primitive"
 import { cn, cnState } from "@/lib/utils"
+import { useHighlightFirstOnOpen } from "@/components/ui/use-command-reset"
 
 type CommandHost = {
   /** Whether the dialog around the command list is open. */
@@ -45,10 +46,6 @@ function escapeClosesHost(host: CommandHost | null, details: { reason: string; e
 
 type CommandProps = ComponentProps<typeof CommandPrimitive>
 
-/**
- * Inside a CommandDialogContent, each open starts from `defaultQuery` (empty by default), on the first page with
- * nothing highlighted, unless `query` controls the search text.
- */
 // A modified click on a link command stays native (a new tab), so CommandLinkItem can't cancel it, and UI SDK then
 // runs the command's onAction with that click. A link command never runs onAction.
 function isModifiedLinkPress(event: Event | undefined) {
@@ -60,31 +57,78 @@ function isModifiedLinkPress(event: Event | undefined) {
   )
 }
 
-function Command({ className, onQueryChange, onPagesChange, onAction, ...props }: CommandProps) {
+const noPages: string[] = []
+
+/**
+ * Inside a CommandDialogContent, each open starts from `defaultQuery` (empty by default), on `defaultPages` (the
+ * first page), with the best match highlighted. A `query` or `pages` you control is left to you.
+ */
+function Command({
+  className,
+  query: queryProp,
+  defaultQuery = "",
+  onQueryChange,
+  pages: pagesProp,
+  defaultPages = noPages,
+  onPagesChange,
+  onAction,
+  controller: controllerProp,
+  autoHighlight,
+  ref,
+  ...props
+}: CommandProps) {
   const host = use(CommandHostContext)
-  // A closed dialog can stay mounted (keepMounted, or an exit animation that never ends), so opening remounts the
-  // primitive rather than trusting the content to unmount.
-  const [opens, setOpens] = useState(0)
-  const [wasOpen, setWasOpen] = useState(host?.open ?? false)
+  const [ownController] = useState(createCommandController)
+  const controller = controllerProp ?? ownController
+  const [root, setRoot] = useState<HTMLElement | null>(null)
+  const rootRef = useCallback(
+    (node: HTMLDivElement | null) => {
+      setRoot(node)
+      if (typeof ref === "function") return ref(node)
+      if (ref) ref.current = node
+      return undefined
+    },
+    [ref],
+  )
+  // Controlled here rather than remounted on open: a closed dialog can stay mounted (keepMounted, or an exit
+  // animation that never ends), and a remount would replace the input the dialog has just focused.
+  const [ownQuery, setOwnQuery] = useState(defaultQuery)
+  const [ownPages, setOwnPages] = useState(defaultPages)
   const open = host?.open ?? false
+  const [wasOpen, setWasOpen] = useState(open)
   if (open !== wasOpen) {
     setWasOpen(open)
-    if (open) setOpens(opens + 1)
+    if (open) {
+      setOwnQuery(defaultQuery)
+      setOwnPages(defaultPages)
+    }
   }
+  const hosted = host !== null
+  useHighlightFirstOnOpen(open, hosted && autoHighlight !== false && props.value === undefined, controller, root)
   return (
     <CommandPrimitive
-      key={opens}
       className={cnState(
         "flex w-full flex-col overflow-hidden rounded-surface bg-popover/(--glass-opacity) text-popover-foreground in-data-[slot=dialog-content]:rounded-none in-data-[slot=dialog-content]:bg-transparent",
         className,
       )}
+      query={queryProp ?? (hosted ? ownQuery : undefined)}
+      defaultQuery={hosted ? undefined : defaultQuery}
       onQueryChange={(query, details) => {
-        if (!escapeClosesHost(host, details)) onQueryChange?.(query, details)
+        if (escapeClosesHost(host, details)) return
+        onQueryChange?.(query, details)
+        if (!details.canceled) setOwnQuery(query)
       }}
+      pages={pagesProp ?? (hosted ? ownPages : undefined)}
+      defaultPages={hosted ? undefined : defaultPages}
       onPagesChange={(pages, details) => {
-        if (!escapeClosesHost(host, details)) onPagesChange?.(pages, details)
+        if (escapeClosesHost(host, details)) return
+        onPagesChange?.(pages, details)
+        if (!details.canceled) setOwnPages(pages)
       }}
       onAction={(value, details) => (isModifiedLinkPress(details.event) ? undefined : onAction?.(value, details))}
+      controller={controller}
+      autoHighlight={autoHighlight}
+      ref={rootRef}
       {...props}
     />
   )
@@ -173,7 +217,9 @@ type CommandItemProps = ComponentProps<typeof CommandItemPrimitive> & {
 
 function CommandItem({ className, href, onFollow, fast = true, ...props }: CommandItemProps) {
   if (href === undefined) {
-    return <CommandItemPrimitive className={cnState(commandItemClassName, className)} {...props} />
+    return (
+      <CommandItemPrimitive data-value={props.value} className={cnState(commandItemClassName, className)} {...props} />
+    )
   }
   return <CommandLinkItem className={className} href={href} onFollow={onFollow} fast={fast} {...props} />
 }
@@ -236,6 +282,7 @@ function CommandLinkItem({
       // oxlint-disable-next-line jsx-a11y/anchor-has-content, jsx-a11y/control-has-associated-label -- the command's children fill it
       render={render ?? <a href={href} />}
       onSelect={select}
+      data-value={props.value}
       {...mergeProps({ ref, href, target, rel, download }, props)}
     />
   )
