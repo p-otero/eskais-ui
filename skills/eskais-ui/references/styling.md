@@ -43,6 +43,8 @@ On touch screens (`pointer: coarse`) buttons, toggles, tabs, segmented items, ch
 
 `narrow:` applies at 760px viewport width and below (`flex-row narrow:flex-col`). It is unrelated to the `compact` density theme, which changes sizes at any width. Prefer container queries for components placed in panels of different widths.
 
+`SidePanel narrow` decides where an inspector goes at that width: `"stack"` (default) keeps it in the page flow, full width, and wraps its flex parent so it lands below the list, hiding nothing and trapping no focus; `"overlay"` covers its positioned parent, for a panel that should show instead of the list (a tall scroller in a bounded column); `"sheet"` opens it as a modal bottom `Drawer` that takes focus and returns it to `returnFocus()` on close.
+
 ## Typography
 
 Pick text size by role, not by number: `text-meta` (eyebrows; with `tracking-meta`, uppercase if you want), `text-caption`, `text-body-sm`, `text-body`, `text-title-sm` (card titles), `text-title` (dialog titles), `text-display-sm` (page titles, stat values), `text-display`, and `text-entry` for text a person types (16px on touch screens, so iOS doesn't zoom into a focused field; never set `maximum-scale` or `user-scalable=no` instead). Each sets size, line height and weight, and tightens under `data-theme="compact"`: 11, 12, 13, 14, 15, 18, 24 and 28px by default. `tracking-tight` (-0.012em) suits titles; `font-mono` is Geist Mono (installed by `font-geist`).

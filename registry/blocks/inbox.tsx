@@ -151,6 +151,8 @@ function Inbox({ items: initialItems, locale, timeZone, className }: InboxProps)
           description={open?.from}
           scope="inbox-detail"
           scopeLabel={inboxCopy.detail}
+          // The list is a tall scroller in a bounded column, so on a phone the message shows instead of it.
+          narrow="overlay"
           returnFocus={() => primaryOf(listRoot.current, openId)}
         >
           {open && (

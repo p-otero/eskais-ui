@@ -3,7 +3,7 @@
 import { Button } from "@ui-sdk/react/button"
 import { ListboxItem } from "@ui-sdk/react/listbox"
 import { renderElement, type PartProps } from "@ui-sdk/react/primitive"
-import { createElement, useState, type ReactElement, type ReactNode } from "react"
+import { createElement, useState, type ComponentProps, type ReactElement, type ReactNode } from "react"
 
 import { Checkbox, CheckboxIndicator } from "@/components/ui/checkbox"
 import {
@@ -186,7 +186,11 @@ function ListItem({
   }
   const element: ReactElement<Record<string, unknown>> = href
     ? createElement("a", { href, ...primaryProps })
-    : createElement(Button, primaryProps as Record<string, unknown>)
+    : // UI SDK's Button keeps its own data-slot over a prop; the rendered element's props win.
+      createElement(Button, {
+        ...primaryProps,
+        render: (props: ComponentProps<"button">) => <button {...props} data-slot="list-item-primary" />,
+      } as Record<string, unknown>)
   let heading: ReactNode = titleText
   if (pressable) {
     // Always mounted, so the trigger keeps its element (and focus) when the title starts or stops fitting.
@@ -252,10 +256,10 @@ function ListItem({
     return (
       <ListboxItem
         ref={position?.measure}
+        render={<div data-slot="list-item" />}
         value={id}
         index={position?.index}
         data-index={position?.index}
-        data-slot="list-item"
         data-item-id={id}
         data-variant={variant}
         className={cn(rowClassName, "cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-ring")}

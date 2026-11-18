@@ -43,7 +43,7 @@ const list = definePrimitive({
     }
   },
   slots: (slot) => ({
-    root: slot({ role: "group", attrs: (state) => ({ "data-count": String(state.count) }) }),
+    root: slot({ attrs: (state) => ({ "data-count": String(state.count) }) }),
   }),
   agent: { actions: ["select"], items: (api) => api.entries() },
 })

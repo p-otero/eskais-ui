@@ -41,7 +41,7 @@ function CodeTabs({
 }: CodeTabsProps) {
   return (
     <Tabs
-      data-slot="code-tabs"
+      render={<div data-slot="code-tabs" />}
       value={value}
       defaultValue={defaultValue ?? (files[0] ? valueOf(files[0]) : undefined)}
       onValueChange={(next) => next !== null && onValueChange?.(next)}

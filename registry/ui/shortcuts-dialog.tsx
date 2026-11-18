@@ -105,7 +105,11 @@ function ShortcutsDialog({
     <Dialog open={open} onOpenChange={(next) => setOpen(next)}>
       {children}
       <DialogBackdrop />
-      <DialogContent size="md" className={cn("max-h-(--dialog-max-height)", className)} data-slot="shortcuts-dialog">
+      <DialogContent
+        size="md"
+        className={cn("max-h-(--dialog-max-height)", className)}
+        render={<div data-slot="shortcuts-dialog" />}
+      >
         <DialogHeader>
           <DialogTitle>{labels.title}</DialogTitle>
           {labels.description !== undefined && <DialogDescription>{labels.description}</DialogDescription>}

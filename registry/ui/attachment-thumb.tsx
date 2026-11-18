@@ -1,13 +1,18 @@
 "use client"
 
 import { Button } from "@ui-sdk/react/button"
-import type { MouseEvent } from "react"
+import type { ComponentProps, MouseEvent } from "react"
 import { FileIcon } from "lucide-react"
 
 import type { Attachment } from "@/components/ui/attachments-primitive"
 import { Link } from "@/components/ui/link"
 import { ThemedImage } from "@/components/ui/themed-image"
 import { cn } from "@/lib/utils"
+
+// UI SDK's Button keeps its own data-slot over a prop; the rendered element's props win.
+function slotted(props: ComponentProps<"button">) {
+  return <button {...props} data-slot="attachment-thumb" />
+}
 
 type AttachmentSize = "sm" | "md"
 
@@ -107,6 +112,7 @@ function AttachmentThumb({
     return (
       <Button
         {...shared}
+        render={slotted}
         aria-label={openLabel(attachment.name)}
         title={attachment.name}
         onClick={(event) => onOpen(attachment, event)}
@@ -161,7 +167,13 @@ function AttachmentThumb({
   }
   if (onOpen) {
     return (
-      <Button {...shared} title={attachment.name} onClick={(event) => onOpen(attachment, event)} className={pressable}>
+      <Button
+        {...shared}
+        render={slotted}
+        title={attachment.name}
+        onClick={(event) => onOpen(attachment, event)}
+        className={pressable}
+      >
         {content}
       </Button>
     )

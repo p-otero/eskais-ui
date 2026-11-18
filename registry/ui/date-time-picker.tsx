@@ -138,7 +138,10 @@ function DateTimePicker({
           disabled={disabled}
         />
         {timeZone === undefined ? null : (
-          <FieldDescriptionPrimitive data-slot="date-time-picker-zone" className="text-sm text-muted-foreground">
+          <FieldDescriptionPrimitive
+            render={<p data-slot="date-time-picker-zone" />}
+            className="text-sm text-muted-foreground"
+          >
             {zoneName(timeZone, locale)}
           </FieldDescriptionPrimitive>
         )}

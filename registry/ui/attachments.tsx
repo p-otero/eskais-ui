@@ -118,7 +118,7 @@ function AttachmentStrip({
         {hidden > 0 && (
           <li className="flex shrink-0">
             <Button
-              data-slot="attachment-more"
+              render={(part) => <button {...part} data-slot="attachment-more" />}
               aria-label={labels.more(hidden)}
               onClick={() => {
                 flushSync(() => setExpanded(true))

@@ -87,6 +87,7 @@ const categories = [
       "filter-bar",
       "chart",
       "stat",
+      "description-list",
       "list-item",
       "stage-track",
       "avatar",

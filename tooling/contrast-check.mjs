@@ -262,7 +262,7 @@ const popups = [
   },
   {
     name: "inbox inspector",
-    open: (page) => page.getByRole("group", { name: "Messages" }).getByRole("button").first(),
+    open: (page) => page.getByRole("list", { name: "Messages" }).getByRole("button").first(),
     selector: '[data-slot="side-panel"]',
   },
   {

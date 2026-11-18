@@ -40,7 +40,11 @@ function FilterBar({
     >
       {children}
       {isFiltered && onReset && (
-        <FilterBarButton variant="ghost" data-slot="filter-bar-reset" onClick={(event) => onReset(event.nativeEvent)}>
+        <FilterBarButton
+          variant="ghost"
+          render={(part) => <button {...part} data-slot="filter-bar-reset" />}
+          onClick={(event) => onReset(event.nativeEvent)}
+        >
           {resetLabel}
         </FilterBarButton>
       )}

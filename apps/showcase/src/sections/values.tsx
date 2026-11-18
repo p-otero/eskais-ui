@@ -1,7 +1,7 @@
 import { AcceptanceBar, AcceptanceList, countAcceptance } from "@/components/ui/acceptance-list"
 import { QuantityValue } from "@/components/ui/quantity-value"
 import { RelativeTime, useNow } from "@/components/ui/relative-time"
-import { Stat, StatGroup, StatHint, StatLabel, StatValue } from "@/components/ui/stat"
+import { Stat, StatDelta, StatGroup, StatHint, StatLabel, StatValue } from "@/components/ui/stat"
 
 import { Section } from "../section"
 
@@ -59,17 +59,23 @@ function ValuesSection() {
         <StatGroup aria-label="Summary">
           <Stat>
             <StatLabel>Done</StatLabel>
-            <StatValue value={12} />
+            <StatValue locale="en-US" value={12} />
             <StatHint>of 20</StatHint>
+            <StatDelta value={0.2} comparison="vs. last week" locale="en-US" />
           </Stat>
           <Stat>
             <StatLabel>Cost</StatLabel>
-            <StatValue value={{ value: 4.2, quality: "estimated", source: "price table" }} format={usd} />
+            <StatValue
+              locale="en-US"
+              value={{ value: 4.2, quality: "estimated", source: "price table" }}
+              format={usd}
+            />
             <StatHint>Estimated from tokens</StatHint>
+            <StatDelta value={-0.08} invert comparison="vs. last week" locale="en-US" />
           </Stat>
           <Stat>
             <StatLabel>Duration</StatLabel>
-            <StatValue value={{ value: null, quality: "unknown" }} />
+            <StatValue locale="en-US" value={{ value: null, quality: "unknown" }} />
             <StatHint>Not reported</StatHint>
           </Stat>
           <Stat>

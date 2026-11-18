@@ -10,7 +10,9 @@ import {
 } from "@ui-sdk/react/listbox"
 import { usePart, usePrimitive, type PartProps } from "@ui-sdk/react/primitive"
 import {
+  Children,
   createContext,
+  isValidElement,
   memo,
   use,
   useCallback,
@@ -20,7 +22,9 @@ import {
   useState,
   type FocusEvent,
   type KeyboardEvent,
+  type ReactElement,
   type ReactNode,
+  type Ref,
 } from "react"
 
 import { list, type ListEntry, type ListOptions } from "@/components/ui/list-primitive"
@@ -97,6 +101,28 @@ function defaultText(item: unknown) {
   return ""
 }
 
+type ChildRow = ReactElement<{ id: string; title?: unknown }>
+
+// Flat rows given as children, each with a string `id` (`<ListItem id>`), are the list's data too, so they
+// virtualize like `items`. Anything else, like a ListGroup, keeps rendering as it is.
+function childRowsOf(children: ReactNode): ChildRow[] | undefined {
+  const all = Children.toArray(children)
+  if (all.length === 0) return undefined
+  const rows: ChildRow[] = []
+  for (const child of all) {
+    if (!isValidElement<{ id?: unknown }>(child) || typeof child.props.id !== "string") return undefined
+    rows.push(child as ChildRow)
+  }
+  return rows
+}
+
+const childId = (row: unknown) => (row as ChildRow).props.id
+const childText = (row: unknown) => {
+  const { id, title } = (row as ChildRow).props
+  return typeof title === "string" ? title : id
+}
+const renderChild = (row: unknown) => row as ChildRow
+
 function defaultId(item: unknown) {
   if (typeof item === "object" && item !== null && "id" in item) return String((item as { id: unknown }).id)
   return String(item)
@@ -154,10 +180,10 @@ function List<Item = unknown>({
   defaultValue,
   onValueChange,
   onSelect,
-  items: data,
+  items,
   getItemId = defaultId,
-  renderItem,
-  itemText = defaultText,
+  renderItem: renderItemProp,
+  itemText: itemTextProp = defaultText,
   virtualize = "auto",
   estimateSize,
   checkedIds,
@@ -168,11 +194,22 @@ function List<Item = unknown>({
   ...props
 }: ListProps<Item>) {
   const selectable = value !== undefined || defaultValue !== undefined || onValueChange !== undefined
-  const items = useRef(new Map<string, ItemHandle>())
+  const handles = useRef(new Map<string, ItemHandle>())
   const [registered, setRegistered] = useState<ListEntry[]>([])
   const [listbox] = useState(() => createListboxController<string>())
 
-  const ids = useMemo(() => data?.map(getItemId), [data, getItemId])
+  const childRows = useMemo(
+    () => (items === undefined && variant === "row" ? childRowsOf(children) : undefined),
+    [items, variant, children],
+  )
+  const data: readonly unknown[] | undefined = items ?? childRows
+  const getId = (childRows ? childId : getItemId) as (item: unknown) => string
+  const itemText = (childRows ? childText : itemTextProp) as (item: unknown) => string
+  const renderItem = (childRows ? renderChild : renderItemProp) as
+    | ((item: unknown, index: number) => ReactNode)
+    | undefined
+
+  const ids = useMemo(() => data?.map(getId), [data, getId])
   const indexOf = useMemo(() => new Map(ids?.map((id, index) => [id, index])), [ids])
   const dataEntries = useMemo(
     () => data?.map((item, index) => ({ value: ids?.[index] ?? "", label: itemText(item) })),
@@ -190,7 +227,7 @@ function List<Item = unknown>({
   const fromData = data !== undefined
   const refresh = useCallback(() => {
     if (fromData) return
-    setRegistered([...items.current].map(([id, handle]) => ({ value: id, label: handle.label })))
+    setRegistered([...handles.current].map(([id, handle]) => ({ value: id, label: handle.label })))
   }, [fromData])
 
   const handle = usePrimitive(list, {
@@ -199,8 +236,8 @@ function List<Item = unknown>({
     activate: (id) => {
       if (selectable) return listbox.setValue(id)
       const index = indexOf.get(id)
-      if (!items.current.has(id) && index !== undefined) virtual.renderNow(index)
-      return items.current.get(id)?.activate() ?? false
+      if (!handles.current.has(id) && index !== undefined) virtual.renderNow(index)
+      return handles.current.get(id)?.activate() ?? false
     },
   })
 
@@ -234,10 +271,10 @@ function List<Item = unknown>({
       selectable,
       checked,
       register: (id, item) => {
-        items.current.set(id, item)
+        handles.current.set(id, item)
         refresh()
         return () => {
-          if (items.current.get(id) === item) items.current.delete(id)
+          if (handles.current.get(id) === item) handles.current.delete(id)
           refresh()
         }
       },
@@ -283,53 +320,55 @@ function List<Item = unknown>({
     })
   }
 
-  const container = selectable ? (
-    // The root's `select` covers the listbox for agents; two entries with one name would make a ref ambiguous.
-    <Listbox<string>
-      ref={anchor}
-      data-agent-hidden=""
-      controller={listbox}
-      value={value}
-      defaultValue={defaultValue}
-      onValueChange={onValueChange}
-      onHighlight={(_value, details) => {
-        if (virtual.enabled && details.index >= 0) virtual.scrollToIndex(details.index)
-      }}
-      onKeyDownCapture={(event) => listboxKeyDown(event, (id) => listbox.setValue(id))}
-      aria-label={label}
-      className={cn(containerClassNames[variant], "outline-none", virtual.enabled && "relative")}
-    >
-      {rows}
-    </Listbox>
-  ) : (
-    <ul ref={anchor} className={cn(containerClassNames[variant], virtual.enabled && "relative")}>
-      {rows}
-    </ul>
-  )
-
-  return usePart(
-    handle,
-    "root",
-    {},
-    {
-      ...props,
-      ...rootAttributes(variant, selectable),
-      "aria-label": label,
-      onFocus: (event: FocusEvent<HTMLDivElement>) => {
-        onFocus?.(event)
-        if (!virtual.enabled || !(event.target instanceof Element)) return
-        const index = Number(event.target.closest<HTMLElement>("[data-index]")?.dataset.index ?? Number.NaN)
-        if (!Number.isNaN(index)) virtual.pin(index)
-      },
-      className: cn("flex min-w-0 flex-col", className),
-      children: (
-        <ListContext value={context}>
-          {selectable ? container : <RowNavigationProvider handle={navigation}>{container}</RowNavigationProvider>}
-        </ListContext>
-      ),
+  const rootProps = {
+    ...props,
+    ...rootAttributes(variant, selectable),
+    ref: anchor,
+    "aria-label": label,
+    onFocus: (event: FocusEvent<HTMLElement>) => {
+      onFocus?.(event as FocusEvent<HTMLDivElement>)
+      if (!virtual.enabled || !(event.target instanceof Element)) return
+      const index = Number(event.target.closest<HTMLElement>("[data-index]")?.dataset.index ?? Number.NaN)
+      if (!Number.isNaN(index)) virtual.pin(index)
     },
-    "div",
-  )
+    className: cn("min-w-0", containerClassNames[variant], virtual.enabled && "relative", className),
+  }
+
+  // Selectable, the listbox is the List's own element, so one element carries the name. Agents see both: the List
+  // takes `select` (through `onSelect`), the listbox `setValue`, so a step that names either action is unambiguous.
+  const partProps = selectable
+    ? {
+        ...rootProps,
+        className: cn(rootProps.className, "outline-none"),
+        children: <ListContext value={context}>{rows}</ListContext>,
+        render: ({ ref, ...part }: Record<string, unknown>) => (
+          <Listbox<string>
+            {...part}
+            ref={ref as Ref<HTMLDivElement>}
+            render={(listboxProps) => <div {...listboxProps} data-slot="list" />}
+            controller={listbox}
+            value={value}
+            defaultValue={defaultValue}
+            onValueChange={onValueChange}
+            onHighlight={(_value, details) => {
+              if (virtual.enabled && details.index >= 0) virtual.scrollToIndex(details.index)
+            }}
+            onKeyDownCapture={(event) => listboxKeyDown(event, (id) => listbox.setValue(id))}
+          />
+        ),
+      }
+    : {
+        ...rootProps,
+        // Preflight's list-style: none strips list semantics in Safari unless the role is explicit.
+        role: "list",
+        children: (
+          <ListContext value={context}>
+            <RowNavigationProvider handle={navigation}>{rows}</RowNavigationProvider>
+          </ListContext>
+        ),
+      }
+
+  return usePart(handle, "root", {}, partProps as PartProps<"ul">, selectable ? "div" : "ul")
 }
 
 type ListGroupProps = {
@@ -360,7 +399,10 @@ function ListGroup({ label, count, className, children }: ListGroupProps) {
   )
   if (context?.selectable) {
     return (
-      <ListboxGroup data-slot="list-group" className={cn("flex flex-col gap-inline not-first:pt-group", className)}>
+      <ListboxGroup
+        render={<div data-slot="list-group" />}
+        className={cn("flex flex-col gap-inline not-first:pt-group", className)}
+      >
         <ListboxGroupLabel className={groupLabelClassName}>{heading}</ListboxGroupLabel>
         <div className={containerClassNames[variant]}>{children}</div>
       </ListboxGroup>

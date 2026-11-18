@@ -333,7 +333,7 @@ describe("backlog", () => {
     renderBoard({ mode: "live", now: GENERATED_AT, onApproveProposal, onRejectProposal: vi.fn() })
     await tick()
     await user().click(screen.getByRole("radio", { name: "Backlog" }))
-    const list = screen.getByRole("group", { name: "Backlog" })
+    const list = screen.getByRole("list", { name: "Backlog" })
     expect(backlogRows()).toEqual(["T-011", "T-013"])
     const groups = [...list.querySelectorAll('[data-slot="list-group"]')].map((group) =>
       group.firstElementChild?.textContent?.replaceAll(/\s+/g, " "),
@@ -404,7 +404,7 @@ describe("backlog", () => {
     await tick()
     expect(screen.queryByRole("button", { name: /Approve proposal/ })).toBeNull()
     expect(screen.getByRole("button", { name: "Copy command for T-013" })).toBeTruthy()
-    expect(await axeViolations(screen.getByRole("group", { name: "Backlog" }))).toEqual([])
+    expect(await axeViolations(screen.getByRole("list", { name: "Backlog" }))).toEqual([])
   })
 
   test("without host actions or live proposals, a row has no actions slot", async () => {
