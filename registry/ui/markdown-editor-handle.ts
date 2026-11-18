@@ -2,22 +2,25 @@ import { EditorSelection, type EditorState } from "@codemirror/state"
 import { EditorView } from "@codemirror/view"
 
 import {
+  BLOCK_KINDS,
   FORMATS,
   insertAtCaret,
+  insertBlock,
   insertLink,
   insertWikilink,
   toggleFormat,
   wrapSelection,
+  type MarkdownBlockKind,
   type MarkdownFormat,
 } from "@/components/ui/markdown-editor-commands"
 import { setHeading } from "@/components/ui/markdown-editor-lines"
 
 const LEVELS = ["paragraph", "heading1", "heading2", "heading3", "heading4", "heading5", "heading6"] as const
 
-/** The toolbar's commands: its formats and the levels of its text style menu. */
-type MarkdownEditorCommand = MarkdownFormat | (typeof LEVELS)[number]
+/** The toolbar's and the slash menu's commands: formats, levels (`paragraph`, `heading1`…) and blocks. */
+type MarkdownEditorCommand = MarkdownFormat | (typeof LEVELS)[number] | MarkdownBlockKind
 
-const COMMANDS: readonly MarkdownEditorCommand[] = [...FORMATS, ...LEVELS]
+const COMMANDS: readonly MarkdownEditorCommand[] = [...FORMATS, ...LEVELS, ...BLOCK_KINDS]
 
 /** How `insertText` reports the edit. `"input.type"` counts as typing, so a trigger such as `[[` opens its menu. */
 type InsertTextOptions = { userEvent?: string }
@@ -57,8 +60,16 @@ type MarkdownEditorHandle = {
   insertLink: (href: string, text?: string) => boolean
   /** Puts `before` and `after` (`before` again when left out) around the selection, which stays on the text. */
   wrapSelection: (before: string, after?: string) => boolean
-  /** Runs a toolbar command: a format (`bold`, `quote`, `taskList`…) or a level (`paragraph`, `heading1`…). */
+  /**
+   * Runs a command of the toolbar or the slash menu: a format (`bold`, `quote`, `taskList`…), a level
+   * (`paragraph`, `heading1`…) or a block (`codeBlock`, `table`, `divider`). Throws a RangeError on any other name.
+   */
   runCommand: (name: MarkdownEditorCommand) => boolean
+  /**
+   * Inserts a block as the slash menu does, in place of the selection: after a blank line when text comes before
+   * it, with the caret in the code fence, the first cell, or after the rule.
+   */
+  insertBlock: (kind: MarkdownBlockKind) => boolean
   /** Scrolls a line (from 1) to the top of the editor, without moving the caret. */
   scrollToLine: (line: number) => void
   /** The first line in view, from 1. */
@@ -96,6 +107,7 @@ function runCommand(view: EditorView, name: MarkdownEditorCommand) {
   if (!COMMANDS.includes(name)) {
     throw new RangeError(`Unknown command "${String(name)}". Commands: ${COMMANDS.join(", ")}.`)
   }
+  if ((BLOCK_KINDS as readonly string[]).includes(name)) return insertBlock(view, name as MarkdownBlockKind)
   const level = (LEVELS as readonly string[]).indexOf(name)
   return level >= 0 ? setHeading(view, level) : toggleFormat(view, name as MarkdownFormat)
 }
@@ -129,6 +141,7 @@ function createEditorHandle(view: EditorView, menus: HandleMenus): MarkdownEdito
     insertLink: (href, text) => insertLink(view, String(href), text),
     wrapSelection: (before, after) => wrapSelection(view, String(before), after),
     runCommand: (name) => runCommand(view, name),
+    insertBlock: (kind) => insertBlock(view, kind),
     scrollToLine: (line) => {
       const { doc } = view.state
       const number = Math.max(1, Math.min(Math.trunc(Number(line)) || 1, doc.lines))
@@ -143,4 +156,5 @@ function createEditorHandle(view: EditorView, menus: HandleMenus): MarkdownEdito
 }
 
 export { createEditorHandle, runCommand, toEditorPos, toOffset }
+export type { MarkdownBlockKind }
 export type { HandleMenus, InsertTextOptions, MarkdownEditorCommand, MarkdownEditorHandle, MarkdownSelection }

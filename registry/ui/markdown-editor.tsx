@@ -27,6 +27,7 @@ import {
 import type {
   HandleMenus,
   InsertTextOptions,
+  MarkdownBlockKind,
   MarkdownEditorCommand,
   MarkdownEditorHandle,
   MarkdownSelection,
@@ -207,6 +208,7 @@ function MarkdownEditorBody(props: Omit<MarkdownEditorProps, "ref"> & { handle: 
 export { MarkdownEditor, markdownEditorLabelsEn, markdownEditorLabelsEs, markdownSlashCommands }
 export type {
   InsertTextOptions,
+  MarkdownBlockKind,
   MarkdownConflict,
   MarkdownEditorCommand,
   MarkdownEditorHandle,

@@ -180,3 +180,36 @@ test("openWikilinkSuggestions refuses without suggestWikilinks or when read-only
   expect(run(() => readOnly.handle.openWikilinkSuggestions())).toBe(false)
   expect(readOnly.handle.getValue()).toBe("text\n")
 })
+
+test("runCommand and insertBlock insert the slash menu's blocks", async () => {
+  const { handle } = await mount("intro\n")
+  run(() => handle.setSelection(5))
+  expect(run(() => handle.runCommand("table"))).toBe(true)
+  expect(handle.getValue()).toBe("intro\n\n|  |  |\n| --- | --- |\n|  |  |\n")
+  expect(handle.getSelection().head).toBe("intro\n\n| ".length)
+
+  run(() => handle.setSelection(handle.getValue().length))
+  run(() => handle.runCommand("codeBlock"))
+  expect(handle.getValue()).toMatch(/\n```\n\n```$/)
+  expect(handle.getSelection().head).toBe(handle.getValue().length - 4)
+
+  run(() => handle.setSelection(handle.getValue().length))
+  run(() => handle.insertBlock("divider"))
+  expect(handle.getValue()).toMatch(/```\n\n---\n$/)
+  // @ts-expect-error -- not a block
+  expect(() => handle.insertBlock("chart")).toThrow(/Unknown block "chart"/)
+})
+
+test("a block replaces the selection, and a CRLF note keeps CRLF", async () => {
+  const { handle } = await mount("one\r\ntwo\r\n")
+  run(() => handle.setSelection(5, 8))
+  run(() => handle.insertBlock("divider"))
+  expect(handle.getValue()).toBe("one\r\n---\r\n\r\n")
+})
+
+test("a read-only editor refuses blocks", async () => {
+  const { handle } = await mount("text\n", { readOnly: true })
+  expect(run(() => handle.runCommand("table"))).toBe(false)
+  expect(run(() => handle.insertBlock("codeBlock"))).toBe(false)
+  expect(handle.getValue()).toBe("text\n")
+})

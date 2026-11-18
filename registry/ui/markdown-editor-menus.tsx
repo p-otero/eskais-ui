@@ -15,7 +15,12 @@ import {
 } from "@ui-sdk/react/trigger-menu"
 import { useMemo, type ReactNode } from "react"
 
-import { toDocText, toggleFormat, type MarkdownFormat } from "@/components/ui/markdown-editor-commands"
+import {
+  insertBlock,
+  toggleFormat,
+  type MarkdownBlockKind,
+  type MarkdownFormat,
+} from "@/components/ui/markdown-editor-commands"
 import { markdownEditorLabelsEn, type MarkdownEditorLabels } from "@/components/ui/markdown-editor-labels"
 import { setHeading } from "@/components/ui/markdown-editor-lines"
 import { wikilinkText } from "@/components/ui/markdown-syntax"
@@ -32,21 +37,11 @@ type SlashCommand = {
 type WikilinkSuggestion = { slug: string; label?: string }
 type SuggestWikilinks = (query: string, context: { signal: AbortSignal }) => Promise<WikilinkSuggestion[]>
 
-function insertBlock(text: string, caret = text.length): SlashCommand["run"] {
-  return (view, { from, to }) => {
-    const line = view.state.doc.lineAt(from)
-    const lead = view.state.sliceDoc(line.from, from).trim() ? "\n\n" : ""
-    const block = lead + text
-    const insert = toDocText(view.state, block)
-    const offset = toDocText(view.state, block.slice(0, lead.length + caret)).length
-    view.dispatch({
-      changes: { from, to, insert },
-      selection: { anchor: from + view.state.toText(insert.slice(0, offset)).length },
-      userEvent: "input.complete",
-      scrollIntoView: true,
-    })
+const block =
+  (kind: MarkdownBlockKind): SlashCommand["run"] =>
+  (view, range) => {
+    insertBlock(view, kind, range, "input.complete")
   }
-}
 
 /** Removes the typed `/query`, then formats the line it was on. */
 function lineCommand(apply: (view: EditorView) => unknown): SlashCommand["run"] {
@@ -85,9 +80,9 @@ function markdownSlashCommands(labels: Partial<SlashLabels> = {}): SlashCommand[
     { value: "ordered", label: text.orderedList, hint: "1.", run: lines("orderedList") },
     { value: "task", label: text.taskList, hint: "- [ ]", run: lines("taskList") },
     { value: "quote", label: text.quote, hint: ">", run: lines("quote") },
-    { value: "code", label: text.codeBlock, hint: "```", run: insertBlock("```\n\n```", 4) },
-    { value: "table", label: text.table, hint: "| |", run: insertBlock("|  |  |\n| --- | --- |\n|  |  |", 2) },
-    { value: "divider", label: text.divider, hint: "---", run: insertBlock("---\n") },
+    { value: "code", label: text.codeBlock, hint: "```", run: block("codeBlock") },
+    { value: "table", label: text.table, hint: "| |", run: block("table") },
+    { value: "divider", label: text.divider, hint: "---", run: block("divider") },
   ]
 }
 

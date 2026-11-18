@@ -24,6 +24,7 @@ Versions follow [semver](https://semver.org). Before 1.0, a minor version can br
 - `ConfirmDialog triggerDisabled` and `triggerPending`: the trigger is disabled, or pending like `Button loading` (a spinner, `data-pending`, `aria-busy`, presses ignored while it keeps focus); while either is set the dialog refuses to open, so an agent's `setOpen` can't get around the trigger either. `SettingsDangerAction disabled pending` pass them on, and its other props (`data-testid`, `className`) go on its row.
 
 - `MarkdownEditorHandle.insertText(text, { userEvent })`: the edit is a plain `"input"` as before unless `userEvent` says otherwise, and `"input.type"` counts as typing, so a `[[` or `/` inserted from a host button opens its menu. `MarkdownEditorHandle.openWikilinkSuggestions()` focuses the editor, types `[[` unless the caret already follows one and opens the wikilink listbox (through a `TriggerMenu` controller); it returns `false` and changes nothing without `suggestWikilinks` or when read-only.
+- `MarkdownEditorHandle.runCommand` runs the slash menu's blocks too (`codeBlock`, `table`, `divider`), and `insertBlock(kind)` inserts one in place of the selection; `runCommand("table")` threw `RangeError: Unknown command`. The slash menu and the handle share one implementation (`insertBlock` in `markdown-editor-commands`), so a block lands the same way from both: after a blank line when text comes before it, with the caret in the fence, the first cell or after the rule. `MarkdownEditorCommand` now includes `MarkdownBlockKind`.
 
 ### Changed
 
