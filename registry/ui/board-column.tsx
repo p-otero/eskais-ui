@@ -7,6 +7,7 @@ import { Children, createContext, use, useId, useState, type ComponentProps, typ
 import { CircleMinusIcon, CirclePlusIcon } from "lucide-react"
 
 import { Badge } from "@/components/ui/badge"
+import { BoardList, useBoardLists } from "@/components/ui/board-transfer"
 import { Collapsible, CollapsibleTrigger } from "@/components/ui/collapsible"
 import { Empty } from "@/components/ui/empty"
 import {
@@ -62,8 +63,10 @@ function Count({ value, className }: { value: ReactNode; className?: string }) {
   )
 }
 
-type BoardColumnProps = Omit<ComponentProps<"li">, "title" | "children"> & {
+type BoardColumnProps = Omit<ComponentProps<"li">, "title" | "children" | "value"> & {
   title: string
+  /** The column's list in a board that moves cards; its `children` function renders the list's cards. */
+  value?: string
   count?: number | ReactNode
   actions?: ReactNode
   empty?: ReactNode
@@ -75,10 +78,12 @@ type BoardColumnProps = Omit<ComponentProps<"li">, "title" | "children"> & {
   defaultCollapsed?: boolean
   onCollapsedChange?: (collapsed: boolean, details: ChangeDetails<CollapsibleOpenChangeReason>) => void
   labels?: Partial<BoardColumnLabels>
-  children?: ReactNode
+  /** The cards, or, with `value` on a board that moves cards, a function from the column's card ids to them. */
+  children?: ReactNode | ((ids: string[]) => ReactNode)
 }
 
 function BoardColumn({
+  value,
   title,
   count,
   actions,
@@ -103,6 +108,11 @@ function BoardColumn({
   const Heading = `h${headingLevel}` as const
   const groupHeadingLevel = Math.min(headingLevel + 1, 6) as HeadingLevel
   const { collapse, expand, collapseTooltip, expandTooltip } = { ...boardColumnLabels, ...labels }
+  const lists = useBoardLists()
+  const ids = value === undefined ? undefined : lists?.[value]
+  const cards = typeof children === "function" ? children(ids ?? []) : children
+  const shownCount = count === undefined && ids ? ids.length : count
+  const isEmpty = ids ? ids.length === 0 : Children.toArray(cards).length === 0
 
   const header = (
     <div
@@ -123,7 +133,7 @@ function BoardColumn({
       >
         {title}
       </Heading>
-      <Count value={count} />
+      <Count value={shownCount} />
       {actions !== undefined && (
         <div
           data-slot="board-column-actions"
@@ -153,10 +163,13 @@ function BoardColumn({
     <ScrollArea className="flex min-h-0 flex-col">
       <ScrollAreaViewport aria-labelledby={titleId} className="h-auto max-h-(--board-column-max-height)">
         <ScrollAreaContent className="flex flex-col gap-items px-items pb-items content-auto">
-          {Children.toArray(children).length === 0 && empty !== undefined ? (
-            <Empty className="p-group">{empty}</Empty>
+          {isEmpty && empty !== undefined && <Empty className="p-group">{empty}</Empty>}
+          {ids && value !== undefined ? (
+            <BoardList value={value} aria-labelledby={titleId}>
+              {cards}
+            </BoardList>
           ) : (
-            children
+            !isEmpty && cards
           )}
         </ScrollAreaContent>
       </ScrollAreaViewport>
