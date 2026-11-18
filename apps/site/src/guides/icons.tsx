@@ -160,7 +160,7 @@ function Gallery() {
   )
 }
 
-const install = `npm install lucide-react@^1.68.0
+const install = `npm install lucide-react
 npx shadcn@latest add @eskais/icon`
 
 const importByName = `import { ChevronDownIcon, TrashIcon } from "lucide-react"
@@ -229,8 +229,10 @@ export default function Icons() {
 
       <H2 id="install">Install</H2>
       <P>
-        Every item that shows an icon lists <Code>lucide-react</Code> as a dependency, so shadcn installs it with the
-        item. Add it yourself to use icons in your own code, and add <Code>icon</Code> for named icons:
+        Every item that shows an icon lists <Code>lucide-react</Code> as a dependency, without a version, so shadcn
+        installs the latest release in a project that doesn't have it and leaves the one you have alone. The icons need
+        1.68.0 or newer: upgrade an older one. Add it yourself to use icons in your own code, and add <Code>icon</Code>{" "}
+        for named icons:
       </P>
       <Pre code={install} language="bash" />
 

@@ -51,7 +51,7 @@ Pick text size by role, not by number: `text-meta` (eyebrows; with `tracking-met
 
 ## Icons
 
-Components import their icons from `lucide-react` by name (`ChevronDownIcon`, `XIcon`, `CheckIcon`, `SearchIcon`…), and every item that does lists it in `dependencies`, so shadcn installs it. Browse the set on lucide.dev; the site's Icons guide shows the ones the registry uses.
+Components import their icons from `lucide-react` by name (`ChevronDownIcon`, `XIcon`, `CheckIcon`, `SearchIcon`…), and every item that does lists it in `dependencies` without a version, so shadcn installs it in a project that doesn't have it and leaves an existing `lucide-react` as it is. The icons need 1.68.0 or newer: upgrade an older one. Browse the set on lucide.dev; the site's Icons guide shows the ones the registry uses.
 
 - **Decorative**: lucide sets `aria-hidden` unless the icon gets an `aria-*`, `role` or `title` prop, so an icon beside text needs nothing. An icon-only button is named by the button, and shows that name in a tooltip: `<Button size="icon" aria-label="Delete"><TrashIcon /></Button>`.
 - **Meaningful**: when nothing else says it, `<Icon icon={TriangleExclamationPointIcon} label="Blocked" />` renders `role="img"` with that name. `Icon` takes any SVG component.

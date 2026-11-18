@@ -33,6 +33,16 @@ const stylesheet = `@layer ui-sdk;
 @import "tailwindcss";
 /* shadcn adds the theme's tokens, base rules and @custom-variant dark below. */`
 
+const serveRegistry = `npx serve public/r -l 4173
+# or, with Node alone:
+node -e "require('http').createServer((q, s) => require('fs').createReadStream('public/r' + new URL(q.url, 'http://x').pathname).on('error', () => s.writeHead(404).end()).pipe(s)).listen(4173)"`
+
+const localComponentsJson = `{
+  "registries": {
+    "@eskais": "http://localhost:4173/{name}.json"
+  }
+}`
+
 export default function Installation() {
   return (
     <Article>
@@ -137,6 +147,31 @@ createRoot(root).render(
         regions: <Code>getToast</Code>, <Code>queryToasts</Code>, <Code>queryAlerts</Code>, <Code>ignoreAnnouncer</Code>{" "}
         and <Code>resetAnnouncer</Code> for your test setup.
       </P>
+
+      <H2 id="unreleased">Test unreleased items</H2>
+      <P>
+        To try a branch before it is released, serve its built registry and point <Code>@eskais</Code> at it, so every
+        item and the <Code>@eskais/*</Code> items it depends on come from the branch. In a checkout of the branch, build
+        the registry (<Code>public/r</Code>) and serve that folder over HTTP:
+      </P>
+      <Pre code={serveRegistry} language="bash" />
+      <Pre code={localComponentsJson} language="json" title="components.json" />
+      <P>
+        Then add as usual: <Code>npx shadcn@latest add @eskais/command</Code>. Switch the URL back to the release when
+        you're done.
+      </P>
+      <Ul>
+        <li>
+          One item can also come from a file, by a relative path:{" "}
+          <Code>npx shadcn@latest add ../eskais-ui/public/r/command.json</Code>. Its <Code>@eskais/*</Code> dependencies
+          still come from the <Code>@eskais</Code> URL in <Code>components.json</Code>, so with the release URL there
+          they pull the released versions back over the branch's. Serve the folder to test a set of items together.
+        </li>
+        <li>
+          On Windows, shadcn 4.23 can't read an absolute path: <Code>C:/…/command.json</Code> fails with "unknown
+          scheme" and <Code>file:///C:/…/command.json</Code> with "not implemented". Use a relative path or HTTP.
+        </li>
+      </Ul>
 
       <H2 id="next">Next steps</H2>
       <Ol>
