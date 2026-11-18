@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useEffectEvent, useRef, useState } from "react"
+import { createContext, use, useEffect, useEffectEvent, useLayoutEffect, useRef, useState } from "react"
 
 import type { UrlParamAdapter } from "@/lib/url-param"
 
@@ -92,4 +92,54 @@ function useUrlSection(url: UrlParamAdapter | undefined, jump: (id: string) => v
   }
 }
 
-export { useObservedSection, useUrlSection }
+// What counts as the person taking over the page before a section the URL named has mounted.
+const interactions = ["pointerdown", "keydown", "wheel", "touchstart", "scroll", "focusin"] as const
+
+/**
+ * A section the URL named before it mounted, like one that renders after its data loads. Its `SettingsSection`
+ * reports in when it mounts and `arrive` runs once, unless the person has pressed, typed, scrolled or moved focus
+ * since: then the page stays where they put it.
+ */
+function createPendingSection() {
+  let waiting: { id: string; arrive: (id: string) => void } | null = null
+  const cancel = () => {
+    waiting = null
+  }
+  return {
+    wait(id: string, arrive: (id: string) => void) {
+      waiting = { id, arrive }
+    },
+    mounted(id: string) {
+      if (waiting?.id !== id) return
+      const { arrive } = waiting
+      waiting = null
+      arrive(id)
+    },
+    cancel,
+    /** Listens for the person taking over while the page is mounted; returns the cleanup. */
+    listen() {
+      for (const type of interactions) addEventListener(type, cancel, { capture: true, passive: true })
+      return () => {
+        for (const type of interactions) removeEventListener(type, cancel, true)
+      }
+    },
+  }
+}
+
+type PendingSection = ReturnType<typeof createPendingSection>
+
+const PendingSectionContext = createContext<PendingSection | null>(null)
+
+function usePendingSection() {
+  const [pending] = useState(createPendingSection)
+  useEffect(() => pending.listen(), [pending])
+  return pending
+}
+
+/** Tells the page a section has mounted, so a URL that named it before it rendered can still go to it. */
+function useSectionMounted(id: string) {
+  const pending = use(PendingSectionContext)
+  useLayoutEffect(() => pending?.mounted(id), [pending, id])
+}
+
+export { PendingSectionContext, useObservedSection, usePendingSection, useSectionMounted, useUrlSection }
