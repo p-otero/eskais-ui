@@ -2,6 +2,12 @@
 
 Versions follow [semver](https://semver.org). Before 1.0, a minor version can break compatibility. Release with `bun pm version <patch|minor|major>`, which bumps `package.json` and tags `vX.Y.Z`.
 
+## Unreleased
+
+### Fixed
+
+- `MarkdownEditor`: dismissing the suggestions `openWikilinkSuggestions()` opened no longer leaves `[[` in the note. The `[[` it types, and the query typed after it, are provisional: a `markdown-editor-provisional` state field tracks them, `onChange`, the dirty state and undo history skip them, and Escape, a click away, leaving the editor or any other close puts the note and the selection back byte for byte, with no `onChange`. Choosing an item inserts the wikilink as one undo step from the original note. A `[[` the user typed stays when the menu closes, and so does a query the user finished by hand (`[[idea]]`).
+
 ## 0.2.2 (2026-11-18)
 
 ### Added

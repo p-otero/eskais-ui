@@ -37,6 +37,9 @@ type SlashCommand = {
 type WikilinkSuggestion = { slug: string; label?: string }
 type SuggestWikilinks = (query: string, context: { signal: AbortSignal }) => Promise<WikilinkSuggestion[]>
 
+/** What a wikilink query may hold, one character at a time. */
+const WIKILINK_QUERY = /[^\]|[\r\n]/u
+
 const block =
   (kind: MarkdownBlockKind): SlashCommand["run"] =>
   (view, range) => {
@@ -124,7 +127,7 @@ function MarkdownEditorMenus({
         boundary: "anywhere",
         spaces: true,
         maxLength: 80,
-        pattern: /[^\]|[\r\n]/u,
+        pattern: WIKILINK_QUERY,
         items: async (query, { signal }) =>
           (await suggestWikilinks(query, { signal })).map((item) => ({
             value: item.slug,
@@ -188,5 +191,5 @@ function MarkdownEditorMenus({
   )
 }
 
-export { MarkdownEditorMenus, markdownSlashCommands }
+export { MarkdownEditorMenus, markdownSlashCommands, WIKILINK_QUERY }
 export type { SlashCommand, SlashLabels, SuggestWikilinks, WikilinkSuggestion }

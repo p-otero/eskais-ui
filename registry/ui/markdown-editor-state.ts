@@ -19,6 +19,7 @@ import { lineSeparatorExtension, toggleFormat } from "@/components/ui/markdown-e
 import { deleteMarker, indentList, outdentList, setHeading } from "@/components/ui/markdown-editor-lines"
 import { livePreview, previewConfig, toggleTaskAt, type PreviewConfig } from "@/components/ui/markdown-editor-preview"
 import { caretOutOfPrefix, frontmatterEnd } from "@/components/ui/markdown-editor-structure"
+import { provisionalTriggers } from "@/components/ui/markdown-editor-provisional"
 import { markdownEditorTheme } from "@/components/ui/markdown-editor-theme"
 import { markdownExtensions } from "@/components/ui/markdown-syntax"
 
@@ -180,6 +181,7 @@ function createEditorState(
       EditorView.lineWrapping,
       markdownEditorTheme,
       menuAwareKeymap(editorKeymap(hooks)),
+      provisionalTriggers(fromValue),
       livePreview,
       blockPreview,
       caretOutOfPrefix,

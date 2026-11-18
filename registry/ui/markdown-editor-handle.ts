@@ -27,7 +27,7 @@ type InsertTextOptions = { userEvent?: string }
 
 /** What the handle needs from the editor's menus. */
 type HandleMenus = {
-  /** Opens the wikilink listbox, typing `[[` at the caret unless one is there; false without `suggestWikilinks`. */
+  /** Opens the wikilink listbox with a provisional `[[` at the caret unless one is there; false without `suggestWikilinks`. */
   openWikilinkSuggestions: () => boolean
 }
 
@@ -51,8 +51,9 @@ type MarkdownEditorHandle = {
    */
   insertText: (text: string, options?: InsertTextOptions) => boolean
   /**
-   * Focuses the editor and opens the wikilink suggestions at the caret, typing `[[` first unless the caret already
-   * follows one. Returns false, and changes nothing, when the editor is read-only or has no `suggestWikilinks`.
+   * Opens the wikilink suggestions at the caret behind a provisional `[[` (unless one is there): `onChange` and undo
+   * skip it, dismissing puts the note back byte for byte, and a choice is one undoable edit. False when read-only
+   * or without `suggestWikilinks`.
    */
   openWikilinkSuggestions: () => boolean
   insertWikilink: (target: string, alias?: string) => boolean

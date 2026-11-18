@@ -3,6 +3,7 @@ import { EditorView, keymap, type KeyBinding } from "@codemirror/view"
 import type { EditorChange, TextEditorAdapter } from "@ui-sdk/react/trigger-menu"
 
 import { toDocText } from "@/components/ui/markdown-editor-commands"
+import { activeProvisional, revertProvisional, typeProvisional } from "@/components/ui/markdown-editor-provisional"
 
 const setMenuOpen = StateEffect.define<boolean>()
 const menuOpen = StateField.define<boolean>({
@@ -35,6 +36,18 @@ function menuAwareKeymap(bindings: readonly KeyBinding[]): Extension {
       }),
     ),
   ]
+}
+
+const typingProvisionally = new WeakSet<EditorView>()
+
+/** Runs `open` (a trigger menu controller's `open()`) so the trigger it types is provisional. */
+function openProvisionally<T>(view: EditorView, open: () => T) {
+  typingProvisionally.add(view)
+  try {
+    return open()
+  } finally {
+    typingProvisionally.delete(view)
+  }
 }
 
 /** The listener extension must be in the state before the view exists; the adapter attaches once it does. */
@@ -84,9 +97,20 @@ function createAdapterBridge() {
       },
       replace(range, content) {
         const text = toDocText(view.state, typeof content === "string" ? content : content.label)
+        if (typingProvisionally.has(view)) {
+          typeProvisional(view, range.start, range.end, text)
+          return
+        }
+        const active = activeProvisional(view.state)
+        let { start, end } = range
+        if (active && start === active.from && end <= active.to) {
+          // A choice: the note goes back to what it was, then takes the item as one undo step from there.
+          revertProvisional(view)
+          end = start + active.original.length
+        }
         view.dispatch({
-          changes: { from: range.start, to: range.end, insert: text },
-          selection: { anchor: range.start + view.state.toText(text).length },
+          changes: { from: start, to: end, insert: text },
+          selection: { anchor: start + view.state.toText(text).length },
           userEvent: "input.complete",
           scrollIntoView: true,
         })
@@ -109,4 +133,4 @@ function createAdapterBridge() {
   return { extension, attach }
 }
 
-export { createAdapterBridge, menuAwareKeymap, menuOpen, setMenuOpen }
+export { createAdapterBridge, menuAwareKeymap, menuOpen, openProvisionally, setMenuOpen }
