@@ -10,15 +10,19 @@ import {
   filterOptions,
   filterTasks,
   groupByStatus,
+  moveTask,
   summarize,
   type ColumnConfig,
   type TaskFilters,
+  type TaskMove,
 } from "@/lib/agent-task-board-model"
 import type { AgentTaskBoardProps, ColumnAccent } from "@/components/ui/agent-task-board-props"
+import type { TaskStatus, TaskView } from "@/lib/agent-task-types"
 import { useLocale } from "@/lib/locale"
 import { cn } from "@/lib/utils"
 import {
   AgentTaskBoardRoot,
+  AgentTaskMovesRoot,
   AgentTaskProposalsRoot,
   createAgentTaskBoardController,
 } from "@/components/ui/agent-task-board-root"
@@ -36,6 +40,10 @@ import { taskStatusAccentTones } from "@/components/ui/task-status"
 import { useBoardFocus } from "@/components/ui/use-board-focus"
 
 const NO_FILTERS: TaskFilters = {}
+
+function defaultCanMoveTask(task: TaskView, to: TaskStatus) {
+  return task.status === to || (task.status !== "proposed" && to !== "proposed")
+}
 const NO_COLUMNS: ColumnConfig[] = []
 
 function useControllable<T>(value: T | undefined, initial: T) {
@@ -49,6 +57,7 @@ function AgentTaskBoard(props: AgentTaskBoardProps) {
   const { detailPresentation = "dialog", density = "auto", agentAvatars, columnAccent = "tint" } = props
   const { renderLink, onOpenLink, renderAttachments, renderLocation, stages } = props
   const { renderBacklogActions, renderCardActions, filterControls = FILTER_CONTROLS } = props
+  const { onMoveTask, canMoveTask = defaultCanMoveTask } = props
   const tones = useMemo(() => ({ ...taskStatusAccentTones, ...props.columnTones }), [props.columnTones])
   const labels = useMemo(() => resolveLabels(props.labels), [props.labels])
   const now = useNow({ now: mode === "snapshot" ? generatedAt : props.now })
@@ -72,6 +81,10 @@ function AgentTaskBoard(props: AgentTaskBoardProps) {
   }, [stages, tasks, filters])
   const grouped = useMemo(() => groupByStatus(filtered, columns), [filtered, columns])
   const summary = useMemo(() => summarize(filtered), [filtered])
+  const movableStatuses = useMemo(
+    () => grouped.filter((column) => !column.collapsed).map((column) => column.status),
+    [grouped],
+  )
   const selected = selectedId === null ? undefined : tasks.find((task) => task.id === selectedId)
   const live = mode === "live"
 
@@ -162,6 +175,8 @@ function AgentTaskBoard(props: AgentTaskBoardProps) {
         display={display}
         tones={columnAccent === "tint" ? tones : undefined}
         renderCardActions={renderCardActions}
+        onMoveTask={onMoveTask}
+        canMoveTask={canMoveTask}
         onCollapsedChange={(status, collapsed) => {
           const next = withColumn(columns, status, { collapsed })
           setColumns(next)
@@ -255,10 +270,20 @@ function AgentTaskBoard(props: AgentTaskBoardProps) {
           onApproveProposal={live && onApproveProposal ? (id) => onApproveProposal(id) : undefined}
           onRejectProposal={live && onRejectProposal ? (id) => onRejectProposal(id) : undefined}
         />
+        <AgentTaskMovesRoot
+          aria-label={labels.moves.group}
+          className="sr-only"
+          tasks={filtered}
+          statuses={view === "board" ? movableStatuses : undefined}
+          canMove={canMoveTask}
+          agentApproval={agentApproval}
+          agentConfirm={labels.moves.agentConfirm}
+          onMoveTask={onMoveTask}
+        />
       </div>
     </AgentTaskBoardRoot>
   )
 }
 
-export { AgentTaskBoard, NO_STAGE, agentTaskBoardLabels, agentTaskBoardLabelsEs, taskStatusAccentTones }
-export type { AgentTaskBoardProps, ColumnAccent }
+export { AgentTaskBoard, NO_STAGE, agentTaskBoardLabels, moveTask, agentTaskBoardLabelsEs, taskStatusAccentTones }
+export type { AgentTaskBoardProps, ColumnAccent, TaskMove }

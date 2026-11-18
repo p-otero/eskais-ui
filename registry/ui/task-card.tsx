@@ -9,6 +9,7 @@ import type { Instant } from "@/lib/time"
 import type { Tone } from "@/lib/tone"
 import { cn } from "@/lib/utils"
 import { AgentAvatar, UnassignedAvatar, type AgentAvatars } from "@/components/ui/agent-avatar"
+import { BoardItemHandle } from "@/components/ui/board-transfer"
 import { agentBadgeLabels, agentSummary } from "@/components/ui/agent-badge"
 import { BoardCard, useBoardCardStop } from "@/components/ui/board-navigation"
 import type { AgentApproval, BoardMode } from "@/components/ui/agent-task-board-primitive"
@@ -51,6 +52,8 @@ type TaskCardProps = Omit<ComponentProps<"article">, "children" | "onSelect"> &
     selected?: boolean
     /** The host's controls at the end of the card, after Approve/Reject, in every mode. */
     renderActions?: (task: TaskView) => ReactNode
+    /** Shows a drag handle; the card must sit in a `BoardItem` of a board that moves cards. */
+    movable?: boolean
   }
 
 function proposalError(error: unknown, labels: AgentTaskBoardLabels) {
@@ -76,6 +79,7 @@ function TaskCardComponent({
   onOpenLink,
   stages,
   renderActions,
+  movable = false,
   className,
   ref,
   ...props
@@ -114,6 +118,7 @@ function TaskCardComponent({
       {...props}
     >
       <div className="flex min-w-0 items-center gap-inline">
+        {movable && <BoardItemHandle label={task.title} labels={labels.moves} className="size-6" />}
         <span data-slot="task-card-id" className="font-mono text-xs text-muted-foreground">
           {task.id}
         </span>

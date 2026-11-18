@@ -29,6 +29,7 @@ import {
 
 import { list, type ListEntry, type ListOptions } from "@/components/ui/list-primitive"
 import { RowNavigationProvider, useRowNavigation } from "@/components/ui/row-navigation"
+import { ListSortableRows, type ListSortableRowsProps } from "@/components/ui/list-sortable"
 import { useVirtualRows, type Virtualize } from "@/components/ui/virtual-rows"
 import { cn } from "@/lib/utils"
 
@@ -42,6 +43,8 @@ type ListContextValue = {
   select: (id: string, event: Event) => boolean
   /** Rows that Space or `x` check, for bulk actions; undefined when the list has none. */
   checked?: { has: (id: string) => boolean; toggle: (id: string) => void }
+  /** Set while rows reorder: each row gets a drag handle. */
+  sortable?: { labels?: ListSortableRowsProps["labels"] }
 }
 
 /** Where a data row sits among all rows, while the list is virtualized. */
@@ -90,6 +93,12 @@ type ListProps<Item = unknown> = Omit<PartProps<"div">, "children" | "onSelect" 
   /** Rows checked for a bulk action: Space or `x` on a row toggles it, and each row shows a checkbox. */
   checkedIds?: readonly string[]
   onCheckedIdsChange?: (ids: string[]) => void
+  /** Rows reorder by a handle (drag, or Space and arrows). Needs data rows and no `value`; never virtualizes. */
+  sortable?: boolean
+  /** The new order of the row ids; pass `items` back in it. `details.cancel()` keeps the old one. */
+  onReorder?: ListSortableRowsProps["onReorder"]
+  /** The drag handle's name and what screen readers hear while a row moves. */
+  sortableLabels?: ListSortableRowsProps["labels"]
   children?: ReactNode
 }
 
@@ -193,6 +202,9 @@ function List<Item = unknown>({
   estimateSize,
   checkedIds,
   onCheckedIdsChange,
+  sortable = false,
+  onReorder,
+  sortableLabels,
   className,
   children,
   onFocus,
@@ -226,10 +238,11 @@ function List<Item = unknown>({
     (index: number) => (data?.[index] === undefined ? "" : itemText(data[index])),
     [data, itemText],
   )
+  const sorting = sortable && !selectable && data !== undefined && renderItem !== undefined
   const { anchor, ...virtual } = useVirtualRows({
     count: data?.length ?? 0,
     findable: textAt,
-    virtualize: renderItem && variant === "row" ? virtualize : false,
+    virtualize: renderItem && variant === "row" && !sorting ? virtualize : false,
     estimateSize,
     getKey: keyAt,
   })
@@ -276,11 +289,13 @@ function List<Item = unknown>({
     },
   })
 
+  const sortableContext = useMemo(() => (sorting ? { labels: sortableLabels } : undefined), [sorting, sortableLabels])
   const context = useMemo<ListContextValue>(
     () => ({
       variant,
       selectable,
       checked,
+      sortable: sortableContext,
       register: (id, item) => {
         handles.current.set(id, item)
         refresh()
@@ -291,11 +306,31 @@ function List<Item = unknown>({
       },
       select: (id, event) => handle.api.select(id, { reason: "item-press", event }),
     }),
-    [variant, selectable, checked, refresh, handle],
+    [variant, selectable, checked, sortableContext, refresh, handle],
   )
 
   let rows: ReactNode = children
-  if (data && renderItem) {
+  if (sorting && data && renderItem && ids) {
+    rows = (
+      <ListSortableRows
+        label={label}
+        grid={variant === "card"}
+        ids={ids}
+        indexOf={indexOf}
+        textAt={textAt}
+        checkedIds={checkedIds}
+        onCheckedIdsChange={onCheckedIdsChange}
+        onReorder={onReorder}
+        labels={sortableLabels}
+        renderRow={(index) => {
+          const item = data[index]
+          return item === undefined ? null : (
+            <ListRow key={ids[index]} item={item} index={index} renderItem={renderItem} />
+          )
+        }}
+      />
+    )
+  } else if (data && renderItem) {
     const GapTag = selectable ? "div" : "li"
     rows = virtual.segments.map((segment) => {
       if (segment.type === "gap") {
@@ -355,8 +390,10 @@ function List<Item = unknown>({
       }
     : {
         ...rootProps,
-        // Preflight's list-style: none strips list semantics in Safari unless the role is explicit.
-        role: "list",
+        // Preflight's list-style: none strips list semantics in Safari unless the role is explicit. Sorting, the
+        // list is the sortable's own element inside.
+        role: sorting ? "group" : "list",
+        className: sorting ? cn("min-w-0", className) : rootProps.className,
         children: (
           <ListContext value={context}>
             <RowNavigationProvider handle={navigation}>{rows}</RowNavigationProvider>
@@ -364,7 +401,7 @@ function List<Item = unknown>({
         ),
       }
 
-  return usePart(handle, "root", {}, partProps as PartProps<"ul">, selectable ? "div" : "ul")
+  return usePart(handle, "root", {}, partProps as PartProps<"ul">, selectable || sorting ? "div" : "ul")
 }
 
 type ListGroupProps = {

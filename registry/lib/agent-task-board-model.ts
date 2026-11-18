@@ -27,6 +27,17 @@ interface StatusColumn {
   groups?: { ready: TaskView[]; waiting: TaskView[] }
 }
 
+/** A task moved on the board: to another column, which changes its status, or within its own. */
+interface TaskMove {
+  id: string
+  from: TaskStatus
+  to: TaskStatus
+  /** Its position among the column's shown tasks, from 0. */
+  index: number
+  /** The task it now sits before, or null at the end of the column; pass it to `moveTask`. */
+  before: string | null
+}
+
 interface FilterOptions {
   projects: string[]
   profiles: string[]
@@ -186,6 +197,23 @@ function sortTasks(tasks: readonly TaskView[], key: SortKey, direction: SortDire
   })
 }
 
+/**
+ * `tasks` with the task `id` in `status`, placed just before the task `before`, or after the last task in that
+ * status when `before` is null. The board reports a move this way, so the order holds whatever the filters hide.
+ */
+function moveTask(tasks: readonly TaskView[], id: string, status: TaskStatus, before: string | null): TaskView[] {
+  const task = tasks.find((candidate) => candidate.id === id)
+  if (!task) return [...tasks]
+  const moved = task.status === status ? task : { ...task, status }
+  const rest = tasks.filter((candidate) => candidate.id !== id)
+  let at = before === null ? -1 : rest.findIndex((candidate) => candidate.id === before)
+  if (at === -1) {
+    const last = rest.findLastIndex((candidate) => candidate.status === status)
+    at = last === -1 ? rest.length : last + 1
+  }
+  return [...rest.slice(0, at), moved, ...rest.slice(at)]
+}
+
 function hasRun(task: TaskView): boolean {
   return task.usage !== undefined || task.attempts.length > 0
 }
@@ -228,6 +256,7 @@ export {
   filterTasks,
   groupByStatus,
   isReady,
+  moveTask,
   needsDecision,
   sortTasks,
   sumQuantities,
@@ -243,4 +272,5 @@ export type {
   SortKey,
   StatusColumn,
   TaskFilters,
+  TaskMove,
 }

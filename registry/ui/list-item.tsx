@@ -16,6 +16,7 @@ import {
   type ListProps,
 } from "@/components/ui/list"
 import { NavigableRow } from "@/components/ui/row-navigation"
+import { SortableHandle, SortableItem } from "@/components/ui/sortable"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import { useListItemRegistration, useTruncated } from "@/components/ui/use-list-item"
 import type { Tone } from "@/lib/tone"
@@ -220,9 +221,17 @@ function ListItem({
     </span>
   )
 
+  const sortable = option ? undefined : context?.sortable
+  const handle = sortable && (
+    <span className="relative z-10 -my-px flex min-h-lh shrink-0 items-center">
+      <SortableHandle label={title} labels={sortable.labels} />
+    </span>
+  )
+
   const body = (
     <>
       <div className="flex min-w-0 grow basis-60 items-start gap-items">
+        {handle}
         {checkbox}
         {leading && (
           <span
@@ -252,7 +261,7 @@ function ListItem({
 
   const rowClassName = cn(
     "group/list-item relative flex min-w-0 flex-wrap items-start gap-items px-inset-item py-inset-item transition-colors duration-micro ease-standard",
-    rowClassNames[variant],
+    variant === "card" ? rowClassNames.card : rowClassNames.row,
     className,
   )
 
@@ -270,6 +279,21 @@ function ListItem({
       >
         {body}
       </ListboxItem>
+    )
+  }
+  if (sortable) {
+    return (
+      <SortableItem
+        value={id}
+        render={(part) => <li {...part} className={cn(part.className, rowClassName, "data-grabbed:bg-background")} />}
+        data-item-id={id}
+        data-variant={variant}
+        data-selected={selected ? "" : undefined}
+        data-checked={checked?.has(id) ? "" : undefined}
+        data-pressable={pressable ? "" : undefined}
+      >
+        {body}
+      </SortableItem>
     )
   }
   return (

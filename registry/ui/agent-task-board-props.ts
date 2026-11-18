@@ -1,10 +1,12 @@
+import type { ChangeDetails } from "@ui-sdk/core"
 import type { ReactNode } from "react"
 
-import type { ColumnConfig, FilterControl, TaskFilters } from "@/lib/agent-task-board-model"
+import type { ColumnConfig, FilterControl, TaskFilters, TaskMove } from "@/lib/agent-task-board-model"
 import type { TaskLink, TaskStatus, TaskView, ThreadRef } from "@/lib/agent-task-types"
 import type { Tone } from "@/lib/tone"
 import type { AgentAvatars } from "@/components/ui/agent-avatar"
 import type { AgentApproval, BoardView } from "@/components/ui/agent-task-board-primitive"
+import type { TaskMoveReason } from "@/components/ui/agent-task-moves-primitive"
 import type { AgentTaskBoardLabelsInput } from "@/components/ui/agent-task-labels"
 import type { Stage } from "@/components/ui/stage-track"
 
@@ -75,6 +77,18 @@ interface AgentTaskBoardBaseProps {
   onApproveProposal?: ProposalCallback
   onRejectProposal?: ProposalCallback
   agentApproval?: AgentApproval
+  /**
+   * Lets people move cards on the board view, between columns (which changes a task's status) and within one, by
+   * a drag handle or with Space and the arrows. The board doesn't reorder anything itself: apply the move to
+   * `tasks`, as `moveTask(tasks, move.id, move.to, move.before)` does, or leave them to refuse it. Agents get a
+   * `moveTask` action that follows `agentApproval`, asking a person first by default.
+   */
+  onMoveTask?: (move: TaskMove, details: ChangeDetails<TaskMoveReason>) => void
+  /**
+   * Whether a task may go to another column. By default proposals stay put (approve or reject them) and nothing
+   * moves into Proposed.
+   */
+  canMoveTask?: (task: TaskView, to: TaskStatus) => boolean
   /**
    * How a selected task's detail shows. `"dialog"` (default) and `"drawer"` are modal and leave the
    * board's layout alone; `"side"` keeps the board usable beside a non-modal panel.
