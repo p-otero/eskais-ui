@@ -1,0 +1,25 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "date-input",
+  "title": "Date Input",
+  "description": "UI SDK DateInput styled as a field: a date typed segment by segment in the locale's order, ISO values, min, max and unavailable dates marked invalid, floating labels and FormField binding.",
+  "dependencies": [
+    "@ui-sdk/core@0.1.0-beta.5",
+    "@ui-sdk/react@0.1.0-beta.5"
+  ],
+  "registryDependencies": [
+    "@eskais/utils",
+    "@eskais/theme",
+    "@eskais/field",
+    "@eskais/input"
+  ],
+  "files": [
+    {
+      "path": "registry/ui/date-input.tsx",
+      "content": "\"use client\"\n\nimport {\n  DateInput as DateInputPrimitive,\n  DateInputSegment as DateInputSegmentPrimitive,\n  createDateInputController,\n} from \"@ui-sdk/react/date-input\"\nimport type { ComponentProps } from \"react\"\n\nimport { floatingLabelControls } from \"@/components/ui/field\"\nimport { fieldSurfaceClassName } from \"@/components/ui/input\"\nimport { cnState } from \"@/lib/utils\"\n\n// DateInput renders its own segments, so they're styled from the root.\nconst segmentsClassName =\n  \"[&_[data-slot=date-input-segment]]:rounded-sm [&_[data-slot=date-input-segment]]:bg-transparent [&_[data-slot=date-input-segment]]:text-center [&_[data-slot=date-input-segment]]:outline-none [&_[data-slot=date-input-segment]]:placeholder:text-muted-foreground [&_[data-slot=date-input-segment]:focus]:bg-accent [&_[data-slot=date-input-segment]:focus]:text-accent-foreground [&_[data-slot=date-input-segment][data-type=literal]]:text-muted-foreground\"\n\n/**\n * A date typed segment by segment in the locale's order, like `11/02/2026`. The value is an ISO date, or a date and\n * time with `granularity`; `null` until every segment holds something.\n */\nfunction DateInput({ className, ...props }: ComponentProps<typeof DateInputPrimitive>) {\n  return (\n    <DateInputPrimitive\n      className={cnState(\n        `${fieldSurfaceClassName} inline-flex h-field-control w-fit max-w-full shrink-0 items-center rounded-control px-control-x text-entry tabular-nums has-focus-visible:ring-2 has-focus-visible:ring-ring has-aria-invalid:border-destructive data-invalid:border-destructive ${segmentsClassName}`,\n        className,\n      )}\n      {...props}\n    />\n  )\n}\n\n/** One segment, for children rendered from the input's `segments`; styled by `DateInput`, which renders them for you. */\nfunction DateInputSegment({ className, ...props }: ComponentProps<typeof DateInputSegmentPrimitive>) {\n  return <DateInputSegmentPrimitive className={cnState(\"data-disabled:cursor-not-allowed\", className)} {...props} />\n}\n\nfloatingLabelControls.add(DateInput)\n\nexport { createDateInputController, DateInput, DateInputSegment }\nexport type {\n  DateInputController,\n  DateInputGranularity,\n  DateInputSegmentState,\n  DateInputValueChangeReason,\n  DateMatchers,\n} from \"@ui-sdk/react/date-input\"\n",
+      "type": "registry:ui"
+    }
+  ],
+  "docs": "`<DateInput defaultValue min max unavailable locale granularity>` in a `Field`: the label names the group, each segment is a small input in the locale's order (`locale`, or the page's), and the value is an ISO date (`\"2026-11-02\"`, or `\"2026-11-02T14:30\"` with `granularity=\"minute\"`), `null` until every segment is filled. A date outside `min`/`max` or on an `unavailable` date sets `data-invalid` and the destructive edge. Paste a whole date into any segment. `labelPlacement=\"in\"`/`\"on\"` float the Field's label (the empty segments' placeholders show only while one is focused) and `FormField` binds the value. Use `DatePicker` when people should also pick from a calendar.",
+  "type": "registry:ui"
+}

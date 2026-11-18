@@ -57,7 +57,7 @@ const checkboxRowClassName =
   "has-[>[data-slot=checkbox]]:flex-row has-[>[data-slot=checkbox]]:items-start has-[>[data-slot=checkbox]]:gap-inline has-[>[data-slot=switch]]:flex-row has-[>[data-slot=switch]]:items-center has-[>[data-slot=switch]]:gap-inline pointer-coarse:has-[>[data-slot=checkbox]]:items-center pointer-coarse:has-[>[data-slot=checkbox],>[data-slot=switch]]:min-h-(--control-height-touch)"
 
 const textControls =
-  "[data-slot=input],[data-slot=native-select],[data-slot=select-value],[data-slot=number-input-control],[data-slot=date-picker-input],[data-slot=combobox-input],[data-slot=time-input]"
+  "[data-slot=input],[data-slot=native-select],[data-slot=select-value],[data-slot=number-input-control],[data-slot=date-picker-input],[data-slot=combobox-input],[data-slot=autocomplete-input],[data-slot=password-input-control],[data-slot=date-input],[data-slot=time-input]"
 
 // Every control sizes from --field-control-height, so `in` makes the text controls taller and moves their text below
 // the floated label. A placeholder would collide with the resting label, so it shows only while its control is focused.
@@ -71,7 +71,8 @@ const placementClassName: Record<FieldLabelPlacement, string> = {
     "has-[>[data-slot=textarea]]:[--field-label-rest-y:calc(var(--field-label-offset)+var(--item-padding-y)+1px)]",
     `[&_:is(${textControls})]:pt-(--field-label-offset)`,
     "[&>[data-slot=textarea]]:pt-[calc(var(--field-label-offset)+var(--item-padding-y))]",
-    "[&_:is(input,textarea):not(:focus,[data-slot=time-input-segment])]:placeholder:text-transparent",
+    "[&_:is(input,textarea):not(:focus,[data-slot=time-input-segment],[data-slot=date-input-segment])]:placeholder:text-transparent",
+    "[&:not(:focus-within)_[data-slot=date-input-segment]]:placeholder:text-transparent",
     "[&_[data-slot=select-trigger]:not(:focus)_[data-placeholder]]:invisible",
     '[&_select:not(:focus):has(option[value=""]:checked)]:text-transparent',
   ].join(" "),

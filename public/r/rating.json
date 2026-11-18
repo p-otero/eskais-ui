@@ -1,0 +1,24 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "rating",
+  "title": "Rating",
+  "description": "UI SDK Rating styled as stars that fill to the score: half stars, averages that fill part of a star, a pointer preview, sizes and 44px stars on touch screens.",
+  "dependencies": [
+    "@ui-sdk/core@0.1.0-beta.5",
+    "@ui-sdk/react@0.1.0-beta.5",
+    "lucide-react@^1.68.0"
+  ],
+  "registryDependencies": [
+    "@eskais/utils",
+    "@eskais/theme"
+  ],
+  "files": [
+    {
+      "path": "registry/ui/rating.tsx",
+      "content": "\"use client\"\n\nimport {\n  Rating as RatingPrimitive,\n  RatingItem as RatingItemPrimitive,\n  createRatingController,\n} from \"@ui-sdk/react/rating\"\nimport type { ComponentProps, ComponentType, SVGProps } from \"react\"\nimport { StarIcon } from \"lucide-react\"\n\nimport { cnState } from \"@/lib/utils\"\n\ntype RatingSize = \"sm\" | \"md\" | \"lg\"\n\nconst sizeClassNames = {\n  sm: \"[--rating-size:1rem]\",\n  md: \"[--rating-size:1.25rem]\",\n  lg: \"[--rating-size:1.5rem]\",\n} satisfies Record<RatingSize, string>\n\ntype RatingProps = ComponentProps<typeof RatingPrimitive> & {\n  size?: RatingSize\n  /** The icon of each star, drawn twice: an outline, and a filled copy clipped to how much of the star is covered. */\n  icon?: ComponentType<SVGProps<SVGSVGElement>>\n}\n\n/** Without children, each star is `icon` (a star by default), filled up to the score, half stars and averages too. */\nfunction Rating({ className, size = \"md\", icon = StarIcon, children, ...props }: RatingProps) {\n  return (\n    <RatingPrimitive\n      className={cnState(`inline-flex w-fit items-center ${sizeClassNames[size]} data-disabled:opacity-50`, className)}\n      {...props}\n    >\n      {children ?? <RatingItem icon={icon} />}\n    </RatingPrimitive>\n  )\n}\n\ntype RatingItemProps = ComponentProps<typeof RatingItemPrimitive> & {\n  icon?: ComponentType<SVGProps<SVGSVGElement>>\n}\n\n// The filled copy is clipped from the inline end, so a score of 4.2 fills a fifth of the last star.\nconst filledClassName =\n  // oxlint-disable-next-line shadcn/no-arbitrary-values -- clips the filled star to --rating-fill from the inline end\n  \"fill-current [clip-path:inset(0_calc((1-var(--rating-fill,0))*100%)_0_0)] rtl:[clip-path:inset(0_0_0_calc((1-var(--rating-fill,0))*100%))]\"\n\n// On a coarse pointer each star grows to a 44px box edge to edge, so neighbouring hit areas never overlap.\nfunction RatingItem({ className, icon: Icon = StarIcon, children, ...props }: RatingItemProps) {\n  return (\n    <RatingItemPrimitive\n      className={cnState(\n        [\n          \"relative inline-flex size-[calc(var(--rating-size)+var(--gap-inline))] shrink-0 cursor-pointer items-center justify-center rounded-control text-input-strong\",\n          \"pointer-coarse:size-(--control-height-touch) data-disabled:cursor-not-allowed data-readonly:cursor-default\",\n          \"has-focus-visible:ring-2 has-focus-visible:ring-ring\",\n          \"[&_svg]:size-(--rating-size)\",\n        ].join(\" \"),\n        className,\n      )}\n      {...props}\n    >\n      {children ?? (\n        <>\n          <Icon aria-hidden />\n          <span\n            aria-hidden\n            className=\"pointer-events-none absolute inset-0 flex items-center justify-center text-warning\"\n          >\n            <Icon className={filledClassName} />\n          </span>\n        </>\n      )}\n    </RatingItemPrimitive>\n  )\n}\n\nexport { createRatingController, Rating, RatingItem }\nexport type { RatingItemProps, RatingProps, RatingSize }\nexport type { RatingController, RatingItemState, RatingState, RatingValueChangeReason } from \"@ui-sdk/react/rating\"\n",
+      "type": "registry:ui"
+    }
+  ],
+  "docs": "`<Rating defaultValue step max deselectable size>` in a `Field` (the label names the radio group), or with `aria-label`. Each star is `icon` (lucide's star by default) drawn twice, an outline in `input-strong` and a filled copy in the warning colour clipped to `--rating-fill`, so `step={0.5}` and a read-only average like 4.2 fill part of a star (from the inline end in right to left). `size` is `sm`, `md` or `lg`; on a coarse pointer each star is a 44px box. `readOnly` with `getValueLabel` shows a score as one image. Children (`RatingItem icon`, or your own) replace the stars. In UI SDK 0.1.0-beta.5 a read-only rating keeps hidden radio buttons inside its image, which axe reports as nested-interactive.",
+  "type": "registry:ui"
+}

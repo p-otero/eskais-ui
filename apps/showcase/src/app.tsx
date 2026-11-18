@@ -62,6 +62,9 @@ import { FormsSection } from "./sections/forms"
 import { FormSection } from "./sections/form"
 import { FloatingLabelsSection } from "./sections/floating-labels"
 import { TokenInputSection } from "./sections/token-input"
+import { TreeSection } from "./sections/tree"
+import { PickersSection } from "./sections/pickers"
+import { PrimitivesSection } from "./sections/primitives"
 import { ValuesSection } from "./sections/values"
 import { StatusSection } from "./sections/status"
 import { AgentsSection } from "./sections/agents"
@@ -328,6 +331,12 @@ function App() {
           <FloatingLabelsSection />
 
           <TokenInputSection />
+
+          <TreeSection />
+
+          <PickersSection />
+
+          <PrimitivesSection />
 
           <Section title="Dialog" description="Focus trap, Escape, focus restore and an agent-editable field.">
             <RenameDialog />
