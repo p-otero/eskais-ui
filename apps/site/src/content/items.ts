@@ -272,7 +272,14 @@ const itemNotes: Record<string, ItemNotes> = {
     related: ["dropdown-menu", "menubar"],
   },
   command: {
-    a11y: ["Typing filters; arrow keys move the highlight; Enter runs.", "The ⌘K shortcut is opt-in on the trigger."],
+    usage:
+      "Run actions through Command onAction. A command with href is a link instead: Enter, a click, its shortcut or a mouse press follow it (fast links: a #/… hash route or a same-origin path on press), and it never runs onAction. Pass onFollow to route on the client and close the palette.",
+    a11y: [
+      "Typing filters; arrow keys move the highlight; Enter runs, or follows a link command.",
+      "A link command stays an option of the listbox, rendered as an anchor, so modified clicks open a new tab.",
+      "The ⌘K shortcut is opt-in on the trigger.",
+    ],
+    agent: "Agents search and highlight commands by name (setQuery, setValue); UI SDK offers no action that runs one.",
     related: ["combobox", "dropdown-menu", "kbd"],
   },
   lightbox: {

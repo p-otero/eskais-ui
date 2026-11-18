@@ -19,8 +19,14 @@ import {
 } from "@/components/ui/command-dialog"
 import { toast } from "@/components/ui/toast"
 
+import { hrefFor, navigate } from "../router"
+
 export default function CommandDemo() {
   const [open, setOpen] = useState(false)
+  const goTo = (route: string) => {
+    setOpen(false)
+    navigate(route)
+  }
   return (
     <CommandDialog open={open} onOpenChange={setOpen}>
       <CommandDialogTrigger shortcut="mod+j">
@@ -48,6 +54,20 @@ export default function CommandDemo() {
               <CommandItem value="open board" shortcut="mod+shift+b">
                 Open board
                 <CommandShortcut />
+              </CommandItem>
+              <CommandItem
+                value="dialog docs"
+                href={hrefFor("/docs/components/dialog")}
+                onFollow={() => goTo("/docs/components/dialog")}
+              >
+                Dialog docs
+              </CommandItem>
+              <CommandItem
+                value="shell docs"
+                href={hrefFor("/docs/components/shell")}
+                onFollow={() => goTo("/docs/components/shell")}
+              >
+                Shell docs
               </CommandItem>
             </CommandGroup>
           </CommandList>

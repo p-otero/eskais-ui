@@ -8,6 +8,11 @@ type FastLinkOptions = {
   enabled?: boolean
   /** Navigates instead of `location.assign`, for a client-side router. Receives the authored `href`. */
   onFollow?: (href: string, details: { url: URL; anchor: HTMLAnchorElement; event: PointerEvent }) => void
+  /**
+   * Follows the anchor this ref is on although it has this role, like a command rendered as an anchor (`option`).
+   * An anchor with any other role acts as a control and stays native.
+   */
+  anchorRole?: string
 }
 
 const optOut = "[data-no-fast-link]"
@@ -31,32 +36,39 @@ function isHashRoute(anchor: Element, href: string) {
   return prefix !== "" && href.startsWith(prefix)
 }
 
-function hashRouteIntent(event: PointerEvent, root: HTMLElement): FastLinkIntent | null {
+type PressIntent = FastLinkIntent & { hashRoute: boolean }
+
+// Core follows only anchors without a role (or `link`), so an `anchorRole` root is resolved here, like hash routes.
+function pressIntent(event: PointerEvent, root: HTMLElement, anchorRole: string | undefined): PressIntent | null {
   if (event.defaultPrevented || event.button !== 0 || event.pointerType !== "mouse") return null
   if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey || handledPresses.has(event)) return null
   const target = event.target instanceof Element ? event.target : null
   const anchor = target?.closest("a")
   if (!target || !anchor || !root.contains(anchor) || (anchor !== root && anchorRoots.has(anchor))) return null
   const role = anchor.getAttribute("role")
+  const ownRole = anchor === root && anchorRole !== undefined && role === anchorRole
   const linkTarget = anchor.getAttribute("target")
-  if ((role && !/^\s*(?:link)?\s*$/i.test(role)) || (linkTarget && linkTarget !== "_self")) return null
+  if ((role && !ownRole && !/^\s*(?:link)?\s*$/i.test(role)) || (linkTarget && linkTarget !== "_self")) return null
   const control = target.closest(nestedControls)
   if (anchor.hasAttribute("download") || (control && anchor.contains(control))) return null
   const href = anchor.getAttribute("href")
   const view = anchor.ownerDocument.defaultView
-  if (!href || !view || !isHashRoute(anchor, href)) return null
-  // A `<base>` elsewhere makes `#/x` another document's URL, which the browser loads natively.
+  if (!href || !view) return null
   const url = new URL(href, anchor.ownerDocument.baseURI)
-  if (url.href.slice(0, url.href.length - url.hash.length) !== view.location.href.split("#")[0]) return null
+  const hashRoute = isHashRoute(anchor, href)
+  if (hashRoute) {
+    // A `<base>` elsewhere makes `#/x` another document's URL, which the browser loads natively.
+    if (url.href.slice(0, url.href.length - url.hash.length) !== view.location.href.split("#")[0]) return null
+  } else if (!ownRole || href.startsWith("#") || url.origin !== view.location.origin) return null
   handledPresses.add(event)
-  return { anchor, href, url }
+  return { anchor, href, url, hashRoute }
 }
 
 // Core reads `data-no-fast-link` only between the pressed element and its anchor. Checking the press here, in a
 // capture listener added before core's on the same root, lets an ancestor (a region, `<body>`) opt out too.
 function attachFastLink(root: HTMLElement, options: () => FastLinkOptions) {
   let press: PointerEvent | undefined
-  let pendingHashRoute: HTMLAnchorElement | undefined
+  let pendingPress: HTMLAnchorElement | undefined
   const follow = (intent: FastLinkIntent, hashRoute: boolean) => {
     const { onFollow } = options()
     const view = intent.anchor.ownerDocument.defaultView
@@ -67,20 +79,20 @@ function attachFastLink(root: HTMLElement, options: () => FastLinkOptions) {
   const navigate = (intent: FastLinkIntent) => follow(intent, false)
   const onPointerDown = (event: PointerEvent) => {
     press = event
-    pendingHashRoute = undefined
+    pendingPress = undefined
     const target = event.target instanceof Element ? event.target : null
     const enabled = options().enabled !== false && !target?.closest(optOut)
     controller.update({ enabled, navigate })
-    const hashRoute = enabled ? hashRouteIntent(event, root) : null
-    if (!hashRoute) return
-    pendingHashRoute = hashRoute.anchor
-    follow(hashRoute, true)
+    const intent = enabled ? pressIntent(event, root, options().anchorRole) : null
+    if (!intent) return
+    pendingPress = intent.anchor
+    follow(intent, intent.hashRoute)
   }
   // The click that ends the press would follow the link again (a router's onFollow, the link part's own click).
   const onClick = (event: MouseEvent) => {
-    const anchor = pendingHashRoute
+    const anchor = pendingPress
     if (!anchor || event.detail === 0 || !(event.target instanceof Node) || !anchor.contains(event.target)) return
-    pendingHashRoute = undefined
+    pendingPress = undefined
     event.preventDefault()
   }
   if (root instanceof HTMLAnchorElement) anchorRoots.set(root, (anchorRoots.get(root) ?? 0) + 1)

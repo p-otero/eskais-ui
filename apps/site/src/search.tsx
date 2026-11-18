@@ -20,7 +20,7 @@ import {
 } from "@/components/ui/command-dialog"
 
 import { docSections } from "./pages"
-import { navigate } from "./router"
+import { hrefFor, navigate } from "./router"
 
 // The labelled trigger keeps ⌘K and the name agents open the dialog by while it is hidden on narrow screens, where
 // an icon button opens the same dialog through the controller.
@@ -45,12 +45,7 @@ function SiteSearch() {
         <SearchIcon />
       </CommandDialogOpenButton>
       <CommandDialogContent title="Search the docs">
-        <Command
-          onAction={(route) => {
-            search.close()
-            navigate(route)
-          }}
-        >
+        <Command>
           <CommandInput aria-label="Search pages" placeholder="Search components and guides" />
           <CommandEmpty>No pages found.</CommandEmpty>
           <CommandList className="max-h-96">
@@ -58,7 +53,16 @@ function SiteSearch() {
               <CommandGroup key={section.name}>
                 <CommandGroupLabel>{section.name}</CommandGroupLabel>
                 {section.pages.map((page) => (
-                  <CommandItem key={page.route} value={page.route} keywords={[page.title, ...page.keywords]}>
+                  <CommandItem
+                    key={page.route}
+                    value={page.route}
+                    keywords={[page.title, ...page.keywords]}
+                    href={hrefFor(page.route)}
+                    onFollow={() => {
+                      search.close()
+                      navigate(page.route)
+                    }}
+                  >
                     {page.title}
                   </CommandItem>
                 ))}
