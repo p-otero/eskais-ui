@@ -30,6 +30,8 @@ jobs:
         with:
           node-version: 24
           package-manager-cache: false
+      - name: No branch is named like a tag, which raw.githubusercontent.com would serve instead of the tag
+        run: node tooling/check-ref-names.mjs
       - run: bun install --frozen-lockfile
       - run: bun run build:site
       - uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d # v6.0.0

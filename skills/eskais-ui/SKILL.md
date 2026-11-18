@@ -24,7 +24,7 @@ Keeping screens fast (long lists, effects, React Compiler, motion) has its own s
 ## Install
 
 1. In `components.json`, add the registry once:
-   `"registries": { "@eskais": "https://raw.githubusercontent.com/p-otero/eskais-ui/<ref>/public/r/{name}.json" }`, where `<ref>` is a tag like `v0.1.0`, or `main`.
+   `"registries": { "@eskais": "https://raw.githubusercontent.com/p-otero/eskais-ui/refs/tags/<tag>/public/r/{name}.json" }`, with a release tag like `v0.2.1`. Keep the `refs/tags/` prefix: a bare `<tag>` resolves to a branch of the same name first. `main` instead gets unreleased changes.
 2. Aliases: shadcn writes `registry:ui` files to `aliases.ui` and `registry:lib` files to `aliases.lib`, and rewrites the registry's `@/components/ui`, `@/lib` and `@/lib/utils` imports to `ui`, `lib` and `utils`, so any prefix works. Set `components`, `ui`, `utils` and `lib` (e.g. `"~/components"`, `"~/components/ui"`, `"~/lib/utils"`, `"~/lib"`), and make each resolve through `compilerOptions.paths` in the root `tsconfig.json`: shadcn ignores `tsconfig.app.json` and `references`, and writes into a literal `@/` folder when an alias doesn't resolve.
 3. Put `@layer ui-sdk;` as the first line of the global stylesheet, above `@import "tailwindcss"`.
 4. `npx shadcn@latest add @eskais/theme @eskais/font-geist @eskais/button` (any item; dependencies come along). `font-geist` bundles the default font from npm; without it the theme falls back to the system font. `font-inter` is the alternative.

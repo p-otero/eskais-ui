@@ -2,6 +2,12 @@
 
 Versions follow [semver](https://semver.org). Before 1.0, a minor version can break compatibility. Release with `bun pm version <patch|minor|major>`, which bumps `package.json` and tags `vX.Y.Z`.
 
+## Unreleased
+
+### Changed
+
+- The README, the docs site, the `eskais-ui` skill and `@eskais/mockup`'s hint pin the registry as `https://raw.githubusercontent.com/p-otero/eskais-ui/refs/tags/<tag>/public/r/{name}.json`. raw.githubusercontent.com resolves a bare `<tag>` to a branch of the same name first, and a stray `v0.2.1` branch served pre-release files under the documented `v0.2.1` URL; that branch is gone, and `tooling/check-ref-names.mjs` fails CI and the Pages deploy if a branch is ever named like a tag. The site's URL follows the released version.
+
 ## 0.2.1 (2026-11-18)
 
 ### Added

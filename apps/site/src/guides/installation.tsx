@@ -54,8 +54,9 @@ export default function Installation() {
 
       <H2 id="registry">1. Add the registry</H2>
       <P>
-        Add <Code>@eskais</Code> to <Code>registries</Code> once. Replace <Code>main</Code> with a tag such as{" "}
-        <Code>v0.1.0</Code> for repeatable installs.
+        Add <Code>@eskais</Code> to <Code>registries</Code> once. The URL pins the latest release through{" "}
+        <Code>refs/tags/</Code>, so a branch with the same name can never stand in for the tag; change the tag to
+        upgrade, or use <Code>main</Code> for unreleased changes.
       </P>
       <Pre code={componentsJson} language="json" title="components.json" />
 
