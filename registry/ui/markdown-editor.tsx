@@ -34,7 +34,13 @@ import type {
 } from "@/components/ui/markdown-editor-handle"
 import { MarkdownEditorPortals } from "@/components/ui/markdown-editor-portals"
 import { markdownDocument, markdownEditor, type MarkdownEditorActions } from "@/components/ui/markdown-editor-primitive"
-import { toggleTaskOnLine, type CodeLanguages, type EditorSettings } from "@/components/ui/markdown-editor-state"
+import {
+  toggleTaskOnLine,
+  type CodeLanguages,
+  type EditorSettings,
+  type FrontmatterEditing,
+  type InitialCaret,
+} from "@/components/ui/markdown-editor-state"
 import type { MarkdownConflict } from "@/components/ui/markdown-editor-sync"
 import { MarkdownEditorToolbar } from "@/components/ui/markdown-editor-toolbar"
 import { PortalStore } from "@/components/ui/markdown-editor-widgets"
@@ -62,6 +68,13 @@ type MarkdownEditorProps = {
    */
   onConflict?: (conflict: MarkdownConflict) => string | undefined | void
   readOnly?: boolean
+  /**
+   * `"readonly"` protects a leading YAML block: typing, deleting or pasting into it, or across its fences, leaves it
+   * as written, so the Markdown round-trips byte for byte. A new `value` still replaces it. `"editable"` by default.
+   */
+  frontmatter?: FrontmatterEditing
+  /** Where the caret starts: on the line after a leading YAML block (default), or `"start"`. Read at mount. */
+  initialCaret?: InitialCaret
   placeholder?: string
   resolveWikilink?: WikilinkResolver
   suggestWikilinks?: SuggestWikilinks
@@ -93,6 +106,7 @@ function MarkdownEditor({ ref, ...props }: MarkdownEditorProps) {
 
 function MarkdownEditorBody(props: Omit<MarkdownEditorProps, "ref"> & { handle: MarkdownEditorProps["ref"] }) {
   const { label, readOnly = false, placeholder, resolveWikilink, cspNonce, toolbar = true, className } = props
+  const { frontmatter = "editable" } = props
   const { embedPreview = false, renderEmbed } = props
   const labels = useMemo(() => ({ ...markdownEditorLabelsEn, ...props.labels }), [props.labels])
   const slashCommands = useMemo(
@@ -109,9 +123,10 @@ function MarkdownEditorBody(props: Omit<MarkdownEditorProps, "ref"> & { handle: 
       readOnly,
       placeholder,
       cspNonce,
+      frontmatter,
       preview: { resolve: resolveWikilink, taskLabel: labels.task, portals, embeds: embedPreview },
     }),
-    [label, hintId, readOnly, placeholder, cspNonce, resolveWikilink, labels.task, portals, embedPreview],
+    [label, hintId, readOnly, placeholder, cspNonce, frontmatter, resolveWikilink, labels.task, portals, embedPreview],
   )
   const { hostRef, view, adapter, sync } = useMarkdownEditorView(props, settings)
   const [menuController] = useState(createTriggerMenuController)
@@ -207,6 +222,8 @@ function MarkdownEditorBody(props: Omit<MarkdownEditorProps, "ref"> & { handle: 
 
 export { MarkdownEditor, markdownEditorLabelsEn, markdownEditorLabelsEs, markdownSlashCommands }
 export type {
+  FrontmatterEditing,
+  InitialCaret,
   InsertTextOptions,
   MarkdownBlockKind,
   MarkdownConflict,

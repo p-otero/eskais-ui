@@ -53,11 +53,11 @@ function useMarkdownEditorView(props: MarkdownEditorProps, settings: EditorSetti
     const initial = latest.current.value ?? latest.current.defaultValue ?? ""
     const languages = latest.current.codeLanguages
     const editor = new EditorView({
-      state: createEditorState(initial, settingsRef.current, hooks, languages),
+      state: createEditorState(initial, settingsRef.current, hooks, languages, latest.current.initialCaret),
       parent: host,
     })
     const detach = sync.attach(editor, initial, (markdown) =>
-      editor.setState(createEditorState(markdown, settingsRef.current, hooks, languages)),
+      editor.setState(createEditorState(markdown, settingsRef.current, hooks, languages, latest.current.initialCaret)),
     )
     const attached = bridge.attach(editor)
     setView(editor)
