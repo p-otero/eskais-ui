@@ -4,8 +4,8 @@
   "title": "Rating",
   "description": "UI SDK Rating styled as stars that fill to the score: half stars, averages that fill part of a star, a pointer preview, sizes and 44px stars on touch screens.",
   "dependencies": [
-    "@ui-sdk/core@0.1.0-beta.5",
-    "@ui-sdk/react@0.1.0-beta.5",
+    "@ui-sdk/core@0.1.0-beta.10",
+    "@ui-sdk/react@0.1.0-beta.10",
     "lucide-react@^1.68.0"
   ],
   "registryDependencies": [
@@ -19,6 +19,6 @@
       "type": "registry:ui"
     }
   ],
-  "docs": "`<Rating defaultValue step max deselectable size>` in a `Field` (the label names the radio group), or with `aria-label`. Each star is `icon` (lucide's star by default) drawn twice, an outline in `input-strong` and a filled copy in the warning colour clipped to `--rating-fill`, so `step={0.5}` and a read-only average like 4.2 fill part of a star (from the inline end in right to left). `size` is `sm`, `md` or `lg`; on a coarse pointer each star is a 44px box. `readOnly` with `getValueLabel` shows a score as one image. Children (`RatingItem icon`, or your own) replace the stars. In UI SDK 0.1.0-beta.5 a read-only rating keeps hidden radio buttons inside its image, which axe reports as nested-interactive.",
+  "docs": "`<Rating defaultValue step max deselectable size>` in a `Field` (the label names the radio group), or with `aria-label`. Each star is `icon` (lucide's star by default) drawn twice, an outline in `input-strong` and a filled copy in the warning colour clipped to `--rating-fill`, so `step={0.5}` and a read-only average like 4.2 fill part of a star (from the inline end in right to left). `size` is `sm`, `md` or `lg`; on a coarse pointer each star is a 44px box. `readOnly` with `getValueLabel` shows a score as one image. Children (`RatingItem icon`, or your own) replace the stars. In UI SDK 0.1.0-beta.10 a read-only rating keeps hidden radio buttons inside its image, which axe reports as nested-interactive.",
   "type": "registry:ui"
 }

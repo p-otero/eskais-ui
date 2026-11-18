@@ -4,8 +4,8 @@
   "title": "Tree",
   "description": "UI SDK Tree styled as indented rows with guide lines: a file explorer from paths with folder and file icons, checkable trees with mixed branches, lazy branches, links and a flat list for virtualizing.",
   "dependencies": [
-    "@ui-sdk/core@0.1.0-beta.5",
-    "@ui-sdk/react@0.1.0-beta.5",
+    "@ui-sdk/core@0.1.0-beta.10",
+    "@ui-sdk/react@0.1.0-beta.10",
     "lucide-react@^1.68.0"
   ],
   "registryDependencies": [

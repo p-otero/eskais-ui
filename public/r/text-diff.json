@@ -4,8 +4,8 @@
   "title": "Text Diff",
   "description": "Compares two strings: unified or split, line numbers, unchanged regions folded behind Expand N lines, changed words highlighted, syntax colours by language, word wrap, line selection and find in page; inputs past 200k characters diff in a Web Worker.",
   "dependencies": [
-    "@ui-sdk/core@0.1.0-beta.5",
-    "@ui-sdk/react@0.1.0-beta.5"
+    "@ui-sdk/core@0.1.0-beta.10",
+    "@ui-sdk/react@0.1.0-beta.10"
   ],
   "registryDependencies": [
     "@eskais/utils",
