@@ -543,3 +543,22 @@ test("sidebarHeader goes above the sidebar's routes, also in the narrow drawer",
   await settle()
   expect(within(screen.getByRole("dialog", { name: "Main" })).getByText("Workspace: Acme")).toBeTruthy()
 })
+
+test('main="fill" gives main the column height, and a route\'s main overrides it while current', async () => {
+  const { rerender } = render(<TestShell />)
+  await settle()
+  const main = screen.getByRole("main")
+  expect(main.getAttribute("data-main")).toBe("flow")
+  expect(main.className).not.toContain("h-(--shell-column-height)")
+
+  rerender(<TestShell main="fill" />)
+  expect(main.getAttribute("data-main")).toBe("fill")
+  expect(main.className).toContain("h-(--shell-column-height)")
+  expect(main.className).toContain("narrow:h-(--shell-column-height-above-bar)")
+
+  const editorRoutes: Route[] = routes.map((route) => (route.id === "tasks" ? { ...route, main: "fill" } : route))
+  rerender(<TestShell routes={editorRoutes} currentHref="/tasks" />)
+  expect(main.getAttribute("data-main")).toBe("fill")
+  rerender(<TestShell routes={editorRoutes} currentHref="/inbox" />)
+  expect(main.getAttribute("data-main")).toBe("flow")
+})

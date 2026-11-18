@@ -643,6 +643,28 @@ async function checkShellAt(page, width, scheme) {
   await checkPalette(page, scope, `shell-${width}-${scheme}-palette.png`)
 }
 
+async function checkFill(page, width) {
+  await shellBlock(page, width, "light", "&main=fill")
+  const fill = await page.evaluate(() => {
+    const main = document.querySelector('[data-slot="shell-main"]').getBoundingClientRect()
+    const workspace = document.querySelector('[data-slot="document-workspace"]').getBoundingClientRect()
+    const topbar = document.querySelector('[data-slot="topbar"]').getBoundingClientRect()
+    const bar = document.querySelector('nav[aria-label="Bottom bar"]')
+    const barTop = bar?.checkVisibility() ? bar.getBoundingClientRect().top : innerHeight
+    return {
+      mainTop: Math.round(main.top - topbar.bottom),
+      mainBottom: Math.round(barTop - main.bottom),
+      workspace: Math.round(main.height - workspace.height),
+      pageScroll: document.documentElement.scrollHeight - innerHeight,
+    }
+  })
+  check(
+    `Shell main=fill ${width}px: a DocumentWorkspace fills main from the topbar to the bottom edge, no page scroll`,
+    fill.mainTop === 0 && fill.mainBottom === 0 && fill.workspace === 0 && fill.pageScroll <= 0,
+    JSON.stringify(fill),
+  )
+}
+
 async function checkShell(page) {
   const cases = ["light", "dark"].flatMap((scheme) => [1440, 768, 390].map((width) => ({ scheme, width })))
   // One page, so one case at a time.
@@ -667,6 +689,9 @@ async function checkShell(page) {
   const collapsedByShortcut = await collapsedBy()
   await page.keyboard.press("ControlOrMeta+b")
   check("Shell: sidebarShortcut collapses and expands the sidebar", collapsedByShortcut && !(await collapsedBy()))
+
+  await checkFill(page, 1440)
+  await checkFill(page, 390)
 
   await shellBlock(page, 1440, "light", "&router=hash")
   const sidebar = page.getByRole("navigation", { name: "Main" })

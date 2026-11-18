@@ -356,7 +356,7 @@ const itemNotes: Record<string, ItemNotes> = {
   },
   "document-workspace": {
     usage:
-      "For any notes or docs app: put a MarkdownEditor (edit) or MarkdownView (read) in document, your file tree in explorer, DocumentOutline and backlinks in aside, and DocumentQuickOpen in quickOpen. Pass the editor's ref as editorRef and extractHeadings(markdown) as headings.",
+      "For any notes or docs app: put a MarkdownEditor (edit) or MarkdownView (read) in document, your file tree in explorer, DocumentOutline and backlinks in aside, and DocumentQuickOpen in quickOpen. Pass the editor's ref as editorRef and extractHeadings(markdown) as headings. In a Shell, main fill (on the Shell or the route) lets it fill the height left.",
     a11y: [
       "The explorer is a navigation landmark, the document a named region (or main) and the aside a complementary landmark; the Files and Details toggles carry aria-expanded and aria-controls.",
       "It lays out by its own width: resizable, collapsible columns when wide, drawers when narrow. Drawers, quick open and menus give focus back to the document.",
@@ -428,7 +428,7 @@ const itemNotes: Record<string, ItemNotes> = {
   },
   shell: {
     usage:
-      "The frame of an application from one list of routes: pass routes, groups, currentHref and onNavigate (or plain or #/route hrefs), a brand and actions, and put each page in a PageLayout inside it. Use DocsLayout instead for documentation with a table of contents.",
+      "The frame of an application from one list of routes: pass routes, groups, currentHref and onNavigate (or plain or #/route hrefs), a brand and actions, and put each page in a PageLayout inside it; main fill (on the Shell or a route) is for an editor or workspace that fills the height left. Use DocsLayout instead for documentation with a table of contents.",
     a11y: [
       "A skip link first, to the <main> landmark, which takes focus (tabIndex -1) without changing the URL, so hash routers keep their route.",
       'The sidebar and the bottom bar are navigation landmarks named by labels.sidebar and labels.mobileNav; the current route carries aria-current="page" in both, and in the palette.',

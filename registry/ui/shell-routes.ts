@@ -3,6 +3,12 @@ import type { ComponentType, ReactNode } from "react"
 /** Where a route can show: the sidebar (and its drawer), the bottom bar, its More sheet, and the palette's Go to. */
 type ShellPlacement = "sidebar" | "mobile" | "more" | "palette"
 
+/**
+ * How `<main>` lays out the page. `flow`: as tall as its content, and the page scrolls. `fill`: exactly the height
+ * left under the topbar (and above the bottom bar), so a child with `h-full` or `flex-1` fills it and scrolls inside.
+ */
+type ShellMain = "flow" | "fill"
+
 type ShellRoute = {
   /** Unique among the routes: keys and the palette's command values come from it. */
   id: string
@@ -24,6 +30,8 @@ type ShellRoute = {
    * bar even with `mobile` set. `"more"` lets More list it when the bar doesn't show it.
    */
   placements?: readonly ShellPlacement[]
+  /** Overrides the Shell's `main` while this route is current, like `"fill"` for an editor among scrolling pages. */
+  main?: ShellMain
   /** More words the palette matches, like synonyms. */
   keywords?: readonly string[]
   /** A short count or mark beside the label, like 3. It joins the link's name. */
@@ -110,4 +118,4 @@ function mobileRoutes(routes: readonly ShellRoute[]): MobileRoutes {
 }
 
 export { currentRouteId, mobileRoutes, placedIn, sectionRoutes }
-export type { ShellRoute, ShellPlacement, ShellRouteGroup, ShellRouteSection, ShellCurrent, MobileRoutes }
+export type { ShellMain, ShellRoute, ShellPlacement, ShellRouteGroup, ShellRouteSection, ShellCurrent, MobileRoutes }

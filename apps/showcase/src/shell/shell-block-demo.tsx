@@ -15,6 +15,7 @@ import {
 import { Shell, type ShellRoute, type ShellRouteGroup } from "@/components/ui/shell"
 import { Button } from "@/components/ui/button"
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { DocumentWorkspace } from "@/components/ui/document-workspace"
 import { CommandGroup, CommandGroupLabel, CommandItem, CommandItemIcon } from "@/components/ui/command"
 import { PageHeader } from "@/components/ui/page-header"
 import { PageLayout } from "@/components/ui/page-layout"
@@ -22,7 +23,10 @@ import { toast, ToastStack } from "@/components/ui/toast"
 
 // ?demo=shell-block (state routing through onNavigate) or ?demo=shell-block&router=hash (#/route hrefs, no onNavigate),
 // for tooling/shell-check.mjs.
-const hashMode = new URLSearchParams(location.search).get("router") === "hash"
+// &main=fill renders a DocumentWorkspace in a main that fills the height left.
+const params = new URLSearchParams(location.search)
+const hashMode = params.get("router") === "hash"
+const fillMode = params.get("main") === "fill"
 
 const pages: ShellRoute[] = [
   { id: "inbox", label: "Inbox", href: "/inbox", icon: InboxIcon, group: "work", mobile: true, badge: 3 },
@@ -65,6 +69,7 @@ function ShellBlockDemo() {
         onNavigate={hashMode ? undefined : onNavigate}
         storageKey="showcase-shell"
         sidebarShortcut="mod+b"
+        main={fillMode ? "fill" : "flow"}
         sidebarHeader={<p className="truncate px-inset-item text-caption text-muted-foreground">Acme workspace</p>}
         labels={{ searchPlaceholder: "Pages and commands" }}
         brand={<span className="text-title-sm narrow:sr-only">Acme</span>}
@@ -86,27 +91,40 @@ function ShellBlockDemo() {
         }
         onCommand={(value) => toast(`Ran ${value}`)}
       >
-        <PageLayout
-          width="dense"
-          header={
-            <PageHeader
-              eyebrow="Workspace"
-              title={current?.label ?? "Not found"}
-              description="Everything that needs a look, newest first."
-            />
-          }
-        >
-          <div className="grid gap-section md:grid-cols-2">
-            {cards.map((title) => (
-              <Card key={title} data-testid={title === cards.at(-1) ? "last-card" : undefined}>
-                <CardHeader>
-                  <CardTitle headingLevel={2}>{title}</CardTitle>
-                  <CardDescription>Updated 2 hours ago.</CardDescription>
-                </CardHeader>
-              </Card>
-            ))}
-          </div>
-        </PageLayout>
+        {fillMode ? (
+          <DocumentWorkspace
+            explorer={<p className="p-inset-surface text-body-sm">Notes</p>}
+            document={
+              <div data-testid="fill-document" className="flex flex-col gap-group p-inset-surface">
+                {cards.map((title) => (
+                  <p key={title}>{title}: a paragraph long enough to make the document scroll on its own.</p>
+                ))}
+              </div>
+            }
+          />
+        ) : (
+          <PageLayout
+            width="dense"
+            header={
+              <PageHeader
+                eyebrow="Workspace"
+                title={current?.label ?? "Not found"}
+                description="Everything that needs a look, newest first."
+              />
+            }
+          >
+            <div className="grid gap-section md:grid-cols-2">
+              {cards.map((title) => (
+                <Card key={title} data-testid={title === cards.at(-1) ? "last-card" : undefined}>
+                  <CardHeader>
+                    <CardTitle headingLevel={2}>{title}</CardTitle>
+                    <CardDescription>Updated 2 hours ago.</CardDescription>
+                  </CardHeader>
+                </Card>
+              ))}
+            </div>
+          </PageLayout>
+        )}
       </Shell>
       <ToastStack />
     </>

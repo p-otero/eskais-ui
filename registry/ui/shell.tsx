@@ -6,6 +6,7 @@ import { SearchIcon } from "lucide-react"
 import { ShellSidebarSections, useMobileNavItems } from "@/components/ui/shell-nav"
 import {
   placedIn,
+  type ShellMain,
   type ShellPlacement,
   type ShellRoute,
   type ShellRouteGroup,
@@ -127,6 +128,12 @@ type ShellProps<Route extends ShellRoute = ShellRoute> = Omit<ComponentProps<"di
   /** The search text each open of the palette starts from, when `searchQuery` doesn't control it. */
   defaultSearchQuery?: string
   onSearchQueryChange?: ShellSearchProps["onQueryChange"]
+  /**
+   * `fill` gives `<main>` the height left under the topbar and above the bottom bar (`--shell-column-height`), so a
+   * page like a DocumentWorkspace fills it with `h-full`; its content scrolls inside. `flow` (default) lets the page
+   * scroll. A route's `main` overrides it while that route is current.
+   */
+  main?: ShellMain
   /** The id of the `<main>` landmark, the skip link's target. */
   mainId?: string
   /** `div` when the page already has its `<main>`, like a preview inside another page. */
@@ -141,6 +148,7 @@ const narrowQuery = "(width <= 47.5rem)"
 const columns = {
   "--shell-column-height": "calc(var(--shell-height) - var(--topbar-height))",
   "--shell-scroll-margin": "calc(var(--topbar-height) + var(--gap-group))",
+  "--shell-column-height-above-bar": "calc(var(--shell-column-height) - var(--mobile-nav-offset))",
 } as CSSProperties
 
 /**
@@ -170,6 +178,7 @@ function Shell<Route extends ShellRoute>({
   searchQuery,
   defaultSearchQuery,
   onSearchQueryChange,
+  main = "flow",
   mainId = "main",
   as: Main = "main",
   className,
@@ -203,6 +212,7 @@ function Shell<Route extends ShellRoute>({
   )
   const mobileNav = useMobileNavItems(mobile, currentId, onNavigate ? navigate : undefined)
   const hasMobileNav = mobileNav.items.length > 0
+  const mainLayout = routes.find((route) => route.id === currentId)?.main ?? main
 
   return (
     <ShellSidebarContext value={sidebar}>
@@ -279,10 +289,13 @@ function Shell<Route extends ShellRoute>({
             id={mainId}
             tabIndex={-1}
             data-slot="shell-main"
+            data-main={mainLayout}
             // Anchors, focus and scrollIntoView stop below the topbar and above the bottom bar.
             className={cn(
               "flex min-w-0 flex-1 flex-col self-stretch focus:outline-none **:scroll-mt-(--shell-scroll-margin)",
               hasMobileNav && "narrow:**:scroll-mb-(--mobile-nav-offset)",
+              mainLayout === "fill" && "h-(--shell-column-height) min-h-0 overflow-auto",
+              mainLayout === "fill" && hasMobileNav && "narrow:h-(--shell-column-height-above-bar)",
             )}
           >
             {children}
@@ -305,4 +318,4 @@ function Shell<Route extends ShellRoute>({
 }
 
 export { Shell, shellLabels, useShellSidebar }
-export type { ShellRoute, ShellPlacement, ShellRouteGroup, ShellCurrent, ShellLabels, ShellProps }
+export type { ShellMain, ShellRoute, ShellPlacement, ShellRouteGroup, ShellCurrent, ShellLabels, ShellProps }
