@@ -3,10 +3,12 @@ import { createAgent } from "@ui-sdk/react/agent"
 import { useState, type RefObject } from "react"
 import { afterEach, beforeAll, expect, test, vi, type Mock } from "vitest"
 
+import { Button } from "@/components/ui/button"
 import {
   DocumentOutline,
   DocumentQuickOpen,
   DocumentWorkspace,
+  useDocumentWorkspace,
   type DocumentEditor,
   type DocumentSaveState,
   type DocumentWorkspaceMode,
@@ -287,4 +289,170 @@ test("agents switch the mode, open the explorer and the aside, and run quick ope
   expect(open.ok, open.error?.message).toBe(true)
   await settle()
   expect(screen.getByRole("dialog", { name: "Quick open" })).toBeTruthy()
+})
+
+const notes = ["plan", "goals", "risks"]
+
+/** A tree of buttons, not links: what it opens reaches the workspace only through `documentId`. */
+function ButtonTree({ onOpen, close = false }: { onOpen: (id: string) => void; close?: boolean }) {
+  const workspace = useDocumentWorkspace()
+  return (
+    <ul>
+      {notes.map((id) => (
+        <li key={id}>
+          <Button
+            variant="ghost"
+            onClick={() => {
+              onOpen(id)
+              if (close) workspace.closeExplorer()
+            }}
+          >
+            {id}
+          </Button>
+        </li>
+      ))}
+    </ul>
+  )
+}
+
+function ButtonTreeHarness({
+  withId = true,
+  close = false,
+  ...props
+}: HarnessProps & { withId?: boolean; close?: boolean }) {
+  const [current, setCurrent] = useState("plan")
+  return (
+    <>
+      <Harness
+        explorer={<ButtonTree onOpen={setCurrent} close={close} />}
+        documentId={withId ? current : undefined}
+        tabs={<span data-testid="current">{current}</span>}
+        {...props}
+      />
+      <button type="button" onClick={() => setCurrent("risks")}>
+        open risks elsewhere
+      </button>
+    </>
+  )
+}
+
+/** The workspace measures 320px wide, a phone's width. */
+function phoneWidth() {
+  const original = Element.prototype.getBoundingClientRect
+  return vi.spyOn(Element.prototype, "getBoundingClientRect").mockImplementation(function (this: Element) {
+    return this.matches("[data-slot=document-workspace]")
+      ? DOMRect.fromRect({ width: 320, height: 640 })
+      : original.call(this)
+  })
+}
+
+async function openFiles() {
+  fireEvent.click(screen.getByRole("button", { name: "Files" }))
+  await settle()
+  return screen.getByRole("dialog", { name: "Files" })
+}
+
+test("320px: a button in the explorer drawer that opens another document closes it, through documentId", async () => {
+  const rect = phoneWidth()
+  render(<ButtonTreeHarness />)
+  await settle()
+  expect(document.querySelector("[data-slot=document-workspace]")?.getAttribute("data-layout")).toBe("narrow")
+
+  // The current document again: nothing changes, so the drawer stays.
+  fireEvent.click(within(await openFiles()).getByRole("button", { name: "plan" }))
+  await settle()
+  expect(screen.getByRole("dialog", { name: "Files" })).toBeTruthy()
+
+  fireEvent.click(within(screen.getByRole("dialog", { name: "Files" })).getByRole("button", { name: "goals" }))
+  await settle()
+  await frames()
+  expect(screen.getByTestId("current").textContent).toBe("goals")
+  expect(screen.queryByRole("dialog", { name: "Files" })).toBeNull()
+  expect(screen.getByRole("button", { name: "Files" }).getAttribute("aria-expanded")).toBe("false")
+  expect(document.activeElement).toBe(screen.getByRole("textbox", { name: "Note" }))
+  rect.mockRestore()
+})
+
+test("without documentId a button tree keeps the drawer open, and closeExplorer() closes it", async () => {
+  const rect = phoneWidth()
+  const { unmount } = render(<ButtonTreeHarness withId={false} />)
+  await settle()
+  fireEvent.click(within(await openFiles()).getByRole("button", { name: "goals" }))
+  await settle()
+  expect(screen.getByRole("dialog", { name: "Files" })).toBeTruthy()
+  unmount()
+
+  render(<ButtonTreeHarness withId={false} close />)
+  await settle()
+  fireEvent.click(within(await openFiles()).getByRole("button", { name: "risks" }))
+  await settle()
+  await frames()
+  expect(screen.queryByRole("dialog", { name: "Files" })).toBeNull()
+  expect(document.activeElement).toBe(screen.getByRole("textbox", { name: "Note" }))
+  rect.mockRestore()
+})
+
+test("a document opened from elsewhere closes the drawer too; the wide column stays", async () => {
+  const { unmount } = render(<ButtonTreeHarness />)
+  await settle()
+  await openFiles()
+  fireEvent.click(screen.getByRole("button", { name: "open risks elsewhere", hidden: true }))
+  await settle()
+  await frames()
+  expect(screen.queryByRole("dialog", { name: "Files" })).toBeNull()
+  unmount()
+
+  render(<ButtonTreeHarness narrow={-1} />)
+  await settle()
+  fireEvent.click(screen.getByRole("button", { name: "goals" }))
+  await settle()
+  expect(screen.getByRole("navigation", { name: "Files" })).toBeTruthy()
+  expect(screen.getByRole("button", { name: "Files" }).getAttribute("aria-expanded")).toBe("true")
+})
+
+function ControlledExplorer() {
+  const [open, setOpen] = useState(false)
+  return (
+    <>
+      <ButtonTreeHarness explorerOpen={open} onExplorerOpenChange={setOpen} />
+      <output data-testid="explorer-open">{String(open)}</output>
+      <button type="button" onClick={() => setOpen(false)}>
+        close files
+      </button>
+    </>
+  )
+}
+
+test("a controlled explorerOpen drives the drawer, and a document change asks to close it", async () => {
+  render(<ControlledExplorer />)
+  await settle()
+  await openFiles()
+  expect(screen.getByTestId("explorer-open").textContent).toBe("true")
+  fireEvent.click(screen.getByRole("button", { name: "close files", hidden: true }))
+  await settle()
+  await frames()
+  expect(screen.queryByRole("dialog", { name: "Files" })).toBeNull()
+
+  fireEvent.click(within(await openFiles()).getByRole("button", { name: "risks" }))
+  await settle()
+  await frames()
+  expect(screen.getByTestId("explorer-open").textContent).toBe("false")
+  expect(screen.queryByRole("dialog", { name: "Files" })).toBeNull()
+})
+
+test("an agent that opens a document from the explorer drawer leaves it closed", async () => {
+  const rect = phoneWidth()
+  render(<ButtonTreeHarness />)
+  await settle()
+  const agent = createAgent({ allow: () => true })
+  const files = await agent.act({ steps: [{ ref: "Files", action: "press" }] })
+  expect(files.ok, files.error?.message).toBe(true)
+  await settle()
+  const goals = await agent.act({ steps: [{ ref: "goals", action: "press" }] })
+  expect(goals.ok, goals.error?.message).toBe(true)
+  await settle()
+  await frames()
+  expect(screen.getByTestId("current").textContent).toBe("goals")
+  expect(screen.queryByRole("dialog", { name: "Files" })).toBeNull()
+  rect.mockRestore()
 })

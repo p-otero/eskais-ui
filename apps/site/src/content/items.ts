@@ -359,7 +359,7 @@ const itemNotes: Record<string, ItemNotes> = {
   },
   "document-workspace": {
     usage:
-      "For any notes or docs app: put a MarkdownEditor (edit) or MarkdownView (read) in document, your file tree in explorer, DocumentOutline and backlinks in aside, and DocumentQuickOpen in quickOpen. Pass the editor's ref as editorRef and extractHeadings(markdown) as headings. In a Shell, main fill (on the Shell or the route) lets it fill the height left.",
+      "For any notes or docs app: put a MarkdownEditor (edit) or MarkdownView (read) in document, your file tree in explorer, DocumentOutline and backlinks in aside, and DocumentQuickOpen in quickOpen. Pass the editor's ref as editorRef, extractHeadings(markdown) as headings and the open note's id as documentId, so the narrow explorer drawer closes when any control opens a note. In a Shell, main fill (on the Shell or the route) lets it fill the height left.",
     a11y: [
       "The explorer is a navigation landmark, the document a named region (or main) and the aside a complementary landmark; the Files and Details toggles carry aria-expanded and aria-controls.",
       "It lays out by its own width: resizable, collapsible columns when wide, drawers when narrow. Drawers, quick open and menus give focus back to the document.",

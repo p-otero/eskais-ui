@@ -245,6 +245,7 @@ export default function DocumentWorkspaceDemo({ className = "h-144 w-full" }: { 
       </div>
       <DocumentWorkspace
         className="min-h-0 flex-1 rounded-surface border"
+        documentId={current}
         mode={mode}
         onModeChange={setMode}
         storageKey="eskais-demo-workspace"
@@ -268,6 +269,26 @@ export default function DocumentWorkspaceDemo({ className = "h-144 w-full" }: { 
         }
         explorer={
           <div className="flex flex-col gap-group px-inset-item py-inset-item">
+            <section aria-labelledby="recent-notes" className="flex flex-col gap-inline">
+              <h3 id="recent-notes" className="text-meta tracking-meta text-muted-foreground uppercase">
+                Recent
+              </h3>
+              <ul className="flex flex-col">
+                {open.map((slug) => (
+                  <li key={slug}>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      aria-current={slug === current ? "page" : undefined}
+                      onClick={() => openNote(slug)}
+                      className="w-full justify-start font-normal aria-[current]:bg-accent aria-[current]:text-accent-foreground"
+                    >
+                      {titleOf(notes, slug)}
+                    </Button>
+                  </li>
+                ))}
+              </ul>
+            </section>
             {folders.map((folder) => (
               <section key={folder} aria-label={folder} className="flex flex-col gap-inline">
                 <h3 className="flex items-center gap-inline text-meta tracking-meta text-muted-foreground uppercase">

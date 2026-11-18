@@ -76,7 +76,13 @@ type DocumentWorkspaceContextValue = {
   /** Read mode: scrolls the `index`th heading of the document to the top and moves focus to it. */
   revealHeading: (index: number) => void
   quickOpen: CommandDialogController
+  /** Shows or hides the explorer: its column when wide, its drawer when narrow. */
   setExplorerOpen: (open: boolean) => void
+  /**
+   * Closes the explorer drawer in the narrow layout, as a link in it does; the wide layout's column stays. Call it
+   * when a button in your tree opens a document, or pass `documentId` to the workspace instead.
+   */
+  closeExplorer: () => void
   setAsideOpen: (open: boolean) => void
   labels: DocumentWorkspaceLabels
 }

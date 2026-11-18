@@ -115,6 +115,17 @@ function usePanel({ narrow, open, setOpen, controller, panelId }: PanelOptions) 
   return { drawerOpen: narrow && open && allowed }
 }
 
+/** Calls `onChange` after a render where `key` differs from the one before; never on mount. */
+function useOnKeyChange(key: unknown, onChange: () => void) {
+  const changed = useEffectEvent(onChange)
+  const previous = useRef(key)
+  useEffect(() => {
+    if (Object.is(previous.current, key)) return
+    previous.current = key
+    changed()
+  }, [key])
+}
+
 type ModeScrollOptions = {
   mode: DocumentWorkspaceMode
   headings: readonly DocumentHeading[]
@@ -229,6 +240,7 @@ export {
   useContainerNarrow,
   useControllable,
   useModeScroll,
+  useOnKeyChange,
   usePanel,
   watchLostFocus,
   writePanels,

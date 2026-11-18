@@ -26,6 +26,11 @@ import { cn } from "@/lib/utils"
 type DocumentWorkspaceProps = {
   /** The open document: a `MarkdownEditor` in edit mode, a `MarkdownView` in read mode. */
   document: ReactNode
+  /**
+   * The open document's id, like its slug or path. When it changes, the narrow layout's explorer drawer closes
+   * and focus goes to the document, whatever opened it: a link, a button in your tree, quick open or a wikilink.
+   */
+  documentId?: string
   /** A file tree or list, inside a navigation landmark: a resizable column when wide, a drawer when narrow. */
   explorer?: ReactNode
   /** Open documents, like a `TabsList`, in the header. */
@@ -44,6 +49,7 @@ type DocumentWorkspaceProps = {
   mode?: DocumentWorkspaceMode
   defaultMode?: DocumentWorkspaceMode
   onModeChange?: (mode: DocumentWorkspaceMode) => void
+  /** Whether the explorer is shown: the column when wide, the drawer when narrow. Control it with `onExplorerOpenChange`. */
   explorerOpen?: boolean
   defaultExplorerOpen?: boolean
   onExplorerOpenChange?: (open: boolean) => void

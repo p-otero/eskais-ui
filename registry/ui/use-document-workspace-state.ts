@@ -20,6 +20,7 @@ import {
   useContainerNarrow,
   useControllable,
   useModeScroll,
+  useOnKeyChange,
   usePanel,
   watchLostFocus,
   writePanels,
@@ -72,6 +73,11 @@ function useDocumentWorkspaceState(
   const explorerPanel = usePanel({ ...panel, open: explorerOpen, setOpen: setExplorerOpen, panelId: ids.explorer })
   const asidePanel = usePanel({ ...panel, open: asideOpen, setOpen: setAsideOpen, panelId: ids.aside })
 
+  const closeExplorer = () => {
+    if (narrow && explorerOpen) setExplorerOpen(false)
+  }
+  useOnKeyChange(props.documentId, closeExplorer)
+
   const captureScroll = useModeScroll({ mode, headings, editorRef, documentRef })
   const setMode = (next: DocumentWorkspaceMode) => {
     if (next === mode) return
@@ -94,6 +100,7 @@ function useDocumentWorkspaceState(
     refocusDocument: () => watchLostFocus(documentRef.current, () => context.focusDocument()),
     quickOpen,
     setExplorerOpen,
+    closeExplorer,
     setAsideOpen,
     labels,
   }
