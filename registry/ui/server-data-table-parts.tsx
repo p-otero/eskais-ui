@@ -14,6 +14,7 @@ import {
   defaultPaginationLabels,
 } from "@/components/ui/pagination"
 import { Select } from "@/components/ui/select"
+import { useMediaQuery } from "@/components/ui/use-media-query"
 import { pageStatusLabels, type Navigation, type PageStatusLabels } from "@/lib/page-source"
 
 type ServerDataTableLabels = {
@@ -84,6 +85,8 @@ function ServerTableNavigation({
   onLoadMore,
   labels,
 }: ServerTableNavigationProps) {
+  // On a phone, the current page alone between the ends keeps the numbers and both steps on one line.
+  const narrow = useMediaQuery("(width <= 47.5rem)")
   const paginationLabels = {
     navigation: labels.pagination(label),
     previous: labels.previousPage,
@@ -99,6 +102,7 @@ function ServerTableNavigation({
         pageCount={pageCount}
         onPageChange={(next) => onPageChange(next)}
         labels={paginationLabels}
+        siblings={narrow ? 0 : 1}
         data-agent-hidden=""
         className="w-auto"
       />
@@ -153,7 +157,7 @@ function ServerTablePageSize({ size, sizes, onSizeChange, label }: ServerTablePa
   const options = sizes.map((value) => ({ value: String(value), label: String(value) }))
   return (
     <span data-slot="server-data-table-page-size" className="flex items-center gap-inline text-body-sm">
-      <span aria-hidden="true" className="text-muted-foreground">
+      <span aria-hidden="true" className="whitespace-nowrap text-muted-foreground">
         {label}
       </span>
       <Select
