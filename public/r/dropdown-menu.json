@@ -4,8 +4,8 @@
   "title": "Dropdown Menu",
   "description": "UI SDK Menu parts with a button trigger: arrow keys, typeahead, checkbox and radio items, submenus, destructive items and async actions.",
   "dependencies": [
-    "@ui-sdk/core@0.1.0-beta.5",
-    "@ui-sdk/react@0.1.0-beta.5",
+    "@ui-sdk/core@0.1.0-beta.10",
+    "@ui-sdk/react@0.1.0-beta.10",
     "class-variance-authority@0.7.1",
     "lucide-react"
   ],

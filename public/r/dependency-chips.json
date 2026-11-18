@@ -4,8 +4,8 @@
   "title": "Dependency Chips",
   "description": "A named list of toned chips that truncate long labels, collapse past max into a +N chip, and become UI SDK Buttons agents can press when onSelect is set.",
   "dependencies": [
-    "@ui-sdk/core@0.1.0-beta.5",
-    "@ui-sdk/react@0.1.0-beta.5"
+    "@ui-sdk/core@0.1.0-beta.10",
+    "@ui-sdk/react@0.1.0-beta.10"
   ],
   "registryDependencies": [
     "@eskais/utils",

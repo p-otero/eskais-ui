@@ -4,8 +4,8 @@
   "title": "Date Picker",
   "description": "UI SDK Date Picker: type a date in the locale's format or pick it from a calendar popup, single or range, with a format hint, an optional clear button and ISO values.",
   "dependencies": [
-    "@ui-sdk/core@0.1.0-beta.5",
-    "@ui-sdk/react@0.1.0-beta.5",
+    "@ui-sdk/core@0.1.0-beta.10",
+    "@ui-sdk/react@0.1.0-beta.10",
     "class-variance-authority@0.7.1",
     "lucide-react"
   ],

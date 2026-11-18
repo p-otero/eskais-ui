@@ -4,7 +4,7 @@
   "title": "Kbd",
   "description": "Presentational keyboard key and key group rendered as kbd.",
   "dependencies": [
-    "@ui-sdk/react@0.1.0-beta.5"
+    "@ui-sdk/react@0.1.0-beta.10"
   ],
   "registryDependencies": [
     "@eskais/utils",

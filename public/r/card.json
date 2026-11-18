@@ -4,7 +4,7 @@
   "title": "Card",
   "description": "Card parts: a titled card renders as a section labelled by its title, with an eyebrow, a top-end action slot, a heading level on the title and card, dashed or bare surfaces.",
   "dependencies": [
-    "@ui-sdk/react@0.1.0-beta.5",
+    "@ui-sdk/react@0.1.0-beta.10",
     "class-variance-authority@0.7.1"
   ],
   "registryDependencies": [

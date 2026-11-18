@@ -250,7 +250,7 @@ async function screenshots(page) {
         await page.getByRole("dialog", { name: "Files" }).waitFor()
         await shot(page, name("explorer-drawer"))
         await page.keyboard.press("Escape")
-        // UI SDK 0.1.0-beta.5 drops a press on the page while a drawer slides out (see the drawer item docs).
+        // UI SDK 0.1.0-beta.10 drops a press on the page while a drawer slides out (see the drawer item docs).
         await page.getByRole("dialog", { name: "Files" }).waitFor({ state: "detached" })
         await page.getByRole("button", { name: "Details", exact: true }).click()
         await page.getByRole("dialog", { name: "Details" }).waitFor()

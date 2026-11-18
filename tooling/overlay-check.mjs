@@ -72,7 +72,7 @@ await withShowcase(async (page) => {
     open: "Open drawer",
     name: "Plain drawer",
     close: escape,
-    known: "UI SDK 0.1.0-beta.5's Drawer cancels pointerdown on the page while it slides out",
+    known: "UI SDK 0.1.0-beta.10's Drawer cancels pointerdown on the page while it slides out",
   })
 
   await page.getByRole("button", { name: "Open unmounting dialog" }).click()

@@ -2,7 +2,7 @@
 
 import { useLayoutEffect, useRef, type RefObject } from "react"
 
-type FocusMemory = { opener: HTMLElement | null; movedBeforeOpen: boolean; content?: HTMLElement | null }
+type FocusMemory = { opener: HTMLElement | null; movedBeforeOpen: boolean }
 
 function focusedElement() {
   const active = document.activeElement
@@ -26,27 +26,14 @@ function mayReturnFocus(own: Element | null, active: Element | null = focusedEle
   return !openModals().some((modal) => modal !== own && !own?.contains(modal))
 }
 
-/**
- * Records the focused element once, on mount. On unmount with focus still inside (the dialog left the page while
- * open), gives focus back to it instead of letting it fall to <body>, unless `restore` is off or another modal
- * opened meanwhile.
- */
-function useRecordOpener(memoryRef: RefObject<FocusMemory>, restore: boolean) {
+/** Records the focused element once, on mount. */
+function useRecordOpener(memoryRef: RefObject<FocusMemory>) {
   const recorded = useRef(false)
   useLayoutEffect(() => {
-    if (!recorded.current) {
-      recorded.current = true
-      memoryRef.current = { ...memoryRef.current, opener: focusedElement(), movedBeforeOpen: false }
-    }
-    return () => {
-      const inside = document.activeElement
-      const { opener } = memoryRef.current
-      queueMicrotask(() => {
-        if (!restore || !opener?.isConnected || inside?.isConnected || !mayReturnFocus(null)) return
-        opener.focus({ preventScroll: true })
-      })
-    }
-  }, [memoryRef, restore])
+    if (recorded.current) return
+    recorded.current = true
+    memoryRef.current = { opener: focusedElement(), movedBeforeOpen: false }
+  }, [memoryRef])
 }
 
 /** Notes, once, whether focus moved away from the recorded opener between the two markers' layout effects. */

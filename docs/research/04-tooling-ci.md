@@ -82,7 +82,7 @@ Recomendación: **adoptar** · **opcional** · **descartar** · **consultar**.
 | Navegador real | Playwright (Node) — fase siguiente                                        | 1.65                     |
 | Showcase       | Vite 8 + `@vitejs/plugin-react` + `@tailwindcss/vite`                     | 8.x                      |
 | Registry       | `shadcn build` + `shadcn registry validate`                               | 4.23.0                   |
-| UI SDK         | `@ui-sdk/core` + `@ui-sdk/react` **exactos**                              | 0.1.0-beta.5             |
+| UI SDK         | `@ui-sdk/core` + `@ui-sdk/react` **exactos**                              | 0.1.0-beta.10            |
 
 No adoptar ahora: Vite+, turbo, changesets, knip, regresión visual.
 

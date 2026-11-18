@@ -85,24 +85,23 @@ type DialogContentProps = ComponentProps<typeof DialogContentPrimitive> & {
 type FinalFocus = ComponentProps<typeof DialogContentPrimitive>["finalFocus"]
 
 // Mounts before the content's children, so its layout effect runs before React's `autoFocus` inside them, and
-// records the element to return to. Unmounted with focus still inside (the dialog itself left the page while
-// open), it gives focus back to that element instead of letting it fall to <body>.
-function FocusOpener({ memoryRef, restore }: { memoryRef: RefObject<FocusMemory>; restore: boolean }) {
-  useRecordOpener(memoryRef, restore)
+// records the element to return to.
+function FocusOpener({ memoryRef }: { memoryRef: RefObject<FocusMemory> }) {
+  useRecordOpener(memoryRef)
   return null
 }
 
 // Mounts after the children: focus that moved between the two was taken by `autoFocus`, before UI SDK could
-// record where it came from.
+// record where it came from (UI SDK 0.1.0-beta.10 then returns focus past the opener, to the next control).
 function FocusMoved({ memoryRef }: { memoryRef: RefObject<FocusMemory> }) {
   useRecordFocusMove(memoryRef)
   return null
 }
 
-function withFocusMarkers(content: ReactNode, memoryRef: RefObject<FocusMemory>, restore: boolean) {
+function withFocusMarkers(content: ReactNode, memoryRef: RefObject<FocusMemory>) {
   return (
     <>
-      <FocusOpener memoryRef={memoryRef} restore={restore} />
+      <FocusOpener memoryRef={memoryRef} />
       {content}
       <FocusMoved memoryRef={memoryRef} />
     </>
@@ -123,37 +122,36 @@ function resolveFocusTarget(target: Exclude<FinalFocus, "none">) {
 }
 
 /**
- * Keeps focus return working when UI SDK can't see the opener: the content unmounts while open
- * (`{open && <Dialog open />}`), or a React `autoFocus` field took focus first. It never takes focus from another
- * modal opened while this one closes. Pass the content's `finalFocus` and `ref`, give the content the returned
- * `finalFocus` and `attach` (as its ref), and wrap its children.
+ * Keeps focus return working where UI SDK misses it: a React `autoFocus` field took focus before UI SDK recorded the
+ * opener, or another modal (one of ours or another library's) opened while this one closes or unmounts, which keeps
+ * focus. Pass the content's `finalFocus` and `ref`, give the content the returned `finalFocus` and `attach` (as its
+ * ref), and wrap its children.
  */
 function useFocusReturn(finalFocus: FinalFocus, forwarded?: Ref<HTMLElement>) {
   const memoryRef = useRef<FocusMemory>({ opener: null, movedBeforeOpen: false })
-  const restore = finalFocus !== "none"
+  const contentRef = useRef<HTMLElement | null>(null)
   const returnTo = () => {
     const { opener, movedBeforeOpen } = memoryRef.current
     return movedBeforeOpen && opener?.isConnected ? opener : null
   }
-  // Returning the focused element leaves focus where it is; null would send UI SDK down its fallback chain.
+  // Returning the focused element leaves focus where it is; null sends UI SDK down its own fallback chain.
   const guarded = () => {
-    if (!mayReturnFocus(memoryRef.current.content ?? null))
-      return focusedElement() ?? (document.activeElement as HTMLElement | null)
+    if (!mayReturnFocus(contentRef.current)) return focusedElement() ?? (document.activeElement as HTMLElement | null)
     return finalFocus === undefined ? returnTo() : resolveFocusTarget(finalFocus as Exclude<FinalFocus, "none">)
   }
   function wrap<State>(children: ReactNode | ((state: State) => ReactNode)) {
     return typeof children === "function"
-      ? (state: State) => withFocusMarkers(children(state), memoryRef, restore)
-      : withFocusMarkers(children, memoryRef, restore)
+      ? (state: State) => withFocusMarkers(children(state), memoryRef)
+      : withFocusMarkers(children, memoryRef)
   }
   const attach = useCallback(
     (element: HTMLElement | null) => {
-      memoryRef.current.content = element
+      contentRef.current = element
       return assignRef(forwarded, element)
     },
     [forwarded],
   )
-  return { finalFocus: restore ? guarded : finalFocus, wrap, attach }
+  return { finalFocus: finalFocus === "none" ? finalFocus : guarded, wrap, attach }
 }
 
 function DialogContent({

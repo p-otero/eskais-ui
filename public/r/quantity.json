@@ -4,7 +4,7 @@
   "title": "Quantity",
   "description": "Honest values: formatQuantity() and QuantityValue show unknown as a dash, estimated with ~ and screen reader text, and the source in the title.",
   "dependencies": [
-    "@ui-sdk/react@0.1.0-beta.5"
+    "@ui-sdk/react@0.1.0-beta.10"
   ],
   "registryDependencies": [
     "@eskais/utils",

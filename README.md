@@ -6,7 +6,7 @@ UI SDK-first, agent-native React components, distributed as a shadcn-style regis
 - Agents can read and operate the components through `createAgent`. Destructive actions require a person's approval.
 - React 19, strict TypeScript, Tailwind CSS v4. Consumers need Node with npm or pnpm; Bun is only used to develop this repo.
 
-> Status: v0.1 in development. UI SDK is in beta (pinned to `0.1.0-beta.5`), so expect breaking changes.
+> Status: v0.1 in development. UI SDK is in beta (pinned to `0.1.0-beta.10`), so expect breaking changes.
 
 ## Catalog
 
@@ -181,7 +181,7 @@ Derived colours use CSS relative colour syntax: Chrome 119, Firefox 128, Safari 
 
 Notes while UI SDK is in beta:
 
-- `shadcn add` writes `^0.1.0-beta.5` for `@ui-sdk/*`. Change it to the exact version, since later betas can break.
+- `shadcn add` writes `^0.1.0-beta.10` for `@ui-sdk/*`. Change it to the exact version, since later betas can break.
 - pnpm 11+ refuses packages younger than `minimumReleaseAge`. Every other dependency the registry pins is at least 7 days old, but UI SDK's first release is from 2026-11-12: until its pinned beta is old enough, add `@ui-sdk/*` to `minimumReleaseAgeExclude` in `pnpm-workspace.yaml`.
 
 ## Develop

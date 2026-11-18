@@ -152,14 +152,13 @@ test("an agent can open the palette, search and highlight a command by name", as
   expect(screen.getByRole("option", { name: /Open board/ }).dataset.highlighted).toBe("")
 })
 
-// UI SDK 0.1.0-beta.5 offers agents only setValue, setQuery and setPages on a Command: nothing runs a command.
-test.fails("an agent can run a command", async () => {
+test("an agent can run a command", async () => {
   const onAction = vi.fn()
   render(<Palette onAction={onAction} />)
   await settle()
   await agent.act({ steps: [{ ref: "Search commands", action: "press" }] })
   await settle()
-  const ran = await agent.act({ steps: [{ ref: "Run a command", action: "press", args: ["Open board"] }] })
+  const ran = await agent.act({ steps: [{ ref: "Run a command", action: "run", args: ["Open board"] }] })
   expect(ran.ok, ran.error?.message).toBe(true)
   expect(onAction).toHaveBeenCalledWith("board")
 })

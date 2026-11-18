@@ -4,7 +4,7 @@
   "title": "Stat",
   "description": "Summary figures: Stat, StatLabel, StatValue (a number, a Quantity or a node), StatHint and StatDelta (a change with its direction in words), in a responsive StatGroup list.",
   "dependencies": [
-    "@ui-sdk/react@0.1.0-beta.5",
+    "@ui-sdk/react@0.1.0-beta.10",
     "class-variance-authority@0.7.1",
     "lucide-react"
   ],

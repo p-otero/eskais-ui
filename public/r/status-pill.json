@@ -4,7 +4,7 @@
   "title": "Status Pill",
   "description": "Presentational status pill with the shared tones (plus muted) and an optional dot that can pulse, and StatusDot: a coloured dot with a screen reader label. The pulse stops under reduced motion.",
   "dependencies": [
-    "@ui-sdk/react@0.1.0-beta.5",
+    "@ui-sdk/react@0.1.0-beta.10",
     "class-variance-authority@0.7.1"
   ],
   "registryDependencies": [

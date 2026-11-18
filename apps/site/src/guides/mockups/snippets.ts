@@ -104,7 +104,7 @@ const inspectRegistry = `@eskais 0dc2acb842db  107 of 114 component items not in
   …`
 
 const inspectSdk = `$ bun ../eskais-ui/packages/mockup/src/cli.ts inspect --sdk
-@ui-sdk/react 0.1.0-beta.5  68 public subpaths
+@ui-sdk/react 0.1.0-beta.10  68 public subpaths
   accordion            Accordion, AccordionHeader, AccordionItem, AccordionPanel, …
   …
 $ bun ../eskais-ui/packages/mockup/src/cli.ts inspect --sdk file-input

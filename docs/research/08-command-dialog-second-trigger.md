@@ -1,6 +1,6 @@
 # 08 · A second DialogTrigger drops the dialog's agent label
 
-Written in English so it can go to UI SDK as is. Not reported yet. Found on `@ui-sdk/react` 0.1.0-beta.5 (2026-11-16).
+Written in English so it can go to UI SDK as is. Not reported yet. Found on `@ui-sdk/react` 0.1.0-beta.5 (2026-11-16); still there in 0.1.0-beta.10 (2026-11-18).
 
 ## What happens
 
