@@ -94,6 +94,20 @@ export default function Routing() {
       </P>
       <Pre code={ownRouter} />
 
+      <H2 id="settings">Settings section links</H2>
+      <P>
+        A <Code>SettingsPage</Code> navigation entry is a link, so it can open in a new tab. Its href comes from the{" "}
+        <Code>url</Code> adapter: through <Code>hashRouter()</Code> it is <Code>#/settings?section=security</Code>,
+        which fast links follow as a hash route on press and a new tab opens on the same route. Without <Code>url</Code>{" "}
+        it is <Code>#security</Code>, an in-page anchor that stays native. <Code>getHref</Code> overrides both, and{" "}
+        <Code>navigation="buttons"</Code> renders buttons that only scroll, for sections that have no address of their
+        own.
+      </P>
+      <Pre
+        code={`<SettingsPage url={createUrlParam("section", { router: hashRouter() })}>…</SettingsPage>
+<SettingsPage navigation="buttons">…</SettingsPage>`}
+      />
+
       <H2 id="controlled">Controlled selection</H2>
       <P>
         A route contract of the app&apos;s own, like a path segment per item, is not a query param. Skip the adapter and

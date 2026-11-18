@@ -349,6 +349,7 @@ const itemNotes: Record<string, ItemNotes> = {
     a11y: [
       "The navigation is a named landmark; the section being read has aria-current=location.",
       "Going to a section scrolls by id and moves focus to its heading, without touching location.hash, so hash routers keep their route.",
+      'Section links take their href from the url adapter (#/settings?section=id through a hash router), so a new tab opens the route; navigation="buttons" scrolls without an address.',
       "Each section is a region named by its title and described by its description; each row's label names its control.",
     ],
     agent:

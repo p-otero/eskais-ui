@@ -12,6 +12,8 @@ import {
   type ReactNode,
 } from "react"
 
+import { Button as ButtonPrimitive } from "@ui-sdk/react/button"
+
 import { ConfirmDialog } from "@/components/ui/confirm-dialog"
 import { DescriptionList, type DescriptionListProps } from "@/components/ui/description-list"
 import { Field, FieldDescription, FieldLabel } from "@/components/ui/field"
@@ -43,11 +45,20 @@ type SettingsPageProps = Omit<ComponentProps<"div">, "onChange"> & {
   onSectionChange?: (id: string, details: { reason: SettingsSectionChangeReason }) => void
   /**
    * Keeps the section in the URL and scrolls to it on load and on Back: `createUrlParam("section")` from
-   * `@/lib/url-param`, which never touches `location.hash`, so hash routers keep their route.
+   * `@/lib/url-param`, which never touches `location.hash`, or `createUrlParam("section", { router: hashRouter() })`
+   * for `#/settings?section=id` inside a hash route. Its `href` builds the navigation's links.
    */
   url?: UrlParamAdapter
-  /** A navigation entry's href, for opening in a new tab. Default `#id`; a plain click scrolls without following it. */
+  /**
+   * A navigation entry's href, for opening in a new tab: by default the `url` adapter's href for the section, else
+   * `#id`. A plain click scrolls without following it.
+   */
   getHref?: (id: string) => string
+  /**
+   * `links` (default): the navigation's entries are links to each section, which open in a new tab. `buttons`:
+   * buttons that scroll to a section, for a page whose sections have no address of their own.
+   */
+  navigation?: "links" | "buttons"
   labels?: Partial<SettingsPageLabels>
   /**
    * `--settings-top` (0 by default): the height of anything sticky above the page, like a topbar. `--settings-height`
@@ -87,6 +98,9 @@ function goTo(id: string, smooth: boolean, focus: boolean) {
 
 const hashOf = (id: string) => `#${id}`
 
+const navEntryClassName =
+  "rounded-control px-inset-item py-inline text-body-sm text-muted-foreground transition-colors duration-micro ease-standard outline-none hover:bg-accent/60 hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring aria-[current]:bg-accent aria-[current]:font-medium aria-[current]:text-accent-foreground"
+
 /**
  * A settings page: a section navigation that sticks beside the sections on wide containers and becomes a picker on
  * narrow ones, with the section being read marked as you scroll. Going to a section scrolls by id and moves focus to
@@ -97,7 +111,8 @@ function SettingsPage({
   currentSection,
   onSectionChange,
   url,
-  getHref = hashOf,
+  getHref,
+  navigation = "links",
   labels: overrides,
   className,
   style,
@@ -105,6 +120,7 @@ function SettingsPage({
   ...props
 }: SettingsPageProps) {
   const labels = { ...settingsPageLabels, ...overrides }
+  const hrefOf = getHref ?? (url?.href ? (id: string) => url.href?.(id) ?? hashOf(id) : hashOf)
   const sections = sectionsProp ?? sectionsOf(children)
   const ids = sections.map((section) => section.id).join("\n")
   const [chosen, setChosen] = useState<string>()
@@ -148,18 +164,29 @@ function SettingsPage({
           data-slot="settings-nav"
           className="sticky top-(--settings-scroll-margin) hidden max-h-(--settings-nav-height) w-52 shrink-0 flex-col gap-px overflow-y-auto @3xl/settings:flex"
         >
-          {sections.map((section) => (
-            <Link
-              key={section.id}
-              variant="plain"
-              href={getHref(section.id)}
-              current={section.id === current ? "location" : undefined}
-              onFollow={() => choose(section.id)}
-              className="rounded-control px-inset-item py-inline text-body-sm text-muted-foreground transition-colors duration-micro ease-standard outline-none hover:bg-accent/60 hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring aria-[current]:bg-accent aria-[current]:font-medium aria-[current]:text-accent-foreground"
-            >
-              {section.label}
-            </Link>
-          ))}
+          {sections.map((section) =>
+            navigation === "buttons" ? (
+              <ButtonPrimitive
+                key={section.id}
+                aria-current={section.id === current ? "location" : undefined}
+                onClick={() => choose(section.id)}
+                className={cn(navEntryClassName, "cursor-pointer text-start")}
+              >
+                {section.label}
+              </ButtonPrimitive>
+            ) : (
+              <Link
+                key={section.id}
+                variant="plain"
+                href={hrefOf(section.id)}
+                current={section.id === current ? "location" : undefined}
+                onFollow={() => choose(section.id)}
+                className={navEntryClassName}
+              >
+                {section.label}
+              </Link>
+            ),
+          )}
         </nav>
         <div
           data-slot="settings-picker"
