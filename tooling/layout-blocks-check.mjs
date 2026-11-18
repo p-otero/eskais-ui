@@ -1,4 +1,4 @@
-// The layout blocks (?demo=master-detail and master-detail-check, ?demo=dashboard-grid, ?demo=settings-page) at 1440, 768 and 390px, light
+// The layout blocks (?demo=master-detail and master-detail-check, ?demo=dashboard-grid, ?demo=settings-page and settings-page-check) at 1440, 768 and 390px, light
 // and dark: axe, no horizontal overflow, no overlapping panes, stacking on narrow screens, focus moves and sticky
 // navigation. Run by tooling/shell-check.mjs.
 import { createRequire } from "node:module"
@@ -314,6 +314,59 @@ async function settingsPage(page, check, shot, width, scheme) {
   await shot(page, "settings-page-pending.png")
 }
 
+// ?demo=settings-page-check: hashRouter links (#/settings?section=id) and a section that mounts 600 ms in.
+async function settingsPageFocus(page, check) {
+  const tag = "settings-page-check"
+  const origin = new URL(page.url()).origin
+  const focusedHeading = () =>
+    page.evaluate(() => {
+      const active = document.activeElement
+      return active?.matches('[data-slot="settings-section-title"]') ? active.textContent : null
+    })
+  const inView = (name) =>
+    page.getByRole("heading", { name }).evaluate((element) => {
+      const rect = element.getBoundingClientRect()
+      return rect.top >= 0 && rect.bottom <= innerHeight
+    })
+  await page.setViewportSize({ width: 1440, height: 900 })
+
+  await page.goto(`${origin}/?demo=settings-page-check#/settings?section=danger-zone`)
+  await page.getByRole("heading", { name: "Danger zone" }).waitFor()
+  await page.waitForTimeout(300)
+  check(`${tag}: a section the URL names that mounts later takes focus`, (await focusedHeading()) === "Danger zone")
+  check(`${tag}: and is scrolled into view`, await inView("Danger zone"))
+  check(
+    `${tag}: and the address stays`,
+    (await page.evaluate(() => location.hash)) === "#/settings?section=danger-zone",
+  )
+
+  await page.goto("about:blank")
+  await page.goto(`${origin}/?demo=settings-page-check#/settings?section=danger-zone`)
+  await page.getByRole("heading", { name: "Account" }).waitFor()
+  await page.keyboard.press("Shift")
+  const before = await page.evaluate(() => scrollY)
+  await page.getByRole("heading", { name: "Danger zone" }).waitFor()
+  await page.waitForTimeout(300)
+  check(`${tag}: after a key press it doesn't take focus`, (await focusedHeading()) === null)
+  check(`${tag}: nor scroll`, (await page.evaluate(() => scrollY)) === before)
+
+  await page.evaluate(() => scrollTo(0, 0))
+  const link = page.getByRole("navigation", { name: "Settings sections" }).getByRole("link", { name: "Notifications" })
+  check(
+    `${tag}: section links are hash routes`,
+    (await link.getAttribute("href")) === "#/settings?section=notifications",
+  )
+  const linkBox = await link.boundingBox()
+  await page.mouse.move(linkBox.x + linkBox.width / 2, linkBox.y + linkBox.height / 2)
+  await page.mouse.down()
+  await page.mouse.up()
+  await page.waitForTimeout(900)
+  check(`${tag}: a mouse press on a section link focuses its heading`, (await focusedHeading()) === "Notifications")
+  check(`${tag}: and scrolls it into view`, await inView("Notifications"))
+  check(`${tag}: and marks the link`, (await link.getAttribute("aria-current")) === "location")
+  check(`${tag}: and records it`, (await page.evaluate(() => location.hash)) === "#/settings?section=notifications")
+}
+
 function visiblePanes(root) {
   return root.evaluate((element) =>
     [...element.querySelectorAll('[data-slot="master-detail-list"], [data-slot="master-detail-detail"]')]
@@ -418,6 +471,7 @@ async function checkLayoutBlocks(page, check, shot) {
     // oxlint-disable-next-line eslint/no-await-in-loop -- one page drives the steps, in order
     for (const scheme of schemes) await settingsPage(page, check, shot, width, scheme)
   }
+  await settingsPageFocus(page, check)
 }
 
 export { axe, checkLayoutBlocks, layout, open, overlaps, settle }
