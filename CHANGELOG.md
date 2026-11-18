@@ -12,6 +12,10 @@ Versions follow [semver](https://semver.org). Before 1.0, a minor version can br
 
 - The README, the docs site, the `eskais-ui` skill and `@eskais/mockup`'s hint pin the registry as `https://raw.githubusercontent.com/p-otero/eskais-ui/refs/tags/<tag>/public/r/{name}.json`. raw.githubusercontent.com resolves a bare `<tag>` to a branch of the same name first, and a stray `v0.2.1` branch served pre-release files under the documented `v0.2.1` URL; that branch is gone, and `tooling/check-ref-names.mjs` fails CI and the Pages deploy if a branch is ever named like a tag. The site's URL follows the released version.
 
+### Fixed
+
+- Ring `Meter` no longer overflows a narrow column: the `variant="ring"` root (`inline-flex w-fit`) grew to a long label's unwrapped width, so a `MeterLabel className="truncate"` pushed it past a 320px grid column. The root takes `max-w-full min-w-0` and `MeterLabel` `max-w-full min-w-0`, so a truncating label truncates; `node tooling/shell-check.mjs` measures it.
+
 ## 0.2.1 (2026-11-18)
 
 ### Added

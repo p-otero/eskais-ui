@@ -349,6 +349,28 @@ async function checkGauges(page) {
     .locator("svg")
     .evaluateAll((svgs) => svgs.map((svg) => Math.round(svg.getBoundingClientRect().width)))
   check("Ring meter: sm < md < lg", sizes[0] < sizes[1] && sizes[1] < sizes[2], sizes.join(", "))
+  const narrow = await page.getByTestId("narrow-rings").evaluate((grid) => {
+    const cell = (grid.clientWidth - 2 * Number.parseFloat(getComputedStyle(grid).columnGap)) / 3
+    return {
+      overflow: grid.scrollWidth - grid.clientWidth,
+      cell: Math.round(cell),
+      widths: [...grid.querySelectorAll('[role="meter"]')].map((meter) =>
+        Math.round(meter.getBoundingClientRect().width),
+      ),
+      truncated: [...grid.querySelectorAll('[data-slot="meter-label"]')].map(
+        (label) => label.scrollWidth > label.clientWidth,
+      ),
+    }
+  })
+  check(
+    "Ring meter: a long truncating label stays inside a narrow grid column and truncates",
+    narrow.overflow <= 0 &&
+      narrow.widths.every((width) => width <= narrow.cell + 1) &&
+      narrow.truncated[0] &&
+      narrow.truncated[1] &&
+      !narrow.truncated[2],
+    JSON.stringify(narrow),
+  )
   const deltas = await page
     .getByTestId("stats")
     .locator('[data-slot="stat-delta"]')

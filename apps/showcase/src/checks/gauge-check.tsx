@@ -3,7 +3,7 @@ import { Stat, StatDelta, StatGroup, StatLabel, StatValue } from "@/components/u
 import type { Tone } from "@/lib/tone"
 
 // ?demo=gauge-check: the fixture tooling/shell-check.mjs measures and screenshots: ring meters in each size and tone,
-// and stats with a delta up, down, inverted and flat.
+// ring meters with long truncating labels in a narrow grid, and stats with a delta up, down, inverted and flat.
 const rings: { size: "sm" | "md" | "lg"; value: number; tone?: Tone; label: string }[] = [
   { size: "sm", value: 25, label: "Quota" },
   { size: "md", value: 68, tone: "success", label: "Storage" },
@@ -20,6 +20,15 @@ function GaugeCheck() {
           <Meter key={ring.label} variant="ring" value={ring.value} tone={ring.tone} locale="en-US">
             <MeterRing size={ring.size} />
             <MeterLabel>{ring.label}</MeterLabel>
+          </Meter>
+        ))}
+      </div>
+      <div data-testid="narrow-rings" className="grid w-80 grid-cols-3 gap-items">
+        {["Disk used across every workspace", "Compute minutes this billing period", "Seats"].map((label) => (
+          <Meter key={label} variant="ring" value={40} locale="en-US">
+            <MeterRing size="sm" />
+            {/* oxlint-disable-next-line shadcn/no-restyle -- reproduces a consumer's truncating label in a narrow column */}
+            <MeterLabel className="truncate">{label}</MeterLabel>
           </Meter>
         ))}
       </div>
