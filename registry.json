@@ -1250,7 +1250,7 @@
       "dependencies": [
         "@ui-sdk/core@0.1.0-beta.5",
         "@ui-sdk/react@0.1.0-beta.5",
-        "lucide-react@1.68.0"
+        "lucide-react@^1.68.0"
       ],
       "registryDependencies": [
         "@eskais/utils",
@@ -1273,7 +1273,7 @@
       "dependencies": [
         "@ui-sdk/core@0.1.0-beta.5",
         "@ui-sdk/react@0.1.0-beta.5",
-        "lucide-react@1.68.0"
+        "lucide-react@^1.68.0"
       ],
       "registryDependencies": [
         "@eskais/utils",
@@ -1352,7 +1352,7 @@
         "react-hook-form@7.91.0",
         "@hookform/resolvers@7.0.2",
         "@standard-schema/spec@1.1.0",
-        "lucide-react@1.68.0"
+        "lucide-react@^1.68.0"
       ],
       "registryDependencies": [
         "@eskais/utils",
@@ -1442,7 +1442,7 @@
         "@standard-schema/spec@1.1.0",
         "react-hook-form@7.91.0",
         "class-variance-authority@0.7.1",
-        "lucide-react@1.68.0"
+        "lucide-react@^1.68.0"
       ],
       "registryDependencies": [
         "@eskais/utils",
@@ -1546,7 +1546,7 @@
       "dependencies": [
         "@ui-sdk/core@0.1.0-beta.5",
         "@ui-sdk/react@0.1.0-beta.5",
-        "lucide-react@1.68.0"
+        "lucide-react@^1.68.0"
       ],
       "registryDependencies": [
         "@eskais/utils",
@@ -1573,7 +1573,7 @@
       "dependencies": [
         "@ui-sdk/core@0.1.0-beta.5",
         "@ui-sdk/react@0.1.0-beta.5",
-        "lucide-react@1.68.0"
+        "lucide-react@^1.68.0"
       ],
       "registryDependencies": [
         "@eskais/utils",
@@ -1695,7 +1695,7 @@
       "dependencies": [
         "@ui-sdk/react@0.1.0-beta.5",
         "class-variance-authority@0.7.1",
-        "lucide-react@1.68.0"
+        "lucide-react@^1.68.0"
       ],
       "registryDependencies": [
         "@eskais/utils",
@@ -1913,7 +1913,7 @@
         "@ui-sdk/core@0.1.0-beta.5",
         "@ui-sdk/react@0.1.0-beta.5",
         "class-variance-authority@0.7.1",
-        "lucide-react@1.68.0"
+        "lucide-react@^1.68.0"
       ],
       "registryDependencies": [
         "@eskais/utils",
@@ -1938,7 +1938,7 @@
         "@ui-sdk/core@0.1.0-beta.5",
         "@ui-sdk/react@0.1.0-beta.5",
         "class-variance-authority@0.7.1",
-        "lucide-react@1.68.0"
+        "lucide-react@^1.68.0"
       ],
       "registryDependencies": [
         "@eskais/utils",
@@ -1964,7 +1964,7 @@
       "dependencies": [
         "@ui-sdk/core@0.1.0-beta.5",
         "@ui-sdk/react@0.1.0-beta.5",
-        "lucide-react@1.68.0"
+        "lucide-react@^1.68.0"
       ],
       "registryDependencies": [
         "@eskais/utils",
@@ -1988,7 +1988,7 @@
       "dependencies": [
         "@ui-sdk/core@0.1.0-beta.5",
         "@ui-sdk/react@0.1.0-beta.5",
-        "lucide-react@1.68.0"
+        "lucide-react@^1.68.0"
       ],
       "registryDependencies": [
         "@eskais/utils",
@@ -2016,7 +2016,7 @@
       "dependencies": [
         "@ui-sdk/core@0.1.0-beta.5",
         "@ui-sdk/react@0.1.0-beta.5",
-        "lucide-react@1.68.0"
+        "lucide-react@^1.68.0"
       ],
       "registryDependencies": [
         "@eskais/utils",
@@ -2062,7 +2062,7 @@
       "dependencies": [
         "@ui-sdk/core@0.1.0-beta.5",
         "@ui-sdk/react@0.1.0-beta.5",
-        "lucide-react@1.68.0"
+        "lucide-react@^1.68.0"
       ],
       "registryDependencies": [
         "@eskais/utils",
@@ -2106,7 +2106,7 @@
       "dependencies": [
         "@ui-sdk/core@0.1.0-beta.5",
         "@ui-sdk/react@0.1.0-beta.5",
-        "lucide-react@1.68.0"
+        "lucide-react@^1.68.0"
       ],
       "registryDependencies": [
         "@eskais/utils",
@@ -2187,7 +2187,7 @@
       "dependencies": [
         "@ui-sdk/core@0.1.0-beta.5",
         "@ui-sdk/react@0.1.0-beta.5",
-        "lucide-react@1.68.0"
+        "lucide-react@^1.68.0"
       ],
       "registryDependencies": [
         "@eskais/utils",
@@ -2209,7 +2209,7 @@
       "dependencies": [
         "@ui-sdk/react@0.1.0-beta.5",
         "class-variance-authority@0.7.1",
-        "lucide-react@1.68.0"
+        "lucide-react@^1.68.0"
       ],
       "registryDependencies": [
         "@eskais/utils",
@@ -2239,7 +2239,7 @@
         "@ui-sdk/core@0.1.0-beta.5",
         "@ui-sdk/react@0.1.0-beta.5",
         "class-variance-authority@0.7.1",
-        "lucide-react@1.68.0"
+        "lucide-react@^1.68.0"
       ],
       "registryDependencies": [
         "@eskais/utils",
@@ -2266,7 +2266,7 @@
       "dependencies": [
         "@ui-sdk/core@0.1.0-beta.5",
         "@ui-sdk/react@0.1.0-beta.5",
-        "lucide-react@1.68.0"
+        "lucide-react@^1.68.0"
       ],
       "registryDependencies": [
         "@eskais/utils",
@@ -2354,7 +2354,7 @@
       "description": "Provider, model and effort of an AgentRef: compact for cards (one line, long model ids cut in the middle, full text in title) or detail for panels, with a marker when the agent that ran isn't the one requested.",
       "dependencies": [
         "@ui-sdk/react@0.1.0-beta.5",
-        "lucide-react@1.68.0"
+        "lucide-react@^1.68.0"
       ],
       "registryDependencies": [
         "@eskais/utils",
@@ -2452,7 +2452,7 @@
       "dependencies": [
         "@ui-sdk/core@0.1.0-beta.5",
         "@ui-sdk/react@0.1.0-beta.5",
-        "lucide-react@1.68.0"
+        "lucide-react@^1.68.0"
       ],
       "registryDependencies": [
         "@eskais/utils",
@@ -2551,7 +2551,7 @@
       "description": "A compact agent task card: id, two-line title, profile, active agent, liveness, acceptance bar, attempts and cost, dependency chips, blocker with its retry time, decision and analysis-mode markers, and proposal actions in live mode. A stretched UI SDK Button selects it without nesting other controls.",
       "dependencies": [
         "@ui-sdk/react@0.1.0-beta.5",
-        "lucide-react@1.68.0"
+        "lucide-react@^1.68.0"
       ],
       "registryDependencies": [
         "@eskais/utils",
@@ -2609,7 +2609,7 @@
       "description": "An agent task's goal, acceptance and evidence, dependencies that select their task, the pending decision with proposal actions, usage and the attempt timeline. TaskDetailPanel shows it as a non-modal panel; TaskDetailDialog as a modal dialog or a right-side drawer. Escape and a close button close either.",
       "dependencies": [
         "@ui-sdk/react@0.1.0-beta.5",
-        "lucide-react@1.68.0"
+        "lucide-react@^1.68.0"
       ],
       "registryDependencies": [
         "@eskais/utils",
@@ -2657,7 +2657,7 @@
       "dependencies": [
         "@ui-sdk/core@0.1.0-beta.5",
         "@ui-sdk/react@0.1.0-beta.5",
-        "lucide-react@1.68.0"
+        "lucide-react@^1.68.0"
       ],
       "registryDependencies": [
         "@eskais/utils",
@@ -2740,7 +2740,7 @@
       "dependencies": [
         "@ui-sdk/core@0.1.0-beta.5",
         "@ui-sdk/react@0.1.0-beta.5",
-        "lucide-react@1.68.0"
+        "lucide-react@^1.68.0"
       ],
       "registryDependencies": [
         "@eskais/utils",
@@ -2826,7 +2826,7 @@
         "@ui-sdk/core@0.1.0-beta.5",
         "@ui-sdk/react@0.1.0-beta.5",
         "class-variance-authority@0.7.1",
-        "lucide-react@1.68.0"
+        "lucide-react@^1.68.0"
       ],
       "registryDependencies": [
         "@eskais/utils",
@@ -2848,7 +2848,7 @@
       "description": "Presentational breadcrumb trail: a navigation named Breadcrumb, an ordered list and aria-current on the current page.",
       "dependencies": [
         "@ui-sdk/react@0.1.0-beta.5",
-        "lucide-react@1.68.0"
+        "lucide-react@^1.68.0"
       ],
       "registryDependencies": [
         "@eskais/utils",
@@ -2870,7 +2870,7 @@
       "dependencies": [
         "@ui-sdk/core@0.1.0-beta.5",
         "@ui-sdk/react@0.1.0-beta.5",
-        "lucide-react@1.68.0"
+        "lucide-react@^1.68.0"
       ],
       "registryDependencies": [
         "@eskais/utils",
@@ -2893,14 +2893,15 @@
       "dependencies": [
         "@ui-sdk/core@0.1.0-beta.5",
         "@ui-sdk/react@0.1.0-beta.5",
-        "lucide-react@1.68.0"
+        "lucide-react@^1.68.0"
       ],
       "registryDependencies": [
         "@eskais/utils",
         "@eskais/theme",
         "@eskais/dialog",
         "@eskais/kbd",
-        "@eskais/button"
+        "@eskais/button",
+        "@eskais/link"
       ],
       "files": [
         {
@@ -2912,7 +2913,7 @@
           "type": "registry:ui"
         }
       ],
-      "docs": "For a ⌘K palette: `<CommandDialog><CommandDialogTrigger shortcut=\"mod+k\">Search<CommandDialogShortcut /></CommandDialogTrigger><CommandDialogContent title=\"Search\"><Command onAction={…}>…</Command></CommandDialogContent></CommandDialog>`. The shortcut is opt-in, focus returns to the trigger that opened it, and `onOpenChange` reports both ways. For results from a server, use `useAsyncOptions` from `@ui-sdk/react/async-options` with `filter={false}`, `status` and `CommandStatus`; the skill's \"Global search\" recipe has the whole pattern. `createCommandDialogController()` opens it from code. For a second way in, like a Topbar's `centerCompact` icon, use `<CommandDialogOpenButton controller={…} aria-label=\"Search\">`, not a second trigger: in UI SDK 0.1.0-beta.5 a second `CommandDialogTrigger` drops the dialog's agent label."
+      "docs": "For a ⌘K palette: `<CommandDialog><CommandDialogTrigger shortcut=\"mod+k\">Search<CommandDialogShortcut /></CommandDialogTrigger><CommandDialogContent title=\"Search\"><Command onAction={…}>…</Command></CommandDialogContent></CommandDialog>`. The shortcut is opt-in, focus returns to the trigger that opened it, and `onOpenChange` reports both ways. A command that goes to a page takes `href` (and `onFollow` to route on the client and close the palette): it renders as a link that Enter, a click, its shortcut or a mouse press follow (fast links, `#/…` hash routes), and it never runs `onAction`. For results from a server, use `useAsyncOptions` from `@ui-sdk/react/async-options` with `filter={false}`, `status` and `CommandStatus`; the skill's \"Global search\" recipe has the whole pattern. `createCommandDialogController()` opens it from code. For a second way in, like a Topbar's `centerCompact` icon, use `<CommandDialogOpenButton controller={…} aria-label=\"Search\">`, not a second trigger: in UI SDK 0.1.0-beta.5 a second `CommandDialogTrigger` drops the dialog's agent label."
     },
     {
       "name": "radio-group",
@@ -3052,7 +3053,7 @@
       "dependencies": [
         "@ui-sdk/core@0.1.0-beta.5",
         "@ui-sdk/react@0.1.0-beta.5",
-        "lucide-react@1.68.0"
+        "lucide-react@^1.68.0"
       ],
       "registryDependencies": [
         "@eskais/utils",
@@ -3165,7 +3166,7 @@
         "@ui-sdk/core@0.1.0-beta.5",
         "@ui-sdk/react@0.1.0-beta.5",
         "class-variance-authority@0.7.1",
-        "lucide-react@1.68.0"
+        "lucide-react@^1.68.0"
       ],
       "registryDependencies": [
         "@eskais/utils",
@@ -3189,7 +3190,7 @@
         "@ui-sdk/core@0.1.0-beta.5",
         "@ui-sdk/react@0.1.0-beta.5",
         "class-variance-authority@0.7.1",
-        "lucide-react@1.68.0"
+        "lucide-react@^1.68.0"
       ],
       "registryDependencies": [
         "@eskais/utils",
@@ -3240,7 +3241,7 @@
         "@ui-sdk/core@0.1.0-beta.5",
         "@ui-sdk/react@0.1.0-beta.5",
         "class-variance-authority@0.7.1",
-        "lucide-react@1.68.0"
+        "lucide-react@^1.68.0"
       ],
       "registryDependencies": [
         "@eskais/utils",
@@ -3284,7 +3285,7 @@
         "@ui-sdk/core@0.1.0-beta.5",
         "@ui-sdk/react@0.1.0-beta.5",
         "class-variance-authority@0.7.1",
-        "lucide-react@1.68.0"
+        "lucide-react@^1.68.0"
       ],
       "registryDependencies": [
         "@eskais/utils",
@@ -3327,7 +3328,7 @@
         "@ui-sdk/core@0.1.0-beta.5",
         "@ui-sdk/react@0.1.0-beta.5",
         "class-variance-authority@0.7.1",
-        "lucide-react@1.68.0"
+        "lucide-react@^1.68.0"
       ],
       "registryDependencies": [
         "@eskais/utils",
@@ -3428,7 +3429,7 @@
       "dependencies": [
         "@ui-sdk/core@0.1.0-beta.5",
         "@ui-sdk/react@0.1.0-beta.5",
-        "lucide-react@1.68.0"
+        "lucide-react@^1.68.0"
       ],
       "registryDependencies": [
         "@eskais/utils",
@@ -3486,7 +3487,7 @@
       "dependencies": [
         "@ui-sdk/core@0.1.0-beta.5",
         "@ui-sdk/react@0.1.0-beta.5",
-        "lucide-react@1.68.0"
+        "lucide-react@^1.68.0"
       ],
       "registryDependencies": [
         "@eskais/utils",
@@ -3509,7 +3510,7 @@
         "@ui-sdk/core@0.1.0-beta.5",
         "@ui-sdk/react@0.1.0-beta.5",
         "class-variance-authority@0.7.1",
-        "lucide-react@1.68.0"
+        "lucide-react@^1.68.0"
       ],
       "registryDependencies": [
         "@eskais/utils",
@@ -3718,7 +3719,7 @@
       "dependencies": [
         "@ui-sdk/core@0.1.0-beta.5",
         "@ui-sdk/react@0.1.0-beta.5",
-        "lucide-react@1.68.0"
+        "lucide-react@^1.68.0"
       ],
       "registryDependencies": [
         "@eskais/utils",
@@ -3751,7 +3752,7 @@
       "dependencies": [
         "@ui-sdk/core@0.1.0-beta.5",
         "@ui-sdk/react@0.1.0-beta.5",
-        "lucide-react@1.68.0"
+        "lucide-react@^1.68.0"
       ],
       "registryDependencies": [
         "@eskais/utils",
@@ -3781,7 +3782,7 @@
       "dependencies": [
         "@ui-sdk/core@0.1.0-beta.5",
         "@ui-sdk/react@0.1.0-beta.5",
-        "lucide-react@1.68.0"
+        "lucide-react@^1.68.0"
       ],
       "registryDependencies": [
         "@eskais/utils",
@@ -3845,7 +3846,7 @@
       "dependencies": [
         "@ui-sdk/core@0.1.0-beta.5",
         "@ui-sdk/react@0.1.0-beta.5",
-        "lucide-react@1.68.0"
+        "lucide-react@^1.68.0"
       ],
       "registryDependencies": [
         "@eskais/utils",
@@ -3912,7 +3913,7 @@
       "dependencies": [
         "@ui-sdk/core@0.1.0-beta.5",
         "@ui-sdk/react@0.1.0-beta.5",
-        "lucide-react@1.68.0"
+        "lucide-react@^1.68.0"
       ],
       "registryDependencies": [
         "@eskais/utils",
@@ -3947,7 +3948,7 @@
       "dependencies": [
         "@ui-sdk/core@0.1.0-beta.5",
         "@ui-sdk/react@0.1.0-beta.5",
-        "lucide-react@1.68.0"
+        "lucide-react@^1.68.0"
       ],
       "registryDependencies": [
         "@eskais/utils",
@@ -4090,7 +4091,7 @@
       "dependencies": [
         "@ui-sdk/core@0.1.0-beta.5",
         "@ui-sdk/react@0.1.0-beta.5",
-        "lucide-react@1.68.0",
+        "lucide-react@^1.68.0",
         "class-variance-authority@0.7.1"
       ],
       "registryDependencies": [
@@ -4194,7 +4195,7 @@
         "@lezer/markdown@1.8.1",
         "@ui-sdk/core@0.1.0-beta.5",
         "@ui-sdk/react@0.1.0-beta.5",
-        "lucide-react@1.68.0"
+        "lucide-react@^1.68.0"
       ],
       "registryDependencies": [
         "@eskais/utils",
@@ -4314,7 +4315,7 @@
         "@ui-sdk/react@0.1.0-beta.5",
         "class-variance-authority@0.7.1",
         "@fast-link/core@0.0.2",
-        "lucide-react@1.68.0"
+        "lucide-react@^1.68.0"
       ],
       "registryDependencies": [
         "@eskais/utils",
@@ -4354,7 +4355,7 @@
         "@lezer/css@1.3.9",
         "@lezer/html@1.3.13",
         "@lezer/markdown@1.8.1",
-        "lucide-react@1.68.0"
+        "lucide-react@^1.68.0"
       ],
       "registryDependencies": [
         "@eskais/utils",
@@ -4474,7 +4475,7 @@
       "dependencies": [
         "@ui-sdk/core@0.1.0-beta.5",
         "@ui-sdk/react@0.1.0-beta.5",
-        "lucide-react@1.68.0"
+        "lucide-react@^1.68.0"
       ],
       "registryDependencies": [
         "@eskais/utils",
@@ -4507,7 +4508,7 @@
       "dependencies": [
         "@ui-sdk/core@0.1.0-beta.5",
         "@ui-sdk/react@0.1.0-beta.5",
-        "lucide-react@1.68.0"
+        "lucide-react@^1.68.0"
       ],
       "registryDependencies": [
         "@eskais/utils",
@@ -4574,7 +4575,7 @@
       "description": "Icon names a lucide-react icon (or any SVG component) for screen readers: <Icon icon={TrashIcon} label=\"Deleted\" /> renders role=img with that label. Decorative icons need no wrapper, since lucide hides them by default.",
       "docs": "The registry draws its icons with `lucide-react`: import them by name (`import { CheckIcon } from \"lucide-react\"`). Lucide sets `aria-hidden` on an icon that has no `aria-*`, `role` or `title` prop, so a decorative icon needs no wrapper. Use `Icon` only when the icon carries meaning nothing else states: `<Icon icon={TriangleExclamationPointIcon} label=\"Blocked\" />` renders `role=\"img\"` with that `aria-label`. Size comes from the parent (Button, Badge, menu items and inputs set `[&_svg]:size-4`) or a `size-*` class: `size-3.5` beside `text-body-sm`, `size-4` beside `text-body`, `size-5` beside a title; our classes override lucide's `size` prop. Colour is `currentColor`: set a text colour, like `text-success`.",
       "dependencies": [
-        "lucide-react@1.68.0"
+        "lucide-react@^1.68.0"
       ],
       "registryDependencies": [
         "@eskais/utils",
@@ -4624,7 +4625,7 @@
       "dependencies": [
         "@ui-sdk/core@0.1.0-beta.5",
         "@ui-sdk/react@0.1.0-beta.5",
-        "lucide-react@1.68.0"
+        "lucide-react@^1.68.0"
       ],
       "registryDependencies": [
         "@eskais/utils",
@@ -4804,7 +4805,7 @@
       "dependencies": [
         "@ui-sdk/core@0.1.0-beta.5",
         "@ui-sdk/react@0.1.0-beta.5",
-        "lucide-react@1.68.0"
+        "lucide-react@^1.68.0"
       ],
       "registryDependencies": [
         "@eskais/utils",

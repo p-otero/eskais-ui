@@ -4,9 +4,18 @@ Versions follow [semver](https://semver.org). Before 1.0, a minor version can br
 
 ## Unreleased
 
+### Added
+
+- `CommandItem href`: a command that goes to a page renders as a link (an anchor that keeps the item's `data-slot`, styles and `option` role) and follows the repo's fast-link rules: Enter, a click, its `shortcut` or a primary mouse press follow it, a `#/…` hash route by setting `location.hash` and a same-origin path with `location.assign`, while other `#…` anchors and modified clicks stay native. A link command never runs `Command onAction`, which stays for actions. `onFollow(href, { event })` routes on the client (and closes the palette), `fast={false}` waits for the click, and `target`, `rel` and `download` reach the anchor. `useFastLink` takes `anchorRole` for an anchor root with a role other than link. The docs site's search uses link commands, so a page opens in a new tab on Ctrl/Cmd+click.
+
 ### Changed
 
 - The README, the docs site, the `eskais-ui` skill and `@eskais/mockup`'s hint pin the registry as `https://raw.githubusercontent.com/p-otero/eskais-ui/refs/tags/<tag>/public/r/{name}.json`. raw.githubusercontent.com resolves a bare `<tag>` to a branch of the same name first, and a stray `v0.2.1` branch served pre-release files under the documented `v0.2.1` URL; that branch is gone, and `tooling/check-ref-names.mjs` fails CI and the Pages deploy if a branch is ever named like a tag. The site's URL follows the released version.
+- Items depend on `lucide-react@^1.68.0` instead of the exact `lucide-react@1.68.0`. `shadcn add` runs `npm install lucide-react@<spec>`, so the exact pin moved a consumer already on a newer lucide (1.70.0) back down to 1.68.0. The floor stays the oldest release that exports every icon in use and is at least 7 days old; `check-dependency-age.mjs` checks the floor's age, and every other dependency stays exact. `node tooling/consumer-check.mjs pnpm release-age` starts from an app on lucide-react 1.70.0 and checks it isn't downgraded.
+
+### Fixed
+
+- Ring `Meter` no longer overflows a narrow column: the `variant="ring"` root (`inline-flex w-fit`) grew to a long label's unwrapped width, so a `MeterLabel className="truncate"` pushed it past a 320px grid column. The root takes `max-w-full min-w-0` and `MeterLabel` `max-w-full min-w-0`, so a truncating label truncates; `node tooling/shell-check.mjs` measures it.
 
 ## 0.2.1 (2026-11-18)
 

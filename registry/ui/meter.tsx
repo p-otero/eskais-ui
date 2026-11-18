@@ -24,7 +24,8 @@ const meterVariants = cva("", {
   variants: {
     variant: {
       bar: gaugeClassNames.root,
-      ring: "group/gauge inline-flex w-fit flex-col items-center gap-inline text-center",
+      // max-w-full and min-w-0 keep a long label from widening a narrow column: `truncate` on it then truncates.
+      ring: "group/gauge inline-flex w-fit max-w-full min-w-0 flex-col items-center gap-inline text-center",
     },
   },
 })
@@ -51,7 +52,9 @@ function Meter({ className, tone, variant = "bar", ...props }: MeterProps) {
 }
 
 function MeterLabel({ className, ...props }: ComponentProps<typeof MeterLabelPrimitive>) {
-  return <MeterLabelPrimitive className={cnState(gaugeClassNames.label, className)} {...props} />
+  return (
+    <MeterLabelPrimitive className={cnState(`${gaugeClassNames.label} max-w-full min-w-0`, className)} {...props} />
+  )
 }
 
 function MeterValue({

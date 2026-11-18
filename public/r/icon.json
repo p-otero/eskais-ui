@@ -4,7 +4,7 @@
   "title": "Icon",
   "description": "Icon names a lucide-react icon (or any SVG component) for screen readers: <Icon icon={TrashIcon} label=\"Deleted\" /> renders role=img with that label. Decorative icons need no wrapper, since lucide hides them by default.",
   "dependencies": [
-    "lucide-react@1.68.0"
+    "lucide-react@^1.68.0"
   ],
   "registryDependencies": [
     "@eskais/utils",

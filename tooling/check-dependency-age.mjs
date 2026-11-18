@@ -1,5 +1,6 @@
 // Fails when an npm dependency pinned in registry.json is younger than 7 days: shadcn installs dependencies before
 // it writes any file, so a consumer with a minimum release age (pnpm `minimumReleaseAge`) can't add the item at all.
+// A caret range, allowed only for `caretRangeDependencies`, is checked at its floor.
 // Usage: node tooling/check-dependency-age.mjs [--require-network]. Offline it skips, unless --require-network.
 import { readFileSync } from "node:fs"
 import { join } from "node:path"
@@ -17,6 +18,11 @@ export const youngDependencyExceptions = {
     "UI SDK's first release is from 2026-11-12, so no version is 7 days old yet; the components are built on it",
 }
 
+// Dependencies that may be a caret range (`name@^1.2.3`). shadcn runs `npm install name@<spec>`, so an exact pin
+// moves a consumer already on a newer release back down to it. Fine for lucide-react, which only adds icons within a
+// major; the floor stays the oldest release with every icon in use.
+export const caretRangeDependencies = ["lucide-react"]
+
 // "name@1.2.3" or "@scope/name@1.2.3"; anything that isn't a registry version (github:, a URL) is not checked.
 export function parseDependency(spec) {
   const at = spec.indexOf("@", 1)
@@ -32,6 +38,7 @@ export function registryDependencies(registry) {
 }
 
 const exactVersion = /^\d+\.\d+\.\d+(?:-[\w.]+)?$/
+const caretVersion = /^\^(\d+\.\d+\.\d+)$/
 const notOnNpm = /^(?:github:|git\+|git:|https?:|file:|link:|workspace:)/
 
 // `published` maps each "name@version" to its ISO publish time from the npm registry. Returns the pins that fail
@@ -40,15 +47,17 @@ export function findYoungDependencies(
   specs,
   published,
   now,
-  { minimumDays = minimumAgeDays, exceptions = youngDependencyExceptions } = {},
+  { minimumDays = minimumAgeDays, exceptions = youngDependencyExceptions, ranges = caretRangeDependencies } = {},
 ) {
   const problems = []
   const matured = []
   for (const spec of Object.keys(exceptions))
     if (!specs.includes(spec)) problems.push({ spec, reason: "is an exception but no item depends on it any more" })
   for (const spec of specs) {
-    const { name, version } = parseDependency(spec)
-    if (version !== undefined && notOnNpm.test(version)) continue
+    const { name, version: written } = parseDependency(spec)
+    if (written !== undefined && notOnNpm.test(written)) continue
+    const floor = ranges.includes(name) ? caretVersion.exec(written ?? "")?.[1] : undefined
+    const version = floor ?? written
     if (version === undefined || !exactVersion.test(version)) {
       problems.push({ spec, reason: "not pinned to an exact version, so its age can't be checked" })
       continue
