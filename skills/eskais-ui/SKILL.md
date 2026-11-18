@@ -19,6 +19,8 @@ Read a component's own file before you use it: the props, variants and the comme
 | `references/agent-task-board.md`          | the AgentTaskBoard and its pieces                                                       |
 | `references/conversation-and-activity.md` | a chat or agent thread, and an activity log with undo                                   |
 | `references/server-data.md`               | tables, lists and comboboxes over a backend: sources, filters, wire formats, the URL    |
+| ------------------------------------      | --------------------------------------------------------------------------------------- |
+| `references/diffs.md`                     | comparing texts, reviewing patches: TextDiff, GitDiff, DiffView and the diff engine     |
 
 Keeping screens fast (long lists, effects, React Compiler, motion) has its own skill, `eskais-perf`; building a throwaway mockup of a screen has `eskais-mockup`. Both install with `npx shadcn@latest add @eskais/eskais-perf-skill @eskais/eskais-mockup-skill`.
 
@@ -107,6 +109,7 @@ Each line is a need, then what to use. Props are listed by name; read the compon
 - **A table over a server**: `ServerDataTable label source columns filters filterUi urlState labels`: the server filters, sorts (`sortField` on a column) and pages; page numbers, previous and next, or load more follow the source. See `references/server-data.md`
 - **A list that loads as you scroll**: `ServerList aria-label source renderItem itemText labels`: ListItem rows, virtualized, the next page when the end shows and a Load more button; see `references/server-data.md`
 - **Options from a server**: `ServerCombobox source getLabel value onValueChange` (`multiple` for chips) in a `Field`: searched on the server as you type, more at the end of the list
+- **A diff or a code review**: `TextDiff oldText newText language` for two texts; `GitDiff patch` (or `files`) for a patch with a file tree, viewed checkboxes, j/k between hunks and `onLineSelect` for comments; see `references/diffs.md`
 - **Paged data from any backend**: a `PageSource` from an adapter (`pagedSource`, `offsetSource`, `cursorSource`, `relaySource`, `linkHeaderSource`, `springPageSource`, `springSliceSource`, or `arraySource` in memory); hooks `useServerPage`, `useServerInfinite`, `useSourceMutation`. See `references/server-data.md`
 - **Filters for a backend**: `defineFilters` once, then `toFilterAst` and a serializer (`queryParams`, `jsonAst`, `rsql`, `odata`, `springFilter`, `graphqlWhere`, `searchOnly`); `FilterSearch`, `FilterChips`, `FilterPanel` edit it and `createUrlCodec` keeps it in the URL
 - **A page's column**: `PageLayout width header` (`dense`, `wide`, `full`; `variant="workspace"` for app screens). Renders `<main id="main">` only with `as="main"`, since the shell may own `<main>`; never a live region

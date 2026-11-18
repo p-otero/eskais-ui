@@ -69,6 +69,9 @@ async function measure(page, selector) {
     canvas.fillStyle = element instanceof SVGElement ? style.fill : style.color
     canvas.fillRect(0, 0, 1, 1)
     const color = [...canvas.getImageData(0, 0, 1, 1).data]
+    // Fully transparent text paints nothing: a find-in-page layer over coloured tokens (DiffView), whose colours the
+    // token pairs below check.
+    if (color[3] === 0) return null
     element.style.setProperty(paint, "transparent")
     // Marks drawn beside or under the text (a status dot, an icon, a checkbox, a bullet, an underline) aren't
     // what the text sits on; sampled as background they pair the text with its own colour. An underline is
@@ -193,6 +196,22 @@ const tokenPairs = [
   ["muted-foreground", "code-highlight", 4.5],
   ["success-soft-foreground", "success-soft", 4.5],
   ["destructive-soft-foreground", "destructive-soft", 4.5],
+  // Diff lines: code on a changed line and on its changed words, numbers and signs in the gutter, counts on the page.
+  ...["added", "removed"].flatMap((side) => [
+    ...["keyword", "string", "number", "comment", "function", "type", "property", "tag", "punctuation"].flatMap(
+      (tone) => [
+        [`syntax-${tone}`, `diff-${side}`, 4.5],
+        [`syntax-${tone}`, `diff-${side}-strong`, 4.5],
+      ],
+    ),
+    ["foreground", `diff-${side}`, 4.5],
+    ["foreground", `diff-${side}-strong`, 4.5],
+    ["muted-foreground", `diff-${side}-gutter`, 4.5],
+    [`diff-${side}-foreground`, `diff-${side}-gutter`, 4.5],
+    [`diff-${side}-foreground`, `diff-${side}`, 4.5],
+    [`diff-${side}-foreground`, "background", 4.5],
+    [`diff-${side}-foreground`, "card", 4.5],
+  ]),
 ]
 
 // A translucent token (the skeleton) shows the surface under it, so it's measured composited over that surface.

@@ -203,5 +203,13 @@ function highlight(code: string, language: CodeLanguage, parser = parsers.get(la
   return splitLines(parser ? parsed(code, parser) : [{ text: code }])
 }
 
-export { highlight, loadParser, needsParser, normalizeLanguage, parserFor, watchParser }
+export {
+  highlight,
+  highlighter as syntaxHighlighter,
+  loadParser,
+  needsParser,
+  normalizeLanguage,
+  parserFor,
+  watchParser,
+}
 export type { CodeLanguage, CodeLine, CodeToken, DiffKind, SyntaxTone }
