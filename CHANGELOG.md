@@ -2,9 +2,7 @@
 
 Versions follow [semver](https://semver.org). Before 1.0, a minor version can break compatibility. Release with `bun pm version <patch|minor|major>`, which bumps `package.json` and tags `vX.Y.Z`.
 
-## Unreleased
-
-The performance work is measured with the new harness (`bun run perf`, `bun run perf:vitals`, `docs/perf/REPORT.md`). Its numbers are from a desktop CPU and Chrome's 4× slowdown; the report has the before and after of each change.
+## 0.2.2 (2026-11-18)
 
 ### Added
 
@@ -97,6 +95,7 @@ The performance work is measured with the new harness (`bun run perf`, `bun run 
 - A `backdrop-surface` inside another one no longer blurs: cards in a glass board column show it through their own fill (a 200-card glass board: 142 composited layers to 26).
 - Accordion, Collapsible, Sidebar, Progress, Meter, SegmentedControl and NavigationMenu transition only the properties that move instead of `transition-all`.
 - Loading states keep the size of what replaces them: `DataTable` placeholder rows are one text line high, `ServerDataTable` shows as many as its page holds (up to 25) and `ServerList` list-shaped placeholders instead of a spinner, so the first page lands without moving the footer (CLS 0.073 → 0.005 and 0.021 → 0).
+- The showcase uses the Eskais favicon, like the docs site.
 
 ### Fixed
 
