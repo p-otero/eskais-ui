@@ -18,6 +18,7 @@ import { ConfirmDialog } from "@/components/ui/confirm-dialog"
 import { DescriptionList, type DescriptionListProps } from "@/components/ui/description-list"
 import { Field, FieldDescription, FieldLabel } from "@/components/ui/field"
 import { Link } from "@/components/ui/link"
+import { isPlainClick } from "@/components/ui/link-primitive"
 import { Select } from "@/components/ui/select"
 import {
   PendingSectionContext,
@@ -197,6 +198,15 @@ function SettingsPage({
                 href={hrefOf(section.id)}
                 current={section.id === current ? "location" : undefined}
                 onFollow={() => choose(section.id)}
+                // A hash route follows on pointerdown and focuses the heading; the same press would then focus the
+                // link. A plain press keeps focus where it is, and the click puts it back if a browser moved it anyway.
+                onMouseDown={(event) => {
+                  if (isPlainClick(event.nativeEvent)) event.preventDefault()
+                }}
+                onClick={(event) => {
+                  if (isPlainClick(event.nativeEvent) && document.activeElement === event.currentTarget)
+                    focusTitle(section.id)
+                }}
                 className={navEntryClassName}
               >
                 {section.label}

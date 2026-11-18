@@ -16,6 +16,7 @@ import { FieldPlacementCheck } from "./checks/field-placement-check"
 import { GaugeCheck } from "./checks/gauge-check"
 import { IconTooltipCheck } from "./checks/icon-tooltip-check"
 import { MasterDetailCheck } from "./checks/master-detail-check"
+import { SettingsPageCheck } from "./checks/settings-page-check"
 import { MobileNavCheck } from "./checks/mobile-nav-check"
 import { GitBench } from "./checks/git-bench"
 import { ListBench } from "./checks/list-bench"
@@ -43,7 +44,7 @@ if (!root) throw new Error("Missing #root element")
 // ?demo=page, site, shell, inbox, list-bench, shell-block, master-detail, dashboard-grid, settings-page,
 // document-workspace, agent-workspace and commit-history render one demo alone; ?demo=<name>-check pages are the
 // fixtures of tooling/<name>-check.mjs (shell-check's: card-header, description-list, field-placement, gauge,
-// mobile-nav, palette-reopen, side-panel, table, master-detail); *-bench and ?demo=perf pages are the benchmarks'.
+// mobile-nav, palette-reopen, side-panel, table, master-detail, settings-page); *-bench and ?demo=perf pages are the benchmarks'.
 const params = new URLSearchParams(location.search)
 const status = demoStatuses.find((name) => name === params.get("status")) ?? "success"
 const demo = params.get("demo")
@@ -71,6 +72,7 @@ const standalone = new Set([
   "master-detail-check",
   "dashboard-grid",
   "settings-page",
+  "settings-page-check",
   "shell-block",
   "document-workspace",
   "server-data-check",
@@ -112,6 +114,7 @@ function Demo() {
   if (demo === "master-detail-check") return <MasterDetailCheck />
   if (demo === "dashboard-grid") return <DashboardGridDemo />
   if (demo === "settings-page") return <SettingsPageDemo />
+  if (demo === "settings-page-check") return <SettingsPageCheck />
   if (demo === "shell-block") return <ShellBlockDemo />
   if (demo === "document-workspace") return <DocumentWorkspacePage />
   if (demo === "server-data-check") return <ServerDataCheck />
