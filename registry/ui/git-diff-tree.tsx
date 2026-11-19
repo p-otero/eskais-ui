@@ -34,16 +34,39 @@ const statusColour: Record<FileStatus, string> = {
   copied: "text-muted-foreground",
 }
 
+type Section = TreeItemData & { count?: number }
+
 function Items({
   items,
   files,
   labels,
 }: {
-  items: TreeItemData[]
+  items: Section[]
   files: ReadonlyMap<string, DiffViewFile>
   labels: DiffLabels
 }) {
   return items.map((item) => {
+    if (item.count !== undefined) {
+      return (
+        <TreeItem key={item.value} value={item.value} className="outline-none">
+          <TreeItemLabel
+            data-group=""
+            className="flex cursor-pointer items-center gap-inline rounded-control px-inline py-inset-item text-body-sm font-medium hover:bg-accent hover:text-accent-foreground [:focus-visible>&]:outline-2 [:focus-visible>&]:outline-ring"
+          >
+            <TreeItemIndicator className="inline-flex data-expanded:rotate-90 rtl:rotate-180 rtl:data-expanded:rotate-90">
+              <ChevronRightIcon aria-hidden="true" className="size-3.5" />
+            </TreeItemIndicator>
+            <span className="min-w-0 flex-1 truncate">{item.label}</span>
+            <span className="text-caption font-normal text-muted-foreground tabular-nums">
+              {labels.fileCount(item.count)}
+            </span>
+          </TreeItemLabel>
+          <TreeGroup>
+            <Items items={item.children ?? []} files={files} labels={labels} />
+          </TreeGroup>
+        </TreeItem>
+      )
+    }
     const file = files.get(item.value)
     const Icon = file ? statusIcon[file.diff.status] : FolderIcon
     return (
@@ -81,6 +104,24 @@ function Items({
   })
 }
 
+/** Folder values carry their section, so a folder in two sections (src/ staged and unstaged) stays two items. */
+function scoped(items: readonly TreeItemData[], scope: string): TreeItemData[] {
+  return items.map((item) =>
+    item.children ? { ...item, value: `${scope}${item.value}`, children: scoped(item.children, scope) } : item,
+  )
+}
+
+/** The tree's items: the files as folders, or one section per group with its own folders. */
+function itemsOf(files: readonly DiffViewFile[], groups: readonly GitDiffTreeGroup[] | undefined): Section[] {
+  if (!groups) return treeFromPaths(files.map((file) => file.path))
+  return groups.map((group, index) => ({
+    value: `\u0000group:${String(index)}`,
+    label: group.label,
+    count: group.paths.length,
+    children: scoped(treeFromPaths(group.paths), `\u0000${String(index)}:`),
+  }))
+}
+
 function folders(items: readonly TreeItemData[], out: string[] = []) {
   for (const item of items) {
     if (item.children) {
@@ -91,8 +132,13 @@ function folders(items: readonly TreeItemData[], out: string[] = []) {
   return out
 }
 
+/** A section of the tree, like "Staged", and the view paths of its files. */
+type GitDiffTreeGroup = { label: string; paths: readonly string[] }
+
 type GitDiffTreeProps = {
   files: readonly DiffViewFile[]
+  /** Sections, each with its own folders; without them, one tree of every file. */
+  groups?: readonly GitDiffTreeGroup[]
   /** The file shown, highlighted in the tree. */
   value?: string | null
   onOpen: (path: string) => void
@@ -101,9 +147,9 @@ type GitDiffTreeProps = {
 }
 
 /** The changed files as a folder tree (UI SDK Tree): status icon, path and counts; choosing one opens it. */
-function GitDiffTree({ files, value, onOpen, labels, className }: GitDiffTreeProps) {
+function GitDiffTree({ files, groups, value, onOpen, labels, className }: GitDiffTreeProps) {
   const byPath = useMemo(() => new Map(files.map((file) => [file.path, file])), [files])
-  const items = useMemo(() => treeFromPaths(files.map((file) => file.path)), [files])
+  const items = useMemo(() => itemsOf(files, groups), [files, groups])
   const open = useMemo(() => folders(items), [items])
   return (
     <Tree
@@ -122,4 +168,4 @@ function GitDiffTree({ files, value, onOpen, labels, className }: GitDiffTreePro
 }
 
 export { GitDiffTree }
-export type { GitDiffTreeProps }
+export type { GitDiffTreeGroup, GitDiffTreeProps }

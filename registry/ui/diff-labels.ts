@@ -35,6 +35,8 @@ type DiffLabels = {
   split: string
   wrap: string
   files: string
+  /** A group's count in the file tree, like "2 files" beside "Staged". */
+  fileCount: (count: number) => string
   before: string
   after: string
 }
@@ -69,6 +71,7 @@ const diffLabels: DiffLabels = {
   split: "Split",
   wrap: "Wrap lines",
   files: "Changed files",
+  fileCount: (count) => plural(count, "file", "files"),
   before: "Before",
   after: "After",
 }
@@ -101,6 +104,7 @@ const diffLabelsEs: DiffLabels = {
   split: "Dividida",
   wrap: "Ajustar líneas",
   files: "Archivos cambiados",
+  fileCount: (count) => `${String(count)} ${count === 1 ? "archivo" : "archivos"}`,
   before: "Antes",
   after: "Después",
 }

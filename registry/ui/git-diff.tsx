@@ -1,6 +1,6 @@
 "use client"
 
-import { Columns2Icon, RowsIcon, WrapTextIcon } from "lucide-react"
+import { Columns2Icon, PanelLeftIcon, RowsIcon, WrapTextIcon } from "lucide-react"
 import { useCallback, useMemo, useState } from "react"
 
 import { diffLabels } from "@/components/ui/diff-labels"
@@ -21,8 +21,20 @@ type GitDiffProps = Omit<DiffViewProps, "files" | "headers"> & {
   patch?: string
   /** File diffs you parsed or computed; give `oldText`/`newText` to make unchanged regions expandable. */
   files?: readonly FileDiff[]
-  /** The changed-files tree beside the diff. @defaultValue true */
-  fileTree?: boolean
+  /**
+   * The changed-files tree beside the diff, `--diff-tree-width` wide (13rem). `"collapsible"` adds a toggle
+   * at the start of the toolbar to hide and show it. @defaultValue true
+   */
+  fileTree?: boolean | "collapsible"
+  /** Whether a collapsible tree shows. */
+  fileTreeOpen?: boolean
+  defaultFileTreeOpen?: boolean
+  onFileTreeOpenChange?: (open: boolean) => void
+  /**
+   * The files in sections, like the working tree's "Staged" and "Unstaged": each a `label` and its `files` or
+   * `patch`, in order. The tree shows one section per group; the diff lists the groups one after another.
+   */
+  groups?: readonly GitDiffGroup[]
   /** The layout and wrap controls and the totals above the diff. @defaultValue true */
   toolbar?: boolean
   /** `fill` (default) fills the height GitDiff is given, beside its file tree; `auto` grows to the diff. */
@@ -34,6 +46,14 @@ type GitDiffProps = Omit<DiffViewProps, "files" | "headers"> & {
   currentFile?: string | null
   defaultCurrentFile?: string | null
 }
+
+/** A section of a GitDiff: its title in the file tree, and its files. */
+type GitDiffGroup = { label: string; files?: readonly FileDiff[]; patch?: string }
+
+const noGroups: readonly GitDiffGroup[] = []
+
+// oxlint-disable-next-line shadcn/no-arbitrary-values -- a variable a page sets, with its default
+const treeWidth = "w-[var(--diff-tree-width,13rem)]"
 
 function useControlled<T>(value: T | undefined, initial: T, onChange?: (next: T) => void) {
   const [own, setOwn] = useState(initial)
@@ -54,7 +74,11 @@ function useControlled<T>(value: T | undefined, initial: T, onChange?: (next: T)
 function GitDiff({
   patch,
   files: given,
+  groups,
   fileTree = true,
+  fileTreeOpen,
+  defaultFileTreeOpen = true,
+  onFileTreeOpenChange,
   toolbar = true,
   labels = diffLabels,
   layout: layoutProp,
@@ -71,8 +95,26 @@ function GitDiff({
   className,
   ...props
 }: GitDiffProps) {
-  const diffs = useMemo(() => given ?? (patch ? parsePatch(patch) : []), [given, patch])
+  const sections = useMemo(
+    () => (groups ?? noGroups).map((group) => group.files ?? (group.patch ? parsePatch(group.patch) : [])),
+    [groups],
+  )
+  const diffs = useMemo(
+    () => (groups ? sections.flat() : (given ?? (patch ? parsePatch(patch) : []))),
+    [groups, sections, given, patch],
+  )
   const files = useMemo(() => toViewFiles(diffs), [diffs])
+  const treeGroups = useMemo(() => {
+    if (!groups) return undefined
+    const starts = sections.map((_, index) => sections.slice(0, index).reduce((sum, list) => sum + list.length, 0))
+    return groups.map((group, index) => ({
+      label: group.label,
+      paths: files.slice(starts[index], (starts[index] ?? 0) + (sections[index]?.length ?? 0)).map((file) => file.path),
+    }))
+  }, [groups, sections, files])
+  const [treeOpen, setTreeOpen] = useControlled(fileTreeOpen, defaultFileTreeOpen, onFileTreeOpenChange)
+  const collapsible = fileTree === "collapsible" && toolbar
+  const showTree = fileTree !== false && (files.length > 1 || groups !== undefined) && (!collapsible || treeOpen)
   const [own] = useState(createDiffViewController)
   const controller = controllerProp ?? own
   const [layout, setLayout] = useControlled<DiffLayout>(layoutProp, defaultLayout)
@@ -93,6 +135,18 @@ function GitDiff({
     <div data-slot="git-diff" className={cn("flex min-h-0 flex-col gap-items", className)}>
       {toolbar ? (
         <div data-slot="git-diff-toolbar" className="flex flex-wrap items-center gap-items">
+          {collapsible ? (
+            <Toggle
+              variant="outline"
+              size="icon"
+              aria-label={labels.files}
+              pressed={treeOpen}
+              onPressedChange={setTreeOpen}
+              className="narrow:hidden"
+            >
+              <PanelLeftIcon aria-hidden="true" />
+            </Toggle>
+          ) : null}
           <DiffStat additions={totals.additions} deletions={totals.deletions} labels={labels} />
           <div className="ms-auto flex items-center gap-items">
             <SegmentedControl<DiffLayout>
@@ -120,13 +174,14 @@ function GitDiff({
         </div>
       ) : null}
       <div className="flex min-h-0 flex-1 gap-group">
-        {fileTree && files.length > 1 ? (
+        {showTree ? (
           <GitDiffTree
             files={files}
+            groups={treeGroups}
             value={current}
             labels={labels}
             onOpen={(path) => controller.openFile(path)}
-            className="w-64 shrink-0 narrow:hidden"
+            className={cn(treeWidth, "shrink-0 narrow:hidden")}
           />
         ) : null}
         <DiffView
@@ -159,4 +214,4 @@ function GitDiff({
 }
 
 export { createDiffViewController, GitDiff }
-export type { DiffViewController, GitDiffProps }
+export type { DiffViewController, GitDiffGroup, GitDiffProps }
