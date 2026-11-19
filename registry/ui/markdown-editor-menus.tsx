@@ -165,6 +165,7 @@ function MarkdownEditorMenus({
         side="bottom"
         align="start"
         sideOffset={4}
+        // oxlint-disable-next-line eskais/scroll-area -- the slash and wikilink menus, floating like dropdown-menu's
         className="max-h-(--available-height) w-64 overflow-y-auto surface-floating p-inline"
       >
         <TriggerMenuStatus className="sr-only" />

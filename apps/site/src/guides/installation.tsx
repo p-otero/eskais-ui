@@ -218,8 +218,10 @@ createRoot(root).render(
         role tokens) and the <Code>@shadcn/lint</Code> design-system rules (<Code>no-restyle</Code>,{" "}
         <Code>no-raw-colors</Code>, <Code>no-arbitrary-values</Code>…), plus <Code>eskais/icon-button-needs-label</Code>
         , which flags an icon-only <Code>Button</Code> or <Code>Toggle</Code> without <Code>size="icon"</Code> and an{" "}
-        <Code>aria-label</Code> (it comes as <Code>eskais-oxlint-plugin.js</Code> beside the config). Extend it from
-        your <Code>.oxlintrc.json</Code>.
+        <Code>aria-label</Code>, and <Code>eskais/scroll-area</Code> as a warning, which flags a bare{" "}
+        <Code>overflow-auto</Code>, <Code>overflow-y-auto</Code> or <Code>-scroll</Code> class so scrolling content goes
+        in a <Code>ScrollArea</Code> (both come as <Code>eskais-oxlint-plugin.js</Code> beside the config). Extend it
+        from your <Code>.oxlintrc.json</Code>.
       </P>
 
       <H2 id="testing">Optional: test helpers</H2>

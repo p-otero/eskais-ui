@@ -146,7 +146,14 @@
             ]
           }
         ],
-        "eskais/no-inline-icons": "error"
+        "eskais/no-inline-icons": "error",
+        "eskais/scroll-area": "error"
+      }
+    },
+    {
+      "files": ["registry/ui/scroll-area.tsx"],
+      "rules": {
+        "eskais/scroll-area": "off"
       }
     },
     {

@@ -35,6 +35,7 @@ const selectTriggerVariants = cva(triggerClassName, {
 type SelectSize = "default" | "sm"
 
 const listPopupClassName =
+  // oxlint-disable-next-line eskais/scroll-area -- the floating list of Select, Combobox and Autocomplete, capped by UI SDK like dropdown-menu's; SelectList inside it can be a scroll area
   "m-0 max-h-(--available-height) min-w-(--anchor-width) overflow-y-auto overscroll-contain surface-floating p-inline outline-none transition-opacity duration-micro ease-standard data-ending-style:opacity-0 data-starting-style:opacity-0"
 
 // A tint alone misses the 3:1 a state needs, so the highlight also draws a full ring.
