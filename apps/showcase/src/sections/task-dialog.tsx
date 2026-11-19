@@ -4,13 +4,17 @@ import { AgentTaskBoard } from "@/components/ui/agent-task-board"
 import { Button } from "@/components/ui/button"
 
 import { TaskDialog } from "../../../site/src/examples/task-detail-panel"
-import { TASK_DIALOG_NOW, taskDialogTasks } from "../../../site/src/examples/task-dialog-fixtures"
+import { TASK_DIALOG_NOW, taskChanges, taskDialogTasks } from "../../../site/src/examples/task-dialog-fixtures"
 import { sampleTasks } from "../../../../test/fixtures/agent-tasks"
 import { Section } from "../section"
 
 const boardTasks = [...taskDialogTasks, ...sampleTasks]
 
+const selectedRow = (task: string, row: string | null) =>
+  row === null ? null : (taskChanges[task]?.commits.find((commit) => commit.id.startsWith(row))?.id ?? row)
+
 // ?demo=task-dialog&task=T-121&changes=1&acceptance=1: the dialog open over a board, for screenshots.
+// &selected=<a commit hash or working-tree> opens the changes on that row instead of all changes.
 function TaskDialogPage({ params }: { params: URLSearchParams }) {
   const [open, setOpen] = useState<string>(params.get("task") ?? "T-121")
   const [history, setHistory] = useState<string>()
@@ -34,6 +38,7 @@ function TaskDialogPage({ params }: { params: URLSearchParams }) {
           setHistory(branch)
         }}
         changesOpen={params.get("changes") === "1"}
+        changesSelected={selectedRow(open, params.get("selected"))}
         acceptanceOpen={params.get("acceptance") === "1"}
       />
     </main>
@@ -46,7 +51,7 @@ function TaskDialogSection() {
   return (
     <Section
       title="Task dialog with a header strip"
-      description="TaskDetailDialog with a stats strip, AcceptancePopover and a git line in its header, a collapsible changes section before the body, and hide removing what the header shows."
+      description="TaskDetailDialog with a stats strip, AcceptancePopover and a git line in its header, a collapsible changes section before the body (CommitHistory beside GitDiff, all changes until a row is selected), and hide removing what the header shows."
     >
       <div className="flex flex-wrap gap-items">
         <Button variant="outline" onClick={() => setOpen({ id: "T-121" })}>

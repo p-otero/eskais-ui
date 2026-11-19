@@ -1,34 +1,28 @@
 import { useState, type ReactNode } from "react"
-import {
-  ArrowRightIcon,
-  CircleDotIcon,
-  GitBranchIcon,
-  GitCommitHorizontalIcon,
-  HistoryIcon,
-  LayersIcon,
-} from "lucide-react"
+import { ArrowRightIcon, GitBranchIcon, HistoryIcon, LayersIcon } from "lucide-react"
 
 import type { TaskView } from "@/lib/agent-task-types"
 import { AcceptancePopover } from "@/components/ui/acceptance-list"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Collapsible, CollapsibleIcon, CollapsiblePanel, CollapsibleTrigger } from "@/components/ui/collapsible"
+import { CommitHistory, WORKING_TREE } from "@/components/ui/commit-history"
 import { GitBranchChip } from "@/components/ui/git-chip"
 import { GitDiff } from "@/components/ui/git-diff"
 import { Icon } from "@/components/ui/icon"
-import { List, ListGroup, ListItem } from "@/components/ui/list-item"
-import { RelativeTime } from "@/components/ui/relative-time"
 import { TaskDetailDialog } from "@/components/ui/task-detail-dialog"
 import { TaskStatusIcon } from "@/components/ui/task-status"
+import { Toggle } from "@/components/ui/toggle"
 import { UsageQuantity } from "@/components/ui/usage"
 
 import {
   TASK_DIALOG_NOW,
   taskBranches,
-  taskChangeEntries,
+  taskChanges,
   taskDialogTasks,
-  type ChangeEntry,
+  type PatchTotals,
   type TaskBranch,
+  type TaskChangeSet,
 } from "./task-dialog-fixtures"
 
 const statusLabel: Record<TaskView["status"], string> = {
@@ -88,15 +82,16 @@ function StatsStrip({ task, acceptanceOpen }: { task: TaskView; acceptanceOpen?:
   )
 }
 
-function changeCounts(entries: readonly ChangeEntry[]) {
+function changeCounts(changes: TaskChangeSet | undefined) {
+  const worktree = changes?.worktree
   return {
-    all: entries.find((entry) => entry.kind === "all"),
-    worktree: entries.find((entry) => entry.kind === "worktree"),
-    unpushed: entries.filter((entry) => entry.kind === "commit" && !entry.pushed).length,
+    all: changes?.all,
+    uncommitted: worktree ? worktree.staged.files + worktree.unstaged.files : 0,
+    unpushed: changes?.commits.filter((commit) => commit.unpushed).length ?? 0,
   }
 }
 
-function Additions({ additions, deletions }: { additions: number; deletions: number }) {
+function Additions({ additions, deletions }: Omit<PatchTotals, "files">) {
   return (
     <>
       <span className="text-success">+{additions}</span> <span className="text-destructive">−{deletions}</span>
@@ -106,14 +101,14 @@ function Additions({ additions, deletions }: { additions: number; deletions: num
 
 function GitLine({
   branch,
-  entries,
+  changes,
   onOpenHistory,
 }: {
   branch: TaskBranch | undefined
-  entries: readonly ChangeEntry[]
+  changes: TaskChangeSet | undefined
   onOpenHistory: () => void
 }) {
-  const { all, worktree, unpushed } = changeCounts(entries)
+  const { all, uncommitted, unpushed } = changeCounts(changes)
   return (
     <div data-slot="task-git" className="flex min-h-control flex-wrap items-center gap-items text-sm">
       {branch ? (
@@ -127,13 +122,13 @@ function GitLine({
             {branch.ahead} ahead · {branch.behind} behind
           </span>
           {branch.upstream === null ? <Badge tone="warning">Local only</Badge> : <Badge tone="success">Pushed</Badge>}
-          {all?.kind === "all" ? (
+          {all ? (
             <span className="tabular-nums">
               {all.files} files <Additions additions={all.additions} deletions={all.deletions} />
             </span>
           ) : null}
           {unpushed > 0 ? <Badge tone="warning">{unpushed} not pushed</Badge> : null}
-          {worktree ? <Badge tone="warning">{worktree.files} uncommitted</Badge> : null}
+          {uncommitted > 0 ? <Badge tone="warning">{uncommitted} uncommitted</Badge> : null}
           {branch.pullRequest ? null : <span className="text-muted-foreground">No pull request</span>}
         </>
       ) : (
@@ -152,90 +147,71 @@ function GitLine({
   )
 }
 
-function ChangeList({
-  entries,
-  value,
-  onChange,
-}: {
-  entries: readonly ChangeEntry[]
-  value: string
-  onChange: (id: string) => void
-}) {
-  const commits = entries.filter((entry) => entry.kind === "commit")
+/** The branch's diff against its base, shown while no commit is selected. A press clears the selection. */
+function AllChangesToggle({ all, pressed, onPress }: { all: PatchTotals; pressed: boolean; onPress: () => void }) {
   return (
-    <List
-      aria-label="Changes"
-      value={value}
-      onValueChange={(next) => {
-        if (next !== null) onChange(next)
+    <Toggle
+      variant="outline"
+      size="sm"
+      pressed={pressed}
+      onPressedChange={(next, details) => {
+        if (next) onPress()
+        else details.cancel()
       }}
-      className="w-80 shrink-0 overflow-y-auto"
     >
-      {entries.map((entry) =>
-        entry.kind === "all" ? (
-          <ListItem
-            key={entry.id}
-            id={entry.id}
-            title={entry.label}
-            leading={<LayersIcon className="size-4 text-muted-foreground" />}
-            subtitle={`${entry.files} files`}
-            trailing={
-              <span className="text-caption tabular-nums">
-                <Additions additions={entry.additions} deletions={entry.deletions} />
-              </span>
-            }
-          />
-        ) : entry.kind === "worktree" ? (
-          <ListItem
-            key={entry.id}
-            id={entry.id}
-            title="Uncommitted in worktree"
-            leading={<CircleDotIcon className="size-4 text-warning" />}
-            subtitle={`${entry.files} files`}
-            meta={
-              <span className="flex items-center gap-inline">
-                {entry.staged > 0 ? <Badge tone="success">{entry.staged} staged</Badge> : null}
-                {entry.unstaged > 0 ? <Badge tone="warning">{entry.unstaged} unstaged</Badge> : null}
-              </span>
-            }
-          />
-        ) : null,
-      )}
-      <ListGroup label="Commits" count={commits.length}>
-        {commits.map((entry) =>
-          entry.kind === "commit" ? (
-            <ListItem
-              key={entry.id}
-              id={entry.id}
-              title={entry.commit.message}
-              leading={<GitCommitHorizontalIcon className="size-4 text-muted-foreground" />}
-              subtitle={
-                <span className="flex items-center gap-inline">
-                  <span className="font-mono">{entry.commit.id.slice(0, 7)}</span>
-                  <RelativeTime
-                    value={entry.commit.date}
-                    now={TASK_DIALOG_NOW}
-                    locale="en-US"
-                    timeZone="UTC"
-                    formatStyle="short"
-                  />
-                </span>
-              }
-              meta={entry.pushed ? null : <Badge tone="warning">not pushed</Badge>}
-            />
-          ) : null,
-        )}
-      </ListGroup>
-    </List>
+      <LayersIcon />
+      All changes
+      <span aria-hidden="true" className="tabular-nums">
+        +{all.additions} −{all.deletions}
+      </span>
+      <span className="sr-only">
+        , {all.additions} added, {all.deletions} removed
+      </span>
+    </Toggle>
   )
 }
 
-function TaskChanges({ entries }: { entries: readonly ChangeEntry[] }) {
-  const [value, setValue] = useState(entries[0]?.id ?? "all")
-  const shown = entries.find((entry) => entry.id === value) ?? entries[0]
-  if (!shown) {
+function DiffOf({ changes, selected, base }: { changes: TaskChangeSet; selected: string | null; base: string }) {
+  if (selected === WORKING_TREE && changes.worktree) {
+    const groups = [
+      { label: "Staged", patch: changes.worktree.staged.patch },
+      { label: "Unstaged", patch: changes.worktree.unstaged.patch },
+    ].filter((group) => group.patch !== "")
     return (
-      <div className="flex min-h-0 flex-1 flex-col items-center justify-center gap-items rounded-surface border border-dashed p-section text-center">
+      <GitDiff
+        key={WORKING_TREE}
+        aria-label="Uncommitted changes"
+        groups={groups}
+        height="auto"
+        fileTree="collapsible"
+        className="min-w-0 flex-1"
+      />
+    )
+  }
+  const commit = changes.commits.find((entry) => entry.id === selected)
+  return (
+    <GitDiff
+      key={commit?.id ?? "all"}
+      aria-label={commit ? `Changes in ${commit.id.slice(0, 7)}` : `All changes against ${base}`}
+      patch={commit ? changes.patches[commit.id] : changes.all.patch}
+      height="auto"
+      fileTree="collapsible"
+      className="min-w-0 flex-1"
+    />
+  )
+}
+
+type TaskChangesProps = {
+  branch: TaskBranch | undefined
+  changes: TaskChangeSet | undefined
+  defaultSelected?: string | null
+}
+
+function TaskChanges({ branch, changes, defaultSelected = null }: TaskChangesProps) {
+  const [selected, setSelected] = useState<string | null>(defaultSelected)
+  if (!branch || !changes) {
+    return (
+      <div className="flex flex-col items-center justify-center gap-items rounded-surface border border-dashed p-section text-center">
         <GitBranchIcon className="size-6 text-muted-foreground" />
         <p className="text-sm font-medium">No changes to show</p>
         <p className="max-w-sm text-sm text-muted-foreground">
@@ -245,21 +221,31 @@ function TaskChanges({ entries }: { entries: readonly ChangeEntry[] }) {
       </div>
     )
   }
+  const worktree = changes.worktree
   return (
-    <div className="flex min-h-0 flex-1 gap-group">
-      <ChangeList entries={entries} value={shown.id} onChange={setValue} />
-      <GitDiff
-        key={shown.id}
-        aria-label={`Diff of ${shown.id}`}
-        patch={shown.patch}
-        className="min-h-0 min-w-0 flex-1"
+    <div className="flex items-start gap-group narrow:flex-col narrow:items-stretch">
+      <CommitHistory
+        aria-label={`Commits on ${branch.name}`}
+        className="w-96 shrink-0 narrow:w-full"
+        commits={changes.commits}
+        headerStart={
+          <AllChangesToggle all={changes.all} pressed={selected === null} onPress={() => setSelected(null)} />
+        }
+        workingTree={worktree ? { staged: worktree.staged.files, unstaged: worktree.unstaged.files } : undefined}
+        upstreamHead={changes.upstreamHead}
+        selected={selected}
+        onSelect={setSelected}
+        now={TASK_DIALOG_NOW}
+        locale="en-US"
+        timeZone="UTC"
       />
+      <DiffOf changes={changes} selected={selected} base={branch.base} />
     </div>
   )
 }
 
-function ChangesSection({ entries, defaultOpen = false }: { entries: readonly ChangeEntry[]; defaultOpen?: boolean }) {
-  const { all, worktree, unpushed } = changeCounts(entries)
+function ChangesSection({ defaultOpen = false, ...props }: TaskChangesProps & { defaultOpen?: boolean }) {
+  const { all, uncommitted, unpushed } = changeCounts(props.changes)
   return (
     <Collapsible
       defaultOpen={defaultOpen}
@@ -267,12 +253,12 @@ function ChangesSection({ entries, defaultOpen = false }: { entries: readonly Ch
     >
       <CollapsibleTrigger className="flex w-full items-center gap-items text-start">
         <span className="text-sm font-medium">Changes</span>
-        {all?.kind === "all" ? (
+        {all ? (
           <span className="flex flex-wrap items-center gap-inline text-sm text-muted-foreground tabular-nums">
             <span>{all.files} files</span>
             <Additions additions={all.additions} deletions={all.deletions} />
             {unpushed > 0 ? <Badge tone="warning">{unpushed} not pushed</Badge> : null}
-            {worktree ? <Badge tone="warning">{worktree.files} uncommitted</Badge> : null}
+            {uncommitted > 0 ? <Badge tone="warning">{uncommitted} uncommitted</Badge> : null}
           </span>
         ) : (
           <span className="text-sm text-muted-foreground">No branch yet</span>
@@ -280,8 +266,8 @@ function ChangesSection({ entries, defaultOpen = false }: { entries: readonly Ch
         <CollapsibleIcon className="ms-auto" />
       </CollapsibleTrigger>
       <CollapsiblePanel>
-        <div className="flex h-160 min-h-0 pt-items">
-          <TaskChanges entries={entries} />
+        <div className="pt-items">
+          <TaskChanges {...props} />
         </div>
       </CollapsiblePanel>
     </Collapsible>
@@ -293,10 +279,12 @@ type TaskDialogProps = {
   onClose: () => void
   onOpenHistory: (branch: string) => void
   changesOpen?: boolean
+  /** The commit (or `WORKING_TREE`) selected when the changes open; `null`, all changes, by default. */
+  changesSelected?: string | null
   acceptanceOpen?: boolean
 }
 
-function TaskDialog({ task, onClose, onOpenHistory, changesOpen, acceptanceOpen }: TaskDialogProps) {
+function TaskDialog({ task, onClose, onOpenHistory, changesOpen, changesSelected, acceptanceOpen }: TaskDialogProps) {
   return (
     <TaskDetailDialog
       task={task}
@@ -313,14 +301,19 @@ function TaskDialog({ task, onClose, onOpenHistory, changesOpen, acceptanceOpen 
             <StatsStrip task={current} acceptanceOpen={acceptanceOpen} />
             <GitLine
               branch={branch}
-              entries={taskChangeEntries[current.id] ?? []}
+              changes={taskChanges[current.id]}
               onOpenHistory={() => branch && onOpenHistory(branch.name)}
             />
           </>
         )
       }}
       renderBeforeBody={(current) => (
-        <ChangesSection entries={taskChangeEntries[current.id] ?? []} defaultOpen={changesOpen} />
+        <ChangesSection
+          branch={taskBranches[current.id]}
+          changes={taskChanges[current.id]}
+          defaultOpen={changesOpen}
+          defaultSelected={changesSelected}
+        />
       )}
     />
   )
