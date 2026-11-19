@@ -30,6 +30,13 @@ import {
   type SidebarLabels,
   type SidebarTriggerProps,
 } from "@/components/ui/sidebar-trigger"
+import {
+  ScrollArea,
+  ScrollAreaContent,
+  ScrollAreaScrollbar,
+  ScrollAreaThumb,
+  ScrollAreaViewport,
+} from "@/components/ui/scroll-area"
 import { ControlTooltip } from "@/components/ui/tooltip"
 import { cn } from "@/lib/utils"
 import { useSidebarState, type SidebarState, type SidebarStateOptions } from "@/components/ui/use-sidebar-state"
@@ -94,7 +101,18 @@ function Sidebar({
   const collapsed = collapsible && !narrow && (collapsedProp ?? ownCollapsed)
   const rail = collapsed && collapse === "rail"
 
-  const body = <div className="flex min-h-0 flex-1 flex-col gap-group overflow-y-auto">{children}</div>
+  const body = (
+    <ScrollArea className="flex min-h-0 flex-1 flex-col">
+      <ScrollAreaViewport aria-label={label} className="h-auto min-h-0 flex-1">
+        <ScrollAreaContent className="flex flex-col gap-group has-[>[data-collapsible]]:gap-px">
+          {children}
+        </ScrollAreaContent>
+      </ScrollAreaViewport>
+      <ScrollAreaScrollbar>
+        <ScrollAreaThumb />
+      </ScrollAreaScrollbar>
+    </ScrollArea>
+  )
 
   if (narrow) {
     return (

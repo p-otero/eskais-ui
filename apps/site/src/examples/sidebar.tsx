@@ -1,4 +1,4 @@
-import { DownloadIcon, HouseIcon, SettingsIcon } from "lucide-react"
+import { DownloadIcon, FolderIcon, HouseIcon, SettingsIcon } from "lucide-react"
 import { Sidebar, SidebarGroup, SidebarItem } from "@/components/ui/sidebar"
 
 export default function SidebarDemo() {
@@ -11,6 +11,14 @@ export default function SidebarDemo() {
           </SidebarItem>
           <SidebarItem href="#deployments" icon={<DownloadIcon />} badge="23">
             Deployments
+          </SidebarItem>
+        </SidebarGroup>
+        <SidebarGroup label="Projects" collapsible>
+          <SidebarItem href="#atlas" icon={<FolderIcon />}>
+            Atlas
+          </SidebarItem>
+          <SidebarItem href="#borealis" icon={<FolderIcon />}>
+            Borealis
           </SidebarItem>
         </SidebarGroup>
         <SidebarGroup label="Account">

@@ -147,3 +147,98 @@ test("an agent collapses and expands the sidebar by name", async () => {
   expect(expanded.ok, expanded.error?.message).toBe(true)
   expect(screen.getByRole("navigation", { name: "Main" }).hasAttribute("data-collapsed")).toBe(false)
 })
+
+function Docs(props: { open?: boolean; onOpenChange?: (open: boolean) => void }) {
+  return (
+    <Sidebar label="Documentation">
+      <SidebarGroup label="Get started" collapsible defaultOpen={false}>
+        <SidebarItem href="#/install">Installation</SidebarItem>
+      </SidebarGroup>
+      <SidebarGroup label="Forms" collapsible open={props.open} onOpenChange={props.onOpenChange}>
+        <SidebarItem href="#/input" current>
+          Input
+        </SidebarItem>
+      </SidebarGroup>
+    </Sidebar>
+  )
+}
+
+test("the body scrolls in a ScrollArea named by the sidebar", async () => {
+  render(<Main />)
+  await settle()
+  const nav = screen.getByRole("navigation", { name: "Main" })
+  const viewport = nav.querySelector('[data-slot="scroll-area-viewport"]')
+  expect(viewport?.getAttribute("aria-label")).toBe("Main")
+  expect(viewport?.contains(screen.getByRole("link", { name: "Overview" }))).toBe(true)
+  expect(nav.querySelector('[data-slot="scroll-area-scrollbar"]')).toBeTruthy()
+})
+
+test("a collapsible group folds its items under a button named by its label", async () => {
+  const user = userEvent.setup()
+  const { container } = render(<Docs />)
+  await settle()
+  const start = screen.getByRole("button", { name: "Get started" })
+  expect(start.getAttribute("aria-expanded")).toBe("false")
+  expect(screen.queryByRole("link", { name: "Installation" })).toBeNull()
+  const forms = screen.getByRole("button", { name: "Forms" })
+  expect(forms.getAttribute("aria-expanded")).toBe("true")
+  expect(screen.getByRole("list", { name: "Forms" }).contains(screen.getByRole("link", { name: "Input" }))).toBe(true)
+  expect(await axeViolations(container)).toEqual([])
+
+  await user.click(start)
+  expect(start.getAttribute("aria-expanded")).toBe("true")
+  expect(screen.getByRole("link", { name: "Installation" })).toBeTruthy()
+
+  forms.focus()
+  await user.keyboard("{Enter}")
+  await settle(50)
+  expect(forms.getAttribute("aria-expanded")).toBe("false")
+  expect(screen.queryByRole("link", { name: "Input" })).toBeNull()
+  await user.keyboard(" ")
+  expect(forms.getAttribute("aria-expanded")).toBe("true")
+})
+
+test("a controlled group follows open and reports presses", async () => {
+  const user = userEvent.setup()
+  const onOpenChange = vi.fn()
+  const { rerender } = render(<Docs open={false} onOpenChange={onOpenChange} />)
+  await settle()
+  const forms = screen.getByRole("button", { name: "Forms" })
+  await user.click(forms)
+  expect(onOpenChange).toHaveBeenLastCalledWith(true, expect.objectContaining({ reason: "trigger-press" }))
+  expect(forms.getAttribute("aria-expanded")).toBe("false")
+  rerender(<Docs open onOpenChange={onOpenChange} />)
+  expect(forms.getAttribute("aria-expanded")).toBe("true")
+})
+
+test("in the icon rail a collapsible group shows its items", async () => {
+  render(
+    <Sidebar label="Main" collapsed>
+      <SidebarGroup label="Workspace" collapsible defaultOpen={false}>
+        <SidebarItem href="#/" icon={<Icon />}>
+          Overview
+        </SidebarItem>
+      </SidebarGroup>
+    </Sidebar>,
+  )
+  await settle()
+  expect(screen.queryByRole("button", { name: "Workspace" })).toBeNull()
+  expect(screen.getByRole("link", { name: "Overview" })).toBeTruthy()
+})
+
+test("an agent opens and closes a collapsible group by its label", async () => {
+  render(<Docs />)
+  await settle()
+  const components = agent.snapshot().filter((entry) => !entry.offPage && entry.component !== "more")
+  for (const entry of components) {
+    expect(entry.label, `${entry.component} ${entry.ref} has no name`).toBeTruthy()
+  }
+  const group = components.find((candidate) => candidate.label === "Get started")
+  expect(group?.actions).toEqual(expect.arrayContaining(["setOpen"]))
+  const opened = await act(() => agent.act({ steps: [{ ref: "Get started", action: "setOpen", args: [true] }] }))
+  expect(opened.ok, opened.error?.message).toBe(true)
+  expect(screen.getByRole("button", { name: "Get started" }).getAttribute("aria-expanded")).toBe("true")
+  const closed = await act(() => agent.act({ steps: [{ ref: "Forms", action: "setOpen", args: [false] }] }))
+  expect(closed.ok, closed.error?.message).toBe(true)
+  expect(screen.getByRole("button", { name: "Forms" }).getAttribute("aria-expanded")).toBe("false")
+})

@@ -401,8 +401,12 @@ const itemNotes: Record<string, ItemNotes> = {
     a11y: [
       "A named navigation landmark; the current item has aria-current=page.",
       "Collapses to an icon rail with tooltips, and to a drawer on narrow screens.",
+      "The items scroll in a ScrollArea named by the sidebar's label: the wheel, touch, keyboard and find in page work as on any page.",
+      "A collapsible group's label is a UI SDK Collapsible trigger: a button with aria-expanded that Enter and Space toggle, its items a list named by the label. Closed, its links leave the tab order.",
     ],
-    related: ["skip-link", "page-layout", "navigation-menu"],
+    agent:
+      "Agents collapse and expand the sidebar by its label, open or close a collapsible group by its label (setOpen), and follow its items by name.",
+    related: ["skip-link", "page-layout", "navigation-menu", "collapsible", "scroll-area"],
   },
   "navigation-menu": {
     a11y: ["A named landmark of triggers that disclose panels of links; Escape closes and returns focus."],
