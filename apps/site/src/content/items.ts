@@ -1007,6 +1007,16 @@ const itemNotes: Record<string, ItemNotes> = {
     agent: "Agents open, expand and collapse by path; the files are listed for query().",
     related: ["commit-history", "git-chip"],
   },
+  "repository-select": {
+    usage:
+      'Use it to pick one git repository out of several in a workspace: each option shows the path, the branch checked out and whether it has uncommitted files, is ahead or behind its upstream, or has no remote. Put it in CommitHistory\'s headerStart with size="sm", or in a Field with a FieldLabel.',
+    a11y: [
+      "UI SDK's select: arrows, Home/End and typeahead by name; Enter or Space chooses.",
+      'Each state is a word on a badge ("5 uncommitted", "No remote"), never colour alone.',
+    ],
+    agent: "Agents read the repositories as the select's options and choose one with setValue, by value or name.",
+    related: ["commit-history", "select", "git-chip"],
+  },
   "git-chip": {
     usage: "Use the chips for file paths and branch names inside a sentence, like a commit message.",
     a11y: ["The icons are decorative; the chip reads as its text."],

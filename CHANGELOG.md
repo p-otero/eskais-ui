@@ -10,6 +10,7 @@ Versions follow [semver](https://semver.org). Before 1.0, a minor version can br
 - `CommitHistory workingTree={{ staged, unstaged, label? }}`: a dirty checkout's row above the newest commit, "Uncommitted changes · 2 staged · 3 unstaged" with a hollow dashed node. It shares the tree's roving focus and selection with the commits as `WORKING_TREE` (`"working-tree"`, exported), is an agent item named in full, and takes `labels.workingTree`, `labels.staged(n)` and `labels.unstaged(n)`.
 - `CommitHistory upstreamHead` and `Commit.unpushed`: commits the upstream doesn't have yet (the ones above `upstreamHead`, or marked one by one) show a cloud-upload mark beside their time and end their name with ", not pushed" (`labels.notPushed`), for screen readers and agents. The header counts them before the commit count, read as "3 not pushed" (`labels.unpushed(n)`).
 - `CommitHistory headerStart`: content at the start of the header, before the branch switcher, so a repository picker and the branch sit together as repository ▸ branch. `actions` stays at the end.
+- `repository-select`: `RepositorySelect`, one git repository out of several on UI SDK's Select. Each option shows the name, its path, the branch checked out and its state as badges (`5 uncommitted`, `2 ahead`, `7 behind`, `No remote`, or `Up to date`); the trigger shows the name alone. Typed `repositories` (`Repository`), `labels` for every word, `size="sm"` for `CommitHistory headerStart`.
 
 ## 0.2.3 (2026-11-19)
 
