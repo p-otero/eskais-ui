@@ -82,9 +82,10 @@ async function checkFindable(page, findable) {
     target?.dispatchEvent(new Event("beforematch", { bubbles: true }))
     await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)))
     const rows = [...document.querySelectorAll('[role="treeitem"]')]
-    const words = (value) => value.replaceAll(/\s+/g, " ").trim()
+    // A chip in the subject spaces its stand-in's text differently from the row's.
+    const wanted = text.replaceAll(/\s+/g, " ").trim()
     return rows.some(
-      (row) => words(row.textContent ?? "").includes(words(text)) && row.getBoundingClientRect().top >= 0,
+      (row) => (row.textContent ?? "").replaceAll(/\s+/g, " ").includes(wanted) && row.getBoundingClientRect().top >= 0,
     )
   })
   return { layersMs: round(layersMs), found }

@@ -139,6 +139,7 @@ async function splitAdded(page, width) {
 }
 
 for (const width of [1440, 1920]) {
+  // oxlint-disable-next-line eslint/no-await-in-loop -- one browser at a time, each at its own viewport
   await withShowcase(
     async (page) => {
       await open(page)
