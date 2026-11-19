@@ -117,7 +117,7 @@ function DocsLayout({
             </PageLayout>
           </div>
           {toc !== undefined && (
-            <ScrollArea className="sticky top-(--docs-top) hidden max-h-(--docs-column-height) w-52 shrink-0 flex-col self-start xl:flex">
+            <ScrollArea className="sticky! top-(--docs-top) hidden max-h-(--docs-column-height) w-52 shrink-0 flex-col self-start xl:flex">
               <ScrollAreaViewport
                 className="h-auto min-h-0 flex-1 pt-group pb-section"
                 render={(part) => <div {...part} data-slot="docs-layout-toc" />}

@@ -137,7 +137,7 @@ function LightboxView({ items, index, onIndexChange, labels }: ViewProps) {
         </ControlTooltip>
       </div>
       <div data-slot="lightbox-stage" className="relative min-h-0 flex-1 bg-muted/(--glass-opacity)">
-        <ScrollArea className="absolute inset-0">
+        <ScrollArea className="absolute! inset-0">
           <ScrollAreaViewport
             data-zoom={actual ? "actual" : "fit"}
             className="grid place-items-center-safe p-group"
