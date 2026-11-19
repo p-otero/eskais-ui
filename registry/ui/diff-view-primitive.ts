@@ -26,6 +26,8 @@ type DiffViewController = {
   setLayout: (layout: DiffLayout) => void
   setWrap: (wrap: boolean) => void
   clearSelection: () => void
+  /** The file at the top of the view, or the one `openFile` last opened. */
+  currentFile: () => string | null | undefined
 }
 
 /** A handle to drive a DiffView from outside it, like a file list beside it: pass it as `controller`. */
@@ -55,6 +57,8 @@ type DiffViewOptions = {
     selection: DiffLineSelection | null,
     details: ChangeDetails<"item-press" | "list-navigation" | "escape-key" | "imperative">,
   ) => void
+  /** The file at the top of the view changed, by scrolling or `openFile`; a file tree beside it follows it. */
+  onCurrentFileChange?: (path: string | null, details: ChangeDetails<"scroll" | "imperative">) => void
   intraline?: IntralineMode | false
   /** Find in page reaches lines that aren't rendered and opens collapsed gaps and files. @defaultValue true */
   findable?: boolean
@@ -102,6 +106,7 @@ const diffView = definePrimitive({
     onViewedChange: "callback",
     defaultCollapsed: "list",
     onLineSelect: "callback",
+    onCurrentFileChange: "callback",
     intraline: "value",
     findable: "boolean",
   },
@@ -135,6 +140,7 @@ const diffView = definePrimitive({
     })
     document.attachGrid(grid)
     document.onSelect((selection, reason, event) => dispatch(context, "onLineSelect", selection, { reason, event }))
+    document.onCurrentFile((path, reason) => dispatch(context, "onCurrentFileChange", path, { reason }))
 
     const setLayout = (layout: unknown, event?: Event) => {
       if (layout !== "unified" && layout !== "split")
@@ -175,6 +181,7 @@ const diffView = definePrimitive({
       getHunk: (path: unknown, n: unknown) => document.hunk(path, n),
       expandGap: (path: unknown, gap: unknown) => document.expand(path, gap),
       clearSelection: () => document.select(null, null, false, "imperative"),
+      currentFile: () => document.currentFile(),
       keydown(event: KeyboardEvent) {
         if (event.defaultPrevented || event.altKey || event.ctrlKey || event.metaKey || typing(event.target)) return
         const moves: Record<string, () => unknown> = {
@@ -275,6 +282,7 @@ const diffView = definePrimitive({
       "setLayout",
       "setWrap",
       "clearSelection",
+      "currentFile",
     ],
     items: (api) => api.document.fileItems(),
   },
