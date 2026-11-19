@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, type ComponentProps } from "react"
+import { useState, type ComponentProps, type ReactNode } from "react"
 import { XIcon } from "lucide-react"
 
 import type { TaskView } from "@/lib/agent-task-types"
@@ -19,6 +19,12 @@ type TaskDetailDialogProps = Omit<TaskDetailContentProps, "task" | "headingLevel
   onClose: (reason: CloseReason | "imperative") => void
   /** Where focus goes once it closes; the element focused before it opened by default. */
   finalFocus?: ComponentProps<typeof DialogContent>["finalFocus"]
+  /** Under the title, inside the fixed header: a stats strip, a git line. */
+  renderHeader?: (task: TaskView) => ReactNode
+  /** In the scrolling body, before the task's sections: a changes section. */
+  renderBeforeBody?: (task: TaskView) => ReactNode
+  /** In the scrolling body, after the task's sections. */
+  renderAfterBody?: (task: TaskView) => ReactNode
   className?: string
 }
 
@@ -59,6 +65,9 @@ function TaskDetailDialog({
   presentation = "dialog",
   onClose,
   finalFocus,
+  renderHeader,
+  renderBeforeBody,
+  renderAfterBody,
   className,
   labels = agentTaskBoardLabels,
   ...content
@@ -88,15 +97,22 @@ function TaskDetailDialog({
       >
         {current && (
           <>
-            <div className="flex shrink-0 items-start gap-items border-b px-inset-surface py-group">
-              <Title data-slot="task-detail-title" className="min-w-0 flex-1 text-title-sm leading-snug">
-                <span className="font-mono text-muted-foreground">{current.id}</span> {current.title}
-              </Title>
-              <Close variant="ghost" size="icon" aria-label={labels.panel.close}>
-                <XIcon />
-              </Close>
+            <div
+              data-slot="task-detail-header"
+              className="flex shrink-0 flex-col gap-items border-b px-inset-surface py-group"
+            >
+              <div className="flex items-start gap-items">
+                <Title data-slot="task-detail-title" className="min-w-0 flex-1 text-title-sm leading-snug">
+                  <span className="font-mono text-muted-foreground">{current.id}</span> {current.title}
+                </Title>
+                <Close variant="ghost" size="icon" aria-label={labels.panel.close}>
+                  <XIcon />
+                </Close>
+              </div>
+              {renderHeader?.(current)}
             </div>
-            <Body className="@container/task-detail mx-0 p-inset-surface">
+            <Body className="@container/task-detail mx-0 gap-section p-inset-surface">
+              {renderBeforeBody?.(current)}
               <TaskDetailContent
                 task={current}
                 labels={labels}
@@ -104,6 +120,7 @@ function TaskDetailDialog({
                 layout={presentation === "dialog" ? "split" : "stack"}
                 headingLevel={3}
               />
+              {renderAfterBody?.(current)}
             </Body>
           </>
         )}
