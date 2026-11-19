@@ -45,7 +45,7 @@ const guides: GuideMeta[] = [
     title: "Keyboard and long lists",
     description:
       "Shortcuts with scopes and a ? dialog, the keyboard map for lists and tables, and virtualization for thousands of rows.",
-    covers: ["row-navigation", "virtual-rows"],
+    covers: ["row-navigation", "virtual-rows", "trail-rows"],
   },
   {
     slug: "performance",
@@ -64,6 +64,7 @@ const guides: GuideMeta[] = [
     title: "Routing and the URL",
     description:
       "A router adapter for blocks that keep state in the URL: hash and history routers, your own router's API, or controlled selection.",
+    covers: ["url-param"],
   },
   {
     slug: "agents",

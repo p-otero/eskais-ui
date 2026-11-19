@@ -82,8 +82,10 @@ export default function Routing() {
       />
       <Pre code={adapters} />
       <P>
-        Without <Code>router</Code>, <Code>createUrlParam(name)</Code> keeps its old behaviour: the value in{" "}
-        <Code>location.search</Code> (or <Code>{'{ in: "hash" }'}</Code> for a hash route&apos;s query).
+        <Code>createUrlParam</Code> ships in the <Code>url-param</Code> item, which <Code>master-detail</Code> and{" "}
+        <Code>settings-page</Code> install. Without <Code>router</Code>, <Code>createUrlParam(name)</Code> keeps its old
+        behaviour: the value in <Code>location.search</Code> (or <Code>{'{ in: "hash" }'}</Code> for a hash route&apos;s
+        query).
       </P>
 
       <H2 id="own-router">Your router&apos;s own API</H2>

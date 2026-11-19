@@ -4074,6 +4074,22 @@
       ]
     },
     {
+      "name": "url-param",
+      "type": "registry:lib",
+      "title": "URL Param",
+      "description": "One value kept in the URL without knowing the router: the adapter master-detail and settings-page read, write and listen to, from location.search, a hash route's query or a UrlRouter.",
+      "docs": "`createUrlParam(name, { in, router, history })` returns a `UrlParamAdapter` (`{ read(), write(value), subscribe(listener), href?(value) }`). By default it keeps the value in `location.search`; `{ in: \"hash\" }` in a hash route's query; `{ router }` goes through a `UrlRouter` from `url-router` (`hashRouter()`, `historyRouter()` or your router's own API). `history: \"replace\"` writes without a history entry. Pass it to `MasterDetail url` or `SettingsPage url`, or write your own adapter in the same shape.",
+      "registryDependencies": [
+        "@eskais/url-router"
+      ],
+      "files": [
+        {
+          "path": "registry/lib/url-param.ts",
+          "type": "registry:lib"
+        }
+      ]
+    },
+    {
       "name": "url-state",
       "type": "registry:lib",
       "title": "URL State",
@@ -4253,7 +4269,7 @@
         "@eskais/button",
         "@eskais/select",
         "@eskais/relative-time",
-        "@eskais/virtual-rows",
+        "@eskais/trail-rows",
         "@eskais/locale"
       ],
       "files": [
@@ -4275,18 +4291,6 @@
         },
         {
           "path": "registry/ui/use-commit-history.ts",
-          "type": "registry:ui"
-        },
-        {
-          "path": "registry/ui/use-instance-state.ts",
-          "type": "registry:ui"
-        },
-        {
-          "path": "registry/ui/use-trail-rows.ts",
-          "type": "registry:ui"
-        },
-        {
-          "path": "registry/ui/use-findable-rows.ts",
           "type": "registry:ui"
         },
         {
@@ -4336,7 +4340,7 @@
         "@eskais/utils",
         "@eskais/theme",
         "@eskais/tone",
-        "@eskais/virtual-rows"
+        "@eskais/trail-rows"
       ],
       "files": [
         {
@@ -4350,18 +4354,6 @@
         {
           "path": "registry/lib/git-status.ts",
           "type": "registry:lib"
-        },
-        {
-          "path": "registry/ui/use-instance-state.ts",
-          "type": "registry:ui"
-        },
-        {
-          "path": "registry/ui/use-trail-rows.ts",
-          "type": "registry:ui"
-        },
-        {
-          "path": "registry/ui/use-findable-rows.ts",
-          "type": "registry:ui"
         }
       ]
     },
@@ -4748,6 +4740,33 @@
         },
         {
           "path": "registry/ui/use-virtual-rows.ts",
+          "type": "registry:ui"
+        }
+      ]
+    },
+    {
+      "name": "trail-rows",
+      "type": "registry:ui",
+      "title": "Trail Rows",
+      "description": "The rows of a long trail or tree, shared by commit-history and git-tree: virtual-rows in document flow by default, or UI SDK's virtualizer with findable layers so find in page reaches rows that aren't rendered.",
+      "docs": "`useTrailRows({ count, estimate, getKey, text, findable })` returns `segments` (rows, with a `top` when `absolute`, and gaps that hold the space of the rows between), `anchor` (the rows' parent, in flow), `setScroller` (the scroller), `measure`, `textSlot`, `pin`, `scrollToIndex` and `reveal`. Without `findable` it is `useVirtualRows` from `virtual-rows`, rows in document flow; with it, `useFindableRows` puts rows on UI SDK's virtualizer, absolutely positioned in a box `height` px tall, and builds its findable layers once the page is idle, so find in page reaches rows that aren't rendered by the pieces `text(index)` returns. `useInstanceState(instance)` reads a UI SDK primitive instance's state with `useSyncExternalStore`. `commit-history` and `git-tree` install it; you rarely need it directly.",
+      "dependencies": [
+        "@ui-sdk/core@0.1.0-beta.10"
+      ],
+      "registryDependencies": [
+        "@eskais/virtual-rows"
+      ],
+      "files": [
+        {
+          "path": "registry/ui/use-instance-state.ts",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/use-trail-rows.ts",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/use-findable-rows.ts",
           "type": "registry:ui"
         }
       ]
@@ -5603,13 +5622,9 @@
         "@eskais/resizable",
         "@eskais/scroll-area",
         "@eskais/shortcuts",
-        "@eskais/url-router"
+        "@eskais/url-param"
       ],
       "files": [
-        {
-          "path": "registry/lib/url-param.ts",
-          "type": "registry:lib"
-        },
         {
           "path": "registry/ui/master-detail-primitive.ts",
           "type": "registry:ui"
@@ -5673,13 +5688,9 @@
         "@eskais/field",
         "@eskais/link",
         "@eskais/select",
-        "@eskais/url-router"
+        "@eskais/url-param"
       ],
       "files": [
-        {
-          "path": "registry/lib/url-param.ts",
-          "type": "registry:lib"
-        },
         {
           "path": "registry/ui/use-settings-page.ts",
           "type": "registry:ui"

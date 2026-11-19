@@ -176,6 +176,11 @@ export default function Keyboard() {
           rows.
         </li>
         <li>Card lists and grouped lists don't virtualize: render fewer cards, or page them.</li>
+        <li>
+          <Code>CommitHistory</Code> and <Code>GitTree</Code> share their rows through the <Code>trail-rows</Code> item:{" "}
+          <Code>useTrailRows</Code> is <Code>useVirtualRows</Code> by default, and with <Code>findable</Code> puts rows
+          on UI SDK&apos;s virtualizer so find in page reaches rows that aren&apos;t rendered.
+        </li>
       </Ul>
     </Article>
   )
