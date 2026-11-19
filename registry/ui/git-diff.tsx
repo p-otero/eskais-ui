@@ -109,7 +109,12 @@ function GitDiff({
     () => (groups ? sections.flat() : (given ?? (patch ? parsePatch(patch) : []))),
     [groups, sections, given, patch],
   )
-  const files = useMemo(() => toViewFiles(diffs), [diffs])
+  const files = useMemo(() => {
+    const view = toViewFiles(diffs)
+    if (!groups) return view
+    const labelOf = sections.flatMap((list, index) => list.map(() => groups[index]?.label))
+    return view.map((file, index) => ({ ...file, group: labelOf[index] }))
+  }, [diffs, groups, sections])
   const treeGroups = useMemo(() => {
     if (!groups) return undefined
     const starts = sections.map((_, index) => sections.slice(0, index).reduce((sum, list) => sum + list.length, 0))

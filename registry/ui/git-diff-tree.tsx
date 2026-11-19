@@ -105,20 +105,31 @@ function Items({
 }
 
 /** Folder values carry their section, so a folder in two sections (src/ staged and unstaged) stays two items. */
-function scoped(items: readonly TreeItemData[], scope: string): TreeItemData[] {
-  return items.map((item) =>
-    item.children ? { ...item, value: `${scope}${item.value}`, children: scoped(item.children, scope) } : item,
-  )
+function scoped(
+  items: readonly TreeItemData[],
+  scope: string,
+  files: ReadonlyMap<string, DiffViewFile>,
+): TreeItemData[] {
+  return items.map((item) => {
+    if (item.children) {
+      return { ...item, value: `${scope}${item.value}`, children: scoped(item.children, scope, files) }
+    }
+    // A path in two groups is `path (2)` in the second; its section already tells them apart.
+    const diff = files.get(item.value)?.diff
+    const real = diff?.newPath ?? diff?.oldPath
+    return real ? { ...item, label: real.slice(real.lastIndexOf("/") + 1) } : item
+  })
 }
 
 /** The tree's items: the files as folders, or one section per group with its own folders. */
 function itemsOf(files: readonly DiffViewFile[], groups: readonly GitDiffTreeGroup[] | undefined): Section[] {
   if (!groups) return treeFromPaths(files.map((file) => file.path))
+  const byPath = new Map(files.map((file) => [file.path, file]))
   return groups.map((group, index) => ({
     value: `\u0000group:${String(index)}`,
     label: group.label,
     count: group.paths.length,
-    children: scoped(treeFromPaths(group.paths), `\u0000${String(index)}:`),
+    children: scoped(treeFromPaths(group.paths), `\u0000${String(index)}:`, byPath),
   }))
 }
 
