@@ -134,6 +134,9 @@ const allItems = [
   "shortcuts-dialog",
   "row-navigation",
   "virtual-rows",
+  "trail-rows",
+  "commit-history",
+  "git-tree",
   "side-panel",
   "inbox",
   "master-detail",
@@ -144,6 +147,7 @@ const allItems = [
   "page-source",
   "filter-schema",
   "url-state",
+  "url-param",
   "server-data",
   "server-data-table",
   "filter-search",
@@ -396,6 +400,12 @@ async function checkEverything(page) {
         (slot) => !document.querySelector(`[data-slot="${slot}"]`),
       ),
       link: document.querySelector('[data-slot="link"]')?.getAttribute("data-variant"),
+      git: {
+        commits: document.querySelectorAll('[aria-label="History"] [data-slot="commit-row"]').length,
+        files: [...document.querySelectorAll('[role="tree"][aria-label="Changes"] [role="treeitem"]')].map(
+          (row) => row.getAttribute("aria-label") ?? row.textContent,
+        ),
+      },
       markdown: document.querySelector(".cm-line[data-md-heading]")?.textContent,
       workspace: [...document.querySelectorAll("[data-slot=document-outline] button")].map((node) => node.textContent),
       tokens: [...document.querySelectorAll("[data-slot=token-input-token]")].map((chip) => ({
@@ -422,6 +432,8 @@ async function checkEverything(page) {
     throw new Error(`TextDiff didn't diff in its worker: ${JSON.stringify(result.diff)}`)
   if (!result.diff.patch?.includes("a.ts"))
     throw new Error(`GitDiff didn't render its file: ${JSON.stringify(result.diff)}`)
+  if (result.git.commits !== 2 || result.git.files.length < 3)
+    throw new Error(`CommitHistory and GitTree, sharing trail-rows, didn't render: ${JSON.stringify(result.git)}`)
   if (result.blocks.length > 0) throw new Error(`Blocks missing from the landing page: ${result.blocks.join(", ")}`)
   if (result.link !== "inline") throw new Error("Link didn't render")
   if (result.markdown !== "Notes") throw new Error(`MarkdownEditor didn't render its heading: ${result.markdown}`)
@@ -518,6 +530,8 @@ import type { StandardSchemaV1 } from "@standard-schema/spec"
 import { Input } from "@/components/ui/input"
 import { CodeBlock } from "@/components/ui/code-block"
 import { GitDiff } from "@/components/ui/git-diff"
+import { CommitHistory } from "@/components/ui/commit-history"
+import { GitTree } from "@/components/ui/git-tree"
 import { TextDiff } from "@/components/ui/text-diff"
 import { Hero } from "@/components/ui/hero"
 import { Link } from "@/components/ui/link"
@@ -587,6 +601,8 @@ function App() {
       </DataState>
     </Section>
     <AgentTaskBoard tasks={tasks} mode="snapshot" generatedAt="2026-11-15T18:42:00Z" timeZone="UTC" />
+    <CommitHistory aria-label="History" className="max-h-64" now="2026-11-15T19:00:00Z" commits={[{ id: "c2", parents: ["c1"], message: "Fix \`src/a.ts\`", date: "2026-11-15T18:00:00Z" }, { id: "c1", parents: [], message: "Initial commit", date: "2026-11-15T17:00:00Z" }]} />
+    <GitTree aria-label="Changes" className="max-h-64" files={[{ path: "src/a.ts", status: "modified" }, "README.md"]} />
     <Card data-theme="glass">
       <CardHeader><CardTitle className="narrow:text-title">Consumer</CardTitle></CardHeader>
       <CardContent>

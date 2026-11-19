@@ -30,6 +30,8 @@ const guideItems = [
   "icon",
   "row-navigation",
   "virtual-rows",
+  "trail-rows",
+  "url-param",
   "eskais-ui-skill",
   "eskais-mockup-skill",
   "eskais-perf-skill",

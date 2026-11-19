@@ -17,6 +17,8 @@ Versions follow [semver](https://semver.org). Before 1.0, a minor version can br
 
 - `AgentTaskBoard density` writes `data-board-density` (it was `data-density`, which is now the page's axis). A compact board keeps its spacing, controls and narrower columns but no longer sets its own radius: it follows the page's.
 - The current page in `Sidebar` (and so the Shell and docs sidebars) and in `NavigationMenu`'s top links is no longer a solid primary pill: `nav-current` gives it a soft translucent fill (`--nav-current`), a hairline inside its edge (`--nav-current-border`), the foreground text and a medium weight; the other sidebar items drop to the normal weight, so the current one doesn't rest on colour alone. `aria-current="page"` stays. `node tooling/contrast-check.mjs` checks the fill is visible and the text keeps 4.5:1 over muted, background and card in every theme and palette.
+- `trail-rows`: `useTrailRows`, `useFindableRows` and `useInstanceState`, the hooks `commit-history` and `git-tree` each shipped a copy of, now one item both depend on, so the copies can't drift and a second `shadcn add` doesn't overwrite one with the other.
+- `url-param`: `createUrlParam`, which `master-detail` and `settings-page` each shipped, now one item both depend on.
 
 ### Fixed
 
@@ -33,6 +35,7 @@ Versions follow [semver](https://semver.org). Before 1.0, a minor version can br
 - The theme editor's link colour has the same controls as the brand: the OKLCH area, the hue track and a field, named "Link chroma and lightness", "Link hue" and "Link colour in OKLCH". Each change sets `--link-brand` on `<html>` and in the generated CSS.
 - The theme editor keeps its choices when you leave Theming. They live in a store outside React (`createThemeEditorStore` in the showcase), stay on `<html>` so every page previews them, and on the docs site are mirrored to localStorage (every read and write in try/catch, saved values validated) and applied before the first render. "Reset" (it was "Reset to preset") returns to the defaults and clears the saved choice.
 - `@eskais/mockup` builds a screen from two registry items that ship the same file, as `shadcn add` does, when the copies are byte-identical (line endings included). Different copies are still an environment error, which now names the file, both items and both paths.
+- A registry test fails when two items ship the same file, or when an item imports a registry file that neither it nor its registry dependencies ship. `node tooling/consumer-check.mjs` installs and renders `commit-history` and `git-tree` together.
 
 ## 0.2.2 (2026-11-18)
 
