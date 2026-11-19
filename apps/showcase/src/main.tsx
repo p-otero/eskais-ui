@@ -19,6 +19,7 @@ import { GaugeCheck } from "./checks/gauge-check"
 import { IconTooltipCheck } from "./checks/icon-tooltip-check"
 import { ImageScanCheck } from "./checks/image-scan-check"
 import { MasterDetailCheck } from "./checks/master-detail-check"
+import { ModelCheck } from "./checks/model-check"
 import { SettingsPageCheck } from "./checks/settings-page-check"
 import { MobileNavCheck } from "./checks/mobile-nav-check"
 import { GitBench } from "./checks/git-bench"
@@ -82,6 +83,7 @@ const standalone = new Set([
   "description-list-check",
   "gauge-check",
   "image-scan-check",
+  "model-check",
   "master-detail",
   "master-detail-check",
   "dashboard-grid",
@@ -137,6 +139,7 @@ function Demo() {
   if (demo === "description-list-check") return <DescriptionListCheck />
   if (demo === "gauge-check") return <GaugeCheck />
   if (demo === "image-scan-check") return <ImageScanCheck />
+  if (demo === "model-check") return <ModelCheck />
   if (demo === "master-detail") return <MasterDetailDemo />
   if (demo === "master-detail-check") return <MasterDetailCheck />
   if (demo === "dashboard-grid") return <DashboardGridDemo />

@@ -216,6 +216,32 @@ const itemNotes: Record<string, ItemNotes> = {
     agent: "Agents see the image by its alt with the regions as items, and call scan, cancel, retry and selectRegion.",
     related: ["file-input", "image-cropper", "progress"],
   },
+  "model-viewer": {
+    usage:
+      "Reach for it to show a glTF or GLB model people can turn: a product, an avatar, a scan. It costs a small shell up front; three.js loads only when a stage nears the viewport, and only with WebGL.",
+    a11y: [
+      "The stage is an image named by alt and described by the keyboard hint and the visible summary; with focus, arrows turn, + and - zoom, Home resets.",
+      "Views, zoom, reset, play and the clip picker are named buttons, a segmented control and a native select under the stage.",
+      "Under reduced motion clips start paused, auto-rotation stays off and camera moves jump instead of easing.",
+      "Without WebGL, or when loading fails, the poster stays with a message; a failure is announced at once.",
+    ],
+    agent:
+      "Agents see the viewer by its alt with the clips as items, and call rotate, zoom, reset, setView, play, pause and selectClip.",
+    related: ["model-scan", "image-scan", "lightbox"],
+  },
+  "model-scan": {
+    usage:
+      "Reach for it to show a photo turning into a 3D character while an engine works: drive stage, points, model, weights and progress from its events.",
+    a11y: [
+      "The scan is a group named by the photo's alt, busy while it works; the progress bar under it is labelled with the stage.",
+      "Each stage is announced, progress at most every tenth and two seconds, and errors at once.",
+      "Under reduced motion the photo crossfades into the model: no camera flight, no particles, the progress bar stays.",
+      "Once ready, the model is a ModelViewer with its own name and controls.",
+    ],
+    agent:
+      "Agents see the scan by its alt and its stage, and call cancel and retry; the ready model takes the viewer's actions.",
+    related: ["model-viewer", "image-scan", "progress"],
+  },
   "confirm-button": {
     usage:
       "Reach for it for a quick, reversible-by-undo destructive action in a row or toolbar; ConfirmDialog when the consequence needs explaining.",
