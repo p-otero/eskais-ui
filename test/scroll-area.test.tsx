@@ -233,7 +233,7 @@ test("a scrollbar marked data-agent-hidden leaves its scroll area out of the sna
 test("a scroll area with scrollbars, the corner and a labelled viewport has no axe violations", async () => {
   const { container } = render(
     <ScrollArea className="h-40">
-      <ScrollAreaViewport role="region" aria-label="Changelog">
+      <ScrollAreaViewport render={<section />} aria-label="Changelog">
         <ScrollAreaContent>
           <p>Notes</p>
         </ScrollAreaContent>

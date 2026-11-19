@@ -1,7 +1,7 @@
 const focusables =
   'a[href],button,input:not([type="hidden"]),select,textarea,iframe,summary,[contenteditable]:not([contenteditable="false"]),[tabindex]'
 
-const ownTabStops = new WeakSet<Element>()
+const ownTabStops = /* @__PURE__ */ new WeakSet<Element>()
 
 function isFocusable(node: Node, root: Element): node is HTMLElement {
   if (!(node instanceof HTMLElement) || node === root || node.tabIndex < 0) return false

@@ -143,7 +143,11 @@ const prefersReducedMotion = () =>
   typeof matchMedia === "function" && matchMedia("(prefers-reduced-motion: reduce)").matches
 
 // Written on the root on every scroll. Inherited, they would restyle the whole content each time.
-const frameVariables = axes.flatMap((axis) => [names[axis].before, names[axis].after, names[axis].progress])
+const frameVariables = /* @__PURE__ */ axes.flatMap((axis) => [
+  names[axis].before,
+  names[axis].after,
+  names[axis].progress,
+])
 let registered = false
 function registerFrameVariables() {
   if (registered || typeof CSS === "undefined" || !("registerProperty" in CSS)) return
@@ -157,7 +161,7 @@ function registerFrameVariables() {
   }
 }
 
-const startwardKeys = new Set(["ArrowUp", "PageUp", "Home"])
+const startwardKeys = /* @__PURE__ */ new Set(["ArrowUp", "PageUp", "Home"])
 const isEditing = (target: EventTarget | null) =>
   target instanceof HTMLElement && (target.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(target.tagName))
 
@@ -197,6 +201,16 @@ function createStyleWriter() {
   }
 }
 
+/** Focuses a viewport, programmatically focusable while it holds focus when it isn't a tab stop. */
+function focusViewport(el: HTMLElement) {
+  if (!el.hasAttribute("tabindex")) {
+    el.setAttribute("tabindex", "-1")
+    const restore = () => el.getAttribute("tabindex") === "-1" && el.removeAttribute("tabindex")
+    el.addEventListener("blur", restore, { once: true })
+  }
+  el.focus({ preventScroll: true })
+}
+
 type Listeners = { [Type in keyof HTMLElementEventMap]?: (event: HTMLElementEventMap[Type]) => void }
 
 function listen(el: HTMLElement, listeners: Listeners, options?: AddEventListenerOptions) {
@@ -213,6 +227,7 @@ export {
   listen,
   edgeTolerance,
   edgesOf,
+  focusViewport,
   isEditing,
   mainAxis,
   maxScroll,

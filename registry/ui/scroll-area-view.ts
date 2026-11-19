@@ -4,6 +4,7 @@ import {
   createStyleWriter,
   edgeTolerance,
   edgesOf,
+  focusViewport,
   isEditing,
   listen,
   mainAxis,
@@ -68,9 +69,8 @@ function createScrollView(store: ScrollAreaStore) {
     if (store.get()[key] !== value) store.set({ [key]: value } as Partial<ScrollAreaModel>)
   }
 
-  // Reads every metric first, then writes only what changed, in the scroll event itself, so the thumb and the edges
-  // move in the frame that scrolled. Writing in an animation frame instead, as UI SDK does, cost a 20,000-line
-  // DiffView 9 ms more per key press at 4× CPU in Chrome.
+  // Reads every metric, then writes what changed, in the scroll event itself. Writing in an animation frame, as UI SDK
+  // does, cost a 20,000-line DiffView 9 ms more per key press at 4× CPU in Chrome.
   function update(resized = false) {
     if (!viewport) return
     measure()
@@ -417,16 +417,7 @@ function createScrollView(store: ScrollAreaStore) {
       return edge === "start" ? edges.atStart : edges.atEnd
     },
     /** Focuses the viewport, programmatically focusable while it holds focus when it isn't a tab stop. */
-    focusViewport() {
-      const el = viewport
-      if (!el) return
-      if (!el.hasAttribute("tabindex")) {
-        el.setAttribute("tabindex", "-1")
-        const restore = () => el.getAttribute("tabindex") === "-1" && el.removeAttribute("tabindex")
-        el.addEventListener("blur", restore, { once: true })
-      }
-      el.focus({ preventScroll: true })
-    },
+    focusViewport: () => viewport && focusViewport(viewport),
     /** Applies changed options, like `stickToEnd` or `type`. */
     refresh() {
       if (viewport?.isConnected) update(true)
