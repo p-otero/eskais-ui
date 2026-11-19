@@ -1216,7 +1216,10 @@ function checkPins(app, scenario) {
     const [name, version] = [dependency.slice(0, at), dependency.slice(at + 1)]
     const had = scenario.dependencySpecs?.[name]
     const expected = pm === "npm" && had ? had : pinnedSpec(version, had)
-    if (specs[name] !== expected) {
+    // pnpm 12 kept a consumer's own range on Windows and wrote the pin over it on the Linux CI: accept either for a
+    // dependency the consumer already had. A dependency it didn't have must get the exact pin.
+    const accepted = pm === "pnpm" && had ? [had, version] : [expected]
+    if (!accepted.includes(specs[name])) {
       throw new Error(`${name}: package.json has ${String(specs[name])}, expected ${expected} for ${dependency}`)
     }
   }
