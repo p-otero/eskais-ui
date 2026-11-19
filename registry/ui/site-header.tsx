@@ -179,23 +179,25 @@ function SiteHeader({
                 )}
               </NavigationMenuList>
             </NavigationMenu>
-            <div
-              ref={measureRef}
-              aria-hidden="true"
-              inert
-              data-slot="site-header-measure"
-              className="pointer-events-none invisible absolute start-0 top-0 flex w-max gap-inline"
-            >
-              {items.map((item) => (
-                <span key={item.label} data-slot="site-header-measure-item" className={navigationMenuItemClassName}>
-                  {item.label}
-                  {item.items && <Chevron />}
+            {/* An invisible row wider than the bar still widens the page: on a phone the layout viewport grows with
+                it, and fixed overlays (dialogs, sheets) are laid out past the screen's edge. */}
+            <div aria-hidden="true" inert className="pointer-events-none invisible absolute inset-0 overflow-hidden">
+              <div
+                ref={measureRef}
+                data-slot="site-header-measure"
+                className="absolute start-0 top-0 flex w-max gap-inline"
+              >
+                {items.map((item) => (
+                  <span key={item.label} data-slot="site-header-measure-item" className={navigationMenuItemClassName}>
+                    {item.label}
+                    {item.items && <Chevron />}
+                  </span>
+                ))}
+                <span data-slot="site-header-measure-more" className={navigationMenuItemClassName}>
+                  {moreLabel}
+                  <Chevron />
                 </span>
-              ))}
-              <span data-slot="site-header-measure-more" className={navigationMenuItemClassName}>
-                {moreLabel}
-                <Chevron />
-              </span>
+              </div>
             </div>
           </div>
           {actions !== undefined && (

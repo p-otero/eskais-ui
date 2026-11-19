@@ -121,6 +121,15 @@ test("is a header landmark with a named navigation, the current page and a dropd
   expect(await axeViolations(document.body)).toEqual([])
 })
 
+test("the hidden row that measures the links is clipped, so it never widens the page", () => {
+  const { container } = render(<Header />)
+  const measure = container.querySelector<HTMLElement>('[data-slot="site-header-measure"]')
+  const clip = measure?.parentElement
+  expect(clip?.className).toContain("inset-0")
+  expect(clip?.className).toContain("overflow-hidden")
+  expect(clip?.getAttribute("aria-hidden")).toBe("true")
+})
+
 test("links that don't fit move into More, in order, and come back as the bar grows", async () => {
   const user = userEvent.setup()
   render(<Header />)
