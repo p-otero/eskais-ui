@@ -4,6 +4,8 @@ import { createVirtualizer, type VirtualItem } from "@ui-sdk/core"
 import { useCallback, useLayoutEffect, useMemo, useState, useSyncExternalStore } from "react"
 import { flushSync } from "react-dom"
 
+import { layersBesideViewport } from "@/components/ui/scroll-area"
+
 /** `"auto"` virtualizes past `VIRTUALIZE_THRESHOLD` rows. */
 type Virtualize = boolean | "auto"
 
@@ -292,9 +294,11 @@ function connectRows(rows: ReturnType<typeof createRows>, scroller: Scroller) {
   onScroll()
   target.addEventListener("scroll", onScroll, { passive: true })
   if (element) {
+    const restore = layersBesideViewport(element)
     const disconnect = rows.virtualizer.connect(element, options)
     return () => {
       disconnect()
+      restore()
       element.removeEventListener("scroll", onScroll)
     }
   }
