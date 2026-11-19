@@ -16,7 +16,7 @@ async function freePort() {
   return port
 }
 
-async function withShowcase(run, pageOptions = {}) {
+async function withShowcase(run, pageOptions = {}, launchOptions = {}) {
   const port = await freePort()
   const server = spawn("npx", ["vite", "preview", "--port", String(port), "--strictPort"], {
     cwd: showcase,
@@ -25,7 +25,7 @@ async function withShowcase(run, pageOptions = {}) {
     detached: process.platform !== "win32",
   })
   await new Promise((ready) => server.stdout.on("data", (chunk) => String(chunk).includes(String(port)) && ready()))
-  const browser = await chromium.launch({ channel: "chrome" })
+  const browser = await chromium.launch({ channel: "chrome", ...launchOptions })
   const errors = []
   try {
     const page = await browser.newPage({ viewport: { width: 1100, height: 900 }, deviceScaleFactor: 2, ...pageOptions })
