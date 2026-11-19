@@ -8,7 +8,7 @@ import { useMemo, useState, type ComponentProps, type ReactNode } from "react"
 import { ChevronLeftIcon, ChevronRightIcon, ExternalLinkIcon, XIcon, ZoomInIcon } from "lucide-react"
 
 import { buttonVariants } from "@/components/ui/button"
-import { contentClassName, DialogBackdrop } from "@/components/ui/dialog"
+import { DialogBackdrop, dialogContentVariants } from "@/components/ui/dialog"
 import { Link } from "@/components/ui/link"
 import { lightbox, type LightboxIndexChangeReason } from "@/components/ui/lightbox-primitive"
 import { ScrollArea, ScrollAreaCorner, ScrollAreaScrollbar, ScrollAreaViewport } from "@/components/ui/scroll-area"
@@ -227,7 +227,12 @@ function Lightbox({
       <DialogContent
         finalFocus={finalFocus}
         render={<div data-slot="lightbox" />}
-        className={cn(contentClassName, "h-full w-[calc(100%-2rem)] max-w-6xl gap-0 overflow-hidden p-0", className)}
+        // Never a bottom sheet: a sheet fits its content, and the image stage has no height of its own.
+        className={cn(
+          dialogContentVariants({ size: "full", sheet: false }),
+          "max-w-6xl gap-0 overflow-hidden p-0",
+          className,
+        )}
       >
         {items.length > 0 && (
           <LightboxView

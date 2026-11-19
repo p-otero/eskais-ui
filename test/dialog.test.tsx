@@ -147,3 +147,77 @@ test("on narrow screens it is a bottom sheet unless sheet={false}", () => {
   expect(centered.hasAttribute("data-sheet")).toBe(false)
   expect(centered.className).not.toContain("narrow:")
 })
+
+test("while the on-screen keyboard is up, the content and the sheet fit above it", () => {
+  render(<SizedDialog />)
+  const sheet = screen.getByRole("dialog", { name: "Sized" })
+  expect(sheet.className).toContain("data-keyboard:bottom-(--keyboard-inset)")
+  expect(sheet.className).toContain("data-keyboard:max-h-[min(var(--dialog-max-height),")
+  expect(sheet.className).toContain("narrow:data-keyboard:max-h-[min(var(--sheet-max-height),")
+  expect(sheet.className).toContain("env(safe-area-inset-bottom)")
+})
+
+const frame = () => act(() => new Promise((done) => requestAnimationFrame(() => done(undefined))))
+
+test("a field focused when the keyboard comes up is scrolled back into view", async () => {
+  // A visual viewport as phones report it: the keyboard shortens it, the layout viewport (innerHeight) stays.
+  const viewport = Object.assign(new EventTarget(), { width: innerWidth, height: innerHeight, offsetTop: 0, scale: 1 })
+  vi.stubGlobal("visualViewport", viewport)
+  const scrolled = vi.spyOn(HTMLElement.prototype, "scrollIntoView").mockImplementation(() => {})
+  try {
+    render(
+      <Dialog defaultOpen>
+        <DialogContent>
+          <DialogTitle>Notes</DialogTitle>
+          <DialogBody>
+            <Field>
+              <FieldLabel>Note</FieldLabel>
+              <Input />
+            </Field>
+          </DialogBody>
+        </DialogContent>
+      </Dialog>,
+    )
+    const dialog = screen.getByRole("dialog", { name: "Notes" })
+    const field = screen.getByRole("textbox", { name: "Note" })
+    act(() => field.focus())
+
+    viewport.dispatchEvent(new Event("resize"))
+    await frame()
+    expect(scrolled).not.toHaveBeenCalled()
+
+    viewport.height = innerHeight - 300
+    viewport.dispatchEvent(new Event("resize"))
+    await frame()
+    expect(dialog.hasAttribute("data-keyboard")).toBe(true)
+    expect(dialog.style.getPropertyValue("--keyboard-inset")).toBe("300px")
+    expect(scrolled).toHaveBeenCalledTimes(1)
+    expect(scrolled.mock.contexts[0]).toBe(field)
+  } finally {
+    scrolled.mockRestore()
+    vi.unstubAllGlobals()
+  }
+})
+
+test("a scroll of the locked page while the dialog is open is put back", () => {
+  const scrollTo = vi.spyOn(window, "scrollTo").mockImplementation(() => {})
+  const scrollY = vi.spyOn(window, "scrollY", "get").mockReturnValue(0)
+  try {
+    render(
+      <Dialog defaultOpen>
+        <DialogContent>
+          <DialogTitle>Still</DialogTitle>
+        </DialogContent>
+      </Dialog>,
+    )
+    expect(screen.getByRole("dialog", { name: "Still" }).hasAttribute("data-open")).toBe(true)
+    document.documentElement.style.overflow = "hidden"
+    scrollY.mockReturnValue(140)
+    window.dispatchEvent(new Event("scroll"))
+    expect(scrollTo).toHaveBeenCalledWith(0, 0)
+  } finally {
+    document.documentElement.style.overflow = ""
+    scrollTo.mockRestore()
+    scrollY.mockRestore()
+  }
+})

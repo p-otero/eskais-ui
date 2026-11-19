@@ -87,7 +87,11 @@ function CommandDialogContent({ className, children, title = "Command palette", 
   return (
     <>
       <DialogBackdrop />
-      <DialogContent className={cnState("max-w-xl gap-0 overflow-hidden p-0", className)} {...props}>
+      <DialogContent
+        data-dialog-flush=""
+        className={cnState("max-w-xl gap-0 overflow-hidden p-0", className)}
+        {...props}
+      >
         {(state) => (
           <CommandHostContext value={{ open: state.open, closeOnEscape }}>
             <DialogTitle className="sr-only">{title}</DialogTitle>
