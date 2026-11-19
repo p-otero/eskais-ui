@@ -68,6 +68,8 @@ interface AttemptView {
   endedAt?: string
   /** Always computed by the data source; components never derive it from times. */
   liveness?: Liveness
+  /** Why the data source reached its `liveness` verdict, in one line ("No output for 25 min; process still alive"). Task cards show it in a tooltip on a waiting or stuck attempt. */
+  livenessEvidence?: string
   /** ISO 8601 UTC. */
   lastActivityAt?: string
   usage?: UsageSummary

@@ -2,6 +2,12 @@
 
 Versions follow [semver](https://semver.org). Before 1.0, a minor version can break compatibility. Release with `bun pm version <patch|minor|major>`, which bumps `package.json`, rebuilds `public/r` (the mockup CLI reports the version) and tags `vX.Y.Z`.
 
+## Unreleased
+
+### Added
+
+- `AttemptView.livenessEvidence`: one line on why the data source reached its liveness verdict. On a waiting or possibly stuck attempt that has it, the task card's liveness chip becomes a button (`data-slot="task-card-liveness"`, named by the state) with a description tooltip: the state in medium weight, the evidence below. Other states, and attempts without evidence, keep the dot and title. The `task-card` item now depends on `tooltip`.
+
 ## 0.2.4 (2026-11-19)
 
 ### Added

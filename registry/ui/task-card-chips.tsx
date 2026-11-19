@@ -18,6 +18,7 @@ import { AnalysisModeIcon, TaskBlocker } from "@/components/ui/task-card-parts"
 import type { TaskDisplayOptions } from "@/components/ui/task-card"
 import { stageOf } from "@/components/ui/task-location"
 import { taskStatusTones } from "@/components/ui/task-status"
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import { usageFormatter } from "@/components/ui/usage"
 
 const chipClassName =
@@ -69,6 +70,19 @@ function TaskCardChips({
   // Running and idle are routine: a dot is enough. Waiting and stuck need a person, so they say so.
   const livenessShown = liveness === "waiting_input" || liveness === "suspect_dead"
   const livenessName = liveness && (parts.liveness?.[liveness] ?? livenessLabels[liveness])
+  const livenessEvidence = livenessShown ? attempt?.livenessEvidence : undefined
+  const livenessClassName = liveness
+    ? cn("inline-flex min-w-0 items-center gap-inline", toneText[livenessTones[liveness]])
+    : undefined
+  const livenessMark = liveness && (
+    <>
+      <span aria-hidden="true" className="relative inline-flex size-1.5 shrink-0">
+        <StatusPing pulse={liveness === "running"} restartKey={liveness} />
+        <span className="relative size-full rounded-full bg-current" />
+      </span>
+      <span className={livenessShown ? "truncate" : "sr-only"}>{livenessName}</span>
+    </>
+  )
   const counts = countAcceptance(task.acceptance)
   const pressable = onSelectTask && task.dependsOn.some((dependency) => canSelect?.(dependency.id) ?? true)
   const attachments = task.attachments?.length ?? 0
@@ -84,19 +98,26 @@ function TaskCardChips({
       )}
       {(liveness || task.analysisMode) && (
         <Chip data-slot="task-card-signals">
-          {liveness && (
-            <span
-              data-slot="task-card-liveness"
-              title={livenessName}
-              className={cn("inline-flex min-w-0 items-center gap-inline", toneText[livenessTones[liveness]])}
-            >
-              <span aria-hidden="true" className="relative inline-flex size-1.5 shrink-0">
-                <StatusPing pulse={liveness === "running"} restartKey={liveness} />
-                <span className="relative size-full rounded-full bg-current" />
+          {liveness &&
+            (livenessEvidence ? (
+              <Tooltip type="description">
+                <TooltipTrigger
+                  render={(part) => <button type="button" {...part} data-slot="task-card-liveness" />}
+                  aria-label={livenessName}
+                  className="inline-flex min-w-0 cursor-help rounded-sm outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                >
+                  <span className={livenessClassName}>{livenessMark}</span>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <span className="block font-medium">{livenessName}</span>
+                  <span className="block">{livenessEvidence}</span>
+                </TooltipContent>
+              </Tooltip>
+            ) : (
+              <span data-slot="task-card-liveness" title={livenessName} className={livenessClassName}>
+                {livenessMark}
               </span>
-              <span className={livenessShown ? "truncate" : "sr-only"}>{livenessName}</span>
-            </span>
-          )}
+            ))}
           {task.analysisMode && (
             <AnalysisModeIcon mode={task.analysisMode} label={text.analysisMode[task.analysisMode]} />
           )}

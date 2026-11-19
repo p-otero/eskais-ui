@@ -2938,7 +2938,8 @@
         "@eskais/button",
         "@eskais/tone",
         "@eskais/stage-track",
-        "@eskais/attachments"
+        "@eskais/attachments",
+        "@eskais/tooltip"
       ],
       "files": [
         {
