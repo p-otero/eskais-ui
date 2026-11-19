@@ -1,10 +1,9 @@
 // Code shown on the Mockups guide. The outputs are copied from real runs of the CLI.
-const quickstart = `git clone --depth 1 https://github.com/p-otero/eskais-ui
-npx shadcn@latest init -t vite -n app -b base -p nova --no-monorepo
+const quickstart = `npx shadcn@latest init -t vite -n app -b base -p nova --no-monorepo
 cd app && npx shadcn@latest registry add "@eskais=https://raw.githubusercontent.com/p-otero/eskais-ui/main/public/r/{name}.json"
-npx shadcn@latest add @eskais/theme @eskais/card @eskais/button --overwrite -y
+npx shadcn@latest add @eskais/theme @eskais/card @eskais/button @eskais/eskais-mockup-cli --overwrite -y
 # write .mockups/hello/screen.tsx (below), then:
-bun ../eskais-ui/packages/mockup/src/cli.ts validate hello`
+bun .agents/tools/eskais-mockup/cli.ts validate hello`
 
 const helloScreen = `import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -36,13 +35,15 @@ const agentPrompt = `Make a mockup of a Team settings screen: the members with t
 remove one, an Invite button, and a place to drop a team logo. Validate it and
 tell me what it would take to build.`
 
-const checkoutCommands = `# from your project, with the checkout next to it
-bun ../eskais-ui/packages/mockup/src/cli.ts inspect
-bun ../eskais-ui/packages/mockup/src/cli.ts validate team`
+const installCommands = `npx shadcn@latest add @eskais/eskais-mockup-cli
+bun .agents/tools/eskais-mockup/cli.ts --version
+bun .agents/tools/eskais-mockup/cli.ts inspect
+bun .agents/tools/eskais-mockup/cli.ts validate team`
 
-const linkCommands = `# once, in the checkout: registers @eskais/mockup with Bun
+const checkoutCommands = `# from your project, with a checkout of eskais-ui next to it
+bun ../eskais-ui/packages/mockup/src/cli.ts validate team
+# or link it once with Bun: adds node_modules/.bin/eskais-mockup until the next npm or pnpm install
 (cd ../eskais-ui/packages/mockup && bun link)
-# in the project: adds node_modules/.bin/eskais-mockup
 bun link @eskais/mockup
 bunx eskais-mockup validate team`
 
@@ -104,11 +105,11 @@ const inspectRegistry = `@eskais 0dc2acb842db  107 of 114 component items not in
   accordion                UI SDK Accordion parts: triggers in headings, Enter and Space toggle, animated panels on the density tokens.
   …`
 
-const inspectSdk = `$ bun ../eskais-ui/packages/mockup/src/cli.ts inspect --sdk
+const inspectSdk = `$ bun .agents/tools/eskais-mockup/cli.ts inspect --sdk
 @ui-sdk/react 0.1.0-beta.10  68 public subpaths
   accordion            Accordion, AccordionHeader, AccordionItem, AccordionPanel, …
   …
-$ bun ../eskais-ui/packages/mockup/src/cli.ts inspect --sdk file-input
+$ bun .agents/tools/eskais-mockup/cli.ts inspect --sdk file-input
 @ui-sdk/react/file-input  (node_modules/@ui-sdk/react/dist/file-input.d.ts)
 import { FileInput, FileInputDropzone, FileInputItem, FileInputItemRemove, FileInputList, FileInputTrigger } from "@ui-sdk/react/file-input"
 parts FileInput, FileInputDropzone, FileInputItem, FileInputItemRemove, FileInputList, FileInputTrigger`
@@ -158,7 +159,7 @@ export default function Team({ members = sampleMembers }: { members?: Member[] }
   )
 }`
 
-const validateOk = `$ bun ../eskais-ui/packages/mockup/src/cli.ts validate team
+const validateOk = `$ bun .agents/tools/eskais-mockup/cli.ts validate team
 ok .mockups/team/out.html  485 kB (305 kB js, 179 kB css, 75 kB fonts)
 install 2: badge, tone
 proposed 2: AvatarDrop (0 props), MemberRow (2 props)
@@ -167,7 +168,7 @@ gaps 1: Button (a split button with a menu of roles)
 screenshots 0 (1 page; no screenshot: out.html)`
 
 const validateProblems = [
-  "$ bun ../eskais-ui/packages/mockup/src/cli.ts validate broken",
+  "$ bun .agents/tools/eskais-mockup/cli.ts validate broken",
   '.mockups/broken/parts/avatar-drop.tsx:1:1 sdk-reason add a line "// sdk-reason: <why Eskais cannot do this>" above the AvatarDrop component',
   ".mockups/broken/parts/avatar-drop.tsx:9:160 shadcn/no-raw-colors bg-white is a raw colour; use a theme token (bg-card, text-muted-foreground, border-input)",
   ".mockups/broken/parts/avatar-drop.tsx:9:169 shadcn/no-arbitrary-values w-[13px] is an arbitrary size; use the Tailwind scale or a theme token",
@@ -180,12 +181,12 @@ const validateProblems = [
 ].join("\n")
 
 const presentCommands = `# one page per state and theme, named out-<state>-<theme>.html
-bun ../eskais-ui/packages/mockup/src/cli.ts build team --scheme light --out .mockups/team/out-light.html
-bun ../eskais-ui/packages/mockup/src/cli.ts build team --scheme dark --out .mockups/team/out-empty-dark.html
+bun .agents/tools/eskais-mockup/cli.ts build team --scheme light --out .mockups/team/out-light.html
+bun .agents/tools/eskais-mockup/cli.ts build team --scheme dark --out .mockups/team/out-empty-dark.html
 # a PNG with the same name beside each page, from any browser; headless Chrome:
 chrome --headless --hide-scrollbars --window-size=1280,800 \\
   --screenshot=.mockups/team/out-empty-dark.png "file://$PWD/.mockups/team/out-empty-dark.html"
-bun ../eskais-ui/packages/mockup/src/cli.ts gallery`
+bun .agents/tools/eskais-mockup/cli.ts gallery`
 
 const galleryOutput = `team  default  light  .mockups/team/out-light.png  .mockups/team/out-light.html
 team  empty  dark  .mockups/team/out-empty-dark.png  .mockups/team/out-empty-dark.html
@@ -212,13 +213,13 @@ export {
   helloScreen,
   inspectRegistry,
   inspectSdk,
+  installCommands,
   layout,
   levelFive,
   levelFour,
   levelOne,
   levelThree,
   levelTwo,
-  linkCommands,
   presentCommands,
   presentReply,
   quickstart,

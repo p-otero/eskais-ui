@@ -122,6 +122,7 @@ const guides: GuideMeta[] = [
     title: "Mockups",
     description:
       "Sketch a screen in TSX with your own components and fixtures, then build one offline HTML file and validate it.",
+    covers: ["eskais-mockup-cli"],
   },
 ]
 

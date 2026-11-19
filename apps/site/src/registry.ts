@@ -34,6 +34,7 @@ const guideItems = [
   "url-param",
   "eskais-ui-skill",
   "eskais-mockup-skill",
+  "eskais-mockup-cli",
   "eskais-perf-skill",
   "locale",
 ]

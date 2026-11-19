@@ -9,13 +9,13 @@ import {
   helloScreen,
   inspectRegistry,
   inspectSdk,
+  installCommands,
   layout,
   levelFive,
   levelFour,
   levelOne,
   levelThree,
   levelTwo,
-  linkCommands,
   presentCommands,
   presentReply,
   quickstart,
@@ -36,22 +36,19 @@ export default function Mockups() {
 
       <H2 id="quickstart">Quickstart</H2>
       <P>
-        From an empty folder to a validated <Code>out.html</Code>: five commands and one file. You need Node with npx,
-        git, and <A href="https://bun.sh">Bun</A> 1.4 or newer.
+        From an empty folder to a validated <Code>out.html</Code>: four commands and one file. You need Node with npx
+        and <A href="https://bun.sh">Bun</A> 1.4 or newer.
       </P>
       <Pre code={quickstart} language="bash" />
       <Ol>
-        <li>
-          Clone the eskais-ui repository next to your project: the CLI runs from its source (see{" "}
-          <A to="/docs/mockups#install">Install</A>).
-        </li>
         <li>Create a Vite app with Tailwind and a components.json, without prompts.</li>
         <li>
           Add the <Code>@eskais</Code> registry to <Code>components.json</Code>.
         </li>
         <li>
-          Install the theme and two components. <Code>--overwrite</Code> replaces the <Code>button.tsx</Code> and{" "}
-          <Code>utils.ts</Code> that <Code>shadcn init</Code> wrote, and <Code>-y</Code> accepts the new theme.
+          Install the theme, two components and the mockup CLI, which lands in <Code>.agents/tools/eskais-mockup</Code>{" "}
+          (see <A to="/docs/mockups#install">Install</A>). <Code>--overwrite</Code> replaces the <Code>button.tsx</Code>{" "}
+          and <Code>utils.ts</Code> that <Code>shadcn init</Code> wrote, and <Code>-y</Code> accepts the new theme.
         </li>
         <li>
           Write the screen, put <Code>@layer ui-sdk;</Code> on the first line of <Code>src/index.css</Code> (see{" "}
@@ -97,27 +94,35 @@ export default function Mockups() {
         </li>
       </Ol>
       <P>
-        The skill needs the CLI too: tell the agent where your checkout is, or let it clone one. Every rule it follows
-        is on this page.
+        The skill runs the CLI from <Code>.agents/tools/eskais-mockup</Code>, and installs it with shadcn when it's
+        missing. Every rule it follows is on this page.
       </P>
 
       <H2 id="install">Install</H2>
       <P>
-        <Code>@eskais/mockup</Code> isn't published to npm: it runs from a checkout of the{" "}
-        <A href="https://github.com/p-otero/eskais-ui">eskais-ui repository</A> with Bun 1.4 or newer, and needs no{" "}
-        <Code>bun install</Code> there. It reads your project's <Code>components.json</Code>, its stylesheet and its
-        tsconfig aliases from the current folder or the nearest one above it, and builds with the project's own Tailwind
-        and React, so the project can use npm, pnpm or Bun.
+        The CLI is a registry item, <Code>eskais-mockup-cli</Code>: shadcn copies its source into{" "}
+        <Code>.agents/tools/eskais-mockup</Code> and Bun 1.4 or newer runs it from there. It has no npm dependencies and
+        needs no install step. It reads your project's <Code>components.json</Code>, its stylesheet and its tsconfig
+        aliases from the current folder or the nearest one above it, and builds with the project's own Tailwind and
+        React, so the project can use npm, pnpm or Bun.
       </P>
-      <H3 id="install-path">Run it by path</H3>
-      <Pre code={checkoutCommands} language="bash" />
-      <H3 id="install-link">Or link it with Bun</H3>
-      <Pre code={linkCommands} language="bash" />
+      <Pre code={installCommands} language="bash" />
       <P>
-        <Code>bun link @eskais/mockup</Code> leaves <Code>package.json</Code> alone, but the next{" "}
-        <Code>npm install</Code> or <Code>pnpm install</Code> removes the link; run it again then.{" "}
-        <Code>bun unlink</Code> in the checkout unregisters it.
+        <Code>--version</Code> prints the release it came from. Update it with the registry, like a component:{" "}
+        <Code>npx shadcn@latest add @eskais/eskais-mockup-cli --overwrite</Code>. The folder starts with a dot, so
+        TypeScript's <Code>include</Code> globs leave it out of the app's type-check and build; a linter that walks
+        every file still reads it, and it passes Vite's ESLint config and <Code>lint-rules</Code>. It needs a TypeScript
+        project (<Code>tsx: true</Code> in <Code>components.json</Code>): in a JavaScript one shadcn renames the files
+        to <Code>.js</Code>, and Bun can't run them.
       </P>
+      <H3 id="install-checkout">From a checkout</H3>
+      <P>
+        Working on eskais-ui itself, run the same CLI from the repository's <Code>packages/mockup/src</Code>, by path or
+        linked with Bun. <Code>bun link @eskais/mockup</Code> leaves <Code>package.json</Code> alone, but the next{" "}
+        <Code>npm install</Code> or <Code>pnpm install</Code> removes the link; <Code>bun unlink</Code> in the checkout
+        unregisters it.
+      </P>
+      <Pre code={checkoutCommands} language="bash" />
 
       <H2 id="levels">The five levels</H2>
       <P>

@@ -181,8 +181,9 @@ export default function AgentSkills() {
       <Alert tone="info">
         <AlertTitle>Mockups need the CLI</AlertTitle>
         <AlertDescription>
-          <Code>eskais-mockup</Code> teaches the loop; the CLI it runs isn't on npm yet. See{" "}
-          <A to="/docs/mockups#install">Mockups</A> for how to run it today.
+          <Code>eskais-mockup</Code> teaches the loop; the CLI it runs is its own item, run with Bun 1.4 or newer:{" "}
+          <Code>npx shadcn@latest add @eskais/eskais-mockup-cli</Code> puts it in{" "}
+          <Code>.agents/tools/eskais-mockup</Code>. See <A to="/docs/mockups#install">Mockups</A>.
         </AlertDescription>
       </Alert>
     </Article>
