@@ -1,4 +1,4 @@
-import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react"
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react"
 import { createAgent } from "@ui-sdk/react/agent"
 import type { AsyncOptionsStatus } from "@ui-sdk/react/async-options"
 import { useState } from "react"
@@ -28,6 +28,8 @@ const notes: Note[] = [
 /** Matches the query against titles and bodies, as a server's full-text search would. */
 function bodySearch(
   match: (note: Note, q: string) => boolean = (note, q) => `${note.title} ${note.body}`.toLowerCase().includes(q),
+  // A query that never settles on its own: only an abort ends it, so a test of the abort doesn't race the timer.
+  stalls: (q: string) => boolean = () => false,
 ) {
   const requests: { request: PageRequest<{ q?: string }>; signal: AbortSignal }[] = []
   const source: PageSource<Note, { q?: string }> = {
@@ -41,7 +43,9 @@ function bodySearch(
       const page = "page" in request.position ? request.position.page : 1
       const items = found.slice((page - 1) * request.size, page * request.size)
       return new Promise((resolve, reject) => {
-        const timer = setTimeout(() => resolve({ items, hasMore: found.length > page * request.size }), 20)
+        const timer = stalls(q)
+          ? undefined
+          : setTimeout(() => resolve({ items, hasMore: found.length > page * request.size }), 20)
         signal.addEventListener("abort", () => {
           clearTimeout(timer)
           reject(signal.reason)
@@ -99,12 +103,12 @@ test("source: searches the server as you type, keeping results whose title lacks
 })
 
 test("source: a newer query aborts the request in flight, so a stale response never shows", async () => {
-  const { source, requests } = bodySearch()
+  const { source, requests } = bodySearch(undefined, (q) => q === "ship")
   render(<Workspace quickOpen={<DocumentQuickOpen source={source} getItem={toItem} onOpen={vi.fn()} debounce={0} />} />)
   const { dialog, input } = await openQuickOpen()
   await waitFor(() => expect(optionNames(dialog).length).toBeGreaterThan(0))
   fireEvent.change(input, { target: { value: "ship" } })
-  await act(() => new Promise((resolve) => setTimeout(resolve, 5)))
+  await waitFor(() => expect(requests.some((entry) => entry.request.filter.q === "ship")).toBe(true))
   fireEvent.change(input, { target: { value: "numbers" } })
   await waitFor(() => expect(optionNames(dialog)).toEqual(["Budget"]))
   const ship = requests.find((entry) => entry.request.filter.q === "ship")
