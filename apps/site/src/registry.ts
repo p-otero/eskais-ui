@@ -45,9 +45,16 @@ const componentItems = items.filter((item) => !guideItems.includes(item.name))
 const releaseTag = `v${packageJson.version}`
 const registryUrl = `https://raw.githubusercontent.com/p-otero/eskais-ui/refs/tags/${releaseTag}/public/r/{name}.json`
 
+// The exact UI SDK beta every item pins; consumers keep the same one, since later betas can break.
+const uiSdkVersion =
+  items
+    .flatMap((item) => item.dependencies ?? [])
+    .find((dependency) => dependency.startsWith("@ui-sdk/react@"))
+    ?.slice("@ui-sdk/react@".length) ?? "latest"
+
 function findItem(name: string) {
   return items.find((item) => item.name === name)
 }
 
-export { componentItems, findItem, guideItems, items, registryUrl, releaseTag }
+export { componentItems, findItem, guideItems, items, registryUrl, releaseTag, uiSdkVersion }
 export type { RegistryFile, RegistryItem }
