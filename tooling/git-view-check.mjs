@@ -200,6 +200,27 @@ async function autoHuge(page) {
   )
 }
 
+async function autoInPage(page) {
+  const result = await page.evaluate(async () => {
+    const viewport = document.querySelector("[data-testid=page-huge] [data-slot=diff-view-viewport]")
+    const box = viewport.getBoundingClientRect()
+    window.scrollTo({ top: window.scrollY + box.top + box.height / 2 })
+    await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)))
+    const hit = document.elementFromPoint(box.left + 200, innerHeight / 2)
+    return {
+      scroll: viewport.scrollHeight,
+      client: viewport.clientHeight,
+      rows: viewport.querySelectorAll("[role=row]").length,
+      inside: viewport.contains(hit) && hit?.closest("[role=row]") !== null,
+    }
+  })
+  check(
+    "auto, in the page: the window scrolls 2,000 lines, rendered where they show and nowhere else",
+    result.scroll <= result.client + 1 && result.inside && result.rows < 150,
+    JSON.stringify(result),
+  )
+}
+
 async function splitAdded(page, width) {
   const cells = await page.evaluate(() => {
     const rows = [...document.querySelectorAll("[data-testid=split] [role=row]")].filter(
@@ -229,6 +250,7 @@ for (const width of [1440, 1920]) {
         await treeBesideList(page)
         await autoHeight(page)
         await autoHuge(page)
+        await autoInPage(page)
       }
       await splitAdded(page, width)
     },
