@@ -22,6 +22,10 @@ Versions follow [semver](https://semver.org). Before 1.0, a minor version can br
 - `DiffView` (so `GitDiff` and `TextDiff`) in split layout: an added or deleted file's one side spans the whole row, as one column. It used to keep an empty grey old half, which at 1920px pushed the new side's code against the right edge and scrolled long lines sideways. `node tooling/git-view-check.mjs` checks it at 1440px and 1920px.
 - `GitDiff`'s file tree is 13rem wide (it was 16rem), from `--diff-tree-width`, so the diff keeps room beside a 34rem history at 1440px.
 
+### Fixed
+
+- `Popover` with `defaultOpen` (or `open` from its first render) inside a `Dialog` stays open while the dialog takes its initial focus. UI SDK 0.1.0-beta.10 closes a non-modal popover on any focus outside it, even one that never had focus, so `initialFocus="content"` (as `TaskDetailDialog` uses) closed it at once with reason `focus-out`. Until focus first reaches the popover, `Popover` now cancels a `focus-out` onto an ancestor of its trigger, its own dialog; every later focus move closes it as before. `node tooling/popover-check.mjs` (test:browser, test:compiler) checks it in Chrome. Upstream note: `docs/research/09-popover-default-open-in-dialog.md`.
+
 ## 0.2.3 (2026-11-19)
 
 ### Added

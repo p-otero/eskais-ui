@@ -21,6 +21,7 @@ import { MobileNavCheck } from "./checks/mobile-nav-check"
 import { GitBench } from "./checks/git-bench"
 import { ListBench } from "./checks/list-bench"
 import { OverlayCheck } from "./checks/overlay-check"
+import { PopoverCheck } from "./checks/popover-check"
 import { PressCheck } from "./checks/press-check"
 import { SidePanelCheck } from "./checks/side-panel-check"
 import { SortableCheck } from "./checks/sortable-check"
@@ -67,6 +68,7 @@ const standalone = new Set([
   "diff-bench",
   "calendar-check",
   "press-check",
+  "popover-check",
   "side-panel-check",
   "table-check",
   "description-list-check",
@@ -115,6 +117,7 @@ function Demo() {
   if (demo === "diff-bench") return <DiffBench />
   if (demo === "calendar-check") return <CalendarCheck />
   if (demo === "press-check") return <PressCheck />
+  if (demo === "popover-check") return <PopoverCheck />
   if (demo === "side-panel-check") return <SidePanelCheck />
   if (demo === "table-check") return <TableCheck />
   if (demo === "description-list-check") return <DescriptionListCheck />

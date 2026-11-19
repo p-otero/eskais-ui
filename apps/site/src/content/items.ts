@@ -350,6 +350,7 @@ const itemNotes: Record<string, ItemNotes> = {
     a11y: [
       "Focus moves in, Escape and outside presses close it, focus returns to the trigger.",
       "Named by PopoverTitle.",
+      "Open from the start inside a dialog, it stays open while the dialog takes its initial focus.",
     ],
     related: ["hover-card", "tooltip", "dropdown-menu"],
   },
