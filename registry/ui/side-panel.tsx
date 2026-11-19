@@ -128,7 +128,8 @@ function SidePanel({
         <DrawerBackdrop />
         <DrawerContent
           finalFocus={() => sheetReturn.current ?? returnFocus?.() ?? undefined}
-          className="gap-0 overflow-hidden p-0"
+          // oxlint-disable-next-line shadcn/no-arbitrary-values -- a flush sheet clears only the home indicator under viewport-fit=cover
+          className="gap-0 overflow-hidden p-0 data-[side=bottom]:pb-[env(safe-area-inset-bottom)]"
         >
           <ShortcutScope
             name={scope}

@@ -20,6 +20,8 @@ import { ControlTooltip } from "@/components/ui/tooltip"
 import {
   focusedElement,
   mayReturnFocus,
+  useFocusAboveKeyboard,
+  useKeepPageStill,
   useRecordFocusMove,
   useRecordOpener,
   type FocusMemory,
@@ -31,10 +33,14 @@ const backdropClassName =
   "fixed inset-0 z-overlay bg-overlay transition-opacity duration-dialog ease-standard data-ending-style:pointer-events-none data-ending-style:opacity-0 data-starting-style:opacity-0"
 
 // Sizes and offsets come from the containing block (the viewport for a top-layer dialog) through %, never viewport units.
+// The on-screen keyboard covers the layout viewport without resizing it, so while it is up (`data-keyboard`) the
+// content sits above it and fits the height UI SDK measures there; otherwise the footer or the field is under it.
 const dialogContentVariants = cva(
   [
     // oxlint-disable-next-line eskais/scroll-area -- the dialog element's fallback for content without a DialogBody, which is the scroll area
     "fixed inset-0 z-overlay m-auto flex h-fit max-h-(--dialog-max-height) w-(--dialog-width) min-w-0 flex-col gap-group overflow-y-auto overscroll-contain rounded-floating border border-floating-border bg-popover p-inset-surface field-label-surface-popover text-popover-foreground wrap-anywhere shadow-floating outline-none transition duration-dialog ease-standard data-ending-style:pointer-events-none data-ending-style:scale-95 data-ending-style:opacity-0 data-starting-style:scale-95 data-starting-style:opacity-0",
+    // oxlint-disable-next-line shadcn/no-arbitrary-values -- no token can read --visual-viewport-height, which UI SDK sets on the content itself
+    "data-keyboard:top-auto data-keyboard:bottom-(--keyboard-inset) data-keyboard:mb-floating data-keyboard:max-h-[min(var(--dialog-max-height),calc(var(--visual-viewport-height)-2*var(--floating-offset)))]",
   ],
   {
     variants: {
@@ -43,10 +49,16 @@ const dialogContentVariants = cva(
         md: "max-w-lg",
         lg: "max-w-3xl",
         xl: "max-w-6xl",
-        full: "h-(--dialog-max-height) max-w-none",
+        // oxlint-disable-next-line shadcn/no-arbitrary-values -- no token can read --visual-viewport-height, which UI SDK sets on the content itself
+        full: "h-(--dialog-max-height) max-w-none data-keyboard:h-[min(var(--dialog-max-height),calc(var(--visual-viewport-height)-2*var(--floating-offset)))]",
       },
       sheet: {
-        true: "narrow:top-auto narrow:mb-0 narrow:h-fit narrow:max-h-(--sheet-max-height) narrow:w-full narrow:max-w-none narrow:rounded-b-none narrow:border-b-0 narrow:data-ending-style:translate-y-full narrow:data-ending-style:scale-100 narrow:data-starting-style:translate-y-full narrow:data-starting-style:scale-100 narrow:motion-reduce:data-ending-style:translate-y-0 narrow:motion-reduce:data-starting-style:translate-y-0",
+        true: [
+          "narrow:top-auto narrow:mb-0 narrow:data-keyboard:mb-0 narrow:h-fit narrow:max-h-(--sheet-max-height) narrow:data-keyboard:max-h-[min(var(--sheet-max-height),calc(var(--visual-viewport-height)-var(--floating-offset)))] narrow:w-full narrow:max-w-none narrow:rounded-b-none narrow:border-b-0 narrow:data-ending-style:translate-y-full narrow:data-ending-style:scale-100 narrow:data-starting-style:translate-y-full narrow:data-starting-style:scale-100 narrow:motion-reduce:data-ending-style:translate-y-0 narrow:motion-reduce:data-starting-style:translate-y-0",
+          // The sheet reaches the bottom edge, so it clears the home indicator when the page extends under it
+          // (`viewport-fit=cover`); the keyboard covers that edge while it is up.
+          "narrow:pb-[max(var(--spacing-inset-surface),env(safe-area-inset-bottom))] narrow:data-keyboard:pb-inset-surface narrow:data-dialog-flush:pb-[env(safe-area-inset-bottom)] narrow:data-dialog-flush:data-keyboard:pb-0",
+        ].join(" "),
         false: "",
       },
     },
@@ -100,12 +112,24 @@ function FocusMoved({ memoryRef }: { memoryRef: RefObject<FocusMemory> }) {
   return null
 }
 
-function withFocusMarkers(content: ReactNode, memoryRef: RefObject<FocusMemory>) {
+// Mounts with the content, so it follows the keyboard and the page's scroll only while the content is in the page.
+function OpenGuards({ contentRef }: { contentRef: RefObject<HTMLElement | null> }) {
+  useFocusAboveKeyboard(contentRef)
+  useKeepPageStill(contentRef)
+  return null
+}
+
+function withFocusMarkers(
+  content: ReactNode,
+  memoryRef: RefObject<FocusMemory>,
+  contentRef: RefObject<HTMLElement | null>,
+) {
   return (
     <>
       <FocusOpener memoryRef={memoryRef} />
       {content}
       <FocusMoved memoryRef={memoryRef} />
+      <OpenGuards contentRef={contentRef} />
     </>
   )
 }
@@ -126,8 +150,8 @@ function resolveFocusTarget(target: Exclude<FinalFocus, "none">) {
 /**
  * Keeps focus return working where UI SDK misses it: a React `autoFocus` field took focus before UI SDK recorded the
  * opener, or another modal (one of ours or another library's) opened while this one closes or unmounts, which keeps
- * focus. Pass the content's `finalFocus` and `ref`, give the content the returned `finalFocus` and `attach` (as its
- * ref), and wrap its children.
+ * focus. It also keeps a focused field above the on-screen keyboard and the locked page still. Pass the content's
+ * `finalFocus` and `ref`, give the content the returned `finalFocus` and `attach` (as its ref), and wrap its children.
  */
 function useFocusReturn(finalFocus: FinalFocus, forwarded?: Ref<HTMLElement>) {
   const memoryRef = useRef<FocusMemory>({ opener: null, movedBeforeOpen: false })
@@ -143,8 +167,8 @@ function useFocusReturn(finalFocus: FinalFocus, forwarded?: Ref<HTMLElement>) {
   }
   function wrap<State>(children: ReactNode | ((state: State) => ReactNode)) {
     return typeof children === "function"
-      ? (state: State) => withFocusMarkers(children(state), memoryRef)
-      : withFocusMarkers(children, memoryRef)
+      ? (state: State) => withFocusMarkers(children(state), memoryRef, contentRef)
+      : withFocusMarkers(children, memoryRef, contentRef)
   }
   const attach = useCallback(
     (element: HTMLElement | null) => {
