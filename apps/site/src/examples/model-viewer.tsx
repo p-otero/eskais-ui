@@ -12,12 +12,19 @@ import { figureFace } from "../../../../test/fixtures/model/fake-engine"
 import figureUrl from "../../../../test/fixtures/model/figure.glb?url"
 import portraitUrl from "../../../../test/fixtures/model/portrait.svg?url"
 
-const morphs = ["Build", "HeadSize", "Smile"] as const
+// Target names come from the GLB (its extras.targetNames); an ARKit expression goes through `expressions`.
+const controls = [
+  { name: "body.pc00", label: "Build" },
+  { name: "face.head_size.incr", label: "Larger head" },
+  { name: "face.head_size.decr", label: "Smaller head" },
+  { name: "smile", label: "Smile" },
+] as const
 
 export default function ModelViewerDemo() {
-  const [weights, setWeights] = useState<Record<string, number>>({ Smile: 0.4 })
+  const [values, setValues] = useState<Record<string, number>>({ smile: 0.4 })
   const [framing, setFraming] = useState<"full" | "face">("full")
   const [toon, setToon] = useState(false)
+  const smile = values.smile ?? 0
   return (
     <div className="grid w-full gap-group sm:grid-cols-2">
       <ModelViewer
@@ -27,7 +34,8 @@ export default function ModelViewerDemo() {
         aspectRatio={3 / 4}
         framing={framing === "face" ? figureFace : "full"}
         material={toon ? "toon" : "standard"}
-        weights={weights}
+        weights={values}
+        expressions={{ mouthSmileLeft: smile, mouthSmileRight: smile }}
         summary="A standing figure with short brown hair, a teal shirt and dark trousers."
       />
       <div className="flex flex-col gap-group">
@@ -44,18 +52,18 @@ export default function ModelViewerDemo() {
           <Switch checked={toon} onCheckedChange={setToon} />
           Toon material
         </Label>
-        {morphs.map((name) => (
+        {controls.map(({ name, label }) => (
           <Field key={name}>
             <Slider
-              value={Math.round((weights[name] ?? 0) * 100)}
-              onValueChange={(next) => setWeights((current) => ({ ...current, [name]: next / 100 }))}
+              value={Math.round((values[name] ?? 0) * 100)}
+              onValueChange={(next) => setValues((current) => ({ ...current, [name]: next / 100 }))}
               min={0}
               max={100}
               step={5}
               format={(percent) => `${String(percent)}%`}
             >
               <div className="flex justify-between text-sm">
-                <FieldLabel>{name}</FieldLabel>
+                <FieldLabel>{label}</FieldLabel>
                 <SliderValue />
               </div>
               <SliderControl>

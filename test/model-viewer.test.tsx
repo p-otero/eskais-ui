@@ -284,3 +284,17 @@ test("an agent can turn, zoom, choose a view and a clip, pause and reset", async
   await waitFor(() => expect(screen.getByRole("radio", { name: "Front" }).getAttribute("aria-checked")).toBe("true"))
   unmount()
 })
+
+test("aligned weights, target names and expressions reach the scene; a new model replaces the old without a reload", async () => {
+  const weights = new Float32Array([0.5, 1])
+  const { rerender } = render(<Viewer weights={weights} targetNames={["body.pc00", "expr.mouthSmileLeft"]} />)
+  await tick()
+  expect(fakeScene.props?.weights).toBe(weights)
+  expect(fakeScene.props?.targetNames).toEqual(["body.pc00", "expr.mouthSmileLeft"])
+  rerender(<Viewer weights={weights} expressions={{ mouthSmileLeft: 1 }} model="final.glb" />)
+  await tick()
+  expect(fakeScene.props?.model).toBe("final.glb")
+  expect(fakeScene.props?.expressions).toEqual({ mouthSmileLeft: 1 })
+  // The viewer stays ready while the new model loads under the old one.
+  expect(document.querySelector('[data-slot="model-viewer"]')?.getAttribute("data-status")).toBe("ready")
+})

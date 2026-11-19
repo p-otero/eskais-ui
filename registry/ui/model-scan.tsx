@@ -2,7 +2,7 @@
 
 import type { ChangeDetails } from "@ui-sdk/core"
 import { createParts, usePart, usePrimitive, type PartProps } from "@ui-sdk/react/primitive"
-import { lazy, useState, type ReactNode } from "react"
+import { lazy, useMemo, useState, type CSSProperties, type ReactNode } from "react"
 import { CircleAlertIcon, RotateCcwIcon, XIcon } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
@@ -11,19 +11,31 @@ import {
   modelScan,
   type ModelScanActionReason,
   type ModelScanAnnouncements,
-  type ModelScanPoint,
   type ModelScanStage,
 } from "@/components/ui/model-scan-primitive"
-import { ModelViewer, type ModelViewerProps, type ModelViewerSource } from "@/components/ui/model-viewer"
+import {
+  pointGroups,
+  type ModelScanDrawnGroup,
+  type ModelScanPoint,
+  type ModelScanPointGroup,
+  type ModelScanPointList,
+  type ModelScanPoints,
+} from "@/components/ui/model-scan-points"
+import {
+  ModelViewer,
+  type ModelViewerExpressions,
+  type ModelViewerProps,
+  type ModelViewerSource,
+  type ModelViewerWeights,
+} from "@/components/ui/model-viewer"
 import { Progress, ProgressLabel, ProgressTrack, ProgressValue } from "@/components/ui/progress"
 import { cn, cnState } from "@/lib/utils"
 
 const {
   Photo: ModelScanPhoto,
   Effect: ModelScanEffect,
-  Points: ModelScanPoints,
-  Point: ModelScanPointPart,
-} = createParts(modelScan, { photo: "div", effect: "div", points: "div", point: "span" })
+  Points: ModelScanPointLayer,
+} = createParts(modelScan, { photo: "div", effect: "div", points: "div" })
 
 // Loaded inside the viewer's canvas, after the viewer's own scene: only ModelScan pays for the photo transition.
 const ModelScanIntro = lazy(() =>
@@ -32,9 +44,28 @@ const ModelScanIntro = lazy(() =>
 
 type ModelScanEventDetails = ChangeDetails<ModelScanActionReason>
 
+/**
+ * A model as an engine sends it: the GLB (bytes or a URL) and its target names. A new one (a refined character) fades
+ * in over the last, or replaces it at once when it looks the same, keeping its weights.
+ */
+type ModelScanModel = { glb: ArrayBuffer | string; targetNames?: readonly string[] }
+
+const isScanModel = (model: ModelViewerSource | ModelScanModel): model is ModelScanModel =>
+  typeof model === "object" && "glb" in model
+
 type ModelScanViewerProps = Omit<
   ModelViewerProps,
-  "model" | "alt" | "weights" | "poster" | "controls" | "load" | "overlay" | "sceneChildren" | "aspectRatio"
+  | "model"
+  | "alt"
+  | "weights"
+  | "targetNames"
+  | "expressions"
+  | "poster"
+  | "controls"
+  | "load"
+  | "overlay"
+  | "sceneChildren"
+  | "aspectRatio"
 >
 
 type ModelScanProps = Omit<PartProps<"div">, "children"> & {
@@ -46,12 +77,20 @@ type ModelScanProps = Omit<PartProps<"div">, "children"> & {
   width: number
   height: number
   stage: ModelScanStage
-  /** Points the engine found, as fractions of the photo; they light up while detecting. */
-  points?: readonly ModelScanPoint[]
+  /**
+   * Points the engine found, as fractions of the photo, lighting up while detecting: one list (interleaved x, y in a
+   * `Float32Array`, or `{ x, y }` objects), or groups of them, `{ source, points, aspect? }`, each lighting up on its
+   * own, in the order the sources arrived.
+   */
+  points?: ModelScanPoints
   /** The base model (a GLB with morph targets), from the building stage on. */
-  model?: ModelViewerSource
-  /** Morph target weights from the engine, eased as they stream in. */
-  weights?: Readonly<Record<string, number>>
+  model?: ModelViewerSource | ModelScanModel
+  /** Morph target weights from the engine, eased as they stream in: aligned with the target names, or by name. */
+  weights?: ModelViewerWeights
+  /** The order aligned `weights` follow, when `model` doesn't carry it; the GLB's `extras.targetNames` by default. */
+  targetNames?: readonly string[]
+  /** Expression weights by ARKit name, like a smile at the end. */
+  expressions?: ModelViewerExpressions
   /** From 0 to 1 within the stage; leave it out while the engine can't tell. */
   progress?: number
   /** What the engine is doing now, as the progress bar's label; the stage's label by default. */
@@ -75,8 +114,6 @@ type ModelScanProps = Omit<PartProps<"div">, "children"> & {
   labels?: Partial<ModelScanLabels>
 }
 
-const noPoints: readonly ModelScanPoint[] = []
-
 /* oxlint-disable shadcn/no-arbitrary-values -- the photo's drawn box and the scan effect follow the ratio, progress and container variables */
 // The photo's drawn box inside the stage, as ImageScan places its regions: points land on the pixels they name.
 const layerClassName =
@@ -90,9 +127,12 @@ const effectClassNames = {
   bracket:
     "absolute size-6 border-(--model-scan-accent) drop-shadow-[0_0_1px_var(--background)] motion-safe:animate-pulse",
 }
-// Each point grows in after the one before it, at most half a second behind the first.
+// Each point grows in after the one before it in its group, at most 0.4 s behind the first, so a group (the face,
+// the body) lights up on its own when it arrives. Groups take the info, violet and success colours in turn.
 const pointClassName =
-  "absolute size-2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-info shadow-[0_0_0_2px_var(--background),0_0_8px_var(--info)] transition-[scale,opacity] delay-[min(calc(var(--model-scan-point-index)*8ms),500ms)] duration-micro ease-standard starting:scale-0 starting:opacity-0"
+  "absolute size-1.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-(--model-scan-point) shadow-[0_0_0_1.5px_var(--background),0_0_6px_var(--model-scan-point)] transition-[scale,opacity] delay-[min(calc(var(--model-scan-point-index)*4ms),400ms)] duration-micro ease-standard starting:scale-0 starting:opacity-0"
+const groupClassName =
+  "absolute inset-0 [--model-scan-point:var(--info)] data-[order=1]:[--model-scan-point:var(--violet)] data-[order=2]:[--model-scan-point:var(--success)]"
 /* oxlint-enable shadcn/no-arbitrary-values */
 
 const working: readonly ModelScanStage[] = ["detecting", "building", "refining"]
@@ -110,9 +150,11 @@ function ModelScan({
   width,
   height,
   stage,
-  points = noPoints,
+  points,
   model,
   weights,
+  targetNames,
+  expressions,
   progress,
   statusText,
   error,
@@ -129,6 +171,9 @@ function ModelScan({
 }: ModelScanProps) {
   const labels = { ...modelScanLabels, ...ownLabels, stage: { ...modelScanLabels.stage, ...ownLabels?.stage } }
   const ratio = width / height
+  const groups = useMemo(() => pointGroups(points, ratio), [points, ratio])
+  const glb = model && isScanModel(model) ? model.glb : model
+  const modelNames = model && isScanModel(model) ? model.targetNames : undefined
   const announcements: ModelScanAnnouncements = {
     stage: (next) =>
       next === "photo" || next === "error" ? undefined : next === stage && statusText ? statusText : labels.stage[next],
@@ -178,13 +223,11 @@ function ModelScan({
             className={cn(effectClassNames.bracket, "bottom-group left-group rounded-bl-sm border-b-2 border-l-2")}
           />
         </ModelScanEffect>
-        <ModelScanPoints handedOff={handedOff} className="absolute inset-0">
-          {points.map((point, index) => {
-            // Points only arrive, never move or reorder: their place in the stream is their identity.
-            const id = String(index)
-            return <ModelScanPointPart key={id} id={id} point={point} index={index} className={pointClassName} />
-          })}
-        </ModelScanPoints>
+        <ModelScanPointLayer handedOff={handedOff} className="absolute inset-0">
+          {groups.map((group, order) => (
+            <ModelScanPointGroupLayer key={group.source} group={group} order={order} />
+          ))}
+        </ModelScanPointLayer>
       </div>
     </ModelScanPhoto>
   )
@@ -193,7 +236,9 @@ function ModelScan({
     <>
       <ModelViewer
         {...viewerProps}
-        model={model}
+        model={glb}
+        targetNames={targetNames ?? modelNames}
+        expressions={expressions}
         aria-label={modelAlt ?? labels.model}
         alt={shownModel ? (modelAlt ?? labels.model) : alt}
         poster={src}
@@ -243,6 +288,33 @@ function ModelScan({
       children: content,
     },
     "div",
+  )
+}
+
+/** One group's points, drawn as dots at their fractions of the photo; decorative, inside the hidden points layer. */
+function ModelScanPointGroupLayer({ group, order }: { group: ModelScanDrawnGroup; order: number }) {
+  const dots: ReactNode[] = []
+  for (let i = 0; i + 1 < group.coords.length; i += 2) {
+    const index = i / 2
+    // Points of a group only arrive, never move or reorder: their place in the list is their identity.
+    dots.push(
+      <span
+        key={index}
+        className={pointClassName}
+        style={
+          {
+            left: `${String(((group.coords[i] ?? 0) * 100).toFixed(2))}%`,
+            top: `${String(((group.coords[i + 1] ?? 0) * 100).toFixed(2))}%`,
+            "--model-scan-point-index": String(index),
+          } as CSSProperties
+        }
+      />,
+    )
+  }
+  return (
+    <span data-source={group.source} data-order={order % 3} className={groupClassName}>
+      {dots}
+    </span>
   )
 }
 
@@ -310,4 +382,14 @@ function ModelScanStatus({ stage, progress, statusText, error, labels, actions, 
 }
 
 export { ModelScan, modelScanLabels }
-export type { ModelScanEventDetails, ModelScanLabels, ModelScanPoint, ModelScanProps, ModelScanStage }
+export type {
+  ModelScanEventDetails,
+  ModelScanLabels,
+  ModelScanModel,
+  ModelScanPoint,
+  ModelScanPointGroup,
+  ModelScanPointList,
+  ModelScanPoints,
+  ModelScanProps,
+  ModelScanStage,
+}

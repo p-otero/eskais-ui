@@ -5,7 +5,7 @@ import {
   clampZoom,
   containSize,
   damp,
-  dampWeights,
+  dampInto,
   fieldOfView,
   fitBoxDistance,
   fitSphereDistance,
@@ -14,6 +14,7 @@ import {
   viewAngles,
   viewSizeAt,
   wrapDegrees,
+  writeTargets,
 } from "@/components/ui/model-viewer-math"
 
 const rounded = (values: readonly number[]) => values.map((value) => Math.round(value * 1e6) / 1e6 + 0)
@@ -48,28 +49,48 @@ describe("easing", () => {
     expect(damp(0, 1, 4, Number.POSITIVE_INFINITY)).toBe(1)
   })
 
-  test("weights ease to their targets, settle exactly, and missing names ease back to 0", () => {
-    let weights: Record<string, number> = { Blink: 1 }
-    const target = { Smile: 1, Build: 2 }
+  test("weights ease in place to their targets and settle exactly; negative components stay negative", () => {
+    const current = new Float32Array([1, 0, 0])
+    const target = new Float32Array([0, 1, -0.8])
+    const active = new Uint8Array([1, 1, 1])
+    const before = current
     let frames = 0
     let settled = false
     while (!settled && frames < 600) {
-      const step = dampWeights(weights, target, 10, 1 / 60)
-      expect(Object.values(step.next).every((value) => value >= 0 && value <= 1)).toBe(true)
-      weights = step.next
-      settled = step.settled
+      settled = dampInto(current, target, active, 10, 1 / 60)
       frames += 1
     }
-    expect(weights).toEqual({ Blink: 0, Smile: 1, Build: 1 })
+    expect(current).toBe(before)
+    expect([...current]).toEqual([0, 1, expect.closeTo(-0.8, 6)])
     // About 0.7 s at 60 fps: 1/rate per two thirds of the way, down to a thousandth.
     expect(frames).toBeGreaterThan(30)
     expect(frames).toBeLessThan(60)
   })
 
-  test("half a second in, a weight is most of the way there", () => {
-    const { next, settled } = dampWeights({ Smile: 0 }, { Smile: 1 }, 10, 0.1)
-    expect(next.Smile).toBeCloseTo(1 - Math.exp(-1), 6)
-    expect(settled).toBe(false)
+  test("a tenth of a second in, a weight is most of the way there; an inactive one is left alone", () => {
+    const current = new Float32Array([0, 0.5])
+    expect(dampInto(current, new Float32Array([1, 1]), new Uint8Array([1, 0]), 10, 0.1)).toBe(false)
+    expect(current[0]).toBeCloseTo(1 - Math.exp(-1), 6)
+    expect(current[1]).toBe(0.5)
+  })
+
+  test("targets come aligned, by name, or as expressions; a target set before and missing now goes back to 0", () => {
+    const names = ["body.pc00", "expr.mouthSmileLeft", "expr.eyeBlinkLeft"]
+    const index = new Map(names.map((name, i) => [name, i]))
+    const target = new Float32Array(3)
+    const active = new Uint8Array(3)
+    writeTargets(index, target, active, new Float32Array([-1.5, 0.25]), undefined)
+    expect([...target, ...active]).toEqual([-1.5, 0.25, 0, 1, 1, 0])
+    writeTargets(
+      index,
+      target,
+      active,
+      { "body.pc00": 0.5, unknown: 1 },
+      { eyeBlinkLeft: 1, "expr.mouthSmileLeft": 0.75 },
+    )
+    expect([...target, ...active]).toEqual([0.5, 0.75, 1, 1, 1, 1])
+    writeTargets(index, target, active, { "body.pc00": Number.NaN }, undefined)
+    expect([...target]).toEqual([0, 0, 0])
   })
 })
 

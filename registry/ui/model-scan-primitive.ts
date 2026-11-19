@@ -6,9 +6,6 @@ import { announce, css, definePrimitive, dispatch, prepareAnnouncements, type Ch
  */
 type ModelScanStage = "photo" | "detecting" | "building" | "refining" | "ready" | "error"
 
-/** A point on the photo, each value a fraction of its width or height from its top left corner. */
-type ModelScanPoint = { x: number; y: number }
-
 type ModelScanActionReason = "trigger-press" | "imperative"
 
 type ModelScanAnnouncements = {
@@ -35,7 +32,6 @@ const working: readonly ModelScanStage[] = ["detecting", "building", "refining"]
 const cancelable: readonly ModelScanStage[] = ["photo", ...working]
 
 const clamp = (value: number) => Math.min(1, Math.max(0, Number.isFinite(value) ? value : 0))
-const percentOf = (value: number) => `${String(Math.round(clamp(value) * 10_000) / 100)}%`
 
 // Progress is read at most every tenth, and no sooner than this after the last reading.
 const progressStep = 10
@@ -150,19 +146,9 @@ const modelScan = definePrimitive({
       present: (state, part) => state.stage === "detecting" || (state.stage === "building" && !part.props.handedOff),
       attrs: () => ({ "aria-hidden": "true" }),
     }),
-    point: slot<{ id: string; point: ModelScanPoint; index?: number }>({
-      props: { id: "string", point: "value", index: "number" },
-      attrs: (_state, part) => ({
-        style: css({
-          left: percentOf(part.props.point.x),
-          top: percentOf(part.props.point.y),
-          "--model-scan-point-index": String(part.props.index ?? 0),
-        }),
-      }),
-    }),
   }),
   agent: { actions: ["cancel", "retry"] },
 })
 
 export { modelScan }
-export type { ModelScanActionReason, ModelScanAnnouncements, ModelScanOptions, ModelScanPoint, ModelScanStage }
+export type { ModelScanActionReason, ModelScanAnnouncements, ModelScanOptions, ModelScanStage }

@@ -10,12 +10,17 @@ import { Slider, SliderControl, SliderIndicator, SliderThumb, SliderTrack, Slide
 import { Switch } from "@/components/ui/switch"
 
 import { Section } from "../section"
-import { figureFace, figureUrl, portrait, useFakeModelScan } from "./model-fixtures"
+import { engineModels, figureFace, figureUrl, portrait, useFakeModelScan } from "./model-fixtures"
 
-const morphs = ["Build", "HeadSize", "Smile"] as const
+const morphs = [
+  { name: "body.pc00", label: "Build" },
+  { name: "face.head_size.incr", label: "Larger head" },
+  { name: "face.head_size.decr", label: "Smaller head" },
+] as const
 
 function ModelViewerSection() {
-  const [weights, setWeights] = useState<Record<string, number>>({ Build: 0, HeadSize: 0, Smile: 0.4 })
+  const [weights, setWeights] = useState<Record<string, number>>({})
+  const [smile, setSmile] = useState(0.4)
   const [framing, setFraming] = useState<"full" | "face">("full")
   const [toon, setToon] = useState(false)
   return (
@@ -32,6 +37,7 @@ function ModelViewerSection() {
           framing={framing === "face" ? figureFace : "full"}
           material={toon ? "toon" : "standard"}
           weights={weights}
+          expressions={{ mouthSmileLeft: smile, mouthSmileRight: smile }}
           summary="A standing figure with short brown hair, a teal shirt and dark trousers. Clips: Idle, Wave."
         />
         <div className="flex flex-col gap-group">
@@ -48,18 +54,22 @@ function ModelViewerSection() {
             <Switch checked={toon} onCheckedChange={setToon} />
             Toon material
           </Label>
-          {morphs.map((name) => (
+          {[...morphs, { name: "smile", label: "Smile" }].map(({ name, label }) => (
             <Field key={name}>
               <Slider
-                value={Math.round((weights[name] ?? 0) * 100)}
-                onValueChange={(next) => setWeights((current) => ({ ...current, [name]: next / 100 }))}
+                value={Math.round((name === "smile" ? smile : (weights[name] ?? 0)) * 100)}
+                onValueChange={(next) =>
+                  name === "smile"
+                    ? setSmile(next / 100)
+                    : setWeights((current) => ({ ...current, [name]: next / 100 }))
+                }
                 min={0}
                 max={100}
                 step={5}
                 format={(percent) => `${String(percent)}%`}
               >
                 <div className="flex justify-between text-sm">
-                  <FieldLabel>{name}</FieldLabel>
+                  <FieldLabel>{label}</FieldLabel>
                   <SliderValue />
                 </div>
                 <SliderControl>
@@ -78,7 +88,7 @@ function ModelViewerSection() {
 }
 
 function ModelScanSection() {
-  const { state, start, cancel, fail, setFail } = useFakeModelScan(figureUrl)
+  const { props, start, cancel, fail, setFail } = useFakeModelScan(engineModels)
   return (
     <Section
       title="Model scan"
@@ -90,17 +100,17 @@ function ModelScanSection() {
           alt="A front photo of a stylised figure"
           width={portrait.width}
           height={portrait.height}
-          {...state}
+          {...props}
           modelAlt="A 3D stylised figure in a teal shirt"
           idleClip="Wave"
-          onCancel={state.stage === "photo" ? undefined : cancel}
+          onCancel={props.stage === "photo" ? undefined : cancel}
           onRetry={start}
           actions={
-            state.stage === "photo" ? (
+            props.stage === "photo" ? (
               <Button size="sm" onClick={start}>
                 Make 3D
               </Button>
-            ) : state.stage === "ready" || state.stage === "error" ? (
+            ) : props.stage === "ready" || props.stage === "error" ? (
               <Button variant="ghost" size="sm" onClick={cancel}>
                 Start over
               </Button>

@@ -56,20 +56,74 @@ const settleEpsilon = 1e-3
 type WeightMap = Readonly<Record<string, number>>
 
 /**
- * One step of morph weights toward their targets. Names missing from `target` ease back to 0. Returns the new
- * weights and whether every one has arrived, so the caller stops asking for frames.
+ * Morph weights as an engine sends them: a `Float32Array` (or numbers) aligned with the target names, or a map by
+ * name. Values aren't clamped to 0..1: a principal component's coefficient can be negative or past 1.
  */
-function dampWeights(current: WeightMap, target: WeightMap, rate: number, dt: number) {
-  const next: Record<string, number> = {}
-  let settled = true
-  for (const name of new Set([...Object.keys(current), ...Object.keys(target)])) {
-    const goal = clampNumber(target[name] ?? 0, 0, 1)
-    const value = damp(current[name] ?? 0, goal, rate, dt)
-    const arrived = Math.abs(value - goal) < settleEpsilon
-    next[name] = arrived ? goal : value
-    if (!arrived) settled = false
+type ModelViewerWeights = Float32Array | readonly number[] | WeightMap
+
+/** Expression weights by name; a name without a dot is an ARKit name and reaches the `expr.<name>` target. */
+type ModelViewerExpressions = WeightMap
+
+const expressionPrefix = "expr."
+
+const finite = (value: number | undefined) => (value !== undefined && Number.isFinite(value) ? value : 0)
+
+const isAligned = (weights: ModelViewerWeights): weights is Float32Array | readonly number[] =>
+  ArrayBuffer.isView(weights) || Array.isArray(weights)
+
+/**
+ * Writes the weights and expressions into `target`, by the index of each name in `names`, and marks in `active` the
+ * targets they set, which the rig then writes every frame. A target set before and missing now goes back to 0; one
+ * never set stays free for clips to animate. Runs once per new weights, never per frame.
+ */
+function writeTargets(
+  index: ReadonlyMap<string, number>,
+  target: Float32Array,
+  active: Uint8Array,
+  weights: ModelViewerWeights | undefined,
+  expressions: ModelViewerExpressions | undefined,
+) {
+  for (let i = 0; i < target.length; i += 1) if (active[i]) target[i] = 0
+  if (weights && isAligned(weights)) {
+    const count = Math.min(weights.length, target.length)
+    for (let i = 0; i < count; i += 1) {
+      target[i] = finite(weights[i])
+      active[i] = 1
+    }
+  } else if (weights) {
+    for (const [name, value] of Object.entries(weights)) {
+      const i = index.get(name)
+      if (i === undefined) continue
+      target[i] = finite(value)
+      active[i] = 1
+    }
   }
-  return { next, settled }
+  for (const [name, value] of Object.entries(expressions ?? {})) {
+    const i = index.get(name.includes(".") ? name : `${expressionPrefix}${name}`)
+    if (i === undefined) continue
+    target[i] = finite(value)
+    active[i] = 1
+  }
+}
+
+/**
+ * One frame of the active weights toward their targets, in place: no allocation, so it runs every frame for
+ * hundreds of targets. Returns whether every one has arrived, so the caller stops asking for frames.
+ */
+function dampInto(current: Float32Array, target: Float32Array, active: Uint8Array, rate: number, dt: number) {
+  const keep = Math.exp(-rate * Math.max(0, dt))
+  let settled = true
+  for (let i = 0; i < current.length; i += 1) {
+    if (!active[i]) continue
+    const goal = target[i] ?? 0
+    const value = goal + ((current[i] ?? 0) - goal) * keep
+    if (Math.abs(value - goal) < settleEpsilon) current[i] = goal
+    else {
+      current[i] = value
+      settled = false
+    }
+  }
+  return settled
 }
 
 /** The camera's position around `target`, `distance` away, for a yaw and pitch in degrees. */
@@ -120,7 +174,8 @@ export {
   clampZoom,
   containSize,
   damp,
-  dampWeights,
+  dampInto,
+  expressionPrefix,
   fieldOfView,
   fitBoxDistance,
   fitSphereDistance,
@@ -132,6 +187,16 @@ export {
   viewAngles,
   viewSizeAt,
   wrapDegrees,
+  writeTargets,
   zoomRange,
 }
-export type { ModelViewerBounds, ModelViewerFraming, ModelViewerOrbit, ModelViewerView, Vec3, WeightMap }
+export type {
+  ModelViewerBounds,
+  ModelViewerExpressions,
+  ModelViewerFraming,
+  ModelViewerOrbit,
+  ModelViewerView,
+  ModelViewerWeights,
+  Vec3,
+  WeightMap,
+}
