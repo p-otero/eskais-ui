@@ -82,7 +82,10 @@ async function checkFindable(page, findable) {
     target?.dispatchEvent(new Event("beforematch", { bubbles: true }))
     await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)))
     const rows = [...document.querySelectorAll('[role="treeitem"]')]
-    return rows.some((row) => row.textContent?.includes(text) && row.getBoundingClientRect().top >= 0)
+    const words = (value) => value.replaceAll(/\s+/g, " ").trim()
+    return rows.some(
+      (row) => words(row.textContent ?? "").includes(words(text)) && row.getBoundingClientRect().top >= 0,
+    )
   })
   return { layersMs: round(layersMs), found }
 }
@@ -125,6 +128,7 @@ async function run(name, query, rate) {
 
 const pages = [
   [`${String(commits)} commits`, `demo=commit-bench&commits=${String(commits)}`],
+  [`${String(commits)} commits, selected, working tree`, `demo=commit-bench&commits=${String(commits)}&select=true`],
   [`${String(commits)} commits, merges open`, `demo=commit-bench&commits=${String(commits)}&expanded=all`],
   [`${String(files)} files`, `demo=git-tree-bench&files=${String(files)}`],
   [`${String(commits)} commits, 200 branches`, `demo=commit-bench&commits=${String(commits)}&branches=200`],

@@ -60,6 +60,12 @@ const guides: GuideMeta[] = [
       "Tables, lists and comboboxes over any backend: pagination styles, wire formats, adapters, serializers and the URL.",
   },
   {
+    slug: "git-views",
+    title: "Git views",
+    description:
+      "A history beside the selected commit, the working tree's staged and unstaged changes, a repository picker and a commit view.",
+  },
+  {
     slug: "routing",
     title: "Routing and the URL",
     description:
