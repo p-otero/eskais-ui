@@ -4,8 +4,8 @@
   "title": "Settings Page",
   "description": "SettingsPage: a section navigation that sticks beside the sections on wide containers and becomes a section picker on narrow ones, marking the section being read (IntersectionObserver). Going to a section scrolls by id and focuses its heading, so it works under hash routers; the section can live in the URL through createUrlParam. SettingsSection, SettingsRow (a label, a description and the control on the right, stacking when narrow), SettingsFacts (a DescriptionList for read-only facts) and SettingsDangerZone with SettingsDangerAction rows that confirm through ConfirmDialog and need a person's approval for agents.",
   "dependencies": [
-    "@ui-sdk/core@0.1.0-beta.10",
-    "@ui-sdk/react@0.1.0-beta.10"
+    "@ui-sdk/core@0.1.0-beta.12",
+    "@ui-sdk/react@0.1.0-beta.12"
   ],
   "registryDependencies": [
     "@eskais/utils",

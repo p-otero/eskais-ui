@@ -4,8 +4,8 @@
   "title": "Search Field",
   "description": "Search landmark built with definePrimitive: Enter runs onSearch, Escape clears only when there is text, and agents get a submit action.",
   "dependencies": [
-    "@ui-sdk/core@0.1.0-beta.10",
-    "@ui-sdk/react@0.1.0-beta.10",
+    "@ui-sdk/core@0.1.0-beta.12",
+    "@ui-sdk/react@0.1.0-beta.12",
     "lucide-react"
   ],
   "registryDependencies": [

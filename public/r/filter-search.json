@@ -4,8 +4,8 @@
   "title": "Filter Search",
   "description": "The search box of a filter schema: shows the text at once and commits it after the page controller's 250 ms debounce, Enter commits, Escape clears. FilterScope gives filter UIs their schema and controller and lets agents filter by a field's label.",
   "dependencies": [
-    "@ui-sdk/core@0.1.0-beta.10",
-    "@ui-sdk/react@0.1.0-beta.10",
+    "@ui-sdk/core@0.1.0-beta.12",
+    "@ui-sdk/react@0.1.0-beta.12",
     "lucide-react"
   ],
   "registryDependencies": [

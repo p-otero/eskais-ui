@@ -4,8 +4,8 @@
   "title": "Switch",
   "description": "UI SDK Switch with its thumb: an on/off setting that sits in a row beside its Field label.",
   "dependencies": [
-    "@ui-sdk/core@0.1.0-beta.10",
-    "@ui-sdk/react@0.1.0-beta.10"
+    "@ui-sdk/core@0.1.0-beta.12",
+    "@ui-sdk/react@0.1.0-beta.12"
   ],
   "registryDependencies": [
     "@eskais/utils",

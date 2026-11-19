@@ -4,8 +4,8 @@
   "title": "Pagination",
   "description": "UI SDK Pagination that works standalone: page, pageCount or total and pageSize, onPageChange with details, overridable labels.",
   "dependencies": [
-    "@ui-sdk/core@0.1.0-beta.10",
-    "@ui-sdk/react@0.1.0-beta.10",
+    "@ui-sdk/core@0.1.0-beta.12",
+    "@ui-sdk/react@0.1.0-beta.12",
     "lucide-react"
   ],
   "registryDependencies": [

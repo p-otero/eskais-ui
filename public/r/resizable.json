@@ -4,8 +4,8 @@
   "title": "Resizable",
   "description": "UI SDK Resizable: panels with named separator handles that move with the pointer or arrow keys, collapse with Enter and can save their layout.",
   "dependencies": [
-    "@ui-sdk/core@0.1.0-beta.10",
-    "@ui-sdk/react@0.1.0-beta.10"
+    "@ui-sdk/core@0.1.0-beta.12",
+    "@ui-sdk/react@0.1.0-beta.12"
   ],
   "registryDependencies": [
     "@eskais/utils",

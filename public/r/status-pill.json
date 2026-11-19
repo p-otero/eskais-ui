@@ -4,7 +4,7 @@
   "title": "Status Pill",
   "description": "Presentational status pill with the shared tones (plus muted) and an optional dot that pings three times when its status changes (pulse=\"always\" keeps pinging, which is costly in lists and boards), and StatusDot: a coloured dot with a screen reader label. The ping stops under reduced motion.",
   "dependencies": [
-    "@ui-sdk/react@0.1.0-beta.10",
+    "@ui-sdk/react@0.1.0-beta.12",
     "class-variance-authority@0.7.1"
   ],
   "registryDependencies": [

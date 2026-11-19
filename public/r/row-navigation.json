@@ -4,8 +4,8 @@
   "title": "Row Navigation",
   "description": "One tab stop over a collection's rows on UI SDK roving focus: arrows and j/k move, Home/End and PageUp/PageDown jump, Enter opens, Space and x toggle. Adds no role.",
   "dependencies": [
-    "@ui-sdk/core@0.1.0-beta.10",
-    "@ui-sdk/react@0.1.0-beta.10"
+    "@ui-sdk/core@0.1.0-beta.12",
+    "@ui-sdk/react@0.1.0-beta.12"
   ],
   "registryDependencies": [
     "@eskais/utils"

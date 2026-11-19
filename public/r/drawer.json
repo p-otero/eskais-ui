@@ -4,8 +4,8 @@
   "title": "Drawer",
   "description": "UI SDK Drawer parts: a modal sheet from any edge (bottom or side), draggable, with focus trap, Escape and focus restore.",
   "dependencies": [
-    "@ui-sdk/core@0.1.0-beta.10",
-    "@ui-sdk/react@0.1.0-beta.10",
+    "@ui-sdk/core@0.1.0-beta.12",
+    "@ui-sdk/react@0.1.0-beta.12",
     "class-variance-authority@0.7.1"
   ],
   "registryDependencies": [
@@ -22,6 +22,6 @@
       "type": "registry:ui"
     }
   ],
-  "docs": "`DrawerContent` returns focus like `DialogContent` (see the Dialog docs): also when the drawer unmounts while open or a field has `autoFocus`; prefer `initialFocus`. Its closing backdrop and content are `pointer-events: none`, but in UI SDK 0.1.0-beta.10 the drawer itself still cancels a press on the page while it slides out, so a click in that moment is lost.",
+  "docs": "`DrawerContent` returns focus like `DialogContent` (see the Dialog docs): also when the drawer unmounts while open or a field has `autoFocus`; prefer `initialFocus`. Its closing backdrop and content are `pointer-events: none`, but in UI SDK 0.1.0-beta.12 the drawer itself still cancels a press on the page while it slides out, so a click in that moment is lost.",
   "type": "registry:ui"
 }

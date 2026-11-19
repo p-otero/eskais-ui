@@ -4,8 +4,8 @@
   "title": "Agent Task Board",
   "description": "The full board for AI agent tasks: filters, search, a board or sortable table view, a summary, collapsible status columns with ready and waiting groups, a detail dialog, drawer or side panel, compact density on narrow hosts, snapshot and live modes, English and Spanish labels, and agent actions to select, filter, switch views, open threads, decide proposals and move tasks between columns.",
   "dependencies": [
-    "@ui-sdk/core@0.1.0-beta.10",
-    "@ui-sdk/react@0.1.0-beta.10",
+    "@ui-sdk/core@0.1.0-beta.12",
+    "@ui-sdk/react@0.1.0-beta.12",
     "lucide-react"
   ],
   "registryDependencies": [

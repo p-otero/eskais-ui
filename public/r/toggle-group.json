@@ -4,8 +4,8 @@
   "title": "Toggle Group",
   "description": "UI SDK ToggleGroup: toggles sharing one value with arrow-key focus, named by Field.",
   "dependencies": [
-    "@ui-sdk/core@0.1.0-beta.10",
-    "@ui-sdk/react@0.1.0-beta.10"
+    "@ui-sdk/core@0.1.0-beta.12",
+    "@ui-sdk/react@0.1.0-beta.12"
   ],
   "registryDependencies": [
     "@eskais/utils",

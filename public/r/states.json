@@ -4,7 +4,7 @@
   "title": "States",
   "description": "Screen states that never lie: LoadingState (spinner or skeleton, busy, label for screen readers), ErrorState (alert, retry, collapsible details) and DataState, which picks loading, error, empty or your content from a status and never shows empty while pending or after an error.",
   "dependencies": [
-    "@ui-sdk/react@0.1.0-beta.10",
+    "@ui-sdk/react@0.1.0-beta.12",
     "class-variance-authority@0.7.1",
     "lucide-react"
   ],

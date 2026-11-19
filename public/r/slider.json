@@ -4,8 +4,8 @@
   "title": "Slider",
   "description": "UI SDK Slider: one value or a range, with a formatted value part, named by Field.",
   "dependencies": [
-    "@ui-sdk/core@0.1.0-beta.10",
-    "@ui-sdk/react@0.1.0-beta.10"
+    "@ui-sdk/core@0.1.0-beta.12",
+    "@ui-sdk/react@0.1.0-beta.12"
   ],
   "registryDependencies": [
     "@eskais/utils",

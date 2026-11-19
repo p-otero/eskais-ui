@@ -4,7 +4,7 @@
   "title": "Git Chip",
   "description": "Inline chips for git names in text: GitFileChip (a file icon and the path in mono) and GitBranchChip (a branch icon and the name).",
   "dependencies": [
-    "@ui-sdk/react@0.1.0-beta.10",
+    "@ui-sdk/react@0.1.0-beta.12",
     "lucide-react"
   ],
   "registryDependencies": [

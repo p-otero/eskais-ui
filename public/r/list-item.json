@@ -4,8 +4,8 @@
   "title": "List Item",
   "description": "Dense, Linear-style rows that also work as entity cards: List, ListGroup (label and count), ListItem with leading, title, subtitle, status, meta, trailing and actions, plus ListItemTitle, ListItemMeta, ListItemActions and IconTile. Agents get select(id).",
   "dependencies": [
-    "@ui-sdk/core@0.1.0-beta.10",
-    "@ui-sdk/react@0.1.0-beta.10"
+    "@ui-sdk/core@0.1.0-beta.12",
+    "@ui-sdk/react@0.1.0-beta.12"
   ],
   "registryDependencies": [
     "@eskais/utils",

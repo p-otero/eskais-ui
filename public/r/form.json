@@ -4,8 +4,8 @@
   "title": "Form",
   "description": "Forms on react-hook-form with a Standard Schema (Zod, Valibot, Effect): FormField binds one registry control by name, pending submit, server errors mapped to fields, a live root error, focus on the first invalid field, and messages in any language or i18n library.",
   "dependencies": [
-    "@ui-sdk/core@0.1.0-beta.10",
-    "@ui-sdk/react@0.1.0-beta.10",
+    "@ui-sdk/core@0.1.0-beta.12",
+    "@ui-sdk/react@0.1.0-beta.12",
     "react-hook-form@7.91.0",
     "@hookform/resolvers@7.0.2",
     "@standard-schema/spec@1.1.0",

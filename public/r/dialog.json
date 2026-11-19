@@ -4,8 +4,8 @@
   "title": "Dialog",
   "description": "UI SDK Dialog parts: focus trap, Escape, focus restore, dismissible and controller support.",
   "dependencies": [
-    "@ui-sdk/core@0.1.0-beta.10",
-    "@ui-sdk/react@0.1.0-beta.10"
+    "@ui-sdk/core@0.1.0-beta.12",
+    "@ui-sdk/react@0.1.0-beta.12"
   ],
   "registryDependencies": [
     "@eskais/utils",

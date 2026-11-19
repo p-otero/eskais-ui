@@ -4,8 +4,8 @@
   "title": "Button",
   "description": "UI SDK Button with variants: async pending state, a loading prop with a spinner, focusable-when-disabled, link rendering, and a tooltip with its name (and shortcut) on an icon button. ButtonLink is a Link with the Button look, for calls to action that navigate.",
   "dependencies": [
-    "@ui-sdk/core@0.1.0-beta.10",
-    "@ui-sdk/react@0.1.0-beta.10",
+    "@ui-sdk/core@0.1.0-beta.12",
+    "@ui-sdk/react@0.1.0-beta.12",
     "class-variance-authority@0.7.1"
   ],
   "registryDependencies": [

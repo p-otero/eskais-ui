@@ -4,8 +4,8 @@
   "title": "Server Data Table",
   "description": "A DataTable over a PageSource: the server filters, sorts and pages; page numbers, previous and next, or load more follow what the source gives; DataState covers loading, error with retry and empty; a polite status says \"Showing 21–40 of 312\" after each load; filters, sort and page can live in the URL.",
   "dependencies": [
-    "@ui-sdk/core@0.1.0-beta.10",
-    "@ui-sdk/react@0.1.0-beta.10"
+    "@ui-sdk/core@0.1.0-beta.12",
+    "@ui-sdk/react@0.1.0-beta.12"
   ],
   "registryDependencies": [
     "@eskais/utils",

@@ -4,7 +4,7 @@
   "title": "Relative Time",
   "description": "formatRelative() and formatInstant() on Date + Intl, a RelativeTime <time> with the absolute instant in its title, and a useNow hook that pauses while the page is hidden.",
   "dependencies": [
-    "@ui-sdk/react@0.1.0-beta.10"
+    "@ui-sdk/react@0.1.0-beta.12"
   ],
   "registryDependencies": [
     "@eskais/utils",

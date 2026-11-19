@@ -4,8 +4,8 @@
   "title": "Diff View",
   "description": "The renderer behind TextDiff and GitDiff: every file's lines in one virtualized scroller (UI SDK createVirtualizer), unified or split, folded unchanged regions, changed-word highlights, Lezer syntax colours parsed in slices and applied only to the lines on screen, one tab stop over the lines (createGridFocus), j/k and n/p between hunks and files, Shift ranges for comments (onLineSelect), find in page across folded and off-screen lines, and agent actions.",
   "dependencies": [
-    "@ui-sdk/core@0.1.0-beta.10",
-    "@ui-sdk/react@0.1.0-beta.10",
+    "@ui-sdk/core@0.1.0-beta.12",
+    "@ui-sdk/react@0.1.0-beta.12",
     "@lezer/common@1.5.5",
     "@lezer/highlight@1.2.5",
     "lucide-react"

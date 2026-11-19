@@ -4,7 +4,7 @@
   "title": "Badge",
   "description": "Presentational badge: tone (neutral, info, success, warning, destructive) for meaning, variant (default, secondary, outline) for an untoned look. Tone values passed as variant still work but are deprecated.",
   "dependencies": [
-    "@ui-sdk/react@0.1.0-beta.10",
+    "@ui-sdk/react@0.1.0-beta.12",
     "class-variance-authority@0.7.1"
   ],
   "registryDependencies": [

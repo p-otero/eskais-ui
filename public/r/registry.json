@@ -1349,8 +1349,8 @@
       "title": "Appearance",
       "description": "createAppearance and <Appearance>: keep the .dark class, data-theme, data-palette, data-density and data-radius on <html> in sync with a color scheme (system follows prefers-color-scheme live, or light or dark), a theme, a palette, a density (default or compact) and a corner radius (none, sm, md, lg or full), optionally saved between visits. Works in a static file:// page.",
       "dependencies": [
-        "@ui-sdk/core@0.1.0-beta.10",
-        "@ui-sdk/react@0.1.0-beta.10"
+        "@ui-sdk/core@0.1.0-beta.12",
+        "@ui-sdk/react@0.1.0-beta.12"
       ],
       "registryDependencies": [
         "@eskais/theme"
@@ -1396,8 +1396,8 @@
       "title": "Button",
       "description": "UI SDK Button with variants: async pending state, a loading prop with a spinner, focusable-when-disabled, link rendering, and a tooltip with its name (and shortcut) on an icon button. ButtonLink is a Link with the Button look, for calls to action that navigate.",
       "dependencies": [
-        "@ui-sdk/core@0.1.0-beta.10",
-        "@ui-sdk/react@0.1.0-beta.10",
+        "@ui-sdk/core@0.1.0-beta.12",
+        "@ui-sdk/react@0.1.0-beta.12",
         "class-variance-authority@0.7.1"
       ],
       "registryDependencies": [
@@ -1426,8 +1426,8 @@
       "title": "Field",
       "description": "UI SDK Field parts: label, description and validation errors wired to the control; FieldSet with a legend that names the group.",
       "dependencies": [
-        "@ui-sdk/core@0.1.0-beta.10",
-        "@ui-sdk/react@0.1.0-beta.10"
+        "@ui-sdk/core@0.1.0-beta.12",
+        "@ui-sdk/react@0.1.0-beta.12"
       ],
       "registryDependencies": [
         "@eskais/utils",
@@ -1446,8 +1446,8 @@
       "title": "Input",
       "description": "UI SDK Input, InputGroup and InputClear (clears and returns focus).",
       "dependencies": [
-        "@ui-sdk/core@0.1.0-beta.10",
-        "@ui-sdk/react@0.1.0-beta.10",
+        "@ui-sdk/core@0.1.0-beta.12",
+        "@ui-sdk/react@0.1.0-beta.12",
         "lucide-react"
       ],
       "registryDependencies": [
@@ -1470,8 +1470,8 @@
       "description": "UI SDK PasswordInput styled as a field: a reveal toggle as an icon button with a tooltip that keeps its name while aria-pressed says whether the password shows, floating labels and FormField binding.",
       "docs": "`<PasswordInput autoComplete>` in a `Field`: with no children it renders `PasswordInputControl` and `PasswordInputToggle`; compose them to pass input attributes such as `placeholder`. `autoComplete=\"current-password\"` to sign in, `\"new-password\"` to sign up. The toggle is named \"Show password\" (override with `aria-label`) and keeps that name while `aria-pressed` says the password shows; the icon swaps between an eye and a struck eye. A pointer press keeps focus in the field. Submitting, resetting or leaving the page hides it again. `data-capslock` marks the field while Caps Lock is on, for a warning of your own. `labelPlacement=\"in\"`/`\"on\"` float the Field's label, and `FormField` binds the value.",
       "dependencies": [
-        "@ui-sdk/core@0.1.0-beta.10",
-        "@ui-sdk/react@0.1.0-beta.10",
+        "@ui-sdk/core@0.1.0-beta.12",
+        "@ui-sdk/react@0.1.0-beta.12",
         "lucide-react"
       ],
       "registryDependencies": [
@@ -1494,8 +1494,8 @@
       "title": "Search Field",
       "description": "Search landmark built with definePrimitive: Enter runs onSearch, Escape clears only when there is text, and agents get a submit action.",
       "dependencies": [
-        "@ui-sdk/core@0.1.0-beta.10",
-        "@ui-sdk/react@0.1.0-beta.10",
+        "@ui-sdk/core@0.1.0-beta.12",
+        "@ui-sdk/react@0.1.0-beta.12",
         "lucide-react"
       ],
       "registryDependencies": [
@@ -1520,8 +1520,8 @@
       "description": "Rename in place, built with definePrimitive on UI SDK's createInlineEdit: a press, Enter, F2 or typing turns the text into a field; Enter and Tab save, Escape puts it back, blur saves or cancels; validate keeps editing; agents rename(text) and cancel.",
       "docs": "`<InlineEdit label value defaultValue onValueChange validate blur startOn editButton labels size>` for a title, a list item or a tab's name. The text is a button described by `labels.hint` (\"Press Enter or F2 to rename\"); a press (or only a double click with `startOn=\"double-click\"`, leaving a press to the row), Enter, F2 or a printable key turns it into a field named by `label`, filled with the text and selected. Enter and Tab save, Escape puts the text back, and focus returns to the text after Enter or Escape. Leaving the field saves (`blur=\"commit\"`, the default) or puts the text back (`blur=\"cancel\"`). `validate(text)` returning `false` keeps editing. `onValueChange(value, details)` reports `enter-key`, `tab-key`, `focus-out` or, for an agent, `imperative` with `source: \"agent\"`, and can cancel. `size` (`body`, `title-sm`, `title`) sizes the text and the field alike, so nothing moves. `editButton` adds a pencil named by `labels.edit(label)` with a tooltip, shown on hover and focus and always on touch. Agents find it by `label` and call `rename(text)` or `cancel`. Inside a tab or a row that is itself a button, compose `InlineEditRoot`, `InlineEditDisplay` (with `render`), `InlineEditInput` and `InlineEditTrigger` so controls don't nest.",
       "dependencies": [
-        "@ui-sdk/core@0.1.0-beta.10",
-        "@ui-sdk/react@0.1.0-beta.10",
+        "@ui-sdk/core@0.1.0-beta.12",
+        "@ui-sdk/react@0.1.0-beta.12",
         "lucide-react"
       ],
       "registryDependencies": [
@@ -1547,8 +1547,8 @@
       "description": "UI SDK Dialog parts: focus trap, Escape, focus restore, dismissible and controller support.",
       "docs": "Focus returns to whatever opened the dialog. `DialogContent` records the focused element as it opens, so focus still comes back when the dialog leaves the page while open (`{open && <Dialog open>…</Dialog>}`) and when a field inside has React's `autoFocus`, which takes focus before UI SDK records where it came from. To choose the first field, pass `initialFocus` to `DialogContent` (a selector like `\"#name\"`, an element, or a function), not `autoFocus`: it is how UI SDK decides where focus starts, and after a touch press it focuses the dialog itself so no on-screen keyboard pops up. Prefer keeping the `Dialog` mounted and driving `open`: an unmounted dialog skips its exit transition. `finalFocus` overrides where focus returns; `\"none\"` leaves it alone, also on unmount. While the dialog animates out, its backdrop and content are inert (UI SDK) and `pointer-events: none`, so the first click on the page after closing lands. ConfirmDialog, FormDialog, CommandDialog and Drawer share all of this.",
       "dependencies": [
-        "@ui-sdk/core@0.1.0-beta.10",
-        "@ui-sdk/react@0.1.0-beta.10"
+        "@ui-sdk/core@0.1.0-beta.12",
+        "@ui-sdk/react@0.1.0-beta.12"
       ],
       "registryDependencies": [
         "@eskais/utils",
@@ -1574,8 +1574,8 @@
       "title": "Confirm Dialog",
       "description": "UI SDK AlertDialog with an async confirm action: pending, no double submit, closes on success, inline error on failure, data-agent-confirm for destructive actions.",
       "dependencies": [
-        "@ui-sdk/core@0.1.0-beta.10",
-        "@ui-sdk/react@0.1.0-beta.10"
+        "@ui-sdk/core@0.1.0-beta.12",
+        "@ui-sdk/react@0.1.0-beta.12"
       ],
       "registryDependencies": [
         "@eskais/utils",
@@ -1599,8 +1599,8 @@
       "description": "A button that asks twice, built with definePrimitive: the first press arms it (data-armed, its text and name become labels.armed, announced), the second runs onConfirm; it disarms on a timeout, Escape or blur with change reasons, can confirm on a hold, and carries data-agent-confirm.",
       "docs": "`<ConfirmButton agentConfirm onConfirm timeout hold variant size labels>` with the idle content as children. The first press arms it: `data-armed`, the destructive fill, and the text (and so the name) becomes `armedChildren` or `labels.armed` (\"Press again to confirm\"), read politely to screen readers; both contents share one grid cell, so the width holds. The second press runs `onConfirm({ reason, event })`; a returned Promise sets `aria-busy` and `data-pending` with a spinner until it settles. `onArmedChange(armed, details)` reports `trigger-press`, `timeout` (after `timeout` ms, 4000 by default, 0 for never), `escape-key` (Escape only while armed, so a dialog around an idle button still closes), `focus-out` and `confirm`; `details.cancel()` keeps it idle, and `armed`/`defaultArmed` control it. `hold={ms}` also confirms on a held pointer, Enter or Space, filling the button over `--confirm-hold-duration`; a second press still works, for people who can't hold. `agentConfirm` becomes `data-agent-confirm`, so an agent's `confirm` waits for a person through `allow`. For a decision that needs explaining, use `ConfirmDialog`.",
       "dependencies": [
-        "@ui-sdk/core@0.1.0-beta.10",
-        "@ui-sdk/react@0.1.0-beta.10"
+        "@ui-sdk/core@0.1.0-beta.12",
+        "@ui-sdk/react@0.1.0-beta.12"
       ],
       "registryDependencies": [
         "@eskais/utils",
@@ -1625,8 +1625,8 @@
       "title": "Form",
       "description": "Forms on react-hook-form with a Standard Schema (Zod, Valibot, Effect): FormField binds one registry control by name, pending submit, server errors mapped to fields, a live root error, focus on the first invalid field, and messages in any language or i18n library.",
       "dependencies": [
-        "@ui-sdk/core@0.1.0-beta.10",
-        "@ui-sdk/react@0.1.0-beta.10",
+        "@ui-sdk/core@0.1.0-beta.12",
+        "@ui-sdk/react@0.1.0-beta.12",
         "react-hook-form@7.91.0",
         "@hookform/resolvers@7.0.2",
         "@standard-schema/spec@1.1.0",
@@ -1689,8 +1689,8 @@
       "title": "Form Dialog",
       "description": "A Form inside a Dialog: a scrolling body with a sticky footer, Escape and outside presses blocked while pending, closes on success and returns focus, asks before discarding unsaved changes, and an optional review step before submitting.",
       "dependencies": [
-        "@ui-sdk/core@0.1.0-beta.10",
-        "@ui-sdk/react@0.1.0-beta.10",
+        "@ui-sdk/core@0.1.0-beta.12",
+        "@ui-sdk/react@0.1.0-beta.12",
         "@standard-schema/spec@1.1.0",
         "class-variance-authority@0.7.1"
       ],
@@ -1715,8 +1715,8 @@
       "title": "Step Dialog",
       "description": "A multi-step form on one schema, in a Dialog or inline: a progress list with aria-current, Next validates only the current step, Back keeps values, focus moves to each step's heading, and a failed submit returns to the step with the error.",
       "dependencies": [
-        "@ui-sdk/core@0.1.0-beta.10",
-        "@ui-sdk/react@0.1.0-beta.10",
+        "@ui-sdk/core@0.1.0-beta.12",
+        "@ui-sdk/react@0.1.0-beta.12",
         "@standard-schema/spec@1.1.0",
         "react-hook-form@7.91.0",
         "class-variance-authority@0.7.1",
@@ -1758,7 +1758,7 @@
       "title": "Card",
       "description": "Card parts: a titled card renders as a section labelled by its title, with an eyebrow, a top-end action slot, a heading level on the title and card, dashed or bare surfaces.",
       "dependencies": [
-        "@ui-sdk/react@0.1.0-beta.10",
+        "@ui-sdk/react@0.1.0-beta.12",
         "class-variance-authority@0.7.1"
       ],
       "registryDependencies": [
@@ -1801,7 +1801,7 @@
       "title": "Badge",
       "description": "Presentational badge: tone (neutral, info, success, warning, destructive) for meaning, variant (default, secondary, outline) for an untoned look. Tone values passed as variant still work but are deprecated.",
       "dependencies": [
-        "@ui-sdk/react@0.1.0-beta.10",
+        "@ui-sdk/react@0.1.0-beta.12",
         "class-variance-authority@0.7.1"
       ],
       "registryDependencies": [
@@ -1822,8 +1822,8 @@
       "title": "Tabs",
       "description": "UI SDK Tabs: arrow-key navigation, automatic or manual activation, controller support, a selected state that reads at 3:1, and a list that scrolls when its tabs don't fit, with edge fades and pointer-only scroll buttons.",
       "dependencies": [
-        "@ui-sdk/core@0.1.0-beta.10",
-        "@ui-sdk/react@0.1.0-beta.10",
+        "@ui-sdk/core@0.1.0-beta.12",
+        "@ui-sdk/react@0.1.0-beta.12",
         "lucide-react"
       ],
       "registryDependencies": [
@@ -1849,8 +1849,8 @@
       "title": "Collapsible",
       "description": "UI SDK Collapsible: disclosure with aria-expanded, animated height, controller support and a rotating chevron icon.",
       "dependencies": [
-        "@ui-sdk/core@0.1.0-beta.10",
-        "@ui-sdk/react@0.1.0-beta.10",
+        "@ui-sdk/core@0.1.0-beta.12",
+        "@ui-sdk/react@0.1.0-beta.12",
         "lucide-react"
       ],
       "registryDependencies": [
@@ -1870,8 +1870,8 @@
       "title": "Scroll Area",
       "description": "UI SDK ScrollArea: native scrolling with styled scrollbars, edge state and follow-to-end, keyboard-reachable when it overflows.",
       "dependencies": [
-        "@ui-sdk/core@0.1.0-beta.10",
-        "@ui-sdk/react@0.1.0-beta.10"
+        "@ui-sdk/core@0.1.0-beta.12",
+        "@ui-sdk/react@0.1.0-beta.12"
       ],
       "registryDependencies": [
         "@eskais/utils",
@@ -1894,8 +1894,8 @@
       "title": "Separator",
       "description": "UI SDK Separator: horizontal or vertical, announced or decorative.",
       "dependencies": [
-        "@ui-sdk/core@0.1.0-beta.10",
-        "@ui-sdk/react@0.1.0-beta.10"
+        "@ui-sdk/core@0.1.0-beta.12",
+        "@ui-sdk/react@0.1.0-beta.12"
       ],
       "registryDependencies": [
         "@eskais/utils",
@@ -1914,8 +1914,8 @@
       "title": "Avatar",
       "description": "UI SDK Avatar with sizes: a real img that falls back to initials while loading or on error.",
       "dependencies": [
-        "@ui-sdk/core@0.1.0-beta.10",
-        "@ui-sdk/react@0.1.0-beta.10",
+        "@ui-sdk/core@0.1.0-beta.12",
+        "@ui-sdk/react@0.1.0-beta.12",
         "class-variance-authority@0.7.1"
       ],
       "registryDependencies": [
@@ -1935,7 +1935,7 @@
       "title": "Skeleton",
       "description": "Presentational loading placeholder, hidden from assistive technology, that stops pulsing under reduced motion.",
       "dependencies": [
-        "@ui-sdk/react@0.1.0-beta.10"
+        "@ui-sdk/react@0.1.0-beta.12"
       ],
       "registryDependencies": [
         "@eskais/utils",
@@ -1954,7 +1954,7 @@
       "title": "Empty",
       "description": "Presentational empty-state parts in three sizes (inline, panel, page): media, title, description and actions.",
       "dependencies": [
-        "@ui-sdk/react@0.1.0-beta.10",
+        "@ui-sdk/react@0.1.0-beta.12",
         "class-variance-authority@0.7.1"
       ],
       "registryDependencies": [
@@ -1975,7 +1975,7 @@
       "description": "Screen states that never lie: LoadingState (spinner or skeleton, busy, label for screen readers), ErrorState (alert, retry, collapsible details) and DataState, which picks loading, error, empty or your content from a status and never shows empty while pending or after an error.",
       "docs": "One item, three components (`error-state`, `loading-state`, `data-state`), since DataState renders the other two and Empty by default. `<DataState status data error onRetry labels={{ errorTitle, retry, emptyTitle }}>{(data) => …}</DataState>` works with any data library: map its status to `pending`, `error` or `success`. Visible copy has no default: the types require `errorTitle` and `emptyTitle` (and `retry` with `onRetry`) unless you pass `renderError` and `empty`. `loading` and `refreshing` are screen-reader labels and default to English. It picks one state from `status`: `error` shows the error; `success` shows empty when `isEmpty(data)` holds and your content otherwise; `pending` shows the data of the last `success` (`keepPreviousData`, default true), else `placeholderData`, with `aria-busy` and a small spinner, and loading when neither is there or both are empty. `data` is read only with `success`: an initial value passed while pending (an `[]` default, a cache guess) never counts as a result, so the first load always shows loading; pass it as `placeholderData` to show it busy instead. Pass `fetching` for libraries whose status stays `success` during a refetch. `isEmpty` decides what counts as empty (an empty array, `null` or `undefined` by default). Every state takes `size`: `inline`, `panel` (default) or `page`. Any other prop (`data-testid`, `id`, `aria-label`) goes on DataState's root `div`, which keeps its own `data-slot`, `data-status` and `aria-busy`.",
       "dependencies": [
-        "@ui-sdk/react@0.1.0-beta.10",
+        "@ui-sdk/react@0.1.0-beta.12",
         "class-variance-authority@0.7.1",
         "lucide-react"
       ],
@@ -2013,7 +2013,7 @@
       "title": "Kbd",
       "description": "Presentational keyboard key and key group rendered as kbd.",
       "dependencies": [
-        "@ui-sdk/react@0.1.0-beta.10"
+        "@ui-sdk/react@0.1.0-beta.12"
       ],
       "registryDependencies": [
         "@eskais/utils",
@@ -2033,8 +2033,8 @@
       "description": "Keyboard shortcuts on UI SDK's shared shortcuts: useShortcut with scopes, sequences (g i) and mod, ShortcutScope for a region or an open panel, ShortcutHint drawn with Kbd. Plain keys never fire while typing or composing.",
       "docs": "`useShortcut(keys, handler, { scope, enabled, description, allowInInput, when, layer })` registers while mounted. Keys are `+`-joined (`mod+k`, `shift+?`), a space makes a two-step sequence (`g i`, 1.2 s apart at most), and `?` matches with or without Shift. Plain keys never run while focus is in an input, textarea or contenteditable, nor during IME composition. `<ShortcutScope name label active>` limits the shortcuts inside it: `active=\"focus\"` (default) while focus is within, `true` while mounted (an open side panel), and inside a dialog they belong to that dialog. `ShortcutHint keys` draws the keys with `Kbd` (aria-hidden; give the control `aria-keyshortcuts`, which `useAriaKeyshortcuts` returns for single steps). `Button shortcut` and `DropdownMenuItem shortcut` bind and show a key. Shortcuts are a people-only accelerator: agents already press the same parts by name, so they gain nothing new.",
       "dependencies": [
-        "@ui-sdk/core@0.1.0-beta.10",
-        "@ui-sdk/react@0.1.0-beta.10"
+        "@ui-sdk/core@0.1.0-beta.12",
+        "@ui-sdk/react@0.1.0-beta.12"
       ],
       "registryDependencies": [
         "@eskais/utils",
@@ -2063,8 +2063,8 @@
       "description": "A ? dialog that lists the shortcuts available where the person is, grouped by ShortcutScope.",
       "docs": "Mount `<ShortcutsDialog />` once. `?` opens it, however the layout types it (`shortcut` changes or, with `null`, removes the key). Touch screens have no `?`, so give it a way in: `<ShortcutsDialog><ShortcutsDialogTrigger>Keyboard shortcuts</ShortcutsDialogTrigger></ShortcutsDialog>` (a `Button` look; it lists the shortcuts of the `ShortcutScope` it sits in), or control it with `open`/`onOpenChange` from a button elsewhere. It reads `listShortcuts()` as it opens, before the modal pauses the page's shortcuts, and lists only shortcuts with a `description`, grouped by scope under each `ShortcutScope label`. `extra` adds rows that aren't registered shortcuts, like a list's own j/k keys. `labels` (`title`, `global`, `open`, `description`) in the page's language; English by default.",
       "dependencies": [
-        "@ui-sdk/core@0.1.0-beta.10",
-        "@ui-sdk/react@0.1.0-beta.10"
+        "@ui-sdk/core@0.1.0-beta.12",
+        "@ui-sdk/react@0.1.0-beta.12"
       ],
       "registryDependencies": [
         "@eskais/utils",
@@ -2086,8 +2086,8 @@
       "title": "Table",
       "description": "Semantic table parts with aria-sort-ready headers and a horizontal scroll area on narrow screens. Cells stay on one line, cut with an ellipsis and a title holding the whole text while they overflow; TableCell wrap lets one wrap.",
       "dependencies": [
-        "@ui-sdk/core@0.1.0-beta.10",
-        "@ui-sdk/react@0.1.0-beta.10"
+        "@ui-sdk/core@0.1.0-beta.12",
+        "@ui-sdk/react@0.1.0-beta.12"
       ],
       "registryDependencies": [
         "@eskais/utils",
@@ -2107,8 +2107,8 @@
       "title": "Tooltip",
       "description": "UI SDK Tooltip parts: names or describes its trigger, opens on hover and keyboard focus, Escape closes it, optional shortcut and arrow. ControlTooltip gives an icon-only control its name in a tooltip.",
       "dependencies": [
-        "@ui-sdk/core@0.1.0-beta.10",
-        "@ui-sdk/react@0.1.0-beta.10"
+        "@ui-sdk/core@0.1.0-beta.12",
+        "@ui-sdk/react@0.1.0-beta.12"
       ],
       "registryDependencies": [
         "@eskais/utils",
@@ -2128,8 +2128,8 @@
       "title": "Popover",
       "description": "UI SDK Popover parts on a glass-ready surface: focus moves in, Escape and outside presses close it, focus returns to the trigger.",
       "dependencies": [
-        "@ui-sdk/core@0.1.0-beta.10",
-        "@ui-sdk/react@0.1.0-beta.10",
+        "@ui-sdk/core@0.1.0-beta.12",
+        "@ui-sdk/react@0.1.0-beta.12",
         "class-variance-authority@0.7.1"
       ],
       "registryDependencies": [
@@ -2166,10 +2166,10 @@
       "type": "registry:ui",
       "title": "Drawer",
       "description": "UI SDK Drawer parts: a modal sheet from any edge (bottom or side), draggable, with focus trap, Escape and focus restore.",
-      "docs": "`DrawerContent` returns focus like `DialogContent` (see the Dialog docs): also when the drawer unmounts while open or a field has `autoFocus`; prefer `initialFocus`. Its closing backdrop and content are `pointer-events: none`, but in UI SDK 0.1.0-beta.10 the drawer itself still cancels a press on the page while it slides out, so a click in that moment is lost.",
+      "docs": "`DrawerContent` returns focus like `DialogContent` (see the Dialog docs): also when the drawer unmounts while open or a field has `autoFocus`; prefer `initialFocus`. Its closing backdrop and content are `pointer-events: none`, but in UI SDK 0.1.0-beta.12 the drawer itself still cancels a press on the page while it slides out, so a click in that moment is lost.",
       "dependencies": [
-        "@ui-sdk/core@0.1.0-beta.10",
-        "@ui-sdk/react@0.1.0-beta.10",
+        "@ui-sdk/core@0.1.0-beta.12",
+        "@ui-sdk/react@0.1.0-beta.12",
         "class-variance-authority@0.7.1"
       ],
       "registryDependencies": [
@@ -2192,8 +2192,8 @@
       "title": "Dropdown Menu",
       "description": "UI SDK Menu parts with a button trigger: arrow keys, typeahead, checkbox and radio items, submenus, destructive items and async actions.",
       "dependencies": [
-        "@ui-sdk/core@0.1.0-beta.10",
-        "@ui-sdk/react@0.1.0-beta.10",
+        "@ui-sdk/core@0.1.0-beta.12",
+        "@ui-sdk/react@0.1.0-beta.12",
         "class-variance-authority@0.7.1",
         "lucide-react"
       ],
@@ -2217,8 +2217,8 @@
       "title": "Toast",
       "description": "UI SDK toasts: ToastStack renders a styled, announced region with a tone icon per type; toast() and createToaster() add toasts with actions, cancel and timed dismissal.",
       "dependencies": [
-        "@ui-sdk/core@0.1.0-beta.10",
-        "@ui-sdk/react@0.1.0-beta.10",
+        "@ui-sdk/core@0.1.0-beta.12",
+        "@ui-sdk/react@0.1.0-beta.12",
         "class-variance-authority@0.7.1",
         "lucide-react"
       ],
@@ -2244,8 +2244,8 @@
       "title": "Select",
       "description": "UI SDK Select: trigger, popup list, items with a check indicator, groups and separators, or `options` as data with a clearable none choice. Works inside Field; agents choose by label.",
       "dependencies": [
-        "@ui-sdk/core@0.1.0-beta.10",
-        "@ui-sdk/react@0.1.0-beta.10",
+        "@ui-sdk/core@0.1.0-beta.12",
+        "@ui-sdk/react@0.1.0-beta.12",
         "lucide-react"
       ],
       "registryDependencies": [
@@ -2268,8 +2268,8 @@
       "title": "Native Select",
       "description": "A styled native <select> for mobile-heavy forms, with the same options shape as Select, a placeholder and a clearable none choice. A small primitive reports it to agents, which a bare <select> is not.",
       "dependencies": [
-        "@ui-sdk/core@0.1.0-beta.10",
-        "@ui-sdk/react@0.1.0-beta.10",
+        "@ui-sdk/core@0.1.0-beta.12",
+        "@ui-sdk/react@0.1.0-beta.12",
         "lucide-react"
       ],
       "registryDependencies": [
@@ -2296,8 +2296,8 @@
       "title": "Combobox",
       "description": "UI SDK Combobox: a filtering input with clear and trigger buttons and a popup list. Works inside Field; agents choose by label.",
       "dependencies": [
-        "@ui-sdk/core@0.1.0-beta.10",
-        "@ui-sdk/react@0.1.0-beta.10",
+        "@ui-sdk/core@0.1.0-beta.12",
+        "@ui-sdk/react@0.1.0-beta.12",
         "lucide-react"
       ],
       "registryDependencies": [
@@ -2322,8 +2322,8 @@
       "description": "UI SDK Autocomplete styled as a field: free text with suggestions that filter as you type, matches marked, Clear and Trigger buttons with tooltips, async suggestions through useAsyncOptions, floating labels and FormField binding.",
       "docs": "`<Autocomplete items>` with `<AutocompleteControl>` (the field's box) around `AutocompleteInput`, `AutocompleteClear` and `AutocompleteTrigger`, then `<AutocompleteContent>` with `AutocompleteEmpty`, `AutocompleteStatus` and `AutocompleteList` (renders `items`, or your `AutocompleteItem`s with `AutocompleteItemText`, which marks the match). The value is the text: any text is valid, a suggestion only fills it in; use `Combobox` when the value must be an option. `autoHighlight`, `inlineComplete`, `openOnFocus`, `emptyItems` (recent searches) and `submitOnSelect` with `onSubmit` are UI SDK's. For a server, `useAsyncOptions(load, { debounce })` (re-exported here): pass its `items` and `status`, `filter={false}`, and `setQuery` in `onValueChange`. In a `Field` the label names the input and `labelPlacement=\"in\"`/`\"on\"` float it; `FormField` binds the text. Clear and Trigger are named \"Clear\" and \"Show suggestions\", overridable with `aria-label`.",
       "dependencies": [
-        "@ui-sdk/core@0.1.0-beta.10",
-        "@ui-sdk/react@0.1.0-beta.10",
+        "@ui-sdk/core@0.1.0-beta.12",
+        "@ui-sdk/react@0.1.0-beta.12",
         "lucide-react"
       ],
       "registryDependencies": [
@@ -2347,8 +2347,8 @@
       "title": "Segmented Control",
       "description": "UI SDK SegmentedControl: one choice from a row of buttons with a sliding indicator, like a board/table view switch.",
       "dependencies": [
-        "@ui-sdk/core@0.1.0-beta.10",
-        "@ui-sdk/react@0.1.0-beta.10"
+        "@ui-sdk/core@0.1.0-beta.12",
+        "@ui-sdk/react@0.1.0-beta.12"
       ],
       "registryDependencies": [
         "@eskais/utils",
@@ -2368,8 +2368,8 @@
       "title": "Checkbox",
       "description": "UI SDK Checkbox and CheckboxGroup: checked, unchecked and indeterminate, labelled by Field.",
       "dependencies": [
-        "@ui-sdk/core@0.1.0-beta.10",
-        "@ui-sdk/react@0.1.0-beta.10",
+        "@ui-sdk/core@0.1.0-beta.12",
+        "@ui-sdk/react@0.1.0-beta.12",
         "lucide-react"
       ],
       "registryDependencies": [
@@ -2390,8 +2390,8 @@
       "title": "Textarea",
       "description": "UI SDK Textarea: multi-line field with auto resize and a submit shortcut, labelled by Field.",
       "dependencies": [
-        "@ui-sdk/core@0.1.0-beta.10",
-        "@ui-sdk/react@0.1.0-beta.10"
+        "@ui-sdk/core@0.1.0-beta.12",
+        "@ui-sdk/react@0.1.0-beta.12"
       ],
       "registryDependencies": [
         "@eskais/utils",
@@ -2412,8 +2412,8 @@
       "title": "Token Input",
       "description": "UI SDK Token Input styled as a field: removable token chips with undo, Backspace and arrow keys, and a labels mode where Enter or a comma commits and a paste splits; agents set it by label.",
       "dependencies": [
-        "@ui-sdk/core@0.1.0-beta.10",
-        "@ui-sdk/react@0.1.0-beta.10",
+        "@ui-sdk/core@0.1.0-beta.12",
+        "@ui-sdk/react@0.1.0-beta.12",
         "lucide-react"
       ],
       "registryDependencies": [
@@ -2442,7 +2442,7 @@
       "title": "Quantity",
       "description": "Honest values: formatQuantity() and QuantityValue show unknown as a dash, estimated with ~ and screen reader text, and the source in the title.",
       "dependencies": [
-        "@ui-sdk/react@0.1.0-beta.10"
+        "@ui-sdk/react@0.1.0-beta.12"
       ],
       "registryDependencies": [
         "@eskais/utils",
@@ -2466,7 +2466,7 @@
       "title": "Relative Time",
       "description": "formatRelative() and formatInstant() on Date + Intl, a RelativeTime <time> with the absolute instant in its title, and a useNow hook that pauses while the page is hidden.",
       "dependencies": [
-        "@ui-sdk/react@0.1.0-beta.10"
+        "@ui-sdk/react@0.1.0-beta.12"
       ],
       "registryDependencies": [
         "@eskais/utils",
@@ -2493,8 +2493,8 @@
       "title": "Acceptance List",
       "description": "A list of pass, fail and unverified criteria with evidence, a segmented AcceptanceBar on the UI SDK Meter with an accessible summary, and AcceptancePopover, a compact header trigger that opens the list.",
       "dependencies": [
-        "@ui-sdk/core@0.1.0-beta.10",
-        "@ui-sdk/react@0.1.0-beta.10",
+        "@ui-sdk/core@0.1.0-beta.12",
+        "@ui-sdk/react@0.1.0-beta.12",
         "lucide-react"
       ],
       "registryDependencies": [
@@ -2516,7 +2516,7 @@
       "title": "Stat",
       "description": "Summary figures: Stat, StatLabel, StatValue (a number, a Quantity or a node), StatHint and StatDelta (a change with its direction in words), in a responsive StatGroup list.",
       "dependencies": [
-        "@ui-sdk/react@0.1.0-beta.10",
+        "@ui-sdk/react@0.1.0-beta.12",
         "class-variance-authority@0.7.1",
         "lucide-react"
       ],
@@ -2545,8 +2545,8 @@
       "title": "Description List",
       "description": "Terms and their details in a dl: stacked, inline (side by side, stacked again in a narrow container) or a grid of columns. Spacing from the role tokens, copyable details with an agent copy action, and a dash for an empty value that screen readers read as an overridable label.",
       "dependencies": [
-        "@ui-sdk/core@0.1.0-beta.10",
-        "@ui-sdk/react@0.1.0-beta.10",
+        "@ui-sdk/core@0.1.0-beta.12",
+        "@ui-sdk/react@0.1.0-beta.12",
         "class-variance-authority@0.7.1",
         "lucide-react"
       ],
@@ -2574,8 +2574,8 @@
       "description": "Reorder a list or grid by drag, keyboard and agents, built with definePrimitive over UI SDK's createReorder: a controlled string[] order, a draft while an item moves, an optional drag handle, checked items that move together, announcements with overridable labels, a FLIP slide on the motion tokens, and agent actions move(id, index) and reorder(order).",
       "docs": "`Sortable aria-label` holds `SortableItem value`s, rendered from its children function `({ order }) => …` so the items follow the draft while one moves; `value`/`defaultValue` and `onValueChange(order, details)` own the order (`details.reason` is `drag`, `move-key` or `imperative`, and `details.cancel()` or a controlled value that doesn't change keeps the old one). Without `handle` the root is a listbox and each item an option, one tab stop: arrows move focus, Space or Enter lifts the focused item, arrows, Home and End move it, Space or Enter drops it and Escape puts it back. With `handle`, the root is a list, each item a list item and its `SortableHandle` (named `labels.handle(label)`, a grip icon by default) the one tab stop and the drag target, so the item's own buttons stay clickable. `variant` is `card` (separate bordered items, the default), `row` (rows edge to edge in one bordered box) or `plain` (no surface); `orientation` is `vertical`, `horizontal` or `grid`. `selected` (or Ctrl/Cmd+Space and Ctrl/Cmd/Shift+click) checks items that move together; `disabledKeys` can't be picked up; `preview` drags a copy so a scrolling list neither clips the item nor grows, and scrolls near its edges (`autoScroll`); both are read on mount. Style from `data-moving`, `data-grabbed` (a pointer drag, translated by core's `--drag-x`/`--drag-y`), `data-checked` and `data-disabled` on items and `data-moving`/`data-dragging` on the root: nothing re-renders per pointer move. `labels` overrides the role descriptions, the handle's name, the keyboard instructions every item is described by and the announcements (English by default). Agents see the sortable by its label, with `move(id, index)` and `reorder(order)` and its items named by `itemLabel` or their text; `agentMoves={false}` hides them, for a host that offers its own confirmed action. `useFlip(ref, selector, trigger)` slides elements to their new places with the root's `duration-panel` and `ease-standard`, and does nothing under reduced motion.",
       "dependencies": [
-        "@ui-sdk/core@0.1.0-beta.10",
-        "@ui-sdk/react@0.1.0-beta.10",
+        "@ui-sdk/core@0.1.0-beta.12",
+        "@ui-sdk/react@0.1.0-beta.12",
         "lucide-react"
       ],
       "registryDependencies": [
@@ -2607,8 +2607,8 @@
       "title": "Board",
       "description": "Generic kanban layout: a named, horizontally scrolling list of columns with headers, counts, actions, collapsible columns agents can toggle by name, groups and an empty slot. With a value, cards move between columns by drag, keyboard and agents (UI SDK's createTransfer).",
       "dependencies": [
-        "@ui-sdk/core@0.1.0-beta.10",
-        "@ui-sdk/react@0.1.0-beta.10",
+        "@ui-sdk/core@0.1.0-beta.12",
+        "@ui-sdk/react@0.1.0-beta.12",
         "lucide-react"
       ],
       "registryDependencies": [
@@ -2656,7 +2656,7 @@
       "title": "Status Pill",
       "description": "Presentational status pill with the shared tones (plus muted) and an optional dot that pings three times when its status changes (pulse=\"always\" keeps pinging, which is costly in lists and boards), and StatusDot: a coloured dot with a screen reader label. The ping stops under reduced motion.",
       "dependencies": [
-        "@ui-sdk/react@0.1.0-beta.10",
+        "@ui-sdk/react@0.1.0-beta.12",
         "class-variance-authority@0.7.1"
       ],
       "registryDependencies": [
@@ -2677,8 +2677,8 @@
       "title": "Dependency Chips",
       "description": "A named list of toned chips that truncate long labels, collapse past max into a +N chip, and become UI SDK Buttons agents can press when onSelect is set.",
       "dependencies": [
-        "@ui-sdk/core@0.1.0-beta.10",
-        "@ui-sdk/react@0.1.0-beta.10"
+        "@ui-sdk/core@0.1.0-beta.12",
+        "@ui-sdk/react@0.1.0-beta.12"
       ],
       "registryDependencies": [
         "@eskais/utils",
@@ -2714,7 +2714,7 @@
       "title": "Agent Badge",
       "description": "Provider, model and effort of an AgentRef: compact for cards (one line, long model ids cut in the middle, full text in title) or detail for panels, with a marker when the agent that ran isn't the one requested.",
       "dependencies": [
-        "@ui-sdk/react@0.1.0-beta.10",
+        "@ui-sdk/react@0.1.0-beta.12",
         "lucide-react"
       ],
       "registryDependencies": [
@@ -2740,7 +2740,7 @@
       "title": "Liveness Indicator",
       "description": "A toned dot and label for an agent's computed liveness (running pulses, suspect_dead is destructive) and the time since its last activity, with now, locale and timeZone passed through.",
       "dependencies": [
-        "@ui-sdk/react@0.1.0-beta.10"
+        "@ui-sdk/react@0.1.0-beta.12"
       ],
       "registryDependencies": [
         "@eskais/utils",
@@ -2785,7 +2785,7 @@
       "title": "Usage",
       "description": "Token, time and cost usage of an agent task: UsageStat for a card and UsageTable on Table, with compact counts, the exact value in the title, honest unknown and estimated values, and summaries side by side as columns.",
       "dependencies": [
-        "@ui-sdk/react@0.1.0-beta.10"
+        "@ui-sdk/react@0.1.0-beta.12"
       ],
       "registryDependencies": [
         "@eskais/utils",
@@ -2811,8 +2811,8 @@
       "title": "Attempt Timeline",
       "description": "An agent task's attempts on the UI SDK Timeline: kind, status, times, configured and executed route with earlier routes in a popover, context, repairs, checks, commits, blockers, thread links agents can press, usage per attempt and older attempts behind a toggle.",
       "dependencies": [
-        "@ui-sdk/core@0.1.0-beta.10",
-        "@ui-sdk/react@0.1.0-beta.10",
+        "@ui-sdk/core@0.1.0-beta.12",
+        "@ui-sdk/react@0.1.0-beta.12",
         "lucide-react"
       ],
       "registryDependencies": [
@@ -2852,8 +2852,8 @@
       "title": "Agent Task Board core",
       "description": "The non-visual core of AgentTaskBoard: filter, group, sort and summarize tasks; English and Spanish labels; and the board and proposals primitives whose agent actions select, filter, switch views, open threads and decide proposals.",
       "dependencies": [
-        "@ui-sdk/core@0.1.0-beta.10",
-        "@ui-sdk/react@0.1.0-beta.10"
+        "@ui-sdk/core@0.1.0-beta.12",
+        "@ui-sdk/react@0.1.0-beta.12"
       ],
       "registryDependencies": [
         "@eskais/agent-task-types",
@@ -2892,7 +2892,7 @@
       "title": "Proposal Actions",
       "description": "Approve and Reject for one task proposal: async pending with no double submit, inline errors, an on-screen reject confirmation, and agent access set by agentApproval (confirm, allow or deny). Renders nothing in snapshot mode.",
       "dependencies": [
-        "@ui-sdk/react@0.1.0-beta.10"
+        "@ui-sdk/react@0.1.0-beta.12"
       ],
       "registryDependencies": [
         "@eskais/utils",
@@ -2915,7 +2915,7 @@
       "title": "Task Card",
       "description": "A compact agent task card: id, two-line title, profile, active agent, liveness, acceptance bar, attempts and cost, dependency chips, blocker with its retry time, decision and analysis-mode markers, and proposal actions in live mode. A stretched UI SDK Button selects it without nesting other controls.",
       "dependencies": [
-        "@ui-sdk/react@0.1.0-beta.10",
+        "@ui-sdk/react@0.1.0-beta.12",
         "lucide-react"
       ],
       "registryDependencies": [
@@ -2977,7 +2977,7 @@
       "title": "Task Detail Panel",
       "description": "An agent task's goal, acceptance and evidence, dependencies that select their task, the pending decision with proposal actions, usage and the attempt timeline. TaskDetailPanel shows it as a non-modal panel; TaskDetailDialog as a modal dialog or a right-side drawer. Escape and a close button close either.",
       "dependencies": [
-        "@ui-sdk/react@0.1.0-beta.10",
+        "@ui-sdk/react@0.1.0-beta.12",
         "lucide-react"
       ],
       "registryDependencies": [
@@ -3028,8 +3028,8 @@
       "title": "Agent Task Board",
       "description": "The full board for AI agent tasks: filters, search, a board or sortable table view, a summary, collapsible status columns with ready and waiting groups, a detail dialog, drawer or side panel, compact density on narrow hosts, snapshot and live modes, English and Spanish labels, and agent actions to select, filter, switch views, open threads, decide proposals and move tasks between columns.",
       "dependencies": [
-        "@ui-sdk/core@0.1.0-beta.10",
-        "@ui-sdk/react@0.1.0-beta.10",
+        "@ui-sdk/core@0.1.0-beta.12",
+        "@ui-sdk/react@0.1.0-beta.12",
         "lucide-react"
       ],
       "registryDependencies": [
@@ -3111,8 +3111,8 @@
       "title": "Accordion",
       "description": "UI SDK Accordion parts: triggers in headings, Enter and Space toggle, animated panels on the density tokens.",
       "dependencies": [
-        "@ui-sdk/core@0.1.0-beta.10",
-        "@ui-sdk/react@0.1.0-beta.10",
+        "@ui-sdk/core@0.1.0-beta.12",
+        "@ui-sdk/react@0.1.0-beta.12",
         "lucide-react"
       ],
       "registryDependencies": [
@@ -3132,8 +3132,8 @@
       "title": "Hover Card",
       "description": "UI SDK Hover Card on the popover surface: a link that previews where it goes on hover or keyboard focus.",
       "dependencies": [
-        "@ui-sdk/core@0.1.0-beta.10",
-        "@ui-sdk/react@0.1.0-beta.10"
+        "@ui-sdk/core@0.1.0-beta.12",
+        "@ui-sdk/react@0.1.0-beta.12"
       ],
       "registryDependencies": [
         "@eskais/utils",
@@ -3153,8 +3153,8 @@
       "title": "Context Menu",
       "description": "UI SDK Menu opened by right-click, long press or Shift+F10 on a focusable area, with the dropdown menu's items.",
       "dependencies": [
-        "@ui-sdk/core@0.1.0-beta.10",
-        "@ui-sdk/react@0.1.0-beta.10",
+        "@ui-sdk/core@0.1.0-beta.12",
+        "@ui-sdk/react@0.1.0-beta.12",
         "class-variance-authority@0.7.1"
       ],
       "registryDependencies": [
@@ -3175,8 +3175,8 @@
       "title": "Menubar",
       "description": "UI SDK Menubar: one tab stop, arrow keys between menus, with the dropdown menu's surface and items.",
       "dependencies": [
-        "@ui-sdk/core@0.1.0-beta.10",
-        "@ui-sdk/react@0.1.0-beta.10"
+        "@ui-sdk/core@0.1.0-beta.12",
+        "@ui-sdk/react@0.1.0-beta.12"
       ],
       "registryDependencies": [
         "@eskais/utils",
@@ -3196,8 +3196,8 @@
       "title": "Navigation Menu",
       "description": "UI SDK Navigation Menu: a named landmark of triggers that disclose panels of links, each panel on the popover surface.",
       "dependencies": [
-        "@ui-sdk/core@0.1.0-beta.10",
-        "@ui-sdk/react@0.1.0-beta.10",
+        "@ui-sdk/core@0.1.0-beta.12",
+        "@ui-sdk/react@0.1.0-beta.12",
         "class-variance-authority@0.7.1",
         "lucide-react"
       ],
@@ -3220,7 +3220,7 @@
       "title": "Breadcrumb",
       "description": "Presentational breadcrumb trail: a navigation named Breadcrumb, an ordered list and aria-current on the current page.",
       "dependencies": [
-        "@ui-sdk/react@0.1.0-beta.10",
+        "@ui-sdk/react@0.1.0-beta.12",
         "lucide-react"
       ],
       "registryDependencies": [
@@ -3241,8 +3241,8 @@
       "title": "Pagination",
       "description": "UI SDK Pagination that works standalone: page, pageCount or total and pageSize, onPageChange with details, overridable labels.",
       "dependencies": [
-        "@ui-sdk/core@0.1.0-beta.10",
-        "@ui-sdk/react@0.1.0-beta.10",
+        "@ui-sdk/core@0.1.0-beta.12",
+        "@ui-sdk/react@0.1.0-beta.12",
         "lucide-react"
       ],
       "registryDependencies": [
@@ -3264,8 +3264,8 @@
       "title": "Command",
       "description": "UI SDK Command list with search, groups, empty state and Kbd shortcuts, plus a CommandDialog palette with an opt-in mod+K trigger.",
       "dependencies": [
-        "@ui-sdk/core@0.1.0-beta.10",
-        "@ui-sdk/react@0.1.0-beta.10",
+        "@ui-sdk/core@0.1.0-beta.12",
+        "@ui-sdk/react@0.1.0-beta.12",
         "lucide-react"
       ],
       "registryDependencies": [
@@ -3296,7 +3296,7 @@
           "type": "registry:ui"
         }
       ],
-      "docs": "For a ⌘K palette: `<CommandDialog><CommandDialogTrigger shortcut=\"mod+k\">Search<CommandDialogShortcut /></CommandDialogTrigger><CommandDialogContent title=\"Search\"><Command onAction={…}>…</Command></CommandDialogContent></CommandDialog>`. The shortcut is opt-in, focus returns to the trigger that opened it, and `onOpenChange` reports both ways. A command that goes to a page takes `href` (and `onFollow` to route on the client and close the palette): it renders as a link that Enter, a click, its shortcut or a mouse press follow (fast links, `#/…` hash routes), and it never runs `onAction`. Past 50 commands, pass them as data: `<Command items={commands}>` with `<CommandList>{(state) => <CommandRows items={state.items}>{(item) => …}</CommandRows>}</CommandList>` mounts only the rows in view and the highlighted one, while typing, the arrow keys and agents reach every command; under 50 it renders plain groups. For results from a server, use `useAsyncOptions` from `@ui-sdk/react/async-options` with `filter={false}`, `status` and `CommandStatus`; the skill's \"Global search\" recipe has the whole pattern. Every open starts with an empty search (or `defaultQuery`), on the first page, the first command highlighted and focus in the search, also when the closed content stays mounted (`keepMounted`); a controlled `query` or `pages` is yours to reset. One Escape closes the dialog whatever the search holds; `escapeKey=\"clear\"` keeps UI SDK's order (clear, then go back a page, then close). `<CommandFooter>` after the `CommandList` holds hints like the keys that move and close. `createCommandDialogController()` opens it from code. For a second way in, like a Topbar's `centerCompact` icon, use `<CommandDialogOpenButton controller={…} aria-label=\"Search\">`, not a second trigger: in UI SDK 0.1.0-beta.10 a second `CommandDialogTrigger` drops the dialog's agent label."
+      "docs": "For a ⌘K palette: `<CommandDialog><CommandDialogTrigger shortcut=\"mod+k\">Search<CommandDialogShortcut /></CommandDialogTrigger><CommandDialogContent title=\"Search\"><Command onAction={…}>…</Command></CommandDialogContent></CommandDialog>`. The shortcut is opt-in, focus returns to the trigger that opened it, and `onOpenChange` reports both ways. A command that goes to a page takes `href` (and `onFollow` to route on the client and close the palette): it renders as a link that Enter, a click, its shortcut or a mouse press follow (fast links, `#/…` hash routes), and it never runs `onAction`. Past 50 commands, pass them as data: `<Command items={commands}>` with `<CommandList>{(state) => <CommandRows items={state.items}>{(item) => …}</CommandRows>}</CommandList>` mounts only the rows in view and the highlighted one, while typing, the arrow keys and agents reach every command; under 50 it renders plain groups. For results from a server, use `useAsyncOptions` from `@ui-sdk/react/async-options` with `filter={false}`, `status` and `CommandStatus`; the skill's \"Global search\" recipe has the whole pattern. Every open starts with an empty search (or `defaultQuery`), on the first page, the first command highlighted and focus in the search, also when the closed content stays mounted (`keepMounted`); a controlled `query` or `pages` is yours to reset. One Escape closes the dialog whatever the search holds; `escapeKey=\"clear\"` keeps UI SDK's order (clear, then go back a page, then close). `<CommandFooter>` after the `CommandList` holds hints like the keys that move and close. `createCommandDialogController()` opens it from code. For a second way in, like a Topbar's `centerCompact` icon, use `<CommandDialogOpenButton controller={…} aria-label=\"Search\">`, not a second trigger: in UI SDK 0.1.0-beta.12 a second `CommandDialogTrigger` drops the dialog's agent label."
     },
     {
       "name": "radio-group",
@@ -3304,8 +3304,8 @@
       "title": "Radio Group",
       "description": "UI SDK RadioGroup and Radio: pick one with arrow keys, named by Field.",
       "dependencies": [
-        "@ui-sdk/core@0.1.0-beta.10",
-        "@ui-sdk/react@0.1.0-beta.10"
+        "@ui-sdk/core@0.1.0-beta.12",
+        "@ui-sdk/react@0.1.0-beta.12"
       ],
       "registryDependencies": [
         "@eskais/utils",
@@ -3326,8 +3326,8 @@
       "title": "Switch",
       "description": "UI SDK Switch with its thumb: an on/off setting that sits in a row beside its Field label.",
       "dependencies": [
-        "@ui-sdk/core@0.1.0-beta.10",
-        "@ui-sdk/react@0.1.0-beta.10"
+        "@ui-sdk/core@0.1.0-beta.12",
+        "@ui-sdk/react@0.1.0-beta.12"
       ],
       "registryDependencies": [
         "@eskais/utils",
@@ -3347,8 +3347,8 @@
       "title": "Slider",
       "description": "UI SDK Slider: one value or a range, with a formatted value part, named by Field.",
       "dependencies": [
-        "@ui-sdk/core@0.1.0-beta.10",
-        "@ui-sdk/react@0.1.0-beta.10"
+        "@ui-sdk/core@0.1.0-beta.12",
+        "@ui-sdk/react@0.1.0-beta.12"
       ],
       "registryDependencies": [
         "@eskais/utils",
@@ -3367,10 +3367,10 @@
       "type": "registry:ui",
       "title": "Rating",
       "description": "UI SDK Rating styled as stars that fill to the score: half stars, averages that fill part of a star, a pointer preview, sizes and 44px stars on touch screens.",
-      "docs": "`<Rating defaultValue step max deselectable size>` in a `Field` (the label names the radio group), or with `aria-label`. Each star is `icon` (lucide's star by default) drawn twice, an outline in `input-strong` and a filled copy in the warning colour clipped to `--rating-fill`, so `step={0.5}` and a read-only average like 4.2 fill part of a star (from the inline end in right to left). `size` is `sm`, `md` or `lg`; on a coarse pointer each star is a 44px box. `readOnly` with `getValueLabel` shows a score as one image. Children (`RatingItem icon`, or your own) replace the stars. In UI SDK 0.1.0-beta.10 a read-only rating keeps hidden radio buttons inside its image, which axe reports as nested-interactive.",
+      "docs": "`<Rating defaultValue step max deselectable size>` in a `Field` (the label names the radio group), or with `aria-label`. Each star is `icon` (lucide's star by default) drawn twice, an outline in `input-strong` and a filled copy in the warning colour clipped to `--rating-fill`, so `step={0.5}` and a read-only average like 4.2 fill part of a star (from the inline end in right to left). `size` is `sm`, `md` or `lg`; on a coarse pointer each star is a 44px box. `readOnly` with `getValueLabel` shows a score as one image. Children (`RatingItem icon`, or your own) replace the stars. In UI SDK 0.1.0-beta.12 a read-only rating keeps hidden radio buttons inside its image, which axe reports as nested-interactive.",
       "dependencies": [
-        "@ui-sdk/core@0.1.0-beta.10",
-        "@ui-sdk/react@0.1.0-beta.10",
+        "@ui-sdk/core@0.1.0-beta.12",
+        "@ui-sdk/react@0.1.0-beta.12",
         "lucide-react"
       ],
       "registryDependencies": [
@@ -3390,8 +3390,8 @@
       "title": "Toggle",
       "description": "UI SDK Toggle: a button that stays pressed, with variants and sizes.",
       "dependencies": [
-        "@ui-sdk/core@0.1.0-beta.10",
-        "@ui-sdk/react@0.1.0-beta.10",
+        "@ui-sdk/core@0.1.0-beta.12",
+        "@ui-sdk/react@0.1.0-beta.12",
         "class-variance-authority@0.7.1"
       ],
       "registryDependencies": [
@@ -3412,8 +3412,8 @@
       "title": "Toggle Group",
       "description": "UI SDK ToggleGroup: toggles sharing one value with arrow-key focus, named by Field.",
       "dependencies": [
-        "@ui-sdk/core@0.1.0-beta.10",
-        "@ui-sdk/react@0.1.0-beta.10"
+        "@ui-sdk/core@0.1.0-beta.12",
+        "@ui-sdk/react@0.1.0-beta.12"
       ],
       "registryDependencies": [
         "@eskais/utils",
@@ -3434,8 +3434,8 @@
       "title": "OTP Input",
       "description": "UI SDK OTPInput: one native input shown as slots, with paste and one-time-code autofill.",
       "dependencies": [
-        "@ui-sdk/core@0.1.0-beta.10",
-        "@ui-sdk/react@0.1.0-beta.10"
+        "@ui-sdk/core@0.1.0-beta.12",
+        "@ui-sdk/react@0.1.0-beta.12"
       ],
       "registryDependencies": [
         "@eskais/utils",
@@ -3456,8 +3456,8 @@
       "title": "Number Input",
       "description": "UI SDK NumberInput: typed, stepped and formatted numbers with step buttons, named by Field.",
       "dependencies": [
-        "@ui-sdk/core@0.1.0-beta.10",
-        "@ui-sdk/react@0.1.0-beta.10",
+        "@ui-sdk/core@0.1.0-beta.12",
+        "@ui-sdk/react@0.1.0-beta.12",
         "lucide-react"
       ],
       "registryDependencies": [
@@ -3480,8 +3480,8 @@
       "title": "Label",
       "description": "UI SDK Label: names any control by htmlFor, including a radio group, slider or switch.",
       "dependencies": [
-        "@ui-sdk/core@0.1.0-beta.10",
-        "@ui-sdk/react@0.1.0-beta.10"
+        "@ui-sdk/core@0.1.0-beta.12",
+        "@ui-sdk/react@0.1.0-beta.12"
       ],
       "registryDependencies": [
         "@eskais/utils",
@@ -3500,8 +3500,8 @@
       "title": "Progress",
       "description": "UI SDK Progress: a task's progress, determinate or indeterminate, with label and value.",
       "dependencies": [
-        "@ui-sdk/core@0.1.0-beta.10",
-        "@ui-sdk/react@0.1.0-beta.10"
+        "@ui-sdk/core@0.1.0-beta.12",
+        "@ui-sdk/react@0.1.0-beta.12"
       ],
       "registryDependencies": [
         "@eskais/utils",
@@ -3522,8 +3522,8 @@
       "title": "Meter",
       "description": "UI SDK Meter: a reading within a known range, like storage used, as a bar or a ring gauge.",
       "dependencies": [
-        "@ui-sdk/core@0.1.0-beta.10",
-        "@ui-sdk/react@0.1.0-beta.10",
+        "@ui-sdk/core@0.1.0-beta.12",
+        "@ui-sdk/react@0.1.0-beta.12",
         "class-variance-authority@0.7.1"
       ],
       "registryDependencies": [
@@ -3546,7 +3546,7 @@
       "title": "Alert",
       "description": "Presentational alert with the shared tones (neutral, info, success, warning, destructive), a trailing action slot, long text that wraps, and an opt-in live role.",
       "dependencies": [
-        "@ui-sdk/react@0.1.0-beta.10",
+        "@ui-sdk/react@0.1.0-beta.12",
         "class-variance-authority@0.7.1"
       ],
       "registryDependencies": [
@@ -3568,8 +3568,8 @@
       "title": "Calendar",
       "description": "UI SDK Calendar: a month grid with arrow, Page Up/Down and Home/End keys, single, multiple or range selection, several months, min/max and unavailable dates, locale and timeZone.",
       "dependencies": [
-        "@ui-sdk/core@0.1.0-beta.10",
-        "@ui-sdk/react@0.1.0-beta.10",
+        "@ui-sdk/core@0.1.0-beta.12",
+        "@ui-sdk/react@0.1.0-beta.12",
         "class-variance-authority@0.7.1",
         "lucide-react"
       ],
@@ -3592,8 +3592,8 @@
       "title": "Date Picker",
       "description": "UI SDK Date Picker: type a date in the locale's format or pick it from a calendar popup, single or range, with a format hint, an optional clear button and ISO values.",
       "dependencies": [
-        "@ui-sdk/core@0.1.0-beta.10",
-        "@ui-sdk/react@0.1.0-beta.10",
+        "@ui-sdk/core@0.1.0-beta.12",
+        "@ui-sdk/react@0.1.0-beta.12",
         "class-variance-authority@0.7.1",
         "lucide-react"
       ],
@@ -3620,8 +3620,8 @@
       "description": "UI SDK DateInput styled as a field: a date typed segment by segment in the locale's order, ISO values, min, max and unavailable dates marked invalid, floating labels and FormField binding.",
       "docs": "`<DateInput defaultValue min max unavailable locale granularity>` in a `Field`: the label names the group, each segment is a small input in the locale's order (`locale`, or the page's), and the value is an ISO date (`\"2026-11-02\"`, or `\"2026-11-02T14:30\"` with `granularity=\"minute\"`), `null` until every segment is filled. A date outside `min`/`max` or on an `unavailable` date sets `data-invalid` and the destructive edge. Paste a whole date into any segment. `labelPlacement=\"in\"`/`\"on\"` float the Field's label (the empty segments' placeholders show only while one is focused) and `FormField` binds the value. Use `DatePicker` when people should also pick from a calendar.",
       "dependencies": [
-        "@ui-sdk/core@0.1.0-beta.10",
-        "@ui-sdk/react@0.1.0-beta.10"
+        "@ui-sdk/core@0.1.0-beta.12",
+        "@ui-sdk/react@0.1.0-beta.12"
       ],
       "registryDependencies": [
         "@eskais/utils",
@@ -3643,8 +3643,8 @@
       "description": "UI SDK ColorPicker styled: an area (painted on a canvas in OKLCH, every pixel a colour inside the gamut), hue and alpha sliders, a swatch, a text field for any CSS colour, channel inputs, presets and an eye dropper with a tooltip.",
       "docs": "`<ColorPicker defaultValue space format gamut>` in a `Field`, or with `aria-label`. With no children it renders an area (with `ColorPickerAreaCanvas` when `space=\"oklch\"`), a hue slider, a swatch and a text field named by `labels.value` (\"Colour value\"). Compose `ColorPickerArea`, `ColorPickerAreaThumb`, `ColorPickerSlider channel orientation`, `ColorPickerSliderThumb`, `ColorPickerSwatch`, `ColorPickerInput`, `ColorPickerChannelInput channel`, `ColorPickerSwatches` of `ColorPickerSwatchItem value` (presets, 44px on touch) and `ColorPickerEyeDropper` (hidden where the browser can't pick from the screen). `onValueChange` runs on every step of a drag, `onValueCommit` once it ends, for saving. In OKLCH a thumb dragged or stepped past the gamut's edge stays where it was left, and the value is the closest colour inside the gamut.",
       "dependencies": [
-        "@ui-sdk/core@0.1.0-beta.10",
-        "@ui-sdk/react@0.1.0-beta.10",
+        "@ui-sdk/core@0.1.0-beta.12",
+        "@ui-sdk/react@0.1.0-beta.12",
         "lucide-react"
       ],
       "registryDependencies": [
@@ -3678,8 +3678,8 @@
       "title": "Date Time Picker",
       "description": "A date from the calendar and a time of day as one local \"YYYY-MM-DDTHH:mm\" value, composed from UI SDK DatePicker and TimeInput, with min/max, a time zone suffix and locale formatting.",
       "dependencies": [
-        "@ui-sdk/core@0.1.0-beta.10",
-        "@ui-sdk/react@0.1.0-beta.10"
+        "@ui-sdk/core@0.1.0-beta.12",
+        "@ui-sdk/react@0.1.0-beta.12"
       ],
       "registryDependencies": [
         "@eskais/utils",
@@ -3702,8 +3702,8 @@
       "title": "Carousel",
       "description": "UI SDK Carousel: native scroll-snap slides with Previous and Next, arrow keys, indicators and optional rotation; CarouselStatus shows \"1 of 3\" and useCarouselState reads the page and count; agents page it by name.",
       "dependencies": [
-        "@ui-sdk/core@0.1.0-beta.10",
-        "@ui-sdk/react@0.1.0-beta.10",
+        "@ui-sdk/core@0.1.0-beta.12",
+        "@ui-sdk/react@0.1.0-beta.12",
         "class-variance-authority@0.7.1",
         "lucide-react"
       ],
@@ -3726,8 +3726,8 @@
       "title": "Resizable",
       "description": "UI SDK Resizable: panels with named separator handles that move with the pointer or arrow keys, collapse with Enter and can save their layout.",
       "dependencies": [
-        "@ui-sdk/core@0.1.0-beta.10",
-        "@ui-sdk/react@0.1.0-beta.10"
+        "@ui-sdk/core@0.1.0-beta.12",
+        "@ui-sdk/react@0.1.0-beta.12"
       ],
       "registryDependencies": [
         "@eskais/utils",
@@ -3746,8 +3746,8 @@
       "title": "Sidebar",
       "description": "App navigation: a named landmark with groups and items (href or a router link), the current page marked with aria-current, collapsing to an icon rail with tooltips (or hiding, with collapse=\"hide\") and opening in a drawer on narrow screens. The items scroll in a ScrollArea; a SidebarGroup with collapsible folds its items under its label, like a docs section (open, defaultOpen, onOpenChange). Agents collapse and expand it by name. A SidebarTrigger toggles it from elsewhere, like a Topbar, through its controller; useSidebarState wires both and remembers the state.",
       "dependencies": [
-        "@ui-sdk/core@0.1.0-beta.10",
-        "@ui-sdk/react@0.1.0-beta.10",
+        "@ui-sdk/core@0.1.0-beta.12",
+        "@ui-sdk/react@0.1.0-beta.12",
         "class-variance-authority@0.7.1",
         "lucide-react"
       ],
@@ -3791,8 +3791,8 @@
       "title": "Data Table",
       "description": "Generic typed table: sortable columns with aria-sort, optional row selection with a mixed select-all, loading and empty states, and pagination through renderPagination. Sort, selection and page are controlled or not, and agents can sort, select and page it.",
       "dependencies": [
-        "@ui-sdk/core@0.1.0-beta.10",
-        "@ui-sdk/react@0.1.0-beta.10",
+        "@ui-sdk/core@0.1.0-beta.12",
+        "@ui-sdk/react@0.1.0-beta.12",
         "class-variance-authority@0.7.1",
         "lucide-react"
       ],
@@ -3902,8 +3902,8 @@
       "description": "A floating pill header for public sites: brand, a named navigation whose links move into a More panel as the bar narrows (measured, in order, no breakpoint), dropdowns for grouped links, calls to action, and a drawer with every link on narrow screens. It sets data-scrolled once the page scrolls.",
       "docs": "Put a `SkipLink` first in `<body>`, then the header: `<SkipLink>Skip to content</SkipLink><SiteHeader label=\"Main\" brand={<a href=\"/\">…</a>} items={[{ label: \"Pricing\", href: \"/pricing\", current: true }, { label: \"Solutions\", items: […] }]} actions={<Button>Sign in</Button>} /><PageLayout as=\"main\">…</PageLayout>`. `renderLink={(item) => <Link to={item.href} />}` (or `render` per item) uses your router's link. It sticks `--floating-offset` below the top of its scroll container; set `--site-header-width` to change its 64rem cap. `moreLabel`, `menuLabel` and `closeLabel` are English by default. Style the scrolled state with `group-data-scrolled/site-header:`.",
       "dependencies": [
-        "@ui-sdk/core@0.1.0-beta.10",
-        "@ui-sdk/react@0.1.0-beta.10",
+        "@ui-sdk/core@0.1.0-beta.12",
+        "@ui-sdk/react@0.1.0-beta.12",
         "lucide-react"
       ],
       "registryDependencies": [
@@ -3960,8 +3960,8 @@
       "description": "A bottom tab bar for narrow screens: a named navigation of up to five links with the icon above the label, aria-current on the current page, an optional badge, and More, which opens the rest above the bar. Fixed to the bottom above the safe area, 56px targets, hidden above narrow: unless `always`. Glass gives it a translucent chrome fill.",
       "docs": "Pair it with a `Sidebar`: the sidebar on wide screens, this bar on narrow ones. `<Sidebar className=\"narrow:hidden\" …/><PageLayout as=\"main\" className=\"narrow:mb-(--mobile-nav-offset)\">…</PageLayout><MobileNav label=\"Main\" items={[{ label: \"Home\", href: \"/\", icon: <HomeIcon />, current: true }, …]} overflow={[…]} />`. The page keeps `--mobile-nav-offset` (the bar's `--mobile-nav-height`, 3.5rem, plus the bottom safe area) clear so nothing hides under it; add `viewport-fit=cover` to the viewport meta for the safe area to apply. Past five items, or with `overflow`, the fifth slot is More (`moreLabel`, English by default, and `moreIcon`). `renderLink` or `render` per item takes your router's link. It never uses viewport units.",
       "dependencies": [
-        "@ui-sdk/core@0.1.0-beta.10",
-        "@ui-sdk/react@0.1.0-beta.10",
+        "@ui-sdk/core@0.1.0-beta.12",
+        "@ui-sdk/react@0.1.0-beta.12",
         "lucide-react"
       ],
       "registryDependencies": [
@@ -3982,8 +3982,8 @@
       "title": "Filter Bar",
       "description": "A UI SDK Toolbar of filters with one tab stop and arrow keys, a search field inside it, and a reset button that shows while filters apply.",
       "dependencies": [
-        "@ui-sdk/core@0.1.0-beta.10",
-        "@ui-sdk/react@0.1.0-beta.10",
+        "@ui-sdk/core@0.1.0-beta.12",
+        "@ui-sdk/react@0.1.0-beta.12",
         "class-variance-authority@0.7.1",
         "lucide-react"
       ],
@@ -4157,8 +4157,8 @@
       "description": "A DataTable over a PageSource: the server filters, sorts and pages; page numbers, previous and next, or load more follow what the source gives; DataState covers loading, error with retry and empty; a polite status says \"Showing 21–40 of 312\" after each load; filters, sort and page can live in the URL.",
       "docs": "`<ServerDataTable label source columns filters labels={{ errorTitle, retry, emptyTitle }} />`. Columns are DataTable columns; `sortField` sorts one on the server, and `sortMode=\"multi\"` adds a column with Shift+click. `navigation=\"auto\"` shows page numbers with an exact total (or the source's `fetchTotal`), previous and next with an estimate or only `hasMore`, and load more for a cursor; `\"infinite\"` also loads when the end scrolls into view, beside the button. `pageSize` (25) and `pageSizes` (`[10, 25, 50, 100]`, capped by the source's `maxPageSize`) show a page size select. `filters` takes a `defineFilters` schema, `filterUi` picks the built-in filter UI: `\"search\"` (a `FilterSearch`, the default when the schema has a text field), `\"chips\"` (search and `FilterChips`) or `\"panel\"` (search and a `FilterPanelTrigger` that opens a `FilterPanel` beside the table, a bottom sheet on narrow screens), and `toolbar` composes your own from the parts. `urlState={hashUrlState()}` (or `historyUrlState()`, or `{ adapter, prefix, history, format }`) keeps filters, sort and page in readable params, and Back and Forward move through them. While a page loads its predecessor stays, marked `aria-busy`; it never shows empty while loading or after an error. The status says \"Loading…\" only once a load has taken 400 ms, and focus stays on the control pressed. Agents sort and page through the table (`sortBy`, `setPage`) and filter through the \"{label} filters\" group: `filter(\"Status\", [\"Open\"])`, `clearFilters()`. Visible copy has no default: `errorTitle`, `retry` and `emptyTitle` are required; `labels.searchPlaceholder` writes the search box's placeholder (\"Search {label}…\"), control names default to English (`labels.pageSize`, `loadMore`, `range`…), and the page navigation is named \"{label} pages\" (`labels.pagination`) so two tables on a page keep distinct landmarks. Pass `controller` from `usePageController` to drive it from outside. Counts (\"Showing 1,001–1,020 of 12,345\"), the page sizes and the chips' numbers and dates follow the page's `<html lang>` through `useLocale`; `locale` overrides it, and `labels.range` receives it.",
       "dependencies": [
-        "@ui-sdk/core@0.1.0-beta.10",
-        "@ui-sdk/react@0.1.0-beta.10"
+        "@ui-sdk/core@0.1.0-beta.12",
+        "@ui-sdk/react@0.1.0-beta.12"
       ],
       "registryDependencies": [
         "@eskais/utils",
@@ -4195,8 +4195,8 @@
       "description": "A List over a PageSource that grows as you scroll: ListItem rows, virtualized past 200, one tab stop with row navigation, the next page when the end comes into view, and a visible Load more button for keyboards and agents.",
       "docs": "`<ServerList aria-label source renderItem itemText labels={{ errorTitle, retry, emptyTitle }} />`, with `renderItem` returning a `ListItem`. It pages with `useServerInfinite`, by page number or cursor, `pageSize` (50) rows at a time. With `infinite` (default) the next page loads as the end of the list scrolls into view; the Load more button is always there too, so keyboards and agents reach every page, and it keeps focus while it loads and once there is no more. `DataState` covers loading, error with retry and empty, the list is `aria-busy` while a new search loads, and a polite status says \"Showing 1–50 of 312\" after each load (\"Loading…\" only past 400 ms). `filters` takes a schema (a `FilterSearch` by default, or your own `toolbar`), and the `List` props (`variant`, `value`, `onValueChange`, `onSelect`, `virtualize`, `estimateSize`) pass through. Agents select rows through the list's `select(id)` and press Load more. Its counts follow `<html lang>` through `useLocale`; `locale` overrides it.",
       "dependencies": [
-        "@ui-sdk/core@0.1.0-beta.10",
-        "@ui-sdk/react@0.1.0-beta.10"
+        "@ui-sdk/core@0.1.0-beta.12",
+        "@ui-sdk/react@0.1.0-beta.12"
       ],
       "registryDependencies": [
         "@eskais/utils",
@@ -4224,7 +4224,7 @@
       "description": "Inline chips for git names in text: GitFileChip (a file icon and the path in mono) and GitBranchChip (a branch icon and the name).",
       "docs": "`<GitFileChip path=\"src/routes.ts\" />` and `<GitBranchChip name=\"main\" />` sit inline in a sentence, like a commit message: quiet tokens in caption mono, no taller than the line, with a size-3 icon and muted text on a translucent fill that shows on a hovered or selected row as on the card (an outline appears only in forced-colors mode). `textRef` renders the name empty for a virtualizer's `findableText`. Both take `render` and any span prop.",
       "dependencies": [
-        "@ui-sdk/react@0.1.0-beta.10",
+        "@ui-sdk/react@0.1.0-beta.12",
         "lucide-react"
       ],
       "registryDependencies": [
@@ -4245,8 +4245,8 @@
       "description": "A select for one git repository out of several: the trigger shows the name, each option its path, the branch checked out and its state (uncommitted, ahead, behind, no remote, up to date). On UI SDK Select, so keyboard, typeahead and agents work as in any select.",
       "docs": "`<RepositorySelect aria-label=\"Repository\" repositories={[{ value: \"api\", name: \"api\", path: \"~/work/acme/api\", branch: \"main\", uncommitted: 0, ahead: 0, behind: 0, remote: true }]} value={repo} onValueChange={setRepo} />`. Each repository is `{ value, name, path?, branch?, uncommitted?, ahead?, behind?, remote?, disabled? }`; `ahead`/`behind` are `null` without an upstream and `remote: false` shows \"No remote\". The state reads as badges: uncommitted (warning), ahead (info), behind (outline), No remote (secondary), or Up to date (success) when none apply. Typeahead matches `name`; the trigger shows it alone. `size=\"sm\"` fits a header, like `CommitHistory headerStart`. Every word is in `labels` (`uncommitted(n)`, `ahead(n)`, `behind(n)`, `noRemote`, `upToDate`). Takes every Select prop but `items`, `options` and `multiple`, plus `triggerProps` and `contentClassName`.",
       "dependencies": [
-        "@ui-sdk/core@0.1.0-beta.10",
-        "@ui-sdk/react@0.1.0-beta.10"
+        "@ui-sdk/core@0.1.0-beta.12",
+        "@ui-sdk/react@0.1.0-beta.12"
       ],
       "registryDependencies": [
         "@eskais/select",
@@ -4297,8 +4297,8 @@
       "description": "A commit trail, one line per commit: a graph lane down the side, merges collapsed to one row that open their branch on a curved side lane, a pending commit that spins until it lands, and a commit's details inline under its row. Virtualized for 50,000+ commits; agents read and act on commits by name.",
       "docs": "`<CommitHistory aria-label commits branch branches onBranchChange />`. `commits` are newest first in `git log --topo-order` order, each `{ id, parents, message, date, author?, hash?, body?, tags?, stats?, status? }`; a string message turns backticked paths into `GitFileChip`s and git's merge subjects into `GitBranchChip`s, or pass segments. Merges start collapsed: a chevron, and a press, Enter, Right/Left or `expanded`/`defaultExpanded`/`onExpandedChange` open the merged commits on a side lane that curves back at the fork point. A press or Enter on any other commit opens its details under the row (author, the date in the page's language, the short hash with a copy button, files and +/- lines in success and destructive, the body); `detailsMode=\"multiple\"` keeps several open, `details`/`defaultDetails`/`onDetailsChange` control them, and `onOpenCommit` takes the press instead, for apps that navigate to a commit. While details are open the other rows dim to `muted-foreground` (4.5:1); `focusMode` forces it on or off. `status: \"pending\"` spins a hollow ring and shows `labels.pending` in the link colour in place of the time; when it turns `\"done\"` the node grows into its check and the time and tags fade in. The header counts finished commits, or `count`. `tags` are `Badge`s with a `tone`; the time is `formatElapsed` (\"26m\") with the full date as its title, and every row's name reads \"Merge invoice-pdf into main, 38 minutes ago, Release\". One `useNow` clock every 30 s, or pass `now`. Rows virtualize with variable heights (open details are measured), the graph is laid out lazily from the top and an appended page costs only its rows; `hasMore`, `loadingMore` and `onLoadMore` load older commits as the end scrolls into view and from a Load more button. Give the history a bounded height (`className=\"max-h-[32rem]\"` or a flex parent) so it scrolls itself. `findable` lets find in page reach commits scrolled out of view, by subject: rows move to UI SDK's virtualizer, whose findable layers are built once the page is idle after its first paint, and a match scrolls its row into view and highlights it in the row. It's off by default because it costs: on 50,000 commits about a frame on some held-arrow presses (p95 22–27 ms against 10 ms) and 10–40% on the first paint; with it the scroller is capped at `--commit-history-height` (40rem). Agents get `expandDetails`, `collapseDetails`, `expand`, `collapse`, `copyHash` (it returns the hash), `openCommit` (with `onOpenCommit`) and `selectBranch`, each taking a commit's id, hash or subject. `labels` overrides every text; `controller` from `createCommitHistoryController()` drives it from outside. `view=\"branches\"` shows every active branch at a glance, a compact `git log --graph --all` (commits in `--all --topo-order`): `branches` takes `{ name, head, tone?, ahead?, behind?, updatedAt?, author? }`, the base (`branch`) keeps lane 0, each unmerged branch runs in its own lane from its merge-base in a stable chart colour (or its `tone`) and is labelled at its head with a pill (name, ↑ahead ↓behind, read in the row's name: \"branch feature/x, 3 ahead, 12 behind\"); merged branches stay folded under their merge. The header select lists the active branches under \"All branches\", each with a dot in its lane's colour (also in the trigger), its name, arrows for ahead and behind (a zero side left out, the words for screen readers) and its last update, and a search field filters them by name (`labels.searchBranches`, `labels.noBranches` when none match): choosing one, pressing its pill in the trail, or `focusBranch(name)` scrolls to its head and focuses it, and with `filterBranch` shows only the base and that branch; pressing the pill again shows them all. Past `maxLanes` (8 in this view) lanes collapse into \"+N\". Agents also get `focusBranch` and the read-only `listBranches()` (name, head, ahead, behind, updatedAt, state). 50,000 commits with 200 branches lay out in linear time.",
       "dependencies": [
-        "@ui-sdk/core@0.1.0-beta.10",
-        "@ui-sdk/react@0.1.0-beta.10",
+        "@ui-sdk/core@0.1.0-beta.12",
+        "@ui-sdk/react@0.1.0-beta.12",
         "lucide-react"
       ],
       "registryDependencies": [
@@ -4364,7 +4364,7 @@
       "description": "A CommitHistory over a PageSource: older commits load as the end scrolls into view and from a Load more button, the header counts the source's total, and the graph carries on across pages.",
       "docs": "`<ServerCommitHistory aria-label source filter labels={{ errorTitle, retry, emptyTitle }} />` inside a `DataProvider`. `source` is any `PageSource<Commit>` (`cursorSource` for a `git log` API that returns a cursor, `pagedSource`, or `arraySource` in memory) and `filter` what it filters on, like `{ branch }`: a new filter starts again from the newest commit. `pageSize` (100) commits per request through `useServerInfinite`; `DataState` covers loading, error with retry and empty. Every other `CommitHistory` prop passes through.",
       "dependencies": [
-        "@ui-sdk/react@0.1.0-beta.10"
+        "@ui-sdk/react@0.1.0-beta.12"
       ],
       "registryDependencies": [
         "@eskais/commit-history",
@@ -4386,8 +4386,8 @@
       "description": "A repository's files at a commit on UI SDK's Tree: folders first with lucide icons, changed files marked added, modified, deleted or renamed in their tone, folders that hold a change marked too. Virtualized for 100,000 files; agents open and expand by path.",
       "docs": "`<GitTree aria-label files onOpenFile current />`. `files` are paths (strings, a trailing `/` for an empty folder) or `{ path, status, from }` with `status` one of `added`, `modified`, `deleted`, `renamed`; the tree is UI SDK's `treeFromPaths`, so folders sort first. A changed file shows a one-letter mark (`labels.mark`) and its icon in the status tone, and its name reads \"proration.ts, Modified\" (\"pdf.ts, Renamed, from src/invoice/print.ts\"); folders that hold a change carry a dot and \"Has changes\". Folders with changes start open; `expanded`/`defaultExpanded`/`onExpandedChange` control them. Arrows, Home/End, typeahead and Left/Right come from UI SDK's Tree; a press or Enter on a file calls `onOpenFile(path)`, and `current` marks the file shown elsewhere. Rows virtualize (only those in view render, every one stays reachable by keyboard and agents); give it a bounded height. `findable` lets find in page reach files and folders out of view, by name, through UI SDK's findable layers built once the page is idle; off by default, as it costs up to a frame on some held-arrow presses at 100,000 files (p95 about 16 ms against 10 ms), and it caps the scroller at `--git-tree-height` (40rem). Agents get `open(path)` (a file, opening its folders first, or a folder), `expand(path)` and `collapse(path)`. Built on UI SDK's Tree directly; once a styled `tree` item ships, its rows can reuse it.",
       "dependencies": [
-        "@ui-sdk/core@0.1.0-beta.10",
-        "@ui-sdk/react@0.1.0-beta.10",
+        "@ui-sdk/core@0.1.0-beta.12",
+        "@ui-sdk/react@0.1.0-beta.12",
         "lucide-react"
       ],
       "registryDependencies": [
@@ -4419,8 +4419,8 @@
       "description": "The search box of a filter schema: shows the text at once and commits it after the page controller's 250 ms debounce, Enter commits, Escape clears. FilterScope gives filter UIs their schema and controller and lets agents filter by a field's label.",
       "docs": "Inside a `ServerDataTable` (its `toolbar`, or `filterUi=\"search\"`) it finds the schema and controller by itself; elsewhere wrap filter UIs in `<FilterScope schema controller label>` or pass `schema` and `controller`. It edits the schema's first text field and takes its `label` as its name unless you pass one; its placeholder is `placeholder`, or the scope's `searchPlaceholder` (a `ServerDataTable` sets \"Search {label}…\"). An agent's `setValue` commits without the debounce. `FilterScope` is a group named by `label` with agent actions `filter(field, value)`, where the field is a key or a label and the value loose input (option labels or values, `\"yes\"`, `\">= 10\"`, `\"2026-01-01..2026-01-31\"`, read by `parseFilterInput`), and `clearFilters()`. `useFilterScope(props)` returns the schema, controller and state for a filter UI of your own.",
       "dependencies": [
-        "@ui-sdk/core@0.1.0-beta.10",
-        "@ui-sdk/react@0.1.0-beta.10",
+        "@ui-sdk/core@0.1.0-beta.12",
+        "@ui-sdk/react@0.1.0-beta.12",
         "lucide-react"
       ],
       "registryDependencies": [
@@ -4452,8 +4452,8 @@
       "description": "Filters as chips in a FilterBar: one chip per active filter that opens an editor for its field, a button that removes it, Add filter for the others, and reset. Picks apply at once; typed values on Enter or when the editor closes.",
       "docs": "Inside a `ServerDataTable` with `filterUi=\"chips\"`, or a `FilterScope`, it reads the schema and controller (or pass `schema` and `controller`). Each chip's text is its name, \"Status: Open, Blocked\" (`labels.chip`, with `summarizeFilter` for the value), and opens a popover with the field's `FilterField`; a choice applies at once, a typed text or number on Enter or when the popover closes. Its remove button, \"Remove Status filter\", clears the field and returns focus to Add filter, a menu of the fields without a value: choosing one opens its editor, and leaving it empty adds nothing. The toolbar is one tab stop with arrow keys (UI SDK Toolbar), named by `labels.toolbar`, and Reset filters shows while any chip applies. `fields` limits and orders the fields offered (every field but the search field by default); `valueLabels` names remote option ids it hasn't loaded. Labels default to English and can be overridden. Numbers and dates in the chips (\"Jan 1, 2026 – Jan 31, 2026\", a date-only value read as the day it names) and in the editors follow `<html lang>` through `useLocale`; `locale` overrides it.",
       "dependencies": [
-        "@ui-sdk/core@0.1.0-beta.10",
-        "@ui-sdk/react@0.1.0-beta.10",
+        "@ui-sdk/core@0.1.0-beta.12",
+        "@ui-sdk/react@0.1.0-beta.12",
         "lucide-react"
       ],
       "registryDependencies": [
@@ -4482,8 +4482,8 @@
       "description": "Every filter of a schema in one form, applied together: a SidePanel beside the results on wide screens, a bottom Drawer sheet on narrow ones; Apply and Reset.",
       "docs": "`<FilterPanel open onOpenChange />` inside a `FilterScope` (or with `schema` and `controller`), toggled by `<FilterPanelTrigger open onOpenChange count />`, which shows how many filters apply (`countActiveFilters`). `ServerDataTable filterUi=\"panel\"` puts both in place. Each field is a `FilterField` editing a draft; Apply (a submit button, so Enter works) sends it, Reset clears the fields the panel shows and applies at once. It is a `SidePanel` with `narrow=\"sheet\"`: at 760px and below a modal bottom sheet that Apply closes; wider, non-modal beside the results, staying open, closing on Escape and returning focus to `returnFocus`. The draft starts again whenever the applied filters change elsewhere, like a chip or the URL. `labels` names the title, Apply, Reset and Close, in English by default.",
       "dependencies": [
-        "@ui-sdk/core@0.1.0-beta.10",
-        "@ui-sdk/react@0.1.0-beta.10",
+        "@ui-sdk/core@0.1.0-beta.12",
+        "@ui-sdk/react@0.1.0-beta.12",
         "lucide-react"
       ],
       "registryDependencies": [
@@ -4511,8 +4511,8 @@
       "description": "The control for one filter schema field, named by its label: an input for text, a select or checkboxes for options, a select for a boolean, a comparison and numbers, date pickers, or a ServerCombobox for remote options.",
       "docs": "`<FilterField field={schema.status} value onValueChange />` is controlled with the field's value type (`FilterValues`); an empty choice gives `undefined`. Options are a `Select` with Any, or a checkbox group when `multiple`; a boolean a `Select` of `trueLabel` and `falseLabel`; a number a Comparison `Select` (`operators`, `eq`, `gte`, `lte` and `between` by default) and a Value `NumberInput`, side by side once the container is 20rem wide, Minimum and Maximum for between; a date a `DatePicker`, a range two labelled From and To (each end optional); a remote option a `ServerCombobox` that says Any until something is chosen, which reports chosen labels through `onValueLabels`. `appliesAtOnce(field)` says whether a change is a pick or typing. `FilterChips` and `FilterPanel` use it; use it in a form of your own. Every control has a visible label. `labels` translates Any, Yes, No, From, To, Comparison, Value, Minimum, Maximum and the comparisons. Date pickers and number inputs take `locale`, or follow `<html lang>` through `useLocale`.",
       "dependencies": [
-        "@ui-sdk/core@0.1.0-beta.10",
-        "@ui-sdk/react@0.1.0-beta.10"
+        "@ui-sdk/core@0.1.0-beta.12",
+        "@ui-sdk/react@0.1.0-beta.12"
       ],
       "registryDependencies": [
         "@eskais/utils",
@@ -4546,8 +4546,8 @@
       "description": "A Combobox whose options come from a PageSource, searched on the server as you type: requests wait for typing to pause and are aborted when replaced, the next page loads at the end of the list, and the server's order is kept. With multiple, choices show as chips.",
       "docs": "`<ServerCombobox source getLabel value onValueChange />` inside a `Field` with a `FieldLabel`. The source's filter gets the typed text as `q`; `getValue` picks what an option stores (the source's `getId` by default). It runs on UI SDK's `useAsyncOptions` with `filter={false}`: `debounce` (250 ms) before a search, the previous options kept while the next load, the request it replaces aborted, and `pageSize` (20) more whenever scrolling or the arrow keys reach the last option, by page number or cursor. `multiple` keeps an array and shows each choice as a chip with a remove button named \"Remove {label}\"; `valueLabels` names values chosen before their options load, such as ids read from the URL. A hidden status announces loading, errors and the count; `labels` translates it and the control names. Agents choose an option by its label. The count follows `<html lang>` through `useLocale`; `locale` overrides it.",
       "dependencies": [
-        "@ui-sdk/core@0.1.0-beta.10",
-        "@ui-sdk/react@0.1.0-beta.10",
+        "@ui-sdk/core@0.1.0-beta.12",
+        "@ui-sdk/react@0.1.0-beta.12",
         "lucide-react"
       ],
       "registryDependencies": [
@@ -4613,8 +4613,8 @@
       "description": "A UI SDK Dialog that shows one image of a set: previous and next (buttons and arrow keys), a counter, the caption, an open-original link and fit or actual size. Dark variants follow the theme with no flash; agents get next, previous and goTo.",
       "docs": "Pass `items` ({ id, src, srcDark?, alt, name?, href? }) and control `open`/`onOpenChange` and `index`/`onIndexChange`, or put a `DialogTrigger` inside as children. `srcDark` is rendered next to `src` and CSS shows it under `.dark` or the system dark preference (unless `<html>` opts into light), so there is no flash. Focus returns to the trigger, or to whatever was focused when it opened; pass `finalFocus` to override. The dialog is sized in % of the top layer, never viewport units. Labels are English and overridable through `labels`. Agents see `Image viewer` with `next`, `previous` and `goTo(index)` (0-based).",
       "dependencies": [
-        "@ui-sdk/core@0.1.0-beta.10",
-        "@ui-sdk/react@0.1.0-beta.10",
+        "@ui-sdk/core@0.1.0-beta.12",
+        "@ui-sdk/react@0.1.0-beta.12",
         "lucide-react"
       ],
       "registryDependencies": [
@@ -4647,10 +4647,10 @@
       "type": "registry:ui",
       "title": "Image Cropper",
       "description": "UI SDK ImageCropper styled: a selection that dims the rest of the image with a grid while dragging and eight handles, or a round frame the image pans and zooms under, with zoom, rotate and flip, and cropImage.",
-      "docs": "`<ImageCropper aria-label src alt aspectRatio mode shape maxZoom crop onCropChange onCropCommit>`: with no children it renders the viewport (the image's ratio, or a square frame), the image, a selection that dims the rest through a spread `--overlay` shadow, shows a grid at the thirds while dragging and has eight handles (none in `mode=\"frame\"`), then a zoom slider and Rotate, Flip horizontally and Flip vertically buttons with icons and their names from `labels`. Rotate and flip show their label because they're disabled until the image loads, when a tooltip couldn't show. `cropImage(src, crop, { width, shape })` (re-exported) makes the file; save in `onCropCommit`. In UI SDK 0.1.0-beta.10 the handles sit inside the selection's slider, which axe reports as nested-interactive; a frame has no handles.",
+      "docs": "`<ImageCropper aria-label src alt aspectRatio mode shape maxZoom crop onCropChange onCropCommit>`: with no children it renders the viewport (the image's ratio, or a square frame), the image, a selection that dims the rest through a spread `--overlay` shadow, shows a grid at the thirds while dragging and has eight handles (none in `mode=\"frame\"`), then a zoom slider and Rotate, Flip horizontally and Flip vertically buttons with icons and their names from `labels`. Rotate and flip show their label because they're disabled until the image loads, when a tooltip couldn't show. `cropImage(src, crop, { width, shape })` (re-exported) makes the file; save in `onCropCommit`. In UI SDK 0.1.0-beta.12 the handles sit inside the selection's slider, which axe reports as nested-interactive; a frame has no handles.",
       "dependencies": [
-        "@ui-sdk/core@0.1.0-beta.10",
-        "@ui-sdk/react@0.1.0-beta.10",
+        "@ui-sdk/core@0.1.0-beta.12",
+        "@ui-sdk/react@0.1.0-beta.12",
         "lucide-react"
       ],
       "registryDependencies": [
@@ -4672,8 +4672,8 @@
       "description": "AttachmentStrip: a horizontally scrolling strip of image thumbnails and file chips (icon, name, type and size). Images open a Lightbox, files open their link, max adds a +N button. AttachmentThumb renders one. Agents get openAttachment(id).",
       "docs": "Each attachment is { id, name, kind: \"image\" | \"file\", src, srcDark?, thumbnail?, thumbnailDark?, alt, href?, size?, mimeType? }. Dark variants are rendered beside the light ones and CSS shows the one that matches the theme (`.dark`, or the system preference unless the page opted into light), so there is no flash. `onOpen(attachment, details)` runs before anything opens, for people and agents (`details.source === \"agent\"`); `details.cancel()` keeps it closed. Sizes are formatted with Intl in `locale`. The strip needs an `aria-label`; the other labels are English and overridable through `labels` (`open`, `more`, `lightbox`). Focus returns to the thumbnail that opened the lightbox.",
       "dependencies": [
-        "@ui-sdk/core@0.1.0-beta.10",
-        "@ui-sdk/react@0.1.0-beta.10",
+        "@ui-sdk/core@0.1.0-beta.12",
+        "@ui-sdk/react@0.1.0-beta.12",
         "lucide-react"
       ],
       "registryDependencies": [
@@ -4706,8 +4706,8 @@
       "description": "UI SDK FileInput styled as a drop zone with a browse button: accept, size and count limits, the chosen files as attachment chips with remove buttons, and why any were left out in the destructive tone.",
       "docs": "`<FileUpload title description browseLabel accept maxSize minSize maxFiles multiple validate name labels locale>` inside a `Field`: the field's label names the browse button (the field's control), drops, pastes inside the zone and the picker all go through the same checks, the chosen files show as `AttachmentThumb` chips (name, type, size from `formatFileSize`) with a remove button each, and rejected files are listed under the zone with their first reason (`labels.rejected`). `title`, `description` and `browseLabel` are your copy; `labels` (`list`, `remove`, `rejected`) default to English. Compose the parts (`FileInput`, `FileInputDropzone`, `FileInputTrigger variant size`, `FileInputFiles`, `FileInputRejections`, `FileInputList`, `FileInputItem`, `FileInputItemRemove`) for a button alone, a page-wide drop (`target=\"document\"`) or a folder (`directory`). The value is `File[]`, so `FormField` binds it as is. With `name` it submits through a native file input.",
       "dependencies": [
-        "@ui-sdk/core@0.1.0-beta.10",
-        "@ui-sdk/react@0.1.0-beta.10",
+        "@ui-sdk/core@0.1.0-beta.12",
+        "@ui-sdk/react@0.1.0-beta.12",
         "lucide-react"
       ],
       "registryDependencies": [
@@ -4732,8 +4732,8 @@
       "description": "Where a piece of work is in a configurable pipeline (branch, PR, dev, prod): StageTrack shows every stage in a row, reached ones filled and the current one emphasised, or only the current one as a StagePill. StageFilter is a toggle group with a count per stage.",
       "docs": "Stages are { id, label, tone? } with the shared Tone vocabulary; a stage without a tone uses the primary colour, and StagePill defaults to info. `current` is a stage id; stages before it count as reached. The track is an ordered list with `aria-current=\"step\"` on the current stage, and each state has its own marker shape (check, ring, hollow), so meaning never rests on colour; give it an `aria-label`. Below a 24rem container it stacks into a column. `getHref(stage)` makes a stage a link. StageFilter is a UI SDK ToggleGroup (several stages by default, `multiple={false}` for one): nothing pressed means no filter, which a segmented control can't express. Agents set it with `setValue` and stage ids.",
       "dependencies": [
-        "@ui-sdk/core@0.1.0-beta.10",
-        "@ui-sdk/react@0.1.0-beta.10"
+        "@ui-sdk/core@0.1.0-beta.12",
+        "@ui-sdk/react@0.1.0-beta.12"
       ],
       "registryDependencies": [
         "@eskais/utils",
@@ -4761,8 +4761,8 @@
       "description": "One tab stop over a collection's rows on UI SDK roving focus: arrows and j/k move, Home/End and PageUp/PageDown jump, Enter opens, Space and x toggle. Adds no role.",
       "docs": "`useRowNavigation({ ids, onOpen, onToggle, reveal })` makes the instance; wrap the rows in `RowNavigationProvider handle` and each row (a `tr`, or a row's link or button) in `NavigableRow id render`. `ids` lists every row in order, rendered or not, so Home, End and PageDown reach rows a virtualized collection hasn't rendered: `reveal(id)` scrolls one into view and focus follows when it renders. Enter calls `onOpen` only for rows that aren't links or buttons, which open themselves. Keys typed in a control inside a row stay with that control. Agents don't see it: the rows' parts and the collection's own actions already cover them.",
       "dependencies": [
-        "@ui-sdk/core@0.1.0-beta.10",
-        "@ui-sdk/react@0.1.0-beta.10"
+        "@ui-sdk/core@0.1.0-beta.12",
+        "@ui-sdk/react@0.1.0-beta.12"
       ],
       "registryDependencies": [
         "@eskais/utils"
@@ -4785,7 +4785,7 @@
       "description": "Windowed rendering for long lists and tables on UI SDK's virtualizer, in document flow with gap rows: it renders again only when the rows in view change, keeps the focused row rendered, and keeps find in page working through UI SDK's findable layers.",
       "docs": "`useVirtualRows({ count, virtualize, estimateSize, getKey })` virtualizes past 200 rows with `virtualize=\"auto\"`. Put `anchor` on the `ul` or `tbody`; it scrolls with the nearest scrolling ancestor, or the window. Render `segments`: rows, and gaps (`aria-hidden`) that hold the space of the rows between, so a table keeps `tbody > tr` and a list `ul > li`. Give each row `data-index` and `ref={measureElement}`. `pin(index)` keeps the focused row rendered when scrolled away; `renderNow(index)` renders one at once, for an agent's action. Pass `findable: (index) => text` (stable) and UI SDK's findable layers hold the text of the rows that aren't rendered in `hidden=\"until-found\"` stand-ins, so find in page reaches them and scrolls the real row in. Keep `getKey` stable (`useCallback` over the ids).",
       "dependencies": [
-        "@ui-sdk/core@0.1.0-beta.10"
+        "@ui-sdk/core@0.1.0-beta.12"
       ],
       "registryDependencies": [
         "@eskais/utils",
@@ -4809,7 +4809,7 @@
       "description": "The rows of a long trail or tree, shared by commit-history and git-tree: virtual-rows in document flow by default, or UI SDK's virtualizer with findable layers so find in page reaches rows that aren't rendered.",
       "docs": "`useTrailRows({ count, estimate, getKey, text, findable })` returns `segments` (rows, with a `top` when `absolute`, and gaps that hold the space of the rows between), `anchor` (the rows' parent, in flow), `setScroller` (the scroller), `measure`, `textSlot`, `pin`, `scrollToIndex` and `reveal`. Without `findable` it is `useVirtualRows` from `virtual-rows`, rows in document flow; with it, `useFindableRows` puts rows on UI SDK's virtualizer, absolutely positioned in a box `height` px tall, and builds its findable layers once the page is idle, so find in page reaches rows that aren't rendered by the pieces `text(index)` returns. `useInstanceState(instance)` reads a UI SDK primitive instance's state with `useSyncExternalStore`. `commit-history` and `git-tree` install it; you rarely need it directly.",
       "dependencies": [
-        "@ui-sdk/core@0.1.0-beta.10"
+        "@ui-sdk/core@0.1.0-beta.12"
       ],
       "registryDependencies": [
         "@eskais/virtual-rows",
@@ -4837,8 +4837,8 @@
       "description": "Dense, Linear-style rows that also work as entity cards: List, ListGroup (label and count), ListItem with leading, title, subtitle, status, meta, trailing and actions, plus ListItemTitle, ListItemMeta, ListItemActions and IconTile. Agents get select(id).",
       "docs": "`List aria-label` holds `ListItem`s, optionally inside `ListGroup label count`. The name goes on the list itself: a `ul` (`role=\"list\"`), or the listbox when rows are selectable, with no group around it. A row selects through a stretched link (`href`, `aria-current=\"page\"` when `selected`) or a stretched UI SDK Button (`onSelect`), and its actions, chips and status stay their own targets. Give `List` a `value`, `defaultValue` or `onValueChange` and the rows become options of a UI SDK Listbox (arrow keys, one tab stop); options can't hold controls, so `actions` are ignored there. `variant=\"card\"` lays rows out as cards in a responsive grid. Titles wrap to two lines, then show the full title in a tooltip; a status pill wraps below a narrow title, and trailing content and actions drop to their own line on a narrow row. `List onSelect(id, details)` runs before a row is chosen, for people and agents, and `details.cancel()` stops it. Agents see the list by its label with `select(id)`; a selectable list also shows its listbox under the same name with `setValue`, and each action resolves to one of them. Rows of a non-selectable list are one tab stop: arrows or j/k move, Home/End and PageUp/PageDown jump, Enter opens the row through its link or button, and the moved-to row scrolls into view with the least scrolling; a selectable list takes j/k and the page keys as its own arrows. Pass `items` with `renderItem` (and `getItemId`, `itemText`) to render rows from data, or give a row list `ListItem id` children directly (each child an element with a string `id`; `title` is its text), which the list reads as the same data: past 200 rows (`virtualize=\"auto\"`, `estimateSize`) only the rows in view render, with `aria-setsize`/`aria-posinset`, every row reachable by keyboard and by agents' `select`, and find in page through hidden stubs. `checkedIds` with `onCheckedIdsChange` checks rows for a bulk action: Space or x toggles the focused row, each row shows a checkbox outside the tab order (`checkLabel` names it). `sortable` with `onReorder(ids, details)` reorders the rows of a non-selectable list from data: each row gets a drag handle named after its title (`sortableLabels`), the row's link or button keeps its own tab stop, checked rows move together, and agents get `move` and `reorder` on a sortable named like the list. A sortable list renders every row instead of virtualizing.",
       "dependencies": [
-        "@ui-sdk/core@0.1.0-beta.10",
-        "@ui-sdk/react@0.1.0-beta.10"
+        "@ui-sdk/core@0.1.0-beta.12",
+        "@ui-sdk/react@0.1.0-beta.12"
       ],
       "registryDependencies": [
         "@eskais/utils",
@@ -4880,8 +4880,8 @@
       "description": "UI SDK Tree styled as indented rows with guide lines: a file explorer from paths with folder and file icons, checkable trees with mixed branches, lazy branches, links and a flat list for virtualizing.",
       "docs": "`<Tree aria-label paths>` (or `items`) renders every row for you: an indicator, `checkable` checkboxes, an icon from `icon` (`treeFileIcon` by default: open or closed folders, file icons by extension; a function of the item and its state, or `false`) and the label. Compose `TreeItem` > `TreeItemLabel` (+ `TreeItemIndicator`, `TreeItemCheckbox`) and `TreeGroup` yourself, or `TreeNodes items icon checkable`, to render your own rows while the tree keeps the whole hierarchy. Rows indent by `--tree-level` and each open group draws a guide through its parent's indicator. Selection (`mode`, `value`, `activation`), expansion (`expanded`), checks (`checked`, `checkStrategy`) and `onAction` are UI SDK's; `toggleTreeItem(items, checked, value, strategy)` computes a checked value you keep yourself. Items with `href` render as links that follow on press (`onFollow` for a client router). For thousands of rows, keep `items` on the tree and render only the rows in view from `visibleTreeRows(items, expanded)`, scrolling in `onHighlight`; every item sets `--tree-level`, so flat rows indent the same.",
       "dependencies": [
-        "@ui-sdk/core@0.1.0-beta.10",
-        "@ui-sdk/react@0.1.0-beta.10",
+        "@ui-sdk/core@0.1.0-beta.12",
+        "@ui-sdk/react@0.1.0-beta.12",
         "lucide-react"
       ],
       "registryDependencies": [
@@ -4903,8 +4903,8 @@
       "description": "A non-modal inspector beside a list: a named complementary region, Escape closes it and returns focus to the row, shortcuts declared inside run while it is open, and on narrow screens it stacks below the list, overlays it or opens as a bottom sheet.",
       "docs": "`<SidePanel open onOpenChange title description actions returnFocus>` renders nothing while closed. Lay it out beside the list in a flex row (`--side-panel-width`, 24rem by default). `actions` (a status pill, small buttons) sit beside the title until the title would get narrower than `--card-heading-basis` (11rem), then wrap below it, as `CardHeader`'s do; the close button keeps its corner. `narrow` sets what happens at the `narrow:` breakpoint (760px and below): `\"stack\"` (default) keeps it in the page flow, full width, and makes its flex parent wrap so it goes below the list; `\"overlay\"` covers its positioned parent, as it always did before; `\"sheet\"` opens it as a modal bottom `Drawer` that takes focus and returns it to `returnFocus()` on close. `stack` is the default because it is the only mode that neither hides the page nor traps focus, so a panel that is open on load still leaves the list readable and reachable. Use `overlay` to show the panel instead of the list (a tall scroller in a bounded column, as the `inbox` block does), and `sheet` for a detail that should read as a step away from the list. Escape anywhere on the page closes it (a modal above it gets Escape first), and focus that was inside it, or lost to the body, moves to `returnFocus()`. It is a `ShortcutScope` that is active while open (`scope`, `scopeLabel` for the `ShortcutsDialog`), so `Button shortcut=\"u\"` inside it works while focus stays in the list. `labels={{ close }}` names the close button.",
       "dependencies": [
-        "@ui-sdk/core@0.1.0-beta.10",
-        "@ui-sdk/react@0.1.0-beta.10",
+        "@ui-sdk/core@0.1.0-beta.12",
+        "@ui-sdk/react@0.1.0-beta.12",
         "lucide-react",
         "class-variance-authority@0.7.1"
       ],
@@ -5008,8 +5008,8 @@
         "@lezer/common@1.5.5",
         "@lezer/highlight@1.2.5",
         "@lezer/markdown@1.8.1",
-        "@ui-sdk/core@0.1.0-beta.10",
-        "@ui-sdk/react@0.1.0-beta.10",
+        "@ui-sdk/core@0.1.0-beta.12",
+        "@ui-sdk/react@0.1.0-beta.12",
         "lucide-react"
       ],
       "registryDependencies": [
@@ -5130,8 +5130,8 @@
       "description": "Text link with inline, nav, muted, standalone and plain variants: underlined at rest or on hover so it never relies on colour, external and new-tab handling, aria-current, render for router links, an opt-in onFollow that routes plain clicks and gives agents a follow action, and fast navigation on a primary mouse press (fast={false} or data-no-fast-link to opt out); FastLinkRegion and useFastLink do the same for plain anchors.",
       "docs": "`onNavigate(href, event)` routes on the client on a press, a click or Enter, without the agent action `onFollow` adds; `onIntent(href)` runs on a 65 ms hover, focus or a mouse or pen press, to preload the route (idempotent: it can run more than once). Same-origin links follow on a primary mouse press (`pointerdown`), for navigation only: `fast={false}` opts a link out, `data-no-fast-link` on an ancestor a region or the app. Hash routers work too: an `href` that starts with `#/` follows on press, through `onFollow` or by setting `location.hash`, while any other `#…` href is an in-page anchor and stays native. Set another prefix with `data-fast-link-hash-prefix` on an ancestor (`<body data-fast-link-hash-prefix=\"#!/\">`) or `FastLinkRegion hashPrefix`; an empty value makes every `#…` href an anchor.",
       "dependencies": [
-        "@ui-sdk/core@0.1.0-beta.10",
-        "@ui-sdk/react@0.1.0-beta.10",
+        "@ui-sdk/core@0.1.0-beta.12",
+        "@ui-sdk/react@0.1.0-beta.12",
         "class-variance-authority@0.7.1",
         "@fast-link/core@0.0.2",
         "lucide-react"
@@ -5169,8 +5169,8 @@
       "title": "Code Block",
       "description": "CodeBlock and CodeTabs: syntax highlighting for ts, tsx, js, jsx, json, css, html, bash, md and diff with Lezer parsers loaded on first use, rendered as React elements in syntax tokens that hold 4.5:1; a filename header, copy (an agent action too), line numbers, highlighted lines, wrap and a max height. Code for inline code.",
       "dependencies": [
-        "@ui-sdk/core@0.1.0-beta.10",
-        "@ui-sdk/react@0.1.0-beta.10",
+        "@ui-sdk/core@0.1.0-beta.12",
+        "@ui-sdk/react@0.1.0-beta.12",
         "@lezer/common@1.5.5",
         "@lezer/highlight@1.2.5",
         "@lezer/javascript@1.5.6",
@@ -5246,8 +5246,8 @@
       "description": "The renderer behind TextDiff and GitDiff: every file's lines in one virtualized scroller (UI SDK createVirtualizer), unified or split, folded unchanged regions, changed-word highlights, Lezer syntax colours parsed in slices and applied only to the lines on screen, one tab stop over the lines (createGridFocus), j/k and n/p between hunks and files, Shift ranges for comments (onLineSelect), find in page across folded and off-screen lines, and agent actions.",
       "docs": "`<DiffView files={toViewFiles(fileDiffs)} headers />` with `layout`/`defaultLayout`/`onLayoutChange` (`unified`, `split`), `wrap`, `viewed`/`onViewedChange`, `defaultCollapsed`, `onLineSelect(selection, details)` (`{ path, start: { side, line }, end, lines }`, or null) and `intraline` (`word`, `char`, false). `createDiffViewController()` drives it from outside (`openFile`, `nextHunk`, `markViewed`, `setLayout`…). Labels are overridable (`diffLabels`, `diffLabelsEs`); pass a constant. `height=\"auto\"` (default) grows to the diff up to `--diff-max-height` (40rem) and scrolls inside past it; `height=\"fill\"` fills a sized parent.",
       "dependencies": [
-        "@ui-sdk/core@0.1.0-beta.10",
-        "@ui-sdk/react@0.1.0-beta.10",
+        "@ui-sdk/core@0.1.0-beta.12",
+        "@ui-sdk/react@0.1.0-beta.12",
         "@lezer/common@1.5.5",
         "@lezer/highlight@1.2.5",
         "lucide-react"
@@ -5318,8 +5318,8 @@
       "description": "Compares two strings: unified or split, line numbers, unchanged regions folded behind Expand N lines, changed words highlighted, syntax colours by language, word wrap, line selection and find in page; inputs past 200k characters diff in a Web Worker.",
       "docs": "`<TextDiff oldText newText language=\"tsx\" />` takes the diff options (`algorithm`, `context`, `ignoreWhitespace`, `worker`, `workerThreshold`) and every DiffView prop. Small inputs diff during render; large ones in a worker, with `loading` shown before the first result and `aria-busy` while a newer one computes.",
       "dependencies": [
-        "@ui-sdk/core@0.1.0-beta.10",
-        "@ui-sdk/react@0.1.0-beta.10"
+        "@ui-sdk/core@0.1.0-beta.12",
+        "@ui-sdk/react@0.1.0-beta.12"
       ],
       "registryDependencies": [
         "@eskais/utils",
@@ -5344,8 +5344,8 @@
       "description": "A patch or a list of file diffs for review: per-file headers (rename arrow, status chip, +/- counts and bar, mode change, collapse, viewed), a tree of changed files to jump between them, unified/split and wrap controls, one virtualized document for 500-file patches, j/k and n/p, line selection for comments, and agent actions openFile, nextHunk, previousHunk, markViewed and getHunk.",
       "docs": "`<GitDiff patch={gitDiffOutput} />` or `files={fileDiffs}` (give `oldText`/`newText` to make unchanged regions expandable). `fileTree` and `toolbar` default to true; the tree hides on narrow screens. Marking a file viewed folds it. `onViewedChange` and `onLineSelect` report what the reviewer did; `details.source === \"agent\"` tells an agent's change apart. GitDiff fills its parent (`height=\"fill\"`), so give it a height; binary files and mode-only changes show `labels.binaryFile` or `labels.modeChange` instead of counts.",
       "dependencies": [
-        "@ui-sdk/core@0.1.0-beta.10",
-        "@ui-sdk/react@0.1.0-beta.10",
+        "@ui-sdk/core@0.1.0-beta.12",
+        "@ui-sdk/react@0.1.0-beta.12",
         "lucide-react"
       ],
       "registryDependencies": [
@@ -5462,8 +5462,8 @@
       "title": "Docs Layout",
       "description": "DocsLayout, an app shell for documentation: a topbar slot, a sidebar that sticks under it at the full remaining height (a drawer on narrow screens), a breadcrumb slot above the page in the main column, the main landmark and a sticky table of contents. Also DocsToc (headings marked as you read with IntersectionObserver), DocsPager and DocsBreadcrumb.",
       "dependencies": [
-        "@ui-sdk/core@0.1.0-beta.10",
-        "@ui-sdk/react@0.1.0-beta.10",
+        "@ui-sdk/core@0.1.0-beta.12",
+        "@ui-sdk/react@0.1.0-beta.12",
         "lucide-react"
       ],
       "registryDependencies": [
@@ -5496,8 +5496,8 @@
       "title": "Shell",
       "description": "Shell, an application's whole frame from its routes: a skip link, a Topbar (sidebar trigger, brand, ⌘K search, actions), a grouped Sidebar that sticks under it, collapses (remembered) and is a drawer on narrow screens, a command palette whose Go to group reaches every route, a MobileNav bottom bar with More on narrow screens, and the main landmark. Router-agnostic: onNavigate for a history router, #/route hrefs for a hash router, or plain fast links.",
       "dependencies": [
-        "@ui-sdk/core@0.1.0-beta.10",
-        "@ui-sdk/react@0.1.0-beta.10",
+        "@ui-sdk/core@0.1.0-beta.12",
+        "@ui-sdk/react@0.1.0-beta.12",
         "lucide-react"
       ],
       "registryDependencies": [
@@ -5585,8 +5585,8 @@
       "description": "A chat or agent thread: a role=\"log\" that follows new messages while the reader is at the end, stops when they scroll up and shows a \"new below\" pill that jumps back (smooth unless reduced motion), keeps a streaming message in view, loads older messages above without moving the view, and server renders. ConversationMessage is an article named by its author, with avatar, relative time and data-from (user, assistant, agent, system, tool); ConversationComposer composes Textarea and Button. Agents read messages and call jumpToLatest.",
       "docs": "`<Conversation label=\"Thread with Atlas\" composer={<ConversationComposer onSend={send} />}>{messages.map((m) => <ConversationMessage key={m.id} messageId={m.id} from={m.from} author={m.author} avatar={…} time={m.at} now={now} streaming={m.streaming}>{m.text}</ConversationMessage>)}</Conversation>`. Give it a bounded height (it fills its parent). It renders every message: keep a window of the newest few hundred in state and pass `hasOlder` and `onLoadOlder` (add the older ones in one update) for longer threads. A streaming message sets `aria-busy`, so screen readers read it once it is whole. `useConversation()` inside it returns `jumpToLatest`, `release` and `loadOlder`. Labels (`newBelow(count)`, `jumpToLatest`, `loadOlder`, the composer's `message` and `send`, and the screen-reader names per role) are overridable.",
       "dependencies": [
-        "@ui-sdk/core@0.1.0-beta.10",
-        "@ui-sdk/react@0.1.0-beta.10",
+        "@ui-sdk/core@0.1.0-beta.12",
+        "@ui-sdk/react@0.1.0-beta.12",
         "lucide-react"
       ],
       "registryDependencies": [
@@ -5619,8 +5619,8 @@
       "description": "Who changed what, and when, with undo: createActivityLog records the page's UI SDK control changes (from people, agents and the app) and the app's own records, and steps back and forward through them. ActivityLog lists them newest first; pressing an entry seeks to it, Undo and Redo bind Cmd/Ctrl+Z and Shift+Cmd/Ctrl+Z outside text fields, and undoToast shows a toast with Undo. Agents call undo, redo and seek; a seek that undoes more than confirmAbove entries needs a person (data-agent-confirm).",
       "docs": "Create the log once in the browser, with the app's agent bridge, before the controls render: `const log = createActivityLog(agent, { within, describe })`. Then `<ActivityLog log={log} label=\"Activity\" header={…} />`. `log.record({ label, description, actor, undo, redo })` adds a change of the app's own, like a task an agent moved. `log.undo()`, `redo()`, `seek(n)` (0 is the start) and `undoActor(\"agent\")` resolve with what they couldn't put back; restoring goes through the bridge, so permissions and change callbacks still apply, and a password, card or one-time-code field is never put back. It wraps UI SDK's experimental history helpers behind its own types. Entries read UI SDK's English sentences unless you pass `describe`; every label is overridable.",
       "dependencies": [
-        "@ui-sdk/core@0.1.0-beta.10",
-        "@ui-sdk/react@0.1.0-beta.10",
+        "@ui-sdk/core@0.1.0-beta.12",
+        "@ui-sdk/react@0.1.0-beta.12",
         "lucide-react"
       ],
       "registryDependencies": [
@@ -5682,8 +5682,8 @@
       "title": "Master Detail",
       "description": "MasterDetail: a list with a detail pane, side by side on wide containers and stacked below 42rem with a Back button. Controlled or uncontrolled selection, optional URL sync through a router-agnostic adapter (hash routers included), j/k that follow focus, a detail that collapses to a rail or resizes, remembered under a storageKey, and focus that moves to the detail's heading and back to the row. Agents open and close items by the block's name.",
       "dependencies": [
-        "@ui-sdk/core@0.1.0-beta.10",
-        "@ui-sdk/react@0.1.0-beta.10",
+        "@ui-sdk/core@0.1.0-beta.12",
+        "@ui-sdk/react@0.1.0-beta.12",
         "lucide-react"
       ],
       "registryDependencies": [
@@ -5721,7 +5721,7 @@
       "title": "Dashboard Grid",
       "description": "DashboardGrid: a row of stats over a container-query grid of cards (one column, two from 42rem, `columns` from 64rem) where rows are at least one height and cards in a row share it, so they line up, keep their size from loading to loaded and grow their row rather than clip. DashboardCard spans columns and rows and loads through DataState (a skeleton, the error with Retry, an empty title); DashboardChart fills a card and is named by its title; DashboardMeter centres a ring meter in one; DashboardStats and DashboardStat (with a StatDelta in `delta`) draw placeholders of the value's height.",
       "dependencies": [
-        "@ui-sdk/react@0.1.0-beta.10"
+        "@ui-sdk/react@0.1.0-beta.12"
       ],
       "registryDependencies": [
         "@eskais/utils",
@@ -5748,8 +5748,8 @@
       "title": "Settings Page",
       "description": "SettingsPage: a section navigation that sticks beside the sections on wide containers and becomes a section picker on narrow ones, marking the section being read (IntersectionObserver). Going to a section scrolls by id and focuses its heading, so it works under hash routers; the section can live in the URL through createUrlParam. SettingsSection, SettingsRow (a label, a description and the control on the right, stacking when narrow), SettingsFacts (a DescriptionList for read-only facts) and SettingsDangerZone with SettingsDangerAction rows that confirm through ConfirmDialog and need a person's approval for agents.",
       "dependencies": [
-        "@ui-sdk/core@0.1.0-beta.10",
-        "@ui-sdk/react@0.1.0-beta.10"
+        "@ui-sdk/core@0.1.0-beta.12",
+        "@ui-sdk/react@0.1.0-beta.12"
       ],
       "registryDependencies": [
         "@eskais/utils",
@@ -5947,8 +5947,8 @@
       "description": "A notes or docs workspace: an explorer, tabs, breadcrumb, toolbar, the document (edit or read), an aside for backlinks, properties and the outline, a status bar with the save state, an alert slot and Ctrl/Cmd+P quick open. Resizable, collapsible columns when its container is wide, drawers when narrow; named landmarks and toggles agents can press. Also DocumentOutline and DocumentQuickOpen.",
       "docs": "`<DocumentWorkspace document={mode === \"edit\" ? <MarkdownEditor ref={editor} …/> : <MarkdownView …/>} explorer tabs breadcrumb toolbar statusBar aside alert quickOpen={<DocumentQuickOpen items onOpen />} mode onModeChange editorRef={editor} headings={extractHeadings(markdown)} saveState storageKey>`. It fills its parent (`--document-workspace-height`, 100% by default) and decides its layout from its own width, never the viewport, so it works inside an app shell's `<main>` (in a `Shell`, give it `main=\"fill\"` or the route `main: \"fill\"` and it fills the height left): at `narrow` (760 px) or less, the explorer and the aside are 20rem drawers that start closed; wider, they are resizable columns (`Resize files`, `Resize details` handles) that collapse from their toggles or the handle. `explorerOpen`/`onExplorerOpenChange` and `asideOpen`/`onAsideOpenChange` follow what is shown, and control it; turning narrow closes them and turning wide brings back the columns. A link in the explorer drawer closes it; pass `documentId` (the open document's slug or path) and the drawer also closes when it changes, whatever opened the document: a button in your tree, quick open, a wikilink or an agent. `useDocumentWorkspace().closeExplorer()` closes the drawer from your own tree (the wide column stays). `storageKey` remembers the columns' state and widths in localStorage (the drawers always start closed). Landmarks: the explorer is a `nav`, the aside an `aside`, the document a named region (`documentAs=\"main\"` when the workspace is the page's main content); the toggles carry `aria-expanded` and `aria-controls`. The mode switch is a SegmentedControl; switching keeps the reading position by heading (from the editor's `getScrollLine` to the read view's headings and back). `saveState` (`saved`, `saving`, `unsaved`, `error`) is a polite `<output>` in the status bar; `alert` sits in an assertive region that is always there, so a conflict is read once when it appears (pass an `Alert` without `live`). `quickOpen` adds a Quick open button and `quickOpenShortcut` (`mod+p`, `false` to turn it off). `DocumentQuickOpen` searches in one of two ways. With `items`, it filters them in the browser by label and `keywords` (`filter`: `\"fuzzy\"` by default, `\"contains\"`, `\"startsWith\"` or a function); for a search of your own, pass `filter={false}`, `onQueryChange` and `status` (`\"loading\"`, `\"error\"`) and set `items` from its results, which are then listed as they are, so a note that matched on its body shows although its title lacks the query. With `source` (a `PageSource<T, { q?: string }>` from `@eskais/page-source`, as `ServerCombobox` takes) and `getItem`, it searches the server itself while it is open: the query goes out as `filter.q` once typing pauses (`debounce`, 200 ms), a newer query aborts the request in flight, the server's order is kept and the next page (`pageSize`, 20) loads at the end of the list. Loading and errors show in the list and are read out; `labels` takes `empty` (text or a function of the query), `loading`, `error` and `count`. `DocumentOutline` lists `headings`: in edit mode an entry puts the caret at the heading (`setSelection`, `scrollToLine`) and focuses the editor; in read mode it scrolls to the heading and focuses it, found by its `slug` (the `data-slug` `MarkdownView` renders), so a filtered `headings` list, like one without empty headings, still reveals the right one; `useDocumentWorkspace().revealHeading(heading)` does the same for your own outline. Drawers, quick open and menus give focus back to the document unless the action moved it: pass `useDocumentWorkspace().documentFocusTarget` as `finalFocus` to your own menus in `toolbar`. `editorRef` takes any `DocumentEditor` (`focus`, `scrollToLine`, `setSelection`, `getScrollLine`), which `MarkdownEditorHandle` is. All text is in `labels`.",
       "dependencies": [
-        "@ui-sdk/core@0.1.0-beta.10",
-        "@ui-sdk/react@0.1.0-beta.10",
+        "@ui-sdk/core@0.1.0-beta.12",
+        "@ui-sdk/react@0.1.0-beta.12",
         "lucide-react"
       ],
       "registryDependencies": [

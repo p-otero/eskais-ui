@@ -4,7 +4,7 @@
   "title": "Trail Rows",
   "description": "The rows of a long trail or tree, shared by commit-history and git-tree: virtual-rows in document flow by default, or UI SDK's virtualizer with findable layers so find in page reaches rows that aren't rendered.",
   "dependencies": [
-    "@ui-sdk/core@0.1.0-beta.10"
+    "@ui-sdk/core@0.1.0-beta.12"
   ],
   "registryDependencies": [
     "@eskais/virtual-rows",

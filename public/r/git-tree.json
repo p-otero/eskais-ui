@@ -4,8 +4,8 @@
   "title": "Git Tree",
   "description": "A repository's files at a commit on UI SDK's Tree: folders first with lucide icons, changed files marked added, modified, deleted or renamed in their tone, folders that hold a change marked too. Virtualized for 100,000 files; agents open and expand by path.",
   "dependencies": [
-    "@ui-sdk/core@0.1.0-beta.10",
-    "@ui-sdk/react@0.1.0-beta.10",
+    "@ui-sdk/core@0.1.0-beta.12",
+    "@ui-sdk/react@0.1.0-beta.12",
     "lucide-react"
   ],
   "registryDependencies": [

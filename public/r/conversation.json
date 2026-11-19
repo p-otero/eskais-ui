@@ -4,8 +4,8 @@
   "title": "Conversation",
   "description": "A chat or agent thread: a role=\"log\" that follows new messages while the reader is at the end, stops when they scroll up and shows a \"new below\" pill that jumps back (smooth unless reduced motion), keeps a streaming message in view, loads older messages above without moving the view, and server renders. ConversationMessage is an article named by its author, with avatar, relative time and data-from (user, assistant, agent, system, tool); ConversationComposer composes Textarea and Button. Agents read messages and call jumpToLatest.",
   "dependencies": [
-    "@ui-sdk/core@0.1.0-beta.10",
-    "@ui-sdk/react@0.1.0-beta.10",
+    "@ui-sdk/core@0.1.0-beta.12",
+    "@ui-sdk/react@0.1.0-beta.12",
     "lucide-react"
   ],
   "registryDependencies": [

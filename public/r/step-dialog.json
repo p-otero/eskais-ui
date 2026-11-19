@@ -4,8 +4,8 @@
   "title": "Step Dialog",
   "description": "A multi-step form on one schema, in a Dialog or inline: a progress list with aria-current, Next validates only the current step, Back keeps values, focus moves to each step's heading, and a failed submit returns to the step with the error.",
   "dependencies": [
-    "@ui-sdk/core@0.1.0-beta.10",
-    "@ui-sdk/react@0.1.0-beta.10",
+    "@ui-sdk/core@0.1.0-beta.12",
+    "@ui-sdk/react@0.1.0-beta.12",
     "@standard-schema/spec@1.1.0",
     "react-hook-form@7.91.0",
     "class-variance-authority@0.7.1",

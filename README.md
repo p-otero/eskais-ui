@@ -41,7 +41,7 @@ The [installation guide](https://p-otero.github.io/eskais-ui/docs/installation/)
 
 ## Status
 
-Version **0.2.3**. Before 1.0 a minor version can break compatibility. UI SDK is in beta and pinned to an exact version (`0.1.0-beta.10`); see the [changelog](CHANGELOG.md) and [releases](https://github.com/p-otero/eskais-ui/releases). The URL above pins a release through `refs/tags/`; change the tag to upgrade.
+Version **0.2.3**. Before 1.0 a minor version can break compatibility. UI SDK is in beta and pinned to an exact version (`0.1.0-beta.12`); see the [changelog](CHANGELOG.md) and [releases](https://github.com/p-otero/eskais-ui/releases). The URL above pins a release through `refs/tags/`; change the tag to upgrade.
 
 ## Highlights
 

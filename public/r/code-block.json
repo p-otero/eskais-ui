@@ -4,8 +4,8 @@
   "title": "Code Block",
   "description": "CodeBlock and CodeTabs: syntax highlighting for ts, tsx, js, jsx, json, css, html, bash, md and diff with Lezer parsers loaded on first use, rendered as React elements in syntax tokens that hold 4.5:1; a filename header, copy (an agent action too), line numbers, highlighted lines, wrap and a max height. Code for inline code.",
   "dependencies": [
-    "@ui-sdk/core@0.1.0-beta.10",
-    "@ui-sdk/react@0.1.0-beta.10",
+    "@ui-sdk/core@0.1.0-beta.12",
+    "@ui-sdk/react@0.1.0-beta.12",
     "@lezer/common@1.5.5",
     "@lezer/highlight@1.2.5",
     "@lezer/javascript@1.5.6",

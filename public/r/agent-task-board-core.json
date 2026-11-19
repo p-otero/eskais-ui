@@ -4,8 +4,8 @@
   "title": "Agent Task Board core",
   "description": "The non-visual core of AgentTaskBoard: filter, group, sort and summarize tasks; English and Spanish labels; and the board and proposals primitives whose agent actions select, filter, switch views, open threads and decide proposals.",
   "dependencies": [
-    "@ui-sdk/core@0.1.0-beta.10",
-    "@ui-sdk/react@0.1.0-beta.10"
+    "@ui-sdk/core@0.1.0-beta.12",
+    "@ui-sdk/react@0.1.0-beta.12"
   ],
   "registryDependencies": [
     "@eskais/agent-task-types",

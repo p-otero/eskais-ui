@@ -4,7 +4,7 @@
   "title": "Task Card",
   "description": "A compact agent task card: id, two-line title, profile, active agent, liveness, acceptance bar, attempts and cost, dependency chips, blocker with its retry time, decision and analysis-mode markers, and proposal actions in live mode. A stretched UI SDK Button selects it without nesting other controls.",
   "dependencies": [
-    "@ui-sdk/react@0.1.0-beta.10",
+    "@ui-sdk/react@0.1.0-beta.12",
     "lucide-react"
   ],
   "registryDependencies": [

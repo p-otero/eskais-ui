@@ -4,8 +4,8 @@
   "title": "Server List",
   "description": "A List over a PageSource that grows as you scroll: ListItem rows, virtualized past 200, one tab stop with row navigation, the next page when the end comes into view, and a visible Load more button for keyboards and agents.",
   "dependencies": [
-    "@ui-sdk/core@0.1.0-beta.10",
-    "@ui-sdk/react@0.1.0-beta.10"
+    "@ui-sdk/core@0.1.0-beta.12",
+    "@ui-sdk/react@0.1.0-beta.12"
   ],
   "registryDependencies": [
     "@eskais/utils",

@@ -4,8 +4,8 @@
   "title": "Navigation Menu",
   "description": "UI SDK Navigation Menu: a named landmark of triggers that disclose panels of links, each panel on the popover surface.",
   "dependencies": [
-    "@ui-sdk/core@0.1.0-beta.10",
-    "@ui-sdk/react@0.1.0-beta.10",
+    "@ui-sdk/core@0.1.0-beta.12",
+    "@ui-sdk/react@0.1.0-beta.12",
     "class-variance-authority@0.7.1",
     "lucide-react"
   ],

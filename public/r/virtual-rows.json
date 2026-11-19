@@ -4,7 +4,7 @@
   "title": "Virtual Rows",
   "description": "Windowed rendering for long lists and tables on UI SDK's virtualizer, in document flow with gap rows: it renders again only when the rows in view change, keeps the focused row rendered, and keeps find in page working through UI SDK's findable layers.",
   "dependencies": [
-    "@ui-sdk/core@0.1.0-beta.10"
+    "@ui-sdk/core@0.1.0-beta.12"
   ],
   "registryDependencies": [
     "@eskais/utils",
