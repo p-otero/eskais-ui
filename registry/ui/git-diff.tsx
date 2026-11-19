@@ -38,9 +38,9 @@ type GitDiffProps = Omit<DiffViewProps, "files" | "headers"> & {
   /** The layout and wrap controls and the totals above the diff. @defaultValue true */
   toolbar?: boolean
   /**
-   * `fill` (default) fills the height GitDiff is given, beside its file tree. `auto` grows to the diff up to
-   * `--diff-max-height` (40rem), the tree beside it capped the same, for a diff inside a scrolling dialog body:
-   * a short diff never scrolls on its own, and a long one hands the wheel back to the body at its ends.
+   * `fill` (default) fills the height GitDiff is given, beside its file tree. `auto` grows to the whole diff, for a
+   * diff inside a scrolling dialog body: the body is its one scroller, which the virtualizer follows, and the tree
+   * beside it stays in view up to 40rem tall. A `--diff-max-height` caps both, and the diff scrolls inside past it.
    */
   height?: DiffViewProps["height"]
   /**
@@ -58,8 +58,8 @@ const noGroups: readonly GitDiffGroup[] = []
 
 // oxlint-disable-next-line shadcn/no-arbitrary-values -- a variable a page sets, with its default
 const treeWidth = "w-[var(--diff-tree-width,13rem)]"
-// oxlint-disable-next-line shadcn/no-arbitrary-values -- the same cap as the diff's, so the tree never outgrows it
-const diffCap = "max-h-[var(--diff-max-height,40rem)]"
+// oxlint-disable-next-line shadcn/no-arbitrary-values -- the diff's cap when a page sets one, so the tree never outgrows it
+const treeCap = "max-h-[var(--diff-max-height,40rem)]"
 
 function useControlled<T>(value: T | undefined, initial: T, onChange?: (next: T) => void) {
   const [own, setOwn] = useState(initial)
@@ -196,7 +196,11 @@ function GitDiff({
             value={current}
             labels={labels}
             onOpen={(path) => controller.openFile(path)}
-            className={cn(treeWidth, "shrink-0 narrow:hidden", height === "auto" && cn("self-start", diffCap))}
+            className={cn(
+              treeWidth,
+              "shrink-0 narrow:hidden",
+              height === "auto" && cn("sticky top-0 self-start", treeCap),
+            )}
           />
         ) : null}
         <DiffView

@@ -17,7 +17,7 @@ import {
   type DiffLineSelection,
   type DiffSide,
 } from "@/components/ui/diff-view-selection"
-import { layersBesideViewport } from "@/components/ui/scroll-area-layers"
+import { connectDiffScroll, type DiffScroll } from "@/components/ui/diff-view-scroller"
 import { intraline } from "@/lib/diff-intraline"
 import type { DiffLine, IntralineMode, IntralineRanges } from "@/lib/diff-types"
 
@@ -70,6 +70,9 @@ function createDiffDocument(context: DocumentContext) {
   let syntaxVersion = 0
   let grid: GridFocus | null = null
   let viewport: HTMLElement | null = null
+  let scroll: DiffScroll | null = null
+  // The rows' offset in the element that scrolls them: 0 in the diff's own viewport.
+  let margin = 0
   let currentFile: string | null = null
   let onCurrent: ((path: string | null, reason: "scroll" | "imperative") => void) | null = null
   let metrics = defaultMetrics
@@ -91,6 +94,9 @@ function createDiffDocument(context: DocumentContext) {
     estimate: (index) => rowHeight(metrics, doc.rows[index]),
     key: (index) => doc.rows[index]?.key ?? String(index),
     overscan: 10,
+    get scrollMargin() {
+      return margin
+    },
     keep: () => {
       const active = context.store.get().active
       return active && active.row < doc.rows.length ? [active.row] : []
@@ -156,7 +162,7 @@ function createDiffDocument(context: DocumentContext) {
 
   /** The file at the top of the viewport: its header or lines are the first rows in view. */
   function fileInView() {
-    const top = viewport?.scrollTop ?? 0
+    const top = scroll?.top() ?? 0
     const item = virtual.items().find((entry) => entry.start + entry.size > top)
     const row = item ? doc.rows[item.index] : undefined
     return row ? (files[row.file]?.path ?? null) : (files[0]?.path ?? null)
@@ -219,7 +225,8 @@ function createDiffDocument(context: DocumentContext) {
   function currentRow() {
     const active = context.store.get().active
     if (active) return active.row
-    const first = virtual.items().find((item) => viewport === null || item.start >= viewport.scrollTop)
+    const top = scroll?.top()
+    const first = virtual.items().find((item) => top === undefined || item.start >= top)
     return first ? first.index - 1 : -1
   }
 
@@ -255,8 +262,10 @@ function createDiffDocument(context: DocumentContext) {
       }
       // The viewport is dir="ltr" for the code; headers follow the page's direction through this variable.
       el.style.setProperty("--diff-page-direction", getComputedStyle(el.parentElement ?? el).direction)
-      const restore = layersBesideViewport(el)
-      const disconnect = virtual.connect(el, { findable })
+      const connection = connectDiffScroll(el, virtual, findable, (offset) => {
+        margin = offset
+      })
+      scroll = connection.scroll
       setCurrent(fileInView(), "scroll")
       const resize = new ResizeObserver(() =>
         el.style.setProperty("--diff-viewport-width", `${String(el.clientWidth)}px`),
@@ -264,9 +273,9 @@ function createDiffDocument(context: DocumentContext) {
       resize.observe(el)
       return () => {
         resize.disconnect()
-        disconnect()
-        restore()
+        connection.disconnect()
         viewport = null
+        scroll = null
       }
     },
     /** Changed words of a line against the line it pairs with, cached per pair. */
@@ -290,7 +299,7 @@ function createDiffDocument(context: DocumentContext) {
       return false
     },
     reveal: (row: number) => virtual.scrollToIndex(row),
-    pageSize: () => (viewport ? Math.max(1, Math.floor(viewport.clientHeight / metrics.line) - 1) : 10),
+    pageSize: () => (scroll ? Math.max(1, Math.floor(scroll.height() / metrics.line) - 1) : 10),
     activate(cell: GridCell, event: KeyboardEvent) {
       const row = doc.rows[cell.row]
       if (row?.kind === "gap" && row.gap.expandable) expandGap(row.file, row.gap.id)

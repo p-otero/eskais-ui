@@ -10,6 +10,16 @@ import { Section } from "../section"
 
 const boardTasks = [...taskDialogTasks, ...sampleTasks]
 
+// &lines=<n>: the task's changes as one added file of n lines, to see a long diff in the dialog body.
+function longChanges(task: string, lines: number) {
+  const changes = taskChanges[task]
+  if (!changes || !(lines > 0)) return
+  const body = Array.from({ length: lines }, (_, index) => `+export const step${String(index)} = ${String(index)}`)
+  const header = `diff --git a/src/long.ts b/src/long.ts\nnew file mode 100644\n--- /dev/null\n+++ b/src/long.ts\n`
+  const patch = `${header}@@ -0,0 +1,${String(lines)} @@\n${body.join("\n")}\n`
+  taskChanges[task] = { ...changes, all: { files: 1, additions: lines, deletions: 0, patch } }
+}
+
 const selectedRow = (task: string, row: string | null) =>
   row === null ? null : (taskChanges[task]?.commits.find((commit) => commit.id.startsWith(row))?.id ?? row)
 
@@ -17,6 +27,7 @@ const selectedRow = (task: string, row: string | null) =>
 // &selected=<a commit hash or working-tree> opens the changes on that row instead of all changes.
 function TaskDialogPage({ params }: { params: URLSearchParams }) {
   const [open, setOpen] = useState<string>(params.get("task") ?? "T-121")
+  useState(() => longChanges(params.get("task") ?? "T-121", Number(params.get("lines"))))
   const [history, setHistory] = useState<string>()
   return (
     <main className="flex min-h-dvh flex-col gap-section bg-background p-inset-surface">

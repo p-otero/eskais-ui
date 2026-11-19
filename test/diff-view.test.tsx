@@ -153,12 +153,13 @@ describe("TextDiff", () => {
     expect(within(row as HTMLElement).getByText("Added, line 5")).toBeTruthy()
   })
 
-  test("grows to its content up to --diff-max-height by default, or fills its parent", async () => {
+  test("grows to its content by default, capped only by a --diff-max-height a page sets, or fills its parent", async () => {
     const { container, rerender } = render(<TextDiff oldText={before} newText={after} />)
     await settle()
     const root = () => container.querySelector<HTMLElement>('[data-slot="diff-view"]')!
     const viewport = () => container.querySelector<HTMLElement>('[data-slot="diff-view-viewport"]')!
-    expect(root().className).toContain("max-h-[var(--diff-max-height,40rem)]")
+    expect(root().className).toContain("max-h-[var(--diff-max-height,none)]")
+    expect(viewport().dataset.height).toBe("auto")
     expect(viewport().parentElement?.className).not.toContain("flex-1")
     expect(viewport().className).not.toContain("contain-strict")
     rerender(<TextDiff oldText={before} newText={after} height="fill" />)
