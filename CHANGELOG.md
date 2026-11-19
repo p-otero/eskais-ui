@@ -7,6 +7,7 @@ Versions follow [semver](https://semver.org). Before 1.0, a minor version can br
 ### Added
 
 - `CommitHistory selected`, `defaultSelected` and `onSelect(id, details)`: a selected commit for a list beside a commit pane. A press, Enter or Space selects a row (UI SDK Tree's single selection, `aria-selected`), drawn with the `nav-current` fill, hairline and medium weight so it doesn't rest on colour. A press or Enter on the row already selected opens its details (or its merged commits on a merge); arrows only move focus. Agents and `createCommitHistoryController()` get `select(commit)`, by id, hash or subject; `select(null)` clears it.
+- `CommitHistory workingTree={{ staged, unstaged, label? }}`: a dirty checkout's row above the newest commit, "Uncommitted changes · 2 staged · 3 unstaged" with a hollow dashed node. It shares the tree's roving focus and selection with the commits as `WORKING_TREE` (`"working-tree"`, exported), is an agent item named in full, and takes `labels.workingTree`, `labels.staged(n)` and `labels.unstaged(n)`.
 
 ## 0.2.3 (2026-11-19)
 

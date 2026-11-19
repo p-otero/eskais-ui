@@ -15,21 +15,18 @@ import {
 } from "react"
 
 import { Button } from "@/components/ui/button"
-import { CommitBranchSelect } from "@/components/ui/commit-branch-select"
+import { CommitHistoryHeader } from "@/components/ui/commit-history-header"
 import { doneCount, Rows, summaryOf, treeItemsOf } from "@/components/ui/commit-history-rows"
 import {
   commitHistory,
   type CommitHistoryChangeReason,
   type CommitHistoryController,
   type CommitHistoryOptions,
+  WORKING_TREE,
 } from "@/components/ui/commit-history-primitive"
-import {
-  commitHistoryLabels,
-  commitName,
-  type CommitHistoryLabels,
-  type CommitRowContext,
-} from "@/components/ui/commit-history-row"
-import { Select } from "@/components/ui/select"
+import { commitHistoryLabels, type CommitHistoryLabels } from "@/components/ui/commit-history-labels"
+import { commitName, type CommitRowContext } from "@/components/ui/commit-history-row"
+import { WorkingTreeRow, workingTreeText, type WorkingTree } from "@/components/ui/commit-working-tree-row"
 import { useNow } from "@/components/ui/use-now"
 import {
   useBranchModel,
@@ -109,6 +106,11 @@ type CommitHistoryProps = Omit<PartProps<"div">, "children" | "onSelect"> & {
   /** Content at the end of the header, before the count. */
   actions?: ReactNode
   /**
+   * A dirty checkout: a row above the newest commit with the staged and unstaged counts, a hollow dashed node,
+   * and `labels.workingTree` or `label` as its name. It takes focus and selection like a commit, as `WORKING_TREE`.
+   */
+  workingTree?: WorkingTree
+  /**
    * `"branches"` draws every active branch in `branches` as its own lane beside the base, coloured and labelled
    * at its head, with a select (or a press on a pill) to show one alone; merged branches stay folded under their merge. Commits are then
    * `git log --all --topo-order`. Default `"trail"`.
@@ -167,6 +169,7 @@ function CommitHistory({
   maxLanes,
   controller,
   actions,
+  workingTree,
   view = "trail",
   focusedBranch,
   onFocusedBranchChange,
@@ -194,21 +197,25 @@ function CommitHistory({
   const model = useBranchModel(graph, view === "branches" ? branchList : noBranches, { base: branch, staleAfter, now })
   const find = useMemo(() => createCommitFinder(graph), [graph])
   const nameContext = useMemo(() => ({ now, locale, labels }), [now, locale, labels])
+  const workingTreeName = workingTree ? workingTreeText(workingTree, labels, locale).name : undefined
   const lookup = useMemo(
     () => ({
       find,
-      entries: () =>
-        graph.commits.map((commit) => ({
+      entries: () => [
+        ...(workingTreeName === undefined ? [] : [{ value: WORKING_TREE, label: workingTreeName }]),
+        ...graph.commits.map((commit) => ({
           value: commit.id,
           label: commitName(commit, nameContext, model?.byHead.get(commit.id)),
         })),
+      ],
       branches: () => (model?.all ?? []).map(summaryOf),
     }),
-    [find, graph, nameContext, model],
+    [find, graph, nameContext, model, workingTreeName],
   )
 
   const handle = usePrimitive(commitHistory, {
     lookup,
+    workingTree: workingTree !== undefined,
     expanded,
     defaultExpanded,
     onExpandedChange,
@@ -244,7 +251,16 @@ function CommitHistory({
   const { visible } = trail
   const justExpanded = useJustExpanded(state.expanded)
   const openDetails = useMemo(() => new Set(state.details), [state.details])
-  const items = useMemo(() => treeItemsOf(graph), [graph])
+  const commitItems = useMemo(() => treeItemsOf(graph), [graph])
+  const items = useMemo(
+    () =>
+      workingTreeName === undefined
+        ? commitItems
+        : [{ value: WORKING_TREE, label: workingTree?.label ?? labels.workingTree }, ...commitItems],
+    [commitItems, workingTreeName, workingTree?.label, labels.workingTree],
+  )
+  // The working-tree row comes before the commits' rows in the tree's order.
+  const rowOffset = workingTree ? 1 : 0
 
   const commitAt = useCallback(
     (index: number) => graph.commits[visible.rows[index] as number] as Commit,
@@ -342,48 +358,24 @@ function CommitHistory({
       },
       children: (
         <>
-          <div
-            data-slot="commit-history-header"
-            className="flex min-w-0 items-center justify-between gap-items px-(--item-padding-x)"
-          >
-            {model && model.active.length > 0 ? (
-              <CommitBranchSelect
-                branches={model.active}
-                focused={state.focusedBranch}
-                onFocus={focusBranch}
-                labels={labels}
-                now={now}
-                locale={locale}
-              />
-            ) : switcher ? (
-              <Select
-                aria-label={labels.branch}
-                size="sm"
-                options={branchNames.map((name) => ({ value: name, label: name }))}
-                value={state.branch}
-                onValueChange={(value) => {
-                  if (typeof value === "string") handle.api.selectBranch(value, { reason: "item-press" })
-                }}
-                triggerProps={{
-                  className:
-                    "-ms-(--item-padding-x) w-auto border-transparent bg-transparent px-(--item-padding-x) font-medium shadow-none hover:bg-accent",
-                }}
-              />
-            ) : (
-              <span className="truncate text-body-sm font-medium">{state.branch ?? branch}</span>
-            )}
-            <span className="flex shrink-0 items-center gap-items">
-              {actions}
-              <span data-slot="commit-history-count" className="text-caption text-muted-foreground tabular-nums">
-                {labels.commits(total, locale)}
-              </span>
-            </span>
-          </div>
+          <CommitHistoryHeader
+            labels={labels}
+            now={now}
+            locale={locale}
+            active={model?.active}
+            focusedBranch={state.focusedBranch}
+            onFocusBranch={focusBranch}
+            switcher={switcher ? branchNames : undefined}
+            branch={state.branch ?? branch}
+            onBranch={(name) => handle.api.selectBranch(name, { reason: "item-press" })}
+            actions={actions}
+            total={total}
+          />
           <div
             ref={setScroller}
             className={cn("min-h-0 flex-1 overflow-y-auto", findable && "max-h-(--commit-history-height)")}
           >
-            <div ref={anchor} className="min-w-0">
+            <div className="min-w-0">
               <Tree
                 aria-label={label}
                 // The history's own actions serve agents by commit; the tree would list every row a second time.
@@ -415,6 +407,7 @@ function CommitHistory({
                     handle.api.focusBranch(state.focusedBranch === name ? null : name, { reason: "item-press", event })
                     return
                   }
+                  if (id === WORKING_TREE) return
                   const entry = find(id)
                   if (!entry) return
                   const options = { reason: "item-press" as const, event }
@@ -424,19 +417,27 @@ function CommitHistory({
                   else handle.api.toggleDetails(id, options)
                 }}
                 onHighlight={(_id, { index }) => {
-                  if (virtual.virtual && index >= 0) virtual.scrollToIndex(index)
+                  if (virtual.virtual && index >= rowOffset) virtual.scrollToIndex(index - rowOffset)
                 }}
-                style={virtual.absolute ? { height: virtual.height } : undefined}
-                className={cn("flex min-w-0 flex-col outline-none", virtual.virtual && "relative")}
+                className="flex min-w-0 flex-col outline-none"
               >
-                <Rows
-                  trail={trail}
-                  details={openDetails}
-                  justExpanded={justExpanded}
-                  context={context}
-                  virtual={virtual}
-                  heads={shownHeads}
-                />
+                {workingTree && <WorkingTreeRow workingTree={workingTree} labels={labels} locale={locale} />}
+                <div
+                  // The rows' offset in the scroller is read when they mount: a working-tree row above them moves it.
+                  key={workingTree ? "below-working-tree" : "rows"}
+                  ref={anchor}
+                  style={virtual.absolute ? { height: virtual.height } : undefined}
+                  className={cn("flex min-w-0 flex-col", virtual.virtual && "relative")}
+                >
+                  <Rows
+                    trail={trail}
+                    details={openDetails}
+                    justExpanded={justExpanded}
+                    context={context}
+                    virtual={virtual}
+                    heads={shownHeads}
+                  />
+                </div>
               </Tree>
             </div>
             {hasMore && <div ref={reachEnd} aria-hidden="true" data-slot="commit-history-end" />}
@@ -458,5 +459,5 @@ function CommitHistory({
   )
 }
 
-export { CommitHistory, commitHistoryLabels }
-export type { CommitHistoryLabels, CommitHistoryProps }
+export { CommitHistory, commitHistoryLabels, WORKING_TREE }
+export type { CommitHistoryLabels, CommitHistoryProps, WorkingTree }
