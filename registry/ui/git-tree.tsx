@@ -23,6 +23,7 @@ import {
 import { memo, useCallback, useMemo, type CSSProperties, type FocusEvent } from "react"
 
 import { gitTree, type GitTreeOptions } from "@/components/ui/git-tree-primitive"
+import { ScrollArea, ScrollAreaScrollbar, ScrollAreaViewport } from "@/components/ui/scroll-area"
 import { useInstanceState } from "@/components/ui/use-instance-state"
 import { useTrailRows } from "@/components/ui/use-trail-rows"
 import { gitStatusTones, indexGitFiles, type GitFileStatus, type GitTreeFile } from "@/lib/git-status"
@@ -289,62 +290,62 @@ function GitTree({
         if (!Number.isNaN(at)) virtual.pin(at)
       },
       children: (
-        <div
-          ref={setScroller}
-          className={cn("min-h-0 flex-1 overflow-y-auto", findable && "max-h-(--git-tree-height)")}
-        >
-          <div ref={anchor} className="min-w-0">
-            <Tree
-              aria-label={label}
-              // The tree's own expand and collapse would list every path a second time beside open, expand and collapse.
-              data-agent-hidden=""
-              items={items}
-              mode="none"
-              current={current ?? null}
-              expanded={state.expanded as string[]}
-              onExpandedChange={(next, change) =>
-                handle.api.setExpanded(next, { reason: change.reason, event: change.event })
-              }
-              onAction={(path, { event }) => {
-                if (!folders.has(path) && onOpenFile) handle.api.open(path, { reason: "item-press", event })
-              }}
-              onHighlight={(_path, { index: at }) => {
-                if (virtual.virtual && at >= 0) virtual.scrollToIndex(at)
-              }}
-              style={virtual.absolute ? { height: virtual.height } : undefined}
-              className={cn("flex min-w-0 flex-col outline-none", virtual.virtual && "relative")}
-            >
-              {virtual.segments.map((segment) => {
-                if (segment.type === "gap") {
+        <ScrollArea className={cn("flex min-h-0 flex-1 flex-col", findable && "max-h-(--git-tree-height)")}>
+          <ScrollAreaViewport ref={setScroller} className="h-auto min-h-0 flex-1">
+            <div ref={anchor} className="min-w-0">
+              <Tree
+                aria-label={label}
+                // The tree's own expand and collapse would list every path a second time beside open, expand and collapse.
+                data-agent-hidden=""
+                items={items}
+                mode="none"
+                current={current ?? null}
+                expanded={state.expanded as string[]}
+                onExpandedChange={(next, change) =>
+                  handle.api.setExpanded(next, { reason: change.reason, event: change.event })
+                }
+                onAction={(path, { event }) => {
+                  if (!folders.has(path) && onOpenFile) handle.api.open(path, { reason: "item-press", event })
+                }}
+                onHighlight={(_path, { index: at }) => {
+                  if (virtual.virtual && at >= 0) virtual.scrollToIndex(at)
+                }}
+                style={virtual.absolute ? { height: virtual.height } : undefined}
+                className={cn("flex min-w-0 flex-col outline-none", virtual.virtual && "relative")}
+              >
+                {virtual.segments.map((segment) => {
+                  if (segment.type === "gap") {
+                    return (
+                      <div
+                        key={segment.key}
+                        aria-hidden="true"
+                        data-slot="git-tree-gap"
+                        style={{ height: segment.size }}
+                      />
+                    )
+                  }
+                  const { index: at, top } = segment
+                  const row = rows[at]
+                  if (!row) return null
                   return (
-                    <div
-                      key={segment.key}
-                      aria-hidden="true"
-                      data-slot="git-tree-gap"
-                      style={{ height: segment.size }}
+                    <GitTreeRow
+                      key={row.item.value}
+                      item={row.item}
+                      level={row.level}
+                      index={at}
+                      top={top}
+                      expanded={open.has(row.item.value)}
+                      context={context}
+                      measure={virtual.measure}
+                      textSlot={virtual.textSlot}
                     />
                   )
-                }
-                const { index: at, top } = segment
-                const row = rows[at]
-                if (!row) return null
-                return (
-                  <GitTreeRow
-                    key={row.item.value}
-                    item={row.item}
-                    level={row.level}
-                    index={at}
-                    top={top}
-                    expanded={open.has(row.item.value)}
-                    context={context}
-                    measure={virtual.measure}
-                    textSlot={virtual.textSlot}
-                  />
-                )
-              })}
-            </Tree>
-          </div>
-        </div>
+                })}
+              </Tree>
+            </div>
+          </ScrollAreaViewport>
+          <ScrollAreaScrollbar data-agent-hidden="" />
+        </ScrollArea>
       ),
     },
   )

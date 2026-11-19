@@ -27,6 +27,7 @@ import {
 import { commitHistoryLabels, type CommitHistoryLabels } from "@/components/ui/commit-history-labels"
 import type { CommitRowContext } from "@/components/ui/commit-history-row"
 import { WorkingTreeRow, workingTreeText, type WorkingTree } from "@/components/ui/commit-working-tree-row"
+import { ScrollArea, ScrollAreaScrollbar, ScrollAreaViewport } from "@/components/ui/scroll-area"
 import { useNow } from "@/components/ui/use-now"
 import {
   useBranchModel,
@@ -373,78 +374,84 @@ function CommitHistory({
             total={total}
             unpushed={toPush}
           />
-          <div
-            ref={setScroller}
-            className={cn("min-h-0 flex-1 overflow-y-auto", findable && "max-h-(--commit-history-height)")}
-          >
-            <div className="min-w-0">
-              <Tree
-                aria-label={label}
-                // The history's own actions serve agents by commit; the tree would list every row a second time.
-                data-agent-hidden=""
-                items={items}
-                mode={selectable ? "single" : "none"}
-                value={selectable ? state.selected : undefined}
-                onValueChange={(next, change) => {
-                  if (typeof next === "string" || next === null)
-                    handle.api.select(next, { reason: change.reason as CommitHistoryChangeReason, event: change.event })
-                }}
-                expandOnPress={false}
-                controller={tree}
-                expanded={state.expanded as string[]}
-                onExpandedChange={(next, change) =>
-                  handle.api.setExpanded(next, {
-                    reason: change.reason as CommitHistoryChangeReason,
-                    event: change.event,
-                  })
-                }
-                onAction={(id, { event }) => {
-                  // A press inside a commit's details, like its copy button, is not a press on the row.
-                  if (event?.target instanceof Element && event.target.closest("[data-slot=commit-details]")) return
-                  // A press on a branch's pill shows only that branch, or every branch again when it's the one shown.
-                  const pill =
-                    event?.target instanceof Element ? event.target.closest<HTMLElement>("[data-branch]") : null
-                  if (pill?.dataset.branch) {
-                    const name = pill.dataset.branch
-                    handle.api.focusBranch(state.focusedBranch === name ? null : name, { reason: "item-press", event })
-                    return
+          <ScrollArea className={cn("flex min-h-0 flex-1 flex-col", findable && "max-h-(--commit-history-height)")}>
+            <ScrollAreaViewport ref={setScroller} className="h-auto min-h-0 flex-1">
+              <div className="min-w-0">
+                <Tree
+                  aria-label={label}
+                  // The history's own actions serve agents by commit; the tree would list every row a second time.
+                  data-agent-hidden=""
+                  items={items}
+                  mode={selectable ? "single" : "none"}
+                  value={selectable ? state.selected : undefined}
+                  onValueChange={(next, change) => {
+                    if (typeof next === "string" || next === null)
+                      handle.api.select(next, {
+                        reason: change.reason as CommitHistoryChangeReason,
+                        event: change.event,
+                      })
+                  }}
+                  expandOnPress={false}
+                  controller={tree}
+                  expanded={state.expanded as string[]}
+                  onExpandedChange={(next, change) =>
+                    handle.api.setExpanded(next, {
+                      reason: change.reason as CommitHistoryChangeReason,
+                      event: change.event,
+                    })
                   }
-                  if (id === WORKING_TREE) return
-                  const entry = find(id)
-                  if (!entry) return
-                  const options = { reason: "item-press" as const, event }
-                  if (selectable && selectedAtPress.current !== id) return
-                  if (entry.merge) handle.api.toggle(id, options)
-                  else if (onOpenCommit) handle.api.openCommit(id, options)
-                  else handle.api.toggleDetails(id, options)
-                }}
-                onHighlight={(_id, { index }) => {
-                  if (virtual.virtual && index >= rowOffset) virtual.scrollToIndex(index - rowOffset)
-                }}
-                className="flex min-w-0 flex-col outline-none"
-              >
-                {workingTree && <WorkingTreeRow workingTree={workingTree} labels={labels} locale={locale} />}
-                <div
-                  // The rows' offset in the scroller is read when they mount: a working-tree row above them moves it.
-                  key={workingTree ? "below-working-tree" : "rows"}
-                  ref={anchor}
-                  style={virtual.absolute ? { height: virtual.height } : undefined}
-                  className={cn("flex min-w-0 flex-col", virtual.virtual && "relative")}
+                  onAction={(id, { event }) => {
+                    // A press inside a commit's details, like its copy button, is not a press on the row.
+                    if (event?.target instanceof Element && event.target.closest("[data-slot=commit-details]")) return
+                    // A press on a branch's pill shows only that branch, or every branch again when it's the one shown.
+                    const pill =
+                      event?.target instanceof Element ? event.target.closest<HTMLElement>("[data-branch]") : null
+                    if (pill?.dataset.branch) {
+                      const name = pill.dataset.branch
+                      handle.api.focusBranch(state.focusedBranch === name ? null : name, {
+                        reason: "item-press",
+                        event,
+                      })
+                      return
+                    }
+                    if (id === WORKING_TREE) return
+                    const entry = find(id)
+                    if (!entry) return
+                    const options = { reason: "item-press" as const, event }
+                    if (selectable && selectedAtPress.current !== id) return
+                    if (entry.merge) handle.api.toggle(id, options)
+                    else if (onOpenCommit) handle.api.openCommit(id, options)
+                    else handle.api.toggleDetails(id, options)
+                  }}
+                  onHighlight={(_id, { index }) => {
+                    if (virtual.virtual && index >= rowOffset) virtual.scrollToIndex(index - rowOffset)
+                  }}
+                  className="flex min-w-0 flex-col outline-none"
                 >
-                  <Rows
-                    trail={trail}
-                    details={openDetails}
-                    justExpanded={justExpanded}
-                    context={context}
-                    virtual={virtual}
-                    heads={shownHeads}
-                    upstreamRow={upstreamRow}
-                  />
-                </div>
-              </Tree>
-            </div>
-            {hasMore && <div ref={reachEnd} aria-hidden="true" data-slot="commit-history-end" />}
-          </div>
+                  {workingTree && <WorkingTreeRow workingTree={workingTree} labels={labels} locale={locale} />}
+                  <div
+                    // The rows' offset in the scroller is read when they mount: a working-tree row above them moves it.
+                    key={workingTree ? "below-working-tree" : "rows"}
+                    ref={anchor}
+                    style={virtual.absolute ? { height: virtual.height } : undefined}
+                    className={cn("flex min-w-0 flex-col", virtual.virtual && "relative")}
+                  >
+                    <Rows
+                      trail={trail}
+                      details={openDetails}
+                      justExpanded={justExpanded}
+                      context={context}
+                      virtual={virtual}
+                      heads={shownHeads}
+                      upstreamRow={upstreamRow}
+                    />
+                  </div>
+                </Tree>
+              </div>
+              {hasMore && <div ref={reachEnd} aria-hidden="true" data-slot="commit-history-end" />}
+            </ScrollAreaViewport>
+            <ScrollAreaScrollbar data-agent-hidden="" />
+          </ScrollArea>
           {hasMore && onLoadMore && (
             <Button
               variant="ghost"

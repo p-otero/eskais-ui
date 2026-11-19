@@ -19,6 +19,7 @@ import { DescriptionList, type DescriptionListProps } from "@/components/ui/desc
 import { Field, FieldDescription, FieldLabel } from "@/components/ui/field"
 import { Link } from "@/components/ui/link"
 import { isPlainClick } from "@/components/ui/link-primitive"
+import { ScrollArea, ScrollAreaScrollbar, ScrollAreaViewport } from "@/components/ui/scroll-area"
 import { Select } from "@/components/ui/select"
 import {
   PendingSectionContext,
@@ -176,44 +177,47 @@ function SettingsPage({
       {...props}
     >
       <div className="flex flex-col gap-section @3xl/settings:flex-row @3xl/settings:items-start">
-        <nav
-          aria-label={labels.nav}
-          data-slot="settings-nav"
-          className="sticky top-(--settings-scroll-margin) hidden max-h-(--settings-nav-height) w-52 shrink-0 flex-col gap-px overflow-y-auto @3xl/settings:flex"
-        >
-          {sections.map((section) =>
-            navigation === "buttons" ? (
-              <ButtonPrimitive
-                key={section.id}
-                aria-current={section.id === current ? "location" : undefined}
-                onClick={() => choose(section.id)}
-                className={cn(navEntryClassName, "cursor-pointer text-start")}
-              >
-                {section.label}
-              </ButtonPrimitive>
-            ) : (
-              <Link
-                key={section.id}
-                variant="plain"
-                href={hrefOf(section.id)}
-                current={section.id === current ? "location" : undefined}
-                onFollow={() => choose(section.id)}
-                // A hash route follows on pointerdown and focuses the heading; the same press would then focus the
-                // link. A plain press keeps focus where it is, and the click puts it back if a browser moved it anyway.
-                onMouseDown={(event) => {
-                  if (isPlainClick(event.nativeEvent)) event.preventDefault()
-                }}
-                onClick={(event) => {
-                  if (isPlainClick(event.nativeEvent) && document.activeElement === event.currentTarget)
-                    focusTitle(section.id)
-                }}
-                className={navEntryClassName}
-              >
-                {section.label}
-              </Link>
-            ),
-          )}
-        </nav>
+        <ScrollArea className="sticky top-(--settings-scroll-margin) hidden max-h-(--settings-nav-height) w-52 shrink-0 flex-col @3xl/settings:flex">
+          <ScrollAreaViewport
+            aria-label={labels.nav}
+            className="flex h-auto min-h-0 flex-1 flex-col gap-px"
+            render={(part) => <nav {...part} data-slot="settings-nav" />}
+          >
+            {sections.map((section) =>
+              navigation === "buttons" ? (
+                <ButtonPrimitive
+                  key={section.id}
+                  aria-current={section.id === current ? "location" : undefined}
+                  onClick={() => choose(section.id)}
+                  className={cn(navEntryClassName, "cursor-pointer text-start")}
+                >
+                  {section.label}
+                </ButtonPrimitive>
+              ) : (
+                <Link
+                  key={section.id}
+                  variant="plain"
+                  href={hrefOf(section.id)}
+                  current={section.id === current ? "location" : undefined}
+                  onFollow={() => choose(section.id)}
+                  // A hash route follows on pointerdown and focuses the heading; the same press would then focus the
+                  // link. A plain press keeps focus where it is, and the click puts it back if a browser moved it anyway.
+                  onMouseDown={(event) => {
+                    if (isPlainClick(event.nativeEvent)) event.preventDefault()
+                  }}
+                  onClick={(event) => {
+                    if (isPlainClick(event.nativeEvent) && document.activeElement === event.currentTarget)
+                      focusTitle(section.id)
+                  }}
+                  className={navEntryClassName}
+                >
+                  {section.label}
+                </Link>
+              ),
+            )}
+          </ScrollAreaViewport>
+          <ScrollAreaScrollbar data-agent-hidden="" />
+        </ScrollArea>
         <div
           data-slot="settings-picker"
           className="sticky top-(--settings-top) z-sticky -my-inline bg-background py-inline @3xl/settings:hidden"

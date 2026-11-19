@@ -18,6 +18,7 @@ import {
   type AttachmentOpenReason,
 } from "@/components/ui/attachments-primitive"
 import { Lightbox, type LightboxItem, type LightboxLabels } from "@/components/ui/lightbox"
+import { ScrollArea, ScrollAreaScrollbar, ScrollAreaViewport } from "@/components/ui/scroll-area"
 import { cn } from "@/lib/utils"
 
 type AttachmentLabels = {
@@ -65,7 +66,8 @@ function AttachmentStrip({
   ...props
 }: AttachmentStripProps) {
   const labels = { ...attachmentLabels, ...labelOverrides }
-  const list = useRef<HTMLUListElement>(null)
+  // The scroll area's viewport renders the list, so the ref is typed as its div.
+  const list = useRef<HTMLDivElement>(null)
   const [expanded, setExpanded] = useState(false)
   const [viewer, setViewer] = useState({ open: false, index: 0, id: "" })
   const images = useMemo<LightboxItem[]>(
@@ -93,51 +95,54 @@ function AttachmentStrip({
 
   const children = (
     <>
-      <ul
-        ref={list}
-        data-slot="attachment-list"
-        className="-m-inline flex min-w-0 items-center gap-items overflow-x-auto overscroll-x-contain p-inline"
-      >
-        {shown.map((attachment) => (
-          <li key={attachment.id} className="flex shrink-0">
-            <AttachmentThumb
-              attachment={attachment}
-              size={size}
-              locale={locale}
-              openLabel={labels.open}
-              onOpen={(_, event) => {
-                const opened = handle.api.openAttachment(attachment.id, {
-                  reason: "item-press",
-                  event: event.nativeEvent,
-                })
-                if (!opened) event.preventDefault()
-              }}
-            />
-          </li>
-        ))}
-        {hidden > 0 && (
-          <li className="flex shrink-0">
-            <Button
-              render={(part) => <button {...part} data-slot="attachment-more" />}
-              aria-label={labels.more(hidden)}
-              onClick={() => {
-                flushSync(() => setExpanded(true))
-                const first = attachments[max ?? 0]
-                list.current
-                  ?.querySelector<HTMLElement>(`[data-attachment-id="${CSS.escape(first?.id ?? "")}"]`)
-                  ?.focus()
-              }}
-              className={cn(
-                "touch-target flex shrink-0 cursor-pointer items-center justify-center rounded-lg border border-dashed bg-muted/(--glass-opacity) px-inset-item text-body-sm font-medium text-muted-foreground tabular-nums transition-colors hover:bg-accent hover:text-accent-foreground",
-                size === "sm" ? "h-12 min-w-12" : "h-20 min-w-20",
-                focusRing,
-              )}
-            >
-              +{hidden}
-            </Button>
-          </li>
-        )}
-      </ul>
+      <ScrollArea className="-m-inline min-w-0">
+        <ScrollAreaViewport
+          ref={list}
+          className="flex h-auto items-center gap-items overscroll-x-contain p-inline"
+          render={(part) => <ul {...part} data-slot="attachment-list" />}
+        >
+          {shown.map((attachment) => (
+            <li key={attachment.id} className="flex shrink-0">
+              <AttachmentThumb
+                attachment={attachment}
+                size={size}
+                locale={locale}
+                openLabel={labels.open}
+                onOpen={(_, event) => {
+                  const opened = handle.api.openAttachment(attachment.id, {
+                    reason: "item-press",
+                    event: event.nativeEvent,
+                  })
+                  if (!opened) event.preventDefault()
+                }}
+              />
+            </li>
+          ))}
+          {hidden > 0 && (
+            <li className="flex shrink-0">
+              <Button
+                render={(part) => <button {...part} data-slot="attachment-more" />}
+                aria-label={labels.more(hidden)}
+                onClick={() => {
+                  flushSync(() => setExpanded(true))
+                  const first = attachments[max ?? 0]
+                  list.current
+                    ?.querySelector<HTMLElement>(`[data-attachment-id="${CSS.escape(first?.id ?? "")}"]`)
+                    ?.focus()
+                }}
+                className={cn(
+                  "touch-target flex shrink-0 cursor-pointer items-center justify-center rounded-lg border border-dashed bg-muted/(--glass-opacity) px-inset-item text-body-sm font-medium text-muted-foreground tabular-nums transition-colors hover:bg-accent hover:text-accent-foreground",
+                  size === "sm" ? "h-12 min-w-12" : "h-20 min-w-20",
+                  focusRing,
+                )}
+              >
+                +{hidden}
+              </Button>
+            </li>
+          )}
+        </ScrollAreaViewport>
+        <ScrollAreaScrollbar orientation="horizontal" data-agent-hidden="" />
+      </ScrollArea>
       {images.length > 0 && (
         <Lightbox
           items={images}

@@ -15,6 +15,7 @@ import { useMemo } from "react"
 import type { DiffLabels } from "@/components/ui/diff-labels"
 import { FileChange } from "@/components/ui/diff-stat"
 import type { DiffViewFile } from "@/components/ui/diff-view-model"
+import { ScrollArea, ScrollAreaScrollbar, ScrollAreaViewport } from "@/components/ui/scroll-area"
 import type { FileStatus } from "@/lib/diff-types"
 import { cn } from "@/lib/utils"
 
@@ -163,18 +164,24 @@ function GitDiffTree({ files, groups, value, onOpen, labels, className }: GitDif
   const items = useMemo(() => itemsOf(files, groups), [files, groups])
   const open = useMemo(() => folders(items), [items])
   return (
-    <Tree
-      aria-label={labels.files}
-      items={items}
-      defaultExpanded={open}
-      value={value ?? null}
-      onValueChange={(next) => {
-        if (typeof next === "string" && byPath.has(next)) onOpen(next)
-      }}
-      className={cn("flex flex-col overflow-auto", className)}
-    >
-      <Items items={items} files={byPath} labels={labels} />
-    </Tree>
+    <ScrollArea className={cn("flex flex-col", className)}>
+      <ScrollAreaViewport className="h-auto min-h-0 flex-1">
+        <Tree
+          aria-label={labels.files}
+          items={items}
+          defaultExpanded={open}
+          value={value ?? null}
+          onValueChange={(next) => {
+            if (typeof next === "string" && byPath.has(next)) onOpen(next)
+          }}
+          className="flex flex-col"
+        >
+          <Items items={items} files={byPath} labels={labels} />
+        </Tree>
+      </ScrollAreaViewport>
+      <ScrollAreaScrollbar data-agent-hidden="" />
+      <ScrollAreaScrollbar orientation="horizontal" data-agent-hidden="" />
+    </ScrollArea>
   )
 }
 

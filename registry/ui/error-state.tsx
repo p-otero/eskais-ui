@@ -84,7 +84,7 @@ function ErrorState({
               </CollapsibleTrigger>
               <CollapsiblePanel>
                 <div className="pt-items">
-                  <pre className="max-w-full overflow-x-auto rounded-control bg-muted px-inset-item py-inset-item text-start font-mono text-caption whitespace-pre-wrap wrap-anywhere">
+                  <pre className="max-w-full rounded-control bg-muted px-inset-item py-inset-item text-start font-mono text-caption whitespace-pre-wrap wrap-anywhere">
                     {details}
                   </pre>
                 </div>

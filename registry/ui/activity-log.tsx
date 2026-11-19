@@ -12,6 +12,7 @@ import type {
 } from "@/components/ui/activity-log-store"
 import { Button } from "@/components/ui/button"
 import { RelativeTime } from "@/components/ui/relative-time"
+import { ScrollArea, ScrollAreaScrollbar, ScrollAreaViewport } from "@/components/ui/scroll-area"
 import { toast } from "@/components/ui/toast"
 import type { Instant } from "@/lib/time"
 import { cn, cnState } from "@/lib/utils"
@@ -148,36 +149,46 @@ function ActivityLog({
               {labels.empty}
             </p>
           ) : (
-            <ol data-slot="activity-log-list" className="flex min-h-0 flex-col overflow-y-auto">
-              {entries.toReversed().map((entry, reversedIndex) => {
-                const target = entries.length - reversedIndex
-                const Icon = actorIcons[entry.actor]
-                return (
-                  <li key={entry.id} data-actor={entry.actor} className="flex">
-                    <Parts.Entry value={String(target)} data-agent-confirm={confirm(target)} className={entryClassName}>
-                      <Icon aria-hidden className="mt-px size-3.5 shrink-0 text-muted-foreground" />
-                      <span className="flex min-w-0 flex-col">
-                        <span className={cn(entry.reverted && "line-through")}>
-                          <span className="sr-only">{labels.actors[entry.actor]}: </span>
-                          {entry.description}
+            <ScrollArea className="flex min-h-0 flex-col">
+              <ScrollAreaViewport
+                className="flex h-auto min-h-0 flex-1 flex-col"
+                render={(part) => <ol {...part} data-slot="activity-log-list" />}
+              >
+                {entries.toReversed().map((entry, reversedIndex) => {
+                  const target = entries.length - reversedIndex
+                  const Icon = actorIcons[entry.actor]
+                  return (
+                    <li key={entry.id} data-actor={entry.actor} className="flex">
+                      <Parts.Entry
+                        value={String(target)}
+                        data-agent-confirm={confirm(target)}
+                        className={entryClassName}
+                      >
+                        <Icon aria-hidden className="mt-px size-3.5 shrink-0 text-muted-foreground" />
+                        <span className="flex min-w-0 flex-col">
+                          <span className={cn(entry.reverted && "line-through")}>
+                            <span className="sr-only">{labels.actors[entry.actor]}: </span>
+                            {entry.description}
+                          </span>
+                          <span className="flex flex-wrap items-baseline gap-x-inline text-caption text-muted-foreground">
+                            {entry.row !== undefined && <span className="truncate">{entry.row}</span>}
+                            <RelativeTime value={entry.at} now={now} locale={locale} formatStyle="short" />
+                            {target > position && <span className="sr-only">{labels.undone}</span>}
+                            {entry.reverted && <span>{labels.reverted}</span>}
+                          </span>
                         </span>
-                        <span className="flex flex-wrap items-baseline gap-x-inline text-caption text-muted-foreground">
-                          {entry.row !== undefined && <span className="truncate">{entry.row}</span>}
-                          <RelativeTime value={entry.at} now={now} locale={locale} formatStyle="short" />
-                          {target > position && <span className="sr-only">{labels.undone}</span>}
-                          {entry.reverted && <span>{labels.reverted}</span>}
-                        </span>
-                      </span>
-                    </Parts.Entry>
-                  </li>
-                )
-              })}
-              <li className="flex">
-                <Parts.Entry value="0" data-agent-confirm={confirm(0)} className={entryClassName}>
-                  {labels.start}
-                </Parts.Entry>
-              </li>
-            </ol>
+                      </Parts.Entry>
+                    </li>
+                  )
+                })}
+                <li className="flex">
+                  <Parts.Entry value="0" data-agent-confirm={confirm(0)} className={entryClassName}>
+                    {labels.start}
+                  </Parts.Entry>
+                </li>
+              </ScrollAreaViewport>
+              <ScrollAreaScrollbar data-agent-hidden="" />
+            </ScrollArea>
           )}
         </>
       )}

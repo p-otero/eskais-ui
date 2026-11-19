@@ -11,6 +11,7 @@ import { buttonVariants } from "@/components/ui/button"
 import { contentClassName, DialogBackdrop } from "@/components/ui/dialog"
 import { Link } from "@/components/ui/link"
 import { lightbox, type LightboxIndexChangeReason } from "@/components/ui/lightbox-primitive"
+import { ScrollArea, ScrollAreaCorner, ScrollAreaScrollbar, ScrollAreaViewport } from "@/components/ui/scroll-area"
 import { ThemedImage, type ThemedImageProps } from "@/components/ui/themed-image"
 import { ControlTooltip } from "@/components/ui/tooltip"
 import { Toggle } from "@/components/ui/toggle"
@@ -136,20 +137,25 @@ function LightboxView({ items, index, onIndexChange, labels }: ViewProps) {
         </ControlTooltip>
       </div>
       <div data-slot="lightbox-stage" className="relative min-h-0 flex-1 bg-muted/(--glass-opacity)">
-        <div
-          data-slot="lightbox-viewport"
-          data-zoom={actual ? "actual" : "fit"}
-          className="absolute inset-0 grid place-items-center-safe overflow-auto p-group"
-        >
-          <ThemedImage
-            key={item.id}
-            src={item.src}
-            srcDark={item.srcDark}
-            alt={item.alt}
-            decoding="async"
-            className={cn("rounded-control", actual ? "max-w-none" : "max-h-full max-w-full object-contain")}
-          />
-        </div>
+        <ScrollArea className="absolute inset-0">
+          <ScrollAreaViewport
+            data-zoom={actual ? "actual" : "fit"}
+            className="grid place-items-center-safe p-group"
+            render={(part) => <div {...part} data-slot="lightbox-viewport" />}
+          >
+            <ThemedImage
+              key={item.id}
+              src={item.src}
+              srcDark={item.srcDark}
+              alt={item.alt}
+              decoding="async"
+              className={cn("rounded-control", actual ? "max-w-none" : "max-h-full max-w-full object-contain")}
+            />
+          </ScrollAreaViewport>
+          <ScrollAreaScrollbar data-agent-hidden="" />
+          <ScrollAreaScrollbar orientation="horizontal" data-agent-hidden="" />
+          <ScrollAreaCorner />
+        </ScrollArea>
         {count > 1 && (
           <>
             <ControlTooltip label={labels.previous}>

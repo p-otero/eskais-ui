@@ -13,6 +13,7 @@ import {
   DrawerDescription,
   DrawerTitle,
 } from "@/components/ui/drawer"
+import { ScrollArea, ScrollAreaScrollbar, ScrollAreaViewport } from "@/components/ui/scroll-area"
 import { ShortcutHint, ShortcutScope, useShortcut } from "@/components/ui/shortcuts"
 import { narrowQuery, useMediaQuery } from "@/components/ui/use-media-query"
 import { cn } from "@/lib/utils"
@@ -103,9 +104,15 @@ function SidePanel({
 
   const shortcutLabel = scopeLabel ?? (typeof title === "string" ? title : undefined)
   const body = (
-    <div data-slot="side-panel-body" className="flex min-h-0 flex-1 flex-col gap-group overflow-y-auto p-inset-surface">
-      {children}
-    </div>
+    <ScrollArea className="flex min-h-0 flex-1 flex-col">
+      <ScrollAreaViewport
+        className="flex h-auto min-h-0 flex-1 flex-col gap-group p-inset-surface"
+        render={(part) => <div {...part} data-slot="side-panel-body" />}
+      >
+        {children}
+      </ScrollAreaViewport>
+      <ScrollAreaScrollbar data-agent-hidden="" />
+    </ScrollArea>
   )
 
   if (sheet) {

@@ -131,7 +131,7 @@ test("sizes set the width; md is the default; the body scrolls between a header 
   render(<SizedDialog />)
   const dialog = screen.getByRole("dialog", { name: "Sized" })
   expect(dialog.getAttribute("data-size")).toBe("md")
-  expect(dialog.querySelector('[data-slot="dialog-body"]')?.className).toContain("overflow-y-auto")
+  expect(dialog.querySelector('[data-slot="dialog-body"]')?.parentElement?.dataset.slot).toBe("scroll-area")
   expect(dialog.querySelector('[data-slot="dialog-header"]')?.className).toContain("shrink-0")
   expect(dialog.querySelector('[data-slot="dialog-footer"]')?.className).toContain("shrink-0")
 })

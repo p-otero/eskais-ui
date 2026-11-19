@@ -22,6 +22,7 @@ import {
   type CodeLine,
   type SyntaxTone,
 } from "@/components/ui/code-highlight"
+import { ScrollArea, ScrollAreaCorner, ScrollAreaScrollbar, ScrollAreaViewport } from "@/components/ui/scroll-area"
 import { cn } from "@/lib/utils"
 
 type CodeBlockLabels = {
@@ -203,29 +204,35 @@ function CodeBlock({
             </div>
           )}
           {!header && copyButton(copied)}
-          <pre
-            // oxlint-disable-next-line jsx-a11y/no-noninteractive-tabindex -- code that scrolls takes focus so keyboard users can scroll it
-            tabIndex={scrolls ? 0 : undefined}
-            className={cn(
-              "m-0 overflow-auto py-inset-item font-mono text-caption leading-relaxed outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset",
-              maxHeight !== undefined && "max-h-(--code-block-max-height)",
-              !header && copyable && "[&_[data-slot=code-line]]:pe-section",
-              wrap ? "whitespace-pre-wrap wrap-anywhere" : "whitespace-pre [&_[data-slot=code-line]]:min-w-max",
-            )}
-          >
-            <code data-language={lang} className="grid">
-              {lines.map((line, index) => (
-                <CodeLineView
-                  // oxlint-disable-next-line react/no-array-index-key -- lines of a code sample have no identity but their order
-                  key={index}
-                  line={line}
-                  number={index + 1}
-                  highlighted={highlighted.has(index + 1)}
-                  lineNumbers={lineNumbers}
-                />
-              ))}
-            </code>
-          </pre>
+          <ScrollArea className="flex min-h-0 flex-col">
+            <ScrollAreaViewport
+              // Code that scrolls takes focus so keyboard users can scroll it, also before it has been measured.
+              tabIndex={scrolls ? 0 : undefined}
+              render={(part) => <pre {...part} />}
+              className={cn(
+                "m-0 h-auto min-h-0 flex-1 py-inset-item font-mono text-caption leading-relaxed",
+                maxHeight !== undefined && "max-h-(--code-block-max-height)",
+                !header && copyable && "[&_[data-slot=code-line]]:pe-section",
+                wrap ? "whitespace-pre-wrap wrap-anywhere" : "whitespace-pre [&_[data-slot=code-line]]:min-w-max",
+              )}
+            >
+              <code data-language={lang} className="grid">
+                {lines.map((line, index) => (
+                  <CodeLineView
+                    // oxlint-disable-next-line react/no-array-index-key -- lines of a code sample have no identity but their order
+                    key={index}
+                    line={line}
+                    number={index + 1}
+                    highlighted={highlighted.has(index + 1)}
+                    lineNumbers={lineNumbers}
+                  />
+                ))}
+              </code>
+            </ScrollAreaViewport>
+            <ScrollAreaScrollbar data-agent-hidden="" />
+            <ScrollAreaScrollbar orientation="horizontal" data-agent-hidden="" />
+            <ScrollAreaCorner />
+          </ScrollArea>
           <output className="sr-only">{copied ? labels.copied : ""}</output>
         </>
       ),

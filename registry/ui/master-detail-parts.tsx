@@ -96,13 +96,16 @@ function MasterDetailListPane({
           {toolbar}
         </div>
       )}
-      <div
-        data-slot="master-detail-list-body"
-        className="min-h-0 flex-1 overflow-y-auto p-inline"
-        onFocus={(event) => onFocusRow(event.target)}
-      >
-        {children}
-      </div>
+      <ScrollArea className="flex min-h-0 flex-1 flex-col">
+        <ScrollAreaViewport
+          className="h-auto min-h-0 flex-1 p-inline"
+          onFocus={(event) => onFocusRow(event.target)}
+          render={(part) => <div {...part} data-slot="master-detail-list-body" />}
+        >
+          {children}
+        </ScrollAreaViewport>
+        <ScrollAreaScrollbar data-agent-hidden="" />
+      </ScrollArea>
     </section>
   )
 }

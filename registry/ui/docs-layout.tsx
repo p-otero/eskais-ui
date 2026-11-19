@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/breadcrumb"
 import { Link, type LinkProps } from "@/components/ui/link"
 import { PageLayout } from "@/components/ui/page-layout"
+import { ScrollArea, ScrollAreaScrollbar, ScrollAreaViewport } from "@/components/ui/scroll-area"
 import { cn } from "@/lib/utils"
 import { DocsToc, useTocItems, type DocsTocItem, type DocsTocProps } from "@/components/ui/docs-toc"
 
@@ -116,12 +117,15 @@ function DocsLayout({
             </PageLayout>
           </div>
           {toc !== undefined && (
-            <div
-              data-slot="docs-layout-toc"
-              className="sticky top-(--docs-top) hidden max-h-(--docs-column-height) w-52 shrink-0 self-start overflow-y-auto pt-group pb-section xl:block"
-            >
-              {toc}
-            </div>
+            <ScrollArea className="sticky top-(--docs-top) hidden max-h-(--docs-column-height) w-52 shrink-0 flex-col self-start xl:flex">
+              <ScrollAreaViewport
+                className="h-auto min-h-0 flex-1 pt-group pb-section"
+                render={(part) => <div {...part} data-slot="docs-layout-toc" />}
+              >
+                {toc}
+              </ScrollAreaViewport>
+              <ScrollAreaScrollbar data-agent-hidden="" />
+            </ScrollArea>
           )}
         </div>
       </div>

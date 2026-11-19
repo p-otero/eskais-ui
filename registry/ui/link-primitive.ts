@@ -11,6 +11,16 @@ function isPlainClick(event: MouseEvent) {
   return event.button === 0 && !event.metaKey && !event.ctrlKey && !event.shiftKey && !event.altKey
 }
 
+/** A click with a modifier or another button on a link inside the target, which the browser handles natively. */
+function isModifiedLinkPress(event: Event | undefined) {
+  return (
+    event instanceof MouseEvent &&
+    !isPlainClick(event) &&
+    event.target instanceof Element &&
+    event.target.closest("a[href]") !== null
+  )
+}
+
 // UI SDK ships no link part, so a link is invisible to agents unless the app takes over following it. With
 // `onFollow` the app decides what following means (a router push, a confirmation), for people and agents alike.
 const link = definePrimitive({
@@ -39,5 +49,5 @@ const link = definePrimitive({
   agent: { actions: ["follow"] },
 })
 
-export { isPlainClick, link }
+export { isModifiedLinkPress, isPlainClick, link }
 export type { LinkFollowDetails, LinkOptions }
