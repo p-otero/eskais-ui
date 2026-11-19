@@ -22,6 +22,7 @@ Read a component's own file before you use it: the props, variants and the comme
 | `references/server-data.md`               | tables, lists and comboboxes over a backend: sources, filters, wire formats, the URL    |
 | `references/diffs.md`                     | comparing texts, reviewing patches: TextDiff, GitDiff, DiffView and the diff engine     |
 | `references/git.md`                       | a branch's commit history, a repository's files at a commit                             |
+| `references/image-scan.md`                | an image under analysis: scan states, detected regions, pick → crop → scan              |
 
 Keeping screens fast (long lists, effects, React Compiler, motion) has its own skill, `eskais-perf`; building a throwaway mockup of a screen has `eskais-mockup`. Both install with `npx shadcn@latest add @eskais/eskais-perf-skill @eskais/eskais-mockup-skill`.
 
@@ -99,6 +100,7 @@ Each line is a need, then what to use. Props are listed by name; read the compon
 - **A bar pinned to an edge**: `Floating side align strategy` (`sticky` default, `fixed`, `absolute`) + `FloatingContent`; put a `FilterBar` or other UI SDK controls inside. Sticky bars go last in their scroll container
 - **Files and screenshots on an item**: `AttachmentStrip attachments aria-label max size onOpen`: image thumbnails open a built-in `Lightbox`, files open `href`; `+N` reveals the rest. `AttachmentThumb` alone. Agents get `openAttachment(id)`
 - **Crop an image before saving**: `ImageCropper aria-label src alt aspectRatio` (a box with handles) or `mode="frame" shape="circle"` (an avatar); zoom, rotate and flip come with it, `labels` translates them. `cropImage(src, crop, { width, shape })` in `onCropCommit` makes the file
+- **An image being analysed, then what was found**: `ImageScan src alt width height status progress statusText steps step regions onScan onCancel onRetry error` (`status` `uploaded` → `scanning` → `result` or `error`, driven by you): a sweep or a progress line over the image, then `regions` (`{ id, label, box: { x, y, width, height } }` in fractions of the image) as toggle buttons over it with a legend; `aspectRatio fit` for a frame of another ratio. Agents get `scan`, `cancel`, `retry`, `selectRegion`; see `references/image-scan.md`
 - **One image of a set, full size**: `Lightbox items index onIndexChange open onOpenChange`: arrow keys, counter, fit or actual size, open original; `srcDark` follows the theme without a flash. Agents get `next`, `previous`, `goTo(index)`
 - **Where work is in a pipeline**: `StageTrack stages current aria-label` (`variant="pill"` for only the current stage, `getHref` for links); `StageFilter stages counts value onValueChange` is a toggle group to filter by stage
 - **Dense rows or entity cards**: `List aria-label` + `ListGroup label count` + `ListItem id title leading subtitle status meta trailing actions href/onSelect selected`; `variant="card"` for cards; `value`/`onValueChange` on `List` makes it a Listbox. Agents get `select(id)`

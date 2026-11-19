@@ -4737,6 +4737,39 @@
       ]
     },
     {
+      "name": "image-scan",
+      "type": "registry:ui",
+      "title": "Image Scan",
+      "description": "An image under analysis, from a controlled status: a preview, a scan (a turning sweep or a progress line over the image, a progress bar, steps and Cancel), the detected regions as buttons over the image with a legend, or an error with Retry. Announces each change; agents get scan, cancel, retry and selectRegion.",
+      "docs": "`<ImageScan src alt width height status progress statusText steps step regions selectedRegion onSelectedRegionChange onScan onCancel onRetry error fit aspectRatio legend actions labels>`: `status` is `uploaded`, `scanning`, `result` or `error`, and you drive it. While scanning, `progress` (0 to 1) makes the bar and a line over the image determinate; without it a wedge turns over the image. Both are transforms on the compositor, and reduced motion keeps only the bar and a still frame. `regions` are `{ id, label, box: { x, y, width, height }, description?, tone? }` with the box in fractions of the image from its top left corner (physical, so right to left doesn't mirror it); they render in reading order as toggle buttons over the image, named by their label, and in a legend below (pointer only, `aria-hidden`). The frame keeps the image's ratio (`width`/`height`, or the loaded image's), or `aspectRatio` with `fit` `contain` or `cover`, and the boxes follow the drawn image in CSS from the frame's container units; `mapRegionBox(box, { fit, image, frame })` gives the same rectangle in pixels. Screen readers hear `labels.scanning`, progress at most every tenth and two seconds (`labels.progress`), `labels.found(count)`, and the error at once. Cancel, Retry and Scan show when their handler is set; agents see `status` and the regions as items, and call `scan`, `cancel`, `retry` and `selectRegion(id or label)`; a call outside its state (or for a region that isn't there) throws, so the step fails with the reason.",
+      "dependencies": [
+        "@ui-sdk/core@0.1.0-beta.12",
+        "@ui-sdk/react@0.1.0-beta.12",
+        "lucide-react"
+      ],
+      "registryDependencies": [
+        "@eskais/utils",
+        "@eskais/theme",
+        "@eskais/tone",
+        "@eskais/button",
+        "@eskais/progress"
+      ],
+      "files": [
+        {
+          "path": "registry/ui/image-scan-primitive.ts",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/image-scan-status.tsx",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/image-scan.tsx",
+          "type": "registry:ui"
+        }
+      ]
+    },
+    {
       "name": "attachments",
       "type": "registry:ui",
       "title": "Attachments",
@@ -6013,6 +6046,11 @@
           "path": "skills/eskais-ui/references/git.md",
           "type": "registry:file",
           "target": "~/.agents/skills/eskais-ui/references/git.md"
+        },
+        {
+          "path": "skills/eskais-ui/references/image-scan.md",
+          "type": "registry:file",
+          "target": "~/.agents/skills/eskais-ui/references/image-scan.md"
         }
       ]
     },
