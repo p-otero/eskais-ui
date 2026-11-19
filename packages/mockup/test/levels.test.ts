@@ -43,6 +43,9 @@ function itemDocument(input: ItemInput) {
   }
 }
 
+const gaugeFace =
+  'import { cn } from "@/lib/utils"\n\ntype GaugeFaceProps = { value: number }\n\nexport function GaugeFace({ value }: GaugeFaceProps) {\n  return <div className={cn("h-2 rounded")} style={{ width: `${value}%` }} />\n}\n'
+
 const items: ItemInput[] = [
   {
     name: "utils",
@@ -87,9 +90,34 @@ const items: ItemInput[] = [
     files: [
       {
         path: "registry/ui/gauge-face.tsx",
-        content:
-          'import { cn } from "@/lib/utils"\n\ntype GaugeFaceProps = { value: number }\n\nexport function GaugeFace({ value }: GaugeFaceProps) {\n  return <div className={cn("h-2 rounded")} style={{ width: `${value}%` }} />\n}\n',
+        content: gaugeFace,
       },
+    ],
+  },
+  {
+    name: "dial",
+    description: "Another gauge that ships the same gauge face, byte for byte.",
+    registryDependencies: ["@local/utils"],
+    files: [
+      {
+        path: "registry/ui/dial.tsx",
+        content:
+          'import { GaugeFace } from "@/components/ui/gauge-face"\n\nexport function Dial() {\n  return <GaugeFace value={40} />\n}\n',
+      },
+      { path: "registry/ui/gauge-face.tsx", content: gaugeFace },
+    ],
+  },
+  {
+    name: "odd-dial",
+    description: "A gauge that ships a different gauge face under the same name.",
+    registryDependencies: ["@local/utils"],
+    files: [
+      {
+        path: "registry/ui/odd-dial.tsx",
+        content:
+          'import { GaugeFace } from "@/components/ui/gauge-face"\n\nexport function OddDial() {\n  return <GaugeFace value={40} />\n}\n',
+      },
+      { path: "registry/ui/gauge-face.tsx", content: `${gaugeFace}// another copy\n` },
     ],
   },
   {
@@ -227,6 +255,16 @@ beforeAll(() => {
     'import { Missing } from "@registry/not-in-the-registry"\n\nexport default function Screen() {\n  return <Missing />\n}\n',
   )
   write(".mockups/levels-unknown/fixtures.ts", "export const nothing = null\n")
+  write(
+    ".mockups/levels-shared/screen.tsx",
+    'import { Dial } from "@registry/dial"\nimport { Gauge } from "@registry/gauge"\n\nexport default function Screen() {\n  return (\n    <main>\n      <Gauge value={1} label="One" />\n      <Dial />\n    </main>\n  )\n}\n',
+  )
+  write(".mockups/levels-shared/fixtures.ts", "export const nothing = null\n")
+  write(
+    ".mockups/levels-conflict/screen.tsx",
+    'import { Gauge } from "@registry/gauge"\nimport { OddDial } from "@registry/odd-dial"\n\nexport default function Screen() {\n  return (\n    <main>\n      <Gauge value={1} label="One" />\n      <OddDial />\n    </main>\n  )\n}\n',
+  )
+  write(".mockups/levels-conflict/fixtures.ts", "export const nothing = null\n")
 
   write(
     ".mockups/levels-rules/screen.tsx",
@@ -351,6 +389,20 @@ describe("missing pieces", () => {
     const result = run(["build", "levels-unknown"])
     expect(result.code).toBe(2)
     expect(result.stderr).toContain("not-in-the-registry")
+  })
+
+  test("two items that ship the same file byte for byte build together", { timeout: 120_000 }, () => {
+    const result = run(["build", "levels-shared"])
+    expect(result.stderr).toBe("")
+    expect(result.code).toBe(0)
+    expect(manifest("levels-shared").install.map(({ item }) => item)).toEqual(["dial", "gauge", "gauge-face"])
+  })
+
+  test("two items that ship different copies of one file are exit code 2", { timeout: 60_000 }, () => {
+    const result = run(["build", "levels-conflict"])
+    expect(result.code).toBe(2)
+    expect(result.stderr).toContain("gauge-face and odd-dial both ship gauge-face")
+    expect(result.stderr).toContain("different contents")
   })
 
   test("a malformed gaps export is exit code 2", { timeout: 60_000 }, () => {
