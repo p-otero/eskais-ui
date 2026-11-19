@@ -2,7 +2,7 @@
 
 Versions follow [semver](https://semver.org). Before 1.0, a minor version can break compatibility. Release with `bun pm version <patch|minor|major>`, which bumps `package.json` and tags `vX.Y.Z`.
 
-## Unreleased
+## 0.2.3 (2026-11-19)
 
 ### Added
 
