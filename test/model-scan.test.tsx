@@ -2,20 +2,25 @@ import { act, render, screen, waitFor } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { checkServer, mount } from "@ui-sdk/core/testing"
 import { createAgent } from "@ui-sdk/react/agent"
+import { useState } from "react"
 import { renderToString } from "react-dom/server"
 import { afterEach, beforeAll, describe, expect, test, vi } from "vitest"
 
+import { Button } from "@/components/ui/button"
 import { ModelScan, type ModelScanProps } from "@/components/ui/model-scan"
-import { pointGroups } from "@/components/ui/model-scan-points"
+import { pointGroups, pointsAspect } from "@/components/ui/model-scan-points"
 import { modelScan } from "@/components/ui/model-scan-primitive"
+import { modelViewerLabels } from "@/components/ui/model-viewer-labels"
 import { readAnnouncements } from "@/lib/test-utils"
 
 import { axeViolations } from "./axe"
 import {
   figureTargetNames,
+  finalErrors,
   idleEngine,
   reduceEngine,
   runFakeEngine,
+  scanErrors,
   toModelScanProps,
   type EngineEvent,
 } from "./fixtures/model/fake-engine"
@@ -108,41 +113,36 @@ describe("primitive", () => {
 
 describe("points", () => {
   test("one list, as objects or interleaved, is one group", () => {
-    expect(pointGroups([{ x: 0.5, y: 0.25 }], 0.75)).toEqual([
-      { source: "points", coords: new Float32Array([0.5, 0.25]) },
+    expect(pointGroups([{ x: 0.5, y: 0.25 }])).toEqual([
+      { source: "points", coords: new Float32Array([0.5, 0.25]), onPhoto: 1 },
     ])
-    expect(pointGroups(new Float32Array([0.1, 0.2, 0.3, 0.4]), 0.75)[0]?.coords).toEqual(
+    expect(pointGroups(new Float32Array([0.1, 0.2, 0.3, 0.4]))[0]?.coords).toEqual(
       new Float32Array([0.1, 0.2, 0.3, 0.4]),
     )
-    expect(pointGroups([0.1, 0.2], 0.75)[0]?.coords).toEqual(new Float32Array([0.1, 0.2]))
-    expect(pointGroups(undefined, 1)).toEqual([])
+    expect(pointGroups([0.1, 0.2])[0]?.coords).toEqual(new Float32Array([0.1, 0.2]))
+    expect(pointGroups(undefined)).toEqual([])
   })
 
   test("groups keep the order their sources arrived in, and a later group replaces its source's", () => {
-    const groups = pointGroups(
-      [
-        { source: "face", points: new Float32Array([0.5, 0.2]) },
-        { source: "body", points: [{ x: 0.5, y: 0.6 }] },
-        { source: "face", points: new Float32Array([0.4, 0.2]) },
-      ],
-      0.75,
-    )
+    const groups = pointGroups([
+      { source: "face", points: new Float32Array([0.5, 0.2]) },
+      { source: "body", points: [{ x: 0.5, y: 0.6 }] },
+      { source: "face", points: new Float32Array([0.4, 0.2]) },
+    ])
     expect(groups.map((group) => [group.source, [...group.coords]])).toEqual([
       ["face", [expect.closeTo(0.4, 6), expect.closeTo(0.2, 6)]],
       ["body", [0.5, expect.closeTo(0.6, 6)]],
     ])
   })
 
-  test("points from a frame of another aspect land on the photo, and points off it are dropped", () => {
-    // A 3:4 photo padded into a square frame: it fills the height and the middle three quarters of the width.
-    const [group] = pointGroups(
-      [{ source: "body", aspect: 1, points: new Float32Array([0.5, 0.5, 0.125, 0, 0.05, 0.5]) }],
-      0.75,
-    )
-    expect([...(group?.coords ?? [])]).toEqual([0.5, 0.5, 0, 0])
-    // A wide photo in a square frame fills the width and the middle of the height.
-    const [wide] = pointGroups([{ source: "face", aspect: 1, points: [0.5, 0.25, 0.5, 0.5] }], 2)
-    expect([...(wide?.coords ?? [])]).toEqual([0.5, 0, 0.5, 0.5])
+  test("points are the photo's fractions as sent, whatever the aspect, and points off the photo are kept", () => {
+    // MediaPipe reports every landmark, also those a crop cut off: past 0 or 1.
+    const sent = new Float32Array([0.5, 0.5, 0, 1, -0.2, 0.5, 0.5, 1.3])
+    const [group] = pointGroups([{ source: "body", aspect: 9 / 16, points: sent }])
+    expect(group?.coords).toBe(sent)
+    expect(group?.onPhoto).toBe(2)
+    expect(pointsAspect([{ source: "body", aspect: 9 / 16, points: sent }])).toBe(9 / 16)
+    expect(pointsAspect(sent)).toBeUndefined()
   })
 })
 
@@ -188,6 +188,124 @@ test("detecting: points light up, a determinate bar, Cancel, and the scene start
   await user.click(screen.getByRole("button", { name: "Cancel" }))
   expect(onCancel).toHaveBeenCalledWith(expect.objectContaining({ reason: "trigger-press" }))
   expect(await axeViolations(document.body)).toEqual([])
+})
+
+test("points land on the photo as sent; points past its edges aren't drawn and don't count in the stagger", async () => {
+  render(
+    <Scan
+      stage="detecting"
+      points={[
+        { source: "body", aspect: 0.75, points: new Float32Array([0.25, 0.5, -0.1, 0.5, 1, 1, 0.5, 1.2, 0.75, 0]) },
+      ]}
+    />,
+  )
+  await tick()
+  const group = document.querySelector<HTMLElement>('[data-slot="model-scan-points"] [data-source="body"]')
+  const dots = [...(group?.children ?? [])] as HTMLElement[]
+  expect(group?.getAttribute("data-count")).toBe("3")
+  expect(dots.map((dot) => [dot.style.left, dot.style.top])).toEqual([
+    ["25%", "50%"],
+    ["100%", "100%"],
+    ["75%", "0%"],
+  ])
+  expect(dots.map((dot) => dot.style.getPropertyValue("--model-scan-point-index"))).toEqual(["0", "1", "2"])
+})
+
+const photo = () => document.querySelector<HTMLImageElement>('[data-slot="model-scan-photo"] img')
+const pointsBox = () => document.querySelector('[data-slot="model-scan-points"]')?.parentElement
+const scanGroup = () => screen.getByRole("group", { name: "A front photo of a figure" })
+
+test("fit: the photo and its points' box follow contain or cover", async () => {
+  const { rerender } = render(<Scan stage="detecting" points={points} aspectRatio={1} />)
+  await tick()
+  expect(photo()?.className).toContain("object-contain")
+  expect(pointsBox()?.getAttribute("data-fit")).toBe("contain")
+  rerender(<Scan stage="detecting" points={points} aspectRatio={1} fit="cover" />)
+  expect(photo()?.className).toContain("object-cover")
+  expect(pointsBox()?.getAttribute("data-fit")).toBe("cover")
+  expect(pointsBox()?.className).toContain("data-[fit=cover]:h-[max(")
+})
+
+test("the stage takes the photo's ratio once it loads; until then its size's, or the points' aspect", async () => {
+  const tall = [{ source: "face", aspect: 0.5625, points: new Float32Array([0.5, 0.2]) }]
+  const { rerender } = render(<Scan stage="detecting" points={tall} />)
+  await tick()
+  expect(scanGroup().getAttribute("style")).toContain("--model-scan-ratio: 0.75")
+  rerender(
+    <main>
+      <ModelScan src="photo.jpg" alt="A front photo of a figure" stage="detecting" points={tall} />
+    </main>,
+  )
+  expect(scanGroup().getAttribute("style")).toContain("--model-scan-ratio: 0.5625")
+  const img = photo()
+  if (!img) throw new Error("no photo")
+  Object.defineProperties(img, {
+    complete: { value: true, configurable: true },
+    naturalWidth: { value: 1080, configurable: true },
+    naturalHeight: { value: 1920, configurable: true },
+  })
+  act(() => {
+    img.dispatchEvent(new Event("load"))
+  })
+  expect(scanGroup().getAttribute("style")).toContain("--model-scan-ratio: 0.5625")
+  Object.defineProperties(img, {
+    naturalWidth: { value: 1200, configurable: true },
+    naturalHeight: { value: 1600, configurable: true },
+  })
+  act(() => {
+    img.dispatchEvent(new Event("load"))
+  })
+  expect(scanGroup().getAttribute("style")).toContain("--model-scan-ratio: 0.75")
+})
+
+/** A demo's controls: Start in `actions`, left out while a run goes, as the docs recommend. */
+function StartableScan() {
+  const [stage, setStage] = useState<ModelScanProps["stage"]>("photo")
+  const running = stage === "detecting" || stage === "building" || stage === "refining"
+  return (
+    <Scan
+      stage={stage}
+      onCancel={running ? () => setStage("photo") : undefined}
+      onRetry={() => setStage("detecting")}
+      actions={
+        running ? null : (
+          <Button size="sm" onClick={() => setStage("detecting")}>
+            Start scan
+          </Button>
+        )
+      }
+    />
+  )
+}
+
+test("start: gone while a run goes, focus moves to Cancel, and back to Start after cancelling", async () => {
+  const user = userEvent.setup()
+  render(<StartableScan />)
+  await tick()
+  await user.click(screen.getByRole("button", { name: "Start scan" }))
+  expect(screen.queryByRole("button", { name: "Start scan" })).toBeNull()
+  expect(document.activeElement).toBe(screen.getByRole("button", { name: "Cancel" }))
+  await user.keyboard("{Enter}")
+  expect(screen.queryByRole("button", { name: "Cancel" })).toBeNull()
+  expect(document.activeElement).toBe(screen.getByRole("button", { name: "Start scan" }))
+})
+
+test("focus the person moved away stays there when the stage changes", async () => {
+  const user = userEvent.setup()
+  render(
+    <>
+      <StartableScan />
+      <button type="button">Elsewhere</button>
+    </>,
+  )
+  await tick()
+  await user.click(screen.getByRole("button", { name: "Start scan" }))
+  await user.click(screen.getByRole("button", { name: "Elsewhere" }))
+  expect(document.activeElement).toBe(screen.getByRole("button", { name: "Elsewhere" }))
+  act(() => {
+    screen.getByRole("button", { name: "Cancel" }).click()
+  })
+  expect(document.activeElement).toBe(screen.getByRole("button", { name: "Elsewhere" }))
 })
 
 test("building and refining hand the model and the weights to the viewer; ready shows its controls", async () => {
@@ -255,6 +373,52 @@ test("the server renders the photo and no scene", () => {
   expect(html).not.toContain("fake-scene")
 })
 
+test("a failed run ends with the engine's error event, mapped to the consumer's words per code", async () => {
+  vi.useFakeTimers()
+  let state = idleEngine
+  const events: EngineEvent[] = []
+  const stages: string[] = []
+  const emit = (event: EngineEvent) => {
+    events.push(event)
+    state = reduceEngine(state, event)
+    const stage = toModelScanProps(state).stage
+    if (stages.at(-1) !== stage) stages.push(stage)
+  }
+  const run = runFakeEngine(emit, { model: "figure.glb", character: "final.glb", fail: "no-face" })
+  await vi.runAllTimersAsync()
+  await run
+  expect(stages).toEqual(["detecting", "building", "error"])
+  expect(events.at(-1)).toEqual({ type: "error", error: { code: "no-face", message: expect.any(String) as string } })
+  expect(toModelScanProps(state).error).toBe(scanErrors["no-face"])
+  expect(toModelScanProps(state, { "no-face": "Sin cara" }).error).toBe("Sin cara")
+  // Without WebGL2 the words are ModelViewer's own for a browser without WebGL, and a new run can't help.
+  state = idleEngine
+  const noWebgl = runFakeEngine(emit, { model: "figure.glb", character: "final.glb", fail: "webgl2-unavailable" })
+  await vi.runAllTimersAsync()
+  await noWebgl
+  expect(toModelScanProps(state).error).toBe(modelViewerLabels.unsupported)
+  expect(finalErrors).toContain(state.error?.code)
+  vi.useRealTimers()
+})
+
+test("cancelling through the signal rejects with an AbortError and emits nothing more, not an error", async () => {
+  vi.useFakeTimers()
+  const events: EngineEvent["type"][] = []
+  const controller = new AbortController()
+  const run = runFakeEngine((event) => events.push(event.type), {
+    model: "figure.glb",
+    character: "final.glb",
+    signal: controller.signal,
+  })
+  const settled = run.catch((error: unknown) => error)
+  await vi.advanceTimersByTimeAsync(500)
+  controller.abort()
+  expect(await settled).toMatchObject({ name: "AbortError" })
+  await vi.runAllTimersAsync()
+  expect(events).toEqual(["stage", "landmarks"])
+  vi.useRealTimers()
+})
+
 test("the fake engine emits the engine's events, and toModelScanProps maps them; an agent can cancel and retry", async () => {
   vi.useFakeTimers()
   let state = idleEngine
@@ -286,11 +450,6 @@ test("the fake engine emits the engine's events, and toModelScanProps maps them;
   expect(props.weights).toBeInstanceOf(Float32Array)
   expect(props.weights).toHaveLength(figureTargetNames.length)
   expect(props.expressions).toEqual({ mouthSmileLeft: 0.8, mouthSmileRight: 0.8 })
-  stages.length = 0
-  state = idleEngine
-  runFakeEngine(emit, { model: "figure.glb", character: "final.glb", fail: true })
-  await vi.runAllTimersAsync()
-  expect(stages).toEqual(["detecting", "building", "error"])
   vi.useRealTimers()
 
   const onCancel = vi.fn()

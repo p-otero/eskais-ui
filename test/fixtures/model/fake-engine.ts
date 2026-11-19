@@ -1,4 +1,5 @@
 import type { ModelScanPointGroup, ModelScanProps, ModelScanStage } from "@/components/ui/model-scan"
+import { modelViewerLabels } from "@/components/ui/model-viewer-labels"
 
 import figure from "./figure.json"
 
@@ -25,8 +26,29 @@ type EngineEvent =
         quality: number
       }
     }
-  // The fake's own: how this demo ends a run that fails.
-  | { type: "error"; message: string }
+  // The last event of a run that fails. Cancelling through the AbortSignal isn't one: the run rejects with an
+  // AbortError instead.
+  | { type: "error"; error: { code: EngineErrorCode; message: string } }
+
+/** Why the engine stopped: the codes are the engine's, the messages its own English for logs. */
+type EngineErrorCode =
+  | "no-face"
+  | "unreadable-image"
+  | "webgl2-unavailable"
+  | "asset-integrity"
+  | "asset-load"
+  | "worker"
+  | "internal"
+
+const engineMessages: Record<EngineErrorCode, string> = {
+  "no-face": "No face detected in the input image.",
+  "unreadable-image": "The input image could not be decoded.",
+  "webgl2-unavailable": "WebGL2 is not available in this context.",
+  "asset-integrity": "A model asset failed its integrity check.",
+  "asset-load": "A model asset could not be fetched.",
+  worker: "The engine worker terminated unexpectedly.",
+  internal: "An internal engine error occurred.",
+}
 
 /** The fixture's morph targets, in the order the engine's weights follow. */
 const figureTargetNames = [
@@ -47,27 +69,47 @@ type FakeEngineOptions = {
   model: Glb
   /** The final character's GLB, sent with `done`. */
   character: Glb
-  /** Ends the run with an error during the fit. */
-  fail?: boolean
+  /** Ends the run with this error during the fit (`true`: no face). */
+  fail?: boolean | EngineErrorCode
   /** Scales every wait, so tests and checks can run it fast. */
   speed?: number
+  /** Stops the run: it emits nothing more and rejects with an AbortError. */
+  signal?: AbortSignal
+  /** The photo's landmarks to send: the 3:4 portrait's, or the 9:16 one's. */
+  photo?: "portrait" | "tall"
 }
+
+const abortError = () => new DOMException("The run was cancelled.", "AbortError")
 
 /**
  * Replays a run: the face, then the body landmarks over about a second, the base model, weights streamed over about
- * three seconds, then the final character. Returns a function that stops it.
+ * three seconds, then the final character. Resolves after the last event (`done`, or `error`); rejects with an
+ * AbortError once `signal` aborts.
  */
 function runFakeEngine(emit: (event: EngineEvent) => void, options: FakeEngineOptions) {
+  const { signal } = options
+  if (signal?.aborted) return Promise.reject(abortError())
   const timers: ReturnType<typeof setTimeout>[] = []
   const speed = options.speed ?? 1
   let at = 0
+  let finish: (() => void) | undefined
+  const finished = new Promise<void>((resolve, reject) => {
+    finish = resolve
+    signal?.addEventListener(
+      "abort",
+      () => {
+        timers.forEach(clearTimeout)
+        reject(abortError())
+      },
+      { once: true },
+    )
+  })
   const later = (ms: number, run: () => void) => {
     at += ms / speed
     timers.push(setTimeout(run, at))
   }
-  const stop = () => timers.forEach(clearTimeout)
   emit({ type: "stage", stage: "detect" })
-  for (const group of figure.landmarks) {
+  for (const group of options.photo === "tall" ? figure.tall.landmarks : figure.landmarks) {
     later(450, () =>
       emit({
         type: "landmarks",
@@ -82,8 +124,12 @@ function runFakeEngine(emit: (event: EngineEvent) => void, options: FakeEngineOp
     emit({ type: "model", glb: options.model, targetNames: figureTargetNames })
   })
   if (options.fail) {
-    later(1600, () => emit({ type: "error", message: "The engine could not fit a model to this photo." }))
-    return stop
+    const code = options.fail === true ? "no-face" : options.fail
+    later(1600, () => {
+      emit({ type: "error", error: { code, message: engineMessages[code] } })
+      finish?.()
+    })
+    return finished
   }
   later(2400, () => emit({ type: "stage", stage: "refine", ms: 3000 }))
   const steps = 20
@@ -104,8 +150,9 @@ function runFakeEngine(emit: (event: EngineEvent) => void, options: FakeEngineOp
       },
     })
     emit({ type: "stage", stage: "done" })
+    finish?.()
   })
-  return stop
+  return finished
 }
 
 /** What the consumer keeps from the events: the last of each, and every landmarks group. */
@@ -115,7 +162,7 @@ type EngineState = {
   model?: Extract<EngineEvent, { type: "model" }>
   progress?: Extract<EngineEvent, { type: "progress" }>
   character?: Extract<EngineEvent, { type: "done" }>["character"]
-  error?: string
+  error?: Extract<EngineEvent, { type: "error" }>["error"]
 }
 
 const idleEngine: EngineState = { stage: "idle", landmarks: [] }
@@ -133,7 +180,7 @@ function reduceEngine(state: EngineState, event: EngineEvent): EngineState {
     case "done":
       return { ...state, character: event.character }
     case "error":
-      return { ...state, stage: "error", error: event.message }
+      return { ...state, stage: "error", error: event.error }
   }
 }
 
@@ -147,12 +194,30 @@ const uiStage: Record<EngineState["stage"], ModelScanStage> = {
 }
 
 /**
+ * What a person reads for each error code: the consumer's words, not the engine's log messages. Without WebGL2 it is
+ * ModelViewer's own line for a browser without WebGL, and a new run can't help, so the demos offer no Retry then.
+ */
+const scanErrors: Record<EngineErrorCode, string> = {
+  "no-face": "No face found. Try a photo that faces the camera.",
+  "unreadable-image": "This photo can't be read. Try a JPEG or PNG.",
+  "webgl2-unavailable": modelViewerLabels.unsupported,
+  "asset-integrity": "The 3D engine's files didn't load correctly. Try again.",
+  "asset-load": "The 3D engine couldn't load. Check the connection and try again.",
+  worker: "The 3D engine stopped. Try again.",
+  internal: "Something went wrong making the 3D model. Try again.",
+}
+
+/** Errors a new run can't fix. */
+const finalErrors: readonly EngineErrorCode[] = ["webgl2-unavailable"]
+
+/**
  * The engine's state as ModelScan's props. The UI's stage is the consumer's: here the engine's map onto it one to
  * one. The final character replaces the base model (ModelViewer crossfades, keeping the weights), and a smile plays
- * once it's done.
+ * once it's done. `messages` overrides the words per error code.
  */
 function toModelScanProps(
   state: EngineState,
+  messages: Partial<Record<EngineErrorCode, string>> = {},
 ): Pick<ModelScanProps, "stage" | "points" | "model" | "weights" | "progress" | "error" | "expressions"> {
   const character = state.character
   return {
@@ -161,7 +226,7 @@ function toModelScanProps(
     model: character ?? state.model,
     weights: character?.weights ?? state.progress?.weights,
     progress: state.stage === "refine" ? state.progress?.value : undefined,
-    error: state.error,
+    error: state.error && (messages[state.error.code] ?? scanErrors[state.error.code]),
     expressions: state.stage === "done" ? { mouthSmileLeft: 0.8, mouthSmileRight: 0.8 } : undefined,
   }
 }
@@ -172,5 +237,14 @@ const figureFace = {
   radius: figure.faceBounds.radius,
 }
 
-export { figureFace, figureTargetNames, idleEngine, reduceEngine, runFakeEngine, toModelScanProps }
-export type { EngineEvent, EngineStage, EngineState, FakeEngineOptions }
+export {
+  figureFace,
+  figureTargetNames,
+  finalErrors,
+  idleEngine,
+  reduceEngine,
+  runFakeEngine,
+  scanErrors,
+  toModelScanProps,
+}
+export type { EngineErrorCode, EngineEvent, EngineStage, EngineState, FakeEngineOptions }

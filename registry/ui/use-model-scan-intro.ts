@@ -3,7 +3,7 @@ import { use, useEffect, useMemo, useRef, useState } from "react"
 import { Color, SRGBColorSpace, TextureLoader, type PerspectiveCamera, type Texture } from "three"
 
 import { createDissolve } from "@/components/ui/model-scan-dissolve"
-import { containSize, viewSizeAt } from "@/components/ui/model-viewer-math"
+import { fitSize, viewSizeAt } from "@/components/ui/model-viewer-math"
 import type { ModelViewerHandle } from "@/components/ui/model-viewer-primitive"
 import { ModelViewerSceneContext } from "@/components/ui/model-viewer-rig"
 
@@ -40,6 +40,8 @@ type IntroOptions = {
   src: string
   /** The photo's width over its height. */
   ratio: number
+  /** How the photo fills a stage of another ratio, as the 2D one is drawn. */
+  fit: "contain" | "cover"
   /** The 3D photo matches the 2D one: the 2D layer can go. */
   onHandOff: () => void
   /** The model has taken the photo's place. */
@@ -51,7 +53,7 @@ type IntroOptions = {
  * loaded, the camera turns to the three-quarter view while the photo burns into particles and the model fades in
  * where it stood. Under reduced motion the photo crossfades into the model and the camera jumps after.
  */
-function useModelScanIntro({ src, ratio, onHandOff, onDone }: IntroOptions) {
+function useModelScanIntro({ src, ratio, fit, onHandOff, onDone }: IntroOptions) {
   const scene = use(ModelViewerSceneContext)
   const camera = useThree((state) => state.camera) as PerspectiveCamera
   const canvas = useThree((state) => state.gl.domElement)
@@ -112,7 +114,7 @@ function useModelScanIntro({ src, ratio, onHandOff, onDone }: IntroOptions) {
     }
     const framed = rig.frame(framing, camera)
     const view = viewSizeAt(framed.distance, camera.fov, camera.aspect)
-    const photo = containSize(ratio, view)
+    const photo = fitSize(ratio, view, fit)
     const pixels = state.gl.domElement.height / (2 * Math.tan(((camera.fov / 2) * Math.PI) / 180))
     dissolve.place(framed.center, photo.width, photo.height, pixels)
 

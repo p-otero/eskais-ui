@@ -1,13 +1,28 @@
 import { useEffect, useReducer, useRef, useState } from "react"
 
-import { idleEngine, reduceEngine, runFakeEngine, toModelScanProps, type EngineEvent } from "./fake-engine"
+import {
+  finalErrors,
+  idleEngine,
+  reduceEngine,
+  runFakeEngine,
+  toModelScanProps,
+  type EngineErrorCode,
+  type EngineEvent,
+} from "./fake-engine"
 
 type Glb = ArrayBuffer | string
 
-/** ModelScan's props from the fake engine's events, with start, cancel and a switch to fail the next run. */
+/**
+ * ModelScan's props from the fake engine's events, with start, cancel, a switch to fail the next run (`true` or an
+ * error code), and whether a run is going and a retry can help.
+ */
 function useFakeModelScan(
   { model, character }: { model: Glb; character: Glb },
-  { speed = 1, fail: failFirst = false }: { speed?: number; fail?: boolean } = {},
+  {
+    speed = 1,
+    fail: failFirst = false,
+    photo,
+  }: { speed?: number; fail?: boolean | EngineErrorCode; photo?: "portrait" | "tall" } = {},
 ) {
   const [state, dispatch] = useReducer(
     (current: typeof idleEngine, event: EngineEvent | "reset") =>
@@ -15,18 +30,27 @@ function useFakeModelScan(
     idleEngine,
   )
   const [fail, setFail] = useState(failFirst)
-  const stop = useRef<() => void>(undefined)
-  useEffect(() => () => stop.current?.(), [])
+  const run = useRef<AbortController>(undefined)
+  useEffect(() => () => run.current?.abort(), [])
   const start = () => {
-    stop.current?.()
+    run.current?.abort()
     dispatch("reset")
-    stop.current = runFakeEngine(dispatch, { model, character, fail, speed })
+    const controller = new AbortController()
+    run.current = controller
+    // Cancelling rejects the run with an AbortError: not a failure, so nothing to show.
+    runFakeEngine(dispatch, { model, character, fail, speed, photo, signal: controller.signal }).catch(
+      (error: unknown) => {
+        if (!(error instanceof DOMException && error.name === "AbortError")) throw error
+      },
+    )
   }
   const cancel = () => {
-    stop.current?.()
+    run.current?.abort()
     dispatch("reset")
   }
-  return { props: toModelScanProps(state), state, start, cancel, fail, setFail }
+  const running = state.stage === "detect" || state.stage === "fit" || state.stage === "refine"
+  const canRetry = !(state.error && finalErrors.includes(state.error.code))
+  return { props: toModelScanProps(state), state, start, cancel, fail, setFail, running, canRetry }
 }
 
 export { useFakeModelScan }

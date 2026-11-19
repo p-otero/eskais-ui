@@ -277,100 +277,120 @@ for (let index = 0; index < hairColor.count; index += 1) {
 }
 const finalGlb = (await new GLTFExporter().parseAsync(figure, { binary: true, animations: clips })) as ArrayBuffer
 
-// The photo: the figure seen by the viewer's front camera at zoom 1 in a 3:4 stage, drawn flat at the depth of the
-// model's centre, so the 3D scene can take over from it without a jump.
+// The photo: the figure seen by the viewer's front camera at zoom 1 in a stage of the photo's ratio, drawn flat at the
+// depth of the model's centre, so the 3D scene can take over from it without a jump. Two of them: 3:4 and 9:16.
 figure.updateMatrixWorld(true)
 const box = new Box3().setFromObject(figure)
 const size = box.getSize(new Vector3())
 const center = box.getCenter(new Vector3())
-const width = 600
-const height = 800
-const aspect = width / height
-const distance = fitBoxDistance([size.x, size.y, size.z], fieldOfView, aspect)
-const view = viewSizeAt(distance, fieldOfView, aspect)
-const px = (x: number) => Math.round(((x - center.x) / view.width + 0.5) * width * 10) / 10
-const py = (y: number) => Math.round((0.5 - (y - center.y) / view.height) * height * 10) / 10
-const len = (value: number) => Math.round((value / view.height) * height * 10) / 10
+const armX = shoulder.x + 0.03
+const round = (value: number) => Math.round(value * 1000) / 1000
+const interleave = (list: { x: number; y: number }[]) => list.flatMap(({ x, y }) => [x, y])
 
-function capsule(x: number, top: number, bottom: number, radius: number, fill: string) {
-  return `<rect x="${px(x - radius)}" y="${py(top + radius)}" width="${len(radius * 2)}" height="${len(top - bottom + radius * 2)}" rx="${len(radius)}" fill="${fill}"/>`
+function portrait(width: number, height: number) {
+  const aspect = width / height
+  const distance = fitBoxDistance([size.x, size.y, size.z], fieldOfView, aspect)
+  const view = viewSizeAt(distance, fieldOfView, aspect)
+  const px = (x: number) => Math.round(((x - center.x) / view.width + 0.5) * width * 10) / 10
+  const py = (y: number) => Math.round((0.5 - (y - center.y) / view.height) * height * 10) / 10
+  const len = (value: number) => Math.round((value / view.height) * height * 10) / 10
+
+  const capsule = (x: number, top: number, bottom: number, radius: number, fill: string) =>
+    `<rect x="${px(x - radius)}" y="${py(top + radius)}" width="${len(radius * 2)}" height="${len(top - bottom + radius * 2)}" rx="${len(radius)}" fill="${fill}"/>`
+
+  const svg = [
+    `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">`,
+    `<defs><linearGradient id="bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e4ebf2"/><stop offset="1" stop-color="#c8d3df"/></linearGradient>`,
+    `<radialGradient id="shade" cx="0.35" cy="0.3" r="0.8"><stop offset="0" stop-color="#fff" stop-opacity="0.35"/><stop offset="1" stop-color="#000" stop-opacity="0.18"/></radialGradient></defs>`,
+    `<rect width="${width}" height="${height}" fill="url(#bg)"/>`,
+    `<ellipse cx="${px(0)}" cy="${py(0)}" rx="${len(0.32)}" ry="${len(0.05)}" fill="#000" opacity="0.14"/>`,
+    capsule(-0.1, 0.82, 0.1, 0.085, palette.pants),
+    capsule(0.1, 0.82, 0.1, 0.085, palette.pants),
+    `<ellipse cx="${px(-0.1)}" cy="${py(0.04)}" rx="${len(0.09)}" ry="${len(0.05)}" fill="${palette.shoes}"/>`,
+    `<ellipse cx="${px(0.1)}" cy="${py(0.04)}" rx="${len(0.09)}" ry="${len(0.05)}" fill="${palette.shoes}"/>`,
+    capsule(-armX, 1.27, 0.84, 0.062, palette.shirt),
+    capsule(armX, 1.27, 0.84, 0.062, palette.shirt),
+    `<circle cx="${px(-armX - 0.02)}" cy="${py(0.79)}" r="${len(0.06)}" fill="${palette.skin}"/>`,
+    `<circle cx="${px(armX + 0.02)}" cy="${py(0.79)}" r="${len(0.06)}" fill="${palette.skin}"/>`,
+    capsule(0, 1.32, 0.9, 0.2, palette.shirt),
+    `<rect x="${px(-0.055)}" y="${py(1.46)}" width="${len(0.11)}" height="${len(0.12)}" fill="${palette.skin}"/>`,
+    `<circle cx="${px(0)}" cy="${py(head.y)}" r="${len(head.radius)}" fill="${palette.skin}"/>`,
+    `<path d="M ${px(-0.16)} ${py(head.y + 0.03)} A ${len(0.16)} ${len(0.16)} 0 0 1 ${px(0.16)} ${py(head.y + 0.03)} Q ${px(0)} ${py(head.y + 0.08)} ${px(-0.16)} ${py(head.y + 0.03)} Z" fill="${palette.hair}"/>`,
+    ...eyes.map((eye) => `<circle cx="${px(eye.x)}" cy="${py(eye.y)}" r="${len(0.022)}" fill="${palette.eye}"/>`),
+    `<path d="M ${px(-0.04)} ${py(mouth.y + 0.03)} Q ${px(0)} ${py(mouth.y - 0.01)} ${px(0.04)} ${py(mouth.y + 0.03)}" fill="none" stroke="${palette.mouth}" stroke-width="${len(0.016)}" stroke-linecap="round"/>`,
+    `<rect width="${width}" height="${height}" fill="url(#shade)" opacity="0.5"/>`,
+    `</svg>`,
+  ].join("")
+
+  // What two detectors report, both as fractions of the original photo (x of its width, y of its height): a face
+  // mesh, and a pose model's 33 body landmarks in MediaPipe's order (the subject's left first, on the photo's right).
+  const point = (x: number, y: number) => ({ x: round(px(x) / width), y: round(py(y) / height) })
+  const ring = (cx: number, cy: number, rx: number, ry: number, count: number, from = 0, to = Math.PI * 2) =>
+    Array.from({ length: count }, (_, index) => {
+      const angle = from + ((to - from) * index) / count
+      return point(cx + rx * Math.cos(angle), cy + ry * Math.sin(angle))
+    })
+  const facePoints = [
+    ...ring(0, head.y, head.radius, head.radius, 24),
+    ...eyes.flatMap((eye) => ring(eye.x, eye.y, 0.03, 0.018, 6)),
+    ...ring(0, mouth.y + 0.02, 0.045, 0.02, 8, Math.PI, Math.PI * 2),
+    point(0, 1.53),
+  ]
+  const eyeX = Math.abs(eyes[0]?.x ?? 0.055)
+  const eyeY = eyes[0]?.y ?? 1.58
+  // Each pair: the subject's left (+x), then its right.
+  const pair = (x: number, y: number) => [point(x, y), point(-x, y)]
+  const bodyPoints = [
+    point(0, 1.53),
+    ...[eyeX - 0.02, eyeX, eyeX + 0.02].map((x) => point(x, eyeY)),
+    ...[eyeX - 0.02, eyeX, eyeX + 0.02].map((x) => point(-x, eyeY)),
+    ...pair(head.radius * 0.95, eyeY - 0.01),
+    ...pair(0.035, mouth.y + 0.01),
+    ...pair(shoulder.x, 1.27),
+    ...pair(armX, 1.05),
+    ...pair(armX + 0.01, 0.84),
+    ...pair(armX + 0.05, 0.75),
+    ...pair(armX + 0.02, 0.73),
+    ...pair(armX - 0.03, 0.77),
+    ...pair(0.1, 0.9),
+    ...pair(0.1, 0.48),
+    ...pair(0.1, 0.1),
+    ...pair(0.09, 0.03),
+    ...pair(0.14, 0.02),
+  ]
+  return {
+    svg,
+    landmarks: [
+      { source: "face", aspect: round(aspect), points: interleave(facePoints) },
+      { source: "body", aspect: round(aspect), points: interleave(bodyPoints) },
+    ],
+  }
 }
 
-const armX = shoulder.x + 0.03
-const svg = [
-  `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">`,
-  `<defs><linearGradient id="bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e4ebf2"/><stop offset="1" stop-color="#c8d3df"/></linearGradient>`,
-  `<radialGradient id="shade" cx="0.35" cy="0.3" r="0.8"><stop offset="0" stop-color="#fff" stop-opacity="0.35"/><stop offset="1" stop-color="#000" stop-opacity="0.18"/></radialGradient></defs>`,
-  `<rect width="${width}" height="${height}" fill="url(#bg)"/>`,
-  `<ellipse cx="${px(0)}" cy="${py(0)}" rx="${len(0.32)}" ry="${len(0.05)}" fill="#000" opacity="0.14"/>`,
-  capsule(-0.1, 0.82, 0.1, 0.085, palette.pants),
-  capsule(0.1, 0.82, 0.1, 0.085, palette.pants),
-  `<ellipse cx="${px(-0.1)}" cy="${py(0.04)}" rx="${len(0.09)}" ry="${len(0.05)}" fill="${palette.shoes}"/>`,
-  `<ellipse cx="${px(0.1)}" cy="${py(0.04)}" rx="${len(0.09)}" ry="${len(0.05)}" fill="${palette.shoes}"/>`,
-  capsule(-armX, 1.27, 0.84, 0.062, palette.shirt),
-  capsule(armX, 1.27, 0.84, 0.062, palette.shirt),
-  `<circle cx="${px(-armX - 0.02)}" cy="${py(0.79)}" r="${len(0.06)}" fill="${palette.skin}"/>`,
-  `<circle cx="${px(armX + 0.02)}" cy="${py(0.79)}" r="${len(0.06)}" fill="${palette.skin}"/>`,
-  capsule(0, 1.32, 0.9, 0.2, palette.shirt),
-  `<rect x="${px(-0.055)}" y="${py(1.46)}" width="${len(0.11)}" height="${len(0.12)}" fill="${palette.skin}"/>`,
-  `<circle cx="${px(0)}" cy="${py(head.y)}" r="${len(head.radius)}" fill="${palette.skin}"/>`,
-  `<path d="M ${px(-0.16)} ${py(head.y + 0.03)} A ${len(0.16)} ${len(0.16)} 0 0 1 ${px(0.16)} ${py(head.y + 0.03)} Q ${px(0)} ${py(head.y + 0.08)} ${px(-0.16)} ${py(head.y + 0.03)} Z" fill="${palette.hair}"/>`,
-  ...eyes.map((eye) => `<circle cx="${px(eye.x)}" cy="${py(eye.y)}" r="${len(0.022)}" fill="${palette.eye}"/>`),
-  `<path d="M ${px(-0.04)} ${py(mouth.y + 0.03)} Q ${px(0)} ${py(mouth.y - 0.01)} ${px(0.04)} ${py(mouth.y + 0.03)}" fill="none" stroke="${palette.mouth}" stroke-width="${len(0.016)}" stroke-linecap="round"/>`,
-  `<rect width="${width}" height="${height}" fill="url(#shade)" opacity="0.5"/>`,
-  `</svg>`,
-].join("")
-
-// What two detectors report: the face as fractions of the photo, and the body as fractions of a square frame the
-// photo is padded into (aspect 1), as a pose model with a fixed input shape does.
-const round = (value: number) => Math.round(value * 1000) / 1000
-const point = (x: number, y: number) => ({ x: round(px(x) / width), y: round(py(y) / height) })
-const ring = (cx: number, cy: number, rx: number, ry: number, count: number, from = 0, to = Math.PI * 2) =>
-  Array.from({ length: count }, (_, index) => {
-    const angle = from + ((to - from) * index) / count
-    return point(cx + rx * Math.cos(angle), cy + ry * Math.sin(angle))
-  })
-const column = (x: number, top: number, bottom: number, count: number) =>
-  Array.from({ length: count }, (_, index) => point(x, top - ((top - bottom) * index) / (count - 1)))
-const facePoints = [
-  ...ring(0, head.y, head.radius, head.radius, 24),
-  ...eyes.flatMap((eye) => ring(eye.x, eye.y, 0.03, 0.018, 6)),
-  ...ring(0, mouth.y + 0.02, 0.045, 0.02, 8, Math.PI, Math.PI * 2),
-  point(0, 1.53),
-]
-const bodyPoints = [
-  ...column(-0.2, 1.3, 0.92, 6),
-  ...column(0.2, 1.3, 0.92, 6),
-  ...column(-armX - 0.062, 1.25, 0.82, 5),
-  ...column(armX + 0.062, 1.25, 0.82, 5),
-  ...column(-0.185, 0.8, 0.08, 6),
-  ...column(0.185, 0.8, 0.08, 6),
-  ...column(0, 0.86, 0.12, 5),
-]
+const photo = { width: 600, height: 800 }
+const tall = { width: 450, height: 800 }
+const photoShot = portrait(photo.width, photo.height)
+const tallShot = portrait(tall.width, tall.height)
 
 mkdirSync(out, { recursive: true })
-const interleave = (list: { x: number; y: number }[]) => list.flatMap(({ x, y }) => [x, y])
-const square = (list: { x: number; y: number }[]) =>
-  list.map(({ x, y }) => ({ x: round((1 - aspect) / 2 + x * aspect), y }))
 writeFileSync(join(out, "figure.glb"), new Uint8Array(glb))
 writeFileSync(join(out, "figure-final.glb"), new Uint8Array(finalGlb))
-writeFileSync(join(out, "portrait.svg"), `${svg}\n`)
+writeFileSync(join(out, "portrait.svg"), `${photoShot.svg}\n`)
+writeFileSync(join(out, "portrait-tall.svg"), `${tallShot.svg}\n`)
 writeFileSync(
   join(out, "figure.json"),
   `${JSON.stringify(
     {
-      width,
-      height,
+      ...photo,
       faceBounds: { center: [0, head.y, 0.05], radius: 0.2 },
-      landmarks: [
-        { source: "face", aspect, points: interleave(facePoints) },
-        { source: "body", aspect: 1, points: interleave(square(bodyPoints)) },
-      ],
+      landmarks: photoShot.landmarks,
+      tall: { ...tall, landmarks: tallShot.landmarks },
     },
     null,
     2,
   )}\n`,
 )
+const count = photoShot.landmarks.reduce((sum, group) => sum + group.points.length / 2, 0)
 console.log(
-  `figure.glb ${String(glb.byteLength)} and figure-final.glb ${String(finalGlb.byteLength)} bytes, portrait.svg ${String(svg.length)} bytes, ${String(facePoints.length + bodyPoints.length)} points`,
+  `figure.glb ${String(glb.byteLength)} and figure-final.glb ${String(finalGlb.byteLength)} bytes, portrait.svg ${String(photoShot.svg.length)} and portrait-tall.svg ${String(tallShot.svg.length)} bytes, ${String(count)} points`,
 )
