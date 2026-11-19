@@ -1,6 +1,8 @@
 import { createVirtualizer } from "@ui-sdk/core"
 import { useCallback, useEffect, useLayoutEffect, useState, useSyncExternalStore } from "react"
 
+import { layersBesideViewport } from "@/components/ui/scroll-area"
+
 /** Past this many rows only the rows in view render. */
 const FINDABLE_ROWS_THRESHOLD = 200
 
@@ -83,13 +85,16 @@ function useFindableRows({ count, estimate, getKey, text, findable }: FindableRo
     if (!scroller || !enabled) return undefined
     let disconnect = virtual.connect(scroller)
     if (!findable) return () => disconnect()
+    let restore = () => {}
     const cancel = whenIdle(() => {
       disconnect()
+      restore = layersBesideViewport(scroller)
       disconnect = virtual.connect(scroller, { findable: true })
     })
     return () => {
       cancel()
       disconnect()
+      restore()
     }
   }, [virtual, scroller, enabled, findable])
 

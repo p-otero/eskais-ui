@@ -17,6 +17,7 @@ import {
   type DiffLineSelection,
   type DiffSide,
 } from "@/components/ui/diff-view-selection"
+import { layersBesideViewport } from "@/components/ui/scroll-area"
 import { intraline } from "@/lib/diff-intraline"
 import type { DiffLine, IntralineMode, IntralineRanges } from "@/lib/diff-types"
 
@@ -254,6 +255,7 @@ function createDiffDocument(context: DocumentContext) {
       }
       // The viewport is dir="ltr" for the code; headers follow the page's direction through this variable.
       el.style.setProperty("--diff-page-direction", getComputedStyle(el.parentElement ?? el).direction)
+      const restore = layersBesideViewport(el)
       const disconnect = virtual.connect(el, { findable })
       setCurrent(fileInView(), "scroll")
       const resize = new ResizeObserver(() =>
@@ -263,6 +265,7 @@ function createDiffDocument(context: DocumentContext) {
       return () => {
         resize.disconnect()
         disconnect()
+        restore()
         viewport = null
       }
     },
