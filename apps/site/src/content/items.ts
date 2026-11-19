@@ -980,6 +980,7 @@ const itemNotes: Record<string, ItemNotes> = {
       "Use it for a branch's history: one line per commit, merges folded until opened, details inline. Give it a bounded height.",
     a11y: [
       "A tree with one tab stop: arrows, Home/End and typeahead move; Right and Left open and close a merge; Enter opens a commit's details.",
+      "A workingTree row (uncommitted changes, staged and unstaged counts) comes first, in the same tab stop and selection as the commits, named in full.",
       "With selected or onSelect, a press, Enter or Space selects a row (aria-selected, and the nav-current fill, hairline and weight, so it never rests on colour); a press or Enter on the selected row opens its details.",
       'Each row is named in full, like "Merge invoice-pdf into main, 38 minutes ago, Release"; the graph is decorative.',
       "Dimmed rows use muted-foreground, which keeps 4.5:1; the spinner and every transition stop under reduced motion.",

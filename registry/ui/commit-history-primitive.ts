@@ -33,6 +33,8 @@ type CommitBranchSummary = {
 
 type CommitHistoryOptions = {
   lookup?: CommitLookup
+  /** A working-tree row sits above the commits, selectable as `WORKING_TREE`. */
+  workingTree?: boolean
   /** Open merges, by id. */
   expanded?: readonly string[]
   defaultExpanded?: readonly string[]
@@ -71,6 +73,9 @@ interface CommitHistoryController {
 
 const COPIED_FOR = 2000
 
+/** The id of the working-tree row, for `selected`, `onSelect` and `select`. No commit id can take it. */
+const WORKING_TREE = "working-tree"
+
 function reasonOf(options: unknown): { reason: CommitHistoryChangeReason; event?: Event } {
   if (typeof options !== "object" || options === null) return { reason: "imperative" }
   const { reason = "imperative", event } = options as ChangeOptions<CommitHistoryChangeReason>
@@ -83,6 +88,7 @@ const commitHistory = definePrimitive({
   name: "commit-history",
   options: {
     lookup: "value",
+    workingTree: "boolean",
     expanded: "list",
     defaultExpanded: "list",
     onExpandedChange: "callback",
@@ -146,7 +152,8 @@ const commitHistory = definePrimitive({
       /** Selects a commit by id, hash or subject; `null` clears the selection. */
       select(ref: string | null, options?: ChangeOptions<CommitHistoryChangeReason>) {
         if (!selectable()) throw new Error("This history doesn't select commits; pass selected or onSelect.")
-        const id = ref === null ? null : find(ref).id
+        const id =
+          ref === null ? null : ref === WORKING_TREE && context.options().workingTree ? WORKING_TREE : find(ref).id
         return context.store.get().selected === id ? true : change("selected", id, reasonOf(options))
       },
       setExpanded(expanded: readonly string[], options?: ChangeOptions<CommitHistoryChangeReason>) {
@@ -275,7 +282,7 @@ function createCommitHistoryController() {
   return createController<CommitHistoryController>()
 }
 
-export { commitHistory, createCommitHistoryController }
+export { commitHistory, createCommitHistoryController, WORKING_TREE }
 export type {
   CommitBranchSummary,
   CommitHistoryChangeReason,

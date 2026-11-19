@@ -4300,6 +4300,18 @@
         {
           "path": "registry/ui/commit-branch-select.tsx",
           "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/commit-history-labels.ts",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/commit-history-header.tsx",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/commit-working-tree-row.tsx",
+          "type": "registry:ui"
         }
       ]
     },

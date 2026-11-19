@@ -31,6 +31,7 @@ A branch's history as a commit trail, and a repository's files at a commit. Four
 - **Merges** start collapsed. A press, Enter, Right/Left or the chevron opens one; `expanded`/`defaultExpanded`/`onExpandedChange` hold the open merge ids.
 - **Details**: a press or Enter on any other commit opens author, date, hash with a copy button, files and lines changed, and the body under its row. One at a time unless `detailsMode="multiple"`; `details`/`defaultDetails`/`onDetailsChange` hold them. With `onOpenCommit`, the press calls it instead, for apps that navigate to a commit page.
 - **Selection**: for a list beside a commit pane, pass `selected` + `onSelect` (or `defaultSelected`); any of them turns selection on. A press, Enter or Space selects a row, which carries `aria-selected` and the `nav-current` look (fill, hairline, medium weight). A press or Enter on the row already selected opens its details, or its merged commits on a merge; the chevron and Right/Left still open a merge without selecting it. Arrows only move focus, so a held arrow never re-renders the pane. `onSelect(id, details)` gets `details.reason` and `details.cancel()`.
+- **Uncommitted changes**: `workingTree={{ staged: 2, unstaged: 3 }}` puts a row above the newest commit, "Uncommitted changes · 2 staged · 3 unstaged" with a hollow dashed node. It takes roving focus and selection like a commit, under the reserved id `WORKING_TREE` (`"working-tree"`), so `defaultSelected={WORKING_TREE}` opens a dirty checkout on its changes. `workingTree.label`, `labels.workingTree`, `labels.staged(n)` and `labels.unstaged(n)` change the words. Leave the prop out on a clean checkout.
 - **Focus mode**: while details are open the other rows dim to `muted-foreground`, which keeps 4.5:1. `focusMode={false}` turns it off, `true` keeps it on.
 - **A commit in progress**: put it first with `status: "pending"`. It spins (not under reduced motion) and shows `labels.pending` in place of its time. Replace it with `status: "done"` when it lands: its node grows into a check and its time and tags fade in, and the count goes up.
 - **The count** counts finished commits; pass `count` with the server's total when paging.
@@ -92,7 +93,7 @@ Rows out of view aren't in the page, so the browser's find doesn't see them. `fi
 
 The history is one component to an agent, named by its `aria-label`, with every commit as an item named in full ("Merge invoice-pdf into main, 38 minutes ago, Release"). Actions take a commit's id, hash (4 characters or more) or subject:
 
-- `select(commit)`: only with selection on; `select(null)` clears it
+- `select(commit)`: only with selection on; `select(null)` clears it, `select("working-tree")` picks the working-tree row
 - `expandDetails(commit)`, `collapseDetails(commit)`
 - `expand(merge)`, `collapse(merge)`: refused on a commit with no merged commits
 - `copyHash(commit)`: copies where the page can, and returns the hash, so the agent reads it either way

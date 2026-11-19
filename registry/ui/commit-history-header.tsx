@@ -1,0 +1,89 @@
+"use client"
+
+import type { ReactNode } from "react"
+
+import { CommitBranchSelect } from "@/components/ui/commit-branch-select"
+import type { CommitHistoryLabels } from "@/components/ui/commit-history-labels"
+import { Select } from "@/components/ui/select"
+import type { BranchInfo } from "@/lib/commit-branches"
+import type { Instant } from "@/lib/time"
+
+type CommitHistoryHeaderProps = {
+  labels: CommitHistoryLabels
+  now: Instant | undefined
+  locale: string | undefined
+  /** The branches view's active branches: a select shows one alone. */
+  active?: readonly BranchInfo[]
+  focusedBranch: string | null
+  onFocusBranch: (name: string | null) => void
+  /** Branch names for the switcher, when there's more than one and a handler. */
+  switcher?: readonly string[]
+  branch: string | undefined
+  onBranch: (name: string) => void
+  actions?: ReactNode
+  /** Commits counted in the header. */
+  total: number
+}
+
+const switcherClassName =
+  "-ms-(--item-padding-x) w-auto border-transparent bg-transparent px-(--item-padding-x) font-medium shadow-none hover:bg-accent"
+
+/** The history's header: the branch (a switcher or a select in the branches view), the caller's actions and the count. */
+function CommitHistoryHeader({
+  labels,
+  now,
+  locale,
+  active,
+  focusedBranch,
+  onFocusBranch,
+  switcher,
+  branch,
+  onBranch,
+  actions,
+  total,
+}: CommitHistoryHeaderProps) {
+  let branchControl: ReactNode
+  if (active && active.length > 0)
+    branchControl = (
+      <CommitBranchSelect
+        branches={active}
+        focused={focusedBranch}
+        onFocus={onFocusBranch}
+        labels={labels}
+        now={now}
+        locale={locale}
+      />
+    )
+  else if (switcher)
+    branchControl = (
+      <Select
+        aria-label={labels.branch}
+        size="sm"
+        options={switcher.map((name) => ({ value: name, label: name }))}
+        value={branch ?? null}
+        onValueChange={(value) => {
+          if (typeof value === "string") onBranch(value)
+        }}
+        triggerProps={{ className: switcherClassName }}
+      />
+    )
+  else branchControl = <span className="truncate text-body-sm font-medium">{branch}</span>
+
+  return (
+    <div
+      data-slot="commit-history-header"
+      className="flex min-w-0 items-center justify-between gap-items px-(--item-padding-x)"
+    >
+      {branchControl}
+      <span className="flex shrink-0 items-center gap-items">
+        {actions}
+        <span data-slot="commit-history-count" className="text-caption text-muted-foreground tabular-nums">
+          {labels.commits(total, locale)}
+        </span>
+      </span>
+    </div>
+  )
+}
+
+export { CommitHistoryHeader }
+export type { CommitHistoryHeaderProps }
