@@ -379,7 +379,7 @@ const CommitRow = memo(function CommitRow({
     >
       <span
         aria-hidden="true"
-        className="pointer-events-none absolute inset-x-0 top-0 h-(--commit-line) rounded-control transition-colors duration-micro ease-standard group-hover/commit:bg-accent group-focus-visible/commit:bg-accent group-focus-visible/commit:ring-2 group-focus-visible/commit:ring-ring group-data-details-open/commit:bg-accent"
+        className="pointer-events-none absolute inset-x-0 top-0 h-(--commit-line) rounded-control transition-colors duration-micro ease-standard group-hover/commit:bg-accent [:focus-visible>&]:bg-accent [:focus-visible>&]:ring-2 [:focus-visible>&]:ring-ring group-data-details-open/commit:bg-accent"
       />
       <CommitGraphCell row={lanes} node={node} finished={finished} drawIn={drawIn} />
       <TreeItemLabel

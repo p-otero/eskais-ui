@@ -129,7 +129,7 @@ function TreeItemLabel({ className, ...props }: ComponentProps<typeof TreeItemLa
           "flex min-h-control-sm cursor-default items-center gap-inline rounded-control py-inset-item pe-(--item-padding-x) text-body text-foreground select-none",
           "ps-[calc(var(--item-padding-x)+(var(--tree-level,1)-1)*var(--tree-indent))] pointer-coarse:min-h-(--control-height-touch)",
           "hover:bg-accent/60 data-selected:bg-accent data-selected:text-accent-foreground data-current:font-medium data-disabled:cursor-not-allowed data-disabled:opacity-50 data-pending:opacity-70",
-          "group-focus-visible/tree-item:ring-2 group-focus-visible/tree-item:ring-ring group-focus-visible/tree-item:ring-inset",
+          "[:focus-visible>&]:ring-2 [:focus-visible>&]:ring-ring [:focus-visible>&]:ring-inset",
           "[&>svg]:size-4 [&>svg]:shrink-0 [&>svg]:text-muted-foreground [&_a]:outline-none",
         ].join(" "),
         className,

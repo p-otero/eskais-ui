@@ -52,7 +52,7 @@ function Items({
           className={cn(
             // oxlint-disable-next-line shadcn/no-arbitrary-values -- indents each level by a group gap, from the tree's --tree-level
             "flex cursor-pointer items-center gap-inline rounded-control py-inset-item pe-inline ps-[calc(var(--tree-level)*var(--gap-group)-var(--gap-inline))] text-body-sm",
-            "hover:bg-accent hover:text-accent-foreground in-focus-visible:outline-2 in-focus-visible:outline-ring data-selected:bg-accent data-selected:text-accent-foreground",
+            "hover:bg-accent hover:text-accent-foreground [:focus-visible>&]:outline-2 [:focus-visible>&]:outline-ring data-selected:bg-accent data-selected:text-accent-foreground",
           )}
         >
           {item.children ? (
