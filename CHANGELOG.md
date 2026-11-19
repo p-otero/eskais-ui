@@ -2,6 +2,12 @@
 
 Versions follow [semver](https://semver.org). Before 1.0, a minor version can break compatibility. Release with `bun pm version <patch|minor|major>`, which bumps `package.json` and tags `vX.Y.Z`.
 
+## Unreleased
+
+### Added
+
+- `CommitHistory selected`, `defaultSelected` and `onSelect(id, details)`: a selected commit for a list beside a commit pane. A press, Enter or Space selects a row (UI SDK Tree's single selection, `aria-selected`), drawn with the `nav-current` fill, hairline and medium weight so it doesn't rest on colour. A press or Enter on the row already selected opens its details (or its merged commits on a merge); arrows only move focus. Agents and `createCommitHistoryController()` get `select(commit)`, by id, hash or subject; `select(null)` clears it.
+
 ## 0.2.3 (2026-11-19)
 
 ### Added

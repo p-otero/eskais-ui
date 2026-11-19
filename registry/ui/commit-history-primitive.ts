@@ -37,6 +37,10 @@ type CommitHistoryOptions = {
   expanded?: readonly string[]
   defaultExpanded?: readonly string[]
   onExpandedChange?: (expanded: string[], details: ChangeDetails<CommitHistoryChangeReason>) => void
+  /** The selected commit's id, `null` for none. Selection is on once one of these three is given. */
+  selected?: string | null
+  defaultSelected?: string | null
+  onSelectedChange?: (id: string | null, details: ChangeDetails<CommitHistoryChangeReason>) => void
   /** Commits whose details show under their row. */
   details?: readonly string[]
   defaultDetails?: readonly string[]
@@ -55,6 +59,7 @@ type CommitHistoryOptions = {
 }
 
 interface CommitHistoryController {
+  select: (ref: string | null, options?: ChangeOptions<CommitHistoryChangeReason>) => boolean | undefined
   expand: (ref: string, options?: ChangeOptions<CommitHistoryChangeReason>) => boolean | undefined
   collapse: (ref: string, options?: ChangeOptions<CommitHistoryChangeReason>) => boolean | undefined
   expandDetails: (ref: string, options?: ChangeOptions<CommitHistoryChangeReason>) => boolean | undefined
@@ -81,6 +86,9 @@ const commitHistory = definePrimitive({
     expanded: "list",
     defaultExpanded: "list",
     onExpandedChange: "callback",
+    selected: "value",
+    defaultSelected: "value",
+    onSelectedChange: "callback",
     details: "list",
     defaultDetails: "list",
     onDetailsChange: "callback",
@@ -97,6 +105,7 @@ const commitHistory = definePrimitive({
   state: (options: CommitHistoryOptions) => ({
     expanded: list(options.expanded ?? options.defaultExpanded) ?? [],
     details: list(options.details ?? options.defaultDetails) ?? [],
+    selected: options.selected ?? options.defaultSelected ?? null,
     branch: options.branch ?? null,
     focusedBranch: options.focusedBranch ?? null,
     copied: null as string | null,
@@ -104,10 +113,11 @@ const commitHistory = definePrimitive({
   sync: (options) => ({
     ...(options.expanded === undefined ? {} : { expanded: [...options.expanded] }),
     ...(options.details === undefined ? {} : { details: [...options.details] }),
+    ...(options.selected === undefined ? {} : { selected: options.selected }),
     ...(options.branch === undefined ? {} : { branch: options.branch }),
     ...(options.focusedBranch === undefined ? {} : { focusedBranch: options.focusedBranch }),
   }),
-  controlled: ["expanded", "details", "branch", "focusedBranch"],
+  controlled: ["expanded", "details", "selected", "branch", "focusedBranch"],
   api: (context) => {
     const change = createChange(context)
     let timer: ReturnType<typeof setTimeout> | undefined
@@ -127,7 +137,18 @@ const commitHistory = definePrimitive({
     const setExpanded = (next: string[], options?: unknown) => change("expanded", next, reasonOf(options))
     const setDetails = (next: string[], options?: unknown) => change("details", next, reasonOf(options))
 
+    const selectable = () => {
+      const { selected, defaultSelected, onSelectedChange } = context.options()
+      return selected !== undefined || defaultSelected !== undefined || onSelectedChange !== undefined
+    }
+
     const api = {
+      /** Selects a commit by id, hash or subject; `null` clears the selection. */
+      select(ref: string | null, options?: ChangeOptions<CommitHistoryChangeReason>) {
+        if (!selectable()) throw new Error("This history doesn't select commits; pass selected or onSelect.")
+        const id = ref === null ? null : find(ref).id
+        return context.store.get().selected === id ? true : change("selected", id, reasonOf(options))
+      },
       setExpanded(expanded: readonly string[], options?: ChangeOptions<CommitHistoryChangeReason>) {
         return setExpanded([...expanded], options)
       },
@@ -228,12 +249,14 @@ const commitHistory = definePrimitive({
       role: "region",
       attrs: (state) => ({
         "data-details-open": state.details.length > 0 ? "" : undefined,
+        "data-selected": state.selected ?? undefined,
         "data-branch": state.branch ?? undefined,
       }),
     }),
   }),
   agent: {
     actions: [
+      "select",
       "expandDetails",
       "collapseDetails",
       "expand",
