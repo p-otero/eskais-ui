@@ -4,8 +4,8 @@
   "title": "Table",
   "description": "Semantic table parts with aria-sort-ready headers and a horizontal scroll area on narrow screens. Cells stay on one line, cut with an ellipsis and a title holding the whole text while they overflow; TableCell wrap lets one wrap.",
   "dependencies": [
-    "@ui-sdk/core@0.1.0-beta.10",
-    "@ui-sdk/react@0.1.0-beta.10"
+    "@ui-sdk/core@0.1.0-beta.12",
+    "@ui-sdk/react@0.1.0-beta.12"
   ],
   "registryDependencies": [
     "@eskais/utils",

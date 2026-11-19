@@ -4,8 +4,8 @@
   "title": "Sortable",
   "description": "Reorder a list or grid by drag, keyboard and agents, built with definePrimitive over UI SDK's createReorder: a controlled string[] order, a draft while an item moves, an optional drag handle, checked items that move together, announcements with overridable labels, a FLIP slide on the motion tokens, and agent actions move(id, index) and reorder(order).",
   "dependencies": [
-    "@ui-sdk/core@0.1.0-beta.10",
-    "@ui-sdk/react@0.1.0-beta.10",
+    "@ui-sdk/core@0.1.0-beta.12",
+    "@ui-sdk/react@0.1.0-beta.12",
     "lucide-react"
   ],
   "registryDependencies": [

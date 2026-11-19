@@ -4,8 +4,8 @@
   "title": "Confirm Button",
   "description": "A button that asks twice, built with definePrimitive: the first press arms it (data-armed, its text and name become labels.armed, announced), the second runs onConfirm; it disarms on a timeout, Escape or blur with change reasons, can confirm on a hold, and carries data-agent-confirm.",
   "dependencies": [
-    "@ui-sdk/core@0.1.0-beta.10",
-    "@ui-sdk/react@0.1.0-beta.10"
+    "@ui-sdk/core@0.1.0-beta.12",
+    "@ui-sdk/react@0.1.0-beta.12"
   ],
   "registryDependencies": [
     "@eskais/utils",

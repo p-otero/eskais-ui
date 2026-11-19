@@ -4,7 +4,7 @@
   "title": "Alert",
   "description": "Presentational alert with the shared tones (neutral, info, success, warning, destructive), a trailing action slot, long text that wraps, and an opt-in live role.",
   "dependencies": [
-    "@ui-sdk/react@0.1.0-beta.10",
+    "@ui-sdk/react@0.1.0-beta.12",
     "class-variance-authority@0.7.1"
   ],
   "registryDependencies": [

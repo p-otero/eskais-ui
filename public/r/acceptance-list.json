@@ -4,8 +4,8 @@
   "title": "Acceptance List",
   "description": "A list of pass, fail and unverified criteria with evidence, a segmented AcceptanceBar on the UI SDK Meter with an accessible summary, and AcceptancePopover, a compact header trigger that opens the list.",
   "dependencies": [
-    "@ui-sdk/core@0.1.0-beta.10",
-    "@ui-sdk/react@0.1.0-beta.10",
+    "@ui-sdk/core@0.1.0-beta.12",
+    "@ui-sdk/react@0.1.0-beta.12",
     "lucide-react"
   ],
   "registryDependencies": [

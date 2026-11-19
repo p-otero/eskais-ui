@@ -4,8 +4,8 @@
   "title": "Shortcuts",
   "description": "Keyboard shortcuts on UI SDK's shared shortcuts: useShortcut with scopes, sequences (g i) and mod, ShortcutScope for a region or an open panel, ShortcutHint drawn with Kbd. Plain keys never fire while typing or composing.",
   "dependencies": [
-    "@ui-sdk/core@0.1.0-beta.10",
-    "@ui-sdk/react@0.1.0-beta.10"
+    "@ui-sdk/core@0.1.0-beta.12",
+    "@ui-sdk/react@0.1.0-beta.12"
   ],
   "registryDependencies": [
     "@eskais/utils",

@@ -12,9 +12,9 @@ const day = 24 * 60 * 60 * 1000
 // Pins allowed to be younger, each with its reason. One stays allowed only at this exact version: a bump has to be
 // added here again on purpose. Once it is old enough the check says so, and the entry should go.
 export const youngDependencyExceptions = {
-  "@ui-sdk/core@0.1.0-beta.10":
+  "@ui-sdk/core@0.1.0-beta.12":
     "UI SDK's first release is from 2026-11-12, so no version is 7 days old yet; the components are built on it",
-  "@ui-sdk/react@0.1.0-beta.10":
+  "@ui-sdk/react@0.1.0-beta.12":
     "UI SDK's first release is from 2026-11-12, so no version is 7 days old yet; the components are built on it",
 }
 

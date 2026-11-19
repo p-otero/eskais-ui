@@ -4,7 +4,7 @@
   "title": "Skeleton",
   "description": "Presentational loading placeholder, hidden from assistive technology, that stops pulsing under reduced motion.",
   "dependencies": [
-    "@ui-sdk/react@0.1.0-beta.10"
+    "@ui-sdk/react@0.1.0-beta.12"
   ],
   "registryDependencies": [
     "@eskais/utils",

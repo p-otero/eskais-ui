@@ -4,8 +4,8 @@
   "title": "Calendar",
   "description": "UI SDK Calendar: a month grid with arrow, Page Up/Down and Home/End keys, single, multiple or range selection, several months, min/max and unavailable dates, locale and timeZone.",
   "dependencies": [
-    "@ui-sdk/core@0.1.0-beta.10",
-    "@ui-sdk/react@0.1.0-beta.10",
+    "@ui-sdk/core@0.1.0-beta.12",
+    "@ui-sdk/react@0.1.0-beta.12",
     "class-variance-authority@0.7.1",
     "lucide-react"
   ],

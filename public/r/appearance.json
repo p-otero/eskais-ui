@@ -4,8 +4,8 @@
   "title": "Appearance",
   "description": "createAppearance and <Appearance>: keep the .dark class, data-theme, data-palette, data-density and data-radius on <html> in sync with a color scheme (system follows prefers-color-scheme live, or light or dark), a theme, a palette, a density (default or compact) and a corner radius (none, sm, md, lg or full), optionally saved between visits. Works in a static file:// page.",
   "dependencies": [
-    "@ui-sdk/core@0.1.0-beta.10",
-    "@ui-sdk/react@0.1.0-beta.10"
+    "@ui-sdk/core@0.1.0-beta.12",
+    "@ui-sdk/react@0.1.0-beta.12"
   ],
   "registryDependencies": [
     "@eskais/theme"

@@ -4,8 +4,8 @@
   "title": "Repository Select",
   "description": "A select for one git repository out of several: the trigger shows the name, each option its path, the branch checked out and its state (uncommitted, ahead, behind, no remote, up to date). On UI SDK Select, so keyboard, typeahead and agents work as in any select.",
   "dependencies": [
-    "@ui-sdk/core@0.1.0-beta.10",
-    "@ui-sdk/react@0.1.0-beta.10"
+    "@ui-sdk/core@0.1.0-beta.12",
+    "@ui-sdk/react@0.1.0-beta.12"
   ],
   "registryDependencies": [
     "@eskais/select",

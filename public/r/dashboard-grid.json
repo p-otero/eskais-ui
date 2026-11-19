@@ -4,7 +4,7 @@
   "title": "Dashboard Grid",
   "description": "DashboardGrid: a row of stats over a container-query grid of cards (one column, two from 42rem, `columns` from 64rem) where rows are at least one height and cards in a row share it, so they line up, keep their size from loading to loaded and grow their row rather than clip. DashboardCard spans columns and rows and loads through DataState (a skeleton, the error with Retry, an empty title); DashboardChart fills a card and is named by its title; DashboardMeter centres a ring meter in one; DashboardStats and DashboardStat (with a StatDelta in `delta`) draw placeholders of the value's height.",
   "dependencies": [
-    "@ui-sdk/react@0.1.0-beta.10"
+    "@ui-sdk/react@0.1.0-beta.12"
   ],
   "registryDependencies": [
     "@eskais/utils",

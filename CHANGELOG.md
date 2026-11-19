@@ -29,6 +29,12 @@ Versions follow [semver](https://semver.org). Before 1.0, a minor version can br
 
 ### Changed
 
+- Every item depends on UI SDK 0.1.0-beta.12 (`@ui-sdk/core` and `@ui-sdk/react`), up from 0.1.0-beta.10. Pin it exactly in your app too. The public exports are the same; what it brings to Eskais UI components:
+  - `Command` (so `CommandDialog`, `DocumentQuickOpen`) and `Autocomplete` settle the highlighted item after the list changes, instead of keeping a highlight on an item that left it.
+  - `Pagination` keeps focus on the control you pressed when the page changes, and its module no longer fails UI SDK's role check in development, so the warning beta.10 logged on load is gone (and the test setup no longer loads it leniently).
+  - A dialog's narrow bottom sheet (`DialogContent`, `Drawer side="bottom"`) takes its first measurement from `visualViewport`, so it opens at the right height with the on-screen keyboard already up.
+  - A `Drawer side="top"` lays out correctly in right-to-left.
+  - Still there: a second `CommandDialogTrigger` drops the dialog's agent label (keep `CommandDialogOpenButton`), and a `Drawer` drops a press on the page while it slides out.
 - `CommitHistory`: the header writes the commits the upstream doesn't have as "3 not pushed" beside the cloud icon, instead of a bare number that read "3 3 commits" next to the count. The task dialog example opens its diff with the file tree folded (`defaultFileTreeOpen={false}`), so the code keeps its width beside the history.
 - `Sidebar` scrolls its items in the library's `ScrollArea` (named by the sidebar's `label`, with the theme's thumb) instead of a bare overflow element.
 - The docs site has one header on every page: the landing and the 404 use the same `Topbar` as the docs pages (brand, Docs, Components, Theming, search, dark mode, GitHub), instead of a floating pill. Docs pages add their sidebar's trigger at the start; below lg, pages without a sidebar show a Docs link in place of the main navigation. The guides' sections are Get started, Theming and Guides (they were Getting started and Tools).

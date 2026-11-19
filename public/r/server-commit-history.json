@@ -4,7 +4,7 @@
   "title": "Server Commit History",
   "description": "A CommitHistory over a PageSource: older commits load as the end scrolls into view and from a Load more button, the header counts the source's total, and the graph carries on across pages.",
   "dependencies": [
-    "@ui-sdk/react@0.1.0-beta.10"
+    "@ui-sdk/react@0.1.0-beta.12"
   ],
   "registryDependencies": [
     "@eskais/commit-history",

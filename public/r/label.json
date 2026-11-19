@@ -4,8 +4,8 @@
   "title": "Label",
   "description": "UI SDK Label: names any control by htmlFor, including a radio group, slider or switch.",
   "dependencies": [
-    "@ui-sdk/core@0.1.0-beta.10",
-    "@ui-sdk/react@0.1.0-beta.10"
+    "@ui-sdk/core@0.1.0-beta.12",
+    "@ui-sdk/react@0.1.0-beta.12"
   ],
   "registryDependencies": [
     "@eskais/utils",

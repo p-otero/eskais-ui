@@ -4,8 +4,8 @@
   "title": "Commit History",
   "description": "A commit trail, one line per commit: a graph lane down the side, merges collapsed to one row that open their branch on a curved side lane, a pending commit that spins until it lands, and a commit's details inline under its row. Virtualized for 50,000+ commits; agents read and act on commits by name.",
   "dependencies": [
-    "@ui-sdk/core@0.1.0-beta.10",
-    "@ui-sdk/react@0.1.0-beta.10",
+    "@ui-sdk/core@0.1.0-beta.12",
+    "@ui-sdk/react@0.1.0-beta.12",
     "lucide-react"
   ],
   "registryDependencies": [

@@ -4,8 +4,8 @@
   "title": "Scroll Area",
   "description": "UI SDK ScrollArea: native scrolling with styled scrollbars, edge state and follow-to-end, keyboard-reachable when it overflows.",
   "dependencies": [
-    "@ui-sdk/core@0.1.0-beta.10",
-    "@ui-sdk/react@0.1.0-beta.10"
+    "@ui-sdk/core@0.1.0-beta.12",
+    "@ui-sdk/react@0.1.0-beta.12"
   ],
   "registryDependencies": [
     "@eskais/utils",

@@ -8,10 +8,6 @@ declare global {
   var IS_REACT_ACT_ENVIRONMENT: boolean | undefined
 }
 
-// UI SDK 0.1.0-beta.10's own pagination primitive fails its dev role check as it is defined (the `link` slot
-// declares the link role without `focus`), which strict mode turns into a throw at import. Load it leniently once.
-globalThis.__UI_SDK_STRICT__ = false
-await import("@ui-sdk/core/pagination")
 globalThis.__UI_SDK_STRICT__ = true
 globalThis.IS_REACT_ACT_ENVIRONMENT = true
 

@@ -4,8 +4,8 @@
   "title": "Date Input",
   "description": "UI SDK DateInput styled as a field: a date typed segment by segment in the locale's order, ISO values, min, max and unavailable dates marked invalid, floating labels and FormField binding.",
   "dependencies": [
-    "@ui-sdk/core@0.1.0-beta.10",
-    "@ui-sdk/react@0.1.0-beta.10"
+    "@ui-sdk/core@0.1.0-beta.12",
+    "@ui-sdk/react@0.1.0-beta.12"
   ],
   "registryDependencies": [
     "@eskais/utils",

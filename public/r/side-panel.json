@@ -4,8 +4,8 @@
   "title": "Side Panel",
   "description": "A non-modal inspector beside a list: a named complementary region, Escape closes it and returns focus to the row, shortcuts declared inside run while it is open, and on narrow screens it stacks below the list, overlays it or opens as a bottom sheet.",
   "dependencies": [
-    "@ui-sdk/core@0.1.0-beta.10",
-    "@ui-sdk/react@0.1.0-beta.10",
+    "@ui-sdk/core@0.1.0-beta.12",
+    "@ui-sdk/react@0.1.0-beta.12",
     "lucide-react",
     "class-variance-authority@0.7.1"
   ],

@@ -4,8 +4,8 @@
   "title": "Mobile Nav",
   "description": "A bottom tab bar for narrow screens: a named navigation of up to five links with the icon above the label, aria-current on the current page, an optional badge, and More, which opens the rest above the bar. Fixed to the bottom above the safe area, 56px targets, hidden above narrow: unless `always`. Glass gives it a translucent chrome fill.",
   "dependencies": [
-    "@ui-sdk/core@0.1.0-beta.10",
-    "@ui-sdk/react@0.1.0-beta.10",
+    "@ui-sdk/core@0.1.0-beta.12",
+    "@ui-sdk/react@0.1.0-beta.12",
     "lucide-react"
   ],
   "registryDependencies": [

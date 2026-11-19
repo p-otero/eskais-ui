@@ -4,8 +4,8 @@
   "title": "Board",
   "description": "Generic kanban layout: a named, horizontally scrolling list of columns with headers, counts, actions, collapsible columns agents can toggle by name, groups and an empty slot. With a value, cards move between columns by drag, keyboard and agents (UI SDK's createTransfer).",
   "dependencies": [
-    "@ui-sdk/core@0.1.0-beta.10",
-    "@ui-sdk/react@0.1.0-beta.10",
+    "@ui-sdk/core@0.1.0-beta.12",
+    "@ui-sdk/react@0.1.0-beta.12",
     "lucide-react"
   ],
   "registryDependencies": [

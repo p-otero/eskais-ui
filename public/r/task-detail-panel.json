@@ -4,7 +4,7 @@
   "title": "Task Detail Panel",
   "description": "An agent task's goal, acceptance and evidence, dependencies that select their task, the pending decision with proposal actions, usage and the attempt timeline. TaskDetailPanel shows it as a non-modal panel; TaskDetailDialog as a modal dialog or a right-side drawer. Escape and a close button close either.",
   "dependencies": [
-    "@ui-sdk/react@0.1.0-beta.10",
+    "@ui-sdk/react@0.1.0-beta.12",
     "lucide-react"
   ],
   "registryDependencies": [

@@ -4,8 +4,8 @@
   "title": "Filter Bar",
   "description": "A UI SDK Toolbar of filters with one tab stop and arrow keys, a search field inside it, and a reset button that shows while filters apply.",
   "dependencies": [
-    "@ui-sdk/core@0.1.0-beta.10",
-    "@ui-sdk/react@0.1.0-beta.10",
+    "@ui-sdk/core@0.1.0-beta.12",
+    "@ui-sdk/react@0.1.0-beta.12",
     "class-variance-authority@0.7.1",
     "lucide-react"
   ],
