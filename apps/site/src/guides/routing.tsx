@@ -35,7 +35,7 @@ export default function Routing() {
   return (
     <Article>
       <DocTitle
-        eyebrow="Getting started"
+        eyebrow="Guides"
         title="Routing and the URL"
         description="Blocks that keep state in the URL go through a small router adapter, so a hash router keeps its route and an app with its own route contract keeps control."
       />

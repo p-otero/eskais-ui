@@ -75,7 +75,7 @@ export default function GitViews() {
   return (
     <Article>
       <DocTitle
-        eyebrow="Getting started"
+        eyebrow="Guides"
         title="Git views"
         description="A repository's history beside the selected commit, the working tree's staged and unstaged changes, a repository picker and a commit view, from CommitHistory, GitDiff, GitTree and RepositorySelect."
       />

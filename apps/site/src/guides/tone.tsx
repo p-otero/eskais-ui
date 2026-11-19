@@ -18,7 +18,7 @@ export default function Tone() {
   return (
     <Article>
       <DocTitle
-        eyebrow="Getting started"
+        eyebrow="Theming"
         title="Tone and colour"
         description="One vocabulary says what a status means, across Badge, Alert, StatusPill, StatusDot, Progress, Meter and Toast."
       />

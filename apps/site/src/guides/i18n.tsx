@@ -16,7 +16,7 @@ export default function I18n() {
   return (
     <Article>
       <DocTitle
-        eyebrow="Getting started"
+        eyebrow="Guides"
         title="Internationalization"
         description="Components ship no visible copy in a specific language. Accessible labels default to English and every one is overridable."
       />

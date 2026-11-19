@@ -42,7 +42,7 @@ export default function Keyboard() {
   return (
     <Article>
       <DocTitle
-        eyebrow="Getting started"
+        eyebrow="Guides"
         title="Keyboard and long lists"
         description="Shortcuts, keyboard navigation for lists and tables, and virtualization that keeps both working with thousands of rows."
       />

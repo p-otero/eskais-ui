@@ -44,7 +44,7 @@ export default function AgentSkills() {
   return (
     <Article>
       <DocTitle
-        eyebrow="Tools"
+        eyebrow="Get started"
         title="Agent skills"
         description="Three skills teach a coding agent to build with Eskais UI. They are registry items: shadcn writes them into .agents/skills in your project, next to your components."
       />
