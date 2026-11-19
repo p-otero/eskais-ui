@@ -64,6 +64,43 @@ const rename = useSourceMutation({
   optimistic: (items, change) => items.map((task) => (task.id === change.id ? { ...task, title: change.title } : task)),
 })`
 
+const resourceCode = `import { useServerQuery } from "@/components/ui/use-server-query"
+
+// A detail, a snapshot or a short list: no paging. Its key sits under the source's, so the hooks below reach it.
+const detail = useServerQuery([...tasks.key, "detail", id], ({ signal }) => api.task(id, { signal }))
+// detail.data, detail.status, detail.fetching, detail.previous, detail.error, detail.retry
+
+// The server answers with the saved task: write it everywhere, with no optimistic step and no refetch.
+const save = useSourceMutation({
+  source: tasks,
+  mutationFn: (change: TaskChange) => api.save(change), // resolves to the saved Task
+  settleItems: (items, saved) => items.map((task) => (task.id === saved.id ? saved : task)), // pages, infinite lists
+  settle: (saved, _change, current) => (current?.id === saved.id ? saved : undefined), // useServerQuery; undefined skips
+})
+
+// A reload the caller hears about when it fails.
+const reload = useInvalidateSource(tasks, { throwOnError: true })
+reload().catch(() => toast.error("Couldn't reload tasks"))`
+
+const retryCode = `import { createDataClient, isTransientError } from "@/components/ui/server-data"
+
+// Retry only what may pass next time: a network failure, 408, 425, 429 or a 5xx.
+const client = createDataClient({
+  retry: (failures, error) => failures < 3 && isTransientError(error),
+  retryDelay: (failures) => Math.min(500 * 2 ** failures, 5_000),
+})`
+
+const testCode = `// test/setup.ts
+import { notifyManager } from "@tanstack/react-query"
+
+// Deliver query results within the act() that settled them, not one setTimeout(0) later.
+notifyManager.setScheduler(queueMicrotask)
+
+// a test
+const tasks = arraySource(fixtures, { key: ["tasks"] })
+render(<DataProvider client={createDataClient({ retry: 0 })}><TaskScreen source={tasks} /></DataProvider>)
+expect(await screen.findByRole("row", { name: /Write the docs/ })).toBeVisible()`
+
 const styles = [
   [
     "Page and size, limit and offset",
@@ -252,6 +289,56 @@ export default function ServerData() {
         <Code>status</Code> (<Code>readJson</Code> throws an <Code>HttpError</Code> with it), 30 s fresh, no refetch on
         focus. Mount one per request when rendering on a server.
       </P>
+
+      <H2 id="resources">Resources that aren't paged</H2>
+      <P>
+        <Code>useServerQuery(key, fetch, options)</Code> loads one resource and returns what the page hooks return, with{" "}
+        <Code>data</Code> in place of the rows: <Code>status</Code>, <Code>fetching</Code>, <Code>previous</Code>,{" "}
+        <Code>error</Code> and <Code>retry</Code>. <Code>fetch</Code> gets the signal, aborted when the key changes or
+        the component unmounts. It takes <Code>enabled</Code>, <Code>staleTime</Code>, <Code>placeholder</Code> and{" "}
+        <Code>keepPrevious</Code> (off by default, so a detail never shows another id's data). On a server it renders
+        pending, or the data the request's client already holds.
+      </P>
+      <Pre code={resourceCode} />
+      <Ul>
+        <li>
+          <Code>settleItems(items, result, variables)</Code> maps each page's rows, in page and infinite queries; totals
+          stay. <Code>settle(result, variables, current, queryKey)</Code> writes each <Code>useServerQuery</Code> under
+          the key, and <Code>undefined</Code> leaves one alone.
+        </li>
+        <li>
+          On success they cancel the read in flight of each query they write, so an answer sent before the change can't
+          overwrite it, and request nothing. The other queries under the key are marked stale and reload when next
+          shown; one that was already loading starts again. A failed mutation still refreshes the key and rolls back{" "}
+          <Code>optimistic</Code> rows.
+        </li>
+        <li>
+          <Code>useInvalidateSource(source)</Code> resolves once the shown queries have reloaded, failed or not;{" "}
+          <Code>{"{ throwOnError: true }"}</Code>, on the hook or on one call, rejects with the error instead.
+        </li>
+      </Ul>
+
+      <H2 id="retry">Retries</H2>
+      <P>
+        <Code>createDataClient({"{ retry, retryDelay }"})</Code>: a number of retries keeps the 4xx rule, a function{" "}
+        <Code>(failures, error) =&gt; boolean</Code> decides alone. The default stays two retries for anything without a
+        4xx <Code>status</Code>, because <Code>fetch</Code> reports a dropped connection as a <Code>TypeError</Code>{" "}
+        with no status. When your errors carry no status (IPC, a domain error, a parse error), retrying only{" "}
+        <Code>isTransientError</Code> fails them at once instead of after the backoff. Mutations never retry: a write
+        that failed may still have reached the server.
+      </P>
+      <Pre code={retryCode} />
+
+      <H2 id="testing">Testing</H2>
+      <P>
+        Query results reach React through TanStack Query's <Code>notifyManager</Code>, which schedules them with{" "}
+        <Code>setTimeout(0)</Code>. So when a test awaits one <Code>act()</Code> around a source settling, the query is
+        done but the component still shows the state before it. Set the scheduler to <Code>queueMicrotask</Code> in your
+        test setup, or wait with <Code>findBy…</Code> and <Code>waitFor</Code>. An <Code>arraySource</Code> with{" "}
+        <Code>delay</Code> and <Code>fail</Code> stands in for the backend, and a client with <Code>retry: 0</Code>{" "}
+        shows an error at once.
+      </P>
+      <Pre code={testCode} title="tasks.test.tsx" />
 
       <H2 id="effect">Effect</H2>
       <P>

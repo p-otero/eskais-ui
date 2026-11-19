@@ -6,12 +6,14 @@ import {
   useMutation,
   useQuery,
   type InfiniteData,
+  type Query,
   type QueryClient,
   type QueryKey,
 } from "@tanstack/react-query"
 import { useCallback, useEffect, useState, useSyncExternalStore } from "react"
 
 import { useDataClient } from "@/components/ui/server-data"
+import { resourceMeta } from "@/components/ui/use-server-query"
 import {
   createPageController,
   type PageController,
@@ -195,38 +197,103 @@ function useServerInfinite<T, F>(
   }
 }
 
-/** Refreshes every query of the source: pages, infinite lists and totals, by its key prefix. */
-function useInvalidateSource(source: { key: readonly unknown[] }) {
+type InvalidateOptions = {
+  /** Rejects with the error when a reload fails, after its retries, so the caller can say so. Default false. */
+  throwOnError?: boolean
+}
+
+/**
+ * Refreshes every query of the source by its key prefix: pages, infinite lists, totals and `useServerQuery`
+ * resources under it. The returned function resolves once the shown ones have reloaded; with `throwOnError`, here or
+ * per call, a failed reload rejects.
+ */
+function useInvalidateSource(
+  source: { key: readonly unknown[] },
+  options: InvalidateOptions = {},
+): (call?: InvalidateOptions) => Promise<void> {
   const client = useDataClient()
   const { key } = source
-  return useCallback(() => client.invalidateQueries({ queryKey: key }), [client, key])
+  const throwOnError = options.throwOnError === true
+  // The function is often an onClick handler, so `call` may be an event: only a boolean `throwOnError` counts.
+  return useCallback(
+    (call?: InvalidateOptions) =>
+      client.invalidateQueries(
+        { queryKey: key },
+        { throwOnError: typeof call?.throwOnError === "boolean" ? call.throwOnError : throwOnError },
+      ),
+    [client, key, throwOnError],
+  )
 }
 
 type Snapshot = [QueryKey, unknown][]
 
-function updateItems<T>(client: QueryClient, key: readonly unknown[], update: (items: T[]) => T[]) {
-  const kind = (queryKey: QueryKey) => queryKey[key.length]
-  for (const [queryKey, data] of client.getQueriesData<unknown>({ queryKey: key })) {
-    if (data === undefined) continue
-    if (kind(queryKey) === "page") {
-      const page = data as PageResult<T>
-      client.setQueryData(queryKey, { ...page, items: update(page.items) })
-    } else if (kind(queryKey) === "infinite") {
-      const infinite = data as InfiniteData<PageResult<T>>
-      client.setQueryData(queryKey, {
-        ...infinite,
-        pages: infinite.pages.map((page) => ({ ...page, items: update(page.items) })),
-      })
+/** A page or infinite query's data with each page's rows updated; `undefined` for any other query or no data. */
+function mapItems<T>(kind: unknown, data: unknown, update: (items: T[]) => T[]): unknown {
+  if (data === undefined) return undefined
+  if (kind === "page") {
+    const page = data as PageResult<T>
+    return { ...page, items: update(page.items) }
+  }
+  if (kind === "infinite") {
+    const infinite = data as InfiniteData<PageResult<T>>
+    return {
+      ...infinite,
+      pages: infinite.pages.map((page) => ({ ...page, items: update(page.items) })),
     }
+  }
+  return undefined
+}
+
+function updateItems<T>(client: QueryClient, key: readonly unknown[], update: (items: T[]) => T[]) {
+  for (const [queryKey, data] of client.getQueriesData<unknown>({ queryKey: key })) {
+    const next = mapItems(queryKey[key.length], data, update)
+    if (next !== undefined) client.setQueryData(queryKey, next)
   }
 }
 
-type SourceMutationOptions<T, Variables, Result> = {
+/**
+ * Writes the server's answer where `next` returns data. Each query written has its read in flight cancelled first, so
+ * an answer sent before the change can't overwrite it. The rest of the key is marked stale without a request, and a
+ * read of it already in flight, which started before the change, starts again without holding the mutation.
+ */
+async function settleQueries(client: QueryClient, key: readonly unknown[], next: (query: Query) => unknown) {
+  const writes = client
+    .getQueryCache()
+    .findAll({ queryKey: key })
+    .map((query) => [query, next(query)] as const)
+    .filter(([, data]) => data !== undefined)
+  await Promise.all(writes.map(([query]) => client.cancelQueries({ queryKey: query.queryKey, exact: true })))
+  for (const [query, data] of writes) client.setQueryData(query.queryKey, data)
+  const written = new Set<Query>(writes.map(([query]) => query))
+  const rest = (query: Query) => !written.has(query)
+  await client.invalidateQueries({ queryKey: key, predicate: rest, refetchType: "none" })
+  void client.refetchQueries({
+    queryKey: key,
+    predicate: (query) => rest(query) && query.state.fetchStatus === "fetching",
+  })
+}
+
+type SourceMutationOptions<T, Variables, Result, Data = Result> = {
   mutationFn: (variables: Variables) => Promise<Result>
-  /** Its queries are refreshed once the mutation settles. */
+  /** Its queries are refreshed once the mutation settles, unless `settleItems` or `settle` writes the answer. */
   source: PageSource<T, never> | { key: readonly unknown[] }
   /** Opt-in: changes the cached rows at once and restores them if the mutation fails. */
   optimistic?: (items: T[], variables: Variables) => T[]
+  /**
+   * On success, the rows of every page and infinite query under the key, from the server's answer, in place of the
+   * refresh: `(items, saved) => items.map((row) => (row.id === saved.id ? saved : row))`. Each page keeps its total.
+   */
+  settleItems?: (items: T[], result: Result, variables: Variables) => T[]
+  /**
+   * On success, the data of every `useServerQuery` under the key, from the server's answer, in place of the refresh.
+   * `current` is what that query holds; return `undefined` to leave it alone, as for another id's detail.
+   */
+  settle?: (
+    result: Result,
+    variables: Variables,
+    current: Data | undefined,
+    queryKey: readonly unknown[],
+  ) => Data | undefined
   onSuccess?: (result: Result, variables: Variables) => unknown
   onError?: (error: unknown, variables: Variables) => unknown
 }
@@ -240,12 +307,17 @@ type SourceMutationState<Variables, Result> = {
   reset: () => void
 }
 
-/** A change to the source's data: its queries refresh afterwards, and `optimistic` shows the change before. */
-function useSourceMutation<T, Variables = void, Result = unknown>(
-  options: SourceMutationOptions<T, Variables, Result>,
+/**
+ * A change to the source's data. Its queries refresh afterwards; `optimistic` shows the change before, and
+ * `settleItems` and `settle` write the server's answer instead of refreshing.
+ */
+function useSourceMutation<T, Variables = void, Result = unknown, Data = Result>(
+  options: SourceMutationOptions<T, Variables, Result, Data>,
 ): SourceMutationState<Variables, Result> {
   const client = useDataClient()
   const { key } = options.source
+  const { settle, settleItems } = options
+  const settles = settle !== undefined || settleItems !== undefined
   const mutation = useMutation<Result, unknown, Variables, { snapshot: Snapshot } | undefined>(
     {
       mutationFn: options.mutationFn,
@@ -261,8 +333,23 @@ function useSourceMutation<T, Variables = void, Result = unknown>(
         for (const [queryKey, data] of context?.snapshot ?? []) client.setQueryData(queryKey, data)
         return options.onError?.(error, variables)
       },
-      onSuccess: (result, variables) => options.onSuccess?.(result, variables),
-      onSettled: () => client.invalidateQueries({ queryKey: key }),
+      onSuccess: async (result, variables) => {
+        if (settles) {
+          await settleQueries(client, key, (query) => {
+            const data = query.state.data
+            if (query.meta?.serverData === resourceMeta.serverData) {
+              return settle?.(result, variables, data as Data | undefined, query.queryKey)
+            }
+            return (
+              settleItems &&
+              mapItems<T>(query.queryKey[key.length], data, (items) => settleItems(items, result, variables))
+            )
+          })
+        }
+        return options.onSuccess?.(result, variables)
+      },
+      onSettled: (_result, error) =>
+        settles && error === null ? undefined : client.invalidateQueries({ queryKey: key }),
     },
     client,
   )
@@ -299,6 +386,7 @@ export {
 }
 export type {
   InfiniteRequest,
+  InvalidateOptions,
   ServerInfiniteState,
   ServerPageOptions,
   ServerPageState,
