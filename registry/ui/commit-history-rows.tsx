@@ -3,7 +3,7 @@
 import type { TreeItemData } from "@ui-sdk/react/tree"
 
 import { WORKING_TREE, type CommitBranchSummary } from "@/components/ui/commit-history-primitive"
-import { CommitRow, type CommitRowContext } from "@/components/ui/commit-history-row"
+import { CommitRow, commitName, type CommitRowContext } from "@/components/ui/commit-history-row"
 import type { useCommitTrail } from "@/components/ui/use-commit-history"
 import type { useTrailRows } from "@/components/ui/use-trail-rows"
 import type { BranchInfo } from "@/lib/commit-branches"
@@ -98,5 +98,20 @@ function unpushedCount(commits: readonly Commit[], upstreamRow: number) {
   return count
 }
 
-export { doneCount, Rows, summaryOf, treeItemsOf, unpushedCount }
+/** What agents list: the working tree if any, then every commit by its full name. */
+function entriesOf(
+  graph: CommitGraph,
+  context: Parameters<typeof commitName>[1],
+  heads: ReadonlyMap<string, readonly BranchInfo[]> | undefined,
+  workingTree: string | undefined,
+  upstreamRow: number,
+) {
+  const commits = graph.commits.map((commit, index) => ({
+    value: commit.id,
+    label: commitName(commit, context, heads?.get(commit.id), commit.unpushed === true || index < upstreamRow),
+  }))
+  return workingTree === undefined ? commits : [{ value: WORKING_TREE, label: workingTree }, ...commits]
+}
+
+export { doneCount, entriesOf, Rows, summaryOf, treeItemsOf, unpushedCount }
 export type { RowsProps }

@@ -16,7 +16,7 @@ import {
 
 import { Button } from "@/components/ui/button"
 import { CommitHistoryHeader } from "@/components/ui/commit-history-header"
-import { doneCount, Rows, summaryOf, treeItemsOf, unpushedCount } from "@/components/ui/commit-history-rows"
+import { doneCount, entriesOf, Rows, summaryOf, treeItemsOf, unpushedCount } from "@/components/ui/commit-history-rows"
 import {
   commitHistory,
   type CommitHistoryChangeReason,
@@ -25,7 +25,7 @@ import {
   WORKING_TREE,
 } from "@/components/ui/commit-history-primitive"
 import { commitHistoryLabels, type CommitHistoryLabels } from "@/components/ui/commit-history-labels"
-import { commitName, type CommitRowContext } from "@/components/ui/commit-history-row"
+import type { CommitRowContext } from "@/components/ui/commit-history-row"
 import { WorkingTreeRow, workingTreeText, type WorkingTree } from "@/components/ui/commit-working-tree-row"
 import { useNow } from "@/components/ui/use-now"
 import {
@@ -105,6 +105,8 @@ type CommitHistoryProps = Omit<PartProps<"div">, "children" | "onSelect"> & {
   controller?: CommitHistoryController
   /** Content at the end of the header, before the count. */
   actions?: ReactNode
+  /** Content at the start of the header, before the branch switcher: a repository picker, say. */
+  headerStart?: ReactNode
   /**
    * A dirty checkout: a row above the newest commit with the staged and unstaged counts, a hollow dashed node,
    * and `labels.workingTree` or `label` as its name. It takes focus and selection like a commit, as `WORKING_TREE`.
@@ -174,6 +176,7 @@ function CommitHistory({
   maxLanes,
   controller,
   actions,
+  headerStart,
   workingTree,
   upstreamHead,
   view = "trail",
@@ -208,18 +211,7 @@ function CommitHistory({
   const lookup = useMemo(
     () => ({
       find,
-      entries: () => [
-        ...(workingTreeName === undefined ? [] : [{ value: WORKING_TREE, label: workingTreeName }]),
-        ...graph.commits.map((commit, index) => ({
-          value: commit.id,
-          label: commitName(
-            commit,
-            nameContext,
-            model?.byHead.get(commit.id),
-            commit.unpushed === true || index < upstreamRow,
-          ),
-        })),
-      ],
+      entries: () => entriesOf(graph, nameContext, model?.byHead, workingTreeName, upstreamRow),
       branches: () => (model?.all ?? []).map(summaryOf),
     }),
     [find, graph, nameContext, model, workingTreeName, upstreamRow],
@@ -376,6 +368,7 @@ function CommitHistory({
             branch={state.branch ?? branch}
             onBranch={(name) => handle.api.selectBranch(name, { reason: "item-press" })}
             actions={actions}
+            start={headerStart}
             total={total}
             unpushed={toPush}
           />
