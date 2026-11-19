@@ -104,7 +104,7 @@ function Sidebar({
   const body = (
     <ScrollArea className="flex min-h-0 flex-1 flex-col">
       <ScrollAreaViewport aria-label={label} className="h-auto min-h-0 flex-1">
-        <ScrollAreaContent className="flex flex-col gap-group has-[>[data-collapsible]]:gap-px">
+        <ScrollAreaContent className="flex flex-col gap-group not-has-[>:not([data-collapsible])]:gap-px">
           {children}
         </ScrollAreaContent>
       </ScrollAreaViewport>
