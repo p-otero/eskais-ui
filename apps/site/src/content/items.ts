@@ -929,7 +929,7 @@ const itemNotes: Record<string, ItemNotes> = {
   },
   "markdown-editor": {
     usage:
-      "Pass a ref for a host's Insert or Link menu and an outline: MarkdownEditorHandle runs the toolbar's commands, inserts links and wikilinks, opens the wikilink suggestions (openWikilinkSuggestions, also from a slash command's run) and moves the caret, without importing CodeMirror. The [[ that openWikilinkSuggestions types is provisional: dismissing the list leaves the note as it was, with no onChange, and choosing a note is one undo step. frontmatter=\"readonly\" keeps the YAML block byte for byte and leaves the body editable, also when the closing fence ends the file.",
+      "Pass a ref for a host's Insert or Link menu and an outline: MarkdownEditorHandle runs the toolbar's commands, inserts links and wikilinks, opens the wikilink suggestions (openWikilinkSuggestions, also from a slash command's run) and moves the caret, without importing CodeMirror. The [[ that openWikilinkSuggestions types is provisional: getValue() and onChange never include it, so an autosave that reads getValue() while the list is open saves the note as it was; dismissing leaves it untouched, choosing a note is one undo step, and isComposing() says a choice is pending. frontmatter=\"readonly\" keeps the YAML block byte for byte and leaves the body editable, also when the closing fence ends the file.",
     a11y: [
       "Named by label; the toolbar is one tab stop with arrow keys, and what doesn't fit moves into More.",
       "Escape then Tab leaves the editor. Shortcuts: Mod+B/I/E, Mod+Alt+0..6 for headings.",

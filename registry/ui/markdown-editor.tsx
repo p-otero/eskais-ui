@@ -34,7 +34,7 @@ import type {
   MarkdownEditorHandle,
   MarkdownSelection,
 } from "@/components/ui/markdown-editor-handle"
-import { settleProvisional } from "@/components/ui/markdown-editor-provisional"
+import { committedDoc, settleProvisional } from "@/components/ui/markdown-editor-provisional"
 import { MarkdownEditorPortals } from "@/components/ui/markdown-editor-portals"
 import { markdownDocument, markdownEditor, type MarkdownEditorActions } from "@/components/ui/markdown-editor-primitive"
 import {
@@ -183,7 +183,7 @@ function MarkdownEditorBody(props: Omit<MarkdownEditorProps, "ref"> & { handle: 
   const handle = useMemo<MarkdownEditorActions | undefined>(() => {
     if (!view) return undefined
     return {
-      getMarkdown: () => view.state.sliceDoc(),
+      getMarkdown: () => committedDoc(view.state),
       insertText: (text) => insertAtCaret(view, text),
       replaceSelection: (text) => insertAtSelection(view, text),
       insertWikilink: (slug, wikilinkLabel) => insertWikilink(view, slug, wikilinkLabel),

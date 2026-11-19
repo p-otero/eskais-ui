@@ -139,7 +139,7 @@ test("wikilink suggestions opened after the fence leave the note as it was when 
     handle.openWikilinkSuggestions()
   })
   await tick(20)
-  expect(handle.getValue()).toBe(`${bare}\n[[`)
+  expect(editorView().state.sliceDoc()).toBe(`${bare}\n[[`)
   fireEvent.keyDown(editorView().contentDOM, { key: "Escape" })
   await tick(20)
   expect(handle.getValue()).toBe(bare)

@@ -154,6 +154,7 @@ test("insertText with a typing userEvent opens the wikilink suggestions; a plain
       .map((option) => option.textContent),
   ).toEqual(["roadmap", "risks"])
   expect(handle.getValue()).toBe("see [[ [[\n")
+  expect(handle.isComposing()).toBe(false)
 })
 
 test("openWikilinkSuggestions types [[ and opens the listbox, or reuses a [[ before the caret", async () => {
@@ -161,7 +162,8 @@ test("openWikilinkSuggestions types [[ and opens the listbox, or reuses a [[ bef
   run(() => handle.setSelection(4))
   expect(run(() => handle.openWikilinkSuggestions())).toBe(true)
   expect(await waitForListbox()).not.toBeNull()
-  expect(handle.getValue()).toBe("see [[\n")
+  expect(editorView().state.sliceDoc()).toBe("see [[\n")
+  expect(handle.getValue()).toBe("see \n")
   expect(editorView().hasFocus).toBe(true)
   fireEvent.keyDown(editorView().contentDOM, { key: "Escape" })
   await settle()
@@ -174,6 +176,7 @@ test("openWikilinkSuggestions types [[ and opens the listbox, or reuses a [[ bef
   expect(run(() => handle.openWikilinkSuggestions())).toBe(true)
   expect(await waitForListbox()).not.toBeNull()
   expect(handle.getValue()).toBe("see [[\n")
+  expect(handle.isComposing()).toBe(false)
 })
 
 test("openWikilinkSuggestions refuses without suggestWikilinks or when read-only", async () => {

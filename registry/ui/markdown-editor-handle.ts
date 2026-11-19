@@ -14,6 +14,7 @@ import {
   type MarkdownFormat,
 } from "@/components/ui/markdown-editor-commands"
 import { setHeading } from "@/components/ui/markdown-editor-lines"
+import { activeProvisional, committedDoc, committedSelection } from "@/components/ui/markdown-editor-provisional"
 
 const LEVELS = ["paragraph", "heading1", "heading2", "heading3", "heading4", "heading5", "heading6"] as const
 
@@ -40,8 +41,18 @@ type MarkdownSelection = { anchor: number; head: number; from: number; to: numbe
  */
 type MarkdownEditorHandle = {
   focus: () => void
+  /**
+   * The note as `onChange` sends it. While wikilink suggestions are open behind a provisional `[[`, that `[[` and
+   * its query aren't in it: it is the text dismissing them would restore.
+   */
   getValue: () => string
+  /** The selection in `getValue()`'s offsets: during a provisional session, the one dismissing would restore. */
   getSelection: () => MarkdownSelection
+  /**
+   * True while wikilink suggestions are open behind a provisional `[[`: a choice is pending and the text on screen
+   * isn't the note yet. False once an item is chosen or the list is dismissed.
+   */
+  isComposing: () => boolean
   /** Selects from `anchor` to `head` (a caret when `head` is left out), clamped to the text, and scrolls to it. */
   setSelection: (anchor: number, head?: number) => void
   /**
@@ -51,8 +62,8 @@ type MarkdownEditorHandle = {
    */
   insertText: (text: string, options?: InsertTextOptions) => boolean
   /**
-   * Opens the wikilink suggestions at the caret behind a provisional `[[` (unless one is there): `onChange` and undo
-   * skip it, dismissing puts the note back byte for byte, and a choice is one undoable edit. From a slash command's
+   * Opens the wikilink suggestions at the caret behind a provisional `[[` (unless one is there): `getValue()`,
+   * `onChange` and undo skip it, dismissing puts the note back byte for byte, and a choice is one undoable edit. From a slash command's
    * `run`, it opens once the slash menu has closed. False when read-only or without `suggestWikilinks`.
    */
   openWikilinkSuggestions: () => boolean
@@ -116,18 +127,22 @@ function runCommand(view: EditorView, name: MarkdownEditorCommand) {
 function createEditorHandle(view: EditorView, menus: HandleMenus): MarkdownEditorHandle {
   return {
     focus: () => view.focus(),
-    getValue: () => view.state.sliceDoc(),
+    getValue: () => committedDoc(view.state),
     getSelection: () => {
       const { state } = view
-      const { anchor, head, from, to } = state.selection.main
+      const { anchor, head, from, to } = committedSelection(state)
+      const active = activeProvisional(state)
+      // The selection a dismissal restores covers at most the text the trigger replaced.
+      const text = active ? active.original.slice(from - active.from, to - active.from) : state.sliceDoc(from, to)
       return {
         anchor: toOffset(state, anchor),
         head: toOffset(state, head),
         from: toOffset(state, from),
         to: toOffset(state, to),
-        text: state.sliceDoc(from, to),
+        text,
       }
     },
+    isComposing: () => activeProvisional(view.state) !== null,
     setSelection: (anchor, head) => {
       const { state } = view
       const from = toEditorPos(state, anchor)
