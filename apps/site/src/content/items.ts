@@ -190,7 +190,7 @@ const itemNotes: Record<string, ItemNotes> = {
     ],
     agent: "Agents find it by its label and set any CSS colour with setValue.",
     usage:
-      "In OKLCH the area paints its whole box: inside the gamut each point is its own colour, and past the edge it shows the colour the picker holds there, so the thumb always sits on the colour chosen.",
+      "In OKLCH the area paints its whole box: inside the gamut each point is its own colour, and past the edge it shows the colour the picker holds there, so the thumb always sits on the colour chosen. A thumb dragged or stepped past the edge stays where it was left, and the value is the closest colour inside.",
     related: ["slider", "input", "popover"],
   },
   "image-cropper": {

@@ -7,6 +7,7 @@ import { ToastStack } from "@/components/ui/toast"
 
 import { App } from "./app"
 import { appearance } from "./appearance"
+import { ColorPickerCheck } from "./checks/color-picker-check"
 import { CalendarCheck } from "./checks/calendar-check"
 import { CardHeaderCheck } from "./checks/card-header-check"
 import { PaletteReopenCheck } from "./checks/palette-reopen-check"
@@ -69,6 +70,7 @@ const standalone = new Set([
   "diff-bench",
   "calendar-check",
   "press-check",
+  "color-picker-check",
   "popover-check",
   "task-dialog",
   "side-panel-check",
@@ -119,6 +121,7 @@ function Demo() {
   if (demo === "diff-bench") return <DiffBench />
   if (demo === "calendar-check") return <CalendarCheck />
   if (demo === "press-check") return <PressCheck />
+  if (demo === "color-picker-check") return <ColorPickerCheck />
   if (demo === "popover-check") return <PopoverCheck />
   if (demo === "task-dialog") return <TaskDialogPage params={params} />
   if (demo === "side-panel-check") return <SidePanelCheck />

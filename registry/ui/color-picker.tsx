@@ -14,14 +14,26 @@ import {
   ColorPickerSwatches as ColorPickerSwatchesPrimitive,
   ColorPickerSwatchItem as ColorPickerSwatchItemPrimitive,
   createColorPickerController,
+  type ColorChannel,
   type ColorPickerState,
 } from "@ui-sdk/react/color-picker"
-import { createContext, use, useRef, type ComponentProps } from "react"
+import {
+  createContext,
+  use,
+  useMemo,
+  useRef,
+  useState,
+  type ComponentProps,
+  type KeyboardEvent,
+  type PointerEvent,
+  type ReactNode,
+} from "react"
 import { PipetteIcon } from "lucide-react"
 
 import { fieldSurfaceClassName } from "@/components/ui/input"
 import { ControlTooltip, type ControlTooltipOption } from "@/components/ui/tooltip"
 import { useColorAreaCanvas } from "@/components/ui/use-color-area-canvas"
+import { useHeldColor, type Ending } from "@/components/ui/use-held-color"
 import type { AreaGamut } from "@/lib/oklch-gamut"
 import { cnState } from "@/lib/utils"
 
@@ -36,55 +48,135 @@ const GamutContext = createContext<AreaGamut>("srgb")
 // The area's state, inside an OKLCH area across chroma and up lightness: the one ColorPickerAreaCanvas paints itself.
 const OklchAreaContext = createContext<ColorPickerState | null>(null)
 
-type ColorPickerProps = ComponentProps<typeof ColorPickerPrimitive> & { labels?: Partial<ColorPickerLabels> }
+// Where the picker and its thumbs report a lifted pointer or a key, before UI SDK commits the colour.
+const EndingContext = createContext<(ending: Ending) => void>(() => {})
+const AreaAxesContext = createContext<{ x: ColorChannel; y: ColorChannel }>({
+  x: "chroma",
+  y: "lightness",
+})
+
+const isRtl = (element: Element) => getComputedStyle(element).direction === "rtl"
+const keyOf = (event: KeyboardEvent<HTMLElement>) => ({
+  key: event.key,
+  shift: event.shiftKey,
+  rtl: isRtl(event.currentTarget),
+})
+
+type ReleaseHandlers = Pick<ComponentProps<"div">, "onPointerUpCapture" | "onPointerCancelCapture">
+
+type ColorPickerProps = ComponentProps<typeof ColorPickerPrimitive> & {
+  labels?: Partial<ColorPickerLabels>
+}
+
+function HeldColor({ children, ...options }: Parameters<typeof useHeldColor>[0] & { children: ReactNode }) {
+  const recordEnding = useHeldColor(options)
+  return <EndingContext value={recordEnding}>{children}</EndingContext>
+}
 
 /**
  * A group around the parts. Without children it renders an area, a hue slider, a swatch and a text field; with
- * `space="oklch"` the area paints itself on a canvas, since no gradient draws OKLCH's edge.
+ * `space="oklch"` the area paints itself on a canvas, since no gradient draws OKLCH's edge. A thumb dragged past the
+ * gamut's edge stays where it was let go, and the value is the closest colour inside the gamut.
  */
-function ColorPicker({ className, children, labels, ...props }: ColorPickerProps) {
+function ColorPicker({ className, children, labels, controller, ...props }: ColorPickerProps) {
+  const [ownController] = useState(createColorPickerController)
+  const picker = controller ?? ownController
   const oklch = props.space === "oklch"
+  const content = children ?? (
+    <>
+      <ColorPickerArea>
+        {oklch ? <ColorPickerAreaCanvas /> : null}
+        <ColorPickerAreaThumb />
+      </ColorPickerArea>
+      <ColorPickerSlider channel="hue">
+        <ColorPickerSliderThumb />
+      </ColorPickerSlider>
+      <div className="flex items-center gap-items">
+        <ColorPickerSwatch />
+        <ColorPickerInput aria-label={labels?.value ?? colorPickerLabels.value} />
+      </div>
+    </>
+  )
   return (
     <GamutContext value={props.gamut === "p3" ? "p3" : "srgb"}>
-      <ColorPickerPrimitive className={cnState("flex w-full flex-col gap-items", className)} {...props}>
-        {children ?? (
-          <>
-            <ColorPickerArea>
-              {oklch ? <ColorPickerAreaCanvas /> : null}
-              <ColorPickerAreaThumb />
-            </ColorPickerArea>
-            <ColorPickerSlider channel="hue">
-              <ColorPickerSliderThumb />
-            </ColorPickerSlider>
-            <div className="flex items-center gap-items">
-              <ColorPickerSwatch />
-              <ColorPickerInput aria-label={labels?.value ?? colorPickerLabels.value} />
-            </div>
-          </>
+      <ColorPickerPrimitive
+        className={cnState("flex w-full flex-col gap-items", className)}
+        controller={picker}
+        {...props}
+      >
+        {(state: ColorPickerState) => (
+          <HeldColor color={state.color} space={props.space} gamut={props.gamut} controller={picker}>
+            {typeof content === "function" ? content(state) : content}
+          </HeldColor>
         )}
       </ColorPickerPrimitive>
     </GamutContext>
   )
 }
 
-function ColorPickerArea({ className, children, x, y, ...props }: ComponentProps<typeof ColorPickerAreaPrimitive>) {
-  const chromaByLightness = (x ?? "chroma") === "chroma" && (y ?? "lightness") === "lightness"
+type Fractions = Partial<Record<ColorChannel, number>>
+
+// UI SDK ends a drag on the document's pointerup, after the captured pointer's own lifts through the area or slider.
+function useReleaseHandlers(
+  { onPointerUpCapture, onPointerCancelCapture }: ReleaseHandlers,
+  fractions: (event: PointerEvent<HTMLDivElement>, rect: DOMRect) => Fractions,
+): ReleaseHandlers {
+  const recordEnding = use(EndingContext)
+  const release = (event: PointerEvent<HTMLDivElement>) =>
+    recordEnding({ release: fractions(event, event.currentTarget.getBoundingClientRect()) })
+  return {
+    onPointerUpCapture: (event) => {
+      release(event)
+      onPointerUpCapture?.(event)
+    },
+    onPointerCancelCapture: (event) => {
+      release(event)
+      onPointerCancelCapture?.(event)
+    },
+  }
+}
+
+const across = (event: PointerEvent<HTMLDivElement>, rect: DOMRect) => {
+  const fraction = rect.width ? (event.clientX - rect.left) / rect.width : 0
+  return isRtl(event.currentTarget) ? 1 - fraction : fraction
+}
+const up = (event: PointerEvent<HTMLDivElement>, rect: DOMRect) =>
+  rect.height ? (rect.bottom - event.clientY) / rect.height : 0
+
+function ColorPickerArea({
+  className,
+  children,
+  x,
+  y,
+  onPointerUpCapture,
+  onPointerCancelCapture,
+  ...props
+}: ComponentProps<typeof ColorPickerAreaPrimitive>) {
+  const axes = useMemo(() => ({ x: x ?? "chroma", y: y ?? "lightness" }), [x, y])
+  const release = useReleaseHandlers({ onPointerUpCapture, onPointerCancelCapture }, (event, rect) => ({
+    [axes.x]: across(event, rect),
+    [axes.y]: up(event, rect),
+  }))
+  const chromaByLightness = axes.x === "chroma" && axes.y === "lightness"
   return (
-    <ColorPickerAreaPrimitive
-      x={x}
-      y={y}
-      className={cnState(
-        "relative h-36 w-full shrink-0 touch-none rounded-choice border bg-(--color-area-background) has-[canvas]:bg-muted data-disabled:opacity-50",
-        className,
-      )}
-      {...props}
-    >
-      {(state: ColorPickerState) => (
-        <OklchAreaContext value={state.space === "oklch" && chromaByLightness ? state : null}>
-          {typeof children === "function" ? children(state) : children}
-        </OklchAreaContext>
-      )}
-    </ColorPickerAreaPrimitive>
+    <AreaAxesContext value={axes}>
+      <ColorPickerAreaPrimitive
+        x={x}
+        y={y}
+        {...release}
+        className={cnState(
+          "relative h-36 w-full shrink-0 touch-none rounded-choice border bg-(--color-area-background) has-[canvas]:bg-muted data-disabled:opacity-50",
+          className,
+        )}
+        {...props}
+      >
+        {(state: ColorPickerState) => (
+          <OklchAreaContext value={state.space === "oklch" && chromaByLightness ? state : null}>
+            {typeof children === "function" ? children(state) : children}
+          </OklchAreaContext>
+        )}
+      </ColorPickerAreaPrimitive>
+    </AreaAxesContext>
   )
 }
 
@@ -116,18 +208,39 @@ function ColorPickerAreaCanvas({ className, ...props }: ComponentProps<typeof Co
 const thumbClassName =
   "touch-target size-4 rounded-full border-2 border-background bg-(--color-picker-color) shadow-sm ring-1 ring-foreground/50 outline-none focus-visible:ring-3 focus-visible:ring-ring data-disabled:cursor-not-allowed"
 
-function ColorPickerAreaThumb({ className, ...props }: ComponentProps<typeof ColorPickerAreaThumbPrimitive>) {
+function ColorPickerAreaThumb({
+  className,
+  onKeyDownCapture,
+  ...props
+}: ComponentProps<typeof ColorPickerAreaThumbPrimitive>) {
+  const recordEnding = use(EndingContext)
+  const axes = use(AreaAxesContext)
   return (
     <ColorPickerAreaThumbPrimitive
       className={cnState(`${thumbClassName} -translate-x-1/2 -translate-y-1/2`, className)}
+      onKeyDownCapture={(event) => {
+        recordEnding({ ...keyOf(event), ...axes })
+        onKeyDownCapture?.(event)
+      }}
       {...props}
     />
   )
 }
 
-function ColorPickerSlider({ className, ...props }: ComponentProps<typeof ColorPickerSliderPrimitive>) {
+function ColorPickerSlider({
+  className,
+  onPointerUpCapture,
+  onPointerCancelCapture,
+  ...props
+}: ComponentProps<typeof ColorPickerSliderPrimitive>) {
+  const release = useReleaseHandlers({ onPointerUpCapture, onPointerCancelCapture }, (event, rect) => {
+    const { channel, orientation } = event.currentTarget.dataset
+    if (!channel) return {}
+    return { [channel]: orientation === "vertical" ? up(event, rect) : across(event, rect) }
+  })
   return (
     <ColorPickerSliderPrimitive
+      {...release}
       className={cnState(
         "relative h-3 w-full shrink-0 touch-none rounded-full border border-input bg-(--color-slider-background) data-disabled:opacity-50 data-[orientation=vertical]:h-36 data-[orientation=vertical]:w-3",
         className,
@@ -137,9 +250,19 @@ function ColorPickerSlider({ className, ...props }: ComponentProps<typeof ColorP
   )
 }
 
-function ColorPickerSliderThumb({ className, ...props }: ComponentProps<typeof ColorPickerSliderThumbPrimitive>) {
+function ColorPickerSliderThumb({
+  className,
+  onKeyDownCapture,
+  ...props
+}: ComponentProps<typeof ColorPickerSliderThumbPrimitive>) {
+  const recordEnding = use(EndingContext)
   return (
     <ColorPickerSliderThumbPrimitive
+      onKeyDownCapture={(event) => {
+        const channel = event.currentTarget.dataset.channel
+        if (channel) recordEnding({ ...keyOf(event), channel: channel as ColorChannel })
+        onKeyDownCapture?.(event)
+      }}
       className={cnState(
         `${thumbClassName} top-1/2 -translate-x-1/2 -translate-y-1/2 data-[orientation=vertical]:start-1/2 data-[orientation=vertical]:top-auto data-[orientation=vertical]:translate-y-1/2 rtl:translate-x-1/2`,
         className,
@@ -188,7 +311,9 @@ function ColorPickerEyeDropper({
   "aria-label": ariaLabel = "Pick a colour from the screen",
   tooltip,
   ...props
-}: ComponentProps<typeof ColorPickerEyeDropperPrimitive> & { tooltip?: ControlTooltipOption }) {
+}: ComponentProps<typeof ColorPickerEyeDropperPrimitive> & {
+  tooltip?: ControlTooltipOption
+}) {
   return (
     <ControlTooltip label={ariaLabel} tooltip={tooltip} iconOnly={children === undefined}>
       <ColorPickerEyeDropperPrimitive
