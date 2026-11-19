@@ -17,6 +17,7 @@ import { DiffBench } from "./checks/diff-bench"
 import { FieldPlacementCheck } from "./checks/field-placement-check"
 import { GaugeCheck } from "./checks/gauge-check"
 import { IconTooltipCheck } from "./checks/icon-tooltip-check"
+import { ImageScanCheck } from "./checks/image-scan-check"
 import { MasterDetailCheck } from "./checks/master-detail-check"
 import { SettingsPageCheck } from "./checks/settings-page-check"
 import { MobileNavCheck } from "./checks/mobile-nav-check"
@@ -80,6 +81,7 @@ const standalone = new Set([
   "table-check",
   "description-list-check",
   "gauge-check",
+  "image-scan-check",
   "master-detail",
   "master-detail-check",
   "dashboard-grid",
@@ -134,6 +136,7 @@ function Demo() {
   if (demo === "table-check") return <TableCheck />
   if (demo === "description-list-check") return <DescriptionListCheck />
   if (demo === "gauge-check") return <GaugeCheck />
+  if (demo === "image-scan-check") return <ImageScanCheck />
   if (demo === "master-detail") return <MasterDetailDemo />
   if (demo === "master-detail-check") return <MasterDetailCheck />
   if (demo === "dashboard-grid") return <DashboardGridDemo />
