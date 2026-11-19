@@ -204,6 +204,18 @@ const itemNotes: Record<string, ItemNotes> = {
     agent: "Agents find it by its label and set the crop or the zoom.",
     related: ["file-input", "avatar", "lightbox"],
   },
+  "image-scan": {
+    usage:
+      "Reach for it to show a photo while something analyses it, then what it found: drive status from your model's events, and pair it with FileUpload and ImageCropper to pick and crop first.",
+    a11y: [
+      "The image's alt names the group, which is aria-busy while it scans; the progress bar has the status text as its label.",
+      "Scanning, progress (at most every tenth and two seconds), the result count and errors are announced; errors at once.",
+      "Each region is a toggle button over the image, named by its label, in reading order; the legend below is pointer only and hidden from assistive tech.",
+      "Under reduced motion the sweep and the line's glide stop: a still frame and the progress bar remain.",
+    ],
+    agent: "Agents see the image by its alt with the regions as items, and call scan, cancel, retry and selectRegion.",
+    related: ["file-input", "image-cropper", "progress"],
+  },
   "confirm-button": {
     usage:
       "Reach for it for a quick, reversible-by-undo destructive action in a row or toolbar; ConfirmDialog when the consequence needs explaining.",

@@ -76,7 +76,7 @@ import { ChartsSection } from "./sections/charts"
 import { MarkdownSection } from "./sections/markdown"
 import { CodeSection } from "./sections/code"
 import { DiffSection } from "./sections/diff"
-import { AttachmentsSection, LightboxSection } from "./sections/media"
+import { MediaSections } from "./sections/media"
 import { StagesSection } from "./sections/stages"
 import { ListsSection } from "./sections/lists"
 import { GitSection } from "./sections/git"
@@ -435,9 +435,7 @@ function App() {
 
           <CodeSection />
           <DiffSection />
-          <LightboxSection />
-
-          <AttachmentsSection />
+          <MediaSections />
 
           <StagesSection />
 

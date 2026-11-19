@@ -5,6 +5,7 @@ import { AttachmentStrip, type Attachment } from "@/components/ui/attachments"
 import { Lightbox, ThemedImage } from "@/components/ui/lightbox"
 
 import { Section } from "../section"
+import { ImageScanSection } from "./image-scan"
 import { screenshots } from "./media-fixtures"
 
 function LightboxSection() {
@@ -76,4 +77,14 @@ function AttachmentsSection() {
   )
 }
 
-export { AttachmentsSection, LightboxSection }
+function MediaSections() {
+  return (
+    <>
+      <LightboxSection />
+      <AttachmentsSection />
+      <ImageScanSection />
+    </>
+  )
+}
+
+export { AttachmentsSection, LightboxSection, MediaSections }
