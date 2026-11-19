@@ -706,7 +706,11 @@ const itemNotes: Record<string, ItemNotes> = {
     related: ["accordion"],
   },
   "scroll-area": {
-    a11y: ["Native scrolling, so keyboard, wheel and touch work; name a focusable viewport when it holds content."],
+    a11y: [
+      "Native scrolling, so keyboard, wheel and touch work; name a focusable viewport when it holds content.",
+      "An overflowing viewport with nothing focusable inside is a tab stop, so keyboard users can reach it.",
+    ],
+    agent: "Agents scroll it to its start or end (scrollToStart, scrollToEnd).",
     related: ["floating", "board"],
   },
   resizable: {

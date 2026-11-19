@@ -10,6 +10,7 @@ Eskais UI is a shadcn-style registry of React components built on Vercel UI SDK 
 ## Rules
 
 - Every operable control is a UI SDK part. A bare `<button>` or `<input>` is invisible to agents. Never hand-roll a role UI SDK ships (dialog, menu, listbox, combobox, tabs…).
+- One approved exception: `ScrollArea` is our own `definePrimitive` (`scroll-area-primitive.ts` and its `scroll-area-*` modules), started from UI SDK's and kept to its parts, slots, attributes, CSS variables and controller. UI SDK's (beta.10 to beta.13) asks for a spare frame on every scroll and reads every focusable element below the viewport again on each tabindex change below it, which a roving tree or grid makes on every arrow key; ours updates in the scroll event and checks only the nodes a mutation touched. Keep it in step with UI SDK's behaviour when UI SDK changes, and go back to UI SDK's once it is as fast.
 - Behavior UI SDK doesn't ship goes in a `definePrimitive` primitive with explicit `agent.actions`, rendered with `createParts`.
 - Import UI SDK from its public entries (`@ui-sdk/react/dialog`), never `internal/*`.
 - Every control has an accessible name. Style from `data-slot` and state attributes with the semantic tokens in `registry/styles/theme.css`.
