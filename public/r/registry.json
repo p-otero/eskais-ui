@@ -5330,6 +5330,10 @@
       ],
       "files": [
         {
+          "path": "registry/ui/use-git-diff.ts",
+          "type": "registry:ui"
+        },
+        {
           "path": "registry/ui/git-diff-tree.tsx",
           "type": "registry:ui"
         },

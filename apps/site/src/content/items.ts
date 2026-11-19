@@ -592,7 +592,7 @@ const itemNotes: Record<string, ItemNotes> = {
       "Code stays left to right in a right-to-left page; headers follow the page. Find in page reaches lines that aren't rendered and opens a folded region or file it matches.",
     ],
     agent:
-      "The diff is one component named by its aria-label, with openFile(path), nextHunk(), previousHunk(), nextFile(), markViewed(path, viewed), getHunk(path, n) (read-only), expandGap, setLayout and setWrap; its items are the file paths. Viewed checkboxes, the layout control and the wrap toggle are UI SDK parts too.",
+      "The diff is one component named by its aria-label, with openFile(path), currentFile(), nextHunk(), previousHunk(), nextFile(), markViewed(path, viewed), getHunk(path, n) (read-only), expandGap, setLayout and setWrap; its items are the file paths. Viewed checkboxes, the layout control and the wrap toggle are UI SDK parts too.",
     related: ["text-diff", "diff-view", "diff", "code-block"],
   },
   "text-diff": {

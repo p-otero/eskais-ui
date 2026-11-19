@@ -69,6 +69,8 @@ function createDiffDocument(context: DocumentContext) {
   let syntaxVersion = 0
   let grid: GridFocus | null = null
   let viewport: HTMLElement | null = null
+  let currentFile: string | null = null
+  let onCurrent: ((path: string | null, reason: "scroll" | "imperative") => void) | null = null
   let metrics = defaultMetrics
 
   function buildDoc() {
@@ -151,6 +153,24 @@ function createDiffDocument(context: DocumentContext) {
     rebuild()
   })
 
+  /** The file at the top of the viewport: its header or lines are the first rows in view. */
+  function fileInView() {
+    const top = viewport?.scrollTop ?? 0
+    const item = virtual.items().find((entry) => entry.start + entry.size > top)
+    const row = item ? doc.rows[item.index] : undefined
+    return row ? (files[row.file]?.path ?? null) : (files[0]?.path ?? null)
+  }
+
+  function setCurrent(path: string | null, reason: "scroll" | "imperative") {
+    if (path === currentFile) return
+    currentFile = path
+    onCurrent?.(path, reason)
+  }
+
+  virtual.subscribe(() => {
+    if (viewport) setCurrent(fileInView(), "scroll")
+  })
+
   // A match of find in page in a closed gap or a collapsed file opens it, so the browser can show the text.
   virtual.subscribe(() => {
     const found = virtual.items().find((item) => item.found)
@@ -219,6 +239,10 @@ function createDiffDocument(context: DocumentContext) {
       grid = next
     },
     onSelect: selection.onSelect,
+    onCurrentFile(listener: (path: string | null, reason: "scroll" | "imperative") => void) {
+      onCurrent = listener
+    },
+    currentFile: () => currentFile,
     select: selection.select,
     moved: selection.moved,
     connect(el: HTMLElement) {
@@ -231,6 +255,7 @@ function createDiffDocument(context: DocumentContext) {
       // The viewport is dir="ltr" for the code; headers follow the page's direction through this variable.
       el.style.setProperty("--diff-page-direction", getComputedStyle(el.parentElement ?? el).direction)
       const disconnect = virtual.connect(el, { findable })
+      setCurrent(fileInView(), "scroll")
       const resize = new ResizeObserver(() =>
         el.style.setProperty("--diff-viewport-width", `${String(el.clientWidth)}px`),
       )
@@ -287,6 +312,7 @@ function createDiffDocument(context: DocumentContext) {
       const target = file(path)
       setCollapsed(target.path, false)
       virtual.scrollToIndex(doc.fileStart[files.indexOf(target)]!, { align: "start" })
+      setCurrent(target.path, "imperative")
       return { path: target.path, additions: target.diff.additions, deletions: target.diff.deletions }
     },
     stepHunk(direction: 1 | -1, event?: Event) {

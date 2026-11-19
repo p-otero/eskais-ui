@@ -1,18 +1,19 @@
 "use client"
 
 import { Columns2Icon, RowsIcon, WrapTextIcon } from "lucide-react"
-import { useMemo, useState } from "react"
+import { useCallback, useMemo, useState } from "react"
 
 import { diffLabels } from "@/components/ui/diff-labels"
 import { DiffStat } from "@/components/ui/diff-stat"
 import { DiffView, type DiffViewProps } from "@/components/ui/diff-view"
 import { toViewFiles, type DiffLayout } from "@/components/ui/diff-view-model"
-import { createDiffViewController } from "@/components/ui/diff-view-primitive"
+import { createDiffViewController, type DiffViewController } from "@/components/ui/diff-view-primitive"
 import { GitDiffTree } from "@/components/ui/git-diff-tree"
 import { SegmentedControl, SegmentedControlIndicator, SegmentedControlItem } from "@/components/ui/segmented-control"
 import { Toggle } from "@/components/ui/toggle"
 import { parsePatch } from "@/lib/diff-patch"
 import type { FileDiff } from "@/lib/diff-types"
+import { useOpenCurrentFile } from "@/components/ui/use-git-diff"
 import { cn } from "@/lib/utils"
 
 type GitDiffProps = Omit<DiffViewProps, "files" | "headers"> & {
@@ -26,6 +27,12 @@ type GitDiffProps = Omit<DiffViewProps, "files" | "headers"> & {
   toolbar?: boolean
   /** `fill` (default) fills the height GitDiff is given, beside its file tree; `auto` grows to the diff. */
   height?: DiffViewProps["height"]
+  /**
+   * The file in view, for a file list or tree outside GitDiff: setting it scrolls the diff to that file, and
+   * `onCurrentFileChange` reports the file at the top as the diff scrolls. The built-in tree follows it too.
+   */
+  currentFile?: string | null
+  defaultCurrentFile?: string | null
 }
 
 function useControlled<T>(value: T | undefined, initial: T, onChange?: (next: T) => void) {
@@ -58,6 +65,9 @@ function GitDiff({
   onWrapChange,
   controller: controllerProp,
   height = "fill",
+  currentFile: currentFileProp,
+  defaultCurrentFile,
+  onCurrentFileChange,
   className,
   ...props
 }: GitDiffProps) {
@@ -67,7 +77,10 @@ function GitDiff({
   const controller = controllerProp ?? own
   const [layout, setLayout] = useControlled<DiffLayout>(layoutProp, defaultLayout)
   const [wrap, setWrap] = useControlled(wrapProp, defaultWrap)
-  const [current, setCurrent] = useState<string | null>(null)
+  const [ownCurrent, setOwnCurrent] = useState<string | null>(defaultCurrentFile ?? null)
+  const current = currentFileProp === undefined ? ownCurrent : currentFileProp
+  const known = useCallback((path: string) => files.some((file) => file.path === path), [files])
+  const reported = useOpenCurrentFile(controller, current, known)
   const totals = useMemo(
     () =>
       diffs.reduce(
@@ -112,10 +125,7 @@ function GitDiff({
             files={files}
             value={current}
             labels={labels}
-            onOpen={(path) => {
-              setCurrent(path)
-              controller.openFile(path)
-            }}
+            onOpen={(path) => controller.openFile(path)}
             className="w-64 shrink-0 narrow:hidden"
           />
         ) : null}
@@ -126,6 +136,11 @@ function GitDiff({
           files={files}
           labels={labels}
           controller={controller}
+          onCurrentFileChange={(path, details) => {
+            reported(path)
+            setOwnCurrent(path)
+            onCurrentFileChange?.(path, details)
+          }}
           layout={layout}
           onLayoutChange={(next, details) => {
             onLayoutChange?.(next, details)
@@ -143,5 +158,5 @@ function GitDiff({
   )
 }
 
-export { GitDiff }
-export type { GitDiffProps }
+export { createDiffViewController, GitDiff }
+export type { DiffViewController, GitDiffProps }

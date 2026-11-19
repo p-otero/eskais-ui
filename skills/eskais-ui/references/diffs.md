@@ -6,6 +6,7 @@ Part of the `eskais-ui` skill.
 
 - **Two versions of one text** (a config, a generated file, an edit before saving): `TextDiff oldText newText language` (`"tsx"`, or a file name). Takes the diff options and every DiffView prop.
 - **A patch or a pull request**: `GitDiff patch` (output of `git diff`, `git show`, a `.patch`) or `GitDiff files` (`FileDiff[]`). Headers per file, a tree of changed files (`fileTree`), layout and wrap controls (`toolbar`).
+- **A file list or tree of your own beside GitDiff** (a `GitTree` of every file at the commit, with `fileTree={false}`): pass `currentFile` and `onCurrentFileChange`. Setting `currentFile` scrolls the diff to that file; the diff reports the file at the top as it scrolls (`details.reason` is `"scroll"`, or `"imperative"` after `openFile`), so the tree follows it. Echoing a reported file back doesn't scroll. `createDiffViewController()` is exported from `git-diff` too: `openFile(path)`, `currentFile()`, `nextHunk()`…
 - **Your own chrome around the rows**: `DiffView files={toViewFiles(fileDiffs)} headers`, driven by `createDiffViewController()` (`openFile`, `nextHunk`, `markViewed`, `setLayout`, `setWrap`…).
 - **Only the data**: `diffText`, `diffFile`, `parsePatch`, `formatHunks`, `intraline` and `diffTextAsync` from `@/lib/diff-*` (the `diff` item). `formatHunks(diffText(a, b).hunks)` is what `git diff --histogram` prints; `algorithm: "myers"` matches `git diff --minimal`.
 
@@ -30,7 +31,7 @@ Part of the `eskais-ui` skill.
 
 ## Agents
 
-- The diff is one component, named by its `aria-label`, with `openFile(path)`, `nextHunk()`, `previousHunk()`, `nextFile()`, `previousFile()`, `markViewed(path, viewed?)`, `getHunk(path, n)` (read-only: the hunk's header and lines), `expandGap(path, gap)`, `setLayout`, `setWrap` and `clearSelection`. Its items are the file paths, so an agent can see what `openFile` takes.
+- The diff is one component, named by its `aria-label`, with `openFile(path)`, `currentFile()` (read-only), `nextHunk()`, `previousHunk()`, `nextFile()`, `previousFile()`, `markViewed(path, viewed?)`, `getHunk(path, n)` (read-only: the hunk's header and lines), `expandGap(path, gap)`, `setLayout`, `setWrap` and `clearSelection`. Its items are the file paths, so an agent can see what `openFile` takes.
 - `details.source === "agent"` in `onViewedChange` or `onLayoutChange` tells an agent's change apart; `details.cancel()` refuses it.
 
 ## Headers and counts
