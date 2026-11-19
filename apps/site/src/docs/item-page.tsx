@@ -1,6 +1,7 @@
 import { createElement, Suspense, use, useRef, type RefObject } from "react"
 
 import { Code, CodeBlock } from "@/components/ui/code-block"
+import { CodeTabs } from "@/components/ui/code-tabs"
 import { Link } from "@/components/ui/link"
 import { MarkdownView } from "@/components/ui/markdown-view"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -46,7 +47,13 @@ function ExampleSource({ name }: { name: string }) {
   return <CodeBlock code={consumerSource(use(promise))} language="tsx" title={`${name}-demo.tsx`} maxHeight="28rem" />
 }
 
-const installCommand = (name: string) => `npx shadcn@latest add @eskais/${name}`
+const runners = [
+  { title: "npm", run: "npx" },
+  { title: "pnpm", run: "pnpm dlx" },
+  { title: "bun", run: "bunx" },
+] as const
+
+const installCommand = (name: string, run: string = runners[0].run) => `${run} shadcn@latest add @eskais/${name}`
 
 function Preview({ item, preview }: { item: RegistryItem; preview: RefObject<HTMLDivElement | null> }) {
   return (
@@ -164,7 +171,14 @@ function ItemBody({ item }: { item: RegistryItem }) {
 
       <section className="flex flex-col gap-items" aria-labelledby="installation">
         <H2 id="installation">Installation</H2>
-        <CodeBlock code={installCommand(item.name)} language="bash" aria-label="Install command" />
+        <CodeTabs
+          aria-label="Package manager"
+          files={runners.map((runner) => ({
+            title: runner.title,
+            code: installCommand(item.name, runner.run),
+            language: "bash",
+          }))}
+        />
         <Dependencies item={item} />
       </section>
 

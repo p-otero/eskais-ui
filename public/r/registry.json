@@ -67,7 +67,7 @@
       "registryDependencies": [
         "@eskais/utils"
       ],
-      "docs": "Add `@layer ui-sdk;` as the first line of your global stylesheet, above `@import \"tailwindcss\"`, so your styles win over UI SDK's behavior CSS. The theme asks for Geist Variable and falls back to the system font: `npx shadcn add @eskais/font-geist` installs it (or add `@fontsource-variable/geist` and `@import \"@fontsource-variable/geist\";` yourself). It brings `@eskais/utils`, whose `cn` knows the theme's utilities (`text-meta`, `gap-items`, `rounded-surface`…); with another `cn`, `cn(\"text-meta\", \"text-muted-foreground\")` drops the size. If `shadcn init` already wrote `lib/utils.ts`, add with `--overwrite` so ours replaces it.",
+      "docs": "Add `@layer ui-sdk;` as the first line of your global stylesheet, above `@import \"tailwindcss\"`, so your styles win over UI SDK's behavior CSS. The theme asks for Geist Variable and falls back to the system font: `shadcn@latest add @eskais/font-geist` installs it, run with `npx`, `pnpm dlx` or `bunx` (or add `@fontsource-variable/geist` and `@import \"@fontsource-variable/geist\";` yourself). It brings `@eskais/utils`, whose `cn` knows the theme's utilities (`text-meta`, `gap-items`, `rounded-surface`…); with another `cn`, `cn(\"text-meta\", \"text-muted-foreground\")` drops the size. If `shadcn init` already wrote `lib/utils.ts`, add with `--overwrite` so ours replaces it.",
       "css": {
         "@custom-variant dark": {
           "&:where(.dark, .dark *)": {
