@@ -1868,7 +1868,7 @@
       "name": "scroll-area",
       "type": "registry:ui",
       "title": "Scroll Area",
-      "description": "UI SDK ScrollArea: native scrolling with styled scrollbars, edge state and follow-to-end, keyboard-reachable when it overflows.",
+      "description": "ScrollArea: native scrolling with styled scrollbars, edge state and follow-to-end, keyboard-reachable when it overflows. Its own primitive, written for speed from UI SDK's.",
       "dependencies": [
         "@ui-sdk/core@0.1.0-beta.12",
         "@ui-sdk/react@0.1.0-beta.12"
@@ -1880,6 +1880,26 @@
       "files": [
         {
           "path": "registry/ui/scroll-area.tsx",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/scroll-area-primitive.ts",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/scroll-area-view.ts",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/scroll-area-model.ts",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/scroll-area-pointer.ts",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/scroll-area-tab-stop.ts",
           "type": "registry:ui"
         },
         {
