@@ -78,7 +78,7 @@ Each line is a need, then what to use. Props are listed by name; read the compon
 - **Related items as chips**: `DependencyChips` with an `aria-label`; pass `onSelect` to make each chip a button agents can press
 - **A number that may be guessed**: `QuantityValue` with `{ value, quality, source }`: unknown shows `—`, never 0; estimated shows `~`
 - **A time**: `RelativeTime` with one `useNow()` per screen passed down as `now`, not one timer per time
-- **Pass/fail criteria**: `AcceptanceList`, and `AcceptanceBar` with `countAcceptance` for a compact summary
+- **Pass/fail criteria**: `AcceptanceList`, and `AcceptanceBar` with `countAcceptance` for a compact summary; `AcceptancePopover criteria` in a header (a label, a thin bar and `n/m` that opens the list with its evidence, on hover too)
 - **Summary figures**: `StatGroup` of `Stat` parts; `StatDelta value comparison invert` for a change, read in words; see `references/data-display.md`
 - **An entity's properties**: `DescriptionList layout columns labels` (`stacked`, `inline`, `grid`) of `DescriptionItem` > `DescriptionTerm` + `DescriptionDetails mono copyable`; an empty value reads `labels.empty`; see `references/data-display.md`
 - **Columns of items**: `Board` with `BoardColumn` (collapsible, groups, `empty`); with `value`/`onValueChange`, `BoardColumn value` renders `BoardItem`s that move between columns by drag, keyboard and agents (`references/lists-and-navigation.md`). Cards are one tab stop with Linear-style arrows and j/k: wrap a card's primary control in `BoardCard id render`

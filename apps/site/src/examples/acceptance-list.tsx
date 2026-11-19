@@ -1,4 +1,4 @@
-import { AcceptanceBar, AcceptanceList, countAcceptance } from "@/components/ui/acceptance-list"
+import { AcceptanceBar, AcceptanceList, AcceptancePopover, countAcceptance } from "@/components/ui/acceptance-list"
 
 const criteria = [
   { text: "The build has no warnings", result: "pass", evidence: "CI run 812, 4 min" },
@@ -10,6 +10,7 @@ const criteria = [
 export default function AcceptanceListDemo() {
   return (
     <div className="flex w-full max-w-md flex-col gap-items">
+      <AcceptancePopover criteria={criteria} className="self-start" />
       <AcceptanceBar counts={countAcceptance(criteria)} />
       <AcceptanceList criteria={criteria} />
     </div>
