@@ -126,7 +126,7 @@ function TaskDetailDialog({
               </div>
               {renderHeader?.(current)}
             </div>
-            <Body className="@container/task-detail gap-section p-inset-surface">
+            <Body className="@container/task-detail gap-section p-inset-surface in-data-dialog-flush:px-inset-surface">
               {renderBeforeBody?.(current)}
               <TaskDetailContent
                 task={current}

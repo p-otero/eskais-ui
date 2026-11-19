@@ -213,10 +213,9 @@ function DialogHeader({ className, render, ...props }: PartProps<"div">) {
 }
 
 /**
- * The part that scrolls, so the header and footer around it stay in view. It is positioned so the visually hidden
- * inputs inside Select, Checkbox and other controls are clipped by it, instead of overflowing the dialog and scrolling
- * the header away when a field takes focus. Its scroll area reaches past the content's padding to its edges; a content
- * without padding sets `data-dialog-flush`, and the body takes no padding of its own either.
+ * The part that scrolls, so the header and footer stay in view; it clips the hidden inputs of Select and Checkbox.
+ * Its scroll area reaches past the content's padding to its edges. Under `data-dialog-flush` the body drops its own
+ * padding; a body that still wants its sides says so for that scope (`in-data-dialog-flush:px-inset-surface`).
  */
 function DialogBody({ className, render, ...props }: PartProps<"div">) {
   return (
