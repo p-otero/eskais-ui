@@ -980,13 +980,14 @@ const itemNotes: Record<string, ItemNotes> = {
       "Use it for a branch's history: one line per commit, merges folded until opened, details inline. Give it a bounded height.",
     a11y: [
       "A tree with one tab stop: arrows, Home/End and typeahead move; Right and Left open and close a merge; Enter opens a commit's details.",
+      "With selected or onSelect, a press, Enter or Space selects a row (aria-selected, and the nav-current fill, hairline and weight, so it never rests on colour); a press or Enter on the selected row opens its details.",
       'Each row is named in full, like "Merge invoice-pdf into main, 38 minutes ago, Release"; the graph is decorative.',
       "Dimmed rows use muted-foreground, which keeps 4.5:1; the spinner and every transition stop under reduced motion.",
       "Find in page sees the rows in view; findable adds UI SDK's findable layers for the rest, at a cost to held arrow keys.",
       "In the branches view each lane is named by its pill and in the branch select, never by colour alone.",
     ],
     agent:
-      "Agents get expandDetails, collapseDetails, expand, collapse, copyHash (it returns the hash), openCommit and selectBranch, by id, hash or subject.",
+      "Agents get select, expandDetails, collapseDetails, expand, collapse, copyHash (it returns the hash), openCommit and selectBranch, by id, hash or subject.",
     related: ["server-commit-history", "git-tree", "git-chip", "commit-graph"],
   },
   "server-commit-history": {

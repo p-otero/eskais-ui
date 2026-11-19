@@ -3,7 +3,16 @@
 import type { ChangeDetails } from "@ui-sdk/core"
 import { usePart, usePrimitive, type PartProps } from "@ui-sdk/react/primitive"
 import { createTreeController, Tree } from "@ui-sdk/react/tree"
-import { useCallback, useMemo, useState, type FocusEvent, type ReactNode } from "react"
+import {
+  useCallback,
+  useMemo,
+  useRef,
+  useState,
+  type FocusEvent,
+  type KeyboardEvent,
+  type PointerEvent,
+  type ReactNode,
+} from "react"
 
 import { Button } from "@/components/ui/button"
 import { CommitBranchSelect } from "@/components/ui/commit-branch-select"
@@ -58,6 +67,14 @@ type CommitHistoryProps = Omit<PartProps<"div">, "children" | "onSelect"> & {
   expanded?: readonly string[]
   defaultExpanded?: readonly string[]
   onExpandedChange?: CommitHistoryOptions["onExpandedChange"]
+  /**
+   * The selected commit's id, for a list beside a detail pane; `null` for none. Passing `selected`,
+   * `defaultSelected` or `onSelect` turns selection on: a press, Enter or Space selects a row (`aria-selected`),
+   * and a press or Enter on the row already selected opens its details, or its merged commits on a merge.
+   */
+  selected?: string | null
+  defaultSelected?: string | null
+  onSelect?: CommitHistoryOptions["onSelectedChange"]
   /** Commits whose details show under their row. */
   details?: readonly string[]
   defaultDetails?: readonly string[]
@@ -128,6 +145,9 @@ function CommitHistory({
   expanded,
   defaultExpanded,
   onExpandedChange,
+  selected,
+  defaultSelected,
+  onSelect,
   details,
   defaultDetails,
   onDetailsChange,
@@ -154,6 +174,8 @@ function CommitHistory({
   staleAfter,
   className,
   onFocus,
+  onPointerDownCapture,
+  onKeyDownCapture,
   ...props
 }: CommitHistoryProps) {
   const labels = useMemo(() => ({ ...commitHistoryLabels, ...labelOverrides }), [labelOverrides])
@@ -190,6 +212,9 @@ function CommitHistory({
     expanded,
     defaultExpanded,
     onExpandedChange,
+    selected,
+    defaultSelected,
+    onSelectedChange: onSelect,
     details,
     defaultDetails,
     onDetailsChange,
@@ -275,6 +300,13 @@ function CommitHistory({
     return map
   }, [model])
 
+  const selectable = selected !== undefined || defaultSelected !== undefined || onSelect !== undefined
+  // The selection as the press found it: a press on the row already selected opens it rather than selecting it.
+  const selectedAtPress = useRef<string | null>(null)
+  const notePress = () => {
+    selectedAtPress.current = state.selected
+  }
+
   const reachEnd = useReachEnd(onLoadMore, hasMore && !loadingMore)
   const total = count ?? doneCount(commits)
   const dimmed = focusMode ?? state.details.length > 0
@@ -294,6 +326,14 @@ function CommitHistory({
         trailLine,
         className,
       ),
+      onPointerDownCapture: (event: PointerEvent<HTMLDivElement>) => {
+        onPointerDownCapture?.(event)
+        notePress()
+      },
+      onKeyDownCapture: (event: KeyboardEvent<HTMLDivElement>) => {
+        onKeyDownCapture?.(event)
+        notePress()
+      },
       onFocus: (event: FocusEvent<HTMLDivElement>) => {
         onFocus?.(event)
         if (!virtual.virtual || !(event.target instanceof Element)) return
@@ -349,7 +389,12 @@ function CommitHistory({
                 // The history's own actions serve agents by commit; the tree would list every row a second time.
                 data-agent-hidden=""
                 items={items}
-                mode="none"
+                mode={selectable ? "single" : "none"}
+                value={selectable ? state.selected : undefined}
+                onValueChange={(next, change) => {
+                  if (typeof next === "string" || next === null)
+                    handle.api.select(next, { reason: change.reason as CommitHistoryChangeReason, event: change.event })
+                }}
                 expandOnPress={false}
                 controller={tree}
                 expanded={state.expanded as string[]}
@@ -373,6 +418,7 @@ function CommitHistory({
                   const entry = find(id)
                   if (!entry) return
                   const options = { reason: "item-press" as const, event }
+                  if (selectable && selectedAtPress.current !== id) return
                   if (entry.merge) handle.api.toggle(id, options)
                   else if (onOpenCommit) handle.api.openCommit(id, options)
                   else handle.api.toggleDetails(id, options)

@@ -305,6 +305,8 @@ function useFinished(status: Commit["status"]) {
 }
 
 const easeIn = "transition duration-panel ease-standard starting:opacity-0"
+// The selected row reads as the current page in a nav: its fill and hairline, and a medium weight on its text.
+const selectedLine = "group-data-selected/commit:nav-current"
 // oxlint-disable-next-line shadcn/no-arbitrary-values -- text starts past the lanes of the row's first line, each --commit-lane wide
 const lineIndent = "ps-[calc(var(--commit-lane)*var(--indent)+var(--gap-inline))]"
 // oxlint-disable-next-line shadcn/no-arbitrary-values -- the details start past every lane that runs on below the line
@@ -372,19 +374,22 @@ const CommitRow = memo(function CommitRow({
         "group/commit flex flex-col outline-none",
         top === undefined ? "relative" : "absolute inset-x-0",
         // Focus mode: every row but the open, hovered or focused one reads quieter, still at 4.5:1.
-        "group-data-focus-mode/history:not-data-details-open:not-hover:not-focus-within:text-muted-foreground",
+        "group-data-focus-mode/history:not-data-details-open:not-data-selected:not-hover:not-focus-within:text-muted-foreground",
         entering && "transition duration-panel ease-standard starting:-translate-y-1 starting:opacity-0",
       )}
       render={(props) => <div {...props} data-slot="commit-row" />}
     >
       <span
         aria-hidden="true"
-        className="pointer-events-none absolute inset-x-0 top-0 h-(--commit-line) rounded-control transition-colors duration-micro ease-standard group-hover/commit:bg-accent [:focus-visible>&]:bg-accent [:focus-visible>&]:ring-2 [:focus-visible>&]:ring-ring group-data-details-open/commit:bg-accent"
+        className={cn(
+          "pointer-events-none absolute inset-x-0 top-0 h-(--commit-line) rounded-control transition-colors duration-micro ease-standard group-hover/commit:bg-accent [:focus-visible>&]:bg-accent [:focus-visible>&]:ring-2 [:focus-visible>&]:ring-ring group-data-details-open/commit:bg-accent",
+          selectedLine,
+        )}
       />
       <CommitGraphCell row={lanes} node={node} finished={finished} drawIn={drawIn} />
       <TreeItemLabel
         className={cn(
-          "relative flex h-(--commit-line) min-w-0 items-center gap-items pe-(--item-padding-x) text-body-sm",
+          "relative flex h-(--commit-line) min-w-0 items-center gap-items pe-(--item-padding-x) text-body-sm data-selected:font-medium data-selected:text-foreground",
           lineIndent,
         )}
       >
