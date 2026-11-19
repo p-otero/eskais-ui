@@ -404,8 +404,11 @@ function CommitHistory({
                     // A press inside a commit's details, like its copy button, is not a press on the row.
                     if (event?.target instanceof Element && event.target.closest("[data-slot=commit-details]")) return
                     // A press on a branch's pill shows only that branch, or every branch again when it's the one shown.
+                    // Scoped to the pill's slot: the root carries `data-branch` too, for the branch it shows.
                     const pill =
-                      event?.target instanceof Element ? event.target.closest<HTMLElement>("[data-branch]") : null
+                      event?.target instanceof Element
+                        ? event.target.closest<HTMLElement>("[data-slot=commit-branch-pill][data-branch]")
+                        : null
                     if (pill?.dataset.branch) {
                       const name = pill.dataset.branch
                       handle.api.focusBranch(state.focusedBranch === name ? null : name, {
