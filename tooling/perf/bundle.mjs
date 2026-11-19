@@ -61,6 +61,34 @@ async function bundle(name, files, external) {
   return { initialBytes, lazyBytes }
 }
 
+const base = (file) => file.replace(/^.*\//, "").replace(/\.tsx?$/, "")
+
+// The files an entry should export: an item's files minus the ones it reaches only through `import()` (a lazily
+// loaded scene and what it alone imports), which the build then splits into lazy chunks instead of the entry.
+async function entryFiles(files) {
+  const byName = new Map(files.map((file) => [base(file), file]))
+  const edges = new Map()
+  const lazyRoots = new Set()
+  for (const file of files) {
+    const source = await readFile(resolve(root, file), "utf8")
+    const imports = [...source.matchAll(/^import (?!type )[^;]*?from "@\/components\/ui\/([\w-]+)"/gms)].map(
+      (match) => match[1],
+    )
+    edges.set(file, imports.map((name) => byName.get(name)).filter(Boolean))
+    for (const [, name] of source.matchAll(/import\("@\/components\/ui\/([\w-]+)"\)/g)) {
+      if (byName.has(name)) lazyRoots.add(byName.get(name))
+    }
+  }
+  const reach = (starts) => {
+    const seen = new Set(starts)
+    for (const file of seen) for (const next of edges.get(file) ?? []) seen.add(next)
+    return seen
+  }
+  const lazy = reach(lazyRoots)
+  const eager = reach(files.filter((file) => !lazy.has(file)))
+  return files.filter((file) => !lazy.has(file) || eager.has(file))
+}
+
 const gzip = (chunk) => gzipSync(chunk.code, { level: 9 }).length
 const kb = (bytes) => Math.round(bytes / 102.4) / 10
 
@@ -75,12 +103,13 @@ async function measureBundles({ items: names, uiSdkShare = true } = {}) {
   const rows = []
   for (const item of items) {
     try {
-      const full = await bundle(item.name, item.files, false)
+      const entries = await entryFiles(item.files)
+      const full = await bundle(item.name, entries, false)
       if (!uiSdkShare) {
         rows.push({ item: item.name, gzipKB: kb(full.initialBytes), lazyKB: kb(full.lazyBytes) })
         continue
       }
-      const own = await bundle(item.name, item.files, true)
+      const own = await bundle(item.name, entries, true)
       rows.push({
         item: item.name,
         gzipKB: kb(full.initialBytes),

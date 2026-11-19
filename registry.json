@@ -6164,6 +6164,11 @@
           "path": "skills/eskais-ui/references/image-scan.md",
           "type": "registry:file",
           "target": "~/.agents/skills/eskais-ui/references/image-scan.md"
+        },
+        {
+          "path": "skills/eskais-ui/references/3d.md",
+          "type": "registry:file",
+          "target": "~/.agents/skills/eskais-ui/references/3d.md"
         }
       ]
     },

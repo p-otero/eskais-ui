@@ -4774,6 +4774,111 @@
       ]
     },
     {
+      "name": "model-viewer",
+      "type": "registry:ui",
+      "title": "Model Viewer",
+      "description": "A 3D model (glTF or GLB) in a stage that turns with drag, wheel, pinch and keys, with views, zoom, reset, animation clips and morph weights. The three.js scene (react-three-fiber) is a separate chunk, loaded when the stage nears the viewport and only with WebGL; a poster stands in until then and without WebGL. Agents get rotate, zoom, reset, setView, play, pause and selectClip.",
+      "docs": "`<ModelViewer model alt poster summary aspectRatio view defaultView onViewChange framing clip defaultClip onClipChange playing defaultPlaying onPlayingChange loop speed weights material background autoRotate controls load overlay sceneChildren onLoad onError error labels>`: `model` is a URL, its bytes (an ArrayBuffer) or a loaded scene (`{ scene, animations }`). The stage is `role=\"img\"` named by `alt`, described by the keyboard hint and the visible `summary`; while it has focus, arrows turn the model, + and - zoom and Home resets. Views are `front`, `three-quarter`, `side` and `back`; free rotation sets the view to `null`. `framing` is `\"full\"` or a sphere of the model (`{ center: [x, y, z], radius }` in its own units), like a face for a close-up. `weights` are morph target weights by name, from 0 to 1, eased inside the render loop: new weights render React once, never per frame. `playing` left out (or `null`) plays the clip once loaded, except under reduced motion, which also drops auto-rotation and turns every camera move into a jump. `material=\"toon\"` swaps in a three-tone toon material. The canvas draws on demand (`frameloop=\"demand\"`), only while the camera, a clip or a weight moves, and not at all while the stage is out of view or the tab is hidden. Without WebGL, or when loading fails (`labels.error`, announced at once), the poster stays with a message. `preloadModelViewer()` starts loading the scene chunk early; `sceneChildren` puts three.js content of your own inside the canvas, where `ModelViewerSceneContext` gives the viewer's handle and the model's rig. Agent calls before the model has loaded, or for a clip it doesn't have, throw with the reason.",
+      "dependencies": [
+        "@ui-sdk/core@0.1.0-beta.12",
+        "@ui-sdk/react@0.1.0-beta.12",
+        "lucide-react",
+        "three@0.185.1",
+        "@react-three/fiber@9.8.0"
+      ],
+      "devDependencies": [
+        "@types/three@0.185.4"
+      ],
+      "registryDependencies": [
+        "@eskais/utils",
+        "@eskais/theme",
+        "@eskais/button",
+        "@eskais/toggle",
+        "@eskais/segmented-control",
+        "@eskais/native-select"
+      ],
+      "files": [
+        {
+          "path": "registry/ui/model-viewer-math.ts",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/model-viewer-labels.ts",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/model-viewer-primitive.ts",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/model-viewer-rig.ts",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/use-model-viewer-scene.ts",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/model-viewer-scene.tsx",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/model-viewer.tsx",
+          "type": "registry:ui"
+        }
+      ]
+    },
+    {
+      "name": "model-scan",
+      "type": "registry:ui",
+      "title": "Model Scan",
+      "description": "A photo becoming a 3D character, driven by an engine's events through props: points light up over the photo, the photo burns into particles while the camera turns to a three-quarter view and the base model appears where it stood, streamed morph weights reshape it, and it hands over to orbit. Reduced motion crossfades instead. Announces each stage; agents get cancel and retry.",
+      "docs": "`<ModelScan src alt width height stage points model weights progress statusText error onCancel onRetry modelAlt idleClip aspectRatio viewer actions labels>`: `stage` is `photo`, `detecting`, `building`, `refining`, `ready` or `error`, and you drive it from your engine. `points` are `{ x, y }` fractions of the photo (they light up while detecting); `model` is the base GLB with morph targets (a URL or its bytes), from `building` on; `weights` are its morph weights by name, eased as they stream; `progress` is 0 to 1 within the stage, shown on the progress bar under the stage (indeterminate without it). At `building` the photo moves into the 3D scene on a plane the front camera sees exactly where the 2D photo was, so nothing jumps; the camera then eases to the three-quarter view while the photo burns away into particles and the model fades in, all on the GPU. Under reduced motion the photo crossfades into the model, with no camera flight or particles, and the camera jumps after. At `ready` the idle clip plays (`idleClip`, or the model's first) unless motion is reduced, and the viewer's controls appear. It builds on ModelViewer (pass more of its props through `viewer`), whose scene chunk starts loading at `detecting`; the transition is a second small chunk. Screen readers hear each stage (`labels.stage`), progress at most every tenth and two seconds, and the error at once. Cancel shows before `ready` when `onCancel` is set, Retry at `error` with `onRetry`; agents call `cancel` and `retry`, and a call outside its stage throws with the reason.",
+      "dependencies": [
+        "@ui-sdk/core@0.1.0-beta.12",
+        "@ui-sdk/react@0.1.0-beta.12",
+        "lucide-react",
+        "three@0.185.1",
+        "@react-three/fiber@9.8.0"
+      ],
+      "devDependencies": [
+        "@types/three@0.185.4"
+      ],
+      "registryDependencies": [
+        "@eskais/utils",
+        "@eskais/theme",
+        "@eskais/button",
+        "@eskais/progress",
+        "@eskais/model-viewer"
+      ],
+      "files": [
+        {
+          "path": "registry/ui/model-scan-labels.ts",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/model-scan-primitive.ts",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/model-scan-dissolve.ts",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/use-model-scan-intro.ts",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/model-scan-intro.tsx",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/model-scan.tsx",
+          "type": "registry:ui"
+        }
+      ]
+    },
+    {
       "name": "attachments",
       "type": "registry:ui",
       "title": "Attachments",
@@ -6059,6 +6164,11 @@
           "path": "skills/eskais-ui/references/image-scan.md",
           "type": "registry:file",
           "target": "~/.agents/skills/eskais-ui/references/image-scan.md"
+        },
+        {
+          "path": "skills/eskais-ui/references/3d.md",
+          "type": "registry:file",
+          "target": "~/.agents/skills/eskais-ui/references/3d.md"
         }
       ]
     },
