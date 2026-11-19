@@ -1,34 +1,34 @@
 "use client"
 
-import type { ReactNode } from "react"
+import type { ComponentType } from "react"
 
-import { attemptCount, needsDecision, taskCost } from "@/lib/agent-task-board-model"
-import type { TaskLink, TaskView, ThreadRef } from "@/lib/agent-task-types"
+import type { TaskView } from "@/lib/agent-task-types"
 import { cn } from "@/lib/utils"
-import { AcceptanceList } from "@/components/ui/acceptance-list"
 import { agentTaskBoardLabels } from "@/components/ui/agent-task-labels"
-import { AttachmentStrip } from "@/components/ui/attachments"
-import { AttemptTimeline } from "@/components/ui/attempt-timeline"
-import { DependencyChips } from "@/components/ui/dependency-chips"
-import { ProposalActions } from "@/components/ui/proposal-actions"
-import { RelativeTime } from "@/components/ui/relative-time"
-import { TaskStatusIcon, TaskStatusPill, taskStatusTones } from "@/components/ui/task-status"
-import { proposalError, type TaskDisplayOptions } from "@/components/ui/task-card"
-import { Block, DetailValue } from "@/components/ui/task-detail-parts"
-import { TaskLinks } from "@/components/ui/task-links"
-import { TaskLocationTrack } from "@/components/ui/task-location"
-import { UsageGrid } from "@/components/ui/usage-grid"
+import { TaskStatusIcon, TaskStatusPill } from "@/components/ui/task-status"
+import type { TaskDisplayOptions } from "@/components/ui/task-card"
+import {
+  TaskDetailAcceptance,
+  TaskDetailActivity,
+  TaskDetailAttachments,
+  TaskDetailAttempts,
+  TaskDetailDecision,
+  TaskDetailDependencies,
+  TaskDetailDetails,
+  TaskDetailGoal,
+  TaskDetailLinks,
+  TaskDetailLocation,
+  TaskDetailUsage,
+  taskDetailMainSections,
+  taskDetailSideSections,
+  type TaskDetailMainSection,
+  type TaskDetailRow,
+  type TaskDetailSection,
+  type TaskDetailSectionProps,
+  type TaskDetailSideSection,
+} from "@/components/ui/task-detail-sections"
 
-type TaskDetailContentProps = TaskDisplayOptions & {
-  task: TaskView
-  renderThreadLink?: (thread: ThreadRef) => ReactNode
-  onOpenThread?: (thread: ThreadRef) => void
-  /** Replaces the default link in the detail's list of links. */
-  renderLink?: (link: TaskLink) => ReactNode
-  /** Replaces the attachment strip in the main column. */
-  renderAttachments?: (task: TaskView) => ReactNode
-  /** Replaces the stage track in the side column. */
-  renderLocation?: (task: TaskView) => ReactNode
+type TaskDetailContentProps = TaskDetailSectionProps & {
   /**
    * `"split"` sets the side column beside the main one once the content is 56rem wide, inside an
    * `@container/task-detail`; `"stack"` (default) keeps one column, the side after the main.
@@ -36,8 +36,31 @@ type TaskDetailContentProps = TaskDisplayOptions & {
   layout?: "stack" | "split"
   /** Lists the status among the details; turn it off where a header already shows it. */
   showStatus?: boolean
-  /** Heading level of each section. */
-  headingLevel?: number
+  /**
+   * Sections and detail rows to leave out, like the ones a header already shows:
+   * `hide={["status", "cost", "attemptsSummary", "acceptance"]}`.
+   */
+  hide?: readonly (TaskDetailSection | TaskDetailRow)[]
+  /** The sections of each column, in order; a column you pass shows only those. Both default to every section. */
+  sections?: {
+    main?: readonly TaskDetailMainSection[]
+    side?: readonly TaskDetailSideSection[]
+  }
+}
+
+const nothingHidden: NonNullable<TaskDetailContentProps["hide"]> = []
+
+const sectionComponents: Record<Exclude<TaskDetailSection, "details">, ComponentType<TaskDetailSectionProps>> = {
+  goal: TaskDetailGoal,
+  decision: TaskDetailDecision,
+  acceptance: TaskDetailAcceptance,
+  attachments: TaskDetailAttachments,
+  activity: TaskDetailActivity,
+  dependencies: TaskDetailDependencies,
+  attemptsSummary: TaskDetailAttempts,
+  usage: TaskDetailUsage,
+  links: TaskDetailLinks,
+  location: TaskDetailLocation,
 }
 
 function TaskDetailMeta({
@@ -57,54 +80,23 @@ function TaskDetailMeta({
 }
 
 function TaskDetailContent({
-  task,
-  mode = "snapshot",
-  now,
-  locale,
-  timeZone,
-  formatCurrency,
-  labels = agentTaskBoardLabels,
-  onApproveProposal,
-  onRejectProposal,
-  agentApproval,
-  onSelectTask,
-  canSelect,
-  renderThreadLink,
-  onOpenThread,
-  renderLink,
-  onOpenLink,
-  renderAttachments,
-  renderLocation,
-  agentAvatars,
-  statusTones,
-  stages,
   layout = "stack",
   showStatus = true,
+  hide = nothingHidden,
+  sections,
   headingLevel = 3,
+  labels = agentTaskBoardLabels,
+  ...props
 }: TaskDetailContentProps) {
-  const text = labels.panel
-  const parts = labels.components
-  const time = { now, locale, timeZone }
-  const selectable = onSelectTask && task.dependsOn.some((dependency) => canSelect?.(dependency.id) ?? true)
-  const counts = task.counts
-  const attachments = renderAttachments
-    ? renderAttachments(task)
-    : task.attachments &&
-      task.attachments.length > 0 && (
-        <AttachmentStrip
-          attachments={task.attachments}
-          aria-label={text.attachmentsOf(task.id)}
-          labels={parts.attachments}
-          locale={locale}
-        />
-      )
-  const location = renderLocation
-    ? renderLocation(task)
-    : task.location && (
-        <TaskLocationTrack location={task.location} stages={stages} aria-label={text.locationOf(task.id)} />
-      )
-  const links = task.links ?? []
   const split = layout === "split"
+  const shown = <T extends TaskDetailSection>(order: readonly T[]) => order.filter((section) => !hide.includes(section))
+  const rows: TaskDetailRow[] = hide.filter((key): key is TaskDetailRow => key === "status" || key === "cost")
+  if (!showStatus && !rows.includes("status")) rows.push("status")
+  const section = (key: TaskDetailSection) => {
+    if (key === "details") return <TaskDetailDetails key={key} {...props} labels={labels} hide={rows} />
+    const Section = sectionComponents[key]
+    return <Section key={key} {...props} labels={labels} headingLevel={headingLevel} />
+  }
 
   return (
     <div
@@ -117,181 +109,37 @@ function TaskDetailContent({
       )}
     >
       <div data-slot="task-detail-main" className="flex min-w-0 flex-col gap-group">
-        {task.goal && (
-          <Block title={text.goal} level={headingLevel}>
-            <p className="text-sm whitespace-pre-line">{task.goal}</p>
-          </Block>
-        )}
-
-        {needsDecision(task) && (
-          <Block title={text.decision} level={headingLevel}>
-            {task.decisionNeeded && <p className="text-sm">{task.decisionNeeded}</p>}
-            {task.status === "proposed" && (
-              <ProposalActions
-                taskId={task.id}
-                mode={mode}
-                onApprove={onApproveProposal}
-                onReject={onRejectProposal}
-                agentApproval={agentApproval}
-                labels={labels.proposals}
-                renderError={(error) => proposalError(error, labels)}
-              />
-            )}
-          </Block>
-        )}
-
-        <Block title={text.acceptance} level={headingLevel}>
-          {task.acceptance.length > 0 ? (
-            <AcceptanceList
-              criteria={task.acceptance}
-              labels={parts.acceptance}
-              evidence="disclosure"
-              className="gap-inline"
-            />
-          ) : (
-            <p className="text-sm text-muted-foreground">{text.noAcceptance}</p>
-          )}
-        </Block>
-
-        {attachments ? (
-          <Block title={text.attachments} level={headingLevel}>
-            {attachments}
-          </Block>
-        ) : null}
-
-        <Block title={text.activity} level={headingLevel}>
-          {task.attempts.length > 0 ? (
-            <AttemptTimeline
-              attempts={task.attempts}
-              labels={{ ...parts.attemptTimeline, threadLink: labels.openThread }}
-              usageLabels={parts.usage}
-              usageOpenUpTo={0}
-              agentAvatars={agentAvatars}
-              formatCurrency={formatCurrency}
-              renderThreadLink={renderThreadLink}
-              onOpenThread={onOpenThread}
-              {...time}
-            />
-          ) : (
-            <p className="text-sm text-muted-foreground">{labels.empty.attempts}</p>
-          )}
-        </Block>
+        {shown(sections?.main ?? taskDetailMainSections).map(section)}
       </div>
-
       <div data-slot="task-detail-side" className="flex min-w-0 flex-col gap-group">
-        <dl className="grid grid-cols-(--detail-value-columns) content-start gap-x-group gap-y-items text-sm">
-          {showStatus && (
-            <DetailValue term={text.status}>
-              <span className="inline-flex items-center gap-inline">
-                <TaskStatusIcon status={task.status} tone={statusTones?.[task.status]} />
-                <span>{parts.taskStatus?.[task.status] ?? labels.columns[task.status]}</span>
-              </span>
-            </DetailValue>
-          )}
-          {task.profile && <DetailValue term={text.profile}>{task.profile}</DetailValue>}
-          {task.project && <DetailValue term={text.project}>{task.project}</DetailValue>}
-          <DetailValue term={text.updated}>
-            <RelativeTime value={task.updatedAt} {...time} />
-          </DetailValue>
-          {!task.usage && (
-            <DetailValue
-              term={text.cost}
-              quantity={taskCost(task)}
-              locale={locale}
-              formatCurrency={formatCurrency}
-              quantityLabels={parts.usage?.quantity}
-            />
-          )}
-          {task.labels && task.labels.length > 0 && (
-            <DetailValue term={text.labels} wrap>
-              <ul className="flex flex-wrap gap-inline">
-                {task.labels.map((label) => (
-                  <li
-                    key={label}
-                    className="rounded-control border bg-secondary px-inset-chip py-inset-chip text-xs text-secondary-foreground"
-                  >
-                    {label}
-                  </li>
-                ))}
-              </ul>
-            </DetailValue>
-          )}
-        </dl>
-
-        {task.dependsOn.length > 0 && (
-          <Block title={text.dependencies} level={headingLevel}>
-            <DependencyChips
-              aria-label={text.dependenciesOf(task.id)}
-              items={task.dependsOn.map((dependency) => ({
-                id: dependency.id,
-                label: `${dependency.id} ${dependency.title ?? ""}`.trim(),
-                tone: taskStatusTones[dependency.status],
-              }))}
-              onSelect={selectable ? (id) => (canSelect?.(id) ?? true) && onSelectTask?.(id) : undefined}
-            />
-          </Block>
-        )}
-
-        <Block title={text.attemptsSummary} level={headingLevel}>
-          <dl className="grid grid-cols-(--detail-value-columns) gap-x-group gap-y-inline text-sm">
-            <DetailValue term={text.counts.attempts} inline>
-              {counts?.attempts ?? attemptCount(task)}
-            </DetailValue>
-            {counts && (
-              <>
-                <DetailValue term={text.counts.repairs} inline>
-                  {counts.repairs}
-                </DetailValue>
-                <DetailValue term={text.counts.reviews} inline>
-                  {counts.reviews}
-                </DetailValue>
-                <DetailValue term={text.counts.humanInterventions} inline>
-                  {counts.humanInterventions}
-                </DetailValue>
-              </>
-            )}
-            {task.acceptedFirstPass !== undefined && (
-              <DetailValue term={text.acceptedFirstPass} inline>
-                {task.acceptedFirstPass ? text.yes : text.no}
-              </DetailValue>
-            )}
-          </dl>
-        </Block>
-
-        {task.usage && (
-          <Block title={text.usage} level={headingLevel}>
-            <UsageGrid
-              usage={task.usage}
-              variant="compact"
-              aria-label={text.usageOf(task.id)}
-              labels={parts.usage}
-              locale={locale}
-              formatCurrency={formatCurrency}
-            />
-          </Block>
-        )}
-
-        {links.length > 0 && (
-          <Block title={text.links} level={headingLevel}>
-            <TaskLinks
-              links={links}
-              aria-label={text.linksOf(task.id)}
-              labels={labels.link}
-              renderLink={renderLink}
-              onOpenLink={onOpenLink && ((link) => onOpenLink(link, task))}
-            />
-          </Block>
-        )}
-
-        {location ? (
-          <Block title={text.location} level={headingLevel}>
-            {location}
-          </Block>
-        ) : null}
+        {shown(sections?.side ?? taskDetailSideSections).map(section)}
       </div>
     </div>
   )
 }
 
-export { TaskDetailContent, TaskDetailMeta }
-export type { TaskDetailContentProps }
+export {
+  TaskDetailAcceptance,
+  TaskDetailActivity,
+  TaskDetailAttachments,
+  TaskDetailAttempts,
+  TaskDetailContent,
+  TaskDetailDecision,
+  TaskDetailDependencies,
+  TaskDetailDetails,
+  TaskDetailGoal,
+  TaskDetailLinks,
+  TaskDetailLocation,
+  TaskDetailMeta,
+  TaskDetailUsage,
+  taskDetailMainSections,
+  taskDetailSideSections,
+}
+export type {
+  TaskDetailContentProps,
+  TaskDetailMainSection,
+  TaskDetailRow,
+  TaskDetailSection,
+  TaskDetailSectionProps,
+  TaskDetailSideSection,
+}

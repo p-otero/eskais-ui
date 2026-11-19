@@ -3003,6 +3003,10 @@
           "type": "registry:ui"
         },
         {
+          "path": "registry/ui/task-detail-sections.tsx",
+          "type": "registry:ui"
+        },
+        {
           "path": "registry/ui/task-detail-dialog.tsx",
           "type": "registry:ui"
         },
