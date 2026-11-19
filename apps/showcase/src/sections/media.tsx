@@ -6,6 +6,7 @@ import { Lightbox, ThemedImage } from "@/components/ui/lightbox"
 
 import { Section } from "../section"
 import { ImageScanSection } from "./image-scan"
+import { ModelScanSection, ModelViewerSection } from "./model-viewer"
 import { screenshots } from "./media-fixtures"
 
 function LightboxSection() {
@@ -83,6 +84,8 @@ function MediaSections() {
       <LightboxSection />
       <AttachmentsSection />
       <ImageScanSection />
+      <ModelViewerSection />
+      <ModelScanSection />
     </>
   )
 }

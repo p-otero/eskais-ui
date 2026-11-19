@@ -174,6 +174,10 @@ const categories = [
     ],
   },
   {
+    name: "3D",
+    items: ["model-viewer", "model-scan"],
+  },
+  {
     name: "Editor",
     items: ["code-block", "markdown-editor", "markdown-view", "markdown-editor-languages"],
   },
