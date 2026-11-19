@@ -120,6 +120,7 @@ function useModelScanIntro({ src, ratio, onHandOff, onDone }: IntroOptions) {
     // The rig turns the camera on the frame after a call: the first frame jumps to the front, the second draws the
     // photo there, and the third hands over, once that one is on screen.
     if (intro.frames === 1) {
+      dissolve.set({ particles: !reduced })
       rig.setOpacity(0)
       handle.api.aim("front", "jump")
     }
@@ -133,7 +134,7 @@ function useModelScanIntro({ src, ratio, onHandOff, onDone }: IntroOptions) {
     const duration = reduced ? crossfade : flight
     const u = (state.clock.elapsedTime - intro.start) / duration
     if (reduced) {
-      dissolve.set({ opacity: 1 - smoothstep(0, 1, u), particles: false })
+      dissolve.set({ opacity: 1 - smoothstep(0, 1, u) })
       rig.setOpacity(smoothstep(0, 1, u))
     } else {
       if (!intro.aimed && u > 0.08) {

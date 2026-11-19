@@ -1,4 +1,4 @@
-import { Profiler, useState } from "react"
+import { useState } from "react"
 
 import { Button } from "@/components/ui/button"
 import { ModelScan } from "@/components/ui/model-scan"
@@ -6,34 +6,25 @@ import { ModelViewer } from "@/components/ui/model-viewer"
 
 import { figureUrl, portrait, useFakeModelScan } from "../sections/model-fixtures"
 
-declare global {
-  var modelViewerCommits: number | undefined
-}
-
-const countCommit = () => {
-  globalThis.modelViewerCommits = (globalThis.modelViewerCommits ?? 0) + 1
-}
-
-// ?demo=model-check: a ModelViewer whose weights a button changes, inside a Profiler that counts its commits, and a
-// ModelScan run by the fake engine (?speed= scales its waits), above a tall spacer to scroll them out of view, for
+// ?demo=model-check: a ModelViewer whose weights a button changes, and a
+// ModelScan run by the fake engine (?speed= scales its waits, ?fail ends it in an error), above a tall spacer to scroll them out of view, for
 // tooling/model-check.mjs.
 function ModelCheck() {
-  const speed = Number(new URLSearchParams(location.search).get("speed") ?? "1")
-  const { state, start, cancel } = useFakeModelScan(figureUrl, { speed })
+  const params = new URLSearchParams(location.search)
+  const speed = Number(params.get("speed") ?? "1")
+  const { state, start, cancel } = useFakeModelScan(figureUrl, { speed, fail: params.has("fail") })
   const [weights, setWeights] = useState<Record<string, number>>({})
   return (
     <main className="flex flex-col items-start gap-section p-group">
       <section data-testid="viewer" aria-label="Viewer" className="flex w-full max-w-md flex-col gap-items">
-        <Profiler id="model-viewer" onRender={countCommit}>
-          <ModelViewer
-            model={figureUrl}
-            alt="A stylised figure"
-            poster={portrait.src}
-            aspectRatio={3 / 4}
-            weights={weights}
-            summary="A standing figure in a teal shirt."
-          />
-        </Profiler>
+        <ModelViewer
+          model={figureUrl}
+          alt="A stylised figure"
+          poster={portrait.src}
+          aspectRatio={3 / 4}
+          weights={weights}
+          summary="A standing figure in a teal shirt."
+        />
         <div className="flex flex-wrap gap-items">
           <Button size="sm" onClick={() => setWeights({ Build: 1, HeadSize: 1, Smile: 1 })}>
             Morph

@@ -204,6 +204,8 @@
     "menubar": 61.4,
     "meter": 22.7,
     "mobile-nav": 55.7,
+    "model-scan": 82.5,
+    "model-viewer": 77.7,
     "native-select": 27.6,
     "navigation-menu": 54.9,
     "number-input": 65.8,
@@ -278,5 +280,9 @@
     "utils": 10.5,
     "virtual-rows": 4.8,
     "voice-input": 63.9
+  },
+  "lazyBundles": {
+    "model-scan": 368.3,
+    "model-viewer": 363.6
   }
 }

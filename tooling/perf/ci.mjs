@@ -77,7 +77,11 @@ try {
   await server.close()
 }
 console.log("Measuring bundles…")
-for (const row of await measureBundles({ uiSdkShare: false })) measured.bundles[row.item] = row.gzipKB
+measured.lazyBundles = {}
+for (const row of await measureBundles({ uiSdkShare: false })) {
+  measured.bundles[row.item] = row.gzipKB
+  if (row.lazyKB > 0) measured.lazyBundles[row.item] = row.lazyKB
+}
 
 const failures = []
 const rows = []
@@ -106,6 +110,9 @@ for (const [id, { cls, lcp }] of Object.entries(measured.vitals)) {
   check("LCP ms, slow 4G", id, lcp, budgets.vitals[id].lcp)
 }
 for (const [item, kb] of Object.entries(measured.bundles)) check("gzip KB", item, kb, budgets.bundles[item])
+// Lazily imported chunks (a three.js scene) are budgeted apart: they load only where the item renders them.
+for (const [item, kb] of Object.entries(budgets.lazyBundles ?? {}))
+  check("lazy gzip KB", item, measured.lazyBundles[item] ?? 0, kb)
 for (const item of Object.keys(budgets.bundles)) {
   if (!(item in measured.bundles)) failures.push(`gzip KB ${item}: in budgets.json but no longer a registry item`)
 }
