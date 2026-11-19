@@ -55,7 +55,7 @@ const commitCode = `const [current, setCurrent] = useState<string | null>(null)
 
 const dialogCode = `<Collapsible>
   <CollapsibleTrigger>Changes</CollapsibleTrigger>
-  <CollapsiblePanel className="[--diff-max-height:24rem]">
+  <CollapsiblePanel>
     <GitDiff aria-label="Changes against main" patch={patch} height="auto" />
   </CollapsiblePanel>
 </Collapsible>`
@@ -133,12 +133,14 @@ export default function GitViews() {
       <H2 id="dialog">Changes in a scrolling dialog</H2>
       <Ul>
         <li>
-          <Code>height="auto"</Code> grows to a short diff with no scroller of its own and stops at{" "}
-          <Code>--diff-max-height</Code> (40rem) for a long one, the file tree capped the same.
+          <Code>height="auto"</Code> grows to the whole diff with no scroller of its own: the dialog body is the one
+          scroller, and the diff still renders only the lines in view, reads find in page and moves the body with j/k.
+          The file tree beside it stays in view, up to 40rem tall.
         </li>
         <li>
-          Nothing contains overscroll: at the diff's top or bottom the wheel moves the dialog body on. Set the cap below
-          the body's visible height, never in viewport units.
+          To cap a diff instead, set <Code>--diff-max-height</Code> on it or an ancestor: past it the diff scrolls
+          inside, and at its top or bottom the wheel moves the dialog body on. Set the cap below the body's visible
+          height, never in viewport units.
         </li>
         <li>In split layout an added or deleted file shows its one side across the whole width.</li>
       </Ul>

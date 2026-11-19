@@ -22,8 +22,9 @@ type DiffViewProps = DiffViewOptions & {
   /** Shown when no file has a change. */
   empty?: ReactNode
   /**
-   * `auto` (default) grows to the diff and scrolls inside past `--diff-max-height` (40rem); `fill` takes the
-   * height its parent gives it, for a diff that fills a pane.
+   * `auto` (default) grows to the diff and scrolls with the nearest scrolling ancestor, or the page, which the
+   * virtualizer follows; a `--diff-max-height` set on it or an ancestor caps it and it scrolls inside past that.
+   * `fill` takes the height its parent gives it, for a diff that fills a pane.
    */
   height?: DiffHeight
 }
@@ -183,7 +184,9 @@ function Viewport({
     {
       dir: "ltr",
       // A UI SDK part keeps its own data-slot, so the element the scroll area renders takes the diff's back.
-      render: <ScrollAreaViewport render={(part) => <div {...part} data-slot="diff-view-viewport" />} />,
+      render: (
+        <ScrollAreaViewport render={(part) => <div {...part} data-slot="diff-view-viewport" data-height={height} />} />
+      ),
       className: cn(
         // oxlint-disable-next-line shadcn/no-arbitrary-values -- a tab is four columns, as the unwrapped width counts it
         "relative h-auto min-h-0 flex-1 font-mono text-body-sm [tab-size:4]",
@@ -246,8 +249,8 @@ function DiffView({
       "aria-busy": busy,
       className: cn(
         "flex min-h-0 flex-col overflow-hidden rounded-surface border border-border bg-background text-foreground",
-        // oxlint-disable-next-line shadcn/no-arbitrary-values -- the cap is a variable a page overrides, with its default
-        height === "auto" && "max-h-[var(--diff-max-height,40rem)]",
+        // oxlint-disable-next-line shadcn/no-arbitrary-values -- an optional cap a page sets; without it the diff grows
+        height === "auto" && "max-h-[var(--diff-max-height,none)]",
         className,
       ),
       children: (

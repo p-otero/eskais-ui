@@ -1,7 +1,6 @@
-// Drives ?demo=git-view-check in Chrome: GitDiff's file tree beside a 34rem list at 1440px (13rem, collapsible),
-// GitDiff height="auto" in a scrolling body (grows to a short diff, caps a long one at --diff-max-height and hands
-// the wheel back to the body), and an added file in split layout at 1440px and 1920px (its one side spans the row).
-// Usage: node tooling/git-view-check.mjs (after `bun run build:showcase`)
+// Drives ?demo=git-view-check in Chrome: GitDiff's file tree beside a 34rem list, GitDiff height="auto" in a
+// scrolling body (short, capped by --diff-max-height, and 2,000 lines that scroll only with the body), and an added
+// file in split layout at 1440px and 1920px. Usage: node tooling/git-view-check.mjs (after `bun run build:showcase`)
 import { withShowcase } from "./showcase-browser.mjs"
 
 const failures = []
@@ -118,6 +117,89 @@ async function autoHeight(page) {
   )
 }
 
+async function autoHuge(page) {
+  const measure = () =>
+    page.evaluate(() => {
+      const body = document.querySelector("[data-testid=huge-body]")
+      const viewport = body.querySelector("[data-slot=diff-view-viewport]")
+      const bar = body.querySelector(
+        "[data-slot=diff-view] [data-slot=scroll-area-scrollbar][data-orientation=vertical]",
+      )
+      return {
+        scroll: viewport.scrollHeight,
+        client: viewport.clientHeight,
+        bar: bar?.hasAttribute("data-visible") ?? false,
+        bodyScroll: body.scrollHeight,
+        bodyClient: body.clientHeight,
+        bodyTop: body.scrollTop,
+        rows: viewport.querySelectorAll("[role=row]").length,
+        layers: body.parentElement.querySelectorAll("[hidden=until-found]").length,
+      }
+    })
+  const start = await measure()
+  check(
+    "auto, uncapped: 2,000 lines have no scroller of their own",
+    start.scroll <= start.client + 1 && !start.bar,
+    `${String(start.scroll)} / ${String(start.client)}, scrollbar ${String(start.bar)}`,
+  )
+  check(
+    "auto, uncapped: the body scrolls the diff",
+    start.bodyScroll > start.bodyClient + 30_000,
+    `${String(start.bodyScroll)} / ${String(start.bodyClient)}`,
+  )
+  check("auto, uncapped: rows virtualize against the body", start.rows > 0 && start.rows < 150, String(start.rows))
+  check("auto, uncapped: off-screen rows stay findable", start.layers > 0, String(start.layers))
+
+  // Halfway down the body, the rows on screen are rendered.
+  const middle = await page.evaluate(async () => {
+    const body = document.querySelector("[data-testid=huge-body]")
+    body.scrollIntoView({ block: "center" })
+    body.scrollTop = body.scrollHeight / 2
+    await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)))
+    const box = body.getBoundingClientRect()
+    const hit = document.elementFromPoint(box.left + box.width / 2, box.top + box.height / 2)
+    return {
+      row: hit?.closest("[role=row]")?.textContent?.slice(0, 40) ?? null,
+      rows: body.querySelectorAll("[data-slot=diff-view-viewport] [role=row]").length,
+    }
+  })
+  check(
+    "auto, uncapped: halfway down the body, its rows are rendered",
+    middle.row !== null && middle.rows < 150,
+    `${String(middle.row)}, ${String(middle.rows)} rows`,
+  )
+
+  // j from the first line moves the body to the next file's hunk.
+  await page.evaluate(() => {
+    document.querySelector("[data-testid=huge-body]").scrollTop = 0
+  })
+  await page.waitForTimeout(100)
+  await page
+    .locator("[data-testid=huge-body] [role=gridcell]")
+    .filter({ hasText: "export const value0 " })
+    .first()
+    .click()
+  const before = await measure()
+  await page.keyboard.press("j")
+  await page.waitForTimeout(200)
+  const after = await measure()
+  const focused = await page.evaluate(() => {
+    const body = document.querySelector("[data-testid=huge-body]")
+    const cell = document.activeElement
+    const box = cell.getBoundingClientRect()
+    const view = body.getBoundingClientRect()
+    return {
+      inside: body.contains(cell) && box.top >= view.top && box.bottom <= view.bottom,
+      text: cell.closest("[role=row]")?.textContent?.slice(0, 40),
+    }
+  })
+  check(
+    "auto, uncapped: j scrolls the body to the next hunk",
+    after.bodyTop > before.bodyTop + 1000 && focused.inside,
+    `${String(before.bodyTop)} → ${String(after.bodyTop)}, ${String(focused.text)}`,
+  )
+}
+
 async function splitAdded(page, width) {
   const cells = await page.evaluate(() => {
     const rows = [...document.querySelectorAll("[data-testid=split] [role=row]")].filter(
@@ -146,6 +228,7 @@ for (const width of [1440, 1920]) {
       if (width === 1440) {
         await treeBesideList(page)
         await autoHeight(page)
+        await autoHuge(page)
       }
       await splitAdded(page, width)
     },

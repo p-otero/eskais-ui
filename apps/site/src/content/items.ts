@@ -642,7 +642,7 @@ const itemNotes: Record<string, ItemNotes> = {
       "DiffView renders file diffs you built yourself (toViewFiles over FileDiffs from parsePatch or diffText). TextDiff and GitDiff are DiffView with input handling and chrome; reach for it to add your own toolbar or side panel, driving it with createDiffViewController.",
     a11y: [
       "All files share one virtualized scroller and one tab stop; the focused line stays rendered when scrolled away.",
-      'It grows to the diff up to --diff-max-height (40rem) and scrolls inside past it; height="fill" fills a sized parent instead.',
+      'It grows to the whole diff and scrolls with its scrolling ancestor, still virtualized; a --diff-max-height the page sets caps it. height="fill" fills a sized parent instead.',
     ],
     agent: "Same actions as GitDiff; a controller calls them from your own buttons.",
     related: ["git-diff", "text-diff", "diff"],

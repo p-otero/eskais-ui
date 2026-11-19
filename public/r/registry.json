@@ -5352,7 +5352,7 @@
       "type": "registry:ui",
       "title": "Diff View",
       "description": "The renderer behind TextDiff and GitDiff: every file's lines in one virtualized scroller (UI SDK createVirtualizer), unified or split, folded unchanged regions, changed-word highlights, Lezer syntax colours parsed in slices and applied only to the lines on screen, one tab stop over the lines (createGridFocus), j/k and n/p between hunks and files, Shift ranges for comments (onLineSelect), find in page across folded and off-screen lines, and agent actions.",
-      "docs": "`<DiffView files={toViewFiles(fileDiffs)} headers />` with `layout`/`defaultLayout`/`onLayoutChange` (`unified`, `split`), `wrap`, `viewed`/`onViewedChange`, `defaultCollapsed`, `onLineSelect(selection, details)` (`{ path, start: { side, line }, end, lines }`, or null) and `intraline` (`word`, `char`, false). `createDiffViewController()` drives it from outside (`openFile`, `nextHunk`, `markViewed`, `setLayout`…). Labels are overridable (`diffLabels`, `diffLabelsEs`); pass a constant. `height=\"auto\"` (default) grows to the diff up to `--diff-max-height` (40rem) and scrolls inside past it; `height=\"fill\"` fills a sized parent.",
+      "docs": "`<DiffView files={toViewFiles(fileDiffs)} headers />` with `layout`/`defaultLayout`/`onLayoutChange` (`unified`, `split`), `wrap`, `viewed`/`onViewedChange`, `defaultCollapsed`, `onLineSelect(selection, details)` (`{ path, start: { side, line }, end, lines }`, or null) and `intraline` (`word`, `char`, false). `createDiffViewController()` drives it from outside (`openFile`, `nextHunk`, `markViewed`, `setLayout`…). Labels are overridable (`diffLabels`, `diffLabelsEs`); pass a constant. `height=\"auto\"` (default) grows to the whole diff and scrolls with the nearest scrolling ancestor (or the page), which the virtualizer follows; a `--diff-max-height` set by the page caps it and it scrolls inside past that. `height=\"fill\"` fills a sized parent.",
       "dependencies": [
         "@ui-sdk/core@0.1.0-beta.12",
         "@ui-sdk/react@0.1.0-beta.12",
@@ -5391,6 +5391,10 @@
         },
         {
           "path": "registry/ui/diff-view-selection.ts",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/diff-view-scroller.ts",
           "type": "registry:ui"
         },
         {

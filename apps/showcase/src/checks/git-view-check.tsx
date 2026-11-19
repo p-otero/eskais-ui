@@ -1,7 +1,8 @@
 import { GitDiff } from "@/components/ui/git-diff"
 
 // ?demo=git-view-check: the fixture of tooling/git-view-check.mjs. A GitDiff beside a 34rem list (tree width),
-// GitDiff height="auto" inside a scrolling body (no scroll trap), and an added file in split view (column sizing).
+// GitDiff height="auto" inside a scrolling body (no scroll trap; uncapped, the body is its one scroller), and an
+// added file in split view (column sizing).
 const file = (path: string, lines: number, kind: "added" | "modified") => {
   const body = Array.from({ length: lines }, (_, index) => `export const value${String(index)} = ${String(index)}`)
   if (kind === "added") {
@@ -15,6 +16,10 @@ const longPatch = Array.from({ length: 6 }, (_, index) => file(`src/long/file-${
   "",
 )
 const addedPatch = file("src/rate-limit/token-bucket.ts", 33, "added")
+// 2,000 lines in 20 files: one hunk each, so j has somewhere to go.
+const hugePatch = Array.from({ length: 20 }, (_, index) =>
+  file(`src/huge/file-${String(index)}.ts`, 100, "added"),
+).join("")
 
 function GitViewCheck() {
   return (
@@ -40,6 +45,14 @@ function GitViewCheck() {
           <GitDiff aria-label="Long changes" patch={longPatch} height="auto" />
         </div>
         <p className="h-200 shrink-0">Acceptance criteria below the changes.</p>
+      </div>
+      <div
+        data-testid="huge-body"
+        className="flex h-120 flex-col gap-group overflow-y-auto rounded-surface border p-inset-surface"
+      >
+        <p>Task details above the changes.</p>
+        <GitDiff aria-label="Huge changes" patch={hugePatch} height="auto" fileTree="collapsible" />
+        <p>Acceptance criteria below the changes.</p>
       </div>
       <section aria-label="Split" data-testid="split" className="flex h-96 min-w-0">
         <GitDiff
