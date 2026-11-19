@@ -353,7 +353,8 @@ function CommitHistory({
         onFocus?.(event)
         if (!virtual.virtual || !(event.target instanceof Element)) return
         const index = Number(event.target.closest<HTMLElement>("[data-index]")?.dataset.index ?? Number.NaN)
-        if (!Number.isNaN(index)) virtual.pin(index)
+        // The working-tree row isn't one of the virtualized rows: focus on it lets go of the pinned one.
+        virtual.pin(Number.isNaN(index) ? undefined : index)
       },
       children: (
         <>

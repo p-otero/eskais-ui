@@ -102,7 +102,10 @@ test("groups show as tree sections with their counts, and a file in either opens
   ])
   const unstagedSection = sections[1] as HTMLElement
   expect(within(unstagedSection).getByText("en.json")).toBeTruthy()
-  expect(within(unstagedSection).getByText(/^steps\.tsx/)).toBeTruthy()
+  expect(within(unstagedSection).getByText("steps.tsx")).toBeTruthy()
+  const badges = [...document.querySelectorAll("[data-slot=diff-file-group]")].map((badge) => badge.textContent)
+  expect(badges).toEqual(["Staged", "Staged", "Unstaged", "Unstaged"])
+  expect(screen.getAllByText("src/onboarding/steps.tsx, Unstaged")).toHaveLength(1)
   await user.click(within(unstagedSection).getByText("en.json"))
   expect(onCurrentFileChange).toHaveBeenLastCalledWith("src/i18n/en.json", expect.anything())
   expect(screen.getAllByRole("grid").length).toBe(4)

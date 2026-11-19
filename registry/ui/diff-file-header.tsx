@@ -47,7 +47,8 @@ function renameLabel(oldPath: string, newPath: string) {
 function FilePath({ file, labels }: { file: DiffViewFile; labels: DiffLabels }) {
   const { oldPath, newPath, status } = file.diff
   const moved = (status === "renamed" || status === "copied") && oldPath && newPath && oldPath !== newPath
-  const full = moved ? `${oldPath} → ${newPath}` : file.path
+  const shown = file.group === undefined ? file.path : (newPath ?? oldPath ?? file.path)
+  const full = moved ? `${oldPath} → ${newPath}` : shown
   return (
     <span
       data-slot="diff-file-path"
@@ -55,8 +56,11 @@ function FilePath({ file, labels }: { file: DiffViewFile; labels: DiffLabels }) 
       dir="ltr"
       title={full}
     >
-      <span aria-hidden="true">{moved ? renameLabel(oldPath, newPath) : file.path}</span>
-      <span className="sr-only">{moved ? `${newPath}, ${labels.renamedFrom} ${oldPath}` : file.path}</span>
+      <span aria-hidden="true">{moved ? renameLabel(oldPath, newPath) : shown}</span>
+      <span className="sr-only">
+        {moved ? `${newPath}, ${labels.renamedFrom} ${oldPath}` : shown}
+        {file.group === undefined ? "" : `, ${file.group}`}
+      </span>
     </span>
   )
 }
@@ -109,6 +113,11 @@ const DiffFileHeader = memo(function DiffFileHeader({
           </Button>
         </span>
         <Badge tone={statusTone[status]}>{labels.status[status]}</Badge>
+        {file.group === undefined ? null : (
+          <Badge variant="outline" aria-hidden="true" data-slot="diff-file-group">
+            {file.group}
+          </Badge>
+        )}
         <FilePath file={file} labels={labels} />
         <FileChange diff={file.diff} labels={labels} />
         <Label className="ms-auto shrink-0 font-normal text-body-sm">

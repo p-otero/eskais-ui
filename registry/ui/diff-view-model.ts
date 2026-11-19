@@ -29,6 +29,8 @@ type DiffViewFile = {
   gaps: DiffGap[]
   /** The file extension, which picks the syntax highlighter. */
   language: string
+  /** The group it's listed under, like "Staged": its header shows it, and the real path in place of a repeat's `(2)`. */
+  group?: string
 }
 
 type DiffRow =
