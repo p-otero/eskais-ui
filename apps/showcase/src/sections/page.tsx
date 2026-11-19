@@ -155,7 +155,7 @@ function PageSection() {
       title="Page layout and header"
       description='PageLayout, PageHeader (eyebrow, tabs, actions that wrap below the title on narrow screens), Section (card, padding sm, dashed create tile) and DataState. PageLayout centers a dense, wide or full column; as="main" makes it the main landmark.'
     >
-      <Field>
+      <Field className="max-w-full overflow-x-auto">
         <FieldLabel>Data state</FieldLabel>
         <SegmentedControl<DemoStatus> value={status} onValueChange={(next) => next && setStatus(next)}>
           <SegmentedControlIndicator />

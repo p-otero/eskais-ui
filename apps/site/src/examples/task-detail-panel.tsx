@@ -254,7 +254,7 @@ function ChangesSection({ defaultOpen = false, ...props }: TaskChangesProps & { 
       className="flex flex-col gap-items rounded-surface border bg-card/(--glass-opacity) px-inset-item py-inset-item"
     >
       <CollapsibleTrigger className="flex w-full items-center gap-items text-start">
-        <span className="text-sm font-medium">Changes</span>
+        <span className="shrink-0 text-sm font-medium">Changes</span>
         {all ? (
           <span className="flex flex-wrap items-center gap-inline text-sm text-muted-foreground tabular-nums">
             <span>{all.files} files</span>
