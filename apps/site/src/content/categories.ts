@@ -106,6 +106,7 @@ const categories = [
       "dependency-chips",
       "attachments",
       "image-cropper",
+      "image-scan",
       "quantity",
       "relative-time",
     ],
