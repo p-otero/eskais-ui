@@ -2,6 +2,16 @@
 
 Versions follow [semver](https://semver.org). Before 1.0, a minor version can break compatibility. Release with `bun pm version <patch|minor|major>`, which bumps `package.json`, rebuilds `public/r` (the mockup CLI reports the version) and tags `vX.Y.Z`.
 
+## Unreleased
+
+### Added
+
+- `server-data`: `useServerQuery(key, fetch, { enabled, staleTime, placeholder, keepPrevious })` for a resource that isn't paged (a detail, a snapshot, a short list). It returns what the page hooks return, with `data` for the rows (`status`, `fetching`, `previous`, `error`, `retry`), passes `fetch` the signal (aborted on a key change and on unmount), renders pending on a server or with the data the request's client holds, and a key under a source's (`[...tasks.key, "detail", id]`) is reached by `useInvalidateSource` and `useSourceMutation`. The name follows `useServerPage`, `useServerInfinite` and `useServerTotal`. Import it from `@/components/ui/use-server-query`.
+- `useSourceMutation` writes the server's answer: `settleItems: (items, result, variables) => items` maps the rows of every page and infinite query under the key (totals stay), and `settle: (result, variables, current, queryKey) => data` writes every `useServerQuery` under it, `undefined` leaving one alone. On success each written query's read in flight is cancelled first, so an answer sent before the change can't overwrite it, and nothing is requested: the rest of the key is marked stale for its next mount, and a read of it already in flight starts again. A failed mutation still rolls back `optimistic` rows and refreshes the key; without `settle` or `settleItems` nothing changes.
+- `createDataClient({ retry, retryDelay })`: `retry` takes a number of retries (the 4xx rule stays) or a rule `(failures, error) => boolean`, and `retryDelay` a function too. `retries` still works and is deprecated. `isTransientError(error)` (a network `TypeError`, 408, 425, 429 or 5xx) writes the common rule, `(failures, error) => failures < 3 && isTransientError(error)`, for errors that carry no status, like IPC or domain errors. The default stays two retries for anything without a 4xx `status`, because `fetch` reports a dropped connection as a `TypeError` with no status; mutations still never retry.
+- `useInvalidateSource(source, { throwOnError: true })`, or `invalidate({ throwOnError: true })` per call, rejects when a reload fails after its retries, so the caller can show a toast. It still resolves by default.
+- The server data guide, the `server-data` docs and the skill's `references/server-data.md` explain that results reach React through TanStack Query's `notifyManager` one `setTimeout(0)` after a query settles (checked against 5.107.1), so a test awaiting a single `act()` sees the state before it, and recommend `notifyManager.setScheduler(queueMicrotask)` in the test setup or `findBy`/`waitFor`, with an `arraySource` test recipe.
+
 ## 0.2.5 (2026-11-19)
 
 ### Added

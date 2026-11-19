@@ -99,6 +99,49 @@ Every serializer escapes for its grammar, or throws `FilterSerializeError` for w
 - `ServerList` (infinite list of `ListItem` rows) and `ServerCombobox` (remote options, `multiple` chips) follow the same rules.
 - `DocumentQuickOpen source={notes} getItem={(note) => ({ value: note.id, label: note.title, description: note.folder, snippet: note.match })} onOpen` takes the same source for a notes app's Ctrl/Cmd+P: the query goes out as `filter.q`, debounced, a newer one aborts the last, the server's matches and order are kept (a note found by its body shows although its title lacks the query) and the next page loads at the end. `snippet` is the passage your search matched, as plain text: it shows under the title on up to two lines with each word of the query marked, and agents read it with the label. A search that isn't a `PageSource` passes `items`, `filter={false}`, `onQueryChange` and `status` instead.
 
+## Hooks without a component
+
+```tsx
+const page = useServerPage(tasks, state.request) // items, status, fetching, previous, total, navigation, error, retry
+const more = useServerInfinite(tasks, { filter, sort, size: 25 }) // items, loadMore, hasMore, loadingMore
+
+// A resource that isn't paged: a detail, a snapshot, a short list. Same shape, with `data`.
+// import { useServerQuery } from "@/components/ui/use-server-query"
+const detail = useServerQuery([...tasks.key, "detail", id], ({ signal }) => api.task(id, { signal }), {
+  enabled, // default true
+  staleTime, // the client's default otherwise
+  keepPrevious, // default false: a detail never shows another id's data
+  placeholder, // shown before the first load, never cached
+})
+```
+
+- Put a resource's key under its source's key, so `useInvalidateSource(tasks)` and `useSourceMutation({ source: tasks })` reach it. `fetch` must not resolve to `undefined` (use `null`).
+- `useSourceMutation` refreshes the key after the change by default. `optimistic: (items, variables) => items` shows it before and rolls back on failure.
+- When the server answers with the saved state, write it instead of refreshing: `settleItems: (items, saved) => items.map((t) => (t.id === saved.id ? saved : t))` for page and infinite queries (totals stay), `settle: (saved, variables, current) => (current?.id === saved.id ? saved : undefined)` for each `useServerQuery` (`undefined` leaves it). Each written query's read in flight is cancelled first; nothing is requested; the rest of the key is marked stale (a read already in flight restarts). A failure still refreshes.
+- `useInvalidateSource(tasks, { throwOnError: true })` (or `invalidate({ throwOnError: true })`) rejects on a failed reload: `invalidate().catch(() => toast.error("Couldn't reload"))`. By default it resolves.
+
+## Retries
+
+`createDataClient({ retry, retryDelay })`. A number keeps the 4xx rule; a function decides alone. Default: two retries for anything without a 4xx `status` (fetch's network failure is a `TypeError` with no status). When your errors carry no status (IPC, domain or parse errors), retry only what may pass:
+
+```ts
+createDataClient({ retry: (failures, error) => failures < 3 && isTransientError(error) }) // TypeError, 408, 425, 429, 5xx
+```
+
+Mutations never retry.
+
+## Testing
+
+Results reach React through TanStack Query's `notifyManager`, scheduled with `setTimeout(0)` after the query settles, so a test that awaits one `act()` can still see the previous state. In the test setup:
+
+```ts
+import { notifyManager } from "@tanstack/react-query"
+
+notifyManager.setScheduler(queueMicrotask)
+```
+
+Or wait with `findBy…`/`waitFor`. Back the screen with `arraySource(fixtures, { key, delay, fail })` and a `DataProvider client={createDataClient({ retry: 0 })}` so an error shows at once.
+
 ## Locale
 
 Counts, page sizes and the chips' numbers and dates follow the page's `<html lang>` (`useLocale` from `locale`); pass `locale` to `ServerDataTable`, `ServerList`, `FilterChips`, `FilterPanel`, `FilterField` or `ServerCombobox` to override it. A date-only value (`2026-01-31`) is shown as the day it names, whatever the viewer's time zone. Your own `labels.range(range, locale)` receives the locale.
@@ -120,7 +163,7 @@ Counts, page sizes and the chips' numbers and dates follow the page's `<html lan
 | URL history    | `replace`; `push`, `push-page`                                                  |
 | URL format     | readable fields; one encoded `f` param for `or` groups                          |
 | Page size      | 25 of `[10, 25, 50, 100]`, capped by `maxPageSize`                              |
-| Mutations      | `useSourceMutation` invalidates `source.key`; `optimistic` on request           |
+| Mutations      | `useSourceMutation` invalidates `source.key`; `optimistic`, `settle` on request |
 | Dates          | ISO 8601                                                                        |
 | Query client   | the app's; a shared default, or `DataProvider`                                  |
 | Query defaults | keep previous data, 2 retries except 4xx, `staleTime` 30 s, no refetch on focus |
