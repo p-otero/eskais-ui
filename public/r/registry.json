@@ -1554,7 +1554,8 @@
         "@eskais/utils",
         "@eskais/theme",
         "@eskais/button",
-        "@eskais/tooltip"
+        "@eskais/tooltip",
+        "@eskais/scroll-area"
       ],
       "files": [
         {
@@ -1879,6 +1880,10 @@
       "files": [
         {
           "path": "registry/ui/scroll-area.tsx",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/scroll-area-layers.ts",
           "type": "registry:ui"
         }
       ]
@@ -3270,7 +3275,8 @@
         "@eskais/kbd",
         "@eskais/button",
         "@eskais/link",
-        "@eskais/virtual-rows"
+        "@eskais/virtual-rows",
+        "@eskais/scroll-area"
       ],
       "files": [
         {
@@ -3878,7 +3884,8 @@
       "description": "Presentational page header: an eyebrow, a title at the heading level you choose, a description, an actions slot that wraps below the title on narrow screens, a breadcrumb slot and a tabs slot.",
       "registryDependencies": [
         "@eskais/utils",
-        "@eskais/theme"
+        "@eskais/theme",
+        "@eskais/scroll-area"
       ],
       "files": [
         {
@@ -4304,7 +4311,8 @@
         "@eskais/select",
         "@eskais/relative-time",
         "@eskais/trail-rows",
-        "@eskais/locale"
+        "@eskais/locale",
+        "@eskais/scroll-area"
       ],
       "files": [
         {
@@ -4386,7 +4394,8 @@
         "@eskais/utils",
         "@eskais/theme",
         "@eskais/tone",
-        "@eskais/trail-rows"
+        "@eskais/trail-rows",
+        "@eskais/scroll-area"
       ],
       "files": [
         {
@@ -4615,7 +4624,8 @@
         "@eskais/dialog",
         "@eskais/toggle",
         "@eskais/link",
-        "@eskais/tooltip"
+        "@eskais/tooltip",
+        "@eskais/scroll-area"
       ],
       "files": [
         {
@@ -4671,7 +4681,8 @@
         "@eskais/theme",
         "@eskais/lightbox",
         "@eskais/link",
-        "@eskais/locale"
+        "@eskais/locale",
+        "@eskais/scroll-area"
       ],
       "files": [
         {
@@ -4777,7 +4788,8 @@
         "@ui-sdk/core@0.1.0-beta.10"
       ],
       "registryDependencies": [
-        "@eskais/utils"
+        "@eskais/utils",
+        "@eskais/scroll-area"
       ],
       "files": [
         {
@@ -4800,7 +4812,8 @@
         "@ui-sdk/core@0.1.0-beta.10"
       ],
       "registryDependencies": [
-        "@eskais/virtual-rows"
+        "@eskais/virtual-rows",
+        "@eskais/scroll-area"
       ],
       "files": [
         {
@@ -4900,7 +4913,8 @@
         "@eskais/theme",
         "@eskais/button",
         "@eskais/shortcuts",
-        "@eskais/drawer"
+        "@eskais/drawer",
+        "@eskais/scroll-area"
       ],
       "files": [
         {
@@ -5170,7 +5184,8 @@
         "@eskais/utils",
         "@eskais/theme",
         "@eskais/button",
-        "@eskais/tabs"
+        "@eskais/tabs",
+        "@eskais/scroll-area"
       ],
       "files": [
         {
@@ -5246,7 +5261,8 @@
         "@eskais/button",
         "@eskais/badge",
         "@eskais/checkbox",
-        "@eskais/label"
+        "@eskais/label",
+        "@eskais/scroll-area"
       ],
       "files": [
         {
@@ -5337,7 +5353,8 @@
         "@eskais/diff",
         "@eskais/diff-view",
         "@eskais/segmented-control",
-        "@eskais/toggle"
+        "@eskais/toggle",
+        "@eskais/scroll-area"
       ],
       "files": [
         {
@@ -5454,7 +5471,8 @@
         "@eskais/theme",
         "@eskais/link",
         "@eskais/breadcrumb",
-        "@eskais/page-layout"
+        "@eskais/page-layout",
+        "@eskais/scroll-area"
       ],
       "files": [
         {
@@ -5576,7 +5594,8 @@
         "@eskais/theme",
         "@eskais/button",
         "@eskais/textarea",
-        "@eskais/relative-time"
+        "@eskais/relative-time",
+        "@eskais/scroll-area"
       ],
       "files": [
         {
@@ -5609,7 +5628,8 @@
         "@eskais/theme",
         "@eskais/button",
         "@eskais/relative-time",
-        "@eskais/toast"
+        "@eskais/toast",
+        "@eskais/scroll-area"
       ],
       "files": [
         {
@@ -5738,7 +5758,8 @@
         "@eskais/field",
         "@eskais/link",
         "@eskais/select",
-        "@eskais/url-param"
+        "@eskais/url-param",
+        "@eskais/scroll-area"
       ],
       "files": [
         {
@@ -5939,7 +5960,8 @@
         "@eskais/resizable",
         "@eskais/segmented-control",
         "@eskais/status-pill",
-        "@eskais/page-source"
+        "@eskais/page-source",
+        "@eskais/scroll-area"
       ],
       "files": [
         {
