@@ -161,9 +161,13 @@ function viewSizeAt(distance: number, fov: number, aspect: number) {
   return { width: height * aspect, height }
 }
 
-/** The size an image of `ratio` (width over height) takes drawn with `object-fit: contain` in a box. */
-function containSize(ratio: number, box: { width: number; height: number }) {
-  return box.width / box.height > ratio
+/**
+ * The size an image of `ratio` (width over height) takes drawn with `object-fit` in a box: inside it with `contain`,
+ * past it along one axis with `cover`.
+ */
+function fitSize(ratio: number, box: { width: number; height: number }, fit: "contain" | "cover" = "contain") {
+  const wider = box.width / box.height > ratio
+  return wider === (fit === "contain")
     ? { width: box.height * ratio, height: box.height }
     : { width: box.width, height: box.width / ratio }
 }
@@ -172,12 +176,12 @@ export {
   clampNumber,
   clampPitch,
   clampZoom,
-  containSize,
   damp,
   dampInto,
   expressionPrefix,
   fieldOfView,
   fitBoxDistance,
+  fitSize,
   fitSphereDistance,
   framingMargin,
   modelViewerViews,

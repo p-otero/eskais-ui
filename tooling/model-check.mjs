@@ -1,6 +1,6 @@
-// ModelViewer and ModelScan in Chrome (WebGL through SwiftShader): the three.js chunk loads only near a viewer; the
-// canvas draws nothing idle, off screen or hidden; morphing commits React once; the scan ends at three-quarter, and
-// reduced motion crossfades with no particles; nothing overflows at 390 and 1440 px.
+// ModelViewer and ModelScan in Chrome (SwiftShader): the three.js chunk loads only near a viewer, nothing draws idle,
+// off screen or hidden, morphing commits React once, the scan ends at three-quarter (reduced motion: a crossfade),
+// points land on a 9:16 photo, Start scan hands focus to Cancel, errors show per code, nothing overflows.
 // Usage: node tooling/model-check.mjs [--screenshots=<dir>] (after `bun run build:showcase`)
 /* oxlint-disable no-await-in-loop -- each width, mode and stage is measured in turn on one page */
 import { mkdirSync } from "node:fs"
@@ -112,6 +112,46 @@ async function runScan(page, { capture } = {}) {
     await page.waitForTimeout(50)
   }
   return seen
+}
+
+// Where each drawn point sits against where its fraction of the photo lands on the photo's drawn box, worked out from
+// the image's own object-fit, and how many points each group has on and off the photo.
+async function pointPlacement(page) {
+  return page.evaluate(() => {
+    const img = document.querySelector("[data-testid=scan] [data-slot=model-scan-photo] img")
+    const frame = img.getBoundingClientRect()
+    const ratio = img.naturalWidth / img.naturalHeight
+    const cover = getComputedStyle(img).objectFit === "cover"
+    const wider = frame.width / frame.height > ratio
+    const width = wider === !cover ? frame.height * ratio : frame.width
+    const height = wider === !cover ? frame.height : frame.width / ratio
+    const left = frame.left + (frame.width - width) / 2
+    const top = frame.top + (frame.height - height) / 2
+    let worst = 0
+    const groups = {}
+    for (const group of document.querySelectorAll("[data-testid=scan] [data-slot=model-scan-points] [data-source]")) {
+      groups[group.dataset.source] = { drawn: group.childElementCount, count: Number(group.dataset.count) }
+      for (const dot of group.children) {
+        const rect = dot.getBoundingClientRect()
+        const x = left + (parseFloat(dot.style.left) / 100) * width
+        const y = top + (parseFloat(dot.style.top) / 100) * height
+        worst = Math.max(worst, Math.hypot(rect.left + rect.width / 2 - x, rect.top + rect.height / 2 - y))
+      }
+    }
+    return { worst, groups, cover }
+  })
+}
+
+// Runs a scan until both landmark groups have arrived, and stops it there.
+async function detectBoth(page) {
+  await page.getByRole("button", { name: "Start scan" }).click()
+  await page.waitForFunction(
+    () => document.querySelectorAll("[data-testid=scan] [data-slot=model-scan-points] [data-source]").length === 2,
+    undefined,
+    { timeout: 10_000 },
+  )
+  // Every point has grown in: the stagger is at most 0.4 s, plus the grow.
+  await page.waitForTimeout(700)
 }
 
 const scanCamera = (page) => page.getByTestId("scan").locator("canvas").getAttribute("data-camera")
@@ -238,6 +278,63 @@ await withShowcase(
       { timeout: 5000 },
     )
     check("an arrow turns the camera 15°", true)
+
+    // Start scan goes while a run goes, focus moves to Cancel, and comes back to Start scan after cancelling.
+    {
+      await open(page, { width: 1440, query: "&speed=0.5" })
+      await page.getByRole("button", { name: "Start scan" }).focus()
+      await page.keyboard.press("Enter")
+      await scanRoot(page).and(page.locator("[data-stage=detecting]")).waitFor()
+      const scan = page.getByTestId("scan")
+      check(
+        "while a run goes, Start scan is gone",
+        (await scan.getByRole("button", { name: "Start scan" }).count()) === 0,
+      )
+      const focused = () => page.evaluate(() => document.activeElement?.textContent?.trim())
+      check("starting moves focus to Cancel", (await focused()) === "Cancel", await focused())
+      await page.keyboard.press("Enter")
+      await scanRoot(page).and(page.locator("[data-stage=photo]")).waitFor()
+      check("cancelling moves focus back to Start scan", (await focused()) === "Start scan", await focused())
+    }
+
+    // Points are fractions of the original photo: on a 9:16 photo they land on its drawn box, contained in a stage of
+    // its own ratio or cropped into a square one, and none is drawn off the photo.
+    for (const query of ["&photo=tall", "&photo=tall&fit=cover&stage=1"]) {
+      await open(page, { width: 1440, query: `${query}&speed=0.25` })
+      await detectBoth(page)
+      const placement = await pointPlacement(page)
+      check("the points show while detecting", (await scanRoot(page).getAttribute("data-stage")) === "detecting")
+      const label = placement.cover ? "cover in a square stage" : "contain"
+      check(
+        `9:16 photo, ${label}: points land on the photo's drawn box`,
+        placement.worst < 1.5,
+        placement.worst.toFixed(2),
+      )
+      check(
+        `9:16 photo, ${label}: the face and the body's 33 landmarks are all drawn`,
+        placement.groups.face?.drawn === placement.groups.face?.count && placement.groups.body?.drawn === 33,
+        JSON.stringify(placement.groups),
+      )
+      if (shots && !placement.cover)
+        await page.getByTestId("scan").screenshot({ path: join(shots, "model-scan-tall-detecting.png") })
+      if (shots && placement.cover)
+        await page.getByTestId("scan").screenshot({ path: join(shots, "model-scan-tall-cover-detecting.png") })
+    }
+
+    // An engine error shows the consumer's words for its code, read at once; without WebGL2, no Retry.
+    for (const code of ["no-face", "webgl2-unavailable"]) {
+      await open(page, { width: 1440, query: `&speed=4&fail=${code}` })
+      const seen = await runScan(page)
+      const scan = page.getByTestId("scan")
+      const retry = await scan.getByRole("button", { name: "Try again" }).count()
+      check(`${code}: the run ends in the error stage`, seen.at(-1) === "error", seen.join(","))
+      check(
+        `${code}: ${code === "webgl2-unavailable" ? "no Retry, ModelViewer's no-WebGL line" : "Retry"}`,
+        code === "webgl2-unavailable"
+          ? retry === 0 && (await scan.getByText("3D isn't available in this browser.").count()) > 0
+          : retry === 1,
+      )
+    }
 
     // The scan: the camera ends at three-quarter, after a flight drawn with particles.
     await open(page, { width: 1440, query: "&speed=2" })

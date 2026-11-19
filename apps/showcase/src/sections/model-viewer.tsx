@@ -88,7 +88,7 @@ function ModelViewerSection() {
 }
 
 function ModelScanSection() {
-  const { props, start, cancel, fail, setFail } = useFakeModelScan(engineModels)
+  const { props, start, cancel, fail, setFail, canRetry } = useFakeModelScan(engineModels)
   return (
     <Section
       title="Model scan"
@@ -104,7 +104,7 @@ function ModelScanSection() {
           modelAlt="A 3D stylised figure in a teal shirt"
           idleClip="Wave"
           onCancel={props.stage === "photo" ? undefined : cancel}
-          onRetry={start}
+          onRetry={canRetry ? start : undefined}
           actions={
             props.stage === "photo" ? (
               <Button size="sm" onClick={start}>
@@ -118,7 +118,7 @@ function ModelScanSection() {
           }
         />
         <Label>
-          <Switch checked={fail} onCheckedChange={setFail} />
+          <Switch checked={fail !== false} onCheckedChange={setFail} />
           Fail the next run
         </Label>
       </div>

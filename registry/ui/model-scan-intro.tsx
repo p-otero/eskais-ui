@@ -5,6 +5,7 @@ import { useModelScanIntro } from "@/components/ui/use-model-scan-intro"
 type ModelScanIntroProps = {
   src: string
   ratio: number
+  fit: "contain" | "cover"
   onHandOff: () => void
   onDone: () => void
 }

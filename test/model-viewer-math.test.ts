@@ -3,11 +3,11 @@ import { describe, expect, test } from "vitest"
 import {
   clampPitch,
   clampZoom,
-  containSize,
   damp,
   dampInto,
   fieldOfView,
   fitBoxDistance,
+  fitSize,
   fitSphereDistance,
   nearestAngle,
   orbitPosition,
@@ -112,8 +112,10 @@ describe("framing", () => {
     expect(viewSizeAt(distance, fieldOfView, 0.75).width).toBeCloseTo(0.4 * 1.1, 6)
   })
 
-  test("contain keeps the ratio inside the box", () => {
-    expect(containSize(0.75, { width: 300, height: 300 })).toEqual({ width: 225, height: 300 })
-    expect(containSize(2, { width: 300, height: 300 })).toEqual({ width: 300, height: 150 })
+  test("contain keeps the ratio inside the box, cover fills it", () => {
+    expect(fitSize(0.75, { width: 300, height: 300 })).toEqual({ width: 225, height: 300 })
+    expect(fitSize(2, { width: 300, height: 300 })).toEqual({ width: 300, height: 150 })
+    expect(fitSize(0.75, { width: 300, height: 300 }, "cover")).toEqual({ width: 300, height: 400 })
+    expect(fitSize(2, { width: 300, height: 300 }, "cover")).toEqual({ width: 600, height: 300 })
   })
 })

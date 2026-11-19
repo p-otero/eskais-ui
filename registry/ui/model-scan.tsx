@@ -14,7 +14,9 @@ import {
   type ModelScanStage,
 } from "@/components/ui/model-scan-primitive"
 import {
+  isOnPhoto,
   pointGroups,
+  pointsAspect,
   type ModelScanDrawnGroup,
   type ModelScanPoint,
   type ModelScanPointGroup,
@@ -29,6 +31,7 @@ import {
   type ModelViewerWeights,
 } from "@/components/ui/model-viewer"
 import { Progress, ProgressLabel, ProgressTrack, ProgressValue } from "@/components/ui/progress"
+import { useModelScanFocus } from "@/components/ui/use-model-scan-focus"
 import { cn, cnState } from "@/lib/utils"
 
 const {
@@ -73,14 +76,18 @@ type ModelScanProps = Omit<PartProps<"div">, "children"> & {
   src: string
   /** Describes the photo, and names the scan. */
   alt: string
-  /** The photo's size in pixels; its ratio sizes the stage before it loads. */
-  width: number
-  height: number
+  /**
+   * The photo's size in pixels: its ratio sizes the stage until the photo loads, which then gives its own. Without
+   * it, the points' `aspect` does, or 3:4.
+   */
+  width?: number
+  height?: number
   stage: ModelScanStage
   /**
-   * Points the engine found, as fractions of the photo, lighting up while detecting: one list (interleaved x, y in a
-   * `Float32Array`, or `{ x, y }` objects), or groups of them, `{ source, points, aspect? }`, each lighting up on its
-   * own, in the order the sources arrived.
+   * Points the engine found, as fractions of the original photo, lighting up while detecting: one list (interleaved
+   * x, y in a `Float32Array`, or `{ x, y }` objects), or groups of them, `{ source, points, aspect? }`, each lighting
+   * up on its own, in the order the sources arrived. Points past the photo's edges (landmarks a crop cut off) are
+   * kept but not drawn.
    */
   points?: ModelScanPoints
   /** The base model (a GLB with morph targets), from the building stage on. */
@@ -107,6 +114,8 @@ type ModelScanProps = Omit<PartProps<"div">, "children"> & {
   idleClip?: string
   /** The stage's width over its height; the photo's by default. */
   aspectRatio?: number
+  /** How the photo fills a stage of another `aspectRatio`: whole (`contain`) or cropped (`cover`). Points follow it. */
+  fit?: "contain" | "cover"
   /** More ModelViewer props for the model: framing, material, summary, labels… */
   viewer?: ModelScanViewerProps
   /** More controls beside Cancel and Retry. */
@@ -115,11 +124,13 @@ type ModelScanProps = Omit<PartProps<"div">, "children"> & {
 }
 
 /* oxlint-disable shadcn/no-arbitrary-values -- the photo's drawn box and the scan effect follow the ratio, progress and container variables */
-// The photo's drawn box inside the stage, as ImageScan places its regions: points land on the pixels they name.
+// The photo's drawn box inside the stage, as ImageScan places its regions: a stage of another ratio letterboxes it
+// (contain) or crops it (cover), and points land on the pixels they name either way.
 const layerClassName =
-  "pointer-events-none absolute top-1/2 left-1/2 h-[min(100cqh,calc(100cqw/var(--model-scan-ratio)))] w-[min(100cqw,calc(100cqh*var(--model-scan-ratio)))] -translate-x-1/2 -translate-y-1/2"
+  "pointer-events-none absolute top-1/2 left-1/2 h-[min(100cqh,calc(100cqw/var(--model-scan-ratio)))] w-[min(100cqw,calc(100cqh*var(--model-scan-ratio)))] -translate-x-1/2 -translate-y-1/2 data-[fit=cover]:h-[max(100cqh,calc(100cqw/var(--model-scan-ratio)))] data-[fit=cover]:w-[max(100cqw,calc(100cqh*var(--model-scan-ratio)))]"
 // A size container (Tailwind's @container is inline-size only), so the photo's box sizes from it.
-const photoClassName = "pointer-events-none absolute inset-0 [container-type:size] data-handed-off:invisible"
+const photoClassName =
+  "pointer-events-none absolute inset-0 overflow-hidden [container-type:size] data-handed-off:invisible"
 const effectClassNames = {
   root: "group/effect absolute inset-0 overflow-hidden [--model-scan-accent:var(--info)]",
   veil: "absolute inset-0 origin-bottom bg-overlay opacity-40 transition-transform duration-panel ease-standard group-data-determinate/effect:scale-y-[calc(1-var(--model-scan-progress,0))]",
@@ -163,6 +174,7 @@ function ModelScan({
   modelAlt,
   idleClip,
   aspectRatio,
+  fit = "contain",
   viewer: viewerProps,
   actions,
   labels: ownLabels,
@@ -170,8 +182,20 @@ function ModelScan({
   ...props
 }: ModelScanProps) {
   const labels = { ...modelScanLabels, ...ownLabels, stage: { ...modelScanLabels.stage, ...ownLabels?.stage } }
-  const ratio = width / height
-  const groups = useMemo(() => pointGroups(points, ratio), [points, ratio])
+  // The loaded photo's own ratio; until then the given size's, or the engine's `aspect`.
+  const [measured, setMeasured] = useState<{ src: string; ratio: number } | null>(null)
+  const measure = (img: HTMLImageElement | null) => {
+    if (!img?.complete || !img.naturalWidth || !img.naturalHeight) return
+    const next = img.naturalWidth / img.naturalHeight
+    if (measured?.src !== src || measured.ratio !== next) setMeasured({ src, ratio: next })
+  }
+  const ratio =
+    (measured?.src === src ? measured.ratio : undefined) ??
+    (width && height ? width / height : undefined) ??
+    pointsAspect(points) ??
+    3 / 4
+  const groups = useMemo(() => pointGroups(points), [points])
+  const statusRow = useModelScanFocus(stage)
   const glb = model && isScanModel(model) ? model.glb : model
   const modelNames = model && isScanModel(model) ? model.targetNames : undefined
   const announcements: ModelScanAnnouncements = {
@@ -203,14 +227,16 @@ function ModelScan({
   const overlay = (
     <ModelScanPhoto handedOff={handedOff} className={photoClassName}>
       <img
+        ref={measure}
         src={src}
         alt=""
         width={width}
         height={height}
         draggable={false}
-        className="absolute inset-0 size-full object-contain"
+        onLoad={(event) => measure(event.currentTarget)}
+        className={cn("absolute inset-0 size-full", fit === "cover" ? "object-cover" : "object-contain")}
       />
-      <div className={layerClassName}>
+      <div data-fit={fit} className={layerClassName}>
         <ModelScanEffect className={effectClassNames.root}>
           <span className={effectClassNames.veil} />
           <span className={effectClassNames.line} />
@@ -258,22 +284,25 @@ function ModelScan({
             <ModelScanIntro
               src={src}
               ratio={ratio}
+              fit={fit}
               onHandOff={() => setHandedOff(true)}
               onDone={() => setIntroDone(true)}
             />
           ) : null
         }
       />
-      <ModelScanStatus
-        stage={stage}
-        progress={progress}
-        statusText={statusText}
-        error={error}
-        labels={labels}
-        actions={actions}
-        cancel={onCancel && stage !== "ready" && stage !== "error" ? (event) => scan.api.cancel(event) : undefined}
-        retry={onRetry && stage === "error" ? (event) => scan.api.retry(event) : undefined}
-      />
+      <div ref={statusRow} data-slot="model-scan-status" className="contents">
+        <ModelScanStatus
+          stage={stage}
+          progress={progress}
+          statusText={statusText}
+          error={error}
+          labels={labels}
+          actions={actions}
+          cancel={onCancel && stage !== "ready" && stage !== "error" ? (event) => scan.api.cancel(event) : undefined}
+          retry={onRetry && stage === "error" ? (event) => scan.api.retry(event) : undefined}
+        />
+      </div>
     </>
   )
 
@@ -291,28 +320,34 @@ function ModelScan({
   )
 }
 
-/** One group's points, drawn as dots at their fractions of the photo; decorative, inside the hidden points layer. */
+/**
+ * One group's points, drawn as dots at their fractions of the photo; decorative, inside the hidden points layer.
+ * Points past the photo's edges aren't drawn: clamped, they would pile up on the border where no landmark is. They
+ * don't count in the stagger either, so a group lights up over the same time however many a crop cut off.
+ */
 function ModelScanPointGroupLayer({ group, order }: { group: ModelScanDrawnGroup; order: number }) {
   const dots: ReactNode[] = []
   for (let i = 0; i + 1 < group.coords.length; i += 2) {
-    const index = i / 2
+    const x = group.coords[i] ?? -1
+    const y = group.coords[i + 1] ?? -1
+    if (!isOnPhoto(x, y)) continue
     // Points of a group only arrive, never move or reorder: their place in the list is their identity.
     dots.push(
       <span
-        key={index}
+        key={i / 2}
         className={pointClassName}
         style={
           {
-            left: `${String(((group.coords[i] ?? 0) * 100).toFixed(2))}%`,
-            top: `${String(((group.coords[i + 1] ?? 0) * 100).toFixed(2))}%`,
-            "--model-scan-point-index": String(index),
+            left: `${String((x * 100).toFixed(2))}%`,
+            top: `${String((y * 100).toFixed(2))}%`,
+            "--model-scan-point-index": String(dots.length),
           } as CSSProperties
         }
       />,
     )
   }
   return (
-    <span data-source={group.source} data-order={order % 3} className={groupClassName}>
+    <span data-source={group.source} data-order={order % 3} data-count={group.onPhoto} className={groupClassName}>
       {dots}
     </span>
   )
