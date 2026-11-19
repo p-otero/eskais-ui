@@ -12,6 +12,7 @@ import { CalendarCheck } from "./checks/calendar-check"
 import { CardHeaderCheck } from "./checks/card-header-check"
 import { PaletteReopenCheck } from "./checks/palette-reopen-check"
 import { DescriptionListCheck } from "./checks/description-list-check"
+import { DialogMobileCheck } from "./checks/dialog-mobile-check"
 import { DiffBench } from "./checks/diff-bench"
 import { FieldPlacementCheck } from "./checks/field-placement-check"
 import { GaugeCheck } from "./checks/gauge-check"
@@ -60,6 +61,7 @@ const standalone = new Set([
   "site",
   "shell",
   "overlay-check",
+  "dialog-mobile-check",
   "card-header-check",
   "palette-reopen-check",
   "field-placement-check",
@@ -107,6 +109,7 @@ function Demo() {
     )
   }
   if (demo === "overlay-check") return <OverlayCheck />
+  if (demo === "dialog-mobile-check") return <DialogMobileCheck />
   if (demo === "sortable-check") return <SortableCheck />
   if (demo === "tree-focus-check") return <TreeFocusCheck />
   if (demo === "git-view-check") return <GitViewCheck />
