@@ -60,7 +60,7 @@ const cases = [
     field: "Notes",
   },
   { name: "ShortcutsDialog", path: "?demo=dialog-mobile-check", trigger: button("Keyboard shortcuts") },
-  { name: "TaskDetailDialog", path: "?demo=task-dialog", scrolls: true },
+  { name: "TaskDetailDialog", path: "?demo=task-dialog", scrolls: true, insetBody: true },
   { name: "SidePanel sheet", path: "?demo=side-panel-check&narrow=sheet", narrowOnly: true },
 ]
 
@@ -311,6 +311,14 @@ async function checkCase(context, origin, device, item) {
     const geometry = await page.evaluate(measure)
     checkGeometry(label, item, device, geometry, scrolled)
     await checkStage(label, item, device)
+    if (item.insetBody) {
+      // A flush content drops the body's own inset; a body that pads itself keeps its sides off the dialog's edge.
+      const inset = await page.evaluate(() => {
+        const body = document.querySelector('[role="dialog"] [data-slot="dialog-body"]')
+        return body ? Number.parseFloat(getComputedStyle(body).paddingLeft) : 0
+      })
+      check(`${label}: the body keeps its side inset`, inset >= 12, `${String(inset)}px`)
+    }
     if (shots) await page.screenshot({ path: join(shots, `${slug(item.name)}-${device.name}.png`) })
     if (item.field) await keyboardUp(item.name, item.field, device)
     await checkBackdrop(label, item, geometry)

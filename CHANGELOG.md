@@ -8,6 +8,10 @@ Versions follow [semver](https://semver.org). Before 1.0, a minor version can br
 
 - `AttemptView.livenessEvidence`: one line on why the data source reached its liveness verdict. On a waiting or possibly stuck attempt that has it, the task card's liveness chip becomes a button (`data-slot="task-card-liveness"`, named by the state) with a description tooltip: the state in medium weight, the evidence below. Other states, and attempts without evidence, keep the dot and title. The `task-card` item now depends on `tooltip`.
 
+### Fixed
+
+- `TaskDetailDialog`: the body keeps its side inset again. 0.2.4 marked the dialog `data-dialog-flush`, and `DialogBody` dropped the horizontal padding in that scope, so the sections touched the dialog's edges while the header kept its inset. The body now pads its sides in the flush scope too (`in-data-dialog-flush:px-inset-surface`), and `dialog-mobile-check` measures it.
+
 ## 0.2.4 (2026-11-19)
 
 ### Added
