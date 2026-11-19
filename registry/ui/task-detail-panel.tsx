@@ -6,6 +6,7 @@ import { XIcon } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { agentTaskBoardLabels } from "@/components/ui/agent-task-labels"
 import { Button } from "@/components/ui/button"
+import { ScrollArea, ScrollAreaScrollbar, ScrollAreaViewport } from "@/components/ui/scroll-area"
 import { TaskDetailContent, TaskDetailMeta, type TaskDetailContentProps } from "@/components/ui/task-detail-content"
 import { insidePopup } from "@/components/ui/task-detail-parts"
 
@@ -87,25 +88,40 @@ function TaskDetailPanel({
       aria-labelledby={titleId}
       onKeyDown={handleKeyDown}
       className={cn(
-        "@container/task-detail flex flex-col gap-surface overflow-y-auto overscroll-contain rounded-surface border bg-popover/(--glass-opacity) p-inset-surface text-popover-foreground shadow-surface backdrop-surface",
+        "@container/task-detail flex flex-col overflow-hidden rounded-surface border bg-popover/(--glass-opacity) text-popover-foreground shadow-surface backdrop-surface",
         className,
       )}
       {...props}
     >
-      <header className="flex items-start gap-items">
-        <div className="flex min-w-0 flex-1 flex-col gap-inline">
-          <TaskDetailMeta task={task} labels={labels} />
-          <Title id={titleId} data-slot="task-detail-title" tabIndex={-1} className="text-title-sm focus:outline-none">
-            {task.title}
-          </Title>
-        </div>
-        {onClose && (
-          <Button variant="ghost" size="icon" aria-label={labels.panel.close} onClick={() => onClose("close-press")}>
-            <XIcon />
-          </Button>
-        )}
-      </header>
-      <TaskDetailContent {...content} showStatus={false} headingLevel={headingLevel + 1} />
+      <ScrollArea className="flex min-h-0 flex-1 flex-col">
+        <ScrollAreaViewport className="flex h-auto min-h-0 flex-1 flex-col gap-surface overscroll-contain p-inset-surface">
+          <header className="flex items-start gap-items">
+            <div className="flex min-w-0 flex-1 flex-col gap-inline">
+              <TaskDetailMeta task={task} labels={labels} />
+              <Title
+                id={titleId}
+                data-slot="task-detail-title"
+                tabIndex={-1}
+                className="text-title-sm focus:outline-none"
+              >
+                {task.title}
+              </Title>
+            </div>
+            {onClose && (
+              <Button
+                variant="ghost"
+                size="icon"
+                aria-label={labels.panel.close}
+                onClick={() => onClose("close-press")}
+              >
+                <XIcon />
+              </Button>
+            )}
+          </header>
+          <TaskDetailContent {...content} showStatus={false} headingLevel={headingLevel + 1} />
+        </ScrollAreaViewport>
+        <ScrollAreaScrollbar data-agent-hidden="" />
+      </ScrollArea>
     </section>
   )
 }

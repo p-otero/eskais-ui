@@ -28,6 +28,7 @@ import {
   ResizablePanel,
   type ResizableSize,
 } from "@/components/ui/resizable"
+import { ScrollArea, ScrollAreaScrollbar, ScrollAreaViewport } from "@/components/ui/scroll-area"
 import { ShortcutScope } from "@/components/ui/shortcuts"
 import {
   useDetailFocus,
@@ -299,12 +300,15 @@ function MasterDetail({
           onClose={narrow || closable ? () => close("close-press") : undefined}
           onCollapse={collapsible ? () => setCollapsed(true) : undefined}
         />
-        <div
-          data-slot="master-detail-body"
-          className="flex min-h-0 flex-1 flex-col gap-group overflow-y-auto p-inset-surface"
-        >
-          {view.content}
-        </div>
+        <ScrollArea className="flex min-h-0 flex-1 flex-col">
+          <ScrollAreaViewport
+            className="flex h-auto min-h-0 flex-1 flex-col gap-group p-inset-surface"
+            render={(part) => <div {...part} data-slot="master-detail-body" />}
+          >
+            {view.content}
+          </ScrollAreaViewport>
+          <ScrollAreaScrollbar data-agent-hidden="" />
+        </ScrollArea>
       </>
     )
   }

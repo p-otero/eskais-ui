@@ -1,5 +1,6 @@
 import { useId, type ComponentProps, type ReactNode } from "react"
 
+import { ScrollArea, ScrollAreaScrollbar, ScrollAreaViewport } from "@/components/ui/scroll-area"
 import { cn } from "@/lib/utils"
 
 type PageHeadingLevel = 1 | 2 | 3 | 4 | 5 | 6
@@ -67,9 +68,15 @@ function PageHeader({
       </div>
       {tabs !== undefined && (
         // The bleed keeps the tabs' focus rings inside the scroll box, which would clip them.
-        <div data-slot="page-header-tabs" className="-m-inline flex min-w-0 overflow-x-auto p-inline">
-          {tabs}
-        </div>
+        <ScrollArea className="-m-inline min-w-0">
+          <ScrollAreaViewport
+            className="flex h-auto p-inline"
+            render={(part) => <div {...part} data-slot="page-header-tabs" />}
+          >
+            {tabs}
+          </ScrollAreaViewport>
+          <ScrollAreaScrollbar orientation="horizontal" data-agent-hidden="" />
+        </ScrollArea>
       )}
     </div>
   )

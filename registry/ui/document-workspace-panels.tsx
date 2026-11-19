@@ -4,6 +4,7 @@ import type { ComponentProps, MouseEvent, ReactNode } from "react"
 
 import { Drawer, DrawerBackdrop, DrawerContent, DrawerTitle } from "@/components/ui/drawer"
 import { Resizable, ResizableHandle, ResizablePanel } from "@/components/ui/resizable"
+import { ScrollArea, ScrollAreaScrollbar, ScrollAreaViewport } from "@/components/ui/scroll-area"
 import type { DocumentWorkspaceState } from "@/components/ui/use-document-workspace-state"
 
 type WorkspaceDrawerProps = {
@@ -31,6 +32,17 @@ function WorkspaceDrawer({ open, onOpenChange, side, title, finalFocus, onClosed
 
 type PanelsProps = { state: DocumentWorkspaceState; explorer?: ReactNode; aside?: ReactNode }
 
+/** A column's content, scrolling inside the panel that names it. */
+function PanelScroll({ children }: { children: ReactNode }) {
+  return (
+    <ScrollArea className="size-full">
+      <ScrollAreaViewport>{children}</ScrollAreaViewport>
+      <ScrollAreaScrollbar data-agent-hidden="" />
+      <ScrollAreaScrollbar orientation="horizontal" data-agent-hidden="" />
+    </ScrollArea>
+  )
+}
+
 /** The wide layout: the explorer, the center and the aside as resizable columns that collapse to nothing. */
 function WorkspaceColumns({ state, explorer, aside, children }: PanelsProps & { children: ReactNode }) {
   const { ids, labels, stored, controller } = state
@@ -47,9 +59,9 @@ function WorkspaceColumns({ state, explorer, aside, children }: PanelsProps & { 
             defaultSize={state.explorer.open ? (stored.explorerSize ?? "256px") : 0}
             render={<nav aria-label={labels.explorer} />}
             data-slot="document-workspace-explorer"
-            className="bg-muted/(--glass-opacity)"
+            className="overflow-hidden bg-muted/(--glass-opacity)"
           >
-            {explorer}
+            <PanelScroll>{explorer}</PanelScroll>
           </ResizablePanel>
           <ResizableHandle aria-label={labels.resizeExplorer} />
         </>
@@ -69,8 +81,9 @@ function WorkspaceColumns({ state, explorer, aside, children }: PanelsProps & { 
             defaultSize={state.aside.open ? (stored.asideSize ?? "288px") : 0}
             render={<aside aria-label={labels.aside} />}
             data-slot="document-workspace-aside"
+            className="overflow-hidden"
           >
-            {aside}
+            <PanelScroll>{aside}</PanelScroll>
           </ResizablePanel>
         </>
       )}
@@ -99,16 +112,20 @@ function WorkspaceDrawers({ state, explorer, aside }: PanelsProps) {
           finalFocus={context.documentFocusTarget}
           onClosed={onClosed}
         >
-          {/* oxlint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-noninteractive-element-interactions -- hears the clicks of the links inside, which Enter fires too */}
-          <nav
-            id={ids.explorer}
-            aria-label={labels.explorer}
-            data-slot="document-workspace-explorer"
-            onClick={closeOnLink}
-            className="min-h-0 flex-1 overflow-auto"
-          >
-            {explorer}
-          </nav>
+          <ScrollArea className="flex min-h-0 flex-1 flex-col">
+            <ScrollAreaViewport
+              id={ids.explorer}
+              aria-label={labels.explorer}
+              // Hears the clicks of the links inside, which Enter fires too.
+              onClick={closeOnLink}
+              className="h-auto min-h-0 flex-1"
+              render={(part) => <nav {...part} data-slot="document-workspace-explorer" />}
+            >
+              {explorer}
+            </ScrollAreaViewport>
+            <ScrollAreaScrollbar data-agent-hidden="" />
+            <ScrollAreaScrollbar orientation="horizontal" data-agent-hidden="" />
+          </ScrollArea>
         </WorkspaceDrawer>
       )}
       {aside !== undefined && (
@@ -120,14 +137,18 @@ function WorkspaceDrawers({ state, explorer, aside }: PanelsProps) {
           finalFocus={context.documentFocusTarget}
           onClosed={onClosed}
         >
-          <aside
-            id={ids.aside}
-            aria-label={labels.aside}
-            data-slot="document-workspace-aside"
-            className="min-h-0 flex-1 overflow-auto"
-          >
-            {aside}
-          </aside>
+          <ScrollArea className="flex min-h-0 flex-1 flex-col">
+            <ScrollAreaViewport
+              id={ids.aside}
+              aria-label={labels.aside}
+              className="h-auto min-h-0 flex-1"
+              render={(part) => <aside {...part} data-slot="document-workspace-aside" />}
+            >
+              {aside}
+            </ScrollAreaViewport>
+            <ScrollAreaScrollbar data-agent-hidden="" />
+            <ScrollAreaScrollbar orientation="horizontal" data-agent-hidden="" />
+          </ScrollArea>
         </WorkspaceDrawer>
       )}
     </>

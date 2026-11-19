@@ -126,7 +126,7 @@ test("a page header shows an eyebrow above the title and a tabs slot under the t
   expect(eyebrow.className).toContain("text-meta")
   expect(eyebrow.compareDocumentPosition(heading) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
   expect(heading.className).toContain("text-display-sm")
-  expect(header.lastElementChild?.getAttribute("data-slot")).toBe("page-header-tabs")
+  expect(header.lastElementChild?.firstElementChild?.getAttribute("data-slot")).toBe("page-header-tabs")
   expect(header.querySelector("[data-slot=page-header-actions]")?.parentElement?.className).toContain("narrow:flex-col")
   expect(await axeViolations(container)).toEqual([])
 

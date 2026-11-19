@@ -9,6 +9,7 @@ import { diffLabels, type DiffLabels } from "@/components/ui/diff-labels"
 import type { DiffSnapshot } from "@/components/ui/diff-view-document"
 import { diffView, type DiffViewOptions } from "@/components/ui/diff-view-primitive"
 import { DiffViewRow, loneSide, type DiffViewApi } from "@/components/ui/diff-view-rows"
+import { ScrollArea, ScrollAreaCorner, ScrollAreaScrollbar, ScrollAreaViewport } from "@/components/ui/scroll-area"
 import { cn } from "@/lib/utils"
 
 type DiffViewProps = DiffViewOptions & {
@@ -175,17 +176,19 @@ function Viewport({
 }) {
   const snapshot = useSyncExternalStore(api.subscribe, api.snapshot, api.snapshot)
   const isEmpty = snapshot.doc.rows.length === 0
-  return usePart(
+  const viewport = usePart(
     diffView,
     "viewport",
     {},
     {
       dir: "ltr",
+      // A UI SDK part keeps its own data-slot, so the element the scroll area renders takes the diff's back.
+      render: <ScrollAreaViewport render={(part) => <div {...part} data-slot="diff-view-viewport" />} />,
       className: cn(
         // oxlint-disable-next-line shadcn/no-arbitrary-values -- a tab is four columns, as the unwrapped width counts it
-        "relative min-h-0 overflow-auto font-mono text-body-sm [tab-size:4]",
+        "relative h-auto min-h-0 flex-1 font-mono text-body-sm [tab-size:4]",
         // Size containment keeps a filled pane's layout to itself; a content-sized one has to measure its rows.
-        height === "fill" ? "flex-1 contain-strict" : "contain-content",
+        height === "fill" ? "contain-strict" : "contain-content",
         snapshot.wrap ? "whitespace-pre-wrap wrap-anywhere" : "whitespace-pre",
       ),
       children: isEmpty ? (
@@ -208,6 +211,14 @@ function Viewport({
         </div>
       ),
     },
+  )
+  return (
+    <ScrollArea className={cn("flex min-h-0 flex-col", height === "fill" && "flex-1")}>
+      {viewport}
+      <ScrollAreaScrollbar data-agent-hidden="" />
+      <ScrollAreaScrollbar orientation="horizontal" data-agent-hidden="" />
+      <ScrollAreaCorner />
+    </ScrollArea>
   )
 }
 

@@ -10,11 +10,12 @@ import {
   DialogTrigger as DialogTriggerPrimitive,
   createDialogController,
 } from "@ui-sdk/react/dialog"
-import { renderElement, type PartProps } from "@ui-sdk/react/primitive"
+import { mergeProps, renderElement, type PartProps } from "@ui-sdk/react/primitive"
 import { cva, type VariantProps } from "class-variance-authority"
 import { useCallback, useRef, type ComponentProps, type ReactNode, type Ref, type RefObject } from "react"
 
 import { buttonVariants, type ButtonLookProps } from "@/components/ui/button"
+import { ScrollArea, ScrollAreaScrollbar, ScrollAreaViewport } from "@/components/ui/scroll-area"
 import { ControlTooltip } from "@/components/ui/tooltip"
 import {
   focusedElement,
@@ -189,20 +190,29 @@ function DialogHeader({ className, render, ...props }: PartProps<"div">) {
 /**
  * The part that scrolls, so the header and footer around it stay in view. It is positioned so the visually hidden
  * inputs inside Select, Checkbox and other controls are clipped by it, instead of overflowing the dialog and scrolling
- * the header away when a field takes focus.
+ * the header away when a field takes focus. Its scroll area reaches past the content's padding to its edges; a content
+ * without padding sets `data-dialog-flush`, and the body takes no padding of its own either.
  */
 function DialogBody({ className, render, ...props }: PartProps<"div">) {
-  return renderElement(
-    "div",
-    {
-      "data-slot": "dialog-body",
-      className: cn(
-        "relative -mx-inset-surface flex min-h-0 min-w-0 flex-1 flex-col gap-group overflow-y-auto overscroll-contain px-inset-surface",
-        className,
-      ),
-      ...props,
-    },
-    render,
+  return (
+    <ScrollArea className="-mx-inset-surface flex min-h-0 min-w-0 flex-1 flex-col in-data-dialog-flush:mx-0">
+      <ScrollAreaViewport
+        render={(viewport) =>
+          renderElement(
+            "div",
+            mergeProps(viewport, props, {
+              "data-slot": "dialog-body",
+              className: cn(
+                "relative flex h-auto min-h-0 min-w-0 flex-1 flex-col gap-group overscroll-contain px-inset-surface in-data-dialog-flush:px-0",
+                className,
+              ),
+            }),
+            render,
+          )
+        }
+      />
+      <ScrollAreaScrollbar data-agent-hidden="" />
+    </ScrollArea>
   )
 }
 

@@ -1,5 +1,6 @@
 "use client"
 
+import { mergeProps } from "@ui-sdk/react/primitive"
 import { useState, type ComponentProps, type ReactNode } from "react"
 import { XIcon } from "lucide-react"
 
@@ -8,6 +9,7 @@ import { cn } from "@/lib/utils"
 import { agentTaskBoardLabels } from "@/components/ui/agent-task-labels"
 import { Dialog, DialogBackdrop, DialogBody, DialogClose, DialogContent, DialogTitle } from "@/components/ui/dialog"
 import { Drawer, DrawerBackdrop, DrawerClose, DrawerContent, DrawerTitle } from "@/components/ui/drawer"
+import { ScrollArea, ScrollAreaScrollbar, ScrollAreaViewport } from "@/components/ui/scroll-area"
 import { TaskDetailContent, type TaskDetailContentProps } from "@/components/ui/task-detail-content"
 import type { CloseReason } from "@/components/ui/task-detail-panel"
 
@@ -48,7 +50,19 @@ const parts = {
 }
 
 function DrawerBody({ className, ...props }: ComponentProps<"div">) {
-  return <div className={cn("flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain", className)} {...props} />
+  return (
+    <ScrollArea className="flex min-h-0 flex-1 flex-col">
+      <ScrollAreaViewport
+        render={(viewport) => (
+          <div
+            {...mergeProps(viewport, props)}
+            className={cn(viewport.className, "flex h-auto min-h-0 flex-1 flex-col overscroll-contain", className)}
+          />
+        )}
+      />
+      <ScrollAreaScrollbar data-agent-hidden="" />
+    </ScrollArea>
+  )
 }
 
 const shapes = {
@@ -89,6 +103,7 @@ function TaskDetailDialog({
       <Backdrop />
       <Content
         data-task-detail={presentation}
+        data-dialog-flush=""
         data-task-id={current?.id}
         initialFocus="content"
         finalFocus={finalFocus}
@@ -111,7 +126,7 @@ function TaskDetailDialog({
               </div>
               {renderHeader?.(current)}
             </div>
-            <Body className="@container/task-detail mx-0 gap-section p-inset-surface">
+            <Body className="@container/task-detail gap-section p-inset-surface">
               {renderBeforeBody?.(current)}
               <TaskDetailContent
                 task={current}

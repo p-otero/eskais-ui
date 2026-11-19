@@ -7,6 +7,7 @@ import { ArrowDownIcon } from "lucide-react"
 import { buttonVariants } from "@/components/ui/button"
 import { conversation, type ConversationOptions } from "@/components/ui/conversation-primitive"
 import { RelativeTime } from "@/components/ui/relative-time"
+import { ScrollArea, ScrollAreaScrollbar, ScrollAreaViewport } from "@/components/ui/scroll-area"
 import type { Instant } from "@/lib/time"
 import { cn, cnState } from "@/lib/utils"
 
@@ -62,13 +63,24 @@ function ConversationRoot({ initial, threshold, hasOlder, onLoadOlder, className
 
 function ConversationLog({ className, ...props }: ComponentProps<typeof Parts.Log>) {
   return (
-    <Parts.Log
-      className={cnState(
-        "flex min-h-0 flex-1 flex-col gap-group overflow-y-auto overscroll-contain p-inset-surface outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset",
-        className,
-      )}
-      {...props}
-    />
+    <ScrollArea className="flex min-h-0 flex-1 flex-col">
+      <ScrollAreaViewport
+        render={(viewport) => (
+          <Parts.Log
+            {...viewport}
+            {...props}
+            className={cnState(
+              cn(
+                viewport.className,
+                "flex h-auto min-h-0 flex-1 flex-col gap-group overscroll-contain p-inset-surface",
+              ),
+              className,
+            )}
+          />
+        )}
+      />
+      <ScrollAreaScrollbar data-agent-hidden="" />
+    </ScrollArea>
   )
 }
 

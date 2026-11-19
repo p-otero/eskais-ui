@@ -159,11 +159,13 @@ describe("TextDiff", () => {
     const root = () => container.querySelector<HTMLElement>('[data-slot="diff-view"]')!
     const viewport = () => container.querySelector<HTMLElement>('[data-slot="diff-view-viewport"]')!
     expect(root().className).toContain("max-h-[var(--diff-max-height,40rem)]")
-    expect(viewport().className).not.toContain("flex-1")
+    expect(viewport().parentElement?.className).not.toContain("flex-1")
+    expect(viewport().className).not.toContain("contain-strict")
     rerender(<TextDiff oldText={before} newText={after} height="fill" />)
     await settle()
     expect(root().className).not.toContain("max-h-")
-    expect(viewport().className).toContain("flex-1")
+    expect(viewport().parentElement?.className).toContain("flex-1")
+    expect(viewport().className).toContain("contain-strict")
   })
 
   test("identical texts show the empty state", async () => {

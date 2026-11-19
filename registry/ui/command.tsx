@@ -24,7 +24,8 @@ import { SearchIcon } from "lucide-react"
 
 import { isHashRoute, useFastLink } from "@/components/ui/fast-link"
 import { Kbd } from "@/components/ui/kbd"
-import { isPlainClick } from "@/components/ui/link-primitive"
+import { ScrollArea, ScrollAreaScrollbar, ScrollAreaViewport } from "@/components/ui/scroll-area"
+import { isModifiedLinkPress, isPlainClick } from "@/components/ui/link-primitive"
 import {
   COMMAND_VIRTUALIZE_THRESHOLD,
   createCommandHighlight,
@@ -57,17 +58,6 @@ function escapeClosesHost(host: CommandHost | null, details: { reason: string; e
 }
 
 type CommandProps = ComponentProps<typeof CommandPrimitive>
-
-// A modified click on a link command stays native (a new tab), so CommandLinkItem can't cancel it, and UI SDK then
-// runs the command's onAction with that click. A link command never runs onAction.
-function isModifiedLinkPress(event: Event | undefined) {
-  return (
-    event instanceof MouseEvent &&
-    !isPlainClick(event) &&
-    event.target instanceof Element &&
-    event.target.closest("a[href]") !== null
-  )
-}
 
 const noPages: string[] = []
 
@@ -140,6 +130,8 @@ function Command({
           onPagesChange?.(pages, details)
           if (!details.canceled) setOwnPages(pages)
         }}
+        // A modified click on a link command stays native (a new tab), so CommandLinkItem can't cancel it, and UI SDK
+        // then runs the command's onAction with that click. A link command never runs onAction.
         onAction={(value, details) => (isModifiedLinkPress(details.event) ? undefined : onAction?.(value, details))}
         onValueChange={(value, details) => {
           highlight.set(details.index, details.reason)
@@ -171,13 +163,20 @@ function CommandInput({ className, ...props }: ComponentProps<typeof CommandInpu
 
 function CommandList({ className, ...props }: ComponentProps<typeof CommandListPrimitive>) {
   return (
-    <CommandListPrimitive
-      className={cnState(
-        "max-h-80 scroll-py-inline overflow-x-hidden overflow-y-auto overscroll-contain p-inline",
-        className,
-      )}
-      {...props}
-    />
+    <ScrollArea className="flex min-h-0 flex-col">
+      <ScrollAreaViewport
+        render={(viewport) => (
+          <CommandListPrimitive
+            {...mergeProps(viewport, props)}
+            className={cnState(
+              cn(viewport.className, "h-auto max-h-80 min-h-0 flex-1 scroll-py-inline overscroll-contain p-inline"),
+              className,
+            )}
+          />
+        )}
+      />
+      <ScrollAreaScrollbar data-agent-hidden="" />
+    </ScrollArea>
   )
 }
 

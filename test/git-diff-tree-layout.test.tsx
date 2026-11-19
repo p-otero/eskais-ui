@@ -8,6 +8,10 @@ import { afterAll, beforeAll, expect, test, vi } from "vitest"
 
 import { GitDiff } from "@/components/ui/git-diff"
 
+// The tree scrolls in a scroll area, which takes its width and cap.
+const treeBox = () =>
+  screen.getByRole("tree", { name: "Changed files" }).closest<HTMLElement>("[data-slot=scroll-area]")!
+
 const patch = readFileSync(join(import.meta.dirname, "fixtures", "diff", "real.patch"), "utf8")
 
 const staged = `diff --git a/src/onboarding/step-indicator.tsx b/src/onboarding/step-indicator.tsx
@@ -59,7 +63,7 @@ const settle = () => act(() => new Promise((resolve) => setTimeout(resolve, 10))
 test("the file tree is --diff-tree-width wide, 13rem by default", async () => {
   render(<GitDiff aria-label="Review" patch={patch} />)
   await settle()
-  expect(screen.getByRole("tree", { name: "Changed files" }).className).toContain("w-[var(--diff-tree-width,13rem)]")
+  expect(treeBox().className).toContain("w-[var(--diff-tree-width,13rem)]")
 })
 
 test("a collapsible tree has a toggle at the start of the toolbar", async () => {
@@ -135,8 +139,6 @@ test('height="auto" keeps its height in a flex column and caps the tree like the
   const root = container.querySelector("[data-slot=git-diff]") as HTMLElement
   expect(root.className).toContain("shrink-0")
   expect(root.className).not.toContain("min-h-0")
-  expect(screen.getByRole("tree", { name: "Changed files" }).className).toContain(
-    "max-h-[var(--diff-max-height,40rem)]",
-  )
+  expect(treeBox().className).toContain("max-h-[var(--diff-max-height,40rem)]")
   expect(screen.getByRole("group", { name: "Review" }).className).toContain("max-h-[var(--diff-max-height,40rem)]")
 })

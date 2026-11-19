@@ -47,7 +47,7 @@ function CodeTabs({
       onValueChange={(next) => next !== null && onValueChange?.(next)}
       className={cn("min-w-0 gap-0 overflow-hidden rounded-surface border bg-muted", className)}
     >
-      <div className="flex min-w-0 overflow-x-auto border-b p-inline">
+      <div className="flex min-w-0 border-b p-inline">
         <TabsList aria-label={label} className="bg-transparent p-0">
           <TabsIndicator />
           {files.map((file) => (
