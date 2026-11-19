@@ -28,6 +28,7 @@ import { TableCheck } from "./checks/table-check"
 import { ServerDataCheck } from "./checks/server-data-check"
 import { TreeFocusCheck } from "./checks/tree-focus-check"
 import { GitViewCheck } from "./checks/git-view-check"
+import { GitWorkspaceDemo, gitWorkspaceDemos, isGitWorkspaceDemo } from "./sections/git-workspace/demos"
 import { AgentWorkspace } from "./sections/agent-workspace"
 import { PerfPage } from "./perf/perf-page"
 import { DocumentWorkspacePage } from "./sections/document-workspace"
@@ -44,7 +45,7 @@ const root = document.getElementById("root")
 if (!root) throw new Error("Missing #root element")
 
 // ?demo=page, site, shell, inbox, list-bench, shell-block, master-detail, dashboard-grid, settings-page,
-// document-workspace, agent-workspace and commit-history render one demo alone; ?demo=<name>-check pages are the
+// document-workspace, agent-workspace, commit-history and the git views (sections/git-workspace) render one demo alone; ?demo=<name>-check pages are the
 // fixtures of tooling/<name>-check.mjs (shell-check's: card-header, description-list, field-placement, gauge,
 // mobile-nav, palette-reopen, side-panel, table, master-detail, settings-page); *-bench and ?demo=perf pages are the benchmarks'.
 const params = new URLSearchParams(location.search)
@@ -87,6 +88,7 @@ const standalone = new Set([
   "sortable-check",
   "tree-focus-check",
   "git-view-check",
+  ...Object.keys(gitWorkspaceDemos),
 ])
 
 function Demo() {
@@ -102,6 +104,7 @@ function Demo() {
   if (demo === "sortable-check") return <SortableCheck />
   if (demo === "tree-focus-check") return <TreeFocusCheck />
   if (demo === "git-view-check") return <GitViewCheck />
+  if (isGitWorkspaceDemo(demo)) return <GitWorkspaceDemo name={demo} />
   if (demo === "card-header-check") return <CardHeaderCheck />
   if (demo === "palette-reopen-check") return <PaletteReopenCheck />
   if (demo === "field-placement-check") return <FieldPlacementCheck />

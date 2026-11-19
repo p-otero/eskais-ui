@@ -26,6 +26,8 @@ const pages = [
   "docs/server-data/",
   "docs/components/server-data-table/",
   "docs/components/filter-panel/",
+  "docs/git-views/",
+  "docs/components/repository-select/",
 ]
 const viewports = [
   { width: 1440, height: 900 },

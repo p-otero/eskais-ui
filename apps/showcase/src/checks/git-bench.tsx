@@ -1,6 +1,6 @@
 import type { CSSProperties } from "react"
 
-import { CommitHistory } from "@/components/ui/commit-history"
+import { CommitHistory, WORKING_TREE } from "@/components/ui/commit-history"
 import { GitTree } from "@/components/ui/git-tree"
 import type { Commit } from "@/lib/commit-graph"
 import type { GitTreeFile } from "@/lib/git-status"
@@ -34,6 +34,8 @@ const merges =
     : []
 const files: GitTreeFile[] = demo === "git-tree-bench" ? benchFiles(Number(params.get("files") ?? 100_000)) : []
 const findable = params.get("findable") === "true"
+// The master-detail setup: a selected row, the working tree on top and the commits above the upstream marked.
+const selecting = params.get("select") === "true"
 if (demo === "commit-bench" || demo === "git-tree-bench") globalThis.gitBench = { start: performance.now() }
 
 // The bench page is the scroller's whole height, past the components' default caps.
@@ -53,7 +55,7 @@ function markMounted(node: HTMLElement | null) {
 }
 
 /**
- * ?demo=commit-bench&commits=50000&expanded=all (or &branches=200 for the branches view) and ?demo=git-tree-bench&files=100000, with &findable=true for the
+ * ?demo=commit-bench&commits=50000&expanded=all (&select=true: a selection, a working-tree row, an upstream) (or &branches=200 for the branches view) and ?demo=git-tree-bench&files=100000, with &findable=true for the
  * find-in-page layers: tooling/git-bench.mjs's.
  */
 function GitBench({ kind }: { kind: "commits" | "files" }) {
@@ -71,6 +73,13 @@ function GitBench({ kind }: { kind: "commits" | "files" }) {
           findable={findable}
           view={branched ? "branches" : "trail"}
           branches={branched?.branches}
+          {...(selecting
+            ? {
+                defaultSelected: WORKING_TREE,
+                workingTree: { staged: 2, unstaged: 3 },
+                upstreamHead: commits[3]?.id,
+              }
+            : {})}
         />
       ) : (
         <GitTree
