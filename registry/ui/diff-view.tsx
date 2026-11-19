@@ -8,7 +8,7 @@ import { DiffFileHeader, DiffNoticeRow } from "@/components/ui/diff-file-header"
 import { diffLabels, type DiffLabels } from "@/components/ui/diff-labels"
 import type { DiffSnapshot } from "@/components/ui/diff-view-document"
 import { diffView, type DiffViewOptions } from "@/components/ui/diff-view-primitive"
-import { DiffViewRow, type DiffViewApi } from "@/components/ui/diff-view-rows"
+import { DiffViewRow, loneSide, type DiffViewApi } from "@/components/ui/diff-view-rows"
 import { cn } from "@/lib/utils"
 
 type DiffViewProps = DiffViewOptions & {
@@ -107,7 +107,7 @@ function FileGroup({ api, snapshot, fileIndex, items, labels, findable }: FileGr
                 path={file.path}
                 label={file.path ? labels.changes(file.path) : labels.diff}
                 count={end - firstGridRow}
-                cols={split ? 2 : 1}
+                cols={split && loneSide(file) === null ? 2 : 1}
               >
                 {rows}
               </DiffGrid>

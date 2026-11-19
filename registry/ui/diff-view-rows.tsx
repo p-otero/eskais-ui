@@ -190,6 +190,16 @@ function LineCell({ api, file, rowIndex, rowKey, col, line, partner, labels, fin
   )
 }
 
+/**
+ * The one side an added or deleted file has in split layout, 1 (new) or 0 (old), or null when it has both. That
+ * side takes the whole width: an empty half would push the code against the far edge and scroll it sideways.
+ */
+function loneSide(file: DiffViewFile): 0 | 1 | null {
+  if (file.diff.status === "added") return 1
+  if (file.diff.status === "deleted") return 0
+  return null
+}
+
 const range = (start: number, count: number) => (count === 1 ? String(start) : `${String(start)},${String(count)}`)
 
 function hunkHeader(file: DiffViewFile, gap: DiffGap) {
@@ -326,21 +336,24 @@ const DiffViewRow = memo(function DiffViewRow({
     )
   } else if (row.kind === "pair") {
     const changed = row.left !== row.right
-    cells = (["old", "new"] as const).map((side, col) => (
-      <LineCell
-        key={side}
-        api={api}
-        file={file}
-        rowIndex={index}
-        rowKey={row.key}
-        col={col}
-        line={col === 0 ? row.left : row.right}
-        partner={changed ? (col === 0 ? row.right : row.left) : undefined}
-        labels={labels}
-        findable={findable}
-        split
-      />
-    ))
+    const lone = loneSide(file)
+    cells = (["old", "new"] as const).map((side, col) =>
+      lone !== null && lone !== col ? null : (
+        <LineCell
+          key={side}
+          api={api}
+          file={file}
+          rowIndex={index}
+          rowKey={row.key}
+          col={col}
+          line={col === 0 ? row.left : row.right}
+          partner={changed ? (col === 0 ? row.right : row.left) : undefined}
+          labels={labels}
+          findable={findable}
+          split
+        />
+      ),
+    )
   }
   return usePart(
     diffView,
@@ -350,11 +363,11 @@ const DiffViewRow = memo(function DiffViewRow({
       ref: measure,
       style,
       "aria-rowindex": position,
-      className: cn("absolute inset-x-0 grid", split ? "grid-cols-2" : "grid-cols-1"),
+      className: cn("absolute inset-x-0 grid", split && loneSide(file) === null ? "grid-cols-2" : "grid-cols-1"),
       children: cells,
     },
   )
 })
 
-export { DiffViewRow, hunkHeader }
+export { DiffViewRow, hunkHeader, loneSide }
 export type { DiffViewApi }

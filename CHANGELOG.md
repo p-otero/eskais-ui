@@ -18,6 +18,7 @@ Versions follow [semver](https://semver.org). Before 1.0, a minor version can br
 
 ### Changed
 
+- `DiffView` (so `GitDiff` and `TextDiff`) in split layout: an added or deleted file's one side spans the whole row, as one column. It used to keep an empty grey old half, which at 1920px pushed the new side's code against the right edge and scrolled long lines sideways. `node tooling/git-view-check.mjs` checks it at 1440px and 1920px.
 - `GitDiff`'s file tree is 13rem wide (it was 16rem), from `--diff-tree-width`, so the diff keeps room beside a 34rem history at 1440px.
 
 ## 0.2.3 (2026-11-19)

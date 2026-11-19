@@ -1,7 +1,7 @@
 import { GitDiff } from "@/components/ui/git-diff"
 
 // ?demo=git-view-check: the fixture of tooling/git-view-check.mjs. A GitDiff beside a 34rem list (tree width),
-// GitDiff height="auto" inside a scrolling body (no scroll trap).
+// GitDiff height="auto" inside a scrolling body (no scroll trap), and an added file in split view (column sizing).
 const file = (path: string, lines: number, kind: "added" | "modified") => {
   const body = Array.from({ length: lines }, (_, index) => `export const value${String(index)} = ${String(index)}`)
   if (kind === "added") {
@@ -14,6 +14,7 @@ const shortPatch = file("src/short.ts", 3, "modified") + file("src/other.ts", 3,
 const longPatch = Array.from({ length: 6 }, (_, index) => file(`src/long/file-${String(index)}.ts`, 30, "added")).join(
   "",
 )
+const addedPatch = file("src/rate-limit/token-bucket.ts", 33, "added")
 
 function GitViewCheck() {
   return (
@@ -40,6 +41,15 @@ function GitViewCheck() {
         </div>
         <p className="h-200 shrink-0">Acceptance criteria below the changes.</p>
       </div>
+      <section aria-label="Split" data-testid="split" className="flex h-96 min-w-0">
+        <GitDiff
+          aria-label="Added file in split"
+          patch={addedPatch}
+          defaultLayout="split"
+          fileTree={false}
+          className="min-w-0 flex-1"
+        />
+      </section>
     </main>
   )
 }
