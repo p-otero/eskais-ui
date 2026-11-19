@@ -1,34 +1,38 @@
 #!/usr/bin/env bun
 import { existsSync, rmSync } from "node:fs"
-import { join } from "node:path"
+import { join, resolve } from "node:path"
 
 import { buildMockup, summary, type Scheme } from "./build"
 import { DEFAULT_MAX_PROBLEMS, formatProblems } from "./checks"
+import { galleryHeadline, galleryJson, galleryLines, screenshotSummary, writeGallery } from "./gallery"
 import { componentDetail, detailJson, detailText, indexJson, indexText } from "./inspect"
-import { displayPath, EnvironmentError, findProject, mockupDirectory } from "./project"
+import { displayPath, EnvironmentError, findProject, mockupDirectory, type MockupProject } from "./project"
 import { registryListJson, registryListText } from "./registry"
 import { sdkDetail, sdkDetailJson, sdkDetailText, sdkIndexJson, sdkIndexText } from "./sdk"
 import { partsSummary, validateMockup } from "./validate"
 
-const COMMANDS = new Set(["inspect", "build", "validate", "clean"])
+const COMMANDS = new Set(["inspect", "build", "validate", "gallery", "clean"])
 const VALUE_FLAGS = new Set(["--project", "--css", "--theme", "--scheme", "--out", "--max"])
 
 const USAGE = `eskais-mockup: offline HTML mockups of a project's own components
 
   bun <path>/src/cli.ts inspect [Names…] [--registry | --sdk] [--json] [--project <dir>] [--css <file>]
-  bun <path>/src/cli.ts build <name> [--theme <name>] [--scheme light|dark|system] [--out <file>]
-  bun <path>/src/cli.ts validate <name>
+  bun <path>/src/cli.ts build <name> [--theme <name>] [--scheme light|dark|system] [--out <file>] [--gallery]
+  bun <path>/src/cli.ts validate <name> [--gallery]
+  bun <path>/src/cli.ts gallery [dir] [--json]
   bun <path>/src/cli.ts clean [name]
 
 inspect lists the project's components; --registry lists the registry items it has not installed,
 --sdk the @ui-sdk subpaths it installs, and --sdk <name> one primitive's parts and props.
 A mockup lives in <project>/.mockups/<name>/ with screen.tsx, fixtures.ts, parts/ and an optional
-../wrapper.tsx. Exit codes: 0 ok, 1 problems to fix, 2 environment or usage error.`
+../wrapper.tsx. Build each state and theme as out-<state>-<theme>.html, capture each as a PNG with the
+same name, and gallery writes <dir>/gallery.html (default .mockups) with every screenshot. Exit codes: 0 ok, 1 problems to fix, 2 environment or usage error.`
 
 type Options = {
-  command: "inspect" | "build" | "validate" | "clean"
+  command: "inspect" | "build" | "validate" | "gallery" | "clean"
   names: string[]
   json: boolean
+  gallery: boolean
   registry: boolean
   sdk: boolean
   max: number
@@ -43,12 +47,13 @@ function parseArgs(argv: string[]): Options | null {
   const [command, ...rest] = argv
   if (command === undefined || command === "help" || command === "--help" || command === "-h") return null
   if (!COMMANDS.has(command)) {
-    throw new EnvironmentError(`unknown command "${command}"; use inspect, build, validate or clean`)
+    throw new EnvironmentError(`unknown command "${command}"; use inspect, build, validate, gallery or clean`)
   }
   const options: Options = {
     command: command as Options["command"],
     names: [],
     json: false,
+    gallery: false,
     registry: false,
     sdk: false,
     max: DEFAULT_MAX_PROBLEMS,
@@ -61,6 +66,10 @@ function parseArgs(argv: string[]): Options | null {
     const inline = separator === -1 ? undefined : argument.slice(separator + 1)
     if (flag === "--json") {
       options.json = true
+      continue
+    }
+    if (flag === "--gallery") {
+      options.gallery = true
       continue
     }
     if (flag === "--registry" || flag === "--sdk") {
@@ -109,7 +118,29 @@ function mockupName(options: Options): string {
   return name
 }
 
+function runGallery(options: Options, cwd: string): number {
+  if (options.names.length > 1) throw new EnvironmentError("gallery takes one folder")
+  const named = options.names[0]
+  const dir =
+    named === undefined
+      ? join(findProject({ cwd, project: options.project, css: options.css }).root, ".mockups")
+      : resolve(cwd, named)
+  const outcome = writeGallery(dir)
+  if (options.json) console.log(JSON.stringify(galleryJson(outcome, cwd), null, 2))
+  else for (const line of galleryLines(outcome, cwd)) console.log(line)
+  return outcome.path === null ? 1 : 0
+}
+
+function printGallery(project: MockupProject, cwd: string) {
+  const outcome = writeGallery(join(project.root, ".mockups"))
+  console.log(galleryHeadline(outcome, cwd))
+}
+
 async function run(options: Options, cwd: string): Promise<number> {
+  if (options.gallery && options.command !== "build" && options.command !== "validate") {
+    throw new EnvironmentError("--gallery works with build and validate; use the gallery command")
+  }
+  if (options.command === "gallery") return runGallery(options, cwd)
   const project = findProject({ cwd, project: options.project, css: options.css })
   if (options.command === "inspect") {
     if (options.registry && options.sdk) {
@@ -184,11 +215,15 @@ async function run(options: Options, cwd: string): Promise<number> {
       return 1
     }
     console.log(summary(outcome, cwd))
+    if (options.gallery) printGallery(project, cwd)
     return 0
   }
   const outcome = await validateMockup(project, settings)
   for (const warning of outcome.warnings) console.error(`warning: ${warning}`)
-  const summaryLines = partsSummary(outcome.build.manifest)
+  const summaryLines = [
+    ...partsSummary(outcome.build.manifest),
+    screenshotSummary(mockupDirectory(project, settings.name)),
+  ]
   if (outcome.problems.length > 0) {
     for (const line of formatProblems(outcome.problems, options.max)) console.log(line)
     for (const line of summaryLines) console.log(line)
@@ -196,6 +231,7 @@ async function run(options: Options, cwd: string): Promise<number> {
   }
   console.log(`ok ${summary(outcome.build, cwd)}`)
   for (const line of summaryLines) console.log(line)
+  if (options.gallery) printGallery(project, cwd)
   return 0
 }
 
