@@ -10,6 +10,7 @@ import type { TaskLink, TaskStatus, TaskView } from "@/lib/agent-task-types"
 
 import { GENERATED_AT, generateTasks, sampleStages, sampleTasks } from "../../../../test/fixtures/agent-tasks"
 import { Section } from "../section"
+import { TaskDialogSection } from "./task-dialog"
 
 const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
 const PROJECTS = ["docs", "app"] as const
@@ -84,82 +85,85 @@ function AgentTaskBoardSection() {
   }
 
   return (
-    <Section
-      title="AgentTaskBoard"
-      description="The full board for agent tasks: filters and stages, board, table or backlog (each row with a host action), summary, collapsible columns, attachments, and the detail as a dialog, drawer or side panel, and cards that move between columns by their handle. Live mode decides proposals; snapshot mode is read-only."
-    >
-      <div className="flex w-full flex-col gap-4">
-        <div className="flex flex-wrap items-end gap-4">
-          <Field>
-            <FieldLabel>Board mode</FieldLabel>
-            <SegmentedControl value={mode} onValueChange={(next) => next && setMode(next)}>
-              <SegmentedControlIndicator />
-              <SegmentedControlItem value="live">Live</SegmentedControlItem>
-              <SegmentedControlItem value="snapshot">Snapshot</SegmentedControlItem>
-            </SegmentedControl>
-          </Field>
-          <Field>
-            <FieldLabel>Task detail</FieldLabel>
-            <SegmentedControl value={detail} onValueChange={(next) => next && setDetail(next)}>
-              <SegmentedControlIndicator />
-              <SegmentedControlItem value="dialog">Dialog</SegmentedControlItem>
-              <SegmentedControlItem value="drawer">Drawer</SegmentedControlItem>
-              <SegmentedControlItem value="side">Side</SegmentedControlItem>
-            </SegmentedControl>
-          </Field>
-          <Field>
-            <FieldLabel>Data</FieldLabel>
-            <SegmentedControl
-              value={data}
-              onValueChange={(next) => {
-                if (!next) return
-                setData(next)
-                setTasks(withProjects(next === "large" ? generateTasks(200, 30) : sampleTasks))
-              }}
-            >
-              <SegmentedControlIndicator />
-              <SegmentedControlItem value="sample">Sample</SegmentedControlItem>
-              <SegmentedControlItem value="large">200 tasks</SegmentedControlItem>
-            </SegmentedControl>
-          </Field>
-          <Field>
-            <FieldLabel>Project picker</FieldLabel>
-            <SegmentedControl value={projectPicker} onValueChange={(next) => next && setProjectPicker(next)}>
-              <SegmentedControlIndicator />
-              <SegmentedControlItem value="board">In the board</SegmentedControlItem>
-              <SegmentedControlItem value="host">In the host</SegmentedControlItem>
-            </SegmentedControl>
-          </Field>
-          {projectPicker === "host" && (
+    <>
+      <Section
+        title="AgentTaskBoard"
+        description="The full board for agent tasks: filters and stages, board, table or backlog (each row with a host action), summary, collapsible columns, attachments, and the detail as a dialog, drawer or side panel, and cards that move between columns by their handle. Live mode decides proposals; snapshot mode is read-only."
+      >
+        <div className="flex w-full flex-col gap-4">
+          <div className="flex flex-wrap items-end gap-4">
             <Field>
-              <FieldLabel>Host project</FieldLabel>
-              <SegmentedControl
-                value={filters.project ?? "all"}
-                onValueChange={(next) =>
-                  next && setFilters((current) => ({ ...current, project: next === "all" ? undefined : next }))
-                }
-              >
+              <FieldLabel>Board mode</FieldLabel>
+              <SegmentedControl value={mode} onValueChange={(next) => next && setMode(next)}>
                 <SegmentedControlIndicator />
-                <SegmentedControlItem value="all">All</SegmentedControlItem>
-                {PROJECTS.map((project) => (
-                  <SegmentedControlItem key={project} value={project}>
-                    {project}
-                  </SegmentedControlItem>
-                ))}
+                <SegmentedControlItem value="live">Live</SegmentedControlItem>
+                <SegmentedControlItem value="snapshot">Snapshot</SegmentedControlItem>
               </SegmentedControl>
             </Field>
+            <Field>
+              <FieldLabel>Task detail</FieldLabel>
+              <SegmentedControl value={detail} onValueChange={(next) => next && setDetail(next)}>
+                <SegmentedControlIndicator />
+                <SegmentedControlItem value="dialog">Dialog</SegmentedControlItem>
+                <SegmentedControlItem value="drawer">Drawer</SegmentedControlItem>
+                <SegmentedControlItem value="side">Side</SegmentedControlItem>
+              </SegmentedControl>
+            </Field>
+            <Field>
+              <FieldLabel>Data</FieldLabel>
+              <SegmentedControl
+                value={data}
+                onValueChange={(next) => {
+                  if (!next) return
+                  setData(next)
+                  setTasks(withProjects(next === "large" ? generateTasks(200, 30) : sampleTasks))
+                }}
+              >
+                <SegmentedControlIndicator />
+                <SegmentedControlItem value="sample">Sample</SegmentedControlItem>
+                <SegmentedControlItem value="large">200 tasks</SegmentedControlItem>
+              </SegmentedControl>
+            </Field>
+            <Field>
+              <FieldLabel>Project picker</FieldLabel>
+              <SegmentedControl value={projectPicker} onValueChange={(next) => next && setProjectPicker(next)}>
+                <SegmentedControlIndicator />
+                <SegmentedControlItem value="board">In the board</SegmentedControlItem>
+                <SegmentedControlItem value="host">In the host</SegmentedControlItem>
+              </SegmentedControl>
+            </Field>
+            {projectPicker === "host" && (
+              <Field>
+                <FieldLabel>Host project</FieldLabel>
+                <SegmentedControl
+                  value={filters.project ?? "all"}
+                  onValueChange={(next) =>
+                    next && setFilters((current) => ({ ...current, project: next === "all" ? undefined : next }))
+                  }
+                >
+                  <SegmentedControlIndicator />
+                  <SegmentedControlItem value="all">All</SegmentedControlItem>
+                  {PROJECTS.map((project) => (
+                    <SegmentedControlItem key={project} value={project}>
+                      {project}
+                    </SegmentedControlItem>
+                  ))}
+                </SegmentedControl>
+              </Field>
+            )}
+            <p className="text-sm text-muted-foreground" aria-live="polite">
+              {log}
+            </p>
+          </div>
+          {mode === "live" ? (
+            <AgentTaskBoard {...shared} mode="live" />
+          ) : (
+            <AgentTaskBoard {...shared} mode="snapshot" generatedAt={GENERATED_AT} />
           )}
-          <p className="text-sm text-muted-foreground" aria-live="polite">
-            {log}
-          </p>
         </div>
-        {mode === "live" ? (
-          <AgentTaskBoard {...shared} mode="live" />
-        ) : (
-          <AgentTaskBoard {...shared} mode="snapshot" generatedAt={GENERATED_AT} />
-        )}
-      </div>
-    </Section>
+      </Section>
+      <TaskDialogSection />
+    </>
   )
 }
 

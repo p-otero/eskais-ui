@@ -1,6 +1,6 @@
-// Drives ?demo=popover-check in Chrome: an openOnHover popover opens after its delay without taking focus, stays open
-// while the pointer crosses into it, closes once the pointer leaves, and still opens with Enter and a tap; a popover
-// open from the start stays open while its dialog takes initial focus, and closes as usual once focus leaves it.
+// Drives ?demo=popover-check in Chrome: hover opening (delay, crossing into it, closing on leave, Enter and a tap
+// still open it), a defaultOpen popover staying open while its dialog takes initial focus, and ?demo=task-dialog
+// opening with its header's AcceptancePopover open.
 // Usage: node tooling/popover-check.mjs (after `bun run build:showcase`)
 import { withShowcase } from "./showcase-browser.mjs"
 
@@ -71,6 +71,14 @@ await withShowcase(async (page) => {
   check("defaultOpen in a dialog: focus leaving it then closes it", !(await popover.isVisible()))
   await page.keyboard.press("Escape")
   await task.waitFor({ state: "hidden" })
+
+  await page.goto(`${new URL(page.url()).origin}/?demo=task-dialog&task=T-121&acceptance=1`)
+  await page.getByRole("dialog", { name: /Back off webhook retries/ }).waitFor()
+  await page.waitForTimeout(400)
+  check(
+    "task dialog: AcceptancePopover open from the start shows its criteria",
+    await page.getByRole("dialog", { name: "Acceptance" }).isVisible(),
+  )
 })
 
 if (failures.length > 0) {

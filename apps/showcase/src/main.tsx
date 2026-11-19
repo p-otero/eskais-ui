@@ -35,6 +35,7 @@ import { PerfPage } from "./perf/perf-page"
 import { DocumentWorkspacePage } from "./sections/document-workspace"
 import { CommitBranchesDemo, CommitTrailDemo } from "./sections/git"
 import { InboxDemo } from "./sections/inbox"
+import { TaskDialogPage } from "./sections/task-dialog"
 import { DashboardGridDemo, MasterDetailDemo, SettingsPageDemo } from "./sections/layout-blocks"
 import { demoStatuses, PageDemo, type DemoStatus } from "./sections/page"
 import { ShellBlockDemo } from "./shell/shell-block-demo"
@@ -69,6 +70,7 @@ const standalone = new Set([
   "calendar-check",
   "press-check",
   "popover-check",
+  "task-dialog",
   "side-panel-check",
   "table-check",
   "description-list-check",
@@ -118,6 +120,7 @@ function Demo() {
   if (demo === "calendar-check") return <CalendarCheck />
   if (demo === "press-check") return <PressCheck />
   if (demo === "popover-check") return <PopoverCheck />
+  if (demo === "task-dialog") return <TaskDialogPage params={params} />
   if (demo === "side-panel-check") return <SidePanelCheck />
   if (demo === "table-check") return <TableCheck />
   if (demo === "description-list-check") return <DescriptionListCheck />
