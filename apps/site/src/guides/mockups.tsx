@@ -4,6 +4,7 @@ import { A, Article, Code, DocTable, DocTitle, H2, H3, Ol, P, Pre, Ul } from "..
 import {
   agentPrompt,
   checkoutCommands,
+  galleryOutput,
   helloOutput,
   helloScreen,
   inspectRegistry,
@@ -15,6 +16,8 @@ import {
   levelThree,
   levelTwo,
   linkCommands,
+  presentCommands,
+  presentReply,
   quickstart,
   screen,
   validateOk,
@@ -83,8 +86,14 @@ export default function Mockups() {
           It runs <Code>validate</Code> until it prints <Code>ok</Code>, fixing each <Code>file:line:col</Code> line.
         </li>
         <li>
-          It opens <Code>out.html</Code> in the host's preview (it never reads the file) and reports the summary: what
-          to install, the parts it proposes, the UI SDK parts it used and why, and the gaps.
+          It builds a page per state and theme, captures each as a PNG (it never reads the HTML) and runs{" "}
+          <Code>gallery</Code>.
+        </li>
+        <li>
+          It <A to="/docs/mockups#present">presents every screen</A>: each screenshot as an image in its reply, with its{" "}
+          <Code>out-*.html</Code> path, a link to the gallery and a count that matches the one <Code>gallery</Code>{" "}
+          printed. Then it reports the summary: what to install, the parts it proposes, the UI SDK parts it used and
+          why, and the gaps.
         </li>
       </Ol>
       <P>
@@ -182,7 +191,11 @@ export default function Mockups() {
           ],
           [
             <Code key="c">validate name</Code>,
-            "Builds the page, checks the page and the sources, prints every problem and then the install, proposed, sdkParts and gaps summary.",
+            "Builds the page, checks the page and the sources, prints every problem and then the install, proposed, sdkParts, gaps and screenshots summary.",
+          ],
+          [
+            <Code key="c">gallery [dir]</Code>,
+            "Writes dir/gallery.html (.mockups by default) with every out-*.png screenshot, grouped by screen, state and theme and linked to its page, then lists them and prints the total. Exits 1 when there are none.",
           ],
           [<Code key="c">clean [name]</Code>, "Removes one mockup, or the whole .mockups folder without a name."],
         ]}
@@ -193,7 +206,12 @@ export default function Mockups() {
         rows={[
           [<Code key="f">--registry</Code>, "inspect", "Lists the registry items the project hasn't installed."],
           [<Code key="f">--sdk</Code>, "inspect", "Lists the installed UI SDK subpaths, or details the named ones."],
-          [<Code key="f">--json</Code>, "inspect", "Prints JSON instead of text."],
+          [<Code key="f">--json</Code>, "inspect, gallery", "Prints JSON instead of text."],
+          [
+            <Code key="f">--gallery</Code>,
+            "build, validate",
+            "Writes .mockups/gallery.html after a passing run and prints its path and count last.",
+          ],
           [<Code key="f">--project dir</Code>, "all", "The project folder, when it isn't the current one."],
           [<Code key="f">--css file</Code>, "all", "The stylesheet, when components.json doesn't name one."],
           [<Code key="f">--max n</Code>, "build, validate", "How many problems to print (20 by default)."],
@@ -272,9 +290,9 @@ export default function Mockups() {
       </Ol>
       <P>
         Each problem is one line, <Code>file:line:col rule message</Code>, so an agent can fix it without opening the
-        page. After the problems, four lines summarize what the screen needs: the items to install, the parts it
-        proposes, the UI SDK primitives it used and the gaps. Both runs below are real, on the Team screen above in the
-        quickstart's app:
+        page. After the problems, five lines summarize what the screen needs: the items to install, the parts it
+        proposes, the UI SDK primitives it used, the gaps and how many screenshots sit beside its pages. Both runs below
+        are real, on the Team screen above in the quickstart's app:
       </P>
       <Pre code={validateOk} language="plaintext" title="A screen that passes" />
       <Pre code={validateProblems} language="plaintext" title="A copy with four problems" />
@@ -282,6 +300,31 @@ export default function Mockups() {
         Never read <Code>out.html</Code> itself: it is hundreds of kilobytes of inlined JavaScript and CSS. Open it in a
         browser or the host's preview.
       </P>
+
+      <H2 id="present">Present every screen</H2>
+      <P>
+        A mockup is for looking at, so it isn't done until the person has seen every screen in every state and theme.
+        Build one page per state and theme, named <Code>out-&lt;state&gt;-&lt;theme&gt;.html</Code> in the mockup's
+        folder (the theme is the last segment: <Code>light</Code>, <Code>dark</Code>, <Code>system</Code> or a theme
+        name such as <Code>compact</Code>), and capture each as a PNG with the same name beside it, with any browser.
+        Then run <Code>gallery</Code>:
+      </P>
+      <Pre code={presentCommands} language="bash" />
+      <Pre code={galleryOutput} language="plaintext" title="gallery" />
+      <P>
+        <Code>gallery.html</Code> groups the screenshots by screen, then state, then theme, under headings, with alt
+        text such as <Code>team, empty state, dark theme</Code> and each image linked to its page. It is one file with
+        relative paths, lazy-loaded images, no script and no network: it opens from <Code>file://</Code>, and the{" "}
+        <Code>.mockups</Code> folder can be zipped and shared. With no screenshots, <Code>gallery</Code> writes nothing,
+        says so and exits <Code>1</Code>; a page with no PNG is named so it can be captured.
+      </P>
+      <P>
+        An agent with the <Code>eskais-mockup</Code> skill finishes every mockup task this way. It embeds every PNG in
+        its reply with its <Code>out-*.html</Code> path, links the gallery and checks that the number of images equals
+        the count <Code>gallery</Code> printed. It never only lists or describes a screen the person hasn't seen, and a
+        coordinator relaying a worker's mockups keeps the images too.
+      </P>
+      <Pre code={presentReply} language="md" title="The agent's reply" />
 
       <H2 id="why">Why mockups in TSX</H2>
       <P>

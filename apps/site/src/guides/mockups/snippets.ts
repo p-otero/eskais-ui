@@ -29,7 +29,8 @@ const helloOutput = `ok .mockups/hello/out.html  460 kB (282 kB js, 177 kB css, 
 install none
 proposed none
 sdkParts none
-gaps none`
+gaps none
+screenshots 0 (1 page; no screenshot: out.html)`
 
 const agentPrompt = `Make a mockup of a Team settings screen: the members with their role, a way to
 remove one, an Invite button, and a place to drop a team logo. Validate it and
@@ -162,7 +163,8 @@ ok .mockups/team/out.html  485 kB (305 kB js, 179 kB css, 75 kB fonts)
 install 2: badge, tone
 proposed 2: AvatarDrop (0 props), MemberRow (2 props)
 sdkParts 1: AvatarDrop ← @ui-sdk/react/file-input
-gaps 1: Button (a split button with a menu of roles)`
+gaps 1: Button (a split button with a menu of roles)
+screenshots 0 (1 page; no screenshot: out.html)`
 
 const validateProblems = [
   "$ bun ../eskais-ui/packages/mockup/src/cli.ts validate broken",
@@ -174,11 +176,38 @@ const validateProblems = [
   "proposed 2: AvatarDrop (0 props), MemberRow (2 props)",
   "sdkParts none",
   "gaps 1: Button (a split button with a menu of roles)",
+  "screenshots 0 (1 page; no screenshot: out.html)",
+].join("\n")
+
+const presentCommands = `# one page per state and theme, named out-<state>-<theme>.html
+bun ../eskais-ui/packages/mockup/src/cli.ts build team --scheme light --out .mockups/team/out-light.html
+bun ../eskais-ui/packages/mockup/src/cli.ts build team --scheme dark --out .mockups/team/out-empty-dark.html
+# a PNG with the same name beside each page, from any browser; headless Chrome:
+chrome --headless --hide-scrollbars --window-size=1280,800 \\
+  --screenshot=.mockups/team/out-empty-dark.png "file://$PWD/.mockups/team/out-empty-dark.html"
+bun ../eskais-ui/packages/mockup/src/cli.ts gallery`
+
+const galleryOutput = `team  default  light  .mockups/team/out-light.png  .mockups/team/out-light.html
+team  empty  dark  .mockups/team/out-empty-dark.png  .mockups/team/out-empty-dark.html
+no screenshot: .mockups/team/out-saving-dark.html (capture it as out-saving-dark.png)
+gallery .mockups/gallery.html  2 screenshots: 1 screen, 2 states, 2 themes`
+
+const presentReply = [
+  "### team",
+  "",
+  "![team, default state, light theme](.mockups/team/out-light.png)",
+  "`.mockups/team/out-light.html`",
+  "",
+  "![team, empty state, dark theme](.mockups/team/out-empty-dark.png)",
+  "`.mockups/team/out-empty-dark.html`",
+  "",
+  "2 of 2 screenshots. All of them: .mockups/gallery.html",
 ].join("\n")
 
 export {
   agentPrompt,
   checkoutCommands,
+  galleryOutput,
   helloOutput,
   helloScreen,
   inspectRegistry,
@@ -190,6 +219,8 @@ export {
   levelThree,
   levelTwo,
   linkCommands,
+  presentCommands,
+  presentReply,
   quickstart,
   screen,
   validateOk,

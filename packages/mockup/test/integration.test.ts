@@ -11,6 +11,7 @@ const mockups = join(repo, ".mockups")
 const ok = join(mockups, "zz-test-ok")
 const broken = join(mockups, "zz-test-broken")
 const custom = join(mockups, "zz-test-custom.html")
+const gallery = join(mockups, "gallery.html")
 
 const screen = `import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -77,7 +78,7 @@ beforeAll(() => {
 })
 
 afterAll(() => {
-  for (const path of [ok, broken, custom]) rmSync(path, { recursive: true, force: true })
+  for (const path of [ok, broken, custom, gallery]) rmSync(path, { recursive: true, force: true })
   if (existsSync(mockups) && readdirSync(mockups).every((name) => name === ".gitignore")) {
     rmSync(mockups, { recursive: true, force: true })
   }
@@ -128,7 +129,17 @@ describe("validate", () => {
   test("passes a mockup whose controls come from the project", { timeout: 120_000 }, () => {
     const result = run(["validate", "zz-test-ok"])
     expect(result.stdout).toMatch(/^ok \.mockups\/zz-test-ok\/out\.html/)
+    expect(result.stdout).toContain("screenshots 0 (1 page; no screenshot: out.html)")
     expect(result.code).toBe(0)
+  })
+
+  test("counts the screenshots and prints the gallery with --gallery", { timeout: 120_000 }, () => {
+    writeFileSync(join(ok, "out.png"), Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]))
+    const result = run(["validate", "zz-test-ok", "--gallery"])
+    expect(result.code).toBe(0)
+    expect(result.stdout).toContain("screenshots 1 (1 page)")
+    expect(result.stdout.trim().split("\n").at(-1)).toMatch(/^gallery \.mockups\/gallery\.html {2}\d+ screenshots?: /)
+    expect(readFileSync(gallery, "utf8")).toContain('alt="zz-test-ok, default state, system theme"')
   })
 
   test("reports every source rule and the type checker with exit code 1", { timeout: 120_000 }, () => {

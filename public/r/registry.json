@@ -5706,7 +5706,7 @@
       "name": "eskais-mockup-skill",
       "type": "registry:file",
       "title": "Mockup skill",
-      "description": "Agent skill for @eskais/mockup: build a throwaway, offline HTML mockup of a screen from the project's own components in five levels (project components, uninstalled registry items, parts, UI SDK primitives with a reason, recorded gaps) and validate it. Lands in .agents/skills/eskais-mockup.",
+      "description": "Agent skill for @eskais/mockup: build a throwaway, offline HTML mockup of a screen from the project's own components in five levels (project components, uninstalled registry items, parts, UI SDK primitives with a reason, recorded gaps), validate it and present every screen as images, with a gallery. Lands in .agents/skills/eskais-mockup.",
       "docs": "The skill runs the mockup CLI with Bun 1.4 from a checkout of the eskais-ui repository (`bun ../eskais-ui/packages/mockup/src/cli.ts`); the CLI isn't on npm. Codex and Cursor read `.agents/skills` as it is. Claude Code reads `.claude/skills` instead: link the folder with `mkdir -p .claude/skills && ln -s ../../.agents/skills/eskais-mockup .claude/skills/eskais-mockup`, or on Windows, in PowerShell, `New-Item -ItemType Junction -Path .claude\\skills\\eskais-mockup -Target .agents\\skills\\eskais-mockup`.",
       "files": [
         {
