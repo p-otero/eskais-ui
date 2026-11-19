@@ -83,6 +83,17 @@ test("primitive: a scroll updates the edges and the thumb in the scroll event, w
   frame.mockRestore()
 })
 
+test("primitive: a scroller inside the viewport doesn't make it measure again", () => {
+  const { view, viewport } = mountArea(`<div data-inner="">Inner</div>`)
+  const { scrollTo } = layOut(viewport, { client: 100, scroll: 400 })
+  scrollTo(0)
+  const reads = vi.fn(() => 0)
+  Object.defineProperty(viewport, "scrollTop", { configurable: true, get: reads })
+  viewport.querySelector("[data-inner]")!.dispatchEvent(new Event("scroll"))
+  expect(reads).not.toHaveBeenCalled()
+  expect(view.root.hasAttribute("data-scrolling")).toBe(false)
+})
+
 test("primitive: an overflowing viewport with nothing focusable is a tab stop, until something focusable arrives", async () => {
   const { viewport } = mountArea()
   const { scrollTo } = layOut(viewport, { client: 100, scroll: 400 })

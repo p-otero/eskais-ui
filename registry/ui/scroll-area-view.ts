@@ -68,8 +68,9 @@ function createScrollView(store: ScrollAreaStore) {
     if (store.get()[key] !== value) store.set({ [key]: value } as Partial<ScrollAreaModel>)
   }
 
-  // Reads every metric first, then writes only what changed: called from the scroll event itself, so the thumb and
-  // the edges move in the frame that scrolled, with no extra frame and no layout forced after a write.
+  // Reads every metric first, then writes only what changed, in the scroll event itself, so the thumb and the edges
+  // move in the frame that scrolled. Writing in an animation frame instead, as UI SDK does, cost a 20,000-line
+  // DiffView 9 ms more per key press at 4× CPU in Chrome.
   function update(resized = false) {
     if (!viewport) return
     measure()
@@ -217,7 +218,10 @@ function createScrollView(store: ScrollAreaStore) {
     scrollTo(axis, edge === "start" ? 0 : maxScroll(metrics[axis]), smooth ? "smooth" : "instant")
   }
 
-  const onScroll = () => update()
+  // In capture, the viewport also hears the scrolls of scrollers inside it.
+  const onScroll = (event: Event) => {
+    if (event.target === viewport) update()
+  }
   const onTouchStart = (event: TouchEvent) => {
     touchY = event.touches[0]?.clientY ?? null
   }
