@@ -33,6 +33,8 @@ type Commit = {
   stats?: CommitStats
   /** `"pending"` while the commit is being written: a spinning node and a status in place of the time. */
   status?: CommitStatus
+  /** On this branch but not on its upstream yet, as `git log @{u}..` lists it. */
+  unpushed?: boolean
 }
 
 /**
