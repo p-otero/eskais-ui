@@ -1,10 +1,16 @@
 # @eskais/mockup
 
-Builds a throwaway, offline HTML mockup of one screen from a project's own React components, and checks it. It runs from a checkout of this repository with Bun 1.4 or newer and reads the project's `components.json`, stylesheet and tsconfig aliases. The full guide is [/docs/mockups](https://p-otero.github.io/eskais-ui/docs/mockups/) on the docs site.
+Builds a throwaway, offline HTML mockup of one screen from a project's own React components, and checks it. It runs with Bun 1.4 or newer, has no npm dependencies and reads the project's `components.json`, stylesheet and tsconfig aliases. The full guide is [/docs/mockups](https://p-otero.github.io/eskais-ui/docs/mockups/) on the docs site.
+
+A project installs it from the registry as the `eskais-mockup-cli` item, which copies `src/` into `.agents/tools/eskais-mockup/`:
 
 ```bash
-bun ../eskais-ui/packages/mockup/src/cli.ts <command>
+npx shadcn@latest add @eskais/eskais-mockup-cli
+bun .agents/tools/eskais-mockup/cli.ts <command>
+bun .agents/tools/eskais-mockup/cli.ts --version
 ```
+
+From a checkout of this repository, the same CLI runs by path: `bun ../eskais-ui/packages/mockup/src/cli.ts <command>`. Everything in `src/` ships to consumers, so it imports only `node:*` modules and its own files by relative path, and finds `template.html` beside itself. `src/version.ts` is written by `bun run registry:build` from the root `package.json`.
 
 ## Commands
 
@@ -25,10 +31,10 @@ Flags: `--project <dir>`, `--css <file>`, `--theme <name>`, `--scheme light|dark
 A mockup isn't reviewed until the person has seen every screen, in every state and theme. Build one page per state and theme, named `out-<state>-<theme>.html` in the mockup's folder, and capture each as a PNG with the same name beside it:
 
 ```bash
-bun ../eskais-ui/packages/mockup/src/cli.ts build team --scheme dark --out .mockups/team/out-empty-dark.html
+bun .agents/tools/eskais-mockup/cli.ts build team --scheme dark --out .mockups/team/out-empty-dark.html
 chrome --headless --hide-scrollbars --window-size=1280,800 \
   --screenshot=.mockups/team/out-empty-dark.png "file://$PWD/.mockups/team/out-empty-dark.html"
-bun ../eskais-ui/packages/mockup/src/cli.ts gallery
+bun .agents/tools/eskais-mockup/cli.ts gallery
 ```
 
 The theme is the last segment of the name (`light`, `dark`, `system` or a theme name such as `compact`), the state everything before it; `out.html` is the default state in the system theme. `gallery` prints one line per screenshot, the pages that have no PNG, and then the total:

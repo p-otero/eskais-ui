@@ -35,6 +35,8 @@ Eskais UI is a shadcn-style registry of React components built on Vercel UI SDK 
 
 `skills/eskais-ui`, `skills/eskais-perf` and `packages/mockup/skills/eskais-mockup` ship to consumers as the `eskais-ui-skill`, `eskais-perf-skill` and `eskais-mockup-skill` registry items (`registry:file` with a `~/.agents/skills/<name>/` target). They are written for a project that installs Eskais UI, not for this repository: no `registry/`, `tooling/` or AGENTS.md paths. A new file in a skill joins its item's `files`; `test/registry-skills.test.ts` checks the targets, the references and `public/r`.
 
+The mockup CLI ships the same way as `eskais-mockup-cli`: every file of `packages/mockup/src` lands in `~/.agents/tools/eskais-mockup/`, and consumers run `bun .agents/tools/eskais-mockup/cli.ts`. shadcn copies a `registry:file` as it is, without rewriting imports, so those files import only `node:*` and each other by relative path, and find their assets beside themselves. `src/version.ts` holds the release for `--version`: `bun run registry:build` writes it from `package.json`, and the `version` script reruns the build on `bun pm version`. `test/registry-mockup-cli.test.ts` checks the item, and runs the copy in `public/r` from another folder.
+
 ## Spacing
 
 Spacing is chosen by role. The values change with the density (compact is tighter, see "Density and radius"), so never hand-pick a number.

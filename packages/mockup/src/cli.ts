@@ -10,17 +10,19 @@ import { displayPath, EnvironmentError, findProject, mockupDirectory, type Mocku
 import { registryListJson, registryListText } from "./registry"
 import { sdkDetail, sdkDetailJson, sdkDetailText, sdkIndexJson, sdkIndexText } from "./sdk"
 import { partsSummary, validateMockup } from "./validate"
+import { version } from "./version"
 
 const COMMANDS = new Set(["inspect", "build", "validate", "gallery", "clean"])
 const VALUE_FLAGS = new Set(["--project", "--css", "--theme", "--scheme", "--out", "--max"])
 
-const USAGE = `eskais-mockup: offline HTML mockups of a project's own components
+const USAGE = `eskais-mockup ${version}: offline HTML mockups of a project's own components
 
-  bun <path>/src/cli.ts inspect [Names…] [--registry | --sdk] [--json] [--project <dir>] [--css <file>]
-  bun <path>/src/cli.ts build <name> [--theme <name>] [--scheme light|dark|system] [--out <file>] [--gallery]
-  bun <path>/src/cli.ts validate <name> [--gallery]
-  bun <path>/src/cli.ts gallery [dir] [--json]
-  bun <path>/src/cli.ts clean [name]
+  bun .agents/tools/eskais-mockup/cli.ts inspect [Names…] [--registry | --sdk] [--json] [--project <dir>] [--css <file>]
+  bun .agents/tools/eskais-mockup/cli.ts build <name> [--theme <name>] [--scheme light|dark|system] [--out <file>] [--gallery]
+  bun .agents/tools/eskais-mockup/cli.ts validate <name> [--gallery]
+  bun .agents/tools/eskais-mockup/cli.ts gallery [dir] [--json]
+  bun .agents/tools/eskais-mockup/cli.ts clean [name]
+  bun .agents/tools/eskais-mockup/cli.ts --version
 
 inspect lists the project's components; --registry lists the registry items it has not installed,
 --sdk the @ui-sdk subpaths it installs, and --sdk <name> one primitive's parts and props.
@@ -43,9 +45,10 @@ type Options = {
   out?: string | undefined
 }
 
-function parseArgs(argv: string[]): Options | null {
+function parseArgs(argv: string[]): Options | "help" | "version" {
   const [command, ...rest] = argv
-  if (command === undefined || command === "help" || command === "--help" || command === "-h") return null
+  if (command === undefined || command === "help" || command === "--help" || command === "-h") return "help"
+  if (command === "version" || command === "--version" || command === "-v") return "version"
   if (!COMMANDS.has(command)) {
     throw new EnvironmentError(`unknown command "${command}"; use inspect, build, validate, gallery or clean`)
   }
@@ -77,7 +80,8 @@ function parseArgs(argv: string[]): Options | null {
       if (inline !== undefined) options.names.push(inline)
       continue
     }
-    if (flag === "--help" || flag === "-h") return null
+    if (flag === "--help" || flag === "-h") return "help"
+    if (flag === "--version") return "version"
     if (VALUE_FLAGS.has(flag)) {
       const value = inline ?? rest[index + 1]
       if (value === undefined) throw new EnvironmentError(`${flag} needs a value`)
@@ -241,7 +245,8 @@ try {
     console.error(`warning: the mockup left a promise rejected (${message})`)
   })
   const options = parseArgs(process.argv.slice(2))
-  if (options === null) console.log(USAGE)
+  if (options === "help") console.log(USAGE)
+  else if (options === "version") console.log(`eskais-mockup ${version}`)
   else process.exitCode = await run(options, process.cwd())
 } catch (error) {
   if (!(error instanceof EnvironmentError)) throw error

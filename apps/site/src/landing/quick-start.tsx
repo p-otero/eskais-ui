@@ -3,8 +3,6 @@ import { SectionHeading } from "@/components/ui/section-heading"
 
 import { registryUrl, releaseTag, uiSdkVersion } from "../registry"
 
-const repository = "https://github.com/p-otero/eskais-ui"
-
 const setupPrompt = `Set up Eskais UI in this React project: the components, the agent skills and the mockup CLI. It needs React 19 or newer, Tailwind CSS v4 and a components.json; if there is none, run npx shadcn@latest init first. Install with the project's package manager. If a release-age policy (pnpm's minimumReleaseAge, Renovate) blocks an install, stop and ask me instead of changing it.
 
 1. Add the registry, pinned to the ${releaseTag} release:
@@ -15,13 +13,12 @@ const setupPrompt = `Set up Eskais UI in this React project: the components, the
 4. Add the theme, the Geist font and the lint rules. --overwrite replaces the lib/utils.ts that shadcn init wrote:
    npx shadcn@latest add @eskais/theme @eskais/font-geist @eskais/lint-rules --overwrite -y
    If the project lints with oxlint, extend eskais-ui.oxlintrc.json from its .oxlintrc.json.
-5. Add the agent skills to .agents/skills, with UI SDK's own skill beside them:
-   npx shadcn@latest add @eskais/eskais-ui-skill @eskais/eskais-perf-skill @eskais/eskais-mockup-skill -y
+5. Add the agent skills to .agents/skills, with UI SDK's own skill beside them, and the mockup CLI to .agents/tools/eskais-mockup:
+   npx shadcn@latest add @eskais/eskais-ui-skill @eskais/eskais-perf-skill @eskais/eskais-mockup-skill @eskais/eskais-mockup-cli -y
    cp -r node_modules/@ui-sdk/core/skills/ui-sdk .agents/skills/
    If you read skills from .claude/skills, link each of the four folders there.
-6. Set up the mockup CLI. It isn't on npm yet: it runs from a checkout of the repository with Bun 1.4 or newer (ask me before installing Bun). Clone it next to this project and check that it reads the project:
-   git clone --depth 1 --branch ${releaseTag} ${repository} ../eskais-ui
-   bun ../eskais-ui/packages/mockup/src/cli.ts inspect
+6. Check the mockup CLI. It runs with Bun 1.4 or newer (ask me before installing Bun); check that it reads the project:
+   bun .agents/tools/eskais-mockup/cli.ts inspect
 7. Add a note to AGENTS.md, creating it if needed: before building or changing a screen, read .agents/skills/eskais-ui/SKILL.md and .agents/skills/ui-sdk/SKILL.md, and .agents/skills/eskais-perf/SKILL.md for long lists, effects and motion; for a mockup, follow .agents/skills/eskais-mockup/SKILL.md. Add components with npx shadcn@latest add @eskais/<name>, then set @ui-sdk/react and @ui-sdk/core back to ${uiSdkVersion} exactly, since shadcn writes a caret range.
 
 When you're done, tell me what you installed and anything you skipped.`

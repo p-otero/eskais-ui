@@ -1,8 +1,8 @@
 // Installs registry items into fresh Vite apps with npm or pnpm (no Bun), builds them and checks them in Chrome.
-// Usage: node tooling/consumer-check.mjs [npm|pnpm] [scenario…] (default: all). Scenarios: fresh, init, layouts
-// (the layout blocks, driven), aliases (`~/` aliases and the agent skills), imports, imports-flat, imports-tsx (must
-// fail to type-check), release-age (pnpm), existing-lucide and server-data; each one says what it checks below.
-import { spawn } from "node:child_process"
+// Usage: node tooling/consumer-check.mjs [npm|pnpm] [scenario…] (default: all). Scenarios: fresh, init, layouts,
+// aliases (`~/` aliases and the agent skills), imports, imports-flat, imports-tsx (must fail to type-check),
+// release-age (pnpm), existing-lucide, server-data and mockup-cli; each one says what it checks below.
+import { spawn, spawnSync } from "node:child_process"
 import { createReadStream, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, writeFileSync } from "node:fs"
 import { createServer } from "node:http"
 import { tmpdir } from "node:os"
@@ -906,6 +906,44 @@ async function checkServerData(page) {
   await page.locator('[data-slot="server-list-footer"] output').filter({ hasText: "Showing 1–10 of 12" }).waitFor()
 }
 
+const mockupCliMain = `import { createRoot } from "react-dom/client"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { cn } from "@/lib/utils"
+import "./index.css"
+${probes}
+function App() {
+  return (
+    <main className="flex flex-col gap-items p-inset-surface">
+      <Card><CardHeader><CardTitle>Atlas</CardTitle></CardHeader><CardContent><Button>Open</Button></CardContent></Card>
+      <Probes />
+    </main>
+  )
+}
+
+createRoot(document.getElementById("root")!).render(<App />)
+`
+
+const helloScreen = `import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+
+export default function Hello() {
+  return (
+    <main className="flex flex-col gap-section p-inset-surface font-sans">
+      <Card>
+        <CardHeader>
+          <CardTitle>Atlas workspace</CardTitle>
+          <CardDescription>3 members · Team plan</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Button>Invite people</Button>
+        </CardContent>
+      </Card>
+    </main>
+  )
+}
+`
+
 const scenarios = {
   fresh: {
     css: `@layer ui-sdk;\n@import "tailwindcss";\n`,
@@ -1097,6 +1135,20 @@ const scenarios = {
     builtCss: ["--brand", ".text-title{"],
     check: checkLucideIcon,
   },
+  // The mockup CLI, a registry:file item: shadcn copies it into .agents/tools/eskais-mockup as it is, the app's tsc
+  // and Vite build leave the dot folder out, and Bun runs it there against the app's own components. The CI job has
+  // no Bun, so it checks the files and the build and skips running the CLI.
+  "mockup-cli": {
+    css: `@layer ui-sdk;
+@import "tailwindcss";
+`,
+    items: ["theme", "button", "card"],
+    skills: ["eskais-mockup-skill", "eskais-mockup-cli"],
+    main: mockupCliMain,
+    builtCss: ["--brand", ".text-title{"],
+    check: async () => {},
+    mockup: true,
+  },
   // A consumer already on a newer lucide-react than the registry's floor. An item that listed it with any version
   // made shadcn reinstall it: an exact pin wrote that pin back, npm moved a range to the latest release. Listed
   // without one, shadcn skips it, and package.json and node_modules keep 1.70.0.
@@ -1154,17 +1206,38 @@ function checkPlacement(app, scenario) {
   if (stale.length > 0) throw new Error(`Imports still point at @/: ${stale.join(", ")}`)
 }
 
-// Every file of a skill item lands at its `~/` target under the project root, byte for byte.
+// Every file of a skill or tool item lands at its `~/.agents/` target under the project root, byte for byte.
 function checkSkills(app, names) {
   for (const name of names) {
     const item = JSON.parse(readFileSync(join(registryDir, `${name}.json`), "utf8"))
     for (const file of item.files) {
-      if (!file.target?.startsWith("~/.agents/skills/")) throw new Error(`${name}: ${file.path} targets ${file.target}`)
+      if (!/^~\/\.agents\/(skills|tools)\//.test(file.target ?? "")) {
+        throw new Error(`${name}: ${file.path} targets ${file.target}`)
+      }
       const path = join(app, file.target.slice(2))
       if (!existsSync(path)) throw new Error(`shadcn didn't write ${file.target} for ${name}`)
       if (readFileSync(path, "utf8") !== file.content) throw new Error(`${file.target} differs from ${file.path}`)
     }
-    console.log(`${name}: ${item.files.length} files in .agents/skills`)
+    console.log(`${name}: ${item.files.length} files in ${dirname(item.files[0].target.slice(2))}`)
+  }
+}
+
+// The installed CLI reads the app and validates a mockup of its components, with Bun when there is one.
+async function checkMockupCli(app, run) {
+  if (spawnSync("bun", ["--version"], { shell: process.platform === "win32" }).status !== 0) {
+    console.log("mockup-cli: no Bun on this machine, so the CLI didn't run")
+    return
+  }
+  const cli = ".agents/tools/eskais-mockup/cli.ts"
+  const { version } = JSON.parse(readFileSync(join(repo, "package.json"), "utf8"))
+  const printed = spawnSync("bun", [cli, "--version"], { cwd: app, encoding: "utf8" }).stdout.trim()
+  if (printed !== `eskais-mockup ${version}`) throw new Error(`The CLI printed "${printed}" for --version`)
+  await run("bun", [cli, "inspect", "Button", "Card"])
+  mkdirSync(join(app, ".mockups", "hello"), { recursive: true })
+  writeFileSync(join(app, ".mockups", "hello", "screen.tsx"), helloScreen)
+  await run("bun", [cli, "validate", "hello"])
+  if (!readFileSync(join(app, ".mockups", "hello", "out.html"), "utf8").includes('<div id="root"></div>')) {
+    throw new Error("validate didn't write .mockups/hello/out.html")
   }
 }
 
@@ -1320,6 +1393,7 @@ export default defineConfig({
     }
   }
   await withPage(join(app, "dist"), scenario.check)
+  if (scenario.mockup) await checkMockupCli(app, run)
   console.log(`Consumer check (${name}) passed with ${pm} in ${app}`)
 }
 

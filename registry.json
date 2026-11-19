@@ -5753,12 +5753,86 @@
       "type": "registry:file",
       "title": "Mockup skill",
       "description": "Agent skill for @eskais/mockup: build a throwaway, offline HTML mockup of a screen from the project's own components in five levels (project components, uninstalled registry items, parts, UI SDK primitives with a reason, recorded gaps), validate it and present every screen as images, with a gallery. Lands in .agents/skills/eskais-mockup.",
-      "docs": "The skill runs the mockup CLI with Bun 1.4 from a checkout of the eskais-ui repository (`bun ../eskais-ui/packages/mockup/src/cli.ts`); the CLI isn't on npm. Codex and Cursor read `.agents/skills` as it is. Claude Code reads `.claude/skills` instead: link the folder with `mkdir -p .claude/skills && ln -s ../../.agents/skills/eskais-mockup .claude/skills/eskais-mockup`, or on Windows, in PowerShell, `New-Item -ItemType Junction -Path .claude\\skills\\eskais-mockup -Target .agents\\skills\\eskais-mockup`.",
+      "docs": "The skill runs the mockup CLI with Bun 1.4 from `.agents/tools/eskais-mockup`, the `eskais-mockup-cli` item: add both with `npx shadcn@latest add @eskais/eskais-mockup-skill @eskais/eskais-mockup-cli`. Codex and Cursor read `.agents/skills` as it is. Claude Code reads `.claude/skills` instead: link the folder with `mkdir -p .claude/skills && ln -s ../../.agents/skills/eskais-mockup .claude/skills/eskais-mockup`, or on Windows, in PowerShell, `New-Item -ItemType Junction -Path .claude\\skills\\eskais-mockup -Target .agents\\skills\\eskais-mockup`.",
       "files": [
         {
           "path": "packages/mockup/skills/eskais-mockup/SKILL.md",
           "type": "registry:file",
           "target": "~/.agents/skills/eskais-mockup/SKILL.md"
+        }
+      ]
+    },
+    {
+      "name": "eskais-mockup-cli",
+      "type": "registry:file",
+      "title": "Mockup CLI",
+      "description": "The mockup CLI the eskais-mockup skill runs: inspect the project's components, build a screen into one offline HTML file, validate it and write a gallery of its screenshots. Bun 1.4 or newer runs it from .agents/tools/eskais-mockup with no npm dependencies; it reads the project's components.json, stylesheet and tsconfig.",
+      "docs": "Run it from the project root with Bun 1.4 or newer: `bun .agents/tools/eskais-mockup/cli.ts inspect`, then `validate <name>`; `--version` prints the release it came from. It needs a TypeScript project (`tsx: true` in components.json): shadcn renames `.ts` files to `.js` in a JavaScript project, and Bun can't run them. The folder starts with a dot, so TypeScript's `include` globs leave it out of the app's type-check and build; a linter that walks every file still reads it, and it passes Vite's ESLint config and `lint-rules`. Update it with the registry: `npx shadcn@latest add @eskais/eskais-mockup-cli --overwrite`.",
+      "files": [
+        {
+          "path": "packages/mockup/src/cli.ts",
+          "type": "registry:file",
+          "target": "~/.agents/tools/eskais-mockup/cli.ts"
+        },
+        {
+          "path": "packages/mockup/src/build.ts",
+          "type": "registry:file",
+          "target": "~/.agents/tools/eskais-mockup/build.ts"
+        },
+        {
+          "path": "packages/mockup/src/checks.ts",
+          "type": "registry:file",
+          "target": "~/.agents/tools/eskais-mockup/checks.ts"
+        },
+        {
+          "path": "packages/mockup/src/gallery.ts",
+          "type": "registry:file",
+          "target": "~/.agents/tools/eskais-mockup/gallery.ts"
+        },
+        {
+          "path": "packages/mockup/src/inspect.ts",
+          "type": "registry:file",
+          "target": "~/.agents/tools/eskais-mockup/inspect.ts"
+        },
+        {
+          "path": "packages/mockup/src/parts.ts",
+          "type": "registry:file",
+          "target": "~/.agents/tools/eskais-mockup/parts.ts"
+        },
+        {
+          "path": "packages/mockup/src/project.ts",
+          "type": "registry:file",
+          "target": "~/.agents/tools/eskais-mockup/project.ts"
+        },
+        {
+          "path": "packages/mockup/src/registry.ts",
+          "type": "registry:file",
+          "target": "~/.agents/tools/eskais-mockup/registry.ts"
+        },
+        {
+          "path": "packages/mockup/src/sdk.ts",
+          "type": "registry:file",
+          "target": "~/.agents/tools/eskais-mockup/sdk.ts"
+        },
+        {
+          "path": "packages/mockup/src/validate.ts",
+          "type": "registry:file",
+          "target": "~/.agents/tools/eskais-mockup/validate.ts"
+        },
+        {
+          "path": "packages/mockup/src/version.ts",
+          "type": "registry:file",
+          "target": "~/.agents/tools/eskais-mockup/version.ts"
+        },
+        {
+          "path": "packages/mockup/src/bun.d.ts",
+          "type": "registry:file",
+          "target": "~/.agents/tools/eskais-mockup/bun.d.ts"
+        },
+        {
+          "path": "packages/mockup/src/template.html",
+          "type": "registry:file",
+          "target": "~/.agents/tools/eskais-mockup/template.html"
         }
       ]
     },

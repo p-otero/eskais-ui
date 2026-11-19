@@ -9,11 +9,12 @@ A mockup is one screen of the project's real components, with fixture data, buil
 
 ## Run the CLI
 
-The CLI is `packages/mockup/src/cli.ts` in the eskais-ui repository. It isn't on npm. It needs Bun 1.4 or newer and nothing else: it builds with the project's own Tailwind, React and aliases, read from `components.json`, its stylesheet and `tsconfig.json`.
+The CLI lives in the project at `.agents/tools/eskais-mockup/cli.ts`, installed from the registry like a component. It needs Bun 1.4 or newer and nothing else: no npm packages, and it builds with the project's own Tailwind, React and aliases, read from `components.json`, its stylesheet and `tsconfig.json`.
 
-1. Find a checkout: `ls ../eskais-ui/packages/mockup/src/cli.ts`, or ask the person where theirs is. Without one, `git clone --depth 1 https://github.com/p-otero/eskais-ui ../eskais-ui` (ask before cloning).
-2. From the project root, run `bun ../eskais-ui/packages/mockup/src/cli.ts <command>`. Below, `mockup` stands for that.
-3. If the project has `node_modules/.bin/eskais-mockup` (a person ran `bun link @eskais/mockup`), `bunx eskais-mockup <command>` is the same CLI. An `npm install` or `pnpm install` removes that link; fall back to the path.
+1. Look for it: `ls .agents/tools/eskais-mockup/cli.ts`. If it's missing, install it with `npx shadcn@latest add @eskais/eskais-mockup-cli` (the project's `components.json` names the `@eskais` registry).
+2. Check Bun with `bun --version`. If it's missing or older than 1.4, ask the person before installing or upgrading it.
+3. From the project root, run `bun .agents/tools/eskais-mockup/cli.ts <command>`. Below, `mockup` stands for that. `bun .agents/tools/eskais-mockup/cli.ts --version` prints the release it came from; update it with the same `add` and `--overwrite` when the project updates its components.
+4. In a checkout of the eskais-ui repository (contributors), the same CLI is `packages/mockup/src/cli.ts`: `bun ../eskais-ui/packages/mockup/src/cli.ts <command>` from the project.
 
 ## The five levels
 
