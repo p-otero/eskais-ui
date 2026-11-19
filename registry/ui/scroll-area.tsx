@@ -14,6 +14,7 @@ import type { ComponentProps } from "react"
 
 import { cnState } from "@/lib/utils"
 
+/** The root sets `position: relative` inline, so a sticky or absolute root takes `sticky!` or `absolute!`. */
 function ScrollArea({ className, ...props }: ComponentProps<typeof ScrollAreaPrimitive>) {
   return <ScrollAreaPrimitive className={cnState("relative overflow-hidden", className)} {...props} />
 }

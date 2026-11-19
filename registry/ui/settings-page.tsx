@@ -177,7 +177,7 @@ function SettingsPage({
       {...props}
     >
       <div className="flex flex-col gap-section @3xl/settings:flex-row @3xl/settings:items-start">
-        <ScrollArea className="sticky top-(--settings-scroll-margin) hidden max-h-(--settings-nav-height) w-52 shrink-0 flex-col @3xl/settings:flex">
+        <ScrollArea className="sticky! top-(--settings-scroll-margin) hidden max-h-(--settings-nav-height) w-52 shrink-0 flex-col @3xl/settings:flex">
           <ScrollAreaViewport
             aria-label={labels.nav}
             className="flex h-auto min-h-0 flex-1 flex-col gap-px"
