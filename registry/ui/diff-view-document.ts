@@ -17,7 +17,7 @@ import {
   type DiffLineSelection,
   type DiffSide,
 } from "@/components/ui/diff-view-selection"
-import { layersBesideViewport } from "@/components/ui/scroll-area"
+import { layersBesideViewport } from "@/components/ui/scroll-area-layers"
 import { intraline } from "@/lib/diff-intraline"
 import type { DiffLine, IntralineMode, IntralineRanges } from "@/lib/diff-types"
 
