@@ -3,7 +3,7 @@ import type { EditorView, ViewUpdate } from "@codemirror/view"
 import { useState, type RefObject } from "react"
 
 import { replaceDocument } from "@/components/ui/markdown-editor-commands"
-import { committedDoc, isProvisional } from "@/components/ui/markdown-editor-provisional"
+import { committedDoc, committedText, isProvisional } from "@/components/ui/markdown-editor-provisional"
 import { fromValue } from "@/components/ui/markdown-editor-state"
 
 type MarkdownConflict = { local: string; remote: string }
@@ -27,7 +27,7 @@ function createSync(props: RefObject<SyncProps>) {
   let timer: ReturnType<typeof setTimeout> | undefined
 
   const updateDirty = (state: EditorState) => {
-    const next = baseline ? !state.doc.eq(baseline) : false
+    const next = baseline ? !committedText(state).eq(baseline) : false
     if (next === dirty) return
     dirty = next
     props.current.onDirtyChange?.(next)
@@ -73,12 +73,12 @@ function createSync(props: RefObject<SyncProps>) {
     },
     receive(value: string) {
       if (!view) return
-      if (value !== emitted && value !== view.state.sliceDoc()) {
+      if (value !== emitted && value !== committedDoc(view.state)) {
         if (timer === undefined) apply(value)
         else {
           clearTimeout(timer)
           timer = undefined
-          const local = view.state.sliceDoc()
+          const local = committedDoc(view.state)
           const { onConflict } = props.current
           if (onConflict) {
             const kept = onConflict({ local, remote: value })

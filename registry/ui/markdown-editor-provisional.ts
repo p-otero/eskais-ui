@@ -71,11 +71,32 @@ function isProvisional(transaction: Transaction) {
   return transaction.annotation(provisional) === true || activeProvisional(transaction.startState) !== null
 }
 
-/** The note without a provisional trigger: what `onChange` sends while a session is open. */
+/**
+ * The note without a provisional trigger, the text dismissing it would restore: what `getValue()`, `onChange`
+ * and the dirty state see while a session is open.
+ */
 function committedDoc(state: EditorState) {
   const active = activeProvisional(state)
   if (!active) return state.sliceDoc()
   return state.sliceDoc(0, active.from) + active.original + state.sliceDoc(active.to)
+}
+
+/** `committedDoc` as a `Text`, to compare with another without joining the lines. */
+function committedText(state: EditorState) {
+  const active = activeProvisional(state)
+  return active ? state.doc.replace(active.from, active.to, state.toText(active.original)) : state.doc
+}
+
+/** The selection dismissing would restore, in the committed note's positions, while a session is open. */
+function committedSelection(state: EditorState) {
+  const active = activeProvisional(state)
+  if (!active) return state.selection.main
+  return {
+    anchor: active.anchor,
+    head: active.head,
+    from: Math.min(active.anchor, active.head),
+    to: Math.max(active.anchor, active.head),
+  }
 }
 
 /** Types `text` over `from`–`to` as a provisional trigger: out of history and out of `onChange`. */
@@ -131,6 +152,8 @@ function settleProvisional(view: EditorView, trigger: string, query: RegExp) {
 export {
   activeProvisional,
   committedDoc,
+  committedSelection,
+  committedText,
   isProvisional,
   provisionalTriggers,
   revertProvisional,
