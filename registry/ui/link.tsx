@@ -81,7 +81,7 @@ function linkProps({
   rel,
   target,
   ...props
-}: Omit<LinkProps, "onFollow" | "onNavigate" | "onIntent" | "render" | "fast">) {
+}: Omit<LinkProps, "onFollow" | "onNavigate" | "onIntent" | "render" | "fast"> & { onNavigate?: undefined }) {
   return {
     "data-slot": "link",
     "data-variant": variant,
@@ -106,14 +106,20 @@ function linkProps({
   }
 }
 
-function FollowLink({ onFollow, onNavigate: _router, onIntent, render, fast = true, ...props }: LinkProps) {
+function FollowLink({ onFollow, onIntent, render, fast = true, ...props }: LinkProps) {
   const handle = usePrimitive(link, { href: props.href, onFollow })
   const ref = useFastLink<HTMLAnchorElement>({
     enabled: fast && !props.external,
     onFollow: (_href, { event }) => handle.api.follow(event),
   })
   const intent = useLinkIntent(props.href, onIntent)
-  return usePart(handle, "root", {}, { ...mergeProps(linkProps(props), { ref }, intent), render }, "a")
+  return usePart(
+    handle,
+    "root",
+    {},
+    { ...mergeProps(linkProps({ ...props, onNavigate: undefined }), { ref }, intent), render },
+    "a",
+  )
 }
 
 // Without `onFollow` or `onNavigate`, a router element or an `onClick` may route or cancel on the click, so a press

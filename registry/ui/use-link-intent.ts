@@ -1,6 +1,6 @@
 "use client"
 
-import { useRef, type FocusEvent, type PointerEvent } from "react"
+import { useRef, type PointerEvent } from "react"
 
 /** How long a mouse rests on a link before it counts as intent, as instant.page does. */
 const hoverDwell = 65
@@ -25,7 +25,7 @@ function useLinkIntent(href: string | undefined, onIntent: ((href: string) => vo
     onPointerDown: (event: PointerEvent<HTMLElement>) => {
       if (event.pointerType !== "touch") fire()
     },
-    onFocus: (_event: FocusEvent<HTMLElement>) => fire(),
+    onFocus: () => fire(),
   }
 }
 
