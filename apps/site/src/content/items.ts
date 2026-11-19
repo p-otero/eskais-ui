@@ -350,8 +350,10 @@ const itemNotes: Record<string, ItemNotes> = {
     a11y: [
       "Focus moves in, Escape and outside presses close it, focus returns to the trigger.",
       "Named by PopoverTitle.",
+      "openOnHover (with delay and closeDelay) also opens it when the pointer rests on the trigger, leaving focus where it was; the pointer can cross into it. A press, Enter, Space and a tap still open it, and keyboard focus alone doesn't, so tabbing past never pops one open.",
       "Open from the start inside a dialog, it stays open while the dialog takes its initial focus.",
     ],
+    agent: "Agents open it by its trigger's name, hover or not, and read or press what's inside.",
     related: ["hover-card", "tooltip", "dropdown-menu"],
   },
   tooltip: {

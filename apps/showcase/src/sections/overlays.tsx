@@ -138,6 +138,14 @@ function OverlaysSection() {
           <PopoverClose className="self-end">Done</PopoverClose>
         </PopoverContent>
       </Popover>
+      <Popover openOnHover delay={300} closeDelay={200}>
+        <PopoverTrigger variant="ghost">Retry policy</PopoverTrigger>
+        <PopoverContent>
+          <PopoverTitle>Retry policy</PopoverTitle>
+          <PopoverDescription>Opens on hover, or with a press, Enter or a tap.</PopoverDescription>
+          <PopoverClose className="self-end">Done</PopoverClose>
+        </PopoverContent>
+      </Popover>
       <TaskDrawer side="right" label="Open task panel" />
       <TaskDrawer side="bottom" label="Open task sheet" />
       <TaskActions />
