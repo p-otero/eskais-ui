@@ -1,9 +1,10 @@
 "use client"
 
+import { CloudUploadIcon } from "lucide-react"
 import type { ReactNode } from "react"
 
 import { CommitBranchSelect } from "@/components/ui/commit-branch-select"
-import type { CommitHistoryLabels } from "@/components/ui/commit-history-labels"
+import { formatCount, type CommitHistoryLabels } from "@/components/ui/commit-history-labels"
 import { Select } from "@/components/ui/select"
 import type { BranchInfo } from "@/lib/commit-branches"
 import type { Instant } from "@/lib/time"
@@ -23,6 +24,8 @@ type CommitHistoryHeaderProps = {
   actions?: ReactNode
   /** Commits counted in the header. */
   total: number
+  /** Commits the upstream doesn't have yet. */
+  unpushed?: number
 }
 
 const switcherClassName =
@@ -41,6 +44,7 @@ function CommitHistoryHeader({
   onBranch,
   actions,
   total,
+  unpushed = 0,
 }: CommitHistoryHeaderProps) {
   let branchControl: ReactNode
   if (active && active.length > 0)
@@ -77,6 +81,16 @@ function CommitHistoryHeader({
       {branchControl}
       <span className="flex shrink-0 items-center gap-items">
         {actions}
+        {unpushed > 0 && (
+          <span
+            data-slot="commit-history-unpushed"
+            className="inline-flex items-center gap-inline text-caption text-muted-foreground tabular-nums"
+          >
+            <CloudUploadIcon aria-hidden="true" className="size-3.5" />
+            <span aria-hidden="true">{formatCount(unpushed, locale)}</span>
+            <span className="sr-only">{labels.unpushed(unpushed, locale)}</span>
+          </span>
+        )}
         <span data-slot="commit-history-count" className="text-caption text-muted-foreground tabular-nums">
           {labels.commits(total, locale)}
         </span>

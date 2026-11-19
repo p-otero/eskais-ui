@@ -1,7 +1,7 @@
 "use client"
 
 import { TreeItem, TreeItemIndicator, TreeItemLabel } from "@ui-sdk/react/tree"
-import { ArrowDownIcon, ArrowUpIcon, CheckIcon, ChevronRightIcon, CopyIcon } from "lucide-react"
+import { ArrowDownIcon, ArrowUpIcon, CheckIcon, ChevronRightIcon, CloudUploadIcon, CopyIcon } from "lucide-react"
 import { memo, useState, type CSSProperties, type ReactNode } from "react"
 
 import { Badge } from "@/components/ui/badge"
@@ -99,6 +99,8 @@ type CommitRowProps = {
   drawIn: boolean
   /** The branches whose head this commit is, shown as pills in the branches view. */
   heads?: readonly BranchInfo[]
+  /** Not on the upstream yet: a cloud-upload mark, and "not pushed" in the name. */
+  unpushed?: boolean
   context: CommitRowContext
   /** Where the row sits in the list's box while it's virtualized, in px. */
   top?: number
@@ -146,7 +148,7 @@ function branchName(branch: BranchInfo, context: NameContext) {
   return parts.join(", ")
 }
 
-function commitNameSuffix(commit: Commit, context: NameContext, heads: readonly BranchInfo[] = NONE) {
+function commitNameSuffix(commit: Commit, context: NameContext, heads: readonly BranchInfo[] = NONE, unpushed = false) {
   const when =
     commit.status === "pending"
       ? context.labels.pending
@@ -155,13 +157,14 @@ function commitNameSuffix(commit: Commit, context: NameContext, heads: readonly 
     when,
     ...(commit.tags ?? []).map((tag) => tag.label),
     ...heads.map((head) => branchName(head, context)),
+    ...(unpushed ? [context.labels.notPushed] : []),
   ]
   return parts.map((part) => `, ${part}`).join("")
 }
 
-/** A commit's accessible name: "Merge invoice-pdf into main, 38 minutes ago, Release". */
-function commitName(commit: Commit, context: NameContext, heads?: readonly BranchInfo[]) {
-  return commitSubject(commit) + commitNameSuffix(commit, context, heads)
+/** A commit's accessible name: "Merge invoice-pdf into main, 38 minutes ago, Release, not pushed". */
+function commitName(commit: Commit, context: NameContext, heads?: readonly BranchInfo[], unpushed?: boolean) {
+  return commitSubject(commit) + commitNameSuffix(commit, context, heads, unpushed)
 }
 
 function CommitDetails({ commit, context, id }: { commit: Commit; context: CommitRowContext; id: string }) {
@@ -267,6 +270,7 @@ const CommitRow = memo(function CommitRow({
   measure,
   textSlot,
   heads,
+  unpushed = false,
 }: CommitRowProps) {
   const details = useClosing(detailsOpen)
   const finished = useFinished(commit.status)
@@ -352,7 +356,7 @@ const CommitRow = memo(function CommitRow({
             </TreeItemIndicator>
           )}
         </span>
-        <span className="sr-only">{commitNameSuffix(commit, context, heads)}</span>
+        <span className="sr-only">{commitNameSuffix(commit, context, heads, unpushed)}</span>
         <span aria-hidden="true" className="ms-auto flex shrink-0 items-center gap-items">
           {heads?.map((head) => (
             <BranchPill
@@ -371,6 +375,9 @@ const CommitRow = memo(function CommitRow({
               {tag.label}
             </Badge>
           ))}
+          {unpushed && (
+            <CloudUploadIcon data-slot="commit-unpushed" className="size-3.5 shrink-0 text-muted-foreground" />
+          )}
           {when}
         </span>
       </TreeItemLabel>

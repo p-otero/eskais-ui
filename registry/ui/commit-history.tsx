@@ -16,7 +16,7 @@ import {
 
 import { Button } from "@/components/ui/button"
 import { CommitHistoryHeader } from "@/components/ui/commit-history-header"
-import { doneCount, Rows, summaryOf, treeItemsOf } from "@/components/ui/commit-history-rows"
+import { doneCount, Rows, summaryOf, treeItemsOf, unpushedCount } from "@/components/ui/commit-history-rows"
 import {
   commitHistory,
   type CommitHistoryChangeReason,
@@ -111,6 +111,11 @@ type CommitHistoryProps = Omit<PartProps<"div">, "children" | "onSelect"> & {
    */
   workingTree?: WorkingTree
   /**
+   * The upstream's head (`git rev-parse @{u}`): the commits above it aren't pushed yet. Each gets a cloud mark and
+   * "not pushed" in its name, and the header counts them. A commit's own `unpushed` marks it too.
+   */
+  upstreamHead?: string
+  /**
    * `"branches"` draws every active branch in `branches` as its own lane beside the base, coloured and labelled
    * at its head, with a select (or a press on a pill) to show one alone; merged branches stay folded under their merge. Commits are then
    * `git log --all --topo-order`. Default `"trail"`.
@@ -170,6 +175,7 @@ function CommitHistory({
   controller,
   actions,
   workingTree,
+  upstreamHead,
   view = "trail",
   focusedBranch,
   onFocusedBranchChange,
@@ -197,20 +203,26 @@ function CommitHistory({
   const model = useBranchModel(graph, view === "branches" ? branchList : noBranches, { base: branch, staleAfter, now })
   const find = useMemo(() => createCommitFinder(graph), [graph])
   const nameContext = useMemo(() => ({ now, locale, labels }), [now, locale, labels])
+  const upstreamRow = upstreamHead === undefined ? -1 : (rowOfCommit(graph, upstreamHead) ?? -1)
   const workingTreeName = workingTree ? workingTreeText(workingTree, labels, locale).name : undefined
   const lookup = useMemo(
     () => ({
       find,
       entries: () => [
         ...(workingTreeName === undefined ? [] : [{ value: WORKING_TREE, label: workingTreeName }]),
-        ...graph.commits.map((commit) => ({
+        ...graph.commits.map((commit, index) => ({
           value: commit.id,
-          label: commitName(commit, nameContext, model?.byHead.get(commit.id)),
+          label: commitName(
+            commit,
+            nameContext,
+            model?.byHead.get(commit.id),
+            commit.unpushed === true || index < upstreamRow,
+          ),
         })),
       ],
       branches: () => (model?.all ?? []).map(summaryOf),
     }),
-    [find, graph, nameContext, model, workingTreeName],
+    [find, graph, nameContext, model, workingTreeName, upstreamRow],
   )
 
   const handle = usePrimitive(commitHistory, {
@@ -251,14 +263,8 @@ function CommitHistory({
   const { visible } = trail
   const justExpanded = useJustExpanded(state.expanded)
   const openDetails = useMemo(() => new Set(state.details), [state.details])
-  const commitItems = useMemo(() => treeItemsOf(graph), [graph])
-  const items = useMemo(
-    () =>
-      workingTreeName === undefined
-        ? commitItems
-        : [{ value: WORKING_TREE, label: workingTree?.label ?? labels.workingTree }, ...commitItems],
-    [commitItems, workingTreeName, workingTree?.label, labels.workingTree],
-  )
+  const workingTreeLabel = workingTree ? (workingTree.label ?? labels.workingTree) : undefined
+  const items = useMemo(() => treeItemsOf(graph, workingTreeLabel), [graph, workingTreeLabel])
   // The working-tree row comes before the commits' rows in the tree's order.
   const rowOffset = workingTree ? 1 : 0
 
@@ -325,6 +331,7 @@ function CommitHistory({
 
   const reachEnd = useReachEnd(onLoadMore, hasMore && !loadingMore)
   const total = count ?? doneCount(commits)
+  const toPush = useMemo(() => unpushedCount(graph.commits, upstreamRow), [graph, upstreamRow])
   const dimmed = focusMode ?? state.details.length > 0
   const switcher = branchNames && branchNames.length > 1 && onBranchChange
 
@@ -370,6 +377,7 @@ function CommitHistory({
             onBranch={(name) => handle.api.selectBranch(name, { reason: "item-press" })}
             actions={actions}
             total={total}
+            unpushed={toPush}
           />
           <div
             ref={setScroller}
@@ -436,6 +444,7 @@ function CommitHistory({
                     context={context}
                     virtual={virtual}
                     heads={shownHeads}
+                    upstreamRow={upstreamRow}
                   />
                 </div>
               </Tree>

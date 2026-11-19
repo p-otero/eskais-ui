@@ -42,6 +42,10 @@ type CommitHistoryLabels = {
   behind: (count: number, locale?: string) => string
   /** The working-tree row's name, unless `workingTree.label` gives one. */
   workingTree: string
+  /** Read after a commit the upstream doesn't have yet. */
+  notPushed: string
+  /** The header's count of commits the upstream doesn't have: "3 not pushed". */
+  unpushed: (count: number, locale?: string) => string
   /** "2 staged" on the working-tree row. */
   staged: (count: number, locale?: string) => string
   /** "3 unstaged" on the working-tree row. */
@@ -67,6 +71,8 @@ const commitHistoryLabels: CommitHistoryLabels = {
   ahead: (count, locale) => `${formatCount(count, locale)} ahead`,
   behind: (count, locale) => `${formatCount(count, locale)} behind`,
   workingTree: "Uncommitted changes",
+  notPushed: "not pushed",
+  unpushed: (count, locale) => `${formatCount(count, locale)} not pushed`,
   staged: (count, locale) => `${formatCount(count, locale)} staged`,
   unstaged: (count, locale) => `${formatCount(count, locale)} unstaged`,
 }

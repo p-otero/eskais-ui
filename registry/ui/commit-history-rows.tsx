@@ -2,7 +2,7 @@
 
 import type { TreeItemData } from "@ui-sdk/react/tree"
 
-import type { CommitBranchSummary } from "@/components/ui/commit-history-primitive"
+import { WORKING_TREE, type CommitBranchSummary } from "@/components/ui/commit-history-primitive"
 import { CommitRow, type CommitRowContext } from "@/components/ui/commit-history-row"
 import type { useCommitTrail } from "@/components/ui/use-commit-history"
 import type { useTrailRows } from "@/components/ui/use-trail-rows"
@@ -13,9 +13,9 @@ import { toISO } from "@/lib/time"
 
 type Trail = ReturnType<typeof useCommitTrail>
 
-/** The Tree's items: every commit, merges holding the commits nested under them. O(commits). */
-function treeItemsOf(graph: CommitGraph): TreeItemData[] {
-  const items: TreeItemData[] = []
+/** The Tree's items: the working tree if any, then every commit, merges holding their nested commits. O(commits). */
+function treeItemsOf(graph: CommitGraph, workingTree?: string): TreeItemData[] {
+  const items: TreeItemData[] = workingTree === undefined ? [] : [{ value: WORKING_TREE, label: workingTree }]
   const nodes: TreeItemData[] = []
   for (let row = 0; row < graph.size; row += 1) {
     const commit = graph.commits[row] as Commit
@@ -54,9 +54,11 @@ type RowsProps = {
   context: CommitRowContext
   virtual: Omit<ReturnType<typeof useTrailRows>, "setScroller" | "anchor">
   heads: ReadonlyMap<string, readonly BranchInfo[]> | undefined
+  /** Rows before this one aren't on the upstream; -1 when every commit's own `unpushed` decides. */
+  upstreamRow: number
 }
 
-function Rows({ trail, details, justExpanded, context, virtual, heads }: RowsProps) {
+function Rows({ trail, details, justExpanded, context, virtual, heads, upstreamRow }: RowsProps) {
   const { graph, visible, layout } = trail
   return virtual.segments.map((segment) => {
     if (segment.type === "gap") {
@@ -83,10 +85,18 @@ function Rows({ trail, details, justExpanded, context, virtual, heads }: RowsPro
         measure={virtual.measure}
         textSlot={virtual.textSlot}
         heads={heads?.get(commit.id)}
+        unpushed={commit.unpushed === true || row < upstreamRow}
       />
     )
   })
 }
 
-export { doneCount, Rows, summaryOf, treeItemsOf }
+/** How many commits the upstream doesn't have: those marked `unpushed` and every row above `upstreamRow`. */
+function unpushedCount(commits: readonly Commit[], upstreamRow: number) {
+  let count = Math.max(0, upstreamRow)
+  for (let row = count; row < commits.length; row += 1) if (commits[row]?.unpushed === true) count += 1
+  return count
+}
+
+export { doneCount, Rows, summaryOf, treeItemsOf, unpushedCount }
 export type { RowsProps }
