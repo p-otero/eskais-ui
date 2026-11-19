@@ -63,6 +63,9 @@ function GitViewCheck() {
           className="min-w-0 flex-1"
         />
       </section>
+      <section aria-label="In the page" data-testid="page-huge" className="flex min-w-0 flex-col">
+        <GitDiff aria-label="Huge changes in the page" patch={hugePatch} height="auto" fileTree={false} />
+      </section>
     </main>
   )
 }
