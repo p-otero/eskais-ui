@@ -11,7 +11,9 @@ import {
   modelViewerViews,
   type ModelViewerBounds,
   type ModelViewerFraming,
+  type ModelViewerExpressions,
   type ModelViewerView,
+  type ModelViewerWeights,
 } from "@/components/ui/model-viewer-math"
 import {
   modelViewer,
@@ -25,7 +27,7 @@ import { NativeSelect } from "@/components/ui/native-select"
 import { SegmentedControl, SegmentedControlIndicator, SegmentedControlItem } from "@/components/ui/segmented-control"
 import { Toggle } from "@/components/ui/toggle"
 import type { ModelViewerLoadInfo, ModelViewerSource } from "@/components/ui/use-model-viewer-scene"
-import { cn, cnState } from "@/lib/utils"
+import { cnState } from "@/lib/utils"
 
 const {
   Stage: ModelViewerStage,
@@ -79,8 +81,15 @@ type ModelViewerProps = Omit<PartProps<"div">, "children" | "onLoad" | "onError"
     loop?: boolean
     /** The clip's speed, 1 by default. */
     speed?: number
-    /** Morph target weights by name, from 0 to 1, eased on the GPU side of the render loop, not in React. */
-    weights?: Readonly<Record<string, number>>
+    /**
+     * Morph target weights, eased inside the render loop with no React render per frame: a `Float32Array` (or
+     * numbers) aligned with `targetNames`, or a map by name. Names are the GLB's (`extras.targetNames`).
+     */
+    weights?: ModelViewerWeights
+    /** The order aligned `weights` follow; the GLB's own `extras.targetNames` by default. */
+    targetNames?: readonly string[]
+    /** Expression weights by ARKit name (`mouthSmileLeft`), written to the `expr.<name>` targets over `weights`. */
+    expressions?: ModelViewerExpressions
     material?: ModelViewerMaterial
     /** `surface` draws the stage's own background; `transparent` shows what's behind it. */
     background?: "surface" | "transparent"
@@ -102,6 +111,11 @@ type ModelViewerProps = Omit<PartProps<"div">, "children" | "onLoad" | "onError"
   }
 
 const defaultSpin = 20
+
+// Outside the component: React Compiler 1.0 can't compile a ternary inside a logical expression.
+function describedBy(ids: readonly (string | false)[]) {
+  return ids.filter(Boolean).join(" ") || undefined
+}
 
 /**
  * A 3D model (glTF or GLB) in a stage that turns with drag, wheel, pinch and keys, with views, zoom, reset and its
@@ -127,6 +141,8 @@ function ModelViewer({
   loop = true,
   speed = 1,
   weights,
+  targetNames,
+  expressions,
   material = "standard",
   background = "surface",
   autoRotate = false,
@@ -175,7 +191,7 @@ function ModelViewer({
     <>
       <ModelViewerStage
         label={alt}
-        describedBy={cn(controls && hintId, summary ? summaryId : undefined) || undefined}
+        describedBy={describedBy([controls && hintId, summary !== undefined && summaryId])}
         className={cnState(
           "relative isolate aspect-(--model-viewer-ratio) w-full touch-pan-y overflow-hidden rounded-surface border outline-none select-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background data-interactive:cursor-grab data-interactive:active:cursor-grabbing",
           background === "surface" ? "bg-muted" : "bg-transparent",
@@ -200,6 +216,8 @@ function ModelViewer({
               model={model}
               framing={framing}
               weights={weights}
+              targetNames={targetNames}
+              expressions={expressions}
               material={material}
               loop={loop}
               speed={speed}
@@ -345,9 +363,11 @@ function ModelViewerControlBar({
 export { ModelViewer, preloadModelViewer }
 export type {
   ModelViewerBounds,
+  ModelViewerExpressions,
   ModelViewerFraming,
   ModelViewerLabels,
   ModelViewerProps,
   ModelViewerSource,
   ModelViewerView,
+  ModelViewerWeights,
 }

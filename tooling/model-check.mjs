@@ -204,6 +204,31 @@ await withShowcase(
     const settled = await drawsDuring(page, 800)
     check("once the weights arrive, drawing stops", settled.all === 0, JSON.stringify(settled))
 
+    // A new model fades in over the old one: frames while it does, a few commits (the click, the load, the end),
+    // none per frame, and stillness after.
+    {
+      const requests = trackRequests(page)
+      const swapCommitsBefore = await page.evaluate(() => globalThis.reactCommits)
+      const swapDrawsBefore = await draws(page)
+      await page.getByRole("button", { name: "Swap model" }).click()
+      await page.waitForTimeout(1500)
+      requests.stop()
+      const swapDraws = (await draws(page)).all - swapDrawsBefore.all
+      const swapCommits = (await page.evaluate(() => globalThis.reactCommits)) - swapCommitsBefore
+      check(
+        "a new model loads",
+        requests.urls.some((url) => /figure-final.*\.glb$/.test(url)),
+      )
+      check("the swap draws while the new model fades in", swapDraws > 10, String(swapDraws))
+      check(
+        "the swap commits React a few times, not per frame",
+        swapCommits <= 8,
+        `${String(swapCommits)} commits, ${String(swapDraws)} draws`,
+      )
+      const after = await drawsDuring(page, 800)
+      check("once swapped, drawing stops", after.all === 0, JSON.stringify(after))
+    }
+
     // Keys on the stage turn the camera, which comes to rest where they put it.
     await page.getByTestId("viewer").locator("[data-slot=model-viewer-stage]").focus()
     await page.keyboard.press("ArrowRight")

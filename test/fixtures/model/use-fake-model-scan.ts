@@ -1,29 +1,32 @@
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useReducer, useRef, useState } from "react"
 
-import { initialModelScan, runFakeModelEngine, type FakeModelScanState } from "./fake-engine"
+import { idleEngine, reduceEngine, runFakeEngine, toModelScanProps, type EngineEvent } from "./fake-engine"
 
-/** ModelScan's props from the fake engine, with start, cancel and a switch to fail the next run. */
+type Glb = ArrayBuffer | string
+
+/** ModelScan's props from the fake engine's events, with start, cancel and a switch to fail the next run. */
 function useFakeModelScan(
-  model: string,
+  { model, character }: { model: Glb; character: Glb },
   { speed = 1, fail: failFirst = false }: { speed?: number; fail?: boolean } = {},
 ) {
-  const [state, setState] = useState<FakeModelScanState>(initialModelScan)
+  const [state, dispatch] = useReducer(
+    (current: typeof idleEngine, event: EngineEvent | "reset") =>
+      event === "reset" ? idleEngine : reduceEngine(current, event),
+    idleEngine,
+  )
   const [fail, setFail] = useState(failFirst)
   const stop = useRef<() => void>(undefined)
   useEffect(() => () => stop.current?.(), [])
   const start = () => {
     stop.current?.()
-    stop.current = runFakeModelEngine((patch) => setState((current) => ({ ...current, ...patch })), {
-      model,
-      fail,
-      speed,
-    })
+    dispatch("reset")
+    stop.current = runFakeEngine(dispatch, { model, character, fail, speed })
   }
   const cancel = () => {
     stop.current?.()
-    setState(initialModelScan)
+    dispatch("reset")
   }
-  return { state, start, cancel, fail, setFail }
+  return { props: toModelScanProps(state), state, start, cancel, fail, setFail }
 }
 
 export { useFakeModelScan }

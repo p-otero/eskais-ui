@@ -1,6 +1,6 @@
-// Builds the demo character for ModelViewer and ModelScan in code: a stylised figure as a GLB, with morph targets
-// (Build, HeadSize, Smile, Blink) and two clips (Idle, Wave), and a front "photo" of the same figure as an SVG, drawn
-// where the viewer's front camera sees the model, with the points a detector would report on it.
+// The demo figure in code: a GLB with engine-style targets (body.pcNN, face.<modifier>.incr|decr, expr.<ARKit>) and
+// Idle and Wave clips, the same figure with other hair as the final character, its front "photo" as an SVG where the
+// viewer's front camera sees it, and the face and body points a detector would report.
 // Usage: bun tooling/generate-model-fixture.ts (writes test/fixtures/model/)
 import { mkdirSync, writeFileSync } from "node:fs"
 import { join, resolve } from "node:path"
@@ -34,6 +34,7 @@ const out = resolve(import.meta.dirname, "..", "test", "fixtures", "model")
 const palette = {
   skin: "#f1c27d",
   hair: "#5a3825",
+  finalHair: "#3a2418",
   shirt: "#2f9e8f",
   pants: "#34466b",
   shoes: "#2b2b33",
@@ -148,7 +149,7 @@ function morphMesh(name: string, geometry: BufferGeometry, targets: BufferAttrib
 
 const body = merge(bodyParts)
 const bodyMesh = morphMesh("Body", body.geometry, [
-  morph(body.geometry, "Build", (point, index) => {
+  morph(body.geometry, "body.pc00", (point, index) => {
     if (!body.inPart(["torso", "leg"], index)) return
     point.x *= 1.28
     point.z *= 1.22
@@ -158,19 +159,27 @@ const bodyMesh = morphMesh("Body", body.geometry, [
 const headCenter = new Vector3(0, head.y, 0)
 const face = merge(headParts)
 const headMesh = morphMesh("Head", face.geometry, [
-  morph(face.geometry, "HeadSize", (point) => {
+  morph(face.geometry, "face.head_size.incr", (point) => {
     point.sub(headCenter).multiplyScalar(1.16).add(headCenter)
   }),
-  morph(face.geometry, "Smile", (point, index) => {
-    if (!face.inPart(["mouth"], index)) return
-    point.y += 9 * point.x * point.x - 0.006
-    point.x *= 1.1
+  morph(face.geometry, "face.head_size.decr", (point) => {
+    point.sub(headCenter).multiplyScalar(0.88).add(headCenter)
   }),
-  morph(face.geometry, "Blink", (point, index) => {
-    if (!face.inPart(["eye"], index)) return
-    const eye = eyes.reduce((a, b) => (Math.abs(a.x - point.x) < Math.abs(b.x - point.x) ? a : b))
-    point.y = eye.y + (point.y - eye.y) * 0.12
-  }),
+  // The figure's left is +X, as it faces +Z.
+  ...([1, -1] as const).map((side) =>
+    morph(face.geometry, `expr.mouthSmile${side === 1 ? "Left" : "Right"}`, (point, index) => {
+      if (!face.inPart(["mouth"], index) || point.x * side < 0) return
+      point.y += 18 * point.x * point.x - 0.003
+      point.x *= 1.1
+    }),
+  ),
+  ...([1, -1] as const).map((side) =>
+    morph(face.geometry, `expr.eyeBlink${side === 1 ? "Left" : "Right"}`, (point, index) => {
+      if (!face.inPart(["eye"], index) || point.x * side < 0) return
+      const eye = eyes.reduce((a, b) => (Math.abs(a.x - point.x) < Math.abs(b.x - point.x) ? a : b))
+      point.y = eye.y + (point.y - eye.y) * 0.12
+    }),
+  ),
 ])
 
 const shoulder = { x: 0.27, y: 1.3 }
@@ -215,7 +224,7 @@ function idle() {
     new NumberKeyframeTrack(
       "Head.morphTargetInfluences",
       blinkTimes,
-      blinkTimes.flatMap((time) => [0, 0, time === 1.18 ? 1 : 0]),
+      blinkTimes.flatMap((time) => [0, 0, 0, 0, time === 1.18 ? 1 : 0, time === 1.18 ? 1 : 0]),
     ),
   ])
 }
@@ -230,7 +239,11 @@ function wave() {
       [0, 0.45, 0.75, 1.05, 1.35, 1.65, 2.2],
       [...restRight, ...up, ...left, ...right, ...left, ...up, ...restRight],
     ),
-    new NumberKeyframeTrack("Head.morphTargetInfluences", [0, 0.45, 1.65, 2.2], [0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0]),
+    new NumberKeyframeTrack(
+      "Head.morphTargetInfluences",
+      [0, 0.45, 1.65, 2.2],
+      [0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0],
+    ),
   ])
 }
 
@@ -255,6 +268,14 @@ globalThis.FileReader ??= class {
 } as unknown as typeof FileReader
 
 const glb = (await new GLTFExporter().parseAsync(figure, { binary: true, animations: clips })) as ArrayBuffer
+
+// The engine's final character: the same figure with the hair colour it settled on, so the viewer crossfades to it.
+const hairColor = face.geometry.getAttribute("color") as BufferAttribute
+const finalHair = new Color(palette.finalHair)
+for (let index = 0; index < hairColor.count; index += 1) {
+  if (face.inPart(["hair"], index)) hairColor.setXYZ(index, finalHair.r, finalHair.g, finalHair.b)
+}
+const finalGlb = (await new GLTFExporter().parseAsync(figure, { binary: true, animations: clips })) as ArrayBuffer
 
 // The photo: the figure seen by the viewer's front camera at zoom 1 in a 3:4 stage, drawn flat at the depth of the
 // model's centre, so the 3D scene can take over from it without a jump.
@@ -300,7 +321,8 @@ const svg = [
   `</svg>`,
 ].join("")
 
-// What a detector reports: the outline and the face, as fractions of the photo.
+// What two detectors report: the face as fractions of the photo, and the body as fractions of a square frame the
+// photo is padded into (aspect 1), as a pose model with a fixed input shape does.
 const round = (value: number) => Math.round(value * 1000) / 1000
 const point = (x: number, y: number) => ({ x: round(px(x) / width), y: round(py(y) / height) })
 const ring = (cx: number, cy: number, rx: number, ry: number, count: number, from = 0, to = Math.PI * 2) =>
@@ -310,11 +332,13 @@ const ring = (cx: number, cy: number, rx: number, ry: number, count: number, fro
   })
 const column = (x: number, top: number, bottom: number, count: number) =>
   Array.from({ length: count }, (_, index) => point(x, top - ((top - bottom) * index) / (count - 1)))
-const points = [
+const facePoints = [
   ...ring(0, head.y, head.radius, head.radius, 24),
   ...eyes.flatMap((eye) => ring(eye.x, eye.y, 0.03, 0.018, 6)),
   ...ring(0, mouth.y + 0.02, 0.045, 0.02, 8, Math.PI, Math.PI * 2),
   point(0, 1.53),
+]
+const bodyPoints = [
   ...column(-0.2, 1.3, 0.92, 6),
   ...column(0.2, 1.3, 0.92, 6),
   ...column(-armX - 0.062, 1.25, 0.82, 5),
@@ -325,12 +349,28 @@ const points = [
 ]
 
 mkdirSync(out, { recursive: true })
+const interleave = (list: { x: number; y: number }[]) => list.flatMap(({ x, y }) => [x, y])
+const square = (list: { x: number; y: number }[]) =>
+  list.map(({ x, y }) => ({ x: round((1 - aspect) / 2 + x * aspect), y }))
 writeFileSync(join(out, "figure.glb"), new Uint8Array(glb))
+writeFileSync(join(out, "figure-final.glb"), new Uint8Array(finalGlb))
 writeFileSync(join(out, "portrait.svg"), `${svg}\n`)
 writeFileSync(
   join(out, "figure.json"),
-  `${JSON.stringify({ width, height, face: { center: [0, head.y, 0.05], radius: 0.2 }, points }, null, 2)}\n`,
+  `${JSON.stringify(
+    {
+      width,
+      height,
+      faceBounds: { center: [0, head.y, 0.05], radius: 0.2 },
+      landmarks: [
+        { source: "face", aspect, points: interleave(facePoints) },
+        { source: "body", aspect: 1, points: interleave(square(bodyPoints)) },
+      ],
+    },
+    null,
+    2,
+  )}\n`,
 )
 console.log(
-  `figure.glb ${String(glb.byteLength)} bytes, portrait.svg ${String(svg.length)} bytes, ${String(points.length)} points`,
+  `figure.glb ${String(glb.byteLength)} and figure-final.glb ${String(finalGlb.byteLength)} bytes, portrait.svg ${String(svg.length)} bytes, ${String(facePoints.length + bodyPoints.length)} points`,
 )

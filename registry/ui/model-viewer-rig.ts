@@ -7,29 +7,37 @@ import {
   LoopRepeat,
   Mesh,
   MeshToonMaterial,
-  NearestFilter,
-  RedFormat,
   Vector3,
   type AnimationAction,
   type AnimationClip,
   type Material,
-  type MeshStandardMaterial,
   type Object3D,
   type PerspectiveCamera,
 } from "three"
 
 import {
   damp,
-  dampWeights,
+  dampInto,
   fitBoxDistance,
   fitSphereDistance,
-  orbitPosition,
+  writeTargets,
+  type ModelViewerExpressions,
   type ModelViewerFraming,
-  type WeightMap,
+  type ModelViewerWeights,
 } from "@/components/ui/model-viewer-math"
+import {
+  isMesh,
+  signatureOf,
+  targetNamesOf,
+  toonGradient,
+  toonOf,
+  type MorphMesh,
+} from "@/components/ui/model-viewer-meshes"
 import type { ModelViewerHandle } from "@/components/ui/model-viewer-primitive"
 
 type LoadedModel = { scene: Object3D; animations: readonly AnimationClip[] }
+
+type Binding = { influences: number[]; index: number }
 
 type ModelViewerMaterial = "standard" | "toon"
 
@@ -51,43 +59,29 @@ const clipFade = 0.3
 const angleEpsilon = 0.02
 const relativeEpsilon = 1e-4
 
-type MorphMesh = Mesh & { morphTargetDictionary: Record<string, number>; morphTargetInfluences: number[] }
-
-const isMesh = (object: Object3D): object is Mesh => (object as Mesh).isMesh === true
-
-/** Three tones of light, read nearest, for the toon look. */
-function toonGradient() {
-  const texture = new DataTexture(new Uint8Array([90, 170, 255]), 3, 1, RedFormat)
-  texture.minFilter = NearestFilter
-  texture.magFilter = NearestFilter
-  texture.generateMipmaps = false
-  texture.needsUpdate = true
-  return texture
+type Channels = {
+  index: ReadonlyMap<string, number>
+  current: Float32Array
+  target: Float32Array
+  active: Uint8Array
 }
 
-function toonOf(material: Material, gradientMap: DataTexture) {
-  const source = material as MeshStandardMaterial
-  return new MeshToonMaterial({
-    name: material.name,
-    color: source.color,
-    map: source.map ?? null,
-    vertexColors: source.vertexColors,
-    transparent: source.transparent,
-    opacity: source.opacity,
-    side: source.side,
-    gradientMap,
-  })
+type CameraState = { yaw: number; pitch: number; zoom: number; distance: number; turn: number; ready: boolean }
+
+/** What a replacing model takes over from the one it replaces. */
+type RigSnapshot = {
+  cameraState: () => CameraState
+  centerNow: () => Vector3
+  channels: () => Channels
+  clipState: () => { name: string | null; time: number }
+  reveal: () => number
 }
 
-/**
- * Everything a loaded model does per frame, outside React: the camera eased to the orbit the primitive holds, morph
- * weights eased to their targets, and the animation mixer. `update` says whether it needs another frame, so the
- * canvas draws only while something moves.
- */
-function createModelRig(model: LoadedModel) {
+function createModelRig(model: LoadedModel, owned = true) {
   const box = new Box3().setFromObject(model.scene)
   const size = box.getSize(new Vector3())
   const boxCenter = box.getCenter(new Vector3())
+  const boxSize = [size.x, size.y, size.z] as const
   const meshes: MorphMesh[] = []
   const surfaces: Mesh[] = []
   model.scene.traverse((object) => {
@@ -95,7 +89,8 @@ function createModelRig(model: LoadedModel) {
     surfaces.push(object)
     if (object.morphTargetDictionary && object.morphTargetInfluences) meshes.push(object as MorphMesh)
   })
-  const morphNames = [...new Set(meshes.flatMap((mesh) => Object.keys(mesh.morphTargetDictionary)))]
+  const morphNames = targetNamesOf(meshes)
+  const signature = signatureOf(surfaces)
   const clipNames = model.animations.map((clip) => clip.name)
   const mixer = new AnimationMixer(model.scene)
   const actions = new Map<string, AnimationAction>()
@@ -105,13 +100,55 @@ function createModelRig(model: LoadedModel) {
   let gradient: DataTexture | undefined
   const toons = new Map<Material, MeshToonMaterial>()
   let material: ModelViewerMaterial = "standard"
+  // Two fades multiply: a reveal (ModelScan's photo turning into the model) and a swap (a new model over the old).
+  const fades = { reveal: 1, swap: 1 }
   let opacity = 1
 
-  let weights: WeightMap = {}
-  let targetWeights: WeightMap = {}
+  // One channel per target name: where it is, where it goes, and whether the consumer drives it (an undriven one
+  // is left to clips). The bindings to each mesh's influences are found once, so a frame only copies numbers.
+  let names: readonly string[] = morphNames
+  let index = new Map<string, number>()
+  let current = new Float32Array(0)
+  let target = new Float32Array(0)
+  let active = new Uint8Array(0)
+  let bindings: Binding[][] = []
   let weightsSettled = true
+  const bind = (next: readonly string[]) => {
+    const previous = { index, current, target, active }
+    names = next
+    index = new Map(next.map((name, i) => [name, i]))
+    current = new Float32Array(next.length)
+    target = new Float32Array(next.length)
+    active = new Uint8Array(next.length)
+    bindings = next.map((name) =>
+      meshes.flatMap((mesh) => {
+        const at = mesh.morphTargetDictionary[name]
+        return at === undefined ? [] : [{ influences: mesh.morphTargetInfluences, index: at }]
+      }),
+    )
+    copyChannels(previous)
+  }
+  const copyChannels = (from: Channels) => {
+    for (const [name, i] of index) {
+      const j = from.index.get(name)
+      if (j === undefined) continue
+      current[i] = from.current[j] ?? 0
+      target[i] = from.target[j] ?? 0
+      active[i] = from.active[j] ?? 0
+    }
+  }
+  bind(morphNames)
 
-  const camera = { yaw: 0, pitch: 0, zoom: 1, distance: 0, turn: -1, ready: false }
+  const camera: CameraState = { yaw: 0, pitch: 0, zoom: 1, distance: 0, turn: -1, ready: false }
+  // Reused every frame, so the render loop allocates nothing.
+  const result = { moving: false, justSettled: false, camera: { yaw: 0, pitch: 0, zoom: 1 } }
+  const framed = { center: new Vector3(), distance: 0 }
+  const stepping = { dt: 0, jump: false, moved: false }
+  const step = (from: number, to: number, epsilon: number) => {
+    if (stepping.jump || Math.abs(from - to) < epsilon) return to
+    stepping.moved = true
+    return damp(from, to, cameraRate, stepping.dt)
+  }
   const center = new Vector3()
   const goalCenter = new Vector3()
   let settled = false
@@ -119,10 +156,13 @@ function createModelRig(model: LoadedModel) {
   let wasPlaying = false
 
   const applyWeights = () => {
-    for (const mesh of meshes) {
-      for (const [name, value] of Object.entries(weights)) {
-        const index = mesh.morphTargetDictionary[name]
-        if (index !== undefined) mesh.morphTargetInfluences[index] = value
+    for (let i = 0; i < bindings.length; i += 1) {
+      if (!active[i]) continue
+      const value = current[i] ?? 0
+      const targets = bindings[i] ?? []
+      for (let j = 0; j < targets.length; j += 1) {
+        const binding = targets[j] as Binding
+        binding.influences[binding.index] = value
       }
     }
   }
@@ -133,10 +173,11 @@ function createModelRig(model: LoadedModel) {
 
   const applyOpacity = () => {
     eachMaterial((item) => {
+      // Only a change between opaque and transparent needs the program checked again, not every step of a fade.
+      if (item.transparent !== opacity < 1) item.needsUpdate = true
       item.transparent = opacity < 1
       item.opacity = opacity
       item.depthWrite = opacity >= 1
-      item.needsUpdate = true
     })
   }
 
@@ -144,18 +185,56 @@ function createModelRig(model: LoadedModel) {
     scene: model.scene,
     morphNames,
     clipNames,
+    signature,
+    owned,
+    /** The order aligned weights follow: `next`, or the GLB's own (`extras.targetNames`). */
+    setTargetNames(next: readonly string[] | undefined) {
+      const order = next && next.length > 0 ? next : morphNames
+      if (order.length === names.length && order.every((name, i) => names[i] === name)) return
+      bind(order)
+    },
+    targetNames: () => names,
     /** The box's centre and size, in the model's units. */
     bounds: { center: boxCenter, size },
-    /** New target weights; `immediate` jumps to them, like the first weights of a model. */
-    setWeights(next: WeightMap, immediate = false) {
-      targetWeights = next
+    /** New target weights and expressions; `immediate` jumps to them, like the first weights of a model. */
+    setWeights(weights: ModelViewerWeights | undefined, expressions?: ModelViewerExpressions, immediate = false) {
+      writeTargets(index, target, active, weights, expressions)
       weightsSettled = false
       if (immediate) {
-        weights = dampWeights(weights, next, weightRate, Number.POSITIVE_INFINITY).next
+        for (let i = 0; i < current.length; i += 1) if (active[i]) current[i] = target[i] ?? 0
         weightsSettled = true
         applyWeights()
       }
     },
+    /** The current weight of a target, for tests and tools. */
+    weight: (name: string) => {
+      const i = index.get(name)
+      return i === undefined ? undefined : current[i]
+    },
+    /**
+     * Takes over from the model this one replaces: where its camera is, its weights as they are now (so nothing
+     * jumps when the new one shows), and how far into the same clip it was.
+     */
+    inherit(previous: RigSnapshot) {
+      Object.assign(camera, previous.cameraState())
+      center.copy(previous.centerNow())
+      copyChannels(previous.channels())
+      rig.setOpacity(previous.reveal(), "reveal")
+      weightsSettled = false
+      applyWeights()
+      const clip = previous.clipState()
+      const action = clip.name ? actions.get(clip.name) : undefined
+      if (action && clip.name) {
+        action.play()
+        action.time = clip.time
+        activeClip = clip.name
+        mixer.update(0)
+      }
+    },
+    cameraState: () => ({ ...camera }),
+    centerNow: () => center,
+    channels: (): Channels => ({ index, current, target, active }),
+    clipState: () => ({ name: activeClip, time: activeClip ? (actions.get(activeClip)?.time ?? 0) : 0 }),
     setMaterial(next: ModelViewerMaterial) {
       if (next === material) return
       material = next
@@ -178,21 +257,25 @@ function createModelRig(model: LoadedModel) {
       }
       applyOpacity()
     },
-    /** Fades the whole model, for a reveal. */
-    setOpacity(next: number) {
-      if (next === opacity) return
-      opacity = next
+    /** Fades the whole model: `reveal` for an entrance, `swap` while a new model replaces it. */
+    setOpacity(next: number, fade: "reveal" | "swap" = "reveal") {
+      fades[fade] = next
+      const combined = fades.reveal * fades.swap
+      if (combined === opacity) return
+      opacity = combined
       applyOpacity()
     },
+    reveal: () => fades.reveal,
     /** Where the camera looks and how far it stands at zoom 1, for the current framing and aspect. */
     frame(framing: ModelViewerFraming, view: PerspectiveCamera) {
       if (framing === "full") {
-        return { center: boxCenter, distance: fitBoxDistance([size.x, size.y, size.z], view.fov, view.aspect) }
+        framed.center.copy(boxCenter)
+        framed.distance = fitBoxDistance(boxSize, view.fov, view.aspect)
+      } else {
+        framed.center.fromArray(framing.center)
+        framed.distance = fitSphereDistance(framing.radius, view.fov, view.aspect)
       }
-      return {
-        center: new Vector3(...framing.center),
-        distance: fitSphereDistance(framing.radius, view.fov, view.aspect),
-      }
+      return framed
     },
     /** Moves everything one frame on; true while something still moves. */
     update(dt: number, input: RigInput) {
@@ -206,8 +289,10 @@ function createModelRig(model: LoadedModel) {
         moving = true
       }
 
-      const framed = rig.frame(input.framing, view)
-      goalCenter.copy(framed.center)
+      const goal = rig.frame(input.framing, view)
+      goalCenter.copy(goal.center)
+      stepping.dt = dt
+      stepping.jump = jump
       if (!camera.ready || state.turn !== camera.turn) {
         if (!camera.ready || state.motion === "jump") {
           camera.yaw = state.yaw
@@ -216,33 +301,32 @@ function createModelRig(model: LoadedModel) {
         }
         if (!camera.ready) {
           center.copy(goalCenter)
-          camera.distance = framed.distance
+          camera.distance = goal.distance
         }
         camera.turn = state.turn
         camera.ready = true
         settled = false
       }
-      const step = (from: number, to: number, epsilon: number) => {
-        if (jump || Math.abs(from - to) < epsilon) return to
-        moving = true
-        return damp(from, to, cameraRate, dt)
-      }
-      const before = moving
-      moving = false
+      stepping.moved = false
       camera.yaw = step(camera.yaw, state.yaw, angleEpsilon)
       camera.pitch = step(camera.pitch, state.pitch, angleEpsilon)
       camera.zoom = step(camera.zoom, state.zoom, relativeEpsilon)
-      camera.distance = step(camera.distance, framed.distance, framed.distance * relativeEpsilon)
+      camera.distance = step(camera.distance, goal.distance, goal.distance * relativeEpsilon)
       center.set(
         step(center.x, goalCenter.x, camera.distance * relativeEpsilon),
         step(center.y, goalCenter.y, camera.distance * relativeEpsilon),
         step(center.z, goalCenter.z, camera.distance * relativeEpsilon),
       )
-      const cameraMoving = moving
-      moving = before || cameraMoving
+      const cameraMoving = stepping.moved
+      if (cameraMoving) moving = true
       const distance = camera.distance / camera.zoom
-      const [x, y, z] = orbitPosition([center.x, center.y, center.z], camera.yaw, camera.pitch, distance)
-      view.position.set(x, y, z)
+      const yaw = (camera.yaw * Math.PI) / 180
+      const pitch = (camera.pitch * Math.PI) / 180
+      view.position.set(
+        center.x + distance * Math.sin(yaw) * Math.cos(pitch),
+        center.y + distance * Math.sin(pitch),
+        center.z + distance * Math.cos(yaw) * Math.cos(pitch),
+      )
       view.lookAt(center)
       const near = distance / 100
       if (Math.abs(view.near - near) > near * 0.1) {
@@ -277,19 +361,21 @@ function createModelRig(model: LoadedModel) {
       wasPlaying = playing
 
       if (!weightsSettled) {
-        const result = dampWeights(weights, targetWeights, weightRate, dt)
-        weights = result.next
-        weightsSettled = result.settled
+        weightsSettled = dampInto(current, target, active, weightRate, dt)
         moving = true
       }
       applyWeights()
 
       // The camera reports where it came to rest, even while a clip keeps the frames coming.
-      const justSettled = !cameraMoving && !settled
+      result.justSettled = !cameraMoving && !settled
       if (!cameraMoving) settled = true
-      return { moving, justSettled, camera: { yaw: camera.yaw, pitch: camera.pitch, zoom: camera.zoom } }
+      result.moving = moving
+      result.camera.yaw = camera.yaw
+      result.camera.pitch = camera.pitch
+      result.camera.zoom = camera.zoom
+      return result
     },
-    dispose(owned: boolean) {
+    dispose() {
       mixer.stopAllAction()
       mixer.uncacheRoot(model.scene)
       for (const toon of toons.values()) toon.dispose()

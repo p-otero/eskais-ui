@@ -3,7 +3,12 @@
 import { Canvas } from "@react-three/fiber"
 import { Suspense, type ReactNode } from "react"
 
-import { fieldOfView, type ModelViewerFraming, type WeightMap } from "@/components/ui/model-viewer-math"
+import {
+  fieldOfView,
+  type ModelViewerExpressions,
+  type ModelViewerFraming,
+  type ModelViewerWeights,
+} from "@/components/ui/model-viewer-math"
 import type { ModelViewerHandle } from "@/components/ui/model-viewer-primitive"
 import { ModelViewerSceneContext, type ModelViewerMaterial } from "@/components/ui/model-viewer-rig"
 import {
@@ -18,7 +23,9 @@ type ModelViewerSceneProps = {
   handle: ModelViewerHandle
   model: ModelViewerSource | undefined
   framing: ModelViewerFraming
-  weights: WeightMap | undefined
+  weights: ModelViewerWeights | undefined
+  targetNames: readonly string[] | undefined
+  expressions: ModelViewerExpressions | undefined
   material: ModelViewerMaterial
   loop: boolean
   speed: number
@@ -40,24 +47,14 @@ function Lights() {
   )
 }
 
-function ModelLayer({
-  handle,
-  model,
-  framing,
-  weights,
-  material,
-  loop,
-  speed,
-  autoRotate,
-  onLoad,
-  onError,
-  children,
-}: ModelViewerSceneProps) {
-  const rig = useModelRig(model, handle, onLoad, onError)
-  useModelFrame({ handle, rig, framing, weights, material, loop, speed, autoRotate })
+function ModelLayer({ handle, model, onLoad, onError, children, ...frame }: ModelViewerSceneProps) {
+  const { rig, leaving, finishSwap } = useModelRig(model, handle, onLoad, onError)
+  useModelFrame({ handle, rig, leaving, finishSwap, ...frame })
   return (
-    <ModelViewerSceneContext value={{ handle, rig, framing }}>
-      {rig ? <primitive object={rig.scene} /> : null}
+    <ModelViewerSceneContext value={{ handle, rig, framing: frame.framing }}>
+      {/* Keyed by scene, so a swap mounts the new model and keeps the old one where it is. */}
+      {leaving ? <primitive key={leaving.scene.uuid} object={leaving.scene} /> : null}
+      {rig ? <primitive key={rig.scene.uuid} object={rig.scene} /> : null}
       <Suspense fallback={null}>{children}</Suspense>
     </ModelViewerSceneContext>
   )
