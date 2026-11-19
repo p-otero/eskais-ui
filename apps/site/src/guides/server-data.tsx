@@ -135,7 +135,7 @@ export default function ServerData() {
   return (
     <Article>
       <DocTitle
-        eyebrow="Getting started"
+        eyebrow="Guides"
         title="Server data"
         description="Tables, lists and comboboxes over any backend: one contract for paging, one schema for filters, adapters and serializers for each wire format."
       />

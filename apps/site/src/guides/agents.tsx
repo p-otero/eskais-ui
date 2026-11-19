@@ -34,7 +34,7 @@ export default function Agents() {
   return (
     <Article>
       <DocTitle
-        eyebrow="Getting started"
+        eyebrow="Get started"
         title="Agents"
         description="Every operable control is a UI SDK part, so an agent reads the page by accessible names and acts through the same parts a person uses."
       />

@@ -65,7 +65,7 @@ export default function Installation() {
   return (
     <Article>
       <DocTitle
-        eyebrow="Getting started"
+        eyebrow="Get started"
         title="Installation"
         description="Eskais UI is a shadcn registry: components arrive in your project as source you own, with their UI SDK, Tailwind and token dependencies."
       />

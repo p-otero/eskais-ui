@@ -2,7 +2,6 @@ import { MoonIcon, SunIcon } from "lucide-react"
 import { usePreference } from "@ui-sdk/react/preferences"
 import type { ReactNode } from "react"
 import { ButtonLink } from "@/components/ui/button-link"
-import { Floating, FloatingContent } from "@/components/ui/floating"
 import {
   NavigationMenu,
   NavigationMenuContent,
@@ -65,7 +64,7 @@ function Brand() {
   )
 }
 
-function MainNav({ className = "narrow:hidden" }: { className?: string }) {
+function MainNav({ className }: { className?: string }) {
   const route = useRoute()
   const inDocs = route.startsWith("/docs")
   return (
@@ -118,30 +117,16 @@ function HeaderActions({ children }: { children?: ReactNode }) {
   )
 }
 
-/** The landing page's floating pill. */
-function SiteHeader() {
-  return (
-    // Composed from NavigationMenu and Floating until the registry ships a SiteHeader; switch to it once it lands.
-    <Floating side="top" className="w-full">
-      <FloatingContent className="w-full max-w-6xl">
-        <header className="flex w-full min-w-0 items-center justify-between gap-items">
-          <Brand />
-          <MainNav />
-          <HeaderActions>
-            <ButtonLink variant="ghost" className="hidden narrow:inline-flex" {...linkTo("/docs/installation")}>
-              Docs
-            </ButtonLink>
-          </HeaderActions>
-        </header>
-      </FloatingContent>
-    </Floating>
-  )
-}
-
-/** The docs pages' app bar: the sidebar's trigger, the brand and the main navigation, then search and settings. */
-function DocsTopbar({ trigger }: { trigger: ReactNode }) {
+/**
+ * The site's one app bar, on the landing, the docs and every other page: the brand and the main navigation, then
+ * search and settings. Docs pages pass their sidebar's trigger, which opens the navigation below lg; without one,
+ * a Docs link stands in for the main navigation there.
+ */
+function SiteTopbar({ trigger }: { trigger?: ReactNode }) {
   return (
     <Topbar
+      // With no centre slot to keep centred, the actions take their own width and the brand side gives way.
+      className="*:data-[slot=topbar-trailing]:flex-none"
       leading={
         <>
           {trigger}
@@ -150,9 +135,17 @@ function DocsTopbar({ trigger }: { trigger: ReactNode }) {
           <MainNav className="max-lg:hidden" />
         </>
       }
-      trailing={<HeaderActions />}
+      trailing={
+        <HeaderActions>
+          {trigger === undefined && (
+            <ButtonLink variant="ghost" className="lg:hidden" {...linkTo("/docs/installation")}>
+              Docs
+            </ButtonLink>
+          )}
+        </HeaderActions>
+      }
     />
   )
 }
 
-export { DocsTopbar, repositoryUrl, SiteHeader, slug }
+export { repositoryUrl, SiteTopbar, slug }

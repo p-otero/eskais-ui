@@ -1,5 +1,5 @@
 import { categories } from "./content/categories"
-import { guides } from "./guides/meta"
+import { guideGroups, guides, type GuideGroup } from "./guides/meta"
 import { findItem } from "./registry"
 import { componentPath, guidePath } from "./routes"
 
@@ -11,10 +11,10 @@ type DocPage = {
   keywords: string[]
 }
 
-const guideSection = (name: string) => ({
+const guideSection = (name: GuideGroup) => ({
   name,
   pages: guides
-    .filter((guide) => (guide.group ?? "Getting started") === name)
+    .filter((guide) => guide.group === name)
     .map((guide) => ({
       route: guidePath(guide.slug),
       title: guide.title,
@@ -25,8 +25,7 @@ const guideSection = (name: string) => ({
 })
 
 const docSections: { name: string; pages: DocPage[] }[] = [
-  guideSection("Getting started"),
-  guideSection("Tools"),
+  ...guideGroups.map(guideSection),
   ...categories.map((category) => ({
     name: category.name,
     pages: category.items.map((name) => {

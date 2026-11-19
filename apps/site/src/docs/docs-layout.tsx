@@ -4,7 +4,8 @@ import { DocsBreadcrumb, DocsLayout, DocsPager, DocsToc, useTocItems } from "@/c
 import { Sidebar, SidebarGroup, SidebarItem, SidebarTrigger, useSidebarState } from "@/components/ui/sidebar"
 import type { SidebarState } from "@/components/ui/sidebar"
 
-import { DocsTopbar, slug } from "../header"
+import { SiteTopbar, slug } from "../header"
+import { useOpenSections } from "../hooks/use-open-sections"
 import { useScrollIntoView } from "../hooks/use-scroll-into-view"
 import { docPages, docSections, neighbours } from "../pages"
 import { followTo, hrefFor, linkTo } from "../router"
@@ -15,6 +16,8 @@ const narrowQuery = "(width <= 47.5rem)"
 function DocsSidebar({ route, state }: { route: string; state: SidebarState }) {
   const container = useRef<HTMLDivElement>(null)
   useScrollIntoView(container, `a[href="${hrefFor(route)}"]`)
+  const current = docSections.find((section) => section.pages.some((page) => page.route === route))?.name
+  const sections = useOpenSections("eskais-site-sections", current, docSections[0]?.name)
   return (
     <div ref={container} className="flex h-full">
       <Sidebar
@@ -26,7 +29,13 @@ function DocsSidebar({ route, state }: { route: string; state: SidebarState }) {
         className="bg-transparent"
       >
         {docSections.map((section) => (
-          <SidebarGroup key={section.name} label={section.name}>
+          <SidebarGroup
+            key={section.name}
+            label={section.name}
+            collapsible
+            open={sections.isOpen(section.name)}
+            onOpenChange={(open) => sections.setOpen(section.name, open)}
+          >
             {section.pages.map((page) => (
               <SidebarItem key={page.route} current={page.route === route} {...linkTo(page.route)}>
                 {page.title}
@@ -65,7 +74,7 @@ function SiteDocsLayout({ route, children }: { route: string; children: ReactNod
   const sidebar = useSidebarState({ storageKey: "eskais-site-sidebar" })
   return (
     <DocsLayout
-      topbar={<DocsTopbar trigger={<SidebarTrigger {...sidebar.triggerProps} narrowQuery={narrowQuery} />} />}
+      topbar={<SiteTopbar trigger={<SidebarTrigger {...sidebar.triggerProps} narrowQuery={narrowQuery} />} />}
       sidebar={<DocsSidebar route={route} state={sidebar} />}
       header={
         crumbs.length > 0 ? (

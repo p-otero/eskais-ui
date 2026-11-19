@@ -14,7 +14,7 @@ export default function Theming() {
   return (
     <Article>
       <DocTitle
-        eyebrow="Getting started"
+        eyebrow="Theming"
         title="Theming"
         description="A handful of seed tokens derive every colour in light and dark. Palettes, density, corner radius and glass are attribute scopes you can nest anywhere."
       />

@@ -4,7 +4,7 @@ export default function Accessibility() {
   return (
     <Article>
       <DocTitle
-        eyebrow="Getting started"
+        eyebrow="Guides"
         title="Accessibility"
         description="Keyboard, focus and ARIA come from UI SDK; contrast, targets and motion from the theme. What's left for you is naming things and structuring the page."
       />

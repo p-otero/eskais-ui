@@ -29,7 +29,7 @@ export default function Mockups() {
   return (
     <Article>
       <DocTitle
-        eyebrow="Tools"
+        eyebrow="Get started"
         title="Mockups"
         description="Sketch a screen as TSX with your project's own components and fixture data, then build it into one offline HTML file and check it."
       />

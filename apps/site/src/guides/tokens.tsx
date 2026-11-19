@@ -51,7 +51,7 @@ export default function Tokens() {
   return (
     <Article>
       <DocTitle
-        eyebrow="Getting started"
+        eyebrow="Theming"
         title="Spacing and tokens"
         description='Spacing, type, elevation and motion are chosen by role, never by number. The values change with the density, so data-density="compact" tightens everything at once, and the corner radius is an axis of its own.'
       />

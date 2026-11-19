@@ -18,7 +18,7 @@ export default function Performance() {
   return (
     <Article>
       <DocTitle
-        eyebrow="Getting started"
+        eyebrow="Guides"
         title="Performance"
         description="What each key press may cost, how Eskais measures it in Chrome, and how to measure your own screens."
       />

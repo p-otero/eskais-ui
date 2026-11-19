@@ -222,7 +222,7 @@ export default function Icons() {
   return (
     <Article>
       <DocTitle
-        eyebrow="Getting started"
+        eyebrow="Theming"
         title="Icons"
         description="Components draw their icons with lucide-react, imported by name the way shadcn does. Icon names one for screen readers when it carries meaning."
       />
