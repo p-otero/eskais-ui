@@ -209,26 +209,44 @@ async function ensureItem(
   load.items.set(name, loaded)
 }
 
-function writeFiles(load: RegistryLoad): Map<string, string> {
-  const owners = new Map<string, string>()
-  for (const { item, source } of load.items.values()) {
-    mkdirSync(join(source.dir, "files"), { recursive: true })
+export type ShippedFile = {
+  item: string
+  path: string
+  content: string
+  dir: string
+}
+
+// `shadcn add` overwrites a file that two items ship, so the cache accepts it when every
+// copy is byte-identical. Line endings are not normalised: shadcn writes a CRLF copy as is.
+export function shippedFiles(items: Iterable<{ item: RegistryItem; dir: string }>): Map<string, ShippedFile> {
+  const shipped = new Map<string, ShippedFile>()
+  for (const { item, dir } of items) {
     for (const file of item.files ?? []) {
       if (typeof file.content !== "string") continue
       const base = sourceBase(file.path)
-      const owner = owners.get(base)
-      if (owner !== undefined) {
+      const first = shipped.get(base)
+      if (first === undefined) {
+        shipped.set(base, { item: item.name, path: file.path, content: file.content, dir })
+        continue
+      }
+      if (first.content !== file.content || basename(first.path) !== basename(file.path)) {
         throw new EnvironmentError(
-          `the items ${owner} and ${item.name} both ship ${base}; one registry file name per cache`,
+          `the items ${first.item} and ${item.name} both ship ${base} (${first.path} and ${file.path}) with different contents; install one of them, or a registry version where they share it`,
         )
       }
-      owners.set(base, item.name)
-      writeFileSync(join(source.dir, "files", basename(file.path)), file.content)
     }
   }
+  return shipped
+}
+
+function writeFiles(load: RegistryLoad): Map<string, string> {
+  const shipped = shippedFiles([...load.items.values()].map(({ item, source }) => ({ item, dir: source.dir })))
   const files = new Map<string, string>()
-  for (const { source, files: shipped } of load.items.values()) {
-    for (const base of shipped.keys()) files.set(base, join(source.dir, "files", basename(shipped.get(base) ?? "")))
+  for (const [base, file] of shipped) {
+    const target = join(file.dir, "files", basename(file.path))
+    mkdirSync(dirname(target), { recursive: true })
+    writeFileSync(target, file.content)
+    files.set(base, target)
   }
   return files
 }

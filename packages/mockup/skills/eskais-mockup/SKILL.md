@@ -20,7 +20,7 @@ The CLI is `packages/mockup/src/cli.ts` in the eskais-ui repository. It isn't on
 Use the first level that can express the design, and never skip one:
 
 1. **The project's components**, own or installed, through its aliases: `import { Button } from "@/components/ui/button"`. `mockup inspect` lists them; `mockup inspect Button Card` prints each one's import line, `*Props` and `cva` variants.
-2. **Eskais registry items the project has not installed**: `import { Badge } from "@registry/badge"`. `mockup inspect --registry` lists them with one-line descriptions. `build` fetches the item and its `registryDependencies` from the registry URL in `components.json` into `.mockups/.registry/<ref>/` (`<ref>` is the commit pinned in the URL, or a hash of it), and records `npx shadcn@latest add @eskais/badge` in `manifest.install`. Only `inspect` and `build` use the network; `out.html` stays offline.
+2. **Eskais registry items the project has not installed**: `import { Badge } from "@registry/badge"`. `mockup inspect --registry` lists them with one-line descriptions. `build` fetches the item and its `registryDependencies` from the registry URL in `components.json` into `.mockups/.registry/<ref>/` (`<ref>` is the commit pinned in the URL, or a hash of it), and records `npx shadcn@latest add @eskais/badge` in `manifest.install`. Two items may ship the same file when the copies are byte-identical, as `shadcn add` overwrites it; different copies of one file are an environment error naming the file and both items. Only `inspect` and `build` use the network; `out.html` stays offline.
 3. **Composition in `.mockups/<name>/parts/*.tsx`**, built from levels 1 and 2. A component with a `<Name>Props` type is recorded in `manifest.proposed` with its props:
 
    ```tsx
