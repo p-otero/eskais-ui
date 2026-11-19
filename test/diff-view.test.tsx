@@ -328,3 +328,17 @@ describe("diff view model", () => {
 test("the primitive renders on the server", () => {
   checkServer(diffView, {}, "<root><viewport></viewport></root>")
 })
+
+test("split layout: an added or deleted file's one side spans the row", async () => {
+  const added = diffFile("", "one\ntwo\n", { oldPath: "a.txt", newPath: "a.txt" })
+  render(<GitDiff aria-label="Added" files={[{ ...added, status: "added" }]} defaultLayout="split" fileTree={false} />)
+  await settle()
+  const grid = screen.getByRole("grid", { name: "Changes in a.txt" })
+  expect(grid.getAttribute("aria-colcount")).toBe("1")
+  const rows = within(grid).getAllByRole("row")
+  for (const row of rows) {
+    expect(row.className).toContain("grid-cols-1")
+    expect(within(row).getAllByRole("gridcell")).toHaveLength(1)
+  }
+  expect(grid.querySelector('[role=gridcell][data-old="1"]')).not.toBeNull()
+})

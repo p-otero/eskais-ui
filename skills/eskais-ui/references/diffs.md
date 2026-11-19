@@ -24,6 +24,7 @@ Part of the `eskais-ui` skill.
 - `TextDiff` diffs during render below 200k characters and in a Web Worker above (`worker`, `workerThreshold`). The worker is a Blob built from the engine's source: no worker file to configure; under a Content Security Policy without `worker-src blob:` it diffs on the main thread.
 - Syntax colours load the language's Lezer parser on first use and parse each file side in slices while you read; lines show plain first and colour in when the parse lands.
 - Pass `labels` as a constant: a new object every render re-renders every visible row.
+- In split layout an added or deleted file shows its one side across the whole width.
 - Wrapped lines (`wrap`) are measured as they render; unwrapped rows have a fixed height and scroll cheapest.
 
 ## Review flow

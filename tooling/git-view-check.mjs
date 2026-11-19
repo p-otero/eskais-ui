@@ -1,6 +1,6 @@
 // Drives ?demo=git-view-check in Chrome: GitDiff's file tree beside a 34rem list at 1440px (13rem, collapsible),
 // GitDiff height="auto" in a scrolling body (grows to a short diff, caps a long one at --diff-max-height and hands
-// the wheel back to the body).
+// the wheel back to the body), and an added file in split layout at 1440px and 1920px (its one side spans the row).
 // Usage: node tooling/git-view-check.mjs (after `bun run build:showcase`)
 import { withShowcase } from "./showcase-browser.mjs"
 
@@ -21,7 +21,7 @@ const rect = (page, selector) =>
 
 async function open(page) {
   await page.goto(`${new URL(page.url()).origin}/?demo=git-view-check`)
-  await page.waitForSelector("[data-testid=auto-long] [role=row]")
+  await page.waitForSelector("[data-testid=split] [role=row]")
   await page.waitForTimeout(200)
 }
 
@@ -118,14 +118,39 @@ async function autoHeight(page) {
   )
 }
 
-await withShowcase(
-  async (page) => {
-    await open(page)
-    await treeBesideList(page)
-    await autoHeight(page)
-  },
-  { viewport: { width: 1440, height: 1000 }, deviceScaleFactor: 1 },
-)
+async function splitAdded(page, width) {
+  const cells = await page.evaluate(() => {
+    const rows = [...document.querySelectorAll("[data-testid=split] [role=row]")].filter(
+      (row) => row.querySelector("[role=gridcell]")?.dataset.old !== undefined,
+    )
+    return rows.slice(0, 5).map((row) => {
+      const box = row.getBoundingClientRect()
+      const cell = [...row.querySelectorAll("[role=gridcell]")].map((entry) => entry.getBoundingClientRect())
+      return { row: [box.left, box.width], cells: cell.map((entry) => [entry.left, entry.width]) }
+    })
+  })
+  const ok =
+    cells.length > 0 &&
+    cells.every(
+      ({ row, cells: list }) =>
+        list.length === 1 && Math.abs(list[0][0] - row[0]) < 1 && Math.abs(list[0][1] - row[1]) < 1,
+    )
+  check(`${String(width)}: an added file's new side spans the split row`, ok, JSON.stringify(cells[0]))
+}
+
+for (const width of [1440, 1920]) {
+  await withShowcase(
+    async (page) => {
+      await open(page)
+      if (width === 1440) {
+        await treeBesideList(page)
+        await autoHeight(page)
+      }
+      await splitAdded(page, width)
+    },
+    { viewport: { width, height: 1000 }, deviceScaleFactor: 1 },
+  )
+}
 
 if (failures.length > 0) {
   console.error(`\n${String(failures.length)} git view check(s) failed`)
