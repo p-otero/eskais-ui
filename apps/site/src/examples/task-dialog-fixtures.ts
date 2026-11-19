@@ -1,6 +1,7 @@
 // Sample data for the task dialog example: a task with a branch, commits and uncommitted work, and one without a
 // branch yet.
 import type { AttemptView, TaskView, UsageSummary } from "@/lib/agent-task-types"
+import type { Commit } from "@/lib/commit-graph"
 
 const NOW = "2026-11-18T21:40:00Z"
 
@@ -14,12 +15,20 @@ type TaskBranch = {
   pullRequest?: string
 }
 
-type ChangeCommit = { id: string; message: string; date: string }
+type PatchTotals = { files: number; additions: number; deletions: number }
 
-type ChangeEntry =
-  | { kind: "all"; id: "all"; label: string; files: number; additions: number; deletions: number; patch: string }
-  | { kind: "worktree"; id: "worktree"; staged: number; unstaged: number; files: number; patch: string }
-  | { kind: "commit"; id: string; commit: ChangeCommit; pushed: boolean; files: number; patch: string }
+/** What a task's branch changed: the diff against its base, its commits and the checkout's uncommitted work. */
+type TaskChangeSet = {
+  /** The branch against its base, `git diff base...branch`. */
+  all: PatchTotals & { patch: string }
+  /** Newest first, as `git log base..branch` lists them. */
+  commits: Commit[]
+  /** Each commit's own diff, by id. */
+  patches: Record<string, string>
+  /** The upstream's head; commits above it aren't pushed. Commits mark themselves with `unpushed` without one. */
+  upstreamHead?: string
+  worktree?: { staged: PatchTotals & { patch: string }; unstaged: PatchTotals & { patch: string } }
+}
 
 const measured = (value: number) => ({ value, quality: "measured" as const })
 const estimated = (value: number) => ({ value, quality: "estimated" as const, source: "list prices, 2026-11" })
@@ -307,7 +316,7 @@ index 2c3d4e5..3d4e5f6 100644
 
 `
 
-const worktree = `diff --git a/src/webhooks/dispatch.ts b/src/webhooks/dispatch.ts
+const staged = `diff --git a/src/webhooks/dispatch.ts b/src/webhooks/dispatch.ts
 index d4e5f6a..e5f6a7b 100644
 --- a/src/webhooks/dispatch.ts
 +++ b/src/webhooks/dispatch.ts
@@ -320,7 +329,9 @@ index d4e5f6a..e5f6a7b 100644
 +    return queue.retry(job, delay)
 +  }
    return markFailed(job, response.status)
-diff --git a/docs/api/webhooks.md b/docs/api/webhooks.md
+`
+
+const unstaged = `diff --git a/docs/api/webhooks.md b/docs/api/webhooks.md
 index f6a7b8c..a7b8c9d 100644
 --- a/docs/api/webhooks.md
 +++ b/docs/api/webhooks.md
@@ -331,51 +342,73 @@ index f6a7b8c..a7b8c9d 100644
 +attempt number, and never more than an hour.
 `
 
+function totals(patch: string): PatchTotals {
+  let files = 0
+  let additions = 0
+  let deletions = 0
+  for (const line of patch.split("\n")) {
+    if (line.startsWith("diff --git ")) files += 1
+    else if (line.startsWith("+") && !line.startsWith("+++")) additions += 1
+    else if (line.startsWith("-") && !line.startsWith("---")) deletions += 1
+  }
+  return { files, additions, deletions }
+}
+
+const withTotals = (patch: string) => ({ ...totals(patch), patch })
+
 const branch: TaskBranch = { name: "fix/webhook-backoff", base: "main", ahead: 3, behind: 1, upstream: null }
 
-const commits: { commit: ChangeCommit; patches: string[] }[] = [
+const author = { name: "Codex" }
+// The branch's first commit sits on this commit of main.
+const forkPoint = "4c1d9e07a3b5f2e8d6c4a1b9e7f5d3c2a0b8e6f4"
+
+const branchCommits: { commit: Omit<Commit, "parents" | "stats" | "unpushed">; patches: string[] }[] = [
   {
-    commit: { id: "28e0e8d1c4", message: "Cap webhook retries at 8 attempts", date: "2026-11-18T18:40:00Z" },
+    commit: {
+      id: "28e0e8d1c4f7a9b2e5d8c1f4a7b0e3d6c9f2a5b8",
+      message: "Cap webhook retries at 8 attempts",
+      date: "2026-11-18T18:40:00Z",
+      author,
+    },
     patches: [schema, changelog],
   },
   {
     commit: {
-      id: "2372a8e9b0",
+      id: "2372a8e9b0c3d6f9a2e5b8c1d4f7a0e3b6c9d2f5",
       message: "Back off webhook retries exponentially with jitter",
       date: "2026-11-18T16:40:00Z",
+      author,
     },
     patches: [backoffTest, dispatchTest],
   },
   {
     commit: {
-      id: "598bd4b7e2",
+      id: "598bd4b7e2a5c8f1d4b7e0a3c6f9d2b5e8a1c4f7",
       message: "Extract `src/webhooks/backoff.ts` from the dispatcher",
       date: "2026-11-18T13:40:00Z",
+      author,
     },
     patches: [backoffSource, dispatch],
   },
 ]
 
-const all = [backoffSource, backoffTest, dispatch, dispatchTest, schema, changelog].join("")
-
-const backoffChanges: ChangeEntry[] = [
-  { kind: "all", id: "all", label: `All changes vs ${branch.base}`, files: 6, additions: 22, deletions: 6, patch: all },
-  { kind: "worktree", id: "worktree", staged: 0, unstaged: 2, files: 2, patch: worktree },
-  ...commits.map(({ commit, patches }) => ({
-    kind: "commit" as const,
-    id: commit.id,
-    commit,
-    pushed: branch.upstream !== null,
-    files: patches.length,
-    patch: patches.join(""),
+const backoffChanges: TaskChangeSet = {
+  all: withTotals([backoffSource, backoffTest, dispatch, dispatchTest, schema, changelog].join("")),
+  commits: branchCommits.map(({ commit, patches }, index) => ({
+    ...commit,
+    parents: [branchCommits[index + 1]?.commit.id ?? forkPoint],
+    stats: totals(patches.join("")),
+    unpushed: branch.upstream === null,
   })),
-]
+  patches: Object.fromEntries(branchCommits.map(({ commit, patches }) => [commit.id, patches.join("")])),
+  worktree: { staged: withTotals(staged), unstaged: withTotals(unstaged) },
+}
 
 const taskDialogTasks: TaskView[] = [backoffTask, meterTask]
 
 const taskBranches: Record<string, TaskBranch> = { "T-121": branch }
 
-const taskChangeEntries: Record<string, ChangeEntry[]> = { "T-121": backoffChanges }
+const taskChanges: Record<string, TaskChangeSet> = { "T-121": backoffChanges }
 
-export { NOW as TASK_DIALOG_NOW, taskBranches, taskChangeEntries, taskDialogTasks }
-export type { ChangeCommit, ChangeEntry, TaskBranch }
+export { NOW as TASK_DIALOG_NOW, taskBranches, taskChanges, taskDialogTasks }
+export type { PatchTotals, TaskBranch, TaskChangeSet }
