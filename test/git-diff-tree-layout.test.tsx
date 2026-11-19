@@ -125,3 +125,15 @@ test("agents open files in either group", async () => {
   })
   expect(result.ok, result.error?.message).toBe(true)
 })
+
+test('height="auto" keeps its height in a flex column and caps the tree like the diff', async () => {
+  const { container } = render(<GitDiff aria-label="Review" patch={patch} height="auto" />)
+  await settle()
+  const root = container.querySelector("[data-slot=git-diff]") as HTMLElement
+  expect(root.className).toContain("shrink-0")
+  expect(root.className).not.toContain("min-h-0")
+  expect(screen.getByRole("tree", { name: "Changed files" }).className).toContain(
+    "max-h-[var(--diff-max-height,40rem)]",
+  )
+  expect(screen.getByRole("group", { name: "Review" }).className).toContain("max-h-[var(--diff-max-height,40rem)]")
+})

@@ -37,7 +37,11 @@ type GitDiffProps = Omit<DiffViewProps, "files" | "headers"> & {
   groups?: readonly GitDiffGroup[]
   /** The layout and wrap controls and the totals above the diff. @defaultValue true */
   toolbar?: boolean
-  /** `fill` (default) fills the height GitDiff is given, beside its file tree; `auto` grows to the diff. */
+  /**
+   * `fill` (default) fills the height GitDiff is given, beside its file tree. `auto` grows to the diff up to
+   * `--diff-max-height` (40rem), the tree beside it capped the same, for a diff inside a scrolling dialog body:
+   * a short diff never scrolls on its own, and a long one hands the wheel back to the body at its ends.
+   */
   height?: DiffViewProps["height"]
   /**
    * The file in view, for a file list or tree outside GitDiff: setting it scrolls the diff to that file, and
@@ -54,6 +58,8 @@ const noGroups: readonly GitDiffGroup[] = []
 
 // oxlint-disable-next-line shadcn/no-arbitrary-values -- a variable a page sets, with its default
 const treeWidth = "w-[var(--diff-tree-width,13rem)]"
+// oxlint-disable-next-line shadcn/no-arbitrary-values -- the same cap as the diff's, so the tree never outgrows it
+const diffCap = "max-h-[var(--diff-max-height,40rem)]"
 
 function useControlled<T>(value: T | undefined, initial: T, onChange?: (next: T) => void) {
   const [own, setOwn] = useState(initial)
@@ -132,7 +138,11 @@ function GitDiff({
     [diffs],
   )
   return (
-    <div data-slot="git-diff" className={cn("flex min-h-0 flex-col gap-items", className)}>
+    <div
+      data-slot="git-diff"
+      data-height={height}
+      className={cn("flex flex-col gap-items", height === "auto" ? "shrink-0" : "min-h-0", className)}
+    >
       {toolbar ? (
         <div data-slot="git-diff-toolbar" className="flex flex-wrap items-center gap-items">
           {collapsible ? (
@@ -181,7 +191,7 @@ function GitDiff({
             value={current}
             labels={labels}
             onOpen={(path) => controller.openFile(path)}
-            className={cn(treeWidth, "shrink-0 narrow:hidden")}
+            className={cn(treeWidth, "shrink-0 narrow:hidden", height === "auto" && cn("self-start", diffCap))}
           />
         ) : null}
         <DiffView
