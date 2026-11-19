@@ -140,3 +140,23 @@ test("primitive: select reports a reason, can be canceled, and refuses without s
 test("primitive: server markup matches the client's", async () => {
   await checkServer(commitHistory, { lookup, defaultSelected: "c1" }, `<root aria-label="History"></root>`)
 })
+
+test("headerStart sits before the branch switcher, actions after it", () => {
+  render(
+    <CommitHistory
+      aria-label="History"
+      commits={commits}
+      now={NOW}
+      branch="main"
+      branches={["main", "dev"]}
+      onBranchChange={() => {}}
+      headerStart={<button type="button">Repository</button>}
+      actions={<button type="button">Refresh</button>}
+    />,
+  )
+  const header = document.querySelector("[data-slot=commit-history-header]") as HTMLElement
+  const controls = [...header.querySelectorAll("button, [role=combobox]")].map(
+    (element) => element.getAttribute("aria-label") ?? element.textContent,
+  )
+  expect(controls.slice(0, 3)).toEqual(["Repository", "Branch", "Refresh"])
+})

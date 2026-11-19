@@ -22,6 +22,8 @@ type CommitHistoryHeaderProps = {
   branch: string | undefined
   onBranch: (name: string) => void
   actions?: ReactNode
+  /** Content before the branch, like a repository picker. */
+  start?: ReactNode
   /** Commits counted in the header. */
   total: number
   /** Commits the upstream doesn't have yet. */
@@ -43,6 +45,7 @@ function CommitHistoryHeader({
   branch,
   onBranch,
   actions,
+  start,
   total,
   unpushed = 0,
 }: CommitHistoryHeaderProps) {
@@ -78,7 +81,14 @@ function CommitHistoryHeader({
       data-slot="commit-history-header"
       className="flex min-w-0 items-center justify-between gap-items px-(--item-padding-x)"
     >
-      {branchControl}
+      {start === undefined ? (
+        branchControl
+      ) : (
+        <span data-slot="commit-history-scope" className="flex min-w-0 items-center gap-inline">
+          {start}
+          {branchControl}
+        </span>
+      )}
       <span className="flex shrink-0 items-center gap-items">
         {actions}
         {unpushed > 0 && (
