@@ -4,7 +4,7 @@ import { CloudUploadIcon } from "lucide-react"
 import type { ReactNode } from "react"
 
 import { CommitBranchSelect } from "@/components/ui/commit-branch-select"
-import { formatCount, type CommitHistoryLabels } from "@/components/ui/commit-history-labels"
+import type { CommitHistoryLabels } from "@/components/ui/commit-history-labels"
 import { Select } from "@/components/ui/select"
 import type { BranchInfo } from "@/lib/commit-branches"
 import type { Instant } from "@/lib/time"
@@ -97,8 +97,7 @@ function CommitHistoryHeader({
             className="inline-flex items-center gap-inline text-caption text-muted-foreground tabular-nums"
           >
             <CloudUploadIcon aria-hidden="true" className="size-3.5" />
-            <span aria-hidden="true">{formatCount(unpushed, locale)}</span>
-            <span className="sr-only">{labels.unpushed(unpushed, locale)}</span>
+            {labels.unpushed(unpushed, locale)}
           </span>
         )}
         <span data-slot="commit-history-count" className="text-caption text-muted-foreground tabular-nums">

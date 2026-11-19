@@ -22,7 +22,7 @@ test("upstreamHead marks the commits above it, in the name and with a mark, and 
   expect(screen.getByRole("treeitem", { name: "Back off with jitter, 10 minutes ago, not pushed" })).toBeTruthy()
   const pushed = screen.getByRole("treeitem", { name: "Bump version, 20 minutes ago" })
   expect(pushed.querySelector("[data-slot=commit-unpushed]")).toBeNull()
-  expect(screen.getByText("2 not pushed").className).toContain("sr-only")
+  expect(document.querySelector("[data-slot=commit-history-unpushed]")?.textContent).toBe("2 not pushed")
 })
 
 test("a commit's own unpushed marks it; labels change the words", () => {
