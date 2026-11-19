@@ -894,7 +894,12 @@ const itemNotes: Record<string, ItemNotes> = {
     related: ["agent-task-board", "proposal-actions", "dependency-chips"],
   },
   "task-detail-panel": {
-    a11y: ["A section with the task title as its heading; sections inside take the next level."],
+    usage:
+      "TaskDetailPanel beside a board, or TaskDetailDialog as a modal; renderHeader, renderBeforeBody and renderAfterBody add a stats strip, a git line or a changes section to the dialog's frame.",
+    a11y: [
+      "A section with the task title as its heading; sections inside take the next level.",
+      "TaskDetailDialog is named by the task's title, focuses itself as it opens so reading starts at the top, and keeps its close button and Escape whatever its slots hold.",
+    ],
     related: ["task-card", "attempt-timeline", "acceptance-list"],
   },
   "proposal-actions": {
