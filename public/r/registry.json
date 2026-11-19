@@ -4221,6 +4221,29 @@
       ]
     },
     {
+      "name": "repository-select",
+      "type": "registry:ui",
+      "title": "Repository Select",
+      "description": "A select for one git repository out of several: the trigger shows the name, each option its path, the branch checked out and its state (uncommitted, ahead, behind, no remote, up to date). On UI SDK Select, so keyboard, typeahead and agents work as in any select.",
+      "docs": "`<RepositorySelect aria-label=\"Repository\" repositories={[{ value: \"api\", name: \"api\", path: \"~/work/acme/api\", branch: \"main\", uncommitted: 0, ahead: 0, behind: 0, remote: true }]} value={repo} onValueChange={setRepo} />`. Each repository is `{ value, name, path?, branch?, uncommitted?, ahead?, behind?, remote?, disabled? }`; `ahead`/`behind` are `null` without an upstream and `remote: false` shows \"No remote\". The state reads as badges: uncommitted (warning), ahead (info), behind (outline), No remote (secondary), or Up to date (success) when none apply. Typeahead matches `name`; the trigger shows it alone. `size=\"sm\"` fits a header, like `CommitHistory headerStart`. Every word is in `labels` (`uncommitted(n)`, `ahead(n)`, `behind(n)`, `noRemote`, `upToDate`). Takes every Select prop but `items`, `options` and `multiple`, plus `triggerProps` and `contentClassName`.",
+      "dependencies": [
+        "@ui-sdk/core@0.1.0-beta.10",
+        "@ui-sdk/react@0.1.0-beta.10"
+      ],
+      "registryDependencies": [
+        "@eskais/select",
+        "@eskais/badge",
+        "@eskais/git-chip",
+        "@eskais/utils"
+      ],
+      "files": [
+        {
+          "path": "registry/ui/repository-select.tsx",
+          "type": "registry:ui"
+        }
+      ]
+    },
+    {
       "name": "commit-graph",
       "type": "registry:lib",
       "title": "Commit Graph",

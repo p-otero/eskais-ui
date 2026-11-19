@@ -128,7 +128,7 @@ const categories = [
   },
   {
     name: "Git",
-    items: ["commit-history", "server-commit-history", "git-tree", "git-chip", "commit-graph"],
+    items: ["commit-history", "server-commit-history", "git-tree", "repository-select", "git-chip", "commit-graph"],
   },
   {
     name: "Feedback",

@@ -1,13 +1,14 @@
 # Git history and files
 
-A branch's history as a commit trail, and a repository's files at a commit. Four items:
+A branch's history as a commit trail, and a repository's files at a commit. Five items:
 
-| Item                    | What it is                                                                                               |
-| ----------------------- | -------------------------------------------------------------------------------------------------------- |
-| `commit-history`        | `CommitHistory`: one line per commit, merges folded until opened, a commit's details inline, virtualized |
-| `server-commit-history` | `ServerCommitHistory`: the same over a `PageSource`, older pages as the end scrolls into view            |
-| `git-tree`              | `GitTree`: the files at a commit on UI SDK's Tree, changed files marked by status, virtualized           |
-| `git-chip`              | `GitFileChip` and `GitBranchChip`, for paths and branch names inside text                                |
+| Item                    | What it is                                                                                                   |
+| ----------------------- | ------------------------------------------------------------------------------------------------------------ |
+| `commit-history`        | `CommitHistory`: one line per commit, merges folded until opened, a commit's details inline, virtualized     |
+| `server-commit-history` | `ServerCommitHistory`: the same over a `PageSource`, older pages as the end scrolls into view                |
+| `git-tree`              | `GitTree`: the files at a commit on UI SDK's Tree, changed files marked by status, virtualized               |
+| `repository-select`     | `RepositorySelect`: one repository of several, each with its path, branch and uncommitted/ahead/behind state |
+| `git-chip`              | `GitFileChip` and `GitBranchChip`, for paths and branch names inside text                                    |
 
 `commit-graph` (lib) is the model under `CommitHistory`, usable on its own.
 
@@ -103,6 +104,26 @@ The history is one component to an agent, named by its `aria-label`, with every 
 - `selectBranch(name)`: only with `branches` and `onBranchChange`
 
 `createCommitHistoryController()` gives the same calls to your own code.
+
+## Repositories
+
+```tsx
+<RepositorySelect
+  aria-label="Repository"
+  size="sm"
+  repositories={[
+    { value: "api", name: "api", path: "~/work/acme/api", branch: "main", ahead: 0, behind: 0, remote: true },
+    { value: "docs", name: "docs", path: "~/work/acme/docs", branch: "main", uncommitted: 1, remote: false },
+  ]}
+  value={repo}
+  onValueChange={setRepo}
+/>
+```
+
+- A repository is `{ value, name, path?, branch?, uncommitted?, ahead?, behind?, remote?, disabled? }`. `ahead`/`behind` are `null` without an upstream; `remote: false` reads "No remote".
+- The trigger shows the name; each option shows the name, the path in mono, the branch as a `GitBranchChip` and badges: uncommitted (warning), ahead (info), behind (outline), No remote, or Up to date (success) when none apply.
+- It's UI SDK's Select: arrows, typeahead by name, and agents' `setValue`. Every word is in `labels`.
+- In a master-detail Git view, put it in `CommitHistory headerStart` with `size="sm"`; in a toolbar, in a `Field` with a `FieldLabel`.
 
 ## Files
 
