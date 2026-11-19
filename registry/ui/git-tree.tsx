@@ -106,7 +106,7 @@ function NodeIcon({ folder, expanded, path }: { folder: boolean; expanded: boole
 }
 
 const rowClassName =
-  "relative flex h-control-sm min-w-0 items-center gap-inline rounded-control pe-(--item-padding-x) text-body-sm transition-colors duration-micro ease-standard group-focus-visible/git-row:bg-accent group-focus-visible/git-row:ring-2 group-focus-visible/git-row:ring-ring hover:bg-accent data-current:bg-accent data-current:font-medium data-current:text-accent-foreground [&>svg]:size-4 [&>svg]:shrink-0"
+  "relative flex h-control-sm min-w-0 items-center gap-inline rounded-control pe-(--item-padding-x) text-body-sm transition-colors duration-micro ease-standard [:focus-visible>&]:bg-accent [:focus-visible>&]:ring-2 [:focus-visible>&]:ring-ring hover:bg-accent data-current:bg-accent data-current:font-medium data-current:text-accent-foreground [&>svg]:size-4 [&>svg]:shrink-0"
 // oxlint-disable-next-line shadcn/no-arbitrary-values -- each level indents by a chevron plus the inline gap, from the item inset
 const levelIndent = "ps-[calc((var(--tree-level)-1)*var(--git-tree-indent)+var(--item-padding-x))]"
 // oxlint-disable-next-line shadcn/no-arbitrary-values -- one level of nesting (a chevron plus the inline gap), and the scroller's cap with `findable` (UI SDK's virtualizer needs it bounded)
@@ -152,7 +152,7 @@ const GitTreeRow = memo(function GitTreeRow({
       data-index={index}
       data-status={file?.status}
       style={{ "--tree-level": level, top } as CSSProperties}
-      className={cn("group/git-row outline-none", top !== undefined && "absolute inset-x-0")}
+      className={cn("outline-none", top !== undefined && "absolute inset-x-0")}
     >
       <TreeItemLabel className={cn(rowClassName, levelIndent)}>
         {folder ? (

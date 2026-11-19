@@ -26,6 +26,7 @@ import { SidePanelCheck } from "./checks/side-panel-check"
 import { SortableCheck } from "./checks/sortable-check"
 import { TableCheck } from "./checks/table-check"
 import { ServerDataCheck } from "./checks/server-data-check"
+import { TreeFocusCheck } from "./checks/tree-focus-check"
 import { AgentWorkspace } from "./sections/agent-workspace"
 import { PerfPage } from "./perf/perf-page"
 import { DocumentWorkspacePage } from "./sections/document-workspace"
@@ -83,6 +84,7 @@ const standalone = new Set([
   "git-tree-bench",
   "perf",
   "sortable-check",
+  "tree-focus-check",
 ])
 
 function Demo() {
@@ -96,6 +98,7 @@ function Demo() {
   }
   if (demo === "overlay-check") return <OverlayCheck />
   if (demo === "sortable-check") return <SortableCheck />
+  if (demo === "tree-focus-check") return <TreeFocusCheck />
   if (demo === "card-header-check") return <CardHeaderCheck />
   if (demo === "palette-reopen-check") return <PaletteReopenCheck />
   if (demo === "field-placement-check") return <FieldPlacementCheck />
