@@ -895,7 +895,7 @@ const itemNotes: Record<string, ItemNotes> = {
   },
   "task-detail-panel": {
     usage:
-      "TaskDetailPanel beside a board, or TaskDetailDialog as a modal; renderHeader, renderBeforeBody and renderAfterBody add a stats strip, a git line or a changes section to the dialog's frame.",
+      "TaskDetailPanel beside a board, or TaskDetailDialog as a modal; renderHeader, renderBeforeBody and renderAfterBody add a stats strip, a git line or a changes section to the dialog's frame, and hide or sections leave out what the header already shows. Each section (TaskDetailActivity, TaskDetailUsage…) also renders on its own.",
     a11y: [
       "A section with the task title as its heading; sections inside take the next level.",
       "TaskDetailDialog is named by the task's title, focuses itself as it opens so reading starts at the top, and keeps its close button and Escape whatever its slots hold.",
