@@ -174,3 +174,55 @@ test("an agent sees the open popover inside the dialog and can close it", async 
   expect(result.ok, result.error?.message).toBe(true)
   expect(screen.queryByRole("dialog", { name: "Acceptance" })).toBeNull()
 })
+
+function HoverDetails() {
+  return (
+    <>
+      <Popover openOnHover delay={10} closeDelay={10}>
+        <PopoverTrigger>Acceptance 2/3</PopoverTrigger>
+        <PopoverContent>
+          <PopoverTitle>Acceptance</PopoverTitle>
+          <PopoverClose>Done</PopoverClose>
+        </PopoverContent>
+      </Popover>
+      <p>Elsewhere</p>
+    </>
+  )
+}
+
+// Crossing into the content and closing on leave need layout; tooling/popover-check.mjs covers them in Chrome.
+test("openOnHover opens it when the pointer rests on the trigger, without moving focus", async () => {
+  const user = userEvent.setup()
+  render(<HoverDetails />)
+  const trigger = screen.getByRole("button", { name: "Acceptance 2/3" })
+  await user.hover(trigger)
+  await settle(30)
+  expect(screen.getByRole("dialog", { name: "Acceptance" })).toBeTruthy()
+  expect(document.activeElement).toBe(document.body)
+})
+
+test("with openOnHover, Enter and a press still open it and move focus in", async () => {
+  const user = userEvent.setup()
+  render(<HoverDetails />)
+  await user.tab()
+  await settle(30)
+  expect(screen.queryByRole("dialog", { name: "Acceptance" })).toBeNull()
+  await user.keyboard("{Enter}")
+  expect(screen.getByRole("dialog", { name: "Acceptance" }).contains(document.activeElement)).toBe(true)
+  await user.keyboard("{Escape}")
+  expect(screen.queryByRole("dialog", { name: "Acceptance" })).toBeNull()
+
+  await user.pointer({ keys: "[TouchA]", target: screen.getByRole("button", { name: "Acceptance 2/3" }) })
+  expect(screen.getByRole("dialog", { name: "Acceptance" })).toBeTruthy()
+})
+
+test("an agent opens a hover popover by its trigger and presses inside it", async () => {
+  render(<HoverDetails />)
+  await settle()
+  const opened = await agent.act({ steps: [{ ref: "Acceptance 2/3", action: "press" }] })
+  expect(opened.ok, opened.error?.message).toBe(true)
+  expect(agent.snapshot().find((entry) => entry.component === "popover")).toMatchObject({ open: true })
+  const closed = await agent.act({ steps: [{ ref: "Acceptance", action: "setOpen", args: [false] }] })
+  expect(closed.ok, closed.error?.message).toBe(true)
+  expect(screen.queryByRole("dialog", { name: "Acceptance" })).toBeNull()
+})
