@@ -12,6 +12,12 @@ Versions follow [semver](https://semver.org). Before 1.0, a minor version can br
 - `CommitHistory headerStart`: content at the start of the header, before the branch switcher, so a repository picker and the branch sit together as repository ▸ branch. `actions` stays at the end.
 - `repository-select`: `RepositorySelect`, one git repository out of several on UI SDK's Select. Each option shows the name, its path, the branch checked out and its state as badges (`5 uncommitted`, `2 ahead`, `7 behind`, `No remote`, or `Up to date`); the trigger shows the name alone. Typed `repositories` (`Repository`), `labels` for every word, `size="sm"` for `CommitHistory headerStart`.
 - `GitDiff currentFile`, `defaultCurrentFile` and `onCurrentFileChange(path, details)`: a file list or `GitTree` outside the diff drives it and follows it. Setting `currentFile` scrolls to that file; the diff reports the file at the top of the view as it scrolls (`reason: "scroll"`) or opens one (`"imperative"`), and the built-in file tree highlights it. `DiffView onCurrentFileChange` and the controller's and agents' `currentFile()` are the same underneath. `createDiffViewController` and `DiffViewController` are exported from `git-diff`.
+- `GitDiff fileTree="collapsible"`: a "Changed files" toggle (with its tooltip) at the start of the toolbar hides and shows the tree; `fileTreeOpen`, `defaultFileTreeOpen` and `onFileTreeOpenChange` control it.
+- `GitDiff groups`: files in sections, like "Staged" and "Unstaged", each a `label` with its `files` or `patch`. The tree shows one section per group with its file count (`labels.fileCount`) and its own folders; the diff lists the groups in order.
+
+### Changed
+
+- `GitDiff`'s file tree is 13rem wide (it was 16rem), from `--diff-tree-width`, so the diff keeps room beside a 34rem history at 1440px.
 
 ## 0.2.3 (2026-11-19)
 
