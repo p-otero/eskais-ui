@@ -1,7 +1,7 @@
-// Installs registry items into fresh Vite apps with npm or pnpm (no Bun), builds them and checks them in Chrome.
-// Usage: node tooling/consumer-check.mjs [npm|pnpm] [scenario…] (default: all). Scenarios: fresh, init, layouts,
+// Installs registry items into fresh Vite apps with npm, pnpm or bun, builds them and checks them in Chrome.
+// Usage: node tooling/consumer-check.mjs [npm|pnpm|bun] [scenario…] (default: all). Scenarios: fresh, init, layouts,
 // aliases (`~/` aliases and the agent skills), imports, imports-flat, imports-tsx (must fail to type-check),
-// release-age (pnpm), existing-lucide, server-data and mockup-cli; each one says what it checks below.
+// release-age (pnpm, bun), existing-lucide, server-data and mockup-cli; each one says what it checks below.
 import { spawn, spawnSync } from "node:child_process"
 import { createReadStream, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, writeFileSync } from "node:fs"
 import { createServer } from "node:http"
@@ -14,7 +14,7 @@ import { pathToFileURL } from "node:url"
 import { unversionedDependencies, youngDependencyExceptions } from "./check-dependency-age.mjs"
 
 const pm = process.argv[2] ?? "npm"
-if (pm !== "npm" && pm !== "pnpm") throw new Error(`Unsupported package manager: ${pm}`)
+if (pm !== "npm" && pm !== "pnpm" && pm !== "bun") throw new Error(`Unsupported package manager: ${pm}`)
 
 const repo = resolve(import.meta.dirname, "..")
 const registryDir = join(repo, "public", "r")
@@ -1118,11 +1118,12 @@ const scenarios = {
     builtCss: ["--brand", ".text-title{"],
     check: checkServerData,
   },
-  // A consumer whose pnpm holds back releases younger than 7 days. shadcn installs dependencies before it writes any
-  // file, so one young pin (lucide-react 1.73.0 in 0.2.0) fails the whole add with ERR_PNPM_NO_MATURE_MATCHING_VERSION.
-  // Its lucide-react is the newest release the age allows, never older than the registry's floor.
+  // A consumer whose pnpm or bun holds back releases younger than 7 days. shadcn installs dependencies before it writes
+  // any file, so one young pin (lucide-react 1.73.0 in 0.2.0) fails the whole add (pnpm's
+  // ERR_PNPM_NO_MATURE_MATCHING_VERSION). Its lucide-react is the newest release the age allows, never older than the
+  // registry's floor.
   "release-age": {
-    packageManagers: ["pnpm"],
+    packageManagers: ["pnpm", "bun"],
     releaseAge: {
       minutes: 7 * 24 * 60,
       // Only the documented exceptions of check-dependency-age.mjs, and this app's own build tools, which aren't
@@ -1137,7 +1138,7 @@ const scenarios = {
   },
   // The mockup CLI, a registry:file item: shadcn copies it into .agents/tools/eskais-mockup as it is, the app's tsc
   // and Vite build leave the dot folder out, and Bun runs it there against the app's own components. The CI job has
-  // no Bun, so it checks the files and the build and skips running the CLI.
+  // no Bun, so with npm and pnpm there it checks the files and the build and skips running the CLI.
   "mockup-cli": {
     css: `@layer ui-sdk;
 @import "tailwindcss";
@@ -1151,9 +1152,11 @@ const scenarios = {
   },
   // A consumer already on a newer lucide-react than the registry's floor. An item that listed it with any version
   // made shadcn reinstall it: an exact pin wrote that pin back, npm moved a range to the latest release. Listed
-  // without one, shadcn skips it, and package.json and node_modules keep 1.70.0.
+  // without one, shadcn skips it, and package.json and node_modules keep 1.70.0. Its own `^0.7.1` of
+  // class-variance-authority, which button pins, shows what each package manager does to a range (checkPins).
   "existing-lucide": {
     dependencies: ["lucide-react"],
+    dependencySpecs: { "class-variance-authority": "^0.7.1" },
     css: `@layer ui-sdk;\n@import "tailwindcss";\n`,
     items: ["theme", "dialog"],
     main: releaseAgeMain,
@@ -1186,6 +1189,39 @@ function checkLucideDependency(app, scenario) {
     throw new Error(`lucide-react: package.json has ${String(spec)} and ${String(installed)} is installed`)
   if (compareVersions(installed, floor) < 0) throw new Error(`lucide-react ${installed} is older than ${floor}`)
   console.log(`lucide-react: package.json ${spec}, installed ${installed} (floor ${floor})`)
+}
+
+// What `add` left in package.json for every exact pin of the items it installed, as measured with shadcn 4.23: npm
+// writes `^<pin>` (and leaves a consumer's own range), pnpm writes the pin and leaves a consumer's own range, bun
+// writes the pin, also over a consumer's range. So only npm users have to set the UI SDK pins back by hand.
+const pinnedSpec = (version, had) => (pm === "npm" ? `^${version}` : pm === "pnpm" ? (had ?? version) : version)
+
+function checkPins(app, scenario) {
+  const specs = JSON.parse(readFileSync(join(app, "package.json"), "utf8")).dependencies ?? {}
+  const pins = new Set()
+  const seen = new Set()
+  const visit = (item) => {
+    if (seen.has(item)) return
+    seen.add(item)
+    const { dependencies = [], registryDependencies = [] } = JSON.parse(
+      readFileSync(join(registryDir, `${item}.json`), "utf8"),
+    )
+    for (const dependency of dependencies) pins.add(dependency)
+    for (const name of registryDependencies) visit(name.replace(/^@eskais\//, ""))
+  }
+  for (const item of scenario.items) visit(item)
+  for (const dependency of pins) {
+    const at = dependency.lastIndexOf("@")
+    if (at <= 0) continue
+    const [name, version] = [dependency.slice(0, at), dependency.slice(at + 1)]
+    const had = scenario.dependencySpecs?.[name]
+    const expected = pm === "npm" && had ? had : pinnedSpec(version, had)
+    if (specs[name] !== expected) {
+      throw new Error(`${name}: package.json has ${String(specs[name])}, expected ${expected} for ${dependency}`)
+    }
+  }
+  const shown = ["@ui-sdk/core", "@ui-sdk/react", ...Object.keys(scenario.dependencySpecs ?? {})]
+  console.log(`pins: ${shown.map((name) => `${name} ${String(specs[name])}`).join(", ")}`)
 }
 
 // Where shadcn put the files and what the imports point at, for a scenario with its own aliases.
@@ -1268,12 +1304,12 @@ async function runScenario(name, scenario) {
   }
   const run = runner(app)
   const alias = scenario.alias ?? "@"
-  const exec = (args) => run(pm === "npm" ? "npx" : "pnpm", [...(pm === "npm" ? [] : ["exec"]), ...args])
+  const exec = (args) => (pm === "pnpm" ? run("pnpm", ["exec", ...args]) : run(pm === "npm" ? "npx" : "bunx", args))
   write("package.json", {
     name: "eskais-consumer",
     private: true,
     type: "module",
-    dependencies: pick(["react", "react-dom", ...(scenario.dependencies ?? [])]),
+    dependencies: { ...pick(["react", "react-dom", ...(scenario.dependencies ?? [])]), ...scenario.dependencySpecs },
     devDependencies: pick([...devDependencies, ...(scenario.devDependencies ?? [])]),
     ...(scenario.imports && { imports: scenario.imports }),
   })
@@ -1339,11 +1375,20 @@ export default defineConfig({
             .join("")}`
         : "minimumReleaseAge: 0\n",
     )
+  // Bun sets no minimum by default. Its excludes are package names, so an exception covers every version of it.
+  if (pm === "bun" && releaseAge) {
+    const names = releaseAge.exclude.map((spec) => spec.replace(/(?<=.)@[^@]*$/, ""))
+    write(
+      "bunfig.toml",
+      `[install]\nminimumReleaseAge = ${String(releaseAge.minutes * 60)}\nminimumReleaseAgeExcludes = ${JSON.stringify(names)}\n`,
+    )
+  }
   await run(pm, ["install"])
   const items = [...scenario.items, ...(scenario.skills ?? [])]
   const add = () => exec(["shadcn", "add", ...items.map((item) => `@eskais/${item}`), "--yes", "--overwrite"])
   await add()
   checkLucideDependency(app, scenario)
+  checkPins(app, scenario)
   const readStylesheet = () => readFileSync(join(app, "src", "index.css"), "utf8")
   checkStylesheet(readStylesheet())
   const addAgain = async (message, format = async () => {}) => {
