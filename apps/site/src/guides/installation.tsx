@@ -75,8 +75,9 @@ export default function Installation() {
         <li>React 19 and React DOM 19 or newer.</li>
         <li>Tailwind CSS v4.</li>
         <li>
-          A <Code>components.json</Code> from <Code>npx shadcn@latest init</Code>. Registry code runs in the browser and
-          in any Node, npm or pnpm project: it imports nothing from Bun or Node.
+          A <Code>components.json</Code> from <Code>npx shadcn@latest init -b base -p nova</Code> (the flags skip its
+          questions). Registry code runs in the browser and in any Node project, with npm, pnpm or Bun: it imports
+          nothing from Bun or Node.
         </li>
       </Ul>
 
@@ -164,6 +165,10 @@ export default function Installation() {
       <H3 id="running-shadcn">Running shadcn</H3>
       <Ul>
         <li>
+          <strong>Runner.</strong> Every command here uses <Code>npx shadcn@latest</Code>. With pnpm, run{" "}
+          <Code>pnpm dlx shadcn@latest</Code>; with Bun, <Code>bunx shadcn@latest</Code>.
+        </li>
+        <li>
           <strong>Package manager.</strong> shadcn installs dependencies with the manager it finds from your lockfile,
           or from <Code>packageManager</Code> in <Code>package.json</Code>. In a pnpm project without a lockfile yet,
           set <Code>"packageManager": "pnpm@&lt;version&gt;"</Code>, or shadcn falls back to npm.
@@ -180,14 +185,15 @@ export default function Installation() {
       <H3 id="ui-sdk-beta">While UI SDK is in beta</H3>
       <Ul>
         <li>
-          <Code>shadcn add</Code> writes a caret range for <Code>@ui-sdk/*</Code>. Change it to the exact version the
-          registry pins, since later betas can break.
+          With npm, <Code>shadcn add</Code> writes a caret range for <Code>@ui-sdk/*</Code>. Change it to the exact
+          version the registry pins, since later betas can break. pnpm and Bun keep the exact version.
         </li>
         <li>
-          pnpm 11+ refuses packages younger than <Code>minimumReleaseAge</Code>. Every other dependency the registry
-          pins is at least 7 days old, but UI SDK's first release is from 2026-11-12: until its pinned beta is old
-          enough, add <Code>@ui-sdk/*</Code> to <Code>minimumReleaseAgeExclude</Code> in{" "}
-          <Code>pnpm-workspace.yaml</Code>.
+          pnpm 11+ refuses packages younger than <Code>minimumReleaseAge</Code>, and so does Bun when{" "}
+          <Code>bunfig.toml</Code> sets one. Every other dependency the registry pins is at least 7 days old, but UI
+          SDK's first release is from 2026-11-12: until its pinned beta is old enough, add <Code>@ui-sdk/core</Code> and{" "}
+          <Code>@ui-sdk/react</Code> to <Code>minimumReleaseAgeExclude</Code> in <Code>pnpm-workspace.yaml</Code> or to{" "}
+          <Code>minimumReleaseAgeExcludes</Code> under <Code>[install]</Code> in <Code>bunfig.toml</Code>.
         </li>
       </Ul>
 

@@ -39,7 +39,7 @@ const steps = [
   },
   {
     title: "Add components",
-    body: "Dependencies come along: the theme, utils and every part a component is built from.",
+    body: "Dependencies come along: the theme, utils and every part a component is built from. With pnpm, run pnpm dlx shadcn@latest; with Bun, bunx shadcn@latest.",
     code: "npx shadcn@latest add @eskais/theme @eskais/font-geist @eskais/button",
     language: "bash" as const,
     file: "Terminal",
