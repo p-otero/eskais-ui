@@ -20,6 +20,7 @@ import { Toggle } from "@/components/ui/toggle"
 import { ToggleGroup } from "@/components/ui/toggle-group"
 
 import { Section } from "../section"
+import { VoiceInputSection } from "./voice-input"
 
 const plans = [
   { value: "hobby", label: "Hobby" },
@@ -151,7 +152,17 @@ function Controls() {
   )
 }
 
+// The voice input's section renders here: app.tsx is at its line limit.
 function FormsSection() {
+  return (
+    <>
+      <FormControlsSection />
+      <VoiceInputSection />
+    </>
+  )
+}
+
+function FormControlsSection() {
   return (
     <Section
       title="Form controls"

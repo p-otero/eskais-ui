@@ -1514,6 +1514,56 @@
       ]
     },
     {
+      "name": "voice-input",
+      "type": "registry:ui",
+      "title": "Voice Input",
+      "description": "A voice input whose visual follows the microphone level in real time, built with definePrimitive: a mic toggle with a ring that grows as you speak, or a composer bar with cancel, a live waveform and a timer. The level comes from a Web Audio AnalyserNode on one shared AudioContext, written as CSS custom properties on animation frames with no React render per frame; useAudioLevel gives it to your own visual and requestMicrophone maps getUserMedia's errors. It doesn't record or transcribe.",
+      "docs": "`<VoiceInput variant stream state onStart onConfirm onCancel startedAt elapsed bars level labels>`. You own the microphone and the words: `onStart` gets the stream (`requestMicrophone()` from `@/lib/microphone` is optional and maps NotAllowedError to `denied`, NotFoundError and NotReadableError to `error`) and sets `state` to `listening`; `onConfirm` stops it and transcribes, with `state` at `processing`; `onCancel` discards it back to `idle`. `onStateChange(next, details)` asks for the same changes in one callback (`details.source === \"agent\"`, `details.cancel()`). `variant=\"button\"` (default) is a Dictate toggle, pressed while listening, whose ring scales with `--voice-level`; `variant=\"bar\"` adds a cancel button, `bars` level bars (24) that scroll newest last and a timer from `startedAt` (renders once a second) or `elapsed`. Enter or Space on the toggle starts and finishes, Escape cancels while listening, the cancel button hands focus back to the toggle, and every state is announced politely (`labels`). Errors and denial show in the destructive tone. Under reduced motion the level moves in four steps and the bars hold still. Sampling stops, and the AudioContext closes, when listening ends, the stream ends, the page is hidden or it unmounts. `useAudioLevel(stream, { bars, onFrame })` returns a `ref` that gets the same custom properties, for a visual of your own. Agents `start`, `confirm` and `cancel` it by its label. In Electron, allow the `media` permission in `session.setPermissionRequestHandler`, and on macOS ask with `systemPreferences.askForMediaAccess(\"microphone\")` and set `NSMicrophoneUsageDescription`.",
+      "dependencies": [
+        "@ui-sdk/core@0.1.0-beta.12",
+        "@ui-sdk/react@0.1.0-beta.12",
+        "lucide-react"
+      ],
+      "registryDependencies": [
+        "@eskais/utils",
+        "@eskais/theme",
+        "@eskais/tone",
+        "@eskais/button",
+        "@eskais/toggle",
+        "@eskais/spinner"
+      ],
+      "files": [
+        {
+          "path": "registry/lib/audio-level.ts",
+          "type": "registry:lib"
+        },
+        {
+          "path": "registry/lib/audio-meter.ts",
+          "type": "registry:lib"
+        },
+        {
+          "path": "registry/lib/microphone.ts",
+          "type": "registry:lib"
+        },
+        {
+          "path": "registry/ui/voice-input-primitive.ts",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/use-audio-level.ts",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/use-elapsed-seconds.ts",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/voice-input.tsx",
+          "type": "registry:ui"
+        }
+      ]
+    },
+    {
       "name": "inline-edit",
       "type": "registry:ui",
       "title": "Inline Edit",
@@ -5948,6 +5998,11 @@
           "path": "skills/eskais-ui/references/conversation-and-activity.md",
           "type": "registry:file",
           "target": "~/.agents/skills/eskais-ui/references/conversation-and-activity.md"
+        },
+        {
+          "path": "skills/eskais-ui/references/voice-input.md",
+          "type": "registry:file",
+          "target": "~/.agents/skills/eskais-ui/references/voice-input.md"
         },
         {
           "path": "skills/eskais-ui/references/diffs.md",

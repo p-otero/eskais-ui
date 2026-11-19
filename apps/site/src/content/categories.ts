@@ -18,6 +18,7 @@ const categories = [
       "number-input",
       "otp-input",
       "search-field",
+      "voice-input",
       "inline-edit",
       "select",
       "native-select",

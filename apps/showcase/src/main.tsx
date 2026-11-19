@@ -31,6 +31,7 @@ import { TableCheck } from "./checks/table-check"
 import { ServerDataCheck } from "./checks/server-data-check"
 import { TreeFocusCheck } from "./checks/tree-focus-check"
 import { GitViewCheck } from "./checks/git-view-check"
+import { VoiceInputCheck } from "./checks/voice-input-check"
 import { GitWorkspaceDemo, gitWorkspaceDemos, isGitWorkspaceDemo } from "./sections/git-workspace/demos"
 import { AgentWorkspace } from "./sections/agent-workspace"
 import { PerfPage } from "./perf/perf-page"
@@ -96,6 +97,7 @@ const standalone = new Set([
   "sortable-check",
   "tree-focus-check",
   "git-view-check",
+  "voice-input-check",
   ...Object.keys(gitWorkspaceDemos),
 ])
 
@@ -113,6 +115,7 @@ function Demo() {
   if (demo === "sortable-check") return <SortableCheck />
   if (demo === "tree-focus-check") return <TreeFocusCheck />
   if (demo === "git-view-check") return <GitViewCheck />
+  if (demo === "voice-input-check") return <VoiceInputCheck />
   if (isGitWorkspaceDemo(demo)) return <GitWorkspaceDemo name={demo} />
   if (demo === "card-header-check") return <CardHeaderCheck />
   if (demo === "palette-reopen-check") return <PaletteReopenCheck />

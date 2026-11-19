@@ -241,6 +241,19 @@ const itemNotes: Record<string, ItemNotes> = {
     agent: "Exposes a submit action to agents, only when onSearch is set.",
     related: ["input", "filter-bar", "command"],
   },
+  "voice-input": {
+    usage:
+      "Reach for it to dictate into a composer or a field: you get the microphone in onStart and transcribe in onConfirm; it shows that the person is heard.",
+    a11y: [
+      "The Dictate toggle is pressed while listening: Enter or Space starts and finishes, Escape cancels, and the cancel button hands focus back to the toggle.",
+      "Every state is announced politely (Listening, Processing, Microphone access denied); the ring and the waveform are aria-hidden.",
+      "Under reduced motion the level moves in four steps and the bars hold still.",
+      "The demo never asks for the microphone on load: it plays a synthetic voice until you turn on Try with your microphone.",
+    ],
+    agent:
+      'Agents find it by its label and call start, confirm and cancel; onStart sees details.source === "agent", so you decide whether an agent may open the microphone.',
+    related: ["conversation", "toggle", "button"],
+  },
   select: {
     a11y: [
       "A listbox popup with typeahead, arrow keys and Home/End; the trigger shows the selected label.",
