@@ -1,5 +1,6 @@
-import { act, render, screen } from "@testing-library/react"
+import { act, fireEvent, render, screen } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
+import { convertColor, parseColor } from "@ui-sdk/core/color"
 import { createAgent } from "@ui-sdk/react/agent"
 import { expect, test, vi } from "vitest"
 
@@ -10,6 +11,9 @@ import {
   ColorPickerAreaThumb,
   ColorPickerChannelInput,
   ColorPickerEyeDropper,
+  ColorPickerInput,
+  ColorPickerSlider,
+  ColorPickerSliderThumb,
   ColorPickerSwatches,
   ColorPickerSwatchItem,
 } from "@/components/ui/color-picker"
@@ -132,4 +136,135 @@ test("an agent finds the picker by its label and sets a colour", async () => {
   const result = await act(() => agent.act({ steps: [{ ref: "Brand colour", action: "setValue", args: ["#22c55e"] }] }))
   expect(result.ok, result.error?.message).toBe(true)
   expect(onValueChange).toHaveBeenLastCalledWith("#22c55e", expect.objectContaining({ source: "agent" }))
+})
+
+function OklchPicker(props: { onValueChange?: (value: string, details: { reason: string }) => void }) {
+  return (
+    <ColorPicker aria-label="Accent" space="oklch" defaultValue="oklch(0.62 0.19 259)" {...props}>
+      <ColorPickerArea>
+        <ColorPickerAreaCanvas />
+        <ColorPickerAreaThumb />
+      </ColorPickerArea>
+      <ColorPickerSlider channel="hue">
+        <ColorPickerSliderThumb />
+      </ColorPickerSlider>
+      <ColorPickerInput aria-label="Value" />
+    </ColorPicker>
+  )
+}
+
+const areaThumb = () => screen.getByRole("slider", { name: "Chroma and lightness" })
+const areaX = () => Number(areaThumb().style.getPropertyValue("--area-x"))
+const valueText = () => screen.getByRole<HTMLInputElement>("textbox", { name: "Value" }).value
+
+function inSrgb(value: string) {
+  const color = parseColor(value)
+  return (
+    !!color && convertColor(color, "srgb").coords.every((channel) => (channel ?? 0) > -1e-3 && (channel ?? 0) < 1.001)
+  )
+}
+
+test("End past the gamut's edge leaves the area thumb at the end, and the value is the closest colour inside", async () => {
+  const user = userEvent.setup()
+  const onValueChange = vi.fn()
+  render(<OklchPicker onValueChange={onValueChange} />)
+  areaThumb().focus()
+  await user.keyboard("{End}")
+  expect(areaX()).toBe(1)
+  expect(inSrgb(valueText())).toBe(true)
+  await user.keyboard("{Home}")
+  expect(areaX()).toBe(0)
+  await user.keyboard("{End}")
+  expect(areaX()).toBe(1)
+  await user.keyboard("{ArrowDown}")
+  expect(areaX()).toBe(1)
+  expect(inSrgb(valueText())).toBe(true)
+  expect(onValueChange.mock.calls.map(([, details]) => details.reason)).not.toContain("imperative")
+})
+
+test("a hue step keeps the area thumb past the edge and the hue thumb at the end", async () => {
+  const user = userEvent.setup()
+  render(<OklchPicker />)
+  areaThumb().focus()
+  await user.keyboard("{End}")
+  const hue = screen.getByRole("slider", { name: "Hue" })
+  hue.focus()
+  await user.keyboard("{ArrowLeft}")
+  expect(areaX()).toBe(1)
+  await user.keyboard("{End}")
+  expect(hue.getAttribute("aria-valuenow")).toBe("360")
+  expect(areaX()).toBe(1)
+  expect(inSrgb(valueText())).toBe(true)
+})
+
+function renderDraggable() {
+  const onValueChange = vi.fn()
+  const onValueCommit = vi.fn()
+  render(
+    <ColorPicker
+      aria-label="Accent"
+      space="oklch"
+      defaultValue="oklch(0.62 0.19 259)"
+      onValueChange={onValueChange}
+      onValueCommit={onValueCommit}
+    >
+      <ColorPickerArea>
+        <ColorPickerAreaThumb />
+      </ColorPickerArea>
+    </ColorPicker>,
+  )
+  const area = document.querySelector<HTMLElement>("[data-slot=color-picker-area]")!
+  area.getBoundingClientRect = () => DOMRect.fromRect({ x: 0, y: 0, width: 200, height: 100 })
+  area.setPointerCapture = () => {}
+  area.releasePointerCapture = () => {}
+  area.hasPointerCapture = () => true
+  const pointer = { pointerId: 1, button: 0, buttons: 1, isPrimary: true, pointerType: "mouse" }
+  return {
+    onValueChange,
+    onValueCommit,
+    down: (clientX: number) => fireEvent.pointerDown(area, { ...pointer, clientX, clientY: 50 }),
+    move: (clientX: number) => fireEvent.pointerMove(area, { ...pointer, clientX, clientY: 50 }),
+    up: (clientX: number) => fireEvent.pointerUp(area, { ...pointer, buttons: 0, clientX, clientY: 50 }),
+  }
+}
+
+const nextFrame = () => act(() => new Promise((resolve) => requestAnimationFrame(resolve)))
+
+test("a drag past the right edge leaves the thumb there when the pointer lifts", async () => {
+  const { onValueChange, onValueCommit, down, move, up } = renderDraggable()
+  down(100)
+  move(260)
+  await nextFrame()
+  expect(areaX()).toBe(1)
+  up(260)
+  expect(areaX()).toBe(1)
+  const committed = onValueCommit.mock.lastCall?.[0] as string
+  expect(inSrgb(committed)).toBe(true)
+  expect(onValueChange).toHaveBeenLastCalledWith(committed, expect.anything())
+})
+
+// UI SDK moves once a frame, so a pointer lifting sooner commits a move that never rendered.
+test("a pointer that lifts in the frame it reached the edge leaves the thumb there too", () => {
+  const { onValueCommit, down, move, up } = renderDraggable()
+  down(100)
+  move(260)
+  up(260)
+  expect(areaX()).toBe(1)
+  expect(inSrgb(onValueCommit.mock.lastCall?.[0] as string)).toBe(true)
+})
+
+test("a gamut of false holds any colour, so nothing moves back", async () => {
+  const user = userEvent.setup()
+  render(
+    <ColorPicker aria-label="Accent" space="oklch" gamut={false} defaultValue="oklch(0.62 0.19 259)">
+      <ColorPickerArea>
+        <ColorPickerAreaThumb />
+      </ColorPickerArea>
+      <ColorPickerInput aria-label="Value" />
+    </ColorPicker>,
+  )
+  areaThumb().focus()
+  await user.keyboard("{End}")
+  expect(areaX()).toBe(1)
+  expect(valueText()).toBe("oklch(0.62 0.4 259)")
 })

@@ -3635,7 +3635,7 @@
       "type": "registry:ui",
       "title": "Color Picker",
       "description": "UI SDK ColorPicker styled: an area (painted on a canvas in OKLCH, every pixel a colour inside the gamut), hue and alpha sliders, a swatch, a text field for any CSS colour, channel inputs, presets and an eye dropper with a tooltip.",
-      "docs": "`<ColorPicker defaultValue space format gamut>` in a `Field`, or with `aria-label`. With no children it renders an area (with `ColorPickerAreaCanvas` when `space=\"oklch\"`), a hue slider, a swatch and a text field named by `labels.value` (\"Colour value\"). Compose `ColorPickerArea`, `ColorPickerAreaThumb`, `ColorPickerSlider channel orientation`, `ColorPickerSliderThumb`, `ColorPickerSwatch`, `ColorPickerInput`, `ColorPickerChannelInput channel`, `ColorPickerSwatches` of `ColorPickerSwatchItem value` (presets, 44px on touch) and `ColorPickerEyeDropper` (hidden where the browser can't pick from the screen). `onValueChange` runs on every step of a drag, `onValueCommit` once it ends, for saving.",
+      "docs": "`<ColorPicker defaultValue space format gamut>` in a `Field`, or with `aria-label`. With no children it renders an area (with `ColorPickerAreaCanvas` when `space=\"oklch\"`), a hue slider, a swatch and a text field named by `labels.value` (\"Colour value\"). Compose `ColorPickerArea`, `ColorPickerAreaThumb`, `ColorPickerSlider channel orientation`, `ColorPickerSliderThumb`, `ColorPickerSwatch`, `ColorPickerInput`, `ColorPickerChannelInput channel`, `ColorPickerSwatches` of `ColorPickerSwatchItem value` (presets, 44px on touch) and `ColorPickerEyeDropper` (hidden where the browser can't pick from the screen). `onValueChange` runs on every step of a drag, `onValueCommit` once it ends, for saving. In OKLCH a thumb dragged or stepped past the gamut's edge stays where it was left, and the value is the closest colour inside the gamut.",
       "dependencies": [
         "@ui-sdk/core@0.1.0-beta.10",
         "@ui-sdk/react@0.1.0-beta.10",
@@ -3654,6 +3654,10 @@
         },
         {
           "path": "registry/ui/use-color-area-canvas.ts",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/use-held-color.ts",
           "type": "registry:ui"
         },
         {
