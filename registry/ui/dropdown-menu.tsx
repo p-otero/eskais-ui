@@ -28,6 +28,7 @@ import { ControlTooltip } from "@/components/ui/tooltip"
 import { cnState } from "@/lib/utils"
 
 const menuContentClassName =
+  // oxlint-disable-next-line eskais/scroll-area -- UI SDK positions and caps the menu element, which scrolls a menu taller than --available-height; a scroll area would wrap every consumer's items
   "z-popover m-0 flex max-h-(--available-height) min-w-48 flex-col overflow-y-auto overscroll-contain surface-floating p-inline text-sm outline-none origin-(--transform-origin) transition duration-micro ease-standard data-ending-style:scale-95 data-ending-style:opacity-0 data-starting-style:scale-95 data-starting-style:opacity-0 motion-reduce:transition-opacity motion-reduce:data-ending-style:scale-100 motion-reduce:data-starting-style:scale-100"
 
 const menuItemClassName =

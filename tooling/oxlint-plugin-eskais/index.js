@@ -1,4 +1,4 @@
-import { iconButtonNeedsLabel } from "../../registry/rules/eskais-oxlint-plugin.js"
+import { iconButtonNeedsLabel, scrollArea } from "../../registry/rules/eskais-oxlint-plugin.js"
 import noInlineIcons from "./no-inline-icons.js"
 
 export default {
@@ -6,5 +6,6 @@ export default {
   rules: {
     "icon-button-needs-label": iconButtonNeedsLabel,
     "no-inline-icons": noInlineIcons,
+    "scroll-area": scrollArea,
   },
 }

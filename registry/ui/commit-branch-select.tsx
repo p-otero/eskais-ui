@@ -5,6 +5,7 @@ import { memo } from "react"
 
 import { laneColor } from "@/components/ui/commit-graph-cell"
 import { BranchCounts, type CommitHistoryLabels } from "@/components/ui/commit-history-row"
+import { ScrollArea, ScrollAreaScrollbar, ScrollAreaViewport } from "@/components/ui/scroll-area"
 import {
   Select,
   SelectContent,
@@ -67,40 +68,46 @@ const CommitBranchSelect = memo(function CommitBranchSelect({
         <SelectEmpty className="hidden px-(--item-padding-x) py-inset-item text-body-sm text-muted-foreground data-empty:block">
           {labels.noBranches}
         </SelectEmpty>
-        <SelectList className="min-h-0 overflow-y-auto overscroll-contain p-inline">
-          <SelectItem value={ALL} label={labels.allBranches}>
-            <SelectItemText className="min-w-0 flex-1 truncate">{labels.allBranches}</SelectItemText>
-            <SelectItemIndicator />
-          </SelectItem>
-          {branches.map((branch) => (
-            <SelectItem key={branch.name} value={branch.name} label={branch.name} className="gap-inline">
-              <SelectItemIcon className="inline-flex shrink-0">
-                <LaneDot tag={branch.tag} />
-              </SelectItemIcon>
-              <SelectItemText className="min-w-0 flex-1 truncate font-mono text-body-sm">
-                {(state) =>
-                  state.segments.map((segment, at) =>
-                    segment.match ? (
-                      // oxlint-disable-next-line react/no-array-index-key -- the name's pieces have no identity beyond their place
-                      <mark key={at} className="bg-transparent font-semibold text-current">
-                        {segment.text}
-                      </mark>
-                    ) : (
-                      segment.text
-                    ),
-                  )
-                }
-              </SelectItemText>
-              <BranchCounts ahead={branch.ahead} behind={branch.behind} locale={locale} spoken={labels} />
-              {branch.updatedAt !== undefined && (
-                <span className="shrink-0 text-caption text-muted-foreground tabular-nums">
-                  {formatElapsed(branch.updatedAt, { now, locale })}
-                </span>
-              )}
+        <ScrollArea className="flex min-h-0 flex-col">
+          <ScrollAreaViewport
+            className="h-auto min-h-0 flex-1 overscroll-contain p-inline"
+            render={(part) => <SelectList {...part} />}
+          >
+            <SelectItem value={ALL} label={labels.allBranches}>
+              <SelectItemText className="min-w-0 flex-1 truncate">{labels.allBranches}</SelectItemText>
               <SelectItemIndicator />
             </SelectItem>
-          ))}
-        </SelectList>
+            {branches.map((branch) => (
+              <SelectItem key={branch.name} value={branch.name} label={branch.name} className="gap-inline">
+                <SelectItemIcon className="inline-flex shrink-0">
+                  <LaneDot tag={branch.tag} />
+                </SelectItemIcon>
+                <SelectItemText className="min-w-0 flex-1 truncate font-mono text-body-sm">
+                  {(state) =>
+                    state.segments.map((segment, at) =>
+                      segment.match ? (
+                        // oxlint-disable-next-line react/no-array-index-key -- the name's pieces have no identity beyond their place
+                        <mark key={at} className="bg-transparent font-semibold text-current">
+                          {segment.text}
+                        </mark>
+                      ) : (
+                        segment.text
+                      ),
+                    )
+                  }
+                </SelectItemText>
+                <BranchCounts ahead={branch.ahead} behind={branch.behind} locale={locale} spoken={labels} />
+                {branch.updatedAt !== undefined && (
+                  <span className="shrink-0 text-caption text-muted-foreground tabular-nums">
+                    {formatElapsed(branch.updatedAt, { now, locale })}
+                  </span>
+                )}
+                <SelectItemIndicator />
+              </SelectItem>
+            ))}
+          </ScrollAreaViewport>
+          <ScrollAreaScrollbar data-agent-hidden="" />
+        </ScrollArea>
       </SelectContent>
     </Select>
   )

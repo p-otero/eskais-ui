@@ -99,11 +99,40 @@ const iconButtonNeedsLabel = {
   },
 }
 
-export { iconButtonNeedsLabel }
+const OVERFLOW = /(?:^|[\s"'`:!])(overflow-(?:[xy]-)?(?:auto|scroll))(?=$|[\s"'`!])/
+
+// Every string and template literal counts, not only a className attribute: class lists also live in consts, cva()
+// variants and arrays outside the JSX that uses them.
+const scrollArea = {
+  meta: {
+    type: "suggestion",
+    docs: { description: "A component that scrolls its own content does it in a ScrollArea from scroll-area." },
+    messages: {
+      bare: 'Bare {{token}}: scroll in a ScrollArea from "scroll-area" (its viewport sets the overflow and draws the scrollbar), or disable this rule on the line before with the reason.',
+    },
+  },
+  create(context) {
+    const check = (node, text) => {
+      const token = OVERFLOW.exec(text)?.[1]
+      if (token) context.report({ node, messageId: "bare", data: { token } })
+    }
+    return {
+      Literal(node) {
+        if (typeof node.value === "string") check(node, node.value)
+      },
+      TemplateLiteral(node) {
+        check(node, node.quasis.map((quasi) => quasi.value.cooked ?? quasi.value.raw).join(" "))
+      },
+    }
+  },
+}
+
+export { iconButtonNeedsLabel, scrollArea }
 
 export default {
   meta: { name: "eskais" },
   rules: {
     "icon-button-needs-label": iconButtonNeedsLabel,
+    "scroll-area": scrollArea,
   },
 }

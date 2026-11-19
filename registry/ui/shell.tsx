@@ -316,6 +316,7 @@ function Shell<Route extends ShellRoute>({
             className={cn(
               "flex min-w-0 flex-1 flex-col self-stretch focus:outline-none **:scroll-mt-(--shell-scroll-margin)",
               hasMobileNav && "narrow:**:scroll-mb-(--mobile-nav-offset)",
+              // oxlint-disable-next-line eskais/scroll-area -- the page-level main column: its viewport would re-read every focusable element on the page at each roving tabindex change, so it scrolls like the window
               mainLayout === "fill" && "h-(--shell-column-height) min-h-0 overflow-auto",
               mainLayout === "fill" && hasMobileNav && "narrow:h-(--shell-column-height-above-bar)",
             )}

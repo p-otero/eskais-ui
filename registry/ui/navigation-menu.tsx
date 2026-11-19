@@ -73,6 +73,7 @@ function NavigationMenuContent({ className, ...props }: ComponentProps<typeof Na
   return (
     <NavigationMenuContentPrimitive
       className={cnState(
+        // oxlint-disable-next-line eskais/scroll-area -- a floating panel capped by UI SDK, like dropdown-menu's
         `${floatingSurfaceClassName} max-h-(--available-height) w-max max-w-(--available-width) overflow-y-auto p-inline`,
         className,
       )}

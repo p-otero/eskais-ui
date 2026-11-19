@@ -153,6 +153,7 @@ function WorkspaceCenter({
         aria-label={labels.document}
         data-slot="document-workspace-document"
         data-mode={context.mode}
+        // oxlint-disable-next-line eskais/scroll-area -- the page-level document, which hosts the editor (see markdown-editor.tsx)
         className="flex min-h-0 flex-1 flex-col overflow-auto outline-none data-[mode=read]:px-inset-surface data-[mode=read]:py-group"
       >
         {children}

@@ -93,6 +93,7 @@ function EmbedPreview({ entry, options }: { entry: Extract<PortalEntry, { kind: 
 function TableBlock({ entry, options }: { entry: Extract<PortalEntry, { kind: "table" }>; options: ViewOptions }) {
   useRequestMeasure(entry.view)
   return (
+    // oxlint-disable-next-line eskais/scroll-area -- a table widget inside the editor's text, where a focusable viewport would add a tab stop
     <div className="cursor-text overflow-x-auto">
       <MarkdownView markdown={entry.source} sourcePositions {...options} />
     </div>

@@ -34,6 +34,7 @@
     "shadcn/require-static-classes": "error",
     "shadcn/no-restyle": ["error", { "allow": ["layout"] }],
     "eskais/icon-button-needs-label": "error",
+    "eskais/scroll-area": "warn",
     "no-restricted-imports": [
       "error",
       {

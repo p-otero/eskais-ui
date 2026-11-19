@@ -24,6 +24,7 @@ import { cn, cnState } from "@/lib/utils"
 const drawerBackdropClassName = "fixed inset-0 z-overlay bg-overlay data-ending-style:pointer-events-none"
 
 const drawerContentClassName = [
+  // oxlint-disable-next-line eskais/scroll-area -- the drawer element's fallback for content with no scrolling body of its own
   "data-ending-style:pointer-events-none! flex flex-col gap-group overflow-y-auto overscroll-contain border border-floating-border bg-popover p-inset-surface field-label-surface-popover wrap-anywhere text-popover-foreground shadow-floating outline-none",
   "data-[side=bottom]:mx-auto data-[side=bottom]:max-h-[calc(100%-2rem)] data-[side=bottom]:w-full data-[side=bottom]:max-w-2xl data-[side=bottom]:rounded-t-surface data-[side=bottom]:border-b-0",
   "data-[side=top]:mx-auto data-[side=top]:max-h-[calc(100%-2rem)] data-[side=top]:w-full data-[side=top]:max-w-2xl data-[side=top]:rounded-b-surface data-[side=top]:border-t-0",

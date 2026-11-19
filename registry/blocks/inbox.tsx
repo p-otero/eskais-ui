@@ -6,6 +6,7 @@ import type { InboxItem } from "@/components/inbox-sample"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { List, ListItem } from "@/components/ui/list-item"
+import { ScrollArea, ScrollAreaScrollbar, ScrollAreaViewport } from "@/components/ui/scroll-area"
 import { formatShortcutSteps, ShortcutHint } from "@/components/ui/shortcuts"
 import { ShortcutsDialog } from "@/components/ui/shortcuts-dialog"
 import { SidePanel } from "@/components/ui/side-panel"
@@ -110,40 +111,46 @@ function Inbox({ items: initialItems, locale: localeProp, timeZone, className }:
         </span>
       </header>
       <div className="relative flex min-h-0 flex-1">
-        <div data-slot="inbox-scroller" className="min-h-0 min-w-0 flex-1 overflow-y-auto p-inline">
-          <List
-            ref={listRoot}
-            aria-label={inboxCopy.list}
-            items={items}
-            itemText={(item) => `${item.subject} ${item.from}`}
-            estimateSize={56}
-            checkedIds={checked}
-            onCheckedIdsChange={setChecked}
-            onFocus={followFocus}
-            renderItem={(item) => (
-              <ListItem
-                id={item.id}
-                title={item.subject}
-                selected={item.id === openId}
-                onSelect={() => setOpenId(item.id)}
-                leading={
-                  <StatusDot tone="info" label={inboxCopy.unread} className={item.read ? "invisible" : undefined} />
-                }
-                subtitle={`${item.from} · ${item.preview}`}
-                status={item.label && <Badge tone={item.label.tone}>{item.label.text}</Badge>}
-                trailing={
-                  <>
-                    {item.pinned && <Badge variant="outline">{inboxCopy.pinned}</Badge>}
-                    <time dateTime={item.receivedAt} className="tabular-nums">
-                      {time.format(new Date(item.receivedAt))}
-                    </time>
-                  </>
-                }
-                className={item.read ? "text-muted-foreground" : "font-medium"}
-              />
-            )}
-          />
-        </div>
+        <ScrollArea className="flex min-h-0 min-w-0 flex-1 flex-col">
+          <ScrollAreaViewport
+            className="h-auto min-h-0 flex-1 p-inline"
+            render={(part) => <div {...part} data-slot="inbox-scroller" />}
+          >
+            <List
+              ref={listRoot}
+              aria-label={inboxCopy.list}
+              items={items}
+              itemText={(item) => `${item.subject} ${item.from}`}
+              estimateSize={56}
+              checkedIds={checked}
+              onCheckedIdsChange={setChecked}
+              onFocus={followFocus}
+              renderItem={(item) => (
+                <ListItem
+                  id={item.id}
+                  title={item.subject}
+                  selected={item.id === openId}
+                  onSelect={() => setOpenId(item.id)}
+                  leading={
+                    <StatusDot tone="info" label={inboxCopy.unread} className={item.read ? "invisible" : undefined} />
+                  }
+                  subtitle={`${item.from} · ${item.preview}`}
+                  status={item.label && <Badge tone={item.label.tone}>{item.label.text}</Badge>}
+                  trailing={
+                    <>
+                      {item.pinned && <Badge variant="outline">{inboxCopy.pinned}</Badge>}
+                      <time dateTime={item.receivedAt} className="tabular-nums">
+                        {time.format(new Date(item.receivedAt))}
+                      </time>
+                    </>
+                  }
+                  className={item.read ? "text-muted-foreground" : "font-medium"}
+                />
+              )}
+            />
+          </ScrollAreaViewport>
+          <ScrollAreaScrollbar data-agent-hidden="" />
+        </ScrollArea>
         <SidePanel
           open={open !== undefined}
           onOpenChange={(next) => {

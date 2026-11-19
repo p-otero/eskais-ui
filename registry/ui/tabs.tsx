@@ -47,6 +47,7 @@ const tabsListClassName =
 // The fades are masks over the list itself, so they work on any surface; each side's width is 0 until it overflows.
 // The scroll padding is the fade's width, so a tab TabsScroll reveals lands clear of it.
 const scrollClassName = [
+  // oxlint-disable-next-line eskais/scroll-area -- a scrolling tab list hides its scrollbar on purpose: edge fades and scroll buttons stand for it
   "max-w-full overflow-x-auto overscroll-x-contain [--tabs-fade:2.5rem] scroll-px-(--tabs-fade) [scrollbar-width:none] [&::-webkit-scrollbar]:hidden [&_[data-slot=tabs-tab]]:focus-visible:ring-offset-0",
   "[--fade-left:0px] [--fade-right:0px] group-data-overflow-left/tabs-scroll:[--fade-left:var(--tabs-fade)] group-data-overflow-right/tabs-scroll:[--fade-right:var(--tabs-fade)]",
   "[mask-image:linear-gradient(to_right,transparent,black_var(--fade-left),black_calc(100%-var(--fade-right)),transparent)]",

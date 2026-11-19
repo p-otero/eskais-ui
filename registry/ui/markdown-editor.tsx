@@ -229,6 +229,7 @@ function MarkdownEditorBody(props: Omit<MarkdownEditorProps, "ref"> & { handle: 
         readOnly={readOnly}
         agentConfirm={labels.setMarkdownConfirm}
         aria-label={labels.document}
+        // oxlint-disable-next-line eskais/scroll-area -- the editor's own scroller: a viewport re-reads every focusable element below it on each removal, which CodeMirror makes as you type
         className="min-h-0 flex-1 overflow-auto"
       >
         <div ref={hostRef} data-slot="markdown-editor-content" className="h-full" />

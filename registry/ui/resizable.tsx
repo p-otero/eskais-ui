@@ -15,6 +15,7 @@ function Resizable({ className, ...props }: ComponentProps<typeof ResizablePrimi
 }
 
 function ResizablePanel({ className, ...props }: ComponentProps<typeof ResizablePanelPrimitive>) {
+  // oxlint-disable-next-line eskais/scroll-area -- a layout fallback: panels put their own scroll area inside, and one per panel would nest a second viewport around theirs
   return <ResizablePanelPrimitive className={cnState("min-h-0 min-w-0 overflow-auto", className)} {...props} />
 }
 
