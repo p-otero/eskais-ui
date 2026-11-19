@@ -184,6 +184,7 @@ function DiffOf({ changes, selected, base }: { changes: TaskChangeSet; selected:
         groups={groups}
         height="auto"
         fileTree="collapsible"
+        defaultFileTreeOpen={false}
         className="min-w-0 flex-1"
       />
     )
@@ -196,6 +197,7 @@ function DiffOf({ changes, selected, base }: { changes: TaskChangeSet; selected:
       patch={commit ? changes.patches[commit.id] : changes.all.patch}
       height="auto"
       fileTree="collapsible"
+      defaultFileTreeOpen={false}
       className="min-w-0 flex-1"
     />
   )
