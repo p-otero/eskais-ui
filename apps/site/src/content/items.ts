@@ -912,8 +912,14 @@ const itemNotes: Record<string, ItemNotes> = {
     related: ["task-detail-panel", "usage", "agent-badge"],
   },
   "acceptance-list": {
-    a11y: ["Pass, fail and unverified each have an icon and a word, not only a colour."],
-    related: ["task-detail-panel", "stat"],
+    usage:
+      "AcceptanceList in a body, AcceptanceBar for a summary, AcceptancePopover for a header: a label, a thin bar and n/m that opens the list with its evidence.",
+    a11y: [
+      "Pass, fail and unverified each have an icon and a word, not only a colour.",
+      'AcceptancePopover\'s trigger is a button named with the counts ("Acceptance: 1 of 3 passed, 1 failed"); it opens on hover without moving focus, and a press, Enter or a tap opens it with focus inside.',
+    ],
+    agent: "Agents read the counts in the trigger's name and open the popover by it.",
+    related: ["task-detail-panel", "stat", "popover"],
   },
   "agent-badge": {
     a11y: ["Provider, model and effort as text; a fallback route says what was requested and what ran."],

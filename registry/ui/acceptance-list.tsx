@@ -6,6 +6,7 @@ import type { ComponentProps, ReactNode } from "react"
 import { CheckIcon, CircleDashedIcon, XIcon, type LucideIcon } from "lucide-react"
 
 import { Collapsible, CollapsibleIcon, CollapsiblePanel, CollapsibleTrigger } from "@/components/ui/collapsible"
+import { Popover, PopoverContent, PopoverTitle, PopoverTrigger, type PopoverProps } from "@/components/ui/popover"
 import { cn } from "@/lib/utils"
 
 type AcceptanceResult = "pass" | "fail" | "unverified"
@@ -21,6 +22,8 @@ type AcceptanceCounts = Record<AcceptanceResult, number>
 
 interface AcceptanceLabels extends Record<AcceptanceResult, string> {
   bar: string
+  /** The visible label of `AcceptancePopover`'s trigger and its popover's title. */
+  title: string
 }
 
 const defaultAcceptanceLabels: AcceptanceLabels = {
@@ -28,6 +31,7 @@ const defaultAcceptanceLabels: AcceptanceLabels = {
   fail: "Failed",
   unverified: "Not verified",
   bar: "Acceptance criteria",
+  title: "Acceptance",
 }
 
 const results: AcceptanceResult[] = ["pass", "fail", "unverified"]
@@ -171,9 +175,70 @@ function AcceptanceBar({
   )
 }
 
-export { AcceptanceBar, AcceptanceList, countAcceptance, defaultAcceptanceLabels, formatAcceptanceSummary }
+type AcceptancePopoverProps = Omit<PopoverProps, "children"> & {
+  criteria: readonly AcceptanceCriterion[]
+  labels?: Partial<AcceptanceLabels>
+  /** The counts in the trigger's accessible name, after the title: "Acceptance: 1 of 3 passed, 1 failed". */
+  formatSummary?: (counts: AcceptanceCounts) => string
+  /** Classes for the trigger, a ghost button. */
+  className?: string
+  /** Classes for the popover. */
+  contentClassName?: string
+}
+
+/**
+ * The acceptance summary for a header: a label, a thin bar and `n/m` as a button that opens the list of criteria
+ * with their evidence. It opens on hover too, without moving focus; a press, Enter or a tap opens it and moves focus
+ * in.
+ */
+function AcceptancePopover({
+  criteria,
+  labels,
+  formatSummary = formatAcceptanceSummary,
+  className,
+  contentClassName,
+  openOnHover = true,
+  delay = 300,
+  closeDelay = 200,
+  ...props
+}: AcceptancePopoverProps) {
+  const text = { ...defaultAcceptanceLabels, ...labels }
+  const counts = countAcceptance(criteria)
+  return (
+    <Popover openOnHover={openOnHover} delay={delay} closeDelay={closeDelay} {...props}>
+      <PopoverTrigger
+        variant="ghost"
+        aria-label={`${text.title}: ${formatSummary(counts)}`}
+        tooltip={false}
+        className={cn("h-auto flex-col items-start gap-inline px-inset-chip py-inset-chip", className)}
+      >
+        <span className="text-xs font-normal text-muted-foreground">{text.title}</span>
+        <span className="flex w-44 items-center gap-inline">
+          <AcceptanceBar counts={counts} labels={text} aria-hidden className="min-w-0 flex-1" />
+          <span className="text-sm tabular-nums">
+            {counts.pass}/{criteria.length}
+          </span>
+        </span>
+      </PopoverTrigger>
+      <PopoverContent className={cn("w-md", contentClassName)}>
+        <PopoverTitle>{text.title}</PopoverTitle>
+        <AcceptanceList criteria={criteria} labels={text} evidence="inline" />
+      </PopoverContent>
+    </Popover>
+  )
+}
+
+export {
+  AcceptanceBar,
+  AcceptanceList,
+  AcceptancePopover,
+  countAcceptance,
+  defaultAcceptanceLabels,
+  formatAcceptanceSummary,
+}
 export type {
   AcceptanceBarProps,
+  AcceptancePopoverProps,
   AcceptanceCounts,
   AcceptanceCriterion,
   AcceptanceLabels,
