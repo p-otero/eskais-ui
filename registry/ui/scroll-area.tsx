@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/scroll-area-primitive"
 import { cnState } from "@/lib/utils"
 
-const parts = createParts(scrollArea, {
+const parts = /* @__PURE__ */ createParts(scrollArea, {
   root: "div",
   viewport: "div",
   content: "div",
@@ -20,7 +20,7 @@ const parts = createParts(scrollArea, {
   "scroll-to-end": "button",
 })
 
-const OrientationContext = createContext<Orientation>("vertical")
+const OrientationContext = /* @__PURE__ */ createContext<Orientation>("vertical")
 
 /** The root sets `position: relative` inline, so a sticky or absolute root takes `sticky!` or `absolute!`. */
 function ScrollArea({ className, ...props }: ComponentProps<typeof parts.Root>) {
@@ -39,9 +39,19 @@ function ScrollAreaViewport({ className, ...props }: ComponentProps<typeof parts
   )
 }
 
-const ScrollAreaContent = parts.Content
-const ScrollAreaCorner = parts.Corner
-const ScrollAreaScrollToEnd = parts.ScrollToEnd
+// Functions rather than `const ScrollAreaContent = parts.Content`: a property read at the top of a module counts as a
+// side effect to bundlers, which then keep the whole scroll area in every bundle that imports this file.
+function ScrollAreaContent(props: ComponentProps<typeof parts.Content>) {
+  return <parts.Content {...props} />
+}
+
+function ScrollAreaCorner(props: ComponentProps<typeof parts.Corner>) {
+  return <parts.Corner {...props} />
+}
+
+function ScrollAreaScrollToEnd(props: ComponentProps<typeof parts.ScrollToEnd>) {
+  return <parts.ScrollToEnd {...props} />
+}
 
 /**
  * A scrollbar for one axis; without children it holds its thumb. `data-agent-hidden` on it leaves its scroll area out

@@ -68,7 +68,7 @@ const overflowAttrs = (state: ScrollAreaModel) => ({
   "data-overflow-x": flag(state.overflowX),
   "data-overflow-y": flag(state.overflowY),
 })
-const scrollAttrs = live<ScrollAreaModel, unknown, unknown>((state) => ({
+const scrollAttrs = /* @__PURE__ */ live<ScrollAreaModel, unknown, unknown>((state) => ({
   "data-at-start": flag(atStart(state)),
   "data-at-end": flag(atEnd(state)),
   "data-at-x-start": flag(state.atXStart),
@@ -80,7 +80,7 @@ const scrollAttrs = live<ScrollAreaModel, unknown, unknown>((state) => ({
   "data-sticking": flag(state.stickToEnd && state.sticking),
 }))
 // The root's frame variables are registered as not inherited; this keeps an unregistered fallback from reaching the content.
-const contentShield = Object.fromEntries(
+const contentShield = /* @__PURE__ */ Object.fromEntries(
   ["x", "y"].flatMap((axis) =>
     [`overflow-${axis}-start`, `overflow-${axis}-end`, `progress-${axis}`].map((name) => [
       `--scroll-area-${name}`,
@@ -95,7 +95,7 @@ const settings = (options: ScrollAreaOptions) => ({
   stickToEnd: options.stickToEnd ?? false,
 })
 
-const scrollArea = definePrimitive({
+const scrollArea = /* @__PURE__ */ definePrimitive({
   name: "scroll-area",
   options: {
     type: "string",
