@@ -1,7 +1,7 @@
 import { createVirtualizer } from "@ui-sdk/core"
 import { useCallback, useEffect, useLayoutEffect, useState, useSyncExternalStore } from "react"
 
-import { layersBesideViewport } from "@/components/ui/scroll-area"
+import { layersBesideViewport } from "@/components/ui/scroll-area-layers"
 
 /** Past this many rows only the rows in view render. */
 const FINDABLE_ROWS_THRESHOLD = 200

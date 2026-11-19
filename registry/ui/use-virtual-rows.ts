@@ -4,7 +4,7 @@ import { createVirtualizer, type VirtualItem } from "@ui-sdk/core"
 import { useCallback, useLayoutEffect, useMemo, useState, useSyncExternalStore } from "react"
 import { flushSync } from "react-dom"
 
-import { layersBesideViewport } from "@/components/ui/scroll-area"
+import { layersBesideViewport } from "@/components/ui/scroll-area-layers"
 
 /** `"auto"` virtualizes past `VIRTUALIZE_THRESHOLD` rows. */
 type Virtualize = boolean | "auto"

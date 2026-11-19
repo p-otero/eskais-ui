@@ -1881,6 +1881,10 @@
         {
           "path": "registry/ui/scroll-area.tsx",
           "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/scroll-area-layers.ts",
+          "type": "registry:ui"
         }
       ]
     },
