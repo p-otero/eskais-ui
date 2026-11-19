@@ -1,8 +1,9 @@
-import { render, screen } from "@testing-library/react"
+import { act, render, screen } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { createAgent } from "@ui-sdk/react/agent"
 import { expect, test } from "vitest"
 
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog"
 import { Field, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import {
@@ -106,4 +107,70 @@ test("an agent can open the popover and fill its field", async () => {
   const result = await agent.act({ steps: [{ ref: "Retry note", action: "setValue", args: ["Waited 30s"] }] })
   expect(result.ok, result.error?.message).toBe(true)
   expect(screen.getByRole<HTMLInputElement>("textbox", { name: "Retry note" }).value).toBe("Waited 30s")
+})
+
+function DialogWithOpenPopover({ open = true }: { open?: boolean }) {
+  return (
+    <Dialog open={open}>
+      <DialogContent initialFocus="content">
+        <DialogTitle>Task T-014</DialogTitle>
+        <Popover defaultOpen>
+          <PopoverTrigger>Acceptance 2/3</PopoverTrigger>
+          <PopoverContent>
+            <PopoverTitle>Acceptance</PopoverTitle>
+            <PopoverClose>Done</PopoverClose>
+          </PopoverContent>
+        </Popover>
+        <button type="button">After</button>
+      </DialogContent>
+    </Dialog>
+  )
+}
+
+test("a popover open from the start stays open while its dialog takes initial focus", async () => {
+  render(<DialogWithOpenPopover />)
+  await settle(20)
+  expect(document.activeElement).toBe(screen.getByRole("dialog", { name: "Task T-014" }))
+  expect(screen.getByRole("dialog", { name: "Acceptance" })).toBeTruthy()
+})
+
+test("it also stays open when the dialog opens after mounting", async () => {
+  const { rerender } = render(
+    <>
+      <button type="button">Open task</button>
+      <DialogWithOpenPopover open={false} />
+    </>,
+  )
+  screen.getByRole("button", { name: "Open task" }).focus()
+  rerender(
+    <>
+      <button type="button">Open task</button>
+      <DialogWithOpenPopover />
+    </>,
+  )
+  await settle(20)
+  expect(screen.getByRole("dialog", { name: "Acceptance" })).toBeTruthy()
+})
+
+test("after mounting, focus leaving it still closes it", async () => {
+  const user = userEvent.setup()
+  render(<DialogWithOpenPopover />)
+  await settle(20)
+  act(() => screen.getByRole("button", { name: "After" }).focus())
+  expect(screen.queryByRole("dialog", { name: "Acceptance" })).toBeNull()
+
+  await user.click(screen.getByRole("button", { name: "Acceptance 2/3" }))
+  expect(screen.getByRole("dialog", { name: "Acceptance" })).toBeTruthy()
+  act(() => screen.getByRole("dialog", { name: "Task T-014" }).focus())
+  expect(screen.queryByRole("dialog", { name: "Acceptance" })).toBeNull()
+})
+
+test("an agent sees the open popover inside the dialog and can close it", async () => {
+  render(<DialogWithOpenPopover />)
+  await settle(20)
+  const popover = agent.snapshot().find((entry) => entry.component === "popover")
+  expect(popover).toMatchObject({ label: "Acceptance", open: true, buttons: ["Done"] })
+  const result = await agent.act({ steps: [{ ref: "Acceptance", action: "setOpen", args: [false] }] })
+  expect(result.ok, result.error?.message).toBe(true)
+  expect(screen.queryByRole("dialog", { name: "Acceptance" })).toBeNull()
 })

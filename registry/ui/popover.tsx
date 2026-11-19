@@ -1,7 +1,7 @@
 "use client"
 
 import {
-  Popover,
+  Popover as PopoverPrimitive,
   PopoverArrow as PopoverArrowPrimitive,
   PopoverClose as PopoverClosePrimitive,
   PopoverContent as PopoverContentPrimitive,
@@ -10,7 +10,7 @@ import {
   PopoverTrigger as PopoverTriggerPrimitive,
   createPopoverController,
 } from "@ui-sdk/react/popover"
-import type { ComponentProps } from "react"
+import { createContext, use, useMemo, useRef, type ComponentProps, type FocusEvent, type Ref } from "react"
 
 import { buttonVariants, type ButtonLookProps } from "@/components/ui/button"
 import { ControlTooltip } from "@/components/ui/tooltip"
@@ -25,22 +25,101 @@ const arrowClassName =
 
 const popoverContentClassName = `${floatingSurfaceClassName} flex w-72 max-w-(--available-width) flex-col gap-group p-inset-surface`
 
+type PopoverProps = ComponentProps<typeof PopoverPrimitive>
+
+interface PopoverMount {
+  setTrigger: (element: HTMLElement | null) => void
+  focused: () => void
+}
+
+const PopoverMountContext = createContext<PopoverMount | null>(null)
+
+function hostsTrigger(target: EventTarget | null | undefined, trigger: HTMLElement | null) {
+  return target instanceof Node && trigger !== null && target !== trigger && target.contains(trigger)
+}
+
+/**
+ * UI SDK 0.1.0-beta.10 closes a non-modal popover on any focus outside it, even one that never had focus. A
+ * popover open from the start inside a dialog so closes as the dialog takes its initial focus
+ * (docs/research/09-popover-default-open-in-dialog.md). Until focus first reaches it, a focus move onto an
+ * ancestor of its trigger, its own dialog, is ignored.
+ */
+function Popover({ onOpenChange, ...props }: PopoverProps) {
+  const trigger = useRef<HTMLElement | null>(null)
+  const unfocused = useRef(props.open ?? props.defaultOpen ?? false)
+  const mount = useMemo<PopoverMount>(
+    () => ({
+      setTrigger: (element) => {
+        trigger.current = element
+      },
+      focused: () => {
+        unfocused.current = false
+      },
+    }),
+    [],
+  )
+  return (
+    <PopoverMountContext value={mount}>
+      <PopoverPrimitive
+        {...props}
+        onOpenChange={(open, details) => {
+          if (
+            !open &&
+            unfocused.current &&
+            details.reason === "focus-out" &&
+            hostsTrigger(details.event?.target, trigger.current)
+          ) {
+            details.cancel()
+            return
+          }
+          unfocused.current = false
+          onOpenChange?.(open, details)
+        }}
+      />
+    </PopoverMountContext>
+  )
+}
+
+function assignRef<T>(ref: Ref<T> | undefined, value: T) {
+  if (typeof ref === "function") ref(value)
+  else if (ref) ref.current = value
+}
+
 function PopoverTrigger({
   className,
   variant = "outline",
   size,
   tooltip,
+  ref,
   ...props
 }: Omit<ComponentProps<typeof PopoverTriggerPrimitive>, "aria-label"> & ButtonLookProps) {
+  const mount = use(PopoverMountContext)
   return (
     <ControlTooltip label={props["aria-label"]} tooltip={tooltip} iconOnly={size === "icon"}>
-      <PopoverTriggerPrimitive className={cnState(buttonVariants({ variant, size }), className)} {...props} />
+      <PopoverTriggerPrimitive
+        ref={(element: HTMLButtonElement | null) => {
+          if (!props.controller) mount?.setTrigger(element)
+          assignRef(ref, element)
+        }}
+        className={cnState(buttonVariants({ variant, size }), className)}
+        {...props}
+      />
     </ControlTooltip>
   )
 }
 
-function PopoverContent({ className, ...props }: ComponentProps<typeof PopoverContentPrimitive>) {
-  return <PopoverContentPrimitive className={cnState(popoverContentClassName, className)} {...props} />
+function PopoverContent({ className, onFocus, ...props }: ComponentProps<typeof PopoverContentPrimitive>) {
+  const mount = use(PopoverMountContext)
+  return (
+    <PopoverContentPrimitive
+      className={cnState(popoverContentClassName, className)}
+      onFocus={(event: FocusEvent<HTMLDivElement>) => {
+        mount?.focused()
+        onFocus?.(event)
+      }}
+      {...props}
+    />
+  )
 }
 
 function PopoverArrow({ className, ...props }: ComponentProps<typeof PopoverArrowPrimitive>) {
@@ -80,3 +159,4 @@ export {
   createPopoverController,
   floatingSurfaceClassName,
 }
+export type { PopoverProps }
