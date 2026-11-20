@@ -115,9 +115,9 @@ describe("primitive", () => {
           outcome(() => view.api.cancel()),
           outcome(() => view.api.retry()),
         ]).toEqual([
-          status === "uploaded" || `scan works only before a scan (status: ${status}).`,
-          status === "scanning" || `cancel works only while scanning (status: ${status}).`,
-          status === "error" || `retry works only after an error (status: ${status}).`,
+          status === "uploaded" || `scan works only before a scan (status: ${status}). [unavailable:scan]`,
+          status === "scanning" || `cancel works only while scanning (status: ${status}). [unavailable:cancel]`,
+          status === "error" || `retry works only after an error (status: ${status}). [unavailable:retry]`,
         ])
       } finally {
         view.unmount()

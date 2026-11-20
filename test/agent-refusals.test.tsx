@@ -26,7 +26,7 @@ import { searchField } from "@/components/ui/search-field-primitive"
 import { serverFilters } from "@/components/ui/server-filters-primitive"
 import { sidebar } from "@/components/ui/sidebar-primitive"
 import { sortable } from "@/components/ui/sortable-primitive"
-import { ActionRefusedError } from "@/lib/action-refusal"
+import { ActionRefusedError, parseActionRefusal } from "@/lib/action-refusal"
 
 import { sampleTasks } from "./fixtures/agent-tasks"
 
@@ -397,4 +397,43 @@ test("a refusal from app code is an ActionRefusedError with its kind; a press ge
   }
   expect(caught).toBeInstanceOf(ActionRefusedError)
   expect(caught).toMatchObject({ action: "collapse", kind: "refused" })
+})
+
+test("parseActionRefusal tells a refusal from another failure in agent.act()'s step error", async () => {
+  mounted(
+    mount(
+      gitTree,
+      { lookup: tree, defaultExpanded: ["src"], onExpandedChange: refuseAgent },
+      `<root aria-label="Files"></root>`,
+    ),
+  )
+  const refused = await agent.act({ steps: [{ ref: "Files", action: "collapse", args: ["src"] }] })
+  expect(refused.error?.message).toBe("collapse was refused by the app. [refused:collapse]")
+  expect(parseActionRefusal(refused.error)).toEqual({
+    action: "collapse",
+    kind: "refused",
+    text: "collapse was refused by the app.",
+  })
+  // No onOpenFile: the tree throws a plain Error, which is a failure but not a refusal.
+  const other = await agent.act({ steps: [{ ref: "Files", action: "open", args: ["src/a.ts"] }] })
+  expect(other.ok).toBe(false)
+  expect(parseActionRefusal(other.error)).toBeNull()
+  const missing = await agent.act({ steps: [{ ref: "Nothing by this name", action: "open" }] })
+  expect(parseActionRefusal(missing.error?.message)).toBeNull()
+
+  mounted(mount(conversation, { hasOlder: false, onLoadOlder: vi.fn() }, `<root aria-label="Chat"><log></log></root>`))
+  const unavailableStep = await agent.act({ steps: [{ ref: "Chat", action: "loadOlder" }] })
+  expect(parseActionRefusal(unavailableStep.error)).toMatchObject({ action: "loadOlder", kind: "unavailable" })
+})
+
+test("parseActionRefusal reads the error, a message the bridge prefixed, and leaves redacted ones alone", () => {
+  const error = new ActionRefusedError("start", "unavailable", "start isn't available while listening.")
+  expect(error.message).toBe("start isn't available while listening. [unavailable:start]")
+  expect(error.text).toBe("start isn't available while listening.")
+  expect(parseActionRefusal(error)).toEqual({ action: "start", kind: "unavailable", text: error.text })
+  // The bridge's wording for an action whose promise rejected before the step ended.
+  expect(parseActionRefusal(`start on Voice (c2) failed: ${error.message}`)).toMatchObject({ action: "start" })
+  expect(parseActionRefusal("start on Voice (c2) failed: [redacted]")).toBeNull()
+  expect(parseActionRefusal(new Error('Card "a" can\'t be moved.'))).toBeNull()
+  expect(parseActionRefusal(undefined)).toBeNull()
 })
