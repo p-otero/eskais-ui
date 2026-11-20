@@ -32,6 +32,7 @@ function staticRoutes(): Plugin {
           .replaceAll('"./', `"${prefix}`)
           .replace(/<title>.*<\/title>/, `<title>${escapeHtml(route.title)}</title>`)
           .replace(/(<meta name="description" content=")[^"]*/, `$1${escapeHtml(route.description)}`)
+          .replace("</title>", route.noindex ? '</title><meta name="robots" content="noindex" />' : "</title>")
         const file = join(outDir, route.path, "index.html")
         mkdirSync(dirname(file), { recursive: true })
         writeFileSync(file, html)
