@@ -84,8 +84,9 @@ function MediaSections() {
       <LightboxSection />
       <AttachmentsSection />
       <ImageScanSection />
-      <ModelViewerSection />
+      {/* The scan above the viewer: the viewer's bar grows when its clips load, which would move the scan's controls. */}
       <ModelScanSection />
+      <ModelViewerSection />
     </>
   )
 }
