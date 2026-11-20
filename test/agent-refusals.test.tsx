@@ -23,6 +23,7 @@ import { createLogStore } from "@/components/ui/log-viewer-store"
 import { link } from "@/components/ui/link-primitive"
 import { list } from "@/components/ui/list-primitive"
 import { masterDetail } from "@/components/ui/master-detail-primitive"
+import { modelScan } from "@/components/ui/model-scan-primitive"
 import { nativeSelect } from "@/components/ui/native-select-primitive"
 import { searchField } from "@/components/ui/search-field-primitive"
 import { serverFilters } from "@/components/ui/server-filters-primitive"
@@ -342,6 +343,39 @@ test("master detail: a refused open fails the step and keeps the detail closed",
   )
   await failsWith("Inbox", "open", "open was refused by the app.", ["a"])
   expect(view.state.selectedId).toBeNull()
+})
+
+test("model scan: a refused start, cancel, retry, restart or download fails the step; a stage that forbids one says so", async () => {
+  const callbacks = {
+    onStart: vi.fn(refuseAgent),
+    onCancel: vi.fn(refuseAgent),
+    onRetry: vi.fn(refuseAgent),
+    onStartOver: vi.fn(refuseAgent),
+    onDownload: vi.fn(refuseAgent),
+  }
+  const markup = `<root aria-label="Scan"><photo></photo><effect></effect><points></points></root>`
+  const photo = mounted(mount(modelScan, { stage: "photo", ...callbacks }, markup))
+  await failsWith("Scan", "start", "start was refused by the app.")
+  await failsWith("Scan", "download", "download isn't available before a scan starts.")
+  expect(photo.state.stage).toBe("photo")
+  photo.unmount()
+  const running = mounted(mount(modelScan, { stage: "building", ...callbacks }, markup))
+  await failsWith("Scan", "cancel", "cancel was refused by the app.")
+  await failsWith("Scan", "retry", "retry isn't available while the scan runs.")
+  expect(running.state.stage).toBe("building")
+  running.unmount()
+  const ready = mounted(mount(modelScan, { stage: "ready", ...callbacks }, markup))
+  await failsWith("Scan", "download", "download was refused by the app.")
+  await failsWith("Scan", "restart", "restart was refused by the app.")
+  await failsWith("Scan", "cancel", "cancel isn't available once the model is ready.")
+  ready.unmount()
+  const failed = mounted(mount(modelScan, { stage: "error", ...callbacks }, markup))
+  await failsWith("Scan", "retry", "retry was refused by the app.")
+  failed.unmount()
+  const bare = mounted(mount(modelScan, { stage: "ready" }, markup))
+  await failsWith("Scan", "download", "download isn't offered by the app.")
+  expect(bare.state.stage).toBe("ready")
+  for (const callback of Object.values(callbacks)) expect(callback).toHaveBeenCalledOnce()
 })
 
 test("native select: a refused value fails the step and keeps the value", async () => {
