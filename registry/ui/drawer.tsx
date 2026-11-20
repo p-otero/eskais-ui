@@ -32,10 +32,12 @@ const drawerContentClassName = [
   "data-[side=top]:mx-auto data-[side=top]:max-h-[calc(min(100%,var(--dialog-viewport-height,100%))-2rem)] data-[side=top]:w-full data-[side=top]:max-w-2xl data-[side=top]:rounded-b-surface data-[side=top]:border-t-0",
   "data-[side=right]:h-full data-[side=right]:w-[calc(100%-2rem)] data-[side=right]:max-w-sm data-[side=right]:rounded-l-surface data-[side=right]:border-r-0",
   "data-[side=left]:h-full data-[side=left]:w-[calc(100%-2rem)] data-[side=left]:max-w-sm data-[side=left]:rounded-r-surface data-[side=left]:border-l-0",
-  // UI SDK lays its viewport (the content's parent) out from `--keyboard-inset`, against `innerHeight` (beta.12), which
-  // iOS 26 can leave stale. It takes the visible box instead, as DialogContent does, and the drawer snaps inside it.
-  "[:has(>&)]:top-[clamp(0px,var(--dialog-viewport-top,0px),100%-var(--dialog-viewport-height,100%))]! [:has(>&)]:[--keyboard-inset:max(0px,100%-var(--dialog-viewport-bottom,100%))]!",
 ].join(" ")
+
+// UI SDK lays its viewport (the content's parent) out from `--keyboard-inset`, against `innerHeight` (beta.12), which
+// iOS 26 can leave stale. The viewport takes the visible box instead, as DialogContent does; the drawer snaps inside it.
+const drawerViewportClassName =
+  "top-[clamp(0px,var(--dialog-viewport-top,0px),100%-var(--dialog-viewport-height,100%))]! [--keyboard-inset:max(0px,100%-var(--dialog-viewport-bottom,100%))]!"
 
 function DrawerTrigger({
   className,
@@ -67,7 +69,7 @@ function DrawerContent({
     finalFocus: returnFocus,
     wrap,
   } = useFocusReturn(finalFocus, ref as Ref<HTMLElement> | undefined, {
-    viewportBox: "parent",
+    viewportParentClassName: drawerViewportClassName,
   })
   return (
     <DrawerContentPrimitive

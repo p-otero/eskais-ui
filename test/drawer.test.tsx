@@ -131,14 +131,15 @@ test("the drawer's viewport takes the visible part of the page, not UI SDK's inn
     const box = drawer.parentElement as HTMLElement
     expect(box.dataset.slot).toBe("drawer-viewport")
     expect(box.style.getPropertyValue("--dialog-viewport-bottom")).toBe(`${String(innerHeight - 90)}px`)
-    // The rules on the content reach its parent, over the inline inset UI SDK writes.
-    expect(drawer.className).toContain(
-      "[:has(>&)]:[--keyboard-inset:max(0px,100%-var(--dialog-viewport-bottom,100%))]!",
-    )
-    expect(drawer.className).toContain(
-      "[:has(>&)]:top-[clamp(0px,var(--dialog-viewport-top,0px),100%-var(--dialog-viewport-height,100%))]!",
+    // Classes with `!` on the viewport outrank the inline inset UI SDK writes there, and leave with the drawer.
+    expect(box.classList).toContain("[--keyboard-inset:max(0px,100%-var(--dialog-viewport-bottom,100%))]!")
+    expect(box.classList).toContain(
+      "top-[clamp(0px,var(--dialog-viewport-top,0px),100%-var(--dialog-viewport-height,100%))]!",
     )
     expect(drawer.className).toContain("max-h-[calc(min(100%,var(--dialog-viewport-height,100%))-2rem)]")
+    await user.keyboard("{Escape}")
+    await settle()
+    expect(box.className).toBe("")
   } finally {
     vi.unstubAllGlobals()
   }
