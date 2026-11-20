@@ -1,9 +1,10 @@
 import { render, screen, within } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { createAgent } from "@ui-sdk/react/agent"
+import { useState } from "react"
 import { expect, test, vi } from "vitest"
 
-import { DataTable, type DataTableColumn } from "@/components/ui/data-table"
+import { DataTable, type DataTableColumn, type DataTableSort } from "@/components/ui/data-table"
 
 const agent = createAgent()
 
@@ -27,35 +28,58 @@ function customers() {
     .map((row) => within(row).getAllByRole("cell")[0]?.textContent)
 }
 
-test("manual: shows the rows as given and only reports sort and page changes", async () => {
-  const user = userEvent.setup()
-  const onSortChange = vi.fn()
-  const onPageChange = vi.fn()
-  render(
+// A manual table holds sort and page in the app, which fetches the matching rows. UI SDK's dev check fails a controlled
+// value that a change request leaves as it was, so the app here updates both and leaves the rows alone.
+function ManualInvoices({
+  onSortChange,
+  onPageChange,
+}: {
+  onSortChange: (sort: DataTableSort | null, details: unknown) => void
+  onPageChange: (page: number, details: unknown) => void
+}) {
+  const [sort, setSort] = useState<DataTableSort | null>({ columnId: "amount", direction: "descending" })
+  const [current, setCurrent] = useState(3)
+  return (
     <DataTable
       label="Invoices"
       manual
       rows={page}
       total={42}
       pageSize={2}
-      page={3}
-      sort={{ columnId: "amount", direction: "descending" }}
-      onSortChange={onSortChange}
-      onPageChange={onPageChange}
+      page={current}
+      sort={sort}
+      onSortChange={(next, details) => {
+        onSortChange(next, details)
+        setSort(next)
+      }}
+      onPageChange={(next, details) => {
+        onPageChange(next, details)
+        setCurrent(next)
+      }}
       columns={columns}
       getRowId={(row) => row.id}
-    />,
+    />
   )
+}
+
+test("manual: shows the rows as given and only reports sort and page changes", async () => {
+  const user = userEvent.setup()
+  const onSortChange = vi.fn()
+  const onPageChange = vi.fn()
+  render(<ManualInvoices onSortChange={onSortChange} onPageChange={onPageChange} />)
   expect(customers()).toEqual(["Zeta", "Alpha"])
   expect(screen.getByRole("columnheader", { name: /Amount/ }).getAttribute("aria-sort")).toBe("descending")
   expect(screen.getByText("Page 3 of 21")).toBeTruthy()
 
   await user.click(screen.getByRole("button", { name: "Sort by Customer" }))
   expect(onSortChange).toHaveBeenCalledWith({ columnId: "customer", direction: "ascending" }, expect.anything())
+  expect(screen.getByRole("columnheader", { name: /Customer/ }).getAttribute("aria-sort")).toBe("ascending")
   expect(customers()).toEqual(["Zeta", "Alpha"])
 
   await user.click(screen.getByRole("button", { name: "Next page" }))
   expect(onPageChange).toHaveBeenCalledWith(4, expect.objectContaining({ reason: "next-press" }))
+  expect(screen.getByText("Page 4 of 21")).toBeTruthy()
+  expect(customers()).toEqual(["Zeta", "Alpha"])
   expect(screen.queryByRole("columnheader", { name: "Number" })?.hasAttribute("aria-sort")).toBe(false)
 })
 
