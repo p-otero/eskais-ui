@@ -1,7 +1,7 @@
 "use client"
 
 import { createParts, usePart, usePrimitive, type PartProps } from "@ui-sdk/react/primitive"
-import { lazy, Suspense, useId, useMemo, type ReactNode } from "react"
+import { lazy, Suspense, useId, useImperativeHandle, useMemo, type ReactNode, type Ref } from "react"
 import { CircleAlertIcon, PlayIcon, RotateCcwIcon, ZoomInIcon, ZoomOutIcon } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
@@ -31,6 +31,7 @@ import type {
   ModelViewerModelLoad,
   ModelViewerSource,
 } from "@/components/ui/use-model-viewer-scene"
+import { useModelViewerControls } from "@/components/ui/use-model-viewer-controls"
 import { cnState } from "@/lib/utils"
 
 const {
@@ -106,8 +107,16 @@ type ModelViewerProps = Omit<PartProps<"div">, "children" | "onLoad" | "onError"
     background?: "surface" | "transparent"
     /** Turns the model slowly while nobody drags it: true for 20° a second, or degrees a second. Never under reduced motion. */
     autoRotate?: boolean | number
-    /** The controls under the stage and drag, wheel, pinch and keys on it. On by default. */
-    controls?: boolean
+    /**
+     * `true` (the default): the control bar under the stage, and drag, wheel, pinch and keys on it. `"gestures"`:
+     * drag, wheel, pinch and keys without the bar, for controls of your own (`handleRef`, `useModelViewerControls`).
+     * `false`: a still stage that takes no focus.
+     */
+    controls?: boolean | "gestures"
+    /** A grid floor and a contact shadow under the model's feet, in the theme's colours. */
+    floor?: boolean
+    /** The viewer's handle once it mounts: its state, `subscribe`, and `api` to drive it from controls of your own. */
+    handleRef?: Ref<ModelViewerHandle | null>
     /** Loads the scene once the stage nears the viewport; false holds it back. */
     load?: boolean
     /** Content over the canvas, inside the stage. */
@@ -166,6 +175,8 @@ function ModelViewer({
   background = "surface",
   autoRotate = false,
   controls = true,
+  floor = false,
+  handleRef,
   load = true,
   overlay,
   sceneChildren,
@@ -192,7 +203,7 @@ function ModelViewer({
     playing,
     defaultPlaying,
     onPlayingChange,
-    interactive: controls,
+    interactive: controls !== false,
     load,
     errorMessage: error ?? labels.error,
   })
@@ -204,6 +215,7 @@ function ModelViewer({
     }),
     [viewer.instance, viewer.api],
   )
+  useImperativeHandle(handleRef, () => handle, [handle])
   const spin = autoRotate === true ? defaultSpin : autoRotate === false ? 0 : autoRotate
   const ratio = clampNumber(aspectRatio, 0.25, 4)
 
@@ -211,10 +223,15 @@ function ModelViewer({
     <>
       <ModelViewerStage
         label={alt}
-        describedBy={describedBy([controls && hintId, summary !== undefined && summaryId])}
+        describedBy={describedBy([controls !== false && hintId, summary !== undefined && summaryId])}
         className={cnState(
           "relative isolate aspect-(--model-viewer-ratio) w-full touch-pan-y overflow-hidden rounded-surface border outline-none select-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background data-interactive:cursor-grab data-interactive:active:cursor-grabbing",
-          background === "surface" ? "bg-muted" : "bg-transparent",
+          background === "transparent"
+            ? "bg-transparent"
+            : floor
+              ? // oxlint-disable-next-line shadcn/no-arbitrary-values -- a studio light: the card colour pooled over the muted stage, behind the floor
+                "bg-muted bg-[radial-gradient(ellipse_80%_60%_at_50%_38%,var(--card),transparent)]"
+              : "bg-muted",
         )}
       >
         <ModelViewerPoster className="pointer-events-none absolute inset-0 transition-opacity duration-panel ease-standard data-[status=ready]:opacity-0">
@@ -243,6 +260,7 @@ function ModelViewer({
               loop={loop}
               speed={speed}
               autoRotate={spin}
+              floor={floor}
               onLoad={onLoad}
               onError={onError}
               onModelLoad={onModelLoad}
@@ -260,15 +278,17 @@ function ModelViewer({
             </>
           )}
         </ModelViewerMessage>
-        {controls ? (
+        {controls !== false ? (
           <span id={hintId} hidden>
             {labels.keyboard}
           </span>
         ) : null}
       </ModelViewerStage>
-      <ModelViewerControls label={labels.controls} className="flex flex-wrap items-center gap-items">
-        {(state) => <ModelViewerControlBar handle={handle} state={state} labels={labels} />}
-      </ModelViewerControls>
+      {controls === true ? (
+        <ModelViewerControls label={labels.controls} className="flex flex-wrap items-center gap-items">
+          {(state) => <ModelViewerControlBar handle={handle} state={state} labels={labels} />}
+        </ModelViewerControls>
+      ) : null}
       {summary ? (
         <p id={summaryId} className="text-body-sm text-muted-foreground">
           {summary}
@@ -382,9 +402,11 @@ function ModelViewerControlBar({
   )
 }
 
-export { ModelViewer, preloadModelViewer }
+export { ModelViewer, preloadModelViewer, useModelViewerControls }
 export type {
   ModelViewerBounds,
+  ModelViewerControlsState,
+  ModelViewerHandle,
   ModelViewerExpressions,
   ModelViewerFraming,
   ModelViewerLabels,

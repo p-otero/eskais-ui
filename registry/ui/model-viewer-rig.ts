@@ -34,6 +34,7 @@ import {
   toonOf,
   type MorphMesh,
 } from "@/components/ui/model-viewer-meshes"
+import type { ModelViewerFloor } from "@/components/ui/model-viewer-floor"
 import type { ModelViewerHandle } from "@/components/ui/model-viewer-primitive"
 
 type LoadedModel = { scene: Object3D; animations: readonly AnimationClip[] }
@@ -429,6 +430,8 @@ type ModelViewerSceneState = {
   /** The loaded model's rig, or null while it loads. */
   rig: ModelRig | null
   framing: ModelViewerFraming
+  /** The floor under the model, with `floor` on: fade it or run a pulse across it with `set`. */
+  floor: ModelViewerFloor | null
 }
 
 /** What content inside the canvas (`sceneChildren`) can read: the viewer, and the model once it has loaded. */

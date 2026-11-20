@@ -1,8 +1,9 @@
 import { useFrame, useThree } from "@react-three/fiber"
-import { useEffect, useEffectEvent, useRef, useState, useSyncExternalStore } from "react"
-import type { AnimationClip, Object3D, PerspectiveCamera } from "three"
+import { useEffect, useEffectEvent, useMemo, useRef, useState, useSyncExternalStore } from "react"
+import { Color, type AnimationClip, type Object3D, type PerspectiveCamera } from "three"
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js"
 
+import { createFloor } from "@/components/ui/model-viewer-floor"
 import type { ModelViewerExpressions, ModelViewerFraming, ModelViewerWeights } from "@/components/ui/model-viewer-math"
 import type { ModelViewerHandle } from "@/components/ui/model-viewer-primitive"
 import {
@@ -12,6 +13,7 @@ import {
   type ModelViewerMaterial,
   type RigInput,
 } from "@/components/ui/model-viewer-rig"
+import { onThemeChange, tokenColor } from "@/components/ui/model-viewer-theme"
 
 /** A glTF or GLB: its URL, its bytes, or a scene loaded already (a GLTFLoader result works). */
 type ModelViewerSource = string | ArrayBuffer | { scene: Object3D; animations?: readonly AnimationClip[] }
@@ -220,5 +222,41 @@ function useModelFrame(options: ModelFrameOptions) {
   })
 }
 
-export { loadModel, useModelFrame, useModelRig, useSceneFrameloop }
+/**
+ * The floor under `rig`, with `enabled`: placed at its feet whenever the model changes, in the theme's muted
+ * foreground and info colours, read again when the theme changes.
+ */
+function useModelFloor(enabled: boolean, rig: ModelRig | null) {
+  const canvas = useThree((state) => state.gl.domElement)
+  const invalidate = useThree((state) => state.invalidate)
+  const floor = useMemo(() => (enabled ? createFloor() : null), [enabled])
+  useEffect(() => () => floor?.dispose(), [floor])
+  useEffect(() => {
+    if (!floor) return
+    const line = new Color()
+    const accent = new Color()
+    const read = () => {
+      floor.colors(
+        tokenColor(canvas, "--muted-foreground", 0x888888, line),
+        tokenColor(canvas, "--info", 0x3b82f6, accent),
+      )
+      invalidate()
+    }
+    read()
+    return onThemeChange(read)
+  }, [floor, canvas, invalidate])
+  useEffect(() => {
+    if (!floor) return
+    if (!rig) {
+      floor.place(0, 0, 0, 0)
+      return
+    }
+    const { center, size } = rig.bounds
+    floor.place(center.x, center.y - size.y / 2, center.z, size.y)
+    invalidate()
+  }, [floor, rig, invalidate])
+  return floor
+}
+
+export { loadModel, useModelFloor, useModelFrame, useModelRig, useSceneFrameloop }
 export type { ModelViewerLoadInfo, ModelViewerModelLoad, ModelViewerSource }
