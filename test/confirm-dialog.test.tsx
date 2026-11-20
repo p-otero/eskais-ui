@@ -187,3 +187,17 @@ test("triggerDisabled and triggerPending stop the trigger, and agents can't open
   await user.click(trigger)
   expect(screen.getByRole("alertdialog", { name: "Delete Apollo?" })).toBeTruthy()
 })
+
+test("a long description scrolls in the dialog body, and the actions stay outside it", async () => {
+  const user = userEvent.setup()
+  render(<DeleteProject onConfirm={() => {}} />)
+  await user.click(screen.getByRole("button", { name: "Delete project" }))
+  const dialog = screen.getByRole("alertdialog", { name: "Delete Apollo?" })
+  const body = dialog.querySelector('[data-slot="dialog-body"]')
+  expect(body?.textContent).toContain("deleted for everyone")
+  expect(body?.contains(screen.getByRole("button", { name: "Delete forever" }))).toBe(false)
+  expect(body?.contains(screen.getByRole("heading", { name: "Delete Apollo?" }))).toBe(false)
+  expect(document.getElementById(dialog.getAttribute("aria-describedby") ?? "")?.textContent).toContain(
+    "deleted for everyone",
+  )
+})
