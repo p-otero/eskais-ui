@@ -12,8 +12,7 @@ import {
 } from "@tanstack/react-query"
 import { useCallback, useEffect, useState, useSyncExternalStore } from "react"
 
-import { useDataClient } from "@/components/ui/server-data"
-import { resourceMeta } from "@/components/ui/use-server-query"
+import { useDataClient, type DefaultServerError } from "@/components/ui/server-data"
 import {
   createPageController,
   type PageController,
@@ -40,7 +39,7 @@ type ServerPageOptions = {
   navigation?: NavigationMode
 }
 
-type ServerPageState<T> = {
+type ServerPageState<T, TError = DefaultServerError> = {
   /** The page's rows; while another page loads, the previous page's rows stay here. */
   items: T[]
   result: PageResult<T> | undefined
@@ -51,7 +50,7 @@ type ServerPageState<T> = {
   previous: boolean
   total: TotalInfo
   navigation: Navigation
-  error: unknown
+  error: TError | null
   retry: () => void
 }
 
@@ -59,21 +58,32 @@ function pageKey<F>(source: PageSource<unknown, F>, request: PageRequest<F>): Qu
   return [...source.key, "page", request.filter, request.sort, request.position, request.size]
 }
 
-type ServerTotalState = { total: number | undefined; status: ServerStatus; fetching: boolean; error: unknown }
+type ServerTotalState<TError = DefaultServerError> = {
+  total: number | undefined
+  status: ServerStatus
+  fetching: boolean
+  error: TError | null
+}
+
+// Tells a mutation's `settle` and `settleItems` which kind of query each one under the key is, mounted or not.
+const pageMeta = { serverData: "page" }
+const infiniteMeta = { serverData: "infinite" }
+const totalMeta = { serverData: "total" }
 
 /** The source's own count, as a query of its own (`[...key, "total", filter]`); idle without `fetchTotal`. */
-function useServerTotal<T, F>(
+function useServerTotal<T, F, TError = DefaultServerError>(
   source: PageSource<T, F>,
   filter: F,
   options: { enabled?: boolean } = {},
-): ServerTotalState {
+): ServerTotalState<TError> {
   const client = useDataClient()
   const fetchTotal = source.fetchTotal
-  const query = useQuery(
+  const query = useQuery<number, TError>(
     {
       queryKey: [...source.key, "total", filter],
       queryFn: ({ signal }) => (fetchTotal as NonNullable<typeof fetchTotal>).call(source, filter, { signal }),
       enabled: fetchTotal !== undefined && options.enabled !== false,
+      meta: totalMeta,
       placeholderData: keepPreviousData,
     },
     client,
@@ -85,17 +95,18 @@ function useServerTotal<T, F>(
  * One page of a source for a request. The rows of the previous request stay while the next loads, a superseded
  * request is aborted through its signal, and `fetchTotal` runs beside it without holding the rows back.
  */
-function useServerPage<T, F>(
+function useServerPage<T, F, TError = DefaultServerError>(
   source: PageSource<T, F>,
   request: PageRequest<F>,
   options: ServerPageOptions = {},
-): ServerPageState<T> {
+): ServerPageState<T, TError> {
   const client = useDataClient()
-  const query = useQuery(
+  const query = useQuery<PageResult<T>, TError>(
     {
       queryKey: pageKey(source, request),
       queryFn: ({ signal }) => source.fetchPage(request, { signal }),
       enabled: options.enabled !== false,
+      meta: pageMeta,
       placeholderData: keepPreviousData,
     },
     client,
@@ -122,7 +133,7 @@ function useServerPage<T, F>(
 
 type InfiniteRequest<F> = { filter: F; sort: readonly SortSpec[]; size: number }
 
-type ServerInfiniteState<T> = {
+type ServerInfiniteState<T, TError = DefaultServerError> = {
   /** Every loaded page's rows, in order. */
   items: T[]
   pages: PageResult<T>[]
@@ -133,21 +144,21 @@ type ServerInfiniteState<T> = {
   hasMore: boolean
   loadMore: () => Promise<void>
   total: TotalInfo
-  error: unknown
+  error: TError | null
   retry: () => void
 }
 
 type PageParam = number | string | null
 
 /** Pages that add up, for load more and infinite scroll: page numbers or cursors, as the source pages. */
-function useServerInfinite<T, F>(
+function useServerInfinite<T, F, TError = DefaultServerError>(
   source: PageSource<T, F>,
   request: InfiniteRequest<F>,
   options: { enabled?: boolean } = {},
-): ServerInfiniteState<T> {
+): ServerInfiniteState<T, TError> {
   const client = useDataClient()
   const cursorMode = source.capabilities.position === "cursor"
-  const query = useInfiniteQuery(
+  const query = useInfiniteQuery<PageResult<T>, TError, InfiniteData<PageResult<T>, PageParam>, QueryKey, PageParam>(
     {
       queryKey: [...source.key, "infinite", request.filter, request.sort, request.size],
       queryFn: ({ signal, pageParam }: { signal: AbortSignal; pageParam: PageParam }) =>
@@ -169,6 +180,7 @@ function useServerInfinite<T, F>(
         return more && last.items.length > 0 ? all.length + 1 : undefined
       },
       enabled: options.enabled !== false,
+      meta: infiniteMeta,
       placeholderData: keepPreviousData,
     },
     client,
@@ -227,6 +239,17 @@ function useInvalidateSource(
 
 type Snapshot = [QueryKey, unknown][]
 
+/**
+ * What kind of query this is under the source's key. The hooks mark theirs; a query no hook has observed, such as one
+ * filled with `setQueryData` or by a resource's `seeds`, is told by the segment after the key, and anything else is a
+ * resource.
+ */
+function queryKind(query: Query, key: readonly unknown[]): "page" | "infinite" | "total" | "resource" {
+  const marked = query.meta?.serverData
+  const kind = typeof marked === "string" ? marked : query.queryKey[key.length]
+  return kind === "page" || kind === "infinite" || kind === "total" ? kind : "resource"
+}
+
 /** A page or infinite query's data with each page's rows updated; `undefined` for any other query or no data. */
 function mapItems<T>(kind: unknown, data: unknown, update: (items: T[]) => T[]): unknown {
   if (data === undefined) return undefined
@@ -273,7 +296,7 @@ async function settleQueries(client: QueryClient, key: readonly unknown[], next:
   })
 }
 
-type SourceMutationOptions<T, Variables, Result, Data = Result> = {
+type SourceMutationOptions<T, Variables, Result, Data = Result, TError = DefaultServerError> = {
   mutationFn: (variables: Variables) => Promise<Result>
   /** Its queries are refreshed once the mutation settles, unless `settleItems` or `settle` writes the answer. */
   source: PageSource<T, never> | { key: readonly unknown[] }
@@ -294,16 +317,21 @@ type SourceMutationOptions<T, Variables, Result, Data = Result> = {
     current: Data | undefined,
     queryKey: readonly unknown[],
   ) => Data | undefined
+  /**
+   * Whether a failed mutation reloads the key, in case part of the change reached the server. Default true; false
+   * adds no read to a failed command (`optimistic` rows are still restored).
+   */
+  refreshOnError?: boolean
   onSuccess?: (result: Result, variables: Variables) => unknown
-  onError?: (error: unknown, variables: Variables) => unknown
+  onError?: (error: TError, variables: Variables) => unknown
 }
 
-type SourceMutationState<Variables, Result> = {
+type SourceMutationState<Variables, Result, TError = DefaultServerError> = {
   mutate: (variables: Variables) => void
   mutateAsync: (variables: Variables) => Promise<Result>
   status: "idle" | "pending" | "error" | "success"
   pending: boolean
-  error: unknown
+  error: TError | null
   reset: () => void
 }
 
@@ -311,14 +339,15 @@ type SourceMutationState<Variables, Result> = {
  * A change to the source's data. Its queries refresh afterwards; `optimistic` shows the change before, and
  * `settleItems` and `settle` write the server's answer instead of refreshing.
  */
-function useSourceMutation<T, Variables = void, Result = unknown, Data = Result>(
-  options: SourceMutationOptions<T, Variables, Result, Data>,
-): SourceMutationState<Variables, Result> {
+function useSourceMutation<T, Variables = void, Result = unknown, Data = Result, TError = DefaultServerError>(
+  options: SourceMutationOptions<T, Variables, Result, Data, TError>,
+): SourceMutationState<Variables, Result, TError> {
   const client = useDataClient()
   const { key } = options.source
   const { settle, settleItems } = options
   const settles = settle !== undefined || settleItems !== undefined
-  const mutation = useMutation<Result, unknown, Variables, { snapshot: Snapshot } | undefined>(
+  const refreshOnError = options.refreshOnError !== false
+  const mutation = useMutation<Result, TError, Variables, { snapshot: Snapshot } | undefined>(
     {
       mutationFn: options.mutationFn,
       onMutate: async (variables) => {
@@ -337,19 +366,17 @@ function useSourceMutation<T, Variables = void, Result = unknown, Data = Result>
         if (settles) {
           await settleQueries(client, key, (query) => {
             const data = query.state.data
-            if (query.meta?.serverData === resourceMeta.serverData) {
-              return settle?.(result, variables, data as Data | undefined, query.queryKey)
-            }
-            return (
-              settleItems &&
-              mapItems<T>(query.queryKey[key.length], data, (items) => settleItems(items, result, variables))
-            )
+            const kind = queryKind(query, key)
+            if (kind === "resource") return settle?.(result, variables, data as Data | undefined, query.queryKey)
+            return settleItems && mapItems<T>(kind, data, (items) => settleItems(items, result, variables))
           })
         }
         return options.onSuccess?.(result, variables)
       },
-      onSettled: (_result, error) =>
-        settles && error === null ? undefined : client.invalidateQueries({ queryKey: key }),
+      onSettled: (_result, error) => {
+        const refresh = error === null ? !settles : refreshOnError
+        return refresh ? client.invalidateQueries({ queryKey: key }) : undefined
+      },
     },
     client,
   )

@@ -78,9 +78,47 @@ const save = useSourceMutation({
   settle: (saved, _change, current) => (current?.id === saved.id ? saved : undefined), // useServerQuery; undefined skips
 })
 
+// A command whose failure changes nothing on the server: no reload when it fails.
+const archive = useSourceMutation({ source: tasks, mutationFn: api.archive, settle: () => undefined, refreshOnError: false })
+
 // A reload the caller hears about when it fails.
 const reload = useInvalidateSource(tasks, { throwOnError: true })
 reload().catch(() => toast.error("Couldn't reload tasks"))`
+
+const sharedCode = `import { defineResource, useServerResource } from "@/components/ui/use-server-query"
+
+// Declared once, read by every screen: same key, fetch and options, one request.
+export const taskSummary = defineResource({
+  key: (id: string) => [...tasks.key, "summary", id],
+  fetch: (id: string, { signal }) => api.taskSummary(id, { signal }),
+  staleTime: 60_000,
+})
+
+// The full task carries the summary: its answer seeds it, mounted or not.
+export const taskDetail = defineResource({
+  key: (id: string) => [...tasks.key, "detail", id],
+  fetch: (id: string, { signal }) => api.task(id, { signal }),
+  seeds: (task) => [taskSummary.seed(task.id, { id: task.id, title: task.title, status: task.status })],
+})
+
+const detail = useServerResource(taskDetail, id)
+const title = useServerResource(taskSummary, id, { select: (summary) => summary.title }) // data: string | undefined
+
+// Without a definition, useServerQuery takes seeds too: a list fills each row's summary.
+useServerQuery([...tasks.key, "recent"], api.recent, {
+  seeds: (list) => list.map((task) => taskSummary.seed(task.id, summaryOf(task))),
+})`
+
+const errorCode = `// One error type for the whole app: every hook's error becomes ApiError | null.
+declare module "@tanstack/react-query" {
+  interface Register {
+    defaultError: ApiError
+  }
+}
+
+// Or per call: the type parameter after the data.
+const detail = useServerQuery<Task, ApiError>([...tasks.key, "detail", id], fetchTask)
+const page = useServerPage<Task, TaskFilter, ApiError>(tasks, request)`
 
 const retryCode = `import { createDataClient, isTransientError } from "@/components/ui/server-data"
 
@@ -309,8 +347,9 @@ export default function ServerData() {
         <li>
           On success they cancel the read in flight of each query they write, so an answer sent before the change can't
           overwrite it, and request nothing. The other queries under the key are marked stale and reload when next
-          shown; one that was already loading starts again. A failed mutation still refreshes the key and rolls back{" "}
-          <Code>optimistic</Code> rows.
+          shown; one that was already loading starts again. They reach every cached query under the key, mounted or not,
+          as one filled with <Code>setQueryData</Code>. A failed mutation still rolls back <Code>optimistic</Code> rows
+          and refreshes the key, unless <Code>refreshOnError: false</Code> says the failure changed nothing.
         </li>
         <li>
           <Code>useInvalidateSource(source)</Code> resolves once the shown queries have reloaded, failed or not;{" "}
@@ -318,14 +357,35 @@ export default function ServerData() {
         </li>
       </Ul>
 
+      <H2 id="shared-resources">Shared and seeded resources</H2>
+      <P>
+        When two screens read the same resource, declare it once with <Code>defineResource</Code> (its <Code>key</Code>,{" "}
+        <Code>fetch</Code>, <Code>staleTime</Code> and <Code>seeds</Code>) and read it with{" "}
+        <Code>useServerResource(resource, params, options)</Code>. When one answer contains another resource,{" "}
+        <Code>seeds</Code> writes it: after the fetch resolves, unless it was aborted, whether or not that resource is
+        mounted, and never over data written after the fetch started. <Code>select</Code> picks what <Code>data</Code>{" "}
+        holds, typed as its result, recomputed only when the answer changes and kept by identity when equal; the cache,{" "}
+        <Code>settle</Code> and <Code>seeds</Code> still see the whole answer.
+      </P>
+      <Pre code={sharedCode} />
+
+      <H2 id="errors">Typed errors</H2>
+      <P>
+        <Code>error</Code> is <Code>unknown</Code> by default, since a fetch can reject with anything. Register a{" "}
+        <Code>defaultError</Code> with TanStack Query to type it across the app, or pass the error type after the data
+        type; <Code>useServerPage</Code>, <Code>useServerInfinite</Code>, <Code>useServerTotal</Code> and{" "}
+        <Code>useSourceMutation</Code> take it too.
+      </P>
+      <Pre code={errorCode} />
+
       <H2 id="retry">Retries</H2>
       <P>
         <Code>createDataClient({"{ retry, retryDelay }"})</Code>: a number of retries keeps the 4xx rule, a function{" "}
         <Code>(failures, error) =&gt; boolean</Code> decides alone. The default stays two retries for anything without a
         4xx <Code>status</Code>, because <Code>fetch</Code> reports a dropped connection as a <Code>TypeError</Code>{" "}
         with no status. When your errors carry no status (IPC, a domain error, a parse error), retrying only{" "}
-        <Code>isTransientError</Code> fails them at once instead of after the backoff. Mutations never retry: a write
-        that failed may still have reached the server.
+        <Code>isTransientError</Code> fails them at once instead of after the backoff. <Code>retry: false</Code> never
+        retries, as <Code>0</Code> does. Mutations never retry: a write that failed may still have reached the server.
       </P>
       <Pre code={retryCode} />
 

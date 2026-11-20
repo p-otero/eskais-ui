@@ -112,17 +112,48 @@ const detail = useServerQuery([...tasks.key, "detail", id], ({ signal }) => api.
   staleTime, // the client's default otherwise
   keepPrevious, // default false: a detail never shows another id's data
   placeholder, // shown before the first load, never cached
+  select, // (task) => task.title: data is the selection, memoised; the cache keeps the whole answer
+  seeds, // (task) => [taskSummary.seed(task.id, summaryOf(task))]: fill other resources from this answer
 })
+
+// A resource two screens read: declare it once, so both share key, fetch and options.
+// import { defineResource, useServerResource } from "@/components/ui/use-server-query"
+const taskSummary = defineResource({
+  key: (id: string) => [...tasks.key, "summary", id],
+  fetch: (id: string, { signal }) => api.taskSummary(id, { signal }),
+  staleTime: 60_000,
+})
+const taskDetail = defineResource({
+  key: (id: string) => [...tasks.key, "detail", id],
+  fetch: (id: string, { signal }) => api.task(id, { signal }),
+  seeds: (task) => [taskSummary.seed(task.id, summaryOf(task))], // `seed` checks the data's type
+})
+const summary = useServerResource(taskSummary, id, { select: (s) => s.title })
 ```
 
 - Put a resource's key under its source's key, so `useInvalidateSource(tasks)` and `useSourceMutation({ source: tasks })` reach it. `fetch` must not resolve to `undefined` (use `null`).
-- `useSourceMutation` refreshes the key after the change by default. `optimistic: (items, variables) => items` shows it before and rolls back on failure.
-- When the server answers with the saved state, write it instead of refreshing: `settleItems: (items, saved) => items.map((t) => (t.id === saved.id ? saved : t))` for page and infinite queries (totals stay), `settle: (saved, variables, current) => (current?.id === saved.id ? saved : undefined)` for each `useServerQuery` (`undefined` leaves it). Each written query's read in flight is cancelled first; nothing is requested; the rest of the key is marked stale (a read already in flight restarts). A failure still refreshes.
+- Seed instead of calling `setQueryData` in a fetch: `seeds` skips an aborted fetch, writes resources nothing has mounted, and never overwrites data written after the fetch started.
+- `useSourceMutation` refreshes the key after the change by default. `optimistic: (items, variables) => items` shows it before and rolls back on failure. `refreshOnError: false` adds no read after a failed command (the rollback still happens).
+- When the server answers with the saved state, write it instead of refreshing: `settleItems: (items, saved) => items.map((t) => (t.id === saved.id ? saved : t))` for page and infinite queries (totals stay), `settle: (saved, variables, current) => (current?.id === saved.id ? saved : undefined)` for each `useServerQuery` (`undefined` leaves it). They reach every cached query under the key, mounted or not (one filled by `setQueryData` or `seeds` too). Each written query's read in flight is cancelled first; nothing is requested; the rest of the key is marked stale (a read already in flight restarts). A failure still refreshes, unless `refreshOnError: false`.
 - `useInvalidateSource(tasks, { throwOnError: true })` (or `invalidate({ throwOnError: true })`) rejects on a failed reload: `invalidate().catch(() => toast.error("Couldn't reload"))`. By default it resolves.
+
+## Typed errors
+
+`error` is `unknown` by default. Type it app-wide with TanStack's `Register`, or per call after the data type:
+
+```ts
+declare module "@tanstack/react-query" {
+  interface Register {
+    defaultError: ApiError // every hook's error: ApiError | null
+  }
+}
+
+useServerQuery<Task, ApiError>(key, fetch) // useServerPage<T, F, E>, useServerInfinite<T, F, E>, useSourceMutation<…, E>
+```
 
 ## Retries
 
-`createDataClient({ retry, retryDelay })`. A number keeps the 4xx rule; a function decides alone. Default: two retries for anything without a 4xx `status` (fetch's network failure is a `TypeError` with no status). When your errors carry no status (IPC, domain or parse errors), retry only what may pass:
+`createDataClient({ retry, retryDelay })`. A number keeps the 4xx rule; `false` never retries; a function decides alone. Default: two retries for anything without a 4xx `status` (fetch's network failure is a `TypeError` with no status). When your errors carry no status (IPC, domain or parse errors), retry only what may pass:
 
 ```ts
 createDataClient({ retry: (failures, error) => failures < 3 && isTransientError(error) }) // TypeError, 408, 425, 429, 5xx
