@@ -13,6 +13,7 @@ import { CalendarCheck } from "./checks/calendar-check"
 import { CardHeaderCheck } from "./checks/card-header-check"
 import { PaletteReopenCheck } from "./checks/palette-reopen-check"
 import { DescriptionListCheck } from "./checks/description-list-check"
+import { DialogMatrixCheck } from "./checks/dialog-matrix-check"
 import { DialogMobileCheck } from "./checks/dialog-mobile-check"
 import { DiffBench } from "./checks/diff-bench"
 import { FieldPlacementCheck } from "./checks/field-placement-check"
@@ -54,7 +55,7 @@ if (!root) throw new Error("Missing #root element")
 
 // ?demo=page, site, shell, inbox, list-bench, shell-block, master-detail, dashboard-grid, settings-page,
 // document-workspace, agent-workspace, commit-history and the git views (sections/git-workspace) render one demo alone; ?demo=<name>-check pages are the
-// fixtures of tooling/<name>-check.mjs (shell-check's: card-header, description-list, field-placement, gauge,
+// fixtures of tooling/<name>-check.mjs (dialog-mobile-check's: dialog-mobile, dialog-matrix; shell-check's: card-header, description-list, field-placement, gauge,
 // mobile-nav, palette-reopen, side-panel, table, master-detail, settings-page); *-bench and ?demo=perf pages are the benchmarks'.
 const params = new URLSearchParams(location.search)
 const status = demoStatuses.find((name) => name === params.get("status")) ?? "success"
@@ -66,6 +67,7 @@ const standalone = new Set([
   "shell",
   "overlay-check",
   "dialog-mobile-check",
+  "dialog-matrix-check",
   "card-header-check",
   "palette-reopen-check",
   "field-placement-check",
@@ -118,6 +120,7 @@ function Demo() {
   }
   if (demo === "overlay-check") return <OverlayCheck />
   if (demo === "dialog-mobile-check") return <DialogMobileCheck />
+  if (demo === "dialog-matrix-check") return <DialogMatrixCheck />
   if (demo === "sortable-check") return <SortableCheck />
   if (demo === "tree-focus-check") return <TreeFocusCheck />
   if (demo === "git-view-check") return <GitViewCheck />
