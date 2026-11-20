@@ -5,8 +5,15 @@ import { createAgent } from "@ui-sdk/react/agent"
 import { Profiler, useState } from "react"
 import { afterEach, beforeEach, expect, test, vi } from "vitest"
 
-import { VoiceInput, voiceInputTone, type VoiceInputProps, type VoiceInputState } from "@/components/ui/voice-input"
+import {
+  VoiceInput,
+  voiceInputTone,
+  type VoiceInputProps,
+  type VoiceInputState,
+  type VoiceInputStateDetails,
+} from "@/components/ui/voice-input"
 import { voiceInput } from "@/components/ui/voice-input-primitive"
+import { ActionRefusedError } from "@/lib/action-refusal"
 import { readAnnouncements } from "@/lib/test-utils"
 
 import { axeViolations } from "./axe"
@@ -69,13 +76,14 @@ test("primitive: start, confirm and cancel ask for the next state only where the
   const onStateChange = vi.fn()
   const view = mount(voiceInput, { defaultState: "idle", onStateChange }, `<root aria-label="Probe"></root>`)
   try {
-    expect(view.api.confirm()).toBe(false)
-    expect(view.api.cancel()).toBe(false)
+    expect(() => view.api.confirm()).toThrow("confirm isn't available while idle.")
+    expect(() => view.api.cancel()).toThrow("cancel isn't available while idle.")
+    expect(view.api.confirm(undefined, "trigger-press")).toBe(false)
     expect(view.api.start()).toBe(true)
     expect(onStateChange).toHaveBeenLastCalledWith("requesting", expect.objectContaining({ reason: "imperative" }))
     expect(view.root.getAttribute("data-state")).toBe("requesting")
     expect(view.root.getAttribute("aria-busy")).toBe("true")
-    expect(view.api.start()).toBe(false)
+    expect(() => view.api.start()).toThrow(ActionRefusedError)
     expect(view.api.toggle()).toBe(true)
     expect(onStateChange).toHaveBeenLastCalledWith("idle", expect.objectContaining({ reason: "trigger-press" }))
   } finally {
@@ -106,7 +114,7 @@ test("primitive: Escape cancels only while listening, and states are announced",
 test("primitive: a disabled voice input doesn't start, and it renders on the server", () => {
   const view = mount(voiceInput, { disabled: true }, `<root aria-label="Probe"></root>`)
   try {
-    expect(view.api.start()).toBe(false)
+    expect(() => view.api.start()).toThrow("start isn't available while disabled.")
     expect(view.root.hasAttribute("data-disabled")).toBe(true)
   } finally {
     view.unmount()
@@ -255,6 +263,56 @@ test("agent: finds the voice input by its label and starts, confirms and cancels
   expect(group().dataset.state).toBe("processing")
   result = await agent.act({ steps: [{ ref: "Voice input", action: "cancel" }] })
   expect(result.ok, result.error?.message).toBe(true)
+  expect(group().dataset.state).toBe("idle")
+})
+
+const refuse = (details: VoiceInputStateDetails) => {
+  if (details.source === "agent") details.cancel()
+}
+
+test("agent: a start the app refuses fails the step and leaves the voice input idle", async () => {
+  const onStart = vi.fn(refuse)
+  const { unmount } = render(<VoiceInput onStart={onStart} />)
+  const result = await agent.act({ steps: [{ ref: "Voice input", action: "start" }] })
+  expect(result.ok).toBe(false)
+  expect(result.error?.message).toContain("start was refused by the app.")
+  expect(onStart).toHaveBeenCalledOnce()
+  expect(group().dataset.state).toBe("idle")
+  unmount()
+
+  const onStateChange = vi.fn((_next: VoiceInputState, details: VoiceInputStateDetails) => refuse(details))
+  render(<VoiceInput state="listening" onStateChange={onStateChange} />)
+  for (const action of ["confirm", "cancel"]) {
+    const refused = await agent.act({ steps: [{ ref: "Voice input", action }] })
+    expect(refused.ok, action).toBe(false)
+    expect(refused.error?.message).toContain(`${action} was refused by the app.`)
+  }
+  expect(group().dataset.state).toBe("listening")
+})
+
+test("agent: an action the state doesn't offer fails the step with the state", async () => {
+  const onStateChange = vi.fn()
+  const { rerender } = render(<VoiceInput state="processing" onStateChange={onStateChange} />)
+  const start = await agent.act({ steps: [{ ref: "Voice input", action: "start" }] })
+  expect(start.ok).toBe(false)
+  expect(start.error?.message).toContain("start isn't available while processing.")
+  rerender(<VoiceInput state="idle" onStateChange={onStateChange} />)
+  for (const action of ["confirm", "cancel"]) {
+    const result = await agent.act({ steps: [{ ref: "Voice input", action }] })
+    expect(result.error?.message, action).toContain(`${action} isn't available while idle.`)
+  }
+  rerender(<VoiceInput state="idle" disabled onStateChange={onStateChange} />)
+  const disabled = await agent.act({ steps: [{ ref: "Voice input", action: "start" }] })
+  expect(disabled.ok).toBe(false)
+  expect(onStateChange).not.toHaveBeenCalled()
+  expect(group().dataset.state).toBe("idle")
+})
+
+test("a press the app refuses does nothing and throws nothing", async () => {
+  const onStateChange = vi.fn((_next: VoiceInputState, details: VoiceInputStateDetails) => details.cancel())
+  render(<VoiceInput onStateChange={onStateChange} />)
+  await userEvent.click(dictate())
+  expect(onStateChange).toHaveBeenCalledWith("requesting", expect.objectContaining({ reason: "trigger-press" }))
   expect(group().dataset.state).toBe("idle")
 })
 

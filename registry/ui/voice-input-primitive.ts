@@ -1,5 +1,7 @@
 import { announce, createChange, definePrimitive, type ChangeDetails, type ChangeSource } from "@ui-sdk/core"
 
+import { settled, unavailable } from "@/lib/action-refusal"
+
 /** Where a voice input is: the microphone is off, being asked for, heard, the words are being worked on, or it failed. */
 type VoiceInputState = "idle" | "requesting" | "listening" | "processing" | "error" | "denied"
 
@@ -59,27 +61,34 @@ const voiceInput = definePrimitive({
 
     // A UI SDK Toggle reports its press without the event; its own details say who pressed it.
     let pressedBy: ChangeSource | undefined
-    const request = (next: VoiceInputState, reason: VoiceInputStateChangeReason, event?: Event) =>
-      change("state", next, { reason, event, ...(pressedBy ? { source: pressedBy } : {}) })
+    const request = (action: string, next: VoiceInputState, reason: VoiceInputStateChangeReason, event?: Event) =>
+      settled(change("state", next, { reason, event, ...(pressedBy ? { source: pressedBy } : {}) }), action, {
+        reason,
+        event,
+      })
+    const refuse = (action: string, reason: VoiceInputStateChangeReason, event?: Event) => {
+      const { state, disabled } = context.store.get()
+      return unavailable(action, `isn't available while ${disabled ? "disabled" : state}`, { reason, event })
+    }
 
     const api = {
       /** Asks to start listening: `requesting`. From idle, after an error or after a denial (to try again). */
       start(event?: Event, reason: VoiceInputStateChangeReason = "imperative") {
         const { state, disabled } = context.store.get()
-        if (disabled || !startable.has(state)) return false
-        return request("requesting", reason, event)
+        if (disabled || !startable.has(state)) return refuse("start", reason, event)
+        return request("start", "requesting", reason, event)
       },
       /** Asks to stop listening and keep what was said: `processing`. */
       confirm(event?: Event, reason: VoiceInputStateChangeReason = "imperative") {
-        if (context.store.get().state !== "listening") return false
-        return request("processing", reason, event)
+        if (context.store.get().state !== "listening") return refuse("confirm", reason, event)
+        return request("confirm", "processing", reason, event)
       },
       /** Asks to stop and discard: `idle`. While asking for the microphone, listening or processing. */
       cancel(event?: Event, reason: VoiceInputStateChangeReason = "imperative") {
-        if (!cancelable.has(context.store.get().state)) return false
+        if (!cancelable.has(context.store.get().state)) return refuse("cancel", reason, event)
         const root = context.element("root")
         const focused = root?.contains(root.ownerDocument.activeElement) === true
-        if (!request("idle", reason, event)) return false
+        if (!request("cancel", "idle", reason, event)) return false
         // The cancel button leaves with the state, so focus moves to the toggle, which is always there.
         if (focused) root?.querySelector<HTMLElement>("[data-voice-input-toggle]")?.focus()
         return true

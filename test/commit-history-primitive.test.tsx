@@ -40,7 +40,8 @@ test("primitive: expand, details and branch change with a reason, and a callback
   try {
     expect(view.api.expand("Merge a into main")).toBe(true)
     expect(onExpandedChange).toHaveBeenCalledWith(["m1"], expect.objectContaining({ reason: "imperative" }))
-    expect(view.api.expandDetails("c2")).toBe(false)
+    expect(() => view.api.expandDetails("c2")).toThrow("expandDetails was refused by the app.")
+    expect(view.api.expandDetails("c2", { reason: "item-press" })).toBe(false)
     expect(() => view.api.expand("c2")).toThrow(/no merged commits/)
     expect(() => view.api.expandDetails("nope")).toThrow(/No commit "nope"/)
     expect(() => view.api.selectBranch("feature")).toThrow(/Branches: main, dev/)

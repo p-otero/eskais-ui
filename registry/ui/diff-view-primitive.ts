@@ -10,6 +10,7 @@ import {
   type GridCell,
 } from "@ui-sdk/core"
 
+import { settled, unavailable } from "@/lib/action-refusal"
 import { createDiffDocument, type DiffLineSelection } from "@/components/ui/diff-view-document"
 import type { DiffLayout, DiffViewFile } from "@/components/ui/diff-view-model"
 import type { IntralineMode } from "@/lib/diff-types"
@@ -17,14 +18,15 @@ import type { IntralineMode } from "@/lib/diff-types"
 type DiffViewController = {
   openFile: (path: string) => { path: string; additions: number; deletions: number } | undefined
   toggleFile: (path: string, open?: boolean) => boolean | undefined
-  markViewed: (path: string, viewed?: boolean) => void
-  nextHunk: () => { path: string; hunk: number } | null | undefined
-  previousHunk: () => { path: string; hunk: number } | null | undefined
-  nextFile: () => { path: string } | null | undefined
-  previousFile: () => { path: string } | null | undefined
+  /** Each change below throws when there is nothing to move to, or the app cancels it. */
+  markViewed: (path: string, viewed?: boolean) => boolean | undefined
+  nextHunk: () => { path: string; hunk: number } | undefined
+  previousHunk: () => { path: string; hunk: number } | undefined
+  nextFile: () => { path: string } | undefined
+  previousFile: () => { path: string } | undefined
   expandGap: (path: string, gap: number) => number | undefined
-  setLayout: (layout: DiffLayout) => void
-  setWrap: (wrap: boolean) => void
+  setLayout: (layout: DiffLayout, event?: Event) => boolean | undefined
+  setWrap: (wrap: boolean, event?: Event) => boolean | undefined
   clearSelection: () => void
   /** The file at the top of the view, or the one `openFile` last opened. */
   currentFile: () => string | null | undefined
@@ -89,6 +91,8 @@ function typing(target: EventTarget | null) {
  * the lines (createGridFocus), j/k and n/p between hunks and files, Shift ranges for comments, and find in page
  * through the virtualizer's findable layers, which also opens a collapsed gap or file it matches.
  */
+const step = <Result>(result: Result | null, action: string, why: string) => result ?? unavailable(action, why)
+
 const diffView = definePrimitive({
   name: "diff-view",
   options: {
@@ -145,20 +149,24 @@ const diffView = definePrimitive({
     const setLayout = (layout: unknown, event?: Event) => {
       if (layout !== "unified" && layout !== "split")
         throw new RangeError(`Layout is "unified" or "split", not "${String(layout)}".`)
-      change("layout", layout, { reason: event ? "item-press" : "imperative", event })
+      return settled(change("layout", layout, { reason: event ? "item-press" : "imperative", event }), "setLayout", {
+        event,
+      })
     }
-    const setWrap = (wrap: unknown, event?: Event) => {
-      change("wrap", Boolean(wrap), { reason: event ? "press" : "imperative", event })
-    }
+    const setWrap = (wrap: unknown, event?: Event) =>
+      settled(change("wrap", Boolean(wrap), { reason: event ? "press" : "imperative", event }), "setWrap", { event })
     const markViewed = (path: unknown, viewed: unknown = true, event?: Event) => {
       const file = document.file(path)
       const current = context.store.get().viewed
       const next =
         viewed === false ? current.filter((entry) => entry !== file.path) : [...new Set([...current, file.path])]
-      change("viewed", next, { reason: event ? "press" : "imperative", event })
+      const done = settled(change("viewed", next, { reason: event ? "press" : "imperative", event }), "markViewed", {
+        event,
+      })
       // A file marked viewed folds away, as on a code review page; unmarking opens it again.
       if (context.store.get().viewed.includes(file.path) === (viewed !== false))
         document.setCollapsed(file.path, viewed !== false)
+      return done
     }
 
     return {
@@ -173,10 +181,10 @@ const diffView = definePrimitive({
       /** Brings a file into view, opening it if it was collapsed. */
       openFile: (path: unknown) => document.openFile(path),
       toggleFile: (path: unknown, open?: unknown) => document.toggleFile(path, open),
-      nextHunk: () => document.stepHunk(1),
-      previousHunk: () => document.stepHunk(-1),
-      nextFile: () => document.stepFile(1),
-      previousFile: () => document.stepFile(-1),
+      nextHunk: () => step(document.stepHunk(1), "nextHunk", "isn't available: no hunk after this one"),
+      previousHunk: () => step(document.stepHunk(-1), "previousHunk", "isn't available: no hunk before this one"),
+      nextFile: () => step(document.stepFile(1), "nextFile", "isn't available: no file after this one"),
+      previousFile: () => step(document.stepFile(-1), "previousFile", "isn't available: no file before this one"),
       /** One hunk's lines, read-only: `n` counts from 0 within the file. */
       getHunk: (path: unknown, n: unknown) => document.hunk(path, n),
       expandGap: (path: unknown, gap: unknown) => document.expand(path, gap),

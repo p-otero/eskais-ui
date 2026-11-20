@@ -12,6 +12,7 @@ import {
   type ReorderReason,
 } from "@ui-sdk/core"
 
+import { settled } from "@/lib/action-refusal"
 import { sortableLabels, type SortableLabels } from "@/components/ui/sortable-labels"
 
 type SortableReason = ReorderReason
@@ -172,7 +173,10 @@ const sortable = definePrimitive({
           throw new RangeError(`move takes an index from 0 to ${String(value.length - 1)}.`)
         }
         if (disabled(id)) throw new Error(`Item "${id}" can't be moved.`)
-        return reorder.move(id, index as number)
+        const { selected } = context.store.get()
+        const alone = !selected.includes(id) || selected.length === 1
+        if (alone && value.indexOf(id) === index) return true
+        return settled(reorder.move(id, index as number), "move")
       },
       /** Replaces the whole order at once. */
       reorder(order: unknown, options?: ChangeOptions<SortableReason>) {
@@ -180,7 +184,7 @@ const sortable = definePrimitive({
         const next = checkOrder(order, value)
         const moved = next.filter((key, index) => key !== value[index] && disabled(key))
         if (moved.length > 0) throw new Error(`Items can't be moved: ${moved.join(", ")}.`)
-        return change("value", next, reasonOf(options))
+        return settled(change("value", next, reasonOf(options)), "reorder", reasonOf(options))
       },
       press(event: PointerEvent, key: string) {
         const why = { reason: "item-press" as const, event }

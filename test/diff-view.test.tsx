@@ -292,6 +292,21 @@ describe("GitDiff", () => {
     expect(missing.ok).toBe(false)
     expect(missing.error?.message).toContain("No file")
   })
+
+  test("an agent's refused mark or a step with nowhere to go fails with why, and changes nothing", async () => {
+    const onViewedChange = vi.fn((_viewed: readonly string[], details: { source: string; cancel: () => void }) => {
+      if (details.source === "agent") details.cancel()
+    })
+    render(<GitDiff aria-label="Pull request" patch={patch} onViewedChange={onViewedChange} />)
+    await settle()
+    const refused = await agent.act({ steps: [{ ref: "Pull request", action: "markViewed", args: ["gone.txt"] }] })
+    expect(refused.ok).toBe(false)
+    expect(refused.error?.message).toContain("markViewed was refused by the app.")
+    expect(screen.getByRole("checkbox", { name: /gone\.txt/ }).getAttribute("aria-checked")).toBe("false")
+    const first = await agent.act({ steps: [{ ref: "Pull request", action: "previousHunk" }] })
+    expect(first.ok).toBe(false)
+    expect(first.error?.message).toContain("previousHunk isn't available: no hunk before this one.")
+  })
 })
 
 describe("diff view model", () => {

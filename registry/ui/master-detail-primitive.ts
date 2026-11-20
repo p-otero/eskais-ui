@@ -1,5 +1,7 @@
 import { createChange, definePrimitive, type ChangeDetails, type ChangeOptions } from "@ui-sdk/core"
 
+import { settled } from "@/lib/action-refusal"
+
 /**
  * Why the selection changed: `item-press` a row was opened, `focus-in` focus moved to another row while the detail
  * followed it, `close-press` Close or Back, `escape-key` Escape, `restore` the URL changed (Back, a deep link).
@@ -42,12 +44,12 @@ const masterDetail = definePrimitive({
           const ids = known?.map((entry) => entry.id).join(", ")
           throw new RangeError(`No item "${String(id)}".${ids ? ` Items: ${ids}.` : ""}`)
         }
-        if (context.store.get().selectedId === id) return false
-        return change("selectedId", id, reasonOf(options))
+        if (context.store.get().selectedId === id) return true
+        return settled(change("selectedId", id, reasonOf(options)), "open", reasonOf(options))
       },
       close(options?: ChangeOptions<MasterDetailSelectReason>) {
-        if (context.store.get().selectedId === null) return false
-        return change("selectedId", null, reasonOf(options))
+        if (context.store.get().selectedId === null) return true
+        return settled(change("selectedId", null, reasonOf(options)), "close", reasonOf(options))
       },
       items: () => (entries() ?? []).map((entry) => ({ value: entry.id, label: entry.label })),
     }

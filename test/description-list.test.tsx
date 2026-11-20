@@ -131,13 +131,17 @@ test("agents copy a value by its term; the button stays out of their snapshot", 
   expect(writeText).toHaveBeenCalledWith("9f2c4e1")
 })
 
-test("primitive: copy resolves false without a clipboard or text, and renders on a server", async () => {
+test("primitive: copy without a clipboard or text throws for a call and gives a press false, and renders on a server", async () => {
   vi.stubGlobal("navigator", { ...navigator, clipboard: undefined })
   const view = mount(descriptionValue, { text: "abc" }, `<root aria-label="Commit"></root>`)
+  const empty = mount(descriptionValue, { text: "" }, `<root aria-label="Empty"></root>`)
   try {
-    expect(await view.api.copy()).toBe(false)
+    expect(() => view.api.copy()).toThrow("copy isn't available: the page has no clipboard access.")
+    expect(await view.api.copy(new MouseEvent("click"))).toBe(false)
+    expect(() => empty.api.copy()).toThrow("copy has nothing to copy.")
   } finally {
     view.unmount()
+    empty.unmount()
   }
   checkServer(descriptionValue, { text: "abc" }, `<root aria-label="Commit"></root>`)
 })

@@ -1,5 +1,7 @@
 import { definePrimitive, dispatch, type ChangeDetails, type ChangeOptions } from "@ui-sdk/core"
 
+import { settled } from "@/lib/action-refusal"
+
 type ListSelectReason = "item-press" | "imperative"
 
 type ListEntry = { value: string; label: string }
@@ -34,7 +36,7 @@ const list = definePrimitive({
           throw new RangeError(`No row "${String(id)}". Rows: ${ids.join(", ")}.`)
         }
         const details = reasonOf(options)
-        if (dispatch(context, "onSelect", id as string, details)) return false
+        if (dispatch(context, "onSelect", id as string, details)) return settled(false, "select", details)
         // A person's click already follows the link or presses the button; only other callers need it done.
         if (details.event) return true
         return context.options().activate?.(id as string) ?? true

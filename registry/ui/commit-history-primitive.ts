@@ -7,6 +7,8 @@ import {
   type ChangeOptions,
 } from "@ui-sdk/core"
 
+import { settled } from "@/lib/action-refusal"
+
 type CommitHistoryChangeReason = "item-press" | "trigger-press" | "list-navigation" | "imperative"
 
 type CommitLookupEntry = { id: string; hash: string; subject: string; merge: boolean }
@@ -140,8 +142,12 @@ const commitHistory = definePrimitive({
       if (!entry.merge) throw new RangeError(`"${entry.subject}" has no merged commits to ${action}.`)
       return entry
     }
-    const setExpanded = (next: string[], options?: unknown) => change("expanded", next, reasonOf(options))
-    const setDetails = (next: string[], options?: unknown) => change("details", next, reasonOf(options))
+    const changeKey = (key: "expanded" | "details", next: string[], action: string, options?: unknown) =>
+      settled(change(key, next, reasonOf(options)), action, reasonOf(options))
+    const setExpanded = (next: string[], options?: unknown, action = "setExpanded") =>
+      changeKey("expanded", next, action, options)
+    const setDetails = (next: string[], options?: unknown, action = "setDetails") =>
+      changeKey("details", next, action, options)
 
     const selectable = () => {
       const { selected, defaultSelected, onSelectedChange } = context.options()
@@ -154,7 +160,8 @@ const commitHistory = definePrimitive({
         if (!selectable()) throw new Error("This history doesn't select commits; pass selected or onSelect.")
         const id =
           ref === null ? null : ref === WORKING_TREE && context.options().workingTree ? WORKING_TREE : find(ref).id
-        return context.store.get().selected === id ? true : change("selected", id, reasonOf(options))
+        if (context.store.get().selected === id) return true
+        return settled(change("selected", id, reasonOf(options)), "select", reasonOf(options))
       },
       setExpanded(expanded: readonly string[], options?: ChangeOptions<CommitHistoryChangeReason>) {
         return setExpanded([...expanded], options)
@@ -162,7 +169,7 @@ const commitHistory = definePrimitive({
       expand(ref: string, options?: ChangeOptions<CommitHistoryChangeReason>) {
         const { id } = findMerge(ref, "expand")
         const { expanded } = context.store.get()
-        return expanded.includes(id) ? true : setExpanded([...expanded, id], options)
+        return expanded.includes(id) ? true : setExpanded([...expanded, id], options, "expand")
       },
       collapse(ref: string, options?: ChangeOptions<CommitHistoryChangeReason>) {
         const { id } = findMerge(ref, "collapse")
@@ -171,6 +178,7 @@ const commitHistory = definePrimitive({
           ? setExpanded(
               expanded.filter((open) => open !== id),
               options,
+              "collapse",
             )
           : true
       },
@@ -178,7 +186,11 @@ const commitHistory = definePrimitive({
         const { id } = find(ref)
         const { details } = context.store.get()
         if (details.includes(id)) return true
-        return setDetails(context.options().detailsMode === "multiple" ? [...details, id] : [id], options)
+        return setDetails(
+          context.options().detailsMode === "multiple" ? [...details, id] : [id],
+          options,
+          "expandDetails",
+        )
       },
       collapseDetails(ref: string, options?: ChangeOptions<CommitHistoryChangeReason>) {
         const { id } = find(ref)
@@ -187,6 +199,7 @@ const commitHistory = definePrimitive({
           ? setDetails(
               details.filter((open) => open !== id),
               options,
+              "collapseDetails",
             )
           : true
       },
@@ -203,7 +216,7 @@ const commitHistory = definePrimitive({
       openCommit(ref: string, options?: ChangeOptions<CommitHistoryChangeReason>) {
         const { id } = find(ref)
         if (!context.options().onOpenCommit) throw new Error("This history doesn't open commits; use expandDetails.")
-        return !dispatch(context, "onOpenCommit", id, reasonOf(options))
+        return settled(!dispatch(context, "onOpenCommit", id, reasonOf(options)), "openCommit", reasonOf(options))
       },
       /** Copies the commit's hash where the page has clipboard access, and returns it either way. */
       async copyHash(ref: string, event?: Event) {
@@ -232,7 +245,7 @@ const commitHistory = definePrimitive({
         if (typeof name !== "string" || !branches.includes(name)) {
           throw new RangeError(`No branch "${String(name)}". Branches: ${branches.join(", ")}.`)
         }
-        return change("branch", name, reasonOf(options))
+        return settled(change("branch", name, reasonOf(options)), "selectBranch", reasonOf(options))
       },
       /** Scrolls to a branch's head and focuses it, in the branches view; `null` lets go of it. */
       focusBranch(name: string | null, options?: ChangeOptions<CommitHistoryChangeReason>) {
@@ -241,7 +254,7 @@ const commitHistory = definePrimitive({
           const names = branches.map((branch) => branch.name).join(", ") || "none"
           throw new RangeError(`No branch "${String(name)}" in the overview. Branches: ${names}.`)
         }
-        return change("focusedBranch", name, reasonOf(options))
+        return settled(change("focusedBranch", name, reasonOf(options)), "focusBranch", reasonOf(options))
       },
       /** The branches beside the base with their heads and how far ahead and behind they are. Reads only. */
       listBranches() {

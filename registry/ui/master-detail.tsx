@@ -216,6 +216,7 @@ function MasterDetail({
     },
   })
 
+  // Focus is requested only once the change went through: a refused `state.close()` throws before it.
   const open = (id: string, reason: MasterDetailSelectReason = "item-press") => {
     if (reason === "item-press") {
       if (collapsed) setCollapsed(false)
@@ -223,13 +224,12 @@ function MasterDetail({
         focus.heading()
         return
       }
-      if (!followFocus || narrow) focus.request("detail")
     }
-    if (!handle.api.open(id, { reason })) focus.cancel()
+    if (!handle.api.open(id, { reason })) return
+    if (reason === "item-press" && (!followFocus || narrow)) focus.request("detail")
   }
   const close = (reason: MasterDetailSelectReason) => {
-    focus.request("row")
-    if (!handle.api.close({ reason })) focus.cancel()
+    if (handle.api.close({ reason })) focus.request("row")
   }
 
   useShortcut("escape", () => close("escape-key"), {

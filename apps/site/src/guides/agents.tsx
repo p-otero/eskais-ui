@@ -1,4 +1,4 @@
-import { A, Article, Code, DocTitle, H2, Ol, P, Pre, Ul } from "../docs/prose"
+import { A, Article, Code, DocTable, DocTitle, H2, Ol, P, Pre, Ul } from "../docs/prose"
 
 const bridge = `import { createConfirm } from "@ui-sdk/react/alert-dialog"
 import { createAgent } from "@ui-sdk/react/agent"
@@ -29,6 +29,71 @@ const confirm = `<ConfirmDialog
   agentConfirm="Deletes the Apollo project and its files"
   onConfirm={deleteProject}
 />`
+
+const refuse = `<VoiceInput
+  state={state}
+  onStart={(details) => {
+    // People can dictate; an agent's start fails with "start was refused by the app."
+    if (details.source === "agent") return details.cancel()
+    startListening()
+  }}
+/>`
+
+const register = `import { createAgent, registerTools } from "@ui-sdk/react/agent"
+
+export const agent = createAgent({ allow })
+
+// For a real browser agent in production, or only in dev and test builds:
+if (import.meta.env.DEV || import.meta.env.MODE === "test") {
+  registerTools(agent, { allow: (step) => !step.confirm })
+}`
+
+const playwright = `import { chromium, expect, test } from "@playwright/test"
+
+test("an agent can't start dictation the app keeps for people", async () => {
+  const browser = await chromium.launch({ channel: "chrome", args: ["--enable-features=WebMCP"] })
+  const page = await browser.newPage()
+  const cdp = await page.context().newCDPSession(page)
+  const tools = new Map()
+  const responses = new Map()
+  cdp.on("WebMCP.toolsAdded", ({ tools: added }) => added.forEach((tool) => tools.set(tool.name, tool)))
+  cdp.on("WebMCP.toolResponded", ({ invocationId, output }) => responses.get(invocationId)?.(output))
+  await cdp.send("WebMCP.enable")
+  await page.goto("http://localhost:5173/dictation")
+  await expect.poll(() => tools.has("act")).toBe(true)
+
+  const call = async (toolName, input) => {
+    const { frameId } = tools.get(toolName)
+    const { invocationId } = await cdp.send("WebMCP.invokeTool", { frameId, toolName, input })
+    const output = await new Promise((resolve) => responses.set(invocationId, resolve))
+    return typeof output === "string" ? JSON.parse(output) : output
+  }
+
+  const result = await call("act", { steps: [{ ref: "Voice input", action: "start" }] })
+  expect(result.ok).toBe(false)
+  expect(result.error.message).toContain("start was refused by the app.")
+  await expect(page.getByRole("group", { name: "Voice input" })).toHaveAttribute("data-state", "idle")
+  await browser.close()
+})`
+
+const standIn = `// Before the page loads, in the test only: what registerTools needs from document.modelContext.
+await page.addInitScript(() => {
+  if (document.modelContext) return
+  const tools = new Map()
+  Object.defineProperty(document, "modelContext", {
+    value: {
+      registerTool: async (tool) => void tools.set(tool.name, tool),
+      getTools: async () => [...tools.values()],
+      executeTool: async (tool, input) => JSON.stringify(await tools.get(tool.name).execute(input, {})),
+    },
+  })
+})
+
+const result = await page.evaluate(async () => {
+  const act = (await document.modelContext.getTools()).find((tool) => tool.name === "act")
+  const steps = [{ ref: "Voice input", action: "start" }]
+  return JSON.parse(await document.modelContext.executeTool(act, { steps }))
+})`
 
 export default function Agents() {
   return (
@@ -91,6 +156,67 @@ export default function Agents() {
         explicit <Code>agent.actions</Code>, rendered with <Code>createParts</Code>. A bare <Code>&lt;button&gt;</Code>{" "}
         or <Code>&lt;select&gt;</Code> is invisible to agents.
       </P>
+
+      <H2 id="refusals">When an action can't run</H2>
+      <P>
+        UI SDK's bridge reports <Code>ok: true</Code> for any action that returns, so an Eskais component throws when an
+        agent's action doesn't run. <Code>agent.act()</Code> resolves with <Code>ok: false</Code> and an{" "}
+        <Code>error.message</Code> that says why, and stops there.
+      </P>
+      <DocTable
+        label="Why an action fails"
+        head={["Why", "error.message"]}
+        rows={[
+          [
+            <>
+              Your callback called <Code>details.cancel()</Code>
+            </>,
+            <Code key="refused">start was refused by the app.</Code>,
+          ],
+          ["The state doesn't offer it", <Code key="state">start isn't available while listening.</Code>],
+          [
+            "The component wasn't given the callback",
+            <Code key="offered">reset isn't offered: there is no onResetRequest.</Code>,
+          ],
+        ]}
+      />
+      <Pre code={refuse} />
+      <Ul>
+        <li>
+          A person's press that the app refuses does nothing and throws nothing. Only a call with no press behind it (an
+          agent's step, a controller, your code) throws, an <Code>ActionRefusedError</Code> from{" "}
+          <Code>@/lib/action-refusal</Code> with <Code>action</Code> and <Code>kind</Code>.
+        </li>
+        <li>
+          Actions that name an end state (<Code>open</Code>, <Code>close</Code>, <Code>setCollapsed</Code>) succeed when
+          it's already there; actions that move (<Code>start</Code>, <Code>next</Code>, <Code>undo</Code>) fail when
+          there's nowhere to go.
+        </li>
+        <li>
+          UI SDK's own components keep UI SDK's rule: a cancelled <Code>setValue</Code> reports <Code>ok: true</Code>{" "}
+          with no change, so read the step's <Code>changes</Code> and the returned <Code>values</Code> there.
+        </li>
+      </Ul>
+
+      <H2 id="end-to-end">Testing agent actions end to end</H2>
+      <P>
+        UI SDK's supported way to drive a page's agent from outside is WebMCP: <Code>registerTools</Code> publishes{" "}
+        <Code>snapshot</Code>, <Code>query</Code> and <Code>act</Code> through <Code>document.modelContext</Code>, and
+        the browser's agent, or your test, calls them. Nothing test-only goes in the app.
+      </P>
+      <Pre code={register} title="agent.ts" language="ts" />
+      <P>
+        Chrome 158 and later have <Code>document.modelContext</Code> with <Code>--enable-features=WebMCP</Code>.
+        Playwright lists the tools and calls them over the DevTools protocol, as a browser agent does (Playwright's
+        protocol types don't list the <Code>WebMCP</Code> domain yet, so a TypeScript test casts the session):
+      </P>
+      <Pre code={playwright} title="dictation.spec.ts" language="ts" />
+      <P>
+        On a browser without WebMCP, the test gives <Code>registerTools</Code> something to register into, and calls{" "}
+        <Code>executeTool</Code> from inside the page. Check what the step did in the page too, not only{" "}
+        <Code>result.ok</Code>.
+      </P>
+      <Pre code={standIn} language="ts" />
 
       <H2 id="test">The agent test</H2>
       <P>

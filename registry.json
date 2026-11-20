@@ -32,6 +32,18 @@
       ]
     },
     {
+      "name": "action-refusal",
+      "type": "registry:lib",
+      "title": "Action refusal",
+      "description": "ActionRefusedError, unavailable() and settled(): a component action called by an agent or app code throws with why it did not run (refused by the app through details.cancel(), or not available in the current state), so UI SDK's agent bridge fails the step instead of reporting ok. A person's press that can't apply still returns false.",
+      "files": [
+        {
+          "path": "registry/lib/action-refusal.ts",
+          "type": "registry:lib"
+        }
+      ]
+    },
+    {
       "name": "locale",
       "type": "registry:lib",
       "title": "Locale",
@@ -1500,7 +1512,8 @@
       ],
       "registryDependencies": [
         "@eskais/utils",
-        "@eskais/input"
+        "@eskais/input",
+        "@eskais/action-refusal"
       ],
       "files": [
         {
@@ -1530,7 +1543,8 @@
         "@eskais/tone",
         "@eskais/button",
         "@eskais/toggle",
-        "@eskais/spinner"
+        "@eskais/spinner",
+        "@eskais/action-refusal"
       ],
       "files": [
         {
@@ -1577,7 +1591,8 @@
       "registryDependencies": [
         "@eskais/utils",
         "@eskais/theme",
-        "@eskais/tooltip"
+        "@eskais/tooltip",
+        "@eskais/action-refusal"
       ],
       "files": [
         {
@@ -1660,7 +1675,8 @@
         "@eskais/utils",
         "@eskais/theme",
         "@eskais/button",
-        "@eskais/spinner"
+        "@eskais/spinner",
+        "@eskais/action-refusal"
       ],
       "files": [
         {
@@ -1695,7 +1711,8 @@
         "@eskais/checkbox",
         "@eskais/switch",
         "@eskais/button",
-        "@eskais/alert"
+        "@eskais/alert",
+        "@eskais/action-refusal"
       ],
       "files": [
         {
@@ -2350,7 +2367,8 @@
         "@eskais/utils",
         "@eskais/theme",
         "@eskais/input",
-        "@eskais/field"
+        "@eskais/field",
+        "@eskais/action-refusal"
       ],
       "files": [
         {
@@ -2627,7 +2645,8 @@
       "registryDependencies": [
         "@eskais/utils",
         "@eskais/theme",
-        "@eskais/button"
+        "@eskais/button",
+        "@eskais/action-refusal"
       ],
       "files": [
         {
@@ -2654,7 +2673,8 @@
       ],
       "registryDependencies": [
         "@eskais/utils",
-        "@eskais/theme"
+        "@eskais/theme",
+        "@eskais/action-refusal"
       ],
       "files": [
         {
@@ -2694,7 +2714,8 @@
         "@eskais/empty",
         "@eskais/tooltip",
         "@eskais/tone",
-        "@eskais/sortable"
+        "@eskais/sortable",
+        "@eskais/action-refusal"
       ],
       "files": [
         {
@@ -2931,7 +2952,8 @@
       ],
       "registryDependencies": [
         "@eskais/agent-task-types",
-        "@eskais/quantity"
+        "@eskais/quantity",
+        "@eskais/action-refusal"
       ],
       "files": [
         {
@@ -3135,7 +3157,8 @@
         "@eskais/proposal-actions",
         "@eskais/toggle-group",
         "@eskais/row-navigation",
-        "@eskais/locale"
+        "@eskais/locale",
+        "@eskais/action-refusal"
       ],
       "files": [
         {
@@ -3834,7 +3857,8 @@
         "@eskais/tooltip",
         "@eskais/link",
         "@eskais/collapsible",
-        "@eskais/scroll-area"
+        "@eskais/scroll-area",
+        "@eskais/action-refusal"
       ],
       "files": [
         {
@@ -3881,7 +3905,8 @@
         "@eskais/table",
         "@eskais/pagination",
         "@eskais/row-navigation",
-        "@eskais/virtual-rows"
+        "@eskais/virtual-rows",
+        "@eskais/action-refusal"
       ],
       "files": [
         {
@@ -4391,7 +4416,8 @@
         "@eskais/relative-time",
         "@eskais/trail-rows",
         "@eskais/locale",
-        "@eskais/scroll-area"
+        "@eskais/scroll-area",
+        "@eskais/action-refusal"
       ],
       "files": [
         {
@@ -4474,7 +4500,8 @@
         "@eskais/theme",
         "@eskais/tone",
         "@eskais/trail-rows",
-        "@eskais/scroll-area"
+        "@eskais/scroll-area",
+        "@eskais/action-refusal"
       ],
       "files": [
         {
@@ -4507,7 +4534,8 @@
         "@eskais/theme",
         "@eskais/input",
         "@eskais/filter-schema",
-        "@eskais/page-source"
+        "@eskais/page-source",
+        "@eskais/action-refusal"
       ],
       "files": [
         {
@@ -4704,7 +4732,8 @@
         "@eskais/toggle",
         "@eskais/link",
         "@eskais/tooltip",
-        "@eskais/scroll-area"
+        "@eskais/scroll-area",
+        "@eskais/action-refusal"
       ],
       "files": [
         {
@@ -4760,7 +4789,8 @@
         "@eskais/theme",
         "@eskais/tone",
         "@eskais/button",
-        "@eskais/progress"
+        "@eskais/progress",
+        "@eskais/action-refusal"
       ],
       "files": [
         {
@@ -4911,7 +4941,8 @@
         "@eskais/lightbox",
         "@eskais/link",
         "@eskais/locale",
-        "@eskais/scroll-area"
+        "@eskais/scroll-area",
+        "@eskais/action-refusal"
       ],
       "files": [
         {
@@ -5077,7 +5108,8 @@
         "@eskais/checkbox",
         "@eskais/row-navigation",
         "@eskais/virtual-rows",
-        "@eskais/sortable"
+        "@eskais/sortable",
+        "@eskais/action-refusal"
       ],
       "files": [
         {
@@ -5367,7 +5399,8 @@
       ],
       "registryDependencies": [
         "@eskais/utils",
-        "@eskais/theme"
+        "@eskais/theme",
+        "@eskais/action-refusal"
       ],
       "files": [
         {
@@ -5414,7 +5447,8 @@
         "@eskais/theme",
         "@eskais/button",
         "@eskais/tabs",
-        "@eskais/scroll-area"
+        "@eskais/scroll-area",
+        "@eskais/action-refusal"
       ],
       "files": [
         {
@@ -5491,7 +5525,8 @@
         "@eskais/badge",
         "@eskais/checkbox",
         "@eskais/label",
-        "@eskais/scroll-area"
+        "@eskais/scroll-area",
+        "@eskais/action-refusal"
       ],
       "files": [
         {
@@ -5828,7 +5863,8 @@
         "@eskais/button",
         "@eskais/textarea",
         "@eskais/relative-time",
-        "@eskais/scroll-area"
+        "@eskais/scroll-area",
+        "@eskais/action-refusal"
       ],
       "files": [
         {
@@ -5862,7 +5898,8 @@
         "@eskais/button",
         "@eskais/relative-time",
         "@eskais/toast",
-        "@eskais/scroll-area"
+        "@eskais/scroll-area",
+        "@eskais/action-refusal"
       ],
       "files": [
         {
@@ -5926,7 +5963,8 @@
         "@eskais/resizable",
         "@eskais/scroll-area",
         "@eskais/shortcuts",
-        "@eskais/url-param"
+        "@eskais/url-param",
+        "@eskais/action-refusal"
       ],
       "files": [
         {
@@ -6185,6 +6223,11 @@
           "path": "skills/eskais-ui/references/3d.md",
           "type": "registry:file",
           "target": "~/.agents/skills/eskais-ui/references/3d.md"
+        },
+        {
+          "path": "skills/eskais-ui/references/agents.md",
+          "type": "registry:file",
+          "target": "~/.agents/skills/eskais-ui/references/agents.md"
         }
       ]
     },

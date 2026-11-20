@@ -1,5 +1,7 @@
 import { createStickToBottom, definePrimitive } from "@ui-sdk/core"
 
+import { unavailable } from "@/lib/action-refusal"
+
 type ConversationOptions = {
   /** Whether it follows new messages from the start. `false` opens a thread where the reader left it. */
   initial?: boolean
@@ -98,18 +100,25 @@ const conversation = definePrimitive({
         stick.release()
       },
       /** Keeps the view in place while `onLoadOlder` adds messages above. */
-      async loadOlder() {
+      loadOlder(event?: Event) {
         const { hasOlder, loadingOlder } = store.get()
         const load = context.options().onLoadOlder
-        if (!hasOlder || loadingOlder || !load) return false
+        if (!load) return unavailable("loadOlder", "isn't offered: there is no onLoadOlder", { event })
+        if (!hasOlder) return unavailable("loadOlder", "has nothing older to load", { event })
+        if (loadingOlder) return unavailable("loadOlder", "isn't available while older messages load", { event })
         store.set({ loadingOlder: true })
         stick.prepend()
-        try {
-          await load()
-        } finally {
-          store.set({ loadingOlder: false })
-        }
-        return true
+        const settle = () => store.set({ loadingOlder: false })
+        return new Promise<unknown>((resolve) => resolve(load())).then(
+          () => {
+            settle()
+            return true
+          },
+          (error: unknown) => {
+            settle()
+            throw error
+          },
+        )
       },
       /** The messages on the page, oldest first, as `{ value, label }`. */
       messages(): ConversationMessageItem[] {
@@ -167,7 +176,7 @@ const conversation = definePrimitive({
         "aria-busy": state.loadingOlder ? "true" : undefined,
         "data-pending": state.loadingOlder ? "" : undefined,
       }),
-      press: ({ api }) => void api.loadOlder(),
+      press: ({ api }, event) => void api.loadOlder(event),
     }),
   }),
   agent: { actions: ["jumpToLatest", "loadOlder"], items: (api) => api.messages() },

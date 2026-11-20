@@ -1,5 +1,6 @@
 import { definePrimitive, dispatch, type ChangeDetails, type ChangeOptions } from "@ui-sdk/core"
 
+import { settled } from "@/lib/action-refusal"
 import type { TaskView } from "@/lib/agent-task-types"
 import type { AgentApproval, BoardMode } from "@/components/ui/agent-task-board-primitive"
 
@@ -83,10 +84,9 @@ const agentTaskProposals = definePrimitive({
         const ids = state.proposals.map((proposal) => proposal.value).join(", ") || "none"
         throw new RangeError(`No proposal "${String(id)}". Proposals: ${ids}.`)
       }
-      return run(context.options, name, id as string, {
-        reason: options?.reason ?? "imperative",
-        event: options?.event,
-      })
+      const call = { reason: options?.reason ?? "imperative", event: options?.event }
+      const action = name === "onApproveProposal" ? "approveProposal" : "rejectProposal"
+      return settled(run(context.options, name, id as string, call), action, call)
     }
     return {
       approveProposal: (id: unknown, options?: ChangeOptions<ProposalReason>) => act("onApproveProposal", id, options),

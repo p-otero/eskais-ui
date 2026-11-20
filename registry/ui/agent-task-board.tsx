@@ -18,6 +18,7 @@ import {
 } from "@/lib/agent-task-board-model"
 import type { AgentTaskBoardProps, ColumnAccent } from "@/components/ui/agent-task-board-props"
 import type { TaskStatus, TaskView } from "@/lib/agent-task-types"
+import { ActionRefusedError } from "@/lib/action-refusal"
 import { useLocale } from "@/lib/locale"
 import { cn } from "@/lib/utils"
 import {
@@ -40,6 +41,21 @@ import { taskStatusAccentTones } from "@/components/ui/task-status"
 import { useBoardFocus } from "@/components/ui/use-board-focus"
 
 const NO_FILTERS: TaskFilters = {}
+
+type BoardController = ReturnType<typeof createAgentTaskBoardController>
+type PanelCloseReason = "close-press" | "escape-key" | "outside-press" | "imperative"
+
+// The detail dialog also closes on its own (an action inside it, unmount). A refusal then keeps the task selected and
+// the dialog follows the selection, so there is no one to tell.
+function deselect(controller: BoardController, reason: PanelCloseReason) {
+  if (reason !== "imperative") return controller.selectTask(null, { reason })
+  try {
+    return controller.selectTask(null, { reason })
+  } catch (error) {
+    if (error instanceof ActionRefusedError) return false
+    throw error
+  }
+}
 
 function defaultCanMoveTask(task: TaskView, to: TaskStatus) {
   return task.status === to || (task.status !== "proposed" && to !== "proposed")
@@ -99,9 +115,9 @@ function AgentTaskBoard(props: AgentTaskBoardProps) {
     [controller, focusPanelNext],
   )
   const closePanel = useCallback(
-    (reason: "close-press" | "escape-key" | "outside-press" | "imperative") => {
+    (reason: PanelCloseReason) => {
       focusCardNext()
-      controller.selectTask(null, { reason })
+      deselect(controller, reason)
     },
     [controller, focusCardNext],
   )

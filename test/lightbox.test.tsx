@@ -32,7 +32,10 @@ test("primitive: steps within its range and arrow keys follow the reading direct
   const onIndexChange = vi.fn()
   const view = mount(lightbox, { index: 0, count: 3, onIndexChange }, `<root tabindex="0"></root>`)
   try {
-    expect(view.api.previous()).toBe(false)
+    expect(() => view.api.previous()).toThrow("previous isn't available on the first item.")
+    expect(view.api.previous({ reason: "item-press" })).toBe(false)
+    expect(view.api.goTo(0)).toBe(true)
+    expect(onIndexChange).not.toHaveBeenCalled()
     await view.keys("Tab", "ArrowRight")
     expect(onIndexChange).toHaveBeenCalledWith(1, expect.objectContaining({ reason: "list-navigation" }))
     expect(() => view.api.goTo(7)).toThrow(RangeError)

@@ -1,5 +1,7 @@
 import { definePrimitive, dispatch, type ChangeDetails, type ChangeOptions } from "@ui-sdk/core"
 
+import { settled } from "@/lib/action-refusal"
+
 type Attachment = {
   id: string
   name: string
@@ -47,7 +49,7 @@ const attachments = definePrimitive({
           throw new RangeError(`No attachment "${String(id)}". Attachments: ${ids.join(", ")}.`)
         }
         const details = reasonOf(options)
-        if (dispatch(context, "onOpen", attachment, details)) return false
+        if (dispatch(context, "onOpen", attachment, details)) return settled(false, "openAttachment", details)
         context.options().open?.(attachment, details.event)
         return true
       },

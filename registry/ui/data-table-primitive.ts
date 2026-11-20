@@ -1,5 +1,6 @@
 import { createChange, createController, definePrimitive, type ChangeDetails, type ChangeOptions } from "@ui-sdk/core"
 
+import { settled } from "@/lib/action-refusal"
 import { toggleIds, type DataTableSort, type SortDirection } from "@/lib/data-table-model"
 
 type DataTableSortChangeReason = "item-press" | "imperative"
@@ -93,15 +94,15 @@ const dataTable = definePrimitive({
       const shown = context.store.get().selection
       return chosen !== null && chosen.shown === shown ? chosen.next : shown
     }
-    const select = (next: string[], options?: ChangeOptions<DataTableSelectionChangeReason>) => {
+    const select = (next: string[], action: string, options?: ChangeOptions<DataTableSelectionChangeReason>) => {
       const shown = context.store.get().selection
       const changed = change("selection", next, reasonOf(options))
       if (changed !== false) chosen = { shown, next }
-      return changed
+      return settled(changed, action, reasonOf(options))
     }
     return {
       sortBy(columnId: unknown, direction?: unknown, options?: ChangeOptions<DataTableSortChangeReason>) {
-        if (columnId === null) return change("sort", null, reasonOf(options))
+        if (columnId === null) return settled(change("sort", null, reasonOf(options)), "sortBy", reasonOf(options))
         const sortable = context.options().sortableColumns ?? []
         if (typeof columnId !== "string" || !sortable.includes(columnId)) {
           throw new RangeError(`Can't sort by "${String(columnId)}". Sortable columns: ${sortable.join(", ")}.`)
@@ -113,26 +114,26 @@ const dataTable = definePrimitive({
             : current?.columnId === columnId && current.direction === "ascending"
               ? "descending"
               : "ascending"
-        return change("sort", { columnId, direction: next }, reasonOf(options))
+        return settled(change("sort", { columnId, direction: next }, reasonOf(options)), "sortBy", reasonOf(options))
       },
       setSelection(ids: unknown, options?: ChangeOptions<DataTableSelectionChangeReason>) {
         const known = new Set((context.options().rowItems ?? []).map((item) => item.value))
         if (!Array.isArray(ids) || ids.some((id) => typeof id !== "string" || !known.has(id))) {
           throw new RangeError("setSelection takes a list of row ids from the table.")
         }
-        return select([...new Set(ids as string[])], options)
+        return select([...new Set(ids as string[])], "setSelection", options)
       },
       toggleRows(ids: readonly string[], checked?: boolean, options?: ChangeOptions<DataTableSelectionChangeReason>) {
         const current = latest()
         const check = checked ?? !ids.every((id) => current.includes(id))
-        return select(toggleIds(current, ids, check), options)
+        return select(toggleIds(current, ids, check), "toggleRows", options)
       },
       setPage(page: unknown, options?: ChangeOptions<DataTablePageChangeReason>) {
         const pageCount = context.options().pageCount ?? 1
         if (typeof page !== "number" || !Number.isInteger(page) || page < 1 || page > pageCount) {
           throw new RangeError(`setPage takes a page from 1 to ${pageCount}.`)
         }
-        return change("page", page, reasonOf(options))
+        return settled(change("page", page, reasonOf(options)), "setPage", reasonOf(options))
       },
       rows: () => context.options().rowItems ?? [],
     }

@@ -1,5 +1,7 @@
 import { announce, createChange, definePrimitive, type ChangeDetails } from "@ui-sdk/core"
 
+import { unavailable } from "@/lib/action-refusal"
+
 /** Why the button armed or disarmed. */
 type ConfirmButtonArmedChangeReason =
   | "trigger-press"
@@ -95,7 +97,10 @@ const confirmButton = definePrimitive({
       },
       /** Runs `onConfirm` at once, armed or not. Agents call it, and it waits for the person through `allow`. */
       confirm(event?: Event, reason: ConfirmButtonConfirmReason = "imperative") {
-        if (blocked()) return false
+        if (blocked()) {
+          const why = context.store.get().disabled ? "disabled" : "its confirmation runs"
+          return unavailable("confirm", `isn't available while ${why}`, { reason, event })
+        }
         stopHold()
         api.disarm("confirm", event)
         const result = context.options().onConfirm?.({ reason, event })

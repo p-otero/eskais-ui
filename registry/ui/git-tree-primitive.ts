@@ -1,5 +1,6 @@
 import { createChange, definePrimitive, dispatch, type ChangeDetails, type ChangeOptions } from "@ui-sdk/core"
 
+import { settled } from "@/lib/action-refusal"
 import { parentsOf } from "@/lib/git-status"
 
 type GitTreeChangeReason = "item-press" | "trigger-press" | "list-navigation" | "find-in-page" | "imperative"
@@ -46,7 +47,8 @@ const gitTree = definePrimitive({
       if (kind && found !== kind) throw new RangeError(`"${String(path)}" is a ${found}, not a ${kind}.`)
       return path as string
     }
-    const setExpanded = (next: string[], options?: unknown) => change("expanded", next, reasonOf(options))
+    const setExpanded = (next: string[], options?: unknown, action = "setExpanded") =>
+      settled(change("expanded", next, reasonOf(options)), action, reasonOf(options))
     const api = {
       setExpanded(expanded: readonly string[], options?: ChangeOptions<GitTreeChangeReason>) {
         return setExpanded([...expanded], options)
@@ -58,15 +60,15 @@ const gitTree = definePrimitive({
         if (kind === "folder") return api.expand(target, options)
         const { expanded } = context.store.get()
         const missing = parentsOf(target).filter((folder) => !expanded.includes(folder))
-        if (missing.length > 0 && !setExpanded([...expanded, ...missing], options)) return false
+        if (missing.length > 0 && !setExpanded([...expanded, ...missing], options, "open")) return false
         if (!context.options().onOpenFile) throw new Error("This tree doesn't open files.")
-        return !dispatch(context, "onOpenFile", target, reasonOf(options))
+        return settled(!dispatch(context, "onOpenFile", target, reasonOf(options)), "open", reasonOf(options))
       },
       expand(path: string, options?: ChangeOptions<GitTreeChangeReason>) {
         const folder = check(path, "folder")
         const { expanded } = context.store.get()
         const missing = [...parentsOf(folder), folder].filter((open) => !expanded.includes(open))
-        return missing.length === 0 ? true : setExpanded([...expanded, ...missing], options)
+        return missing.length === 0 ? true : setExpanded([...expanded, ...missing], options, "expand")
       },
       collapse(path: string, options?: ChangeOptions<GitTreeChangeReason>) {
         const folder = check(path, "folder")
@@ -75,6 +77,7 @@ const gitTree = definePrimitive({
           ? setExpanded(
               expanded.filter((open) => open !== folder),
               options,
+              "collapse",
             )
           : true
       },

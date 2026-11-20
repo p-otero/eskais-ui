@@ -53,7 +53,8 @@ test("primitive: a canceled change and a controlled value keep the state", () =>
     markup,
   )
   try {
-    expect(view.api.setView("table")).toBe(false)
+    expect(() => view.api.setView("table")).toThrow("setView was refused by the app.")
+    expect(view.api.setView("table", { reason: "item-press" })).toBe(false)
     expect(view.state.view).toBe("board")
     view.api.selectTask("T-014")
     expect(view.state.selectedTaskId).toBe("T-012")

@@ -8,6 +8,8 @@ import {
   type ChangeDetails,
 } from "@ui-sdk/core"
 
+import { settled, unavailable } from "@/lib/action-refusal"
+
 type ImageScanStatus = "uploaded" | "scanning" | "result" | "error"
 
 type ImageScanFit = "contain" | "cover"
@@ -137,12 +139,13 @@ const imageScan = definePrimitive({
   }),
   api: (context) => {
     const change = createChange(context)
-    // A call that can't apply throws, so an agent's step fails with why instead of reporting success.
     const run = (name: "onCancel" | "onRetry" | "onScan", when: ImageScanStatus, event?: Event) => {
+      const action = name.slice(2).toLowerCase()
+      const call = { reason: event ? "trigger-press" : "imperative", event } as const
       const { status } = context.store.get()
-      if (status !== when) throw new Error(`${name.slice(2)} works only ${whenWords[when]} (status: ${status}).`)
-      if (!context.options()[name]) throw new Error(`${name.slice(2)} isn't offered: there is no ${name}.`)
-      return !dispatch(context, name, null, { reason: event ? "trigger-press" : "imperative", event })
+      if (status !== when) return unavailable(action, `works only ${whenWords[when]} (status: ${status})`, call)
+      if (!context.options()[name]) return unavailable(action, `isn't offered: there is no ${name}`, call)
+      return settled(!dispatch(context, name, null, call), action, call)
     }
     const api = {
       /** Stops a running scan through `onCancel`. */
@@ -154,14 +157,16 @@ const imageScan = definePrimitive({
       /** Selects a detected region by its id or label; `null` clears the selection. */
       selectRegion(region: string | null, event?: Event) {
         const { regions, status } = context.store.get()
-        if (status !== "result") throw new Error(`Regions can be selected only in the result (status: ${status}).`)
+        const call = { reason: event ? "item-press" : "imperative", event } as const
+        if (status !== "result")
+          return unavailable("selectRegion", `works only in the result (status: ${status})`, call)
         const match =
           region === null ? null : regions.find((item) => item.value === region || item.label === region)?.value
         if (match === undefined) {
           const names = regions.map((item) => item.label).join(", ")
           throw new Error(`No region "${region ?? ""}". Its regions: ${names || "none"}.`)
         }
-        return change("selectedRegion", match, { reason: event ? "item-press" : "imperative", event })
+        return settled(change("selectedRegion", match, call), "selectRegion", call)
       },
       /** A second press on the selected region clears the selection. */
       toggleRegion(region: string, event?: Event) {

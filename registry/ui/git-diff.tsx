@@ -167,8 +167,8 @@ function GitDiff({
             <SegmentedControl<DiffLayout>
               aria-label={labels.layout}
               value={layout}
-              onValueChange={(next) => {
-                if (next) controller.setLayout(next)
+              onValueChange={(next, details) => {
+                if (next) controller.setLayout(next, details.event)
               }}
             >
               <SegmentedControlIndicator />
@@ -181,7 +181,11 @@ function GitDiff({
                 {labels.split}
               </SegmentedControlItem>
             </SegmentedControl>
-            <Toggle variant="outline" pressed={wrap} onPressedChange={(next) => controller.setWrap(next)}>
+            <Toggle
+              variant="outline"
+              pressed={wrap}
+              onPressedChange={(next, details) => controller.setWrap(next, details.event)}
+            >
               <WrapTextIcon aria-hidden="true" />
               {labels.wrap}
             </Toggle>

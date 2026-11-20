@@ -1,4 +1,6 @@
 import { definePrimitive, dispatch, type ChangeDetails } from "@ui-sdk/core"
+
+import { settled, unavailable } from "@/lib/action-refusal"
 import type { createInputController } from "@ui-sdk/core/input"
 
 type SearchFieldInput = Pick<ReturnType<typeof createInputController>, "getValue" | "clear" | "focus">
@@ -23,8 +25,8 @@ const searchField = definePrimitive({
     },
     submit(event?: Event) {
       const input = context.options().input
-      if (!input) return false
-      return !dispatch(context, "onSearch", input.getValue(), { reason: "submit", event })
+      if (!input) return unavailable("submit", "isn't available: the field isn't ready", { event })
+      return settled(!dispatch(context, "onSearch", input.getValue(), { reason: "submit", event }), "submit", { event })
     },
   }),
   slots: (slot) => ({

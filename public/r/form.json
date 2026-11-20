@@ -20,7 +20,8 @@
     "@eskais/checkbox",
     "@eskais/switch",
     "@eskais/button",
-    "@eskais/alert"
+    "@eskais/alert",
+    "@eskais/action-refusal"
   ],
   "files": [
     {
@@ -60,7 +61,7 @@
     },
     {
       "path": "registry/ui/form-primitive.ts",
-      "content": "import { definePrimitive } from \"@ui-sdk/core\"\n\ntype FormRootOptions = {\n  /** Whether the form has an accessible name, so an agent can find it. */\n  named?: boolean\n  /** Whether submitting needs a person (a destructive submit): agents then press the submit button instead. */\n  confirm?: boolean\n  onResetRequest?: () => void\n}\n\nconst formRoot = definePrimitive({\n  name: \"form\",\n  options: { named: \"boolean\", confirm: \"boolean\", onResetRequest: \"callback\" },\n  state: (options: FormRootOptions) => ({ named: Boolean(options.named), confirm: Boolean(options.confirm) }),\n  sync: (options) => ({ named: Boolean(options.named), confirm: Boolean(options.confirm) }),\n  api: (context) => ({\n    submit() {\n      const form = context.element(\"root\")\n      if (!(form instanceof HTMLFormElement)) return false\n      form.requestSubmit()\n      return true\n    },\n    reset() {\n      const onResetRequest = context.options().onResetRequest\n      if (!onResetRequest) return false\n      onResetRequest()\n      return true\n    },\n  }),\n  slots: (slot) => ({\n    root: slot({}),\n  }),\n  agent: { actions: [\"submit\", \"reset\"], shown: (state) => state.named && !state.confirm },\n})\n\nexport { formRoot }\nexport type { FormRootOptions }\n",
+      "content": "import { definePrimitive } from \"@ui-sdk/core\"\n\nimport { unavailable } from \"@/lib/action-refusal\"\n\ntype FormRootOptions = {\n  /** Whether the form has an accessible name, so an agent can find it. */\n  named?: boolean\n  /** Whether submitting needs a person (a destructive submit): agents then press the submit button instead. */\n  confirm?: boolean\n  onResetRequest?: () => void\n}\n\nconst formRoot = definePrimitive({\n  name: \"form\",\n  options: { named: \"boolean\", confirm: \"boolean\", onResetRequest: \"callback\" },\n  state: (options: FormRootOptions) => ({ named: Boolean(options.named), confirm: Boolean(options.confirm) }),\n  sync: (options) => ({ named: Boolean(options.named), confirm: Boolean(options.confirm) }),\n  api: (context) => ({\n    submit() {\n      const form = context.element(\"root\")\n      if (!(form instanceof HTMLFormElement))\n        return unavailable(\"submit\", \"isn't available: the form isn't on the page\")\n      form.requestSubmit()\n      return true\n    },\n    reset() {\n      const onResetRequest = context.options().onResetRequest\n      if (!onResetRequest) return unavailable(\"reset\", \"isn't offered: there is no onResetRequest\")\n      onResetRequest()\n      return true\n    },\n  }),\n  slots: (slot) => ({\n    root: slot({}),\n  }),\n  agent: { actions: [\"submit\", \"reset\"], shown: (state) => state.named && !state.confirm },\n})\n\nexport { formRoot }\nexport type { FormRootOptions }\n",
       "type": "registry:ui"
     },
     {

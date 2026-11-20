@@ -1,5 +1,7 @@
 import { createChange, definePrimitive, type ChangeDetails, type ChangeOptions } from "@ui-sdk/core"
 
+import { settled, unavailable } from "@/lib/action-refusal"
+
 type LightboxIndexChangeReason = "item-press" | "list-navigation" | "imperative"
 
 type LightboxOptions = {
@@ -31,10 +33,12 @@ const lightbox = definePrimitive({
   }),
   api: (context) => {
     const change = createChange(context)
-    const move = (index: number, options: unknown) => {
+    const move = (index: number, action: string, options: unknown) => {
       const { count, index: current } = context.store.get()
-      if (index < 0 || index >= count || index === current) return false
-      return change("index", index, reasonOf(options))
+      if (index === current) return true
+      if (index < 0) return unavailable(action, "isn't available on the first item", reasonOf(options))
+      if (index >= count) return unavailable(action, "isn't available on the last item", reasonOf(options))
+      return settled(change("index", index, reasonOf(options)), action, reasonOf(options))
     }
     return {
       // The agent bridge passes arguments unchecked, and items list the index as text.
@@ -44,10 +48,12 @@ const lightbox = definePrimitive({
         if (typeof target !== "number" || !Number.isInteger(target) || target < 0 || target >= count) {
           throw new RangeError(`goTo takes an index from 0 to ${count - 1}.`)
         }
-        return move(target, options)
+        return move(target, "goTo", options)
       },
-      next: (options?: ChangeOptions<LightboxIndexChangeReason>) => move(context.store.get().index + 1, options),
-      previous: (options?: ChangeOptions<LightboxIndexChangeReason>) => move(context.store.get().index - 1, options),
+      next: (options?: ChangeOptions<LightboxIndexChangeReason>) =>
+        move(context.store.get().index + 1, "next", options),
+      previous: (options?: ChangeOptions<LightboxIndexChangeReason>) =>
+        move(context.store.get().index - 1, "previous", options),
       entries: () => context.options().entries ?? [],
     }
   },

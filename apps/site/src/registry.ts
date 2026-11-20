@@ -37,6 +37,7 @@ const guideItems = [
   "eskais-mockup-cli",
   "eskais-perf-skill",
   "locale",
+  "action-refusal",
 ]
 
 const componentItems = items.filter((item) => !guideItems.includes(item.name))

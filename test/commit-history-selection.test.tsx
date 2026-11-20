@@ -133,7 +133,8 @@ test("primitive: select reports a reason, can be canceled, and refuses without s
     { lookup, onSelectedChange: (_id, details) => details.cancel() },
     `<root aria-label="History"></root>`,
   )
-  expect(canceled.api.select("c1")).toBe(false)
+  expect(() => canceled.api.select("c1")).toThrow("select was refused by the app.")
+  expect(canceled.api.select("c1", { reason: "item-press" })).toBe(false)
   canceled.unmount()
 })
 
