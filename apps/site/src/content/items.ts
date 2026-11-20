@@ -230,7 +230,7 @@ const itemNotes: Record<string, ItemNotes> = {
       "Reach for it to show a glTF or GLB model people can turn: a product, an avatar, a scan. It costs a small shell up front; three.js loads only when a stage nears the viewport, and only with WebGL.",
     a11y: [
       "The stage is an image named by alt and described by the keyboard hint and the visible summary; with focus, arrows turn, + and - zoom, Home resets.",
-      "Views, zoom, reset, play and the clip picker are named buttons, a segmented control and a native select under the stage.",
+      'Views, zoom, reset, play and the clip picker are named buttons, a segmented control and a native select under the stage; with controls="gestures" your own controls take their place and the stage keeps its keys.',
       "Under reduced motion clips start paused, auto-rotation stays off and camera moves jump instead of easing.",
       "Without WebGL, or when loading fails, the poster stays with a message; a failure is announced at once.",
     ],
@@ -240,15 +240,17 @@ const itemNotes: Record<string, ItemNotes> = {
   },
   "model-scan": {
     usage:
-      "Reach for it to show a photo turning into a 3D character while an engine works: drive stage, points, model, weights and progress from its events.",
+      "Reach for it to show a photo turning into a 3D character while an engine works: drive stage, points, masks, model, weights and progress from its events, and give it onStart, onCancel, onRetry, onStartOver and onDownload for its controls.",
     a11y: [
-      "The scan is a group named by the photo's alt, busy while it works; the progress bar under it is labelled with the stage.",
+      "The scan is a group named by the photo's alt, busy while it works; the progress over the stage is labelled with the stage and says which step of four it is.",
       "Each stage is announced, progress at most every tenth and two seconds, and errors at once.",
-      "Under reduced motion the photo crossfades into the model: no camera flight, no particles, the progress bar stays.",
-      "Once ready, the model is a ModelViewer with its own name and controls.",
+      "The floating controls are named buttons, segmented controls and a toolbar with one tab stop for its buttons; icon buttons show their names in tooltips, every control reaches 44px on a touch screen, and their text reads at 4.5:1 over the brightest and darkest photo.",
+      "When the control that had focus goes with the stage, focus moves to the stage's main one: Cancel, Try again or Make 3D.",
+      "Under reduced motion the photo crossfades into the model: no camera flight, no point cloud, the progress stays.",
+      "Once ready, the model is a ModelViewer with its own name, turned by drag and keys.",
     ],
     agent:
-      "Agents see the scan by its alt and its stage, and call cancel and retry; the ready model takes the viewer's actions.",
+      "Agents see the scan by its alt and its stage, and call start, cancel, retry, restart and download; a call its stage doesn't offer fails with why. The ready model takes the viewer's actions.",
     related: ["model-viewer", "image-scan", "progress"],
   },
   "confirm-button": {
