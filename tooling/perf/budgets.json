@@ -1,6 +1,10 @@
 {
   "layersSettleMs": 4000,
   "keys": {
+    "log-viewer": {
+      "renders": 111,
+      "forcedLayouts": 3
+    },
     "list-1k": {
       "renders": 10,
       "forcedLayouts": 2.05
@@ -127,6 +131,7 @@
     "agent-task-board-core": 18.5,
     "agent-task-types": 0.3,
     "alert": 12.3,
+    "ansi": 2,
     "appearance": 4.1,
     "attachments": 81,
     "attempt-timeline": 82.4,
@@ -198,6 +203,7 @@
     "list-item": 95.5,
     "liveness-indicator": 13.9,
     "locale": 0.4,
+    "log-viewer": 89.3,
     "markdown-editor": 261.4,
     "markdown-editor-languages": 98.1,
     "markdown-view": 105.3,

@@ -179,7 +179,7 @@ const categories = [
   },
   {
     name: "Editor",
-    items: ["code-block", "markdown-editor", "markdown-view", "markdown-editor-languages"],
+    items: ["code-block", "log-viewer", "ansi", "markdown-editor", "markdown-view", "markdown-editor-languages"],
   },
   {
     name: "Diff",

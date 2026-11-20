@@ -3,6 +3,7 @@ import { CodeTabs } from "@/components/ui/code-tabs"
 import { toast } from "@/components/ui/toast"
 
 import { Section } from "../section"
+import { LogViewerSection } from "./log-viewer"
 
 // Touches every syntax tone, so the contrast check measures each on the code surface and on a highlighted line.
 const sample = `import { Card, type CardProps } from "@/components/ui/card"
@@ -20,35 +21,39 @@ const diff = `diff --git a/theme.css b/theme.css
 +  --radius: 1rem;
  }`
 
+// The log viewer shows code too, as a process prints it; it sits beside the code blocks.
 function CodeSection() {
   return (
-    <Section
-      title="Code"
-      description="CodeBlock highlights lazily with Lezer and syntax tokens, numbers and highlights lines, shows diffs, and copies; CodeTabs holds several files."
-    >
-      <div className="flex w-full min-w-0 flex-col gap-group">
-        <CodeBlock
-          code={sample}
-          language="tsx"
-          title="stat.tsx"
-          lineNumbers
-          highlightLines={[[5, 6]]}
-          onCopy={() => toast.success("Copied stat.tsx")}
-        />
-        <CodeBlock code={diff} language="diff" title="theme.css.diff" />
-        <CodeBlock code="npx shadcn@latest add @eskais/code-block # then import it" language="bash" />
-        <CodeTabs
-          aria-label="Theme files"
-          files={[
-            { title: "app.css", code: '@layer ui-sdk;\n@import "tailwindcss";\n.a { color: red; }', language: "css" },
-            { title: "components.json", code: '{ "style": "new-york", "rsc": false }', language: "json" },
-          ]}
-        />
-        <p className="text-body">
-          Inline code reads as <Code>npx shadcn add</Code> inside a sentence.
-        </p>
-      </div>
-    </Section>
+    <>
+      <Section
+        title="Code"
+        description="CodeBlock highlights lazily with Lezer and syntax tokens, numbers and highlights lines, shows diffs, and copies; CodeTabs holds several files."
+      >
+        <div className="flex w-full min-w-0 flex-col gap-group">
+          <CodeBlock
+            code={sample}
+            language="tsx"
+            title="stat.tsx"
+            lineNumbers
+            highlightLines={[[5, 6]]}
+            onCopy={() => toast.success("Copied stat.tsx")}
+          />
+          <CodeBlock code={diff} language="diff" title="theme.css.diff" />
+          <CodeBlock code="npx shadcn@latest add @eskais/code-block # then import it" language="bash" />
+          <CodeTabs
+            aria-label="Theme files"
+            files={[
+              { title: "app.css", code: '@layer ui-sdk;\n@import "tailwindcss";\n.a { color: red; }', language: "css" },
+              { title: "components.json", code: '{ "style": "new-york", "rsc": false }', language: "json" },
+            ]}
+          />
+          <p className="text-body">
+            Inline code reads as <Code>npx shadcn add</Code> inside a sentence.
+          </p>
+        </div>
+      </Section>
+      <LogViewerSection />
+    </>
   )
 }
 
