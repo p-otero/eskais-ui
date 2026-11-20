@@ -92,6 +92,17 @@ test("landmarks and named toggles that expose their state, in the wide layout", 
   expect(screen.getByRole("button", { name: "Quick open" })).toBeTruthy()
 })
 
+test("the document region is a ScrollArea viewport and stays out of the tab order", async () => {
+  render(<Harness narrow={-1} defaultMode="read" />)
+  await settle()
+  const region = screen.getByRole("region", { name: "Document" })
+  expect(region.dataset.slot).toBe("document-workspace-document")
+  expect(region.style.overflow).toBe("auto")
+  expect(region.getAttribute("tabindex")).toBe("-1")
+  const scrollbar = region.parentElement!.querySelector("[data-slot=scroll-area-scrollbar]")
+  expect(scrollbar?.hasAttribute("data-agent-hidden")).toBe(true)
+})
+
 test('documentAs="main" makes the document the main landmark', async () => {
   render(<Harness narrow={-1} documentAs="main" />)
   await settle()

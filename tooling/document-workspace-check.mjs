@@ -42,7 +42,7 @@ const editorHasFocus = (page) => page.evaluate(() => document.activeElement?.clo
 // The text of the line the editor shows at the top of its scroller.
 const topLine = (page) =>
   page.evaluate(() => {
-    const scroller = document.querySelector(".cm-scroller")
+    const scroller = document.querySelector("[data-slot=markdown-editor-viewport]")
     const top = scroller.getBoundingClientRect().top
     const lines = [...document.querySelectorAll(".cm-line")]
     return lines.find((line) => line.getBoundingClientRect().bottom > top + 2)?.textContent ?? ""

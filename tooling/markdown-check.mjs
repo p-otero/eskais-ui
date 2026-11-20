@@ -1,5 +1,5 @@
-// Drives the showcase's Markdown editor with a real keyboard: a line command (toolbar, text style menu, slash menu)
-// on an empty line leaves the caret after its marker, and the slash menu stays open on a query that matches nothing.
+// Drives the showcase's Markdown editor with a real keyboard: line commands leave the caret after their marker, the
+// slash menu stays open on a query that matches nothing, and a long note scrolls in the editor's ScrollArea.
 // Usage: node tooling/markdown-check.mjs (after `bun run build:showcase`)
 import { withShowcase } from "./showcase-browser.mjs"
 
@@ -54,7 +54,102 @@ async function lastLineText(page) {
   }, editorName)
 }
 
+const longNote = Array.from({ length: 3000 }, (_, index) =>
+  index % 40 === 0
+    ? `## Section ${String(index / 40)}`
+    : `Line ${String(index)} with **bold** text and a [link](https://example.com).`,
+).join("\n")
+
+// Pastes `text` over the whole note, as CodeMirror's paste handler reads it.
+async function replaceNote(page, text) {
+  await page.reload()
+  const box = page.getByRole("textbox", { name: editorName }).first()
+  await box.click()
+  await page.keyboard.press("Control+a")
+  await box.evaluate((content, markdown) => {
+    const data = new DataTransfer()
+    data.setData("text/plain", markdown)
+    content.dispatchEvent(new ClipboardEvent("paste", { clipboardData: data, bubbles: true, cancelable: true }))
+  }, text)
+  await page.waitForTimeout(200)
+  return box
+}
+
+const viewportOf = (box) =>
+  box.evaluate((content) => {
+    const viewport = content.closest("[data-slot=markdown-editor-viewport]")
+    const scroller = content.closest(".cm-scroller")
+    const bounds = viewport.getBoundingClientRect()
+    const caret = getSelection()?.getRangeAt(0).getBoundingClientRect()
+    const scrollbar = viewport.parentElement.querySelector(
+      "[data-slot=scroll-area-scrollbar][data-orientation=vertical]",
+    )
+    return {
+      scrollTop: viewport.scrollTop,
+      overflows: viewport.scrollHeight > viewport.clientHeight,
+      nativeScrollbar: getComputedStyle(viewport).scrollbarWidth !== "none",
+      innerScroller:
+        getComputedStyle(scroller).overflowY !== "visible" && scroller.scrollHeight > scroller.clientHeight,
+      lines: content.querySelectorAll(".cm-line").length,
+      caretVisible: caret !== undefined && caret.top >= bounds.top - 1 && caret.bottom <= bounds.bottom + 1,
+      scrollbarShown: scrollbar?.hasAttribute("data-visible") ?? false,
+    }
+  })
+
+async function scrolling(page) {
+  const box = await replaceNote(page, longNote)
+  let view = await viewportOf(box)
+  check("long note: the editor's ScrollArea viewport scrolls", view.overflows && !view.innerScroller)
+  check("long note: no platform scrollbar, ours shows", !view.nativeScrollbar && view.scrollbarShown)
+  check("long note: CodeMirror renders only the lines in view", view.lines < 200, `${String(view.lines)} of 3000`)
+  check("long note: the pasted end is in view", view.caretVisible && view.scrollTop > 0)
+
+  await page.keyboard.press("Control+Home")
+  await page.waitForTimeout(100)
+  view = await viewportOf(box)
+  check("Ctrl+Home scrolls back to the start", view.caretVisible && view.scrollTop < 40, `${String(view.scrollTop)}px`)
+  for (let step = 0; step < 60; step++) await page.keyboard.press("ArrowDown")
+  await page.keyboard.type(" typed")
+  await page.waitForTimeout(100)
+  view = await viewportOf(box)
+  check("arrow keys and typing keep the caret in view", view.caretVisible && view.scrollTop > 0)
+  await page.keyboard.press("PageDown")
+  await page.waitForTimeout(100)
+  check("PageDown keeps the caret in view", (await viewportOf(box)).caretVisible)
+
+  const viewport = page.locator("[data-slot=markdown-editor-viewport]").first()
+  const bounds = await viewport.boundingBox()
+  await page.mouse.move(bounds.x + 60, bounds.y + 40)
+  await page.mouse.wheel(0, 3000)
+  await page.waitForTimeout(300)
+  const line = await viewport.evaluate((element) => {
+    const { left, top } = element.getBoundingClientRect()
+    return document.elementFromPoint(left + 40, top + 40)?.closest(".cm-line")?.textContent ?? ""
+  })
+  check("the wheel scrolls to lines CodeMirror then renders", /^Line \d+/.test(line), line)
+
+  const before = await viewport.evaluate((element) => element.scrollTop)
+  await page.mouse.move(bounds.x + 60, bounds.y + 40)
+  await page.mouse.down()
+  await page.mouse.move(bounds.x + 60, bounds.y + bounds.height + 40, { steps: 5 })
+  await page.waitForTimeout(500)
+  await page.mouse.up()
+  const after = await viewport.evaluate((element) => element.scrollTop)
+  check("a selection dragged past the bottom scrolls the view", after > before, `${String(before)} → ${String(after)}`)
+
+  await replaceNote(page, "Short")
+  await page.locator("body").click({ position: { x: 1, y: 1 } })
+  await viewport.scrollIntoViewIfNeeded()
+  const empty = await viewport.boundingBox()
+  await page.mouse.click(empty.x + empty.width / 2, empty.y + empty.height - 20)
+  check(
+    "a press below a short note focuses the editor",
+    await page.evaluate(() => document.activeElement?.closest(".cm-content") !== null),
+  )
+}
+
 await withShowcase(async (page) => {
+  await scrolling(page)
   for (const [button, selector] of [
     ["Quote", "blockquote p, blockquote"],
     ["Bulleted list", "ul li"],

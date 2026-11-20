@@ -5,6 +5,7 @@ import { BookOpenIcon, PanelLeftIcon, PanelRightIcon, PencilIcon, SearchIcon } f
 
 import { Button } from "@/components/ui/button"
 import { CommandDialogTrigger } from "@/components/ui/command-dialog"
+import { ScrollArea, ScrollAreaCorner, ScrollAreaScrollbar, ScrollAreaViewport } from "@/components/ui/scroll-area"
 import type { DocumentSaveState, DocumentWorkspaceMode } from "@/components/ui/document-workspace-context"
 import { SegmentedControl, SegmentedControlIndicator, SegmentedControlItem } from "@/components/ui/segmented-control"
 import { StatusDot } from "@/components/ui/status-pill"
@@ -147,17 +148,28 @@ function WorkspaceCenter({
           {toolbar !== undefined && <div className="flex shrink-0 items-center gap-inline">{toolbar}</div>}
         </div>
       )}
-      <Document
-        ref={documentRef}
-        tabIndex={-1}
-        aria-label={labels.document}
-        data-slot="document-workspace-document"
-        data-mode={context.mode}
-        // oxlint-disable-next-line eskais/scroll-area -- the page-level document, which hosts the editor (see markdown-editor.tsx)
-        className="flex min-h-0 flex-1 flex-col overflow-auto outline-none data-[mode=read]:px-inset-surface data-[mode=read]:py-group"
-      >
-        {children}
-      </Document>
+      <ScrollArea className="flex min-h-0 flex-1 flex-col">
+        <ScrollAreaViewport
+          ref={(element) => {
+            documentRef.current = element
+          }}
+          className="flex h-auto min-h-0 flex-1 flex-col focus-visible:ring-0 data-[mode=read]:px-inset-surface data-[mode=read]:py-group"
+          render={(part) => (
+            <Document
+              {...part}
+              tabIndex={-1}
+              aria-label={labels.document}
+              data-slot="document-workspace-document"
+              data-mode={context.mode}
+            />
+          )}
+        >
+          {children}
+        </ScrollAreaViewport>
+        <ScrollAreaScrollbar data-agent-hidden="" />
+        <ScrollAreaScrollbar orientation="horizontal" data-agent-hidden="" />
+        <ScrollAreaCorner />
+      </ScrollArea>
       <div
         data-slot="document-workspace-status"
         className="flex min-w-0 items-center gap-items border-t px-inset-item py-inline text-caption text-muted-foreground"
