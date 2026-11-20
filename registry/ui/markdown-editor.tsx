@@ -49,6 +49,7 @@ import { MarkdownEditorToolbar } from "@/components/ui/markdown-editor-toolbar"
 import { PortalStore } from "@/components/ui/markdown-editor-widgets"
 import type { WikilinkResolver } from "@/components/ui/markdown-syntax"
 import { fieldSurfaceClassName } from "@/components/ui/input"
+import { ScrollArea, ScrollAreaCorner, ScrollAreaScrollbar, ScrollAreaViewport } from "@/components/ui/scroll-area"
 import { useEditorHandle, useMarkdownEditorView } from "@/components/ui/use-markdown-editor"
 import { cn } from "@/lib/utils"
 
@@ -229,10 +230,21 @@ function MarkdownEditorBody(props: Omit<MarkdownEditorProps, "ref"> & { handle: 
         readOnly={readOnly}
         agentConfirm={labels.setMarkdownConfirm}
         aria-label={labels.document}
-        // oxlint-disable-next-line eskais/scroll-area -- the editor's own scroller: a viewport re-reads every focusable element below it on each removal, which CodeMirror makes as you type
-        className="min-h-0 flex-1 overflow-auto"
+        className="flex min-h-0 flex-1 flex-col"
       >
-        <div ref={hostRef} data-slot="markdown-editor-content" className="h-full" />
+        {/* CodeMirror grows with its text and scrolls in the viewport: it finds a scrolling ancestor for the lines it
+            renders, the caret it keeps in view and a selection dragged past the edge. */}
+        <ScrollArea className="flex min-h-0 flex-1 flex-col">
+          <ScrollAreaViewport
+            className="h-auto min-h-0 flex-1"
+            render={(part) => <div {...part} data-slot="markdown-editor-viewport" />}
+          >
+            <div ref={hostRef} data-slot="markdown-editor-content" className="flex min-h-full flex-col" />
+          </ScrollAreaViewport>
+          <ScrollAreaScrollbar data-agent-hidden="" />
+          <ScrollAreaScrollbar orientation="horizontal" data-agent-hidden="" />
+          <ScrollAreaCorner />
+        </ScrollArea>
       </DocumentRoot>
       <p id={hintId} hidden>
         {labels.usageHint}

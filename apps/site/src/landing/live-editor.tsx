@@ -2,6 +2,7 @@ import { useState } from "react"
 
 import { MarkdownEditor } from "@/components/ui/markdown-editor"
 import { MarkdownView } from "@/components/ui/markdown-view"
+import { ScrollArea, ScrollAreaScrollbar, ScrollAreaViewport } from "@/components/ui/scroll-area"
 import { SegmentedControl, SegmentedControlIndicator, SegmentedControlItem } from "@/components/ui/segmented-control"
 
 const initial = `## Launch checklist
@@ -33,8 +34,15 @@ export default function LiveEditor() {
       {view === "edit" ? (
         <MarkdownEditor label="Launch checklist" value={markdown} onChange={setMarkdown} className="h-64" />
       ) : (
-        <div className="h-64 overflow-auto rounded-surface border p-inset-surface">
-          <MarkdownView markdown={markdown} aria-label="Rendered checklist" />
+        <div className="flex h-64 flex-col overflow-hidden rounded-surface border">
+          <ScrollArea className="min-h-0 flex-1">
+            <ScrollAreaViewport>
+              <div className="p-inset-surface">
+                <MarkdownView markdown={markdown} aria-label="Rendered checklist" />
+              </div>
+            </ScrollAreaViewport>
+            <ScrollAreaScrollbar />
+          </ScrollArea>
         </div>
       )}
     </div>

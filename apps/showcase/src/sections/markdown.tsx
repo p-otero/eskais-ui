@@ -4,6 +4,7 @@ import { Field, FieldLabel } from "@/components/ui/field"
 import { MarkdownEditor, markdownEditorLabelsEs } from "@/components/ui/markdown-editor"
 import { markdownCodeLanguages } from "@/components/ui/markdown-editor-languages"
 import { MarkdownView } from "@/components/ui/markdown-view"
+import { ScrollArea, ScrollAreaScrollbar, ScrollAreaViewport } from "@/components/ui/scroll-area"
 import { SegmentedControl, SegmentedControlIndicator, SegmentedControlItem } from "@/components/ui/segmented-control"
 
 import { Section } from "../section"
@@ -106,13 +107,20 @@ function MarkdownSection() {
             </p>
           </div>
           <div className="flex min-w-0 flex-col gap-items">
-            <div className="h-136 overflow-auto rounded-surface border p-inset-surface">
-              <MarkdownView
-                aria-label="Preview"
-                markdown={markdown}
-                resolveWikilink={resolveWikilink}
-                wikilinkHref={wikilinkHref}
-              />
+            <div className="flex h-136 flex-col overflow-hidden rounded-surface border">
+              <ScrollArea className="min-h-0 flex-1">
+                <ScrollAreaViewport>
+                  <div className="p-inset-surface">
+                    <MarkdownView
+                      aria-label="Preview"
+                      markdown={markdown}
+                      resolveWikilink={resolveWikilink}
+                      wikilinkHref={wikilinkHref}
+                    />
+                  </div>
+                </ScrollAreaViewport>
+                <ScrollAreaScrollbar />
+              </ScrollArea>
             </div>
           </div>
         </div>

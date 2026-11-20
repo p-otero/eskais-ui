@@ -32,6 +32,20 @@ test("minimalChange keeps the common prefix and suffix and never splits a surrog
   expect(minimalChange("x😀y", "x😃y")).toEqual({ from: 1, to: 3, insert: "😃" })
 })
 
+test("CodeMirror scrolls inside the editor's ScrollArea, whose scrollbars agents don't see", async () => {
+  render(<MarkdownEditor label="Note" defaultValue={"one\n"} />)
+  await settle()
+  const viewport = document.querySelector<HTMLElement>("[data-slot=markdown-editor-viewport]")!
+  expect(viewport.contains(document.querySelector(".cm-editor"))).toBe(true)
+  expect(viewport.style.overflow).toBe("auto")
+  expect(viewport.closest("[data-slot=scroll-area]")).toBeTruthy()
+  const scrollbars = viewport.parentElement!.querySelectorAll("[data-slot=scroll-area-scrollbar]")
+  expect([...scrollbars].map((bar) => bar.getAttribute("data-orientation"))).toEqual(["vertical", "horizontal"])
+  for (const bar of scrollbars) expect(bar.hasAttribute("data-agent-hidden")).toBe(true)
+  // The text box is focusable, so the viewport adds no tab stop of its own.
+  expect(viewport.hasAttribute("tabindex")).toBe(false)
+})
+
 function Controlled(props: Partial<MarkdownEditorProps> & { initial: string; onValue?: (value: string) => void }) {
   const [value, setValue] = useState(props.initial)
   return (

@@ -164,7 +164,8 @@ function createEditorHandle(view: EditorView, menus: HandleMenus): MarkdownEdito
       view.dispatch({ effects: EditorView.scrollIntoView(doc.line(number).from, { y: "start" }) })
     },
     getScrollLine: () => {
-      const top = view.scrollDOM.getBoundingClientRect().top
+      const scroller = view.dom.closest("[data-slot=markdown-editor-viewport]") ?? view.scrollDOM
+      const top = scroller.getBoundingClientRect().top
       const block = view.lineBlockAtHeight(Math.max(0, top - view.documentTop))
       return view.state.doc.lineAt(block.from).number
     },
