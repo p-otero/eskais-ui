@@ -10,6 +10,14 @@ const preferred = [
   enabledControl,
 ]
 
+function firstMatch(row: HTMLElement) {
+  for (const selector of preferred) {
+    const match = row.querySelector<HTMLElement>(selector)
+    if (match) return match
+  }
+  return null
+}
+
 const isGone = (element: HTMLElement) => !element.isConnected || element.matches(":disabled, [aria-disabled=true]")
 
 /**
@@ -50,8 +58,7 @@ function useModelScanFocus(stage: string) {
     if (!element || !last || !isGone(last)) return
     const active = element.ownerDocument.activeElement
     if (active && active !== last && active !== element.ownerDocument.body) return
-    let next: HTMLElement | null = null
-    for (const selector of preferred) next ??= element.querySelector<HTMLElement>(selector)
+    const next = firstMatch(element)
     focused.current = next
     next?.focus()
   })
