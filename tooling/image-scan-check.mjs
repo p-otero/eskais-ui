@@ -6,7 +6,7 @@
 import { mkdirSync } from "node:fs"
 import { join, resolve } from "node:path"
 
-import { mapRegionBox } from "../registry/ui/image-scan-primitive.ts"
+import { mapRegionBox } from "../registry/lib/image-scan-geometry.ts"
 import { withShowcase } from "./showcase-browser.mjs"
 
 const failures = []
