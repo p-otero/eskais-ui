@@ -155,6 +155,32 @@ const faceContours = [
   386, 374, 70, 105, 107, 336, 334, 300, 168, 1, 61, 291, 0, 17,
 ]
 
+const ring = (from: number, to: number): [number, number][] =>
+  Array.from({ length: to - from + 1 }, (_, i) => [from + i, i === to - from ? from : from + i + 1])
+
+// How the contour sample connects, by its index in `faceContours`: the oval, both eyes, the brows, the nose and the
+// mouth, as ModelScan's `edges` for the face group.
+const faceContourEdges: readonly (readonly [number, number])[] = [
+  ...ring(0, 17),
+  [18, 20],
+  [20, 19],
+  [19, 21],
+  [21, 18],
+  [22, 24],
+  [24, 23],
+  [23, 25],
+  [25, 22],
+  [26, 27],
+  [27, 28],
+  [29, 30],
+  [30, 31],
+  [32, 33],
+  [34, 36],
+  [36, 35],
+  [35, 37],
+  [37, 34],
+]
+
 // The same features in the face mesh and in the body's pose landmarks: nose tip, eye corners, mouth corners.
 const sharedFeatures: readonly (readonly [face: number, body: number])[] = [
   [1, 0],
@@ -204,7 +230,8 @@ function placeFaceOnBody(
 
 /**
  * The landmarks as the demo draws them on the body photo: the body's as sent, the face's placed onto it by the
- * recording's own face and body landmarks, so the face lights up on the photo as soon as it arrives.
+ * recording's own face and body landmarks, so the face lights up on the photo as soon as it arrives, joined by
+ * `faceContourEdges`.
  */
 function onBodyPhoto(recording: ScanRecording) {
   const recorded = (source: "face" | "body") => {
@@ -216,9 +243,9 @@ function onBodyPhoto(recording: ScanRecording) {
   return (landmarks: ScanState["landmarks"]): ScanState["landmarks"] =>
     landmarks.flatMap((group) => {
       if (group.source !== "face") return [group]
-      return placed && body ? [{ ...group, aspect: body.aspect, points: placed }] : []
+      return placed && body ? [{ ...group, aspect: body.aspect, points: placed, edges: faceContourEdges }] : []
     })
 }
 
-export { idleScan, onBodyPhoto, placeFaceOnBody, reduceScan, replayScan, scanStage, toModelScanProps }
+export { faceContourEdges, idleScan, onBodyPhoto, placeFaceOnBody, reduceScan, replayScan, scanStage, toModelScanProps }
 export type { RecordedEvent, ScanEvent, ScanRecording, ScanState }

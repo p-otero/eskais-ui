@@ -23,8 +23,21 @@ const characterFace = { center: [0, 0.84, 0.04] as [number, number, number], rad
 const restyle = async (scene: Object3D) =>
   (await import("../../../../test/fixtures/model/character/style")).styleCharacter(scene)
 
+const characterStyles = [
+  { value: "soft", label: "Soft toon" },
+  { value: "cel", label: "Cel outline" },
+]
+
+// What Download saves in the demos: the character in the chosen style, as the engine would hand it over.
+function downloadCharacter(style: keyof typeof character) {
+  const link = document.createElement("a")
+  link.href = character[style]
+  link.download = `character-${style}.glb`
+  link.click()
+}
+
 // The fake engine's tiny figure, for the error runs the recording doesn't have.
 const portrait = { src: portraitUrl, width: 600, height: 800 }
 const engineModels = { model: figureUrl, character: figureFinalUrl }
 
-export { character, characterFace, engineModels, photo, portrait, restyle }
+export { character, characterFace, characterStyles, downloadCharacter, engineModels, photo, portrait, restyle }

@@ -1,6 +1,5 @@
 import { useState } from "react"
 
-import { Button } from "@/components/ui/button"
 import { Field, FieldLabel } from "@/components/ui/field"
 import { ModelScan } from "@/components/ui/model-scan"
 import { ModelViewer } from "@/components/ui/model-viewer"
@@ -8,7 +7,15 @@ import { SegmentedControl, SegmentedControlIndicator, SegmentedControlItem } fro
 import { Slider, SliderControl, SliderIndicator, SliderThumb, SliderTrack, SliderValue } from "@/components/ui/slider"
 
 import { Section } from "../section"
-import { character, characterFace, photo, restyle, useScanReplay } from "./model-fixtures"
+import {
+  character,
+  characterFace,
+  characterStyles,
+  downloadCharacter,
+  photo,
+  restyle,
+  useScanReplay,
+} from "./model-fixtures"
 
 // ARKit expressions over the character's own body and face weights, which its GLB carries.
 const expressions = [
@@ -90,10 +97,11 @@ function ModelViewerSection() {
 
 function ModelScanSection() {
   const { props, start, cancel, running } = useScanReplay()
+  const [style, setStyle] = useState<keyof typeof character>("soft")
   return (
     <Section
       title="Model scan"
-      description="A photo becomes a 3D character, from an engine's events: points over the photo, the photo burning into particles while the camera turns and the model appears, then weights streaming in. This one replays a recorded scan of a synthetic person, 15 times slower than the engine ran it."
+      description="A photo becomes a 3D character, from an engine's events: points and their mesh over the photo while the background dims around the person, then the person's pixels fly as a cloud onto the model while the camera turns, and weights stream in. This one replays a recorded scan of a synthetic person, 15 times slower than the engine ran it."
     >
       <div className="flex w-full max-w-sm flex-col gap-group">
         <ModelScan
@@ -102,21 +110,19 @@ function ModelScanSection() {
           width={photo.width}
           height={photo.height}
           {...props}
+          // The replay sends the soft toon character; the finished one takes the chosen style.
+          model={props.stage === "ready" ? { glb: character[style] } : props.model}
           modelAlt="A 3D character made from the photo"
           idleClip="wave"
           viewer={{ onModelLoad: restyle }}
+          labels={{ play: "Wave" }}
+          styles={characterStyles}
+          selectedStyle={style}
+          onStyleChange={(next) => setStyle(next as keyof typeof character)}
+          onStart={start}
           onCancel={running ? cancel : undefined}
-          actions={
-            props.stage === "photo" ? (
-              <Button size="sm" onClick={start}>
-                Make 3D
-              </Button>
-            ) : props.stage === "ready" ? (
-              <Button variant="ghost" size="sm" onClick={cancel}>
-                Start over
-              </Button>
-            ) : null
-          }
+          onStartOver={cancel}
+          onDownload={() => downloadCharacter(style)}
         />
       </div>
     </Section>

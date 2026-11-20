@@ -4825,8 +4825,8 @@
       "name": "model-viewer",
       "type": "registry:ui",
       "title": "Model Viewer",
-      "description": "A 3D model (glTF or GLB) in a stage that turns with drag, wheel, pinch and keys, with views, zoom, reset, animation clips, morph weights (a Float32Array aligned with the target names, or by name) and ARKit expressions eased in the render loop. A new model fades in over the old one, keeping its weights. The three.js scene (react-three-fiber) is a separate chunk, loaded when the stage nears the viewport and only with WebGL; a poster stands in until then and without WebGL. Agents get rotate, zoom, reset, setView, play, pause and selectClip.",
-      "docs": "`<ModelViewer model alt poster summary aspectRatio view defaultView onViewChange framing clip defaultClip onClipChange playing defaultPlaying onPlayingChange loop speed weights targetNames expressions material background autoRotate controls load overlay sceneChildren onLoad onError error labels>`: `model` is a URL, its bytes (an ArrayBuffer) or a loaded scene (`{ scene, animations }`). The stage is `role=\"img\"` named by `alt`, described by the keyboard hint and the visible `summary`; while it has focus, arrows turn the model, + and - zoom and Home resets. Views are `front`, `three-quarter`, `side` and `back`; free rotation sets the view to `null`. `framing` is `\"full\"` or a sphere of the model (`{ center: [x, y, z], radius }` in its own units), like a face for a close-up. `weights` are morph weights: a Float32Array (or numbers) aligned with `targetNames`, which default to the GLB's `extras.targetNames` (meshes in scene order), or a map by name; values aren't clamped, so a principal component can be negative. `expressions` maps ARKit names (`mouthSmileLeft`) to weights on the `expr.<name>` targets, over `weights`. They ease inside the render loop with no allocation and no React render per frame; a target never set is left to clips. A new `model` loads under the shown one and takes over its camera, weights and clip time: it replaces it at once when the two look the same (meshes, vertex counts, targets, colours), or fades in over it. `playing` left out (or `null`) plays the clip once loaded, except under reduced motion, which also drops auto-rotation and turns every camera move and swap into a jump. `material=\"toon\"` swaps in a three-tone toon material. The canvas draws on demand (`frameloop=\"demand\"`), only while the camera, a clip, a weight or a swap moves, and not at all while the stage is out of view or the tab is hidden. Without WebGL, or when loading fails (`labels.error`, announced at once), the poster stays with a message. `preloadModelViewer()` starts loading the scene chunk early; `sceneChildren` puts three.js content of your own inside the canvas, where `ModelViewerSceneContext` gives the viewer's handle and the model's rig. Agent calls before the model has loaded, or for a clip it doesn't have, throw with the reason.",
+      "description": "A 3D model (glTF or GLB) in a stage that turns with drag, wheel, pinch and keys, with views, zoom, reset, animation clips, morph weights (a Float32Array aligned with the target names, or by name) and ARKit expressions eased in the render loop, and an optional floor (a grid, a contact shadow) in the theme's colours. A new model fades in over the old one, keeping its weights. controls=\"gestures\" keeps drag and keys without the bar, for controls of your own through handleRef and useModelViewerControls. The three.js scene (react-three-fiber) is a separate chunk, loaded when the stage nears the viewport and only with WebGL; a poster stands in until then and without WebGL. Agents get rotate, zoom, reset, setView, play, pause and selectClip.",
+      "docs": "`<ModelViewer model alt poster summary aspectRatio view defaultView onViewChange framing clip defaultClip onClipChange playing defaultPlaying onPlayingChange loop speed weights targetNames expressions material background floor autoRotate controls handleRef load overlay sceneChildren onLoad onError error labels>`: `model` is a URL, its bytes (an ArrayBuffer) or a loaded scene (`{ scene, animations }`). The stage is `role=\"img\"` named by `alt`, described by the keyboard hint and the visible `summary`; while it has focus, arrows turn the model, + and - zoom and Home resets. Views are `front`, `three-quarter`, `side` and `back`; free rotation sets the view to `null`. `framing` is `\"full\"` or a sphere of the model (`{ center: [x, y, z], radius }` in its own units), like a face for a close-up. `weights` are morph weights: a Float32Array (or numbers) aligned with `targetNames`, which default to the GLB's `extras.targetNames` (meshes in scene order), or a map by name; values aren't clamped, so a principal component can be negative. `expressions` maps ARKit names (`mouthSmileLeft`) to weights on the `expr.<name>` targets, over `weights`. They ease inside the render loop with no allocation and no React render per frame; a target never set is left to clips. A new `model` loads under the shown one and takes over its camera, weights and clip time: it replaces it at once when the two look the same (meshes, vertex counts, targets, colours), or fades in over it. `playing` left out (or `null`) plays the clip once loaded, except under reduced motion, which also drops auto-rotation and turns every camera move and swap into a jump. `material=\"toon\"` swaps in a three-tone toon material. `floor` draws a grid disc and a contact shadow under the model's feet in the theme's muted foreground, and pools the card colour over the stage. `controls` is `true` (the bar under the stage, and drag, wheel, pinch and keys), `\"gestures\"` (the gestures and keys without the bar) or `false` (a still stage); with `\"gestures\"`, `handleRef` hands over the viewer's handle and `useModelViewerControls(handle)` its status, view, clips and playing, rendering only when one changes, for a toolbar of your own that calls `handle.api`. Theme colours in the canvas are read again when the theme changes. The canvas draws on demand (`frameloop=\"demand\"`), only while the camera, a clip, a weight or a swap moves, and not at all while the stage is out of view or the tab is hidden. Without WebGL, or when loading fails (`labels.error`, announced at once), the poster stays with a message. `preloadModelViewer()` starts loading the scene chunk early; `sceneChildren` puts three.js content of your own inside the canvas, where `ModelViewerSceneContext` gives the viewer's handle and the model's rig. Agent calls before the model has loaded, or for a clip it doesn't have, throw with the reason.",
       "dependencies": [
         "@ui-sdk/core@0.1.0-beta.12",
         "@ui-sdk/react@0.1.0-beta.12",
@@ -4867,11 +4867,23 @@
           "type": "registry:ui"
         },
         {
+          "path": "registry/ui/model-viewer-floor.ts",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/model-viewer-theme.ts",
+          "type": "registry:ui"
+        },
+        {
           "path": "registry/ui/use-model-viewer-scene.ts",
           "type": "registry:ui"
         },
         {
           "path": "registry/ui/model-viewer-scene.tsx",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/use-model-viewer-controls.ts",
           "type": "registry:ui"
         },
         {
@@ -4884,8 +4896,8 @@
       "name": "model-scan",
       "type": "registry:ui",
       "title": "Model Scan",
-      "description": "A photo becoming a 3D character, driven by an engine's events through props: landmark groups light up over the photo, the photo burns into particles while the camera turns to a three-quarter view and the base model appears where it stood, streamed weights reshape it, the final character fades in over it, and it hands over to orbit. Reduced motion crossfades instead. Announces each stage; agents get cancel and retry.",
-      "docs": "`<ModelScan src alt width height stage points model weights targetNames expressions progress statusText error onCancel onRetry modelAlt idleClip aspectRatio fit viewer actions labels>`: `stage` is `photo`, `detecting`, `building`, `refining`, `ready` or `error`: the UI's, which you map from your engine's. `points` light up while detecting: one list (a Float32Array of interleaved x, y fractions of the original photo, or `{ x, y }` objects), or groups `{ source, points, aspect? }` (the face, the body) that each light up on their own, in the order their sources arrived, a later group replacing its source's. They land straight on the photo where the stage draws it, following `fit` (`contain`, or `cover` in a stage of another `aspectRatio`); points past 0 or 1, landmarks a crop cut off, are kept but not drawn and don't count in the stagger. `aspect` is the photo's own width over height: until the photo loads, it sizes the stage when `width` and `height` aren't given. `error` is the line a person reads at `error`: map your engine's error codes to your own words (ModelScan knows none), and leave `onRetry` out when a new run can't help, like a browser without WebGL2. `model` is the base GLB with morph targets, from `building` on: a URL, its bytes, or `{ glb, targetNames }` as an engine sends it; pass the final character the same way when it arrives and it fades in over the base model keeping the weights (at once when they look the same). `weights` are its morph weights, a Float32Array aligned with the target names or a map by name, eased as they stream; `expressions` by ARKit name, like a smile at the end. `progress` is 0 to 1 within the stage, on the progress bar under the stage (indeterminate without it). At `building` the photo moves into the 3D scene on a plane the front camera sees exactly where the 2D photo was, so nothing jumps; the camera then eases to the three-quarter view while the photo burns away into particles and the model fades in, all on the GPU. Under reduced motion the photo crossfades into the model, with no camera flight or particles, and the camera jumps after. At `ready` the idle clip plays (`idleClip`, or the model's first) unless motion is reduced, and the viewer's controls appear. It builds on ModelViewer (pass more of its props through `viewer`), whose scene chunk starts loading at `detecting`; the transition is a second small chunk. Screen readers hear each stage (`labels.stage`), progress at most every tenth and two seconds, and the error at once. Cancel shows before `ready` when `onCancel` is set, Retry at `error` with `onRetry`, beside your `actions`; when the control that had focus there goes with the stage (a start button as the run begins, Cancel as it ends), focus moves to the first enabled one. Agents call `cancel` and `retry`, and a call outside its stage throws with the reason.",
+      "description": "A photo becoming a 3D character, driven by an engine's events through props: landmark groups light up over the photo as meshes while the background dims around the person (from the engine's mask, or a hull around the pose landmarks), the person's pixels fly as a point cloud onto the base model while the camera turns, a shimmer reveals it and a pulse runs across the floor, streamed weights reshape it, and it hands over to orbit. Floating glass controls follow the stage: a style picker and Make 3D, a progress ring with Cancel, a toolbar of views, the clip, Download and Start over, and the error with Try again. Reduced motion crossfades instead. Announces each stage; agents get start, cancel, retry, restart and download.",
+      "docs": "`<ModelScan src alt width height stage points masks model weights scaledWeights targetNames expressions progress statusText error onStart onCancel onRetry onStartOver onDownload styles selectedStyle onStyleChange controls modelAlt idleClip aspectRatio fit viewer actions labels>`: `stage` is `photo`, `detecting`, `building`, `refining`, `ready` or `error`: the UI's, which you map from your engine's. `points` light up while detecting: one list (a Float32Array of interleaved x, y fractions of the original photo, or `{ x, y }` objects), or groups `{ source, points, aspect?, edges? }` (the face, the body) that each light up on their own, in the order their sources arrived, a later group replacing its source's; `edges` (pairs of point indices) join a group into a mesh, and a `body` group of the 33 pose landmarks has the pose skeleton by default. They land straight on the photo where the stage draws it, following `fit` (`contain`, or `cover` in a stage of another `aspectRatio`); points past 0 or 1 are kept but not drawn. `masks` are the engine's person masks, `{ source?: \"face\" | \"body\", width, height, data }` (`data` a Uint8Array of 0-255 confidence, row-major from the top left, the photo's aspect): the body mask, or one of the photo's aspect, dims the background around the person while detecting and picks the pixels that fly onto the model; without one, a hull around the body's 33 pose landmarks stands in, and without those every pixel flies. `model` is the base GLB with morph targets, from `building` on: a URL, its bytes, or `{ glb, targetNames }`; the final character fades in over it keeping the weights. `weights` and `expressions` ease as they stream. At `building` the photo moves into the 3D scene exactly where the 2D photo was, then the person's pixels fly on curved, staggered paths onto points sampled over the model's surface, turning the info colour mid-flight and the surface's own as they land, a shimmer runs down the body revealing the model, the background's pixels drift out of focus, and a pulse runs across the floor, while the camera turns to the three-quarter view: one draw call, uniforms per frame. Under reduced motion the photo crossfades into the model. The controls float over the stage (`controls=\"overlay\"`, the default) or sit under it (`\"below\"`): over the photo the style picker (`styles` of `{ value, label }`, `selectedStyle`, `onStyleChange`) and Make 3D (`onStart`); while working a progress ring, the stage's label (`statusText`), Step n of 4, the percent and Cancel (`onCancel`); over the finished model the style picker and a toolbar of views, the clip (`labels.play`), Download (`onDownload`) and Start over (`onStartOver`), icon buttons with tooltips; at `error` the message (`error`) with Try again (`onRetry`) and Start over. Each shows only with its callback; `actions` adds your own. All copy is in `labels`. The model's viewer takes drag and keys without a bar of its own (pass more of its props through `viewer`, like `floor={false}`). Screen readers hear each stage, progress at most every tenth and two seconds, and the error at once. Agents call `start`, `cancel`, `retry`, `restart` and `download`; a call the stage doesn't offer, or the app refuses through `details.cancel()`, fails the step with why.",
       "dependencies": [
         "@ui-sdk/core@0.1.0-beta.12",
         "@ui-sdk/react@0.1.0-beta.12",
@@ -4901,7 +4913,11 @@
         "@eskais/theme",
         "@eskais/button",
         "@eskais/progress",
-        "@eskais/model-viewer"
+        "@eskais/model-viewer",
+        "@eskais/toggle",
+        "@eskais/segmented-control",
+        "@eskais/tooltip",
+        "@eskais/action-refusal"
       ],
       "files": [
         {
@@ -4913,6 +4929,10 @@
           "type": "registry:ui"
         },
         {
+          "path": "registry/ui/model-scan-mask.ts",
+          "type": "registry:ui"
+        },
+        {
           "path": "registry/ui/use-model-scan-focus.ts",
           "type": "registry:ui"
         },
@@ -4921,7 +4941,7 @@
           "type": "registry:ui"
         },
         {
-          "path": "registry/ui/model-scan-dissolve.ts",
+          "path": "registry/ui/model-scan-cloud.ts",
           "type": "registry:ui"
         },
         {
@@ -4930,6 +4950,14 @@
         },
         {
           "path": "registry/ui/model-scan-intro.tsx",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/model-scan-landmarks.tsx",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/model-scan-controls.tsx",
           "type": "registry:ui"
         },
         {

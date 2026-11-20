@@ -1,6 +1,6 @@
-// ModelViewer and ModelScan in Chrome (SwiftShader) with the demo character: lazy three.js, no idle draws, both clips,
-// expressions times extras.targetScales with one React commit, the recorded scan's stages, camera and landmarks, focus,
-// errors per code, no overflow.
+// ModelViewer and ModelScan in Chrome (SwiftShader) with the demo character: lazy three.js, no idle draws, clips,
+// scaled expressions with one React commit, the scan's stages, camera, landmark meshes, the person from the mask or the
+// landmarks, the cloud, every stage's controls (tooltips, 44px on a phone, 4.5:1 over any photo), focus, errors.
 // Usage: node tooling/model-check.mjs [--screenshots=<dir>] (after `bun run build:showcase`)
 /* oxlint-disable no-await-in-loop -- each width, mode and stage is measured in turn on one page */
 import { mkdirSync } from "node:fs"
@@ -18,7 +18,7 @@ function check(label, ok, detail = "") {
   if (!ok) failures.push(label)
 }
 
-const threeChunk = /model-viewer-(scene|rig)|model-scan-intro|\.glb$/
+const threeChunk = /model-viewer-(scene|rig)|model-scan-(intro|cloud)|\.glb$/
 
 // Counts WebGL draws, and the ones that draw points (the particles), on every context the page makes, and React
 // commits through the DevTools hook (React DOM's and react-three-fiber's renderer both report there, in production).
@@ -114,7 +114,7 @@ async function runScan(page, { capture } = {}) {
       attributeFilter: ["data-stage"],
     })
   })
-  await page.getByRole("button", { name: "Start scan" }).click()
+  await page.getByRole("button", { name: "Make 3D" }).click()
   const seen = []
   const deadline = Date.now() + 30_000
   while (Date.now() < deadline) {
@@ -128,34 +128,6 @@ async function runScan(page, { capture } = {}) {
   }
   const recorded = await page.evaluate(() => globalThis.scanStages)
   return recorded.filter((stage, index) => stage !== recorded[index - 1])
-}
-
-// Where each drawn point sits against where its fraction of the photo lands on the photo's drawn box, worked out from
-// the image's own object-fit, and how many points each group has on and off the photo.
-async function pointPlacement(page) {
-  return page.evaluate(() => {
-    const img = document.querySelector("[data-testid=scan] [data-slot=model-scan-photo] img")
-    const frame = img.getBoundingClientRect()
-    const ratio = img.naturalWidth / img.naturalHeight
-    const cover = getComputedStyle(img).objectFit === "cover"
-    const wider = frame.width / frame.height > ratio
-    const width = wider === !cover ? frame.height * ratio : frame.width
-    const height = wider === !cover ? frame.height : frame.width / ratio
-    const left = frame.left + (frame.width - width) / 2
-    const top = frame.top + (frame.height - height) / 2
-    let worst = 0
-    const groups = {}
-    for (const group of document.querySelectorAll("[data-testid=scan] [data-slot=model-scan-points] [data-source]")) {
-      groups[group.dataset.source] = { drawn: group.childElementCount, count: Number(group.dataset.count) }
-      for (const dot of group.children) {
-        const rect = dot.getBoundingClientRect()
-        const x = left + (parseFloat(dot.style.left) / 100) * width
-        const y = top + (parseFloat(dot.style.top) / 100) * height
-        worst = Math.max(worst, Math.hypot(rect.left + rect.width / 2 - x, rect.top + rect.height / 2 - y))
-      }
-    }
-    return { worst, groups, cover }
-  })
 }
 
 // The viewer's rig (apps/showcase/src/checks/use-model-probe.ts): a target's weight as given, the influence its mesh
@@ -176,19 +148,129 @@ const probe = (page, target) =>
     }
   }, target)
 
+// Where each drawn point sits against where its fraction of the photo lands on the photo's drawn box, worked out from
+// the image's own object-fit, and how many points and lines each group draws.
+async function pointPlacement(page) {
+  return page.evaluate(() => {
+    const img = document.querySelector("[data-testid=scan] [data-slot=model-scan-photo] img")
+    const frame = img.getBoundingClientRect()
+    const ratio = img.naturalWidth / img.naturalHeight
+    const cover = getComputedStyle(img).objectFit === "cover"
+    const wider = frame.width / frame.height > ratio
+    const width = wider === !cover ? frame.height * ratio : frame.width
+    const height = wider === !cover ? frame.height : frame.width / ratio
+    const left = frame.left + (frame.width - width) / 2
+    const top = frame.top + (frame.height - height) / 2
+    const svg = document.querySelector("[data-testid=scan] [data-slot=model-scan-points] svg")
+    const box = svg.viewBox.baseVal
+    let worst = 0
+    const groups = {}
+    for (const group of svg.querySelectorAll("[data-source]")) {
+      const dots = group.querySelectorAll("circle")
+      groups[group.dataset.source] = {
+        drawn: dots.length,
+        count: Number(group.dataset.count),
+        lines: group.querySelectorAll("line").length,
+      }
+      for (const dot of dots) {
+        const rect = dot.getBoundingClientRect()
+        const x = left + (Number(dot.getAttribute("cx")) / box.width) * width
+        const y = top + (Number(dot.getAttribute("cy")) / box.height) * height
+        worst = Math.max(worst, Math.hypot(rect.left + rect.width / 2 - x, rect.top + rect.height / 2 - y))
+      }
+    }
+    return { worst, groups, cover }
+  })
+}
+
+// The scan's controls: each one's name, its hit area (the larger of its box and its touch-target ::before), and the
+// text contrast inside the floating bars, each bar's translucent fill laid over white and over black, the two
+// extremes a photo can put behind it.
+const auditControls = (page) =>
+  page.evaluate(() => {
+    const canvas = document.createElement("canvas")
+    canvas.width = 1
+    canvas.height = 1
+    const context = canvas.getContext("2d", { willReadFrequently: true })
+    const rgba = (value) => {
+      context.clearRect(0, 0, 1, 1)
+      context.fillStyle = "#000"
+      context.fillStyle = value
+      context.fillRect(0, 0, 1, 1)
+      const [r, g, b, a] = context.getImageData(0, 0, 1, 1).data
+      return [r / 255, g / 255, b / 255, a / 255]
+    }
+    // oxlint-disable-next-line unicorn/consistent-function-scoping -- runs in the page, which sees only this function
+    const luminance = ([r, g, b]) => {
+      // oxlint-disable-next-line unicorn/consistent-function-scoping -- runs in the page, which sees only this function
+      const c = (v) => (v <= 0.04045 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4)
+      return 0.2126 * c(r) + 0.7152 * c(g) + 0.0722 * c(b)
+    }
+    // oxlint-disable-next-line unicorn/consistent-function-scoping -- runs in the page, which sees only this function
+    const over = (top, under) => top.slice(0, 3).map((v, i) => v * top[3] + under[i] * (1 - top[3]))
+    const contrast = (a, b) => {
+      const [hi, lo] = [luminance(a), luminance(b)].toSorted((x, y) => y - x)
+      return (hi + 0.05) / (lo + 0.05)
+    }
+    const root = document.querySelector("[data-testid=scan] [data-slot=model-scan-controls]")
+    const controls = [...root.querySelectorAll('button, [role="radio"]')]
+      .filter((element) => element.getClientRects().length > 0)
+      .map((element) => {
+        const box = element.getBoundingClientRect()
+        const before = getComputedStyle(element, "::before")
+        const bw = before.content === "none" ? 0 : Number.parseFloat(before.width) || 0
+        const bh = before.content === "none" ? 0 : Number.parseFloat(before.height) || 0
+        return {
+          label: element.getAttribute("aria-label") ?? element.textContent.trim(),
+          iconOnly: element.textContent.trim() === "",
+          hit: [Math.round(Math.max(box.width, bw)), Math.round(Math.max(box.height, bh))],
+        }
+      })
+    const texts = []
+    const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT)
+    while (walker.nextNode()) {
+      const node = walker.currentNode
+      const element = node.parentElement
+      if (!node.textContent.trim() || !element?.getClientRects().length) continue
+      // A checked segment's fill is its group's indicator, a sibling under it, not an ancestor.
+      const checked = element.closest('[role="radio"][aria-checked="true"]')
+      let fill = checked?.closest('[role="radiogroup"]')?.querySelector('[data-slot$="indicator"]') ?? element
+      while (fill && fill !== root && rgba(getComputedStyle(fill).backgroundColor)[3] === 0) fill = fill.parentElement
+      const background = rgba(getComputedStyle(fill ?? root).backgroundColor)
+      const color = rgba(getComputedStyle(element).color)
+      const worst = Math.min(
+        ...[
+          [1, 1, 1],
+          [0, 0, 0],
+        ].map((photo) => {
+          const behind = over(background, photo)
+          return contrast(over(color, behind), behind)
+        }),
+      )
+      texts.push({ text: node.textContent.trim().slice(0, 40), worst: Math.round(worst * 100) / 100 })
+    }
+    return { controls, texts }
+  })
+
 // Runs a scan until both landmark groups have arrived, and stops it there.
 async function detectBoth(page) {
-  await page.getByRole("button", { name: "Start scan" }).click()
+  await page.getByRole("button", { name: "Make 3D" }).click()
   await page.waitForFunction(
     () => document.querySelectorAll("[data-testid=scan] [data-slot=model-scan-points] [data-source]").length === 2,
     undefined,
     { timeout: 20_000 },
   )
-  // Every point has grown in: the stagger is at most 0.4 s, plus the grow.
-  await page.waitForTimeout(700)
+  // Every line and point has drawn in: the stagger is at most 0.7 s, plus the draw.
+  await page.waitForTimeout(1200)
 }
 
 const scanCamera = (page) => page.getByTestId("scan").locator("canvas").getAttribute("data-camera")
+const scanData = (page) =>
+  page
+    .getByTestId("scan")
+    .locator("canvas")
+    .evaluate((canvas) => ({ ...canvas.dataset }))
+const toolbar = (page) => page.getByTestId("scan").getByRole("toolbar", { name: "3D model controls" })
 
 await withShowcase(
   async (page) => {
@@ -346,26 +428,23 @@ await withShowcase(
     )
     check("an arrow turns the camera 15°", true)
 
-    // Start scan goes while a run goes, focus moves to Cancel, and comes back to Start scan after cancelling.
+    // Make 3D goes while a run goes, focus moves to Cancel, and comes back to Make 3D after cancelling.
     {
       await open(page, { width: 1440, query: "&slowdown=40" })
-      await page.getByRole("button", { name: "Start scan" }).focus()
+      await page.getByRole("button", { name: "Make 3D" }).focus()
       await page.keyboard.press("Enter")
       await scanRoot(page).and(page.locator("[data-stage=detecting]")).waitFor()
       const scan = page.getByTestId("scan")
-      check(
-        "while a run goes, Start scan is gone",
-        (await scan.getByRole("button", { name: "Start scan" }).count()) === 0,
-      )
+      check("while a run goes, Make 3D is gone", (await scan.getByRole("button", { name: "Make 3D" }).count()) === 0)
       const focused = () => page.evaluate(() => document.activeElement?.textContent?.trim())
       check("starting moves focus to Cancel", (await focused()) === "Cancel", await focused())
       await page.keyboard.press("Enter")
       await scanRoot(page).and(page.locator("[data-stage=photo]")).waitFor()
-      check("cancelling moves focus back to Start scan", (await focused()) === "Start scan", await focused())
+      check("cancelling moves focus back to Make 3D", (await focused()) === "Make 3D", await focused())
     }
 
     // Points are fractions of the original photo: on the 9:16 photo they land on its drawn box, contained in a stage of
-    // its own ratio or cropped into a square one, and none is drawn off the photo.
+    // its own ratio or cropped into a square one, joined by the face's contours and the body's skeleton.
     for (const query of ["", "&fit=cover&stage=1"]) {
       await open(page, { width: 1440, query: `${query}&slowdown=40` })
       await detectBoth(page)
@@ -377,21 +456,42 @@ await withShowcase(
         placement.worst < 1.5,
         placement.worst.toFixed(2),
       )
+      const { face, body } = placement.groups
       check(
-        `9:16 photo, ${label}: the face's contours and the body's landmarks on the photo are all drawn`,
-        placement.groups.face?.drawn === placement.groups.face?.count &&
-          placement.groups.face?.count > 30 &&
-          placement.groups.body?.drawn === placement.groups.body?.count &&
-          placement.groups.body?.count > 20,
+        `9:16 photo, ${label}: the face's contours and the body's skeleton draw as meshes`,
+        face?.drawn >= 30 && face.lines >= 30 && body?.drawn >= 18 && body.lines >= 20,
         JSON.stringify(placement.groups),
       )
-      if (shots && !placement.cover)
-        await page.getByTestId("scan").screenshot({ path: join(shots, "model-scan-tall-detecting.png") })
-      if (shots && placement.cover)
-        await page.getByTestId("scan").screenshot({ path: join(shots, "model-scan-tall-cover-detecting.png") })
+      if (shots)
+        await page
+          .getByTestId("scan")
+          .screenshot({ path: join(shots, `model-scan-tall-${placement.cover ? "cover-" : ""}detecting.png`) })
     }
 
-    // An engine error shows the consumer's words for its code, read at once; without WebGL2, no Retry.
+    // The person: from the engine's mask, or a hull around the body's landmarks without one; the background dims
+    // around them either way.
+    for (const [query, from] of [
+      ["", "mask"],
+      ["&mask=off", "landmarks"],
+    ]) {
+      await open(page, { width: 1440, query: `${query}&slowdown=40` })
+      await detectBoth(page)
+      const found = await page
+        .waitForFunction(
+          (source) =>
+            document.querySelector("[data-testid=scan] [data-slot=model-scan-points]")?.dataset.person === source,
+          from,
+          { timeout: 10_000 },
+        )
+        .then(() => true)
+        .catch(() => false)
+      check(`${from}: the person comes from the ${from === "mask" ? "mask" : "landmarks' hull"}`, found)
+      const layers = await page.locator("[data-testid=scan] [data-slot=model-scan-points] > span").count()
+      check(`${from}: the background dims around the person`, layers === 2, String(layers))
+      if (shots) await page.getByTestId("scan").screenshot({ path: join(shots, `model-scan-person-${from}.png`) })
+    }
+
+    // An engine error shows the consumer's words for its code over the stage, read at once; without WebGL2, no Retry.
     for (const code of ["no-face", "webgl2-unavailable"]) {
       await open(page, { width: 1440, query: `&fail=${code}` })
       const seen = await runScan(page)
@@ -399,19 +499,20 @@ await withShowcase(
       const retry = await scan.getByRole("button", { name: "Try again" }).count()
       check(`${code}: the run ends in the error stage`, seen.at(-1) === "error", seen.join(","))
       check(
-        `${code}: ${code === "webgl2-unavailable" ? "no Retry, ModelViewer's no-WebGL line" : "Retry"}`,
-        code === "webgl2-unavailable"
+        `${code}: ${code === "webgl2-unavailable" ? "no Retry, ModelViewer's no-WebGL line" : "Retry"} and Start over`,
+        (code === "webgl2-unavailable"
           ? retry === 0 && (await scan.getByText("3D isn't available in this browser.").count()) > 0
-          : retry === 1,
+          : retry === 1) && (await scan.getByRole("button", { name: "Start over" }).count()) === 1,
       )
     }
 
-    // The scan: the camera ends at three-quarter, after a flight drawn with particles.
+    // The scan: the person's pixels fly as a cloud from the mask, the camera ends at three-quarter, and one toolbar
+    // takes over.
     await open(page, { width: 1440, query: "&slowdown=10" })
     const points = { before: (await draws(page)).points }
     const stages = await runScan(page)
     check("the scan runs every stage", stages.join(",") === "detecting,building,refining,ready", stages.join(","))
-    await scanRoot(page).and(page.locator("[data-intro=done]")).waitFor({ timeout: 15_000 })
+    await scanRoot(page).and(page.locator("[data-intro=done]")).waitFor({ timeout: 30_000 })
     await page.waitForFunction(
       () => document.querySelector("[data-testid=scan] canvas")?.dataset.camera === "35.0 8.0 1.00",
       undefined,
@@ -419,13 +520,74 @@ await withShowcase(
     )
     check("the scan's camera ends at the three-quarter view", (await scanCamera(page)) === "35.0 8.0 1.00")
     points.after = (await draws(page)).points
-    check("the transition draws particles", points.after - points.before > 0, String(points.after - points.before))
-    check(
-      "ready, the scan hands over to the viewer's controls",
-      await page.getByTestId("scan").getByRole("group", { name: "3D view controls" }).isVisible(),
-    )
+    check("the transition draws the cloud", points.after - points.before > 0, String(points.after - points.before))
+    {
+      const cloud = await scanData(page)
+      check(
+        "the cloud flies the person's pixels, picked by the mask",
+        Number(cloud.particles) > 2000 && cloud.person === "mask",
+        JSON.stringify(cloud),
+      )
+    }
+    {
+      const scan = page.getByTestId("scan")
+      check(
+        "ready: one toolbar over the model, without the viewer's own bar",
+        (await toolbar(page).isVisible()) &&
+          (await scan.getByRole("group", { name: "3D view controls" }).count()) === 0,
+      )
+      check("ready: the style picker shows", await scan.getByRole("radiogroup", { name: "Style" }).isVisible())
+      // Every icon-only control shows its name in a tooltip.
+      for (const name of ["Wave", "Download 3D model", "Start over"]) {
+        await toolbar(page).getByRole("button", { name }).hover()
+        const tip = await page
+          .locator('[role="tooltip"]:visible')
+          .first()
+          .textContent({ timeout: 3000 })
+          .catch(() => null)
+        check(`ready: ${name} shows its name in a tooltip`, tip?.trim() === name, String(tip))
+        await page.mouse.move(0, 0)
+        await page.waitForTimeout(200)
+      }
+      await toolbar(page).getByRole("button", { name: "Download 3D model" }).click()
+      check("ready: Download calls onDownload", (await scan.getAttribute("data-downloads")) === "1")
+      const requests = trackRequests(page)
+      await scan.getByRole("radio", { name: "Cel outline" }).click()
+      await page.waitForTimeout(1500)
+      requests.stop()
+      check(
+        "ready: another style loads its model",
+        requests.urls.some((url) => /character-cel-outline.*\.glb$/.test(url)),
+      )
+      // The floor reads the theme again when it changes: with the clip paused and the canvas still, it draws again.
+      await toolbar(page).getByRole("button", { name: "Wave" }).click()
+      await untilStill(page)
+      // One frame follows the change, maybe before another round trip: count from before it.
+      const still = await draws(page)
+      await page.evaluate(() => document.documentElement.classList.add("dark"))
+      await page.waitForTimeout(600)
+      const themed = { all: (await draws(page)).all - still.all }
+      await page.evaluate(() => document.documentElement.classList.remove("dark"))
+      check("a theme change redraws the floor in the new colours", themed.all > 0, JSON.stringify(themed))
+      await toolbar(page).getByRole("button", { name: "Start over" }).click()
+      await scanRoot(page).and(page.locator("[data-stage=photo]")).waitFor()
+      check("Start over goes back to the photo", await scan.getByRole("button", { name: "Make 3D" }).isVisible())
+    }
 
-    // Reduced motion: a crossfade, no particles and no camera flight, and the progress bar shows while building.
+    // Without a mask, the landmarks' hull picks the cloud's pixels.
+    await open(page, { width: 1440, query: "&slowdown=10&mask=off" })
+    await runScan(page)
+    await scanRoot(page).and(page.locator("[data-intro=done]")).waitFor({ timeout: 30_000 })
+    {
+      const cloud = await scanData(page)
+      check(
+        "without a mask, the landmarks' hull picks the cloud's pixels",
+        Number(cloud.particles) > 2000 && cloud.person === "landmarks",
+        JSON.stringify(cloud),
+      )
+    }
+
+    // Reduced motion: a crossfade, no cloud and no camera flight, and the progress shows while building.
     await open(page, { width: 1440, query: "&slowdown=10", reducedMotion: "reduce" })
     const reducedBefore = (await draws(page)).points
     let barWhileBuilding = false
@@ -434,16 +596,83 @@ await withShowcase(
         if (stage === "building") barWhileBuilding = await page.getByTestId("scan").getByRole("progressbar").isVisible()
       },
     })
-    await scanRoot(page).and(page.locator("[data-intro=done]")).waitFor({ timeout: 15_000 })
+    await scanRoot(page).and(page.locator("[data-intro=done]")).waitFor({ timeout: 30_000 })
     await page.waitForTimeout(300)
-    check("reduced motion: the progress bar shows while building", barWhileBuilding)
-    check("reduced motion: no particles", (await draws(page)).points - reducedBefore === 0)
+    check("reduced motion: the progress shows while building", barWhileBuilding)
+    check("reduced motion: no cloud", (await draws(page)).points - reducedBefore === 0)
     check("reduced motion: the camera jumps to the three-quarter view", (await scanCamera(page)) === "35.0 8.0 1.00")
     check(
       "reduced motion: the clip waits, paused",
-      (await page.getByTestId("scan").getByRole("button", { name: "Play animation" }).getAttribute("aria-pressed")) ===
-        "false",
+      (await toolbar(page).getByRole("button", { name: "Wave" }).getAttribute("aria-pressed")) === "false",
     )
+
+    // Controls below the stage: the same controls, under it rather than over it.
+    {
+      await open(page, { width: 1440, query: "&controls=below" })
+      const stage = await page.getByTestId("scan").locator("[data-slot=model-viewer-stage]").boundingBox()
+      const row = await page.getByTestId("scan").locator("[data-slot=model-scan-controls]").boundingBox()
+      check(
+        "controls below: under the stage, Make 3D there",
+        row.y >= stage.y + stage.height - 0.5 &&
+          (await page.getByTestId("scan").getByRole("button", { name: "Make 3D" }).isVisible()),
+        `${String(row.y)} vs ${String(stage.y + stage.height)}`,
+      )
+      if (shots) await page.getByTestId("scan").screenshot({ path: join(shots, "model-scan-below-photo.png") })
+    }
+
+    // On a phone: every control reaches 44px, and every text in the floating controls reads at 4.5:1 over the
+    // brightest and the darkest photo, in each stage and both modes.
+    {
+      const phone = await page
+        .context()
+        .browser()
+        .newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 2, hasTouch: true, isMobile: true })
+      const touch = await phone.newPage()
+      const origin = new URL(page.url()).origin
+      const audit = async (label) => {
+        const result = await auditControls(touch)
+        const small = result.controls.filter((control) => control.hit[0] < 44 || control.hit[1] < 44)
+        check(`phone, ${label}: every control reaches 44px`, small.length === 0, JSON.stringify(small))
+        const faint = result.texts.filter((text) => text.worst < 4.5)
+        check(
+          `phone, ${label}: the controls' text reads at 4.5:1 over any photo`,
+          result.texts.length > 0 && faint.length === 0,
+          JSON.stringify(faint.length > 0 ? faint : result.texts.length),
+        )
+      }
+      for (const mode of ["light", "dark"]) {
+        for (const photoTone of ["light", "dark"]) {
+          const label = `${mode} mode, ${photoTone} photo`
+          await touch.goto(`${origin}/?demo=model-check&slowdown=10&photo=${photoTone}`)
+          await touch.evaluate((dark) => document.documentElement.classList.toggle("dark", dark), mode === "dark")
+          await touch.getByTestId("scan").getByRole("button", { name: "Make 3D" }).waitFor()
+          await audit(`${label}, photo`)
+          if (shots)
+            await touch
+              .getByTestId("scan")
+              .screenshot({ path: join(shots, `model-scan-phone-${mode}-${photoTone}-photo.png`) })
+          await touch.getByTestId("scan").getByRole("button", { name: "Make 3D" }).tap()
+          await touch.getByTestId("scan").getByRole("progressbar").waitFor({ timeout: 20_000 })
+          await audit(`${label}, working`)
+          await touch
+            .getByTestId("scan")
+            .getByRole("toolbar", { name: "3D model controls" })
+            .waitFor({ timeout: 60_000 })
+          await touch.waitForTimeout(400)
+          await audit(`${label}, ready`)
+          if (shots)
+            await touch
+              .getByTestId("scan")
+              .screenshot({ path: join(shots, `model-scan-phone-${mode}-${photoTone}-ready.png`) })
+        }
+        await touch.goto(`${origin}/?demo=model-check&fail&photo=dark`)
+        await touch.evaluate((dark) => document.documentElement.classList.toggle("dark", dark), mode === "dark")
+        await touch.getByTestId("scan").getByRole("button", { name: "Make 3D" }).tap()
+        await touch.getByTestId("scan").getByRole("button", { name: "Try again" }).waitFor({ timeout: 30_000 })
+        await audit(`${mode} mode, error`)
+      }
+      await phone.close()
+    }
 
     for (const width of [390, 1440]) {
       for (const mode of ["light", "dark"]) {
@@ -467,7 +696,7 @@ await withShowcase(
           .screenshot({ path: join(shots, `model-scan-${String(width)}-${mode}-photo.png`) })
         await runScan(page, {
           capture: async (stage) => {
-            // Both landmark groups, grown in.
+            // Both landmark groups, drawn in.
             if (stage === "detecting")
               await page.waitForFunction(
                 () =>
@@ -476,14 +705,15 @@ await withShowcase(
                 undefined,
                 { timeout: 20_000 },
               )
-            if (stage === "detecting") await page.waitForTimeout(500)
+            if (stage === "detecting") await page.waitForTimeout(1200)
             if (stage === "refining") await page.waitForTimeout(600)
             await page
               .getByTestId("scan")
               .screenshot({ path: join(shots, `model-scan-${String(width)}-${mode}-${stage}.png`) })
           },
         })
-        await page.waitForTimeout(2500)
+        await scanRoot(page).and(page.locator("[data-intro=done]")).waitFor({ timeout: 30_000 })
+        await page.waitForTimeout(1500)
         await page
           .getByTestId("scan")
           .screenshot({ path: join(shots, `model-scan-${String(width)}-${mode}-ready-settled.png`) })
