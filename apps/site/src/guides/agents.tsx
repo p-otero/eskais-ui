@@ -39,6 +39,13 @@ const refuse = `<VoiceInput
   }}
 />`
 
+const parse = `import { parseActionRefusal } from "@/lib/action-refusal"
+
+const result = await agent.act({ steps: [{ ref: "Voice input", action: "start" }] })
+expect(result.ok).toBe(false)
+expect(parseActionRefusal(result.error)).toMatchObject({ action: "start", kind: "refused" })
+// A failure of any other kind (no such component, a bad argument, a plain Error) parses to null.`
+
 const register = `import { createAgent, registerTools } from "@ui-sdk/react/agent"
 
 export const agent = createAgent({ allow })
@@ -49,6 +56,7 @@ if (import.meta.env.DEV || import.meta.env.MODE === "test") {
 }`
 
 const playwright = `import { chromium, expect, test } from "@playwright/test"
+import { parseActionRefusal } from "@/lib/action-refusal"
 
 test("an agent can't start dictation the app keeps for people", async () => {
   const browser = await chromium.launch({ channel: "chrome", args: ["--enable-features=WebMCP"] })
@@ -71,7 +79,7 @@ test("an agent can't start dictation the app keeps for people", async () => {
 
   const result = await call("act", { steps: [{ ref: "Voice input", action: "start" }] })
   expect(result.ok).toBe(false)
-  expect(result.error.message).toContain("start was refused by the app.")
+  expect(parseActionRefusal(result.error)).toMatchObject({ action: "start", kind: "refused" })
   await expect(page.getByRole("group", { name: "Voice input" })).toHaveAttribute("data-state", "idle")
   await browser.close()
 })`
@@ -171,9 +179,12 @@ export default function Agents() {
             <>
               Your callback called <Code>details.cancel()</Code>
             </>,
-            <Code key="refused">start was refused by the app.</Code>,
+            <Code key="refused">start was refused by the app. [refused:start]</Code>,
           ],
-          ["The state doesn't offer it", <Code key="state">start isn't available while listening.</Code>],
+          [
+            "The state doesn't offer it",
+            <Code key="state">start isn't available while listening. [unavailable:start]</Code>,
+          ],
           [
             "The component wasn't given the callback",
             <Code key="offered">reset isn't offered: there is no onResetRequest.</Code>,
@@ -181,11 +192,20 @@ export default function Agents() {
         ]}
       />
       <Pre code={refuse} />
+      <P>
+        A failed step keeps only the error's message: UI SDK's <Code>act</Code> result has <Code>error</Code> as{" "}
+        <Code>{"{ step, message }"}</Code>, with no code or cause, locally and over WebMCP. So a refusal's message ends
+        with a tag, <Code>[refused:start]</Code> or <Code>[unavailable:start]</Code>, and{" "}
+        <Code>parseActionRefusal</Code> reads it back, from the step's <Code>error</Code>, its message or the error
+        itself, as <Code>{"{ action, kind, text }"}</Code>, where <Code>text</Code> is the sentence without the tag.
+        Assert on it in a test instead of matching the words:
+      </P>
+      <Pre code={parse} language="ts" />
       <Ul>
         <li>
           A person's press that the app refuses does nothing and throws nothing. Only a call with no press behind it (an
           agent's step, a controller, your code) throws, an <Code>ActionRefusedError</Code> from{" "}
-          <Code>@/lib/action-refusal</Code> with <Code>action</Code> and <Code>kind</Code>.
+          <Code>@/lib/action-refusal</Code> with <Code>action</Code>, <Code>kind</Code> and <Code>text</Code>.
         </li>
         <li>
           Actions that name an end state (<Code>open</Code>, <Code>close</Code>, <Code>setCollapsed</Code>) succeed when
@@ -206,9 +226,13 @@ export default function Agents() {
       </P>
       <Pre code={register} title="agent.ts" language="ts" />
       <P>
-        Chrome 158 and later have <Code>document.modelContext</Code> with <Code>--enable-features=WebMCP</Code>.
-        Playwright lists the tools and calls them over the DevTools protocol, as a browser agent does (Playwright's
-        protocol types don't list the <Code>WebMCP</Code> domain yet, so a TypeScript test casts the session):
+        <Code>document.modelContext</Code> needs Chromium 158 or later: Chrome 158 and later have it with{" "}
+        <Code>--enable-features=WebMCP</Code>. In Electron, the first major on Chromium 158 or later is Electron 46
+        (Chromium 160), whose stable release Electron's schedule puts on 5 January 2027 (tentative, checked on 20
+        November 2026); Electron 45 (Chromium 156) and older have no <Code>document.modelContext</Code>, so drive their
+        pages through the stand-in below. Playwright lists the tools and calls them over the DevTools protocol, as a
+        browser agent does (Playwright's protocol types don't list the <Code>WebMCP</Code> domain yet, so a TypeScript
+        test casts the session):
       </P>
       <Pre code={playwright} title="dictation.spec.ts" language="ts" />
       <P>

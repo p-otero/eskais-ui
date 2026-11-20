@@ -2,6 +2,7 @@
 // Chrome with --enable-features=WebMCP, then through a stand-in document.modelContext. A refused start or cancel fails
 // with why and changes nothing; accepted ones and a person's press go through. Without WebMCP the first pass skips.
 // Usage: node tooling/agent-bridge-check.mjs [--require-webmcp] (after `bun run build:showcase`)
+import { parseActionRefusal } from "../registry/lib/action-refusal.ts"
 import { withShowcase } from "./showcase-browser.mjs"
 
 const failures = []
@@ -90,6 +91,11 @@ const waitFor = (page, read, value) =>
   )
 
 const fails = (result, message) => result.ok === false && result.error?.message?.includes(message) === true
+const refusal = (result) => JSON.stringify(parseActionRefusal(result.error))
+const isRefusal = (result, kind, action) => {
+  const parsed = parseActionRefusal(result.error)
+  return parsed?.kind === kind && parsed.action === action
+}
 
 async function scenario(page, tools, via) {
   const act = (ref, action) => tools.call("act", { steps: [{ ref, action }] })
@@ -110,6 +116,11 @@ async function scenario(page, tools, via) {
     fails(refused, "start was refused by the app."),
     JSON.stringify(refused.error),
   )
+  check(
+    `${via}: parseActionRefusal reads the refused start from the step's message`,
+    isRefusal(refused, "refused", "start"),
+    refusal(refused),
+  )
   check(`${via}: the refused voice input stays idle`, (await voiceState(page, "Dictation for people")) === "idle")
 
   const started = await act("Dictation for everyone", "start")
@@ -120,6 +131,17 @@ async function scenario(page, tools, via) {
     `${via}: a start while listening fails with the state`,
     fails(twice, "start isn't available while listening."),
     JSON.stringify(twice.error),
+  )
+  check(
+    `${via}: parseActionRefusal reads the unavailable start`,
+    isRefusal(twice, "unavailable", "start"),
+    refusal(twice),
+  )
+  const unknown = await act("Dictation for everyone", "explode")
+  check(
+    `${via}: a step that fails for another reason isn't read as a refusal`,
+    unknown.ok === false && parseActionRefusal(unknown.error) === null,
+    JSON.stringify(unknown.error),
   )
 
   await page.getByRole("group", { name: "Dictation for people" }).getByRole("button", { name: "Dictate" }).click()
@@ -144,6 +166,11 @@ async function scenario(page, tools, via) {
     `${via}: a cancel with nothing scanning fails with the status`,
     fails(late, "cancel works only while scanning (status: uploaded)."),
     JSON.stringify(late.error),
+  )
+  check(
+    `${via}: parseActionRefusal reads the unavailable cancel`,
+    isRefusal(late, "unavailable", "cancel"),
+    refusal(late),
   )
 }
 
