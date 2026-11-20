@@ -82,8 +82,8 @@ jobs:
 
   browser:
     runs-on: ubuntu-latest
-    # The dialog matrix (every dialog on every device and viewport model) runs in both the checks and the compiler build.
-    timeout-minutes: 90
+    # About 33 minutes: the checks about 21 (the reduced dialog matrix about 3), the compiler build and its checks about 11.
+    timeout-minutes: 55
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -96,7 +96,7 @@ jobs:
           node-version: 24
       - run: bun install --frozen-lockfile
       - name: Contrast and axe in Chrome, default and compact themes in light and dark
-        timeout-minutes: 40
+        timeout-minutes: 32
         run: bun run test:browser:checks
       - name: AgentTaskBoard as one static HTML file, opened from file:// with the network blocked
         timeout-minutes: 5
@@ -112,7 +112,7 @@ jobs:
           path: screenshots
           if-no-files-found: ignore
       - name: The showcase built with React Compiler, then the overlay, fast-link, shell and contrast checks on it
-        timeout-minutes: 32
+        timeout-minutes: 18
         run: bun run test:compiler
 
   perf:
