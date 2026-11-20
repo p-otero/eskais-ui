@@ -1,18 +1,30 @@
+import type { Object3D } from "three"
+
 import figureFinalUrl from "../../../../test/fixtures/model/figure-final.glb?url"
 import figureUrl from "../../../../test/fixtures/model/figure.glb?url"
-import portraitTallUrl from "../../../../test/fixtures/model/portrait-tall.svg?url"
+import celUrl from "../../../../test/fixtures/model/character/character-cel-outline.glb?url"
+import softUrl from "../../../../test/fixtures/model/character/character-soft-toon.glb?url"
+import photoUrl from "../../../../test/fixtures/model/character/photo-body.png?url"
 import portraitUrl from "../../../../test/fixtures/model/portrait.svg?url"
 
-export { figureFace, figureTargetNames } from "../../../../test/fixtures/model/fake-engine"
+export { figureTargetNames } from "../../../../test/fixtures/model/fake-engine"
 export type { EngineErrorCode } from "../../../../test/fixtures/model/fake-engine"
 export { useFakeModelScan } from "../../../../test/fixtures/model/use-fake-model-scan"
+export { useScanReplay } from "../../../../test/fixtures/model/character/use-scan-replay"
 
-// A stylised figure built in code (tooling/generate-model-fixture.ts) and its front "photo": no real person.
+// A synthetic person scanned by an open-source photo-to-3D engine (CC0 demo assets, no real person): the character in
+// two styles, the full-length photo the scan used, and its recorded events (use-scan-replay).
+const character = { soft: softUrl, cel: celUrl }
+const photo = { src: photoUrl, width: 540, height: 960 }
+// Where the character's head is, in its own units, for a close-up `framing`.
+const characterFace = { center: [0, 0.84, 0.04] as [number, number, number], radius: 0.16 }
+
+// Builds the style each material names in `extras.eskais`, before the first frame; loaded with the 3D chunk.
+const restyle = async (scene: Object3D) =>
+  (await import("../../../../test/fixtures/model/character/style")).styleCharacter(scene)
+
+// The fake engine's tiny figure, for the error runs the recording doesn't have.
 const portrait = { src: portraitUrl, width: 600, height: 800 }
-// The same figure in a 9:16 photo, as a phone takes it.
-const tallPortrait = { src: portraitTallUrl, width: 450, height: 800 }
-
-// What the fake engine sends: the base model with `model`, the final character with `done`.
 const engineModels = { model: figureUrl, character: figureFinalUrl }
 
-export { engineModels, figureFinalUrl, figureUrl, portrait, tallPortrait }
+export { character, characterFace, engineModels, photo, portrait, restyle }
