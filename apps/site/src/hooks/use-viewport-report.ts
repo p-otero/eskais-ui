@@ -40,40 +40,71 @@ function pageRows(probe: HTMLElement | null): Row[] {
 function describe(element: Element | null) {
   if (!element || element === document.body) return "body"
   const label = element.getAttribute("aria-label") ?? element.getAttribute("name") ?? ""
-  return `${element.tagName.toLowerCase()}${label ? ` "${label}"` : ""}`
+  const slot = element.getAttribute("data-slot")
+  return `${element.tagName.toLowerCase()}${slot ? `[${slot}]` : ""}${label ? ` "${label}"` : ""}`
 }
 
-let lastSheet: Row[] = [["sheet", "not opened yet"]]
+let lastSheet: Row[] = [["dialog", "none opened yet"]]
 
+function openDialog() {
+  return [...document.querySelectorAll<HTMLElement>("[role=dialog], [role=alertdialog]")].findLast((dialog) =>
+    dialog.checkVisibility(),
+  )
+}
+
+function nameOf(dialog: HTMLElement) {
+  const title = dialog.getAttribute("aria-labelledby")
+  return (title ? document.getElementById(title)?.textContent : null) ?? dialog.getAttribute("aria-label") ?? "?"
+}
+
+function flags(element: Element, names: string[]) {
+  return names.map((name) => `${name}: ${String(element.hasAttribute(name))}`).join(", ")
+}
+
+function variables(style: CSSStyleDeclaration, names: string[]) {
+  return names.map((name) => style.getPropertyValue(name).trim() || "unset").join(" / ")
+}
+
+// The topmost open dialog, sheet or drawer; a Drawer's content lays out inside UI SDK's viewport, measured too.
 function sheetRows(): Row[] {
-  const sheet = document.querySelector<HTMLElement>("[data-viewport-debug-sheet]")
+  const sheet = openDialog()
   // Keeps what it measured while open, not the frames of its exit transition.
   if (!sheet || sheet.hasAttribute("data-ending-style")) return lastSheet
   const rect = sheet.getBoundingClientRect()
   const style = getComputedStyle(sheet)
-  const own = (name: string) => style.getPropertyValue(name).trim() || "unset"
   const visual = window.visualViewport
+  const visibleTop = visual ? visual.offsetTop : 0
   const visibleBottom = visual ? visual.offsetTop + visual.height : window.innerHeight
-  lastSheet = [
-    ["sheet rect top / bottom / height", `${px(rect.top)} / ${px(rect.bottom)} / ${px(rect.height)}`],
-    ["sheet bottom vs visible bottom", px(rect.bottom - visibleBottom)],
+  const ours = ["--dialog-viewport-top", "--dialog-viewport-bottom", "--dialog-viewport-height"]
+  const sdk = ["--keyboard-inset", "--visual-viewport-height", "--visual-viewport-top"]
+  const rows: Row[] = [
+    ["dialog", `${nameOf(sheet)} (${sheet.dataset.slot ?? sheet.tagName.toLowerCase()})`],
+    ["rect top / bottom / height", `${px(rect.top)} / ${px(rect.bottom)} / ${px(rect.height)}`],
+    ["bottom past the visible bottom", px(rect.bottom - visibleBottom)],
+    ["top above the visible top", px(visibleTop - rect.top)],
     ["computed top / bottom", `${style.top} / ${style.bottom}`],
-    ["computed max-height", style.maxHeight],
+    ["computed height / max-height", `${style.height} / ${style.maxHeight}`],
     ["computed padding-bottom", style.paddingBottom],
     ["computed translate / transform", `${style.translate} / ${style.transform}`],
-    ["--keyboard-inset (UI SDK)", own("--keyboard-inset")],
-    ["--visual-viewport-height (UI SDK)", own("--visual-viewport-height")],
-    [
-      "--dialog-viewport-top / bottom / height",
-      [own("--dialog-viewport-top"), own("--dialog-viewport-bottom"), own("--dialog-viewport-height")].join(" / "),
-    ],
-    ["data-keyboard (UI SDK)", String(sheet.hasAttribute("data-keyboard"))],
-    ["data-dialog-keyboard", String(sheet.hasAttribute("data-dialog-keyboard"))],
-    [
-      "data-starting-style / ending",
-      `${String(sheet.hasAttribute("data-starting-style"))} / ${String(sheet.hasAttribute("data-ending-style"))}`,
-    ],
+    ["UI SDK --keyboard-inset / --visual-viewport-height / top", variables(style, sdk)],
+    ["--dialog-viewport-top / bottom / height", variables(style, ours)],
+    ["attributes", flags(sheet, ["data-keyboard", "data-dialog-keyboard", "data-starting-style", "data-ending-style"])],
+    ["data-presentation / data-side", `${sheet.dataset.presentation ?? "-"} / ${sheet.dataset.side ?? "-"}`],
+    ["focused", describe(document.activeElement)],
   ]
+  const viewport = sheet.parentElement?.matches("[data-slot=drawer-viewport]") ? sheet.parentElement : null
+  if (viewport) {
+    const box = viewport.getBoundingClientRect()
+    const own = getComputedStyle(viewport)
+    rows.push(
+      ["drawer viewport rect top / bottom", `${px(box.top)} / ${px(box.bottom)}`],
+      ["drawer viewport computed top / bottom", `${own.top} / ${own.bottom}`],
+      ["drawer viewport --keyboard-inset", own.getPropertyValue("--keyboard-inset").trim() || "unset"],
+      ["drawer viewport --dialog-viewport-top / bottom / height", variables(own, ours)],
+      ["drawer viewport data-keyboard", String(viewport.hasAttribute("data-keyboard"))],
+    )
+  }
+  lastSheet = rows
   return lastSheet
 }
 
