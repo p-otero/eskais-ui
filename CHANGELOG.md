@@ -27,7 +27,6 @@ Versions follow [semver](https://semver.org). Before 1.0, a minor version can br
 - `master-detail`: with `followFocus`, focus on a row's actions (a `ListItem`'s `actions` or a List's `rowActions`) no longer opens that row, so a Copy or Stop on another row leaves the detail where it is.
 - `server-data`: `patch(changes, { refetch: true })` with a read in flight under a query it writes sent that read twice: once restarted by the patch and once by the reload, which aborted the first at once. The reload's restart now stands in for the patch's.
 
-
 ## 0.2.8 (2026-11-20)
 
 ### Added
