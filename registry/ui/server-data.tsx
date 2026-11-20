@@ -4,6 +4,7 @@ import {
   QueryClient,
   QueryClientContext,
   QueryClientProvider,
+  type NetworkMode,
   type QueryClientConfig,
   type Register,
 } from "@tanstack/react-query"
@@ -54,6 +55,13 @@ type DataClientOptions = {
   refetchOnWindowFocus?: boolean
   /** Retry delay in ms, or a function of the failures so far and the error; TanStack's exponential backoff when unset. */
   retryDelay?: number | ((failureCount: number, error: unknown) => number)
+  /**
+   * When reads and writes may run, for every hook that doesn't set its own. TanStack's default, `"online"`, pauses them
+   * after the browser fires `offline` until it fires `online`: a read stays pending without reaching its error state.
+   * `"always"` runs them regardless, for a backend the browser's online state says nothing about (Electron IPC,
+   * localhost) or an app that shows its own offline UI. `"offlineFirst"` runs the first attempt and pauses retries.
+   */
+  networkMode?: NetworkMode
 }
 
 function retryRule(retry: number | false | RetryRule): RetryRule {
@@ -68,7 +76,8 @@ function retryRule(retry: number | false | RetryRule): RetryRule {
  * Pass it to your own `QueryClientProvider`, or let `DataProvider` make one.
  */
 function createDataClient(options: DataClientOptions = {}): QueryClient {
-  const { retries = 2, staleTime = 30_000, refetchOnWindowFocus = false, retryDelay } = options
+  const { retries = 2, staleTime = 30_000, refetchOnWindowFocus = false, retryDelay, networkMode } = options
+  const mode = networkMode === undefined ? {} : { networkMode }
   const config: QueryClientConfig = {
     defaultOptions: {
       queries: {
@@ -76,8 +85,9 @@ function createDataClient(options: DataClientOptions = {}): QueryClient {
         staleTime,
         refetchOnWindowFocus,
         ...(retryDelay === undefined ? {} : { retryDelay }),
+        ...mode,
       },
-      mutations: { retry: false },
+      mutations: { retry: false, ...mode },
     },
   }
   return new QueryClient(config)

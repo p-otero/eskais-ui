@@ -4,6 +4,8 @@ import { Skeleton } from "@/components/ui/skeleton"
 
 import { A, Article, Code, DocTable, DocTitle, H2, P, Pre, Ul } from "../docs/prose"
 
+import { networkCode, retryCode, serialCode } from "./server-data/snippets"
+
 const LatencyDemo = lazy(() => import("../examples/server-data-table"))
 const BackendSwitcher = lazy(() => import("./server-data/backend-switcher"))
 
@@ -119,14 +121,6 @@ declare module "@tanstack/react-query" {
 // Or per call: the type parameter after the data.
 const detail = useServerQuery<Task, ApiError>([...tasks.key, "detail", id], fetchTask)
 const page = useServerPage<Task, TaskFilter, ApiError>(tasks, request)`
-
-const retryCode = `import { createDataClient, isTransientError } from "@/components/ui/server-data"
-
-// Retry only what may pass next time: a network failure, 408, 425, 429 or a 5xx.
-const client = createDataClient({
-  retry: (failures, error) => failures < 3 && isTransientError(error),
-  retryDelay: (failures) => Math.min(500 * 2 ** failures, 5_000),
-})`
 
 const testCode = `// test/setup.ts
 import { notifyManager } from "@tanstack/react-query"
@@ -355,6 +349,14 @@ export default function ServerData() {
           <Code>useInvalidateSource(source)</Code> resolves once the shown queries have reloaded, failed or not;{" "}
           <Code>{"{ throwOnError: true }"}</Code>, on the hook or on one call, rejects with the error instead.
         </li>
+        <li>
+          Every reload these hooks make (<Code>useInvalidateSource</Code>, a mutation's refresh after success or
+          failure, and the restart after <Code>settle</Code>) starts again any read under the key that is in flight, its
+          first load included, since it may have left before the write and answer with the data from before it. The old
+          request's signal aborts, the query stays pending or fetching without an error, and whatever that request
+          resolves or rejects with later is dropped. TanStack's own <Code>invalidateQueries</Code> joins a first load in
+          flight instead, so invalidate through the hooks.
+        </li>
       </Ul>
 
       <H2 id="shared-resources">Shared and seeded resources</H2>
@@ -388,6 +390,31 @@ export default function ServerData() {
         retries, as <Code>0</Code> does. Mutations never retry: a write that failed may still have reached the server.
       </P>
       <Pre code={retryCode} />
+
+      <H2 id="network-mode">Offline and network mode</H2>
+      <P>
+        TanStack Query's default <Code>networkMode</Code>, <Code>"online"</Code>, pauses every read and write after the
+        browser fires <Code>offline</Code>, until it fires <Code>online</Code>: a read stays pending, never reaching its
+        error state, and a write waits. When the backend is local (Electron IPC, a server on localhost) or the app shows
+        its own offline UI, use <Code>"always"</Code>, on <Code>createDataClient</Code> for every query and mutation or
+        on one hook: <Code>useServerQuery</Code>, <Code>defineResource</Code> and <Code>useServerResource</Code>,{" "}
+        <Code>useServerPage</Code>, <Code>useServerInfinite</Code>, <Code>useServerTotal</Code> and{" "}
+        <Code>useSourceMutation</Code> take <Code>networkMode</Code>. <Code>"offlineFirst"</Code> runs the first attempt
+        and pauses only the retries, for a service worker cache.
+      </P>
+      <Pre code={networkCode} />
+
+      <H2 id="serial-mutations">Mutations one at a time</H2>
+      <P>
+        Mutations with the same <Code>scope: {"{ id }"}</Code>, from one <Code>useSourceMutation</Code> or several, run
+        one at a time in the order they were called: the next starts once the one before has settled, its refresh
+        included (write the answer with <Code>settle</Code> or <Code>settleItems</Code> to skip the reload between
+        them). A failure doesn't stop the queue. To stop at the first one, have <Code>onError</Code> raise a flag that{" "}
+        <Code>mutationFn</Code> reads: a step's <Code>mutationFn</Code> runs only after the step before has settled.{" "}
+        <Code>mutationKey</Code> finds them with <Code>useMutationState</Code> or <Code>client.isMutating</Code>.
+        Different scopes, or none, run side by side.
+      </P>
+      <Pre code={serialCode} />
 
       <H2 id="testing">Testing</H2>
       <P>

@@ -1,6 +1,6 @@
 "use client"
 
-import { useQuery, type QueryClient } from "@tanstack/react-query"
+import { useQuery, type NetworkMode, type QueryClient } from "@tanstack/react-query"
 import { useCallback } from "react"
 
 import { useDataClient, type DefaultServerError } from "@/components/ui/server-data"
@@ -13,6 +13,11 @@ type ServerQueryOptions<T, TSelected = T> = {
   enabled?: boolean
   /** How long a result counts as fresh, in ms; otherwise the client's default (30 s with `createDataClient`). */
   staleTime?: number
+  /**
+   * When the read may run, as `createDataClient`'s `networkMode`; otherwise the client's. `"always"` for a backend the
+   * browser's online state says nothing about (IPC, localhost).
+   */
+  networkMode?: NetworkMode
   /** Keeps the previous key's data while the next loads, as the page hooks do. Default false: a detail never shows another's. */
   keepPrevious?: boolean
   /** Shown while the first load is pending, never cached. */
@@ -78,6 +83,7 @@ function useServerQuery<T, TError = DefaultServerError, TSelected = T>(
       },
       enabled: options.enabled !== false,
       meta: resourceMeta,
+      ...(options.networkMode === undefined ? {} : { networkMode: options.networkMode }),
       ...(options.staleTime === undefined ? {} : { staleTime: options.staleTime }),
       ...(select === undefined ? {} : { select }),
       placeholderData: (previous) => (keepPrevious ? previous : undefined) ?? (placeholder as typeof previous),
@@ -103,6 +109,8 @@ type ResourceDefinition<P, T> = {
   key: (params: P) => readonly unknown[]
   fetch: (params: P, context: { signal: AbortSignal }) => Promise<T>
   staleTime?: number
+  /** As `useServerQuery`'s `networkMode`, for every screen that reads the resource. */
+  networkMode?: NetworkMode
   /** Other resources this answer fills, as `useServerQuery`'s `seeds`. */
   seeds?: (data: T, params: P) => readonly ResourceSeed[]
 }
@@ -120,7 +128,10 @@ function defineResource<P, T>(definition: ResourceDefinition<P, T>): Resource<P,
   return { ...definition, seed: (params, data) => ({ key: definition.key(params), data }) }
 }
 
-/** `useServerQuery` with a resource's key, fetch, `staleTime` and `seeds`; `options` override its `staleTime`. */
+/**
+ * `useServerQuery` with a resource's key, fetch, `staleTime`, `networkMode` and `seeds`; `options` override its
+ * `staleTime` and `networkMode`.
+ */
 function useServerResource<P, T, TError = DefaultServerError, TSelected = T>(
   resource: Resource<P, T>,
   params: P,
@@ -128,9 +139,11 @@ function useServerResource<P, T, TError = DefaultServerError, TSelected = T>(
 ): ServerQueryState<TSelected, TError> {
   const { seeds } = resource
   const staleTime = options.staleTime ?? resource.staleTime
+  const networkMode = options.networkMode ?? resource.networkMode
   return useServerQuery<T, TError, TSelected>(resource.key(params), (context) => resource.fetch(params, context), {
     ...options,
     ...(staleTime === undefined ? {} : { staleTime }),
+    ...(networkMode === undefined ? {} : { networkMode }),
     ...(seeds === undefined ? {} : { seeds: (data: T) => seeds(data, params) }),
   })
 }
