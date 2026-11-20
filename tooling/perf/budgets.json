@@ -120,7 +120,7 @@
   "bundles": {
     "acceptance-list": 64.6,
     "accordion": 29.8,
-    "action-refusal": 0.4,
+    "action-refusal": 0.6,
     "activity-log": 75.2,
     "agent-badge": 25.9,
     "agent-task-board": 217.9,
@@ -235,7 +235,7 @@
     "separator": 20.3,
     "server-combobox": 85.9,
     "server-commit-history": 146.5,
-    "server-data": 17,
+    "server-data": 17.6,
     "server-data-table": 219.9,
     "server-list": 116.2,
     "settings-page": 104.9,
