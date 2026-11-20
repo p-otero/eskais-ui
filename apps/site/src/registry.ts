@@ -54,9 +54,13 @@ const uiSdkVersion =
     .find((dependency) => dependency.startsWith("@ui-sdk/react@"))
     ?.slice("@ui-sdk/react@".length) ?? "latest"
 
+// Vercel's skills CLI installs the agent skills. Pinned to a release at least 7 days old, so pnpm dlx runs it under
+// pnpm's default minimumReleaseAge, like the registry's own pins.
+const skillsCliVersion = "1.8.1"
+
 function findItem(name: string) {
   return items.find((item) => item.name === name)
 }
 
-export { componentItems, findItem, guideItems, items, registryUrl, releaseTag, uiSdkVersion }
+export { componentItems, findItem, guideItems, items, registryUrl, releaseTag, skillsCliVersion, uiSdkVersion }
 export type { RegistryFile, RegistryItem }

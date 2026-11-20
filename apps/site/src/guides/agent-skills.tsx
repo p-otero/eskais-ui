@@ -1,8 +1,14 @@
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 
 import { A, Article, Code, DocTable, DocTitle, H2, H3, P, Pre, Ul } from "../docs/prose"
+import { releaseTag, skillsCliVersion } from "../registry"
 
-const installAll = "npx shadcn@latest add @eskais/eskais-ui-skill @eskais/eskais-perf-skill @eskais/eskais-mockup-skill"
+const skillsCli = `npx skills@${skillsCliVersion}`
+
+const installAll = `${skillsCli} add p-otero/eskais-ui@${releaseTag} --full-depth --skill eskais-ui --skill eskais-perf --skill eskais-mockup -a universal -y`
+
+const installShadcn =
+  "npx shadcn@latest add @eskais/eskais-ui-skill @eskais/eskais-perf-skill @eskais/eskais-mockup-skill"
 
 const layout = `.agents/skills/
   eskais-ui/
@@ -17,11 +23,11 @@ const layout = `.agents/skills/
     SKILL.md
   eskais-mockup/
     SKILL.md
-  ui-sdk/                            # copied from node_modules/@ui-sdk/core/skills
+  ui-sdk/                            # from node_modules/@ui-sdk/core/skills
     SKILL.md
     references/…`
 
-const uiSdk = "cp -r node_modules/@ui-sdk/core/skills/ui-sdk .agents/skills/"
+const uiSdk = `${skillsCli} add ./node_modules/@ui-sdk/core/skills/ui-sdk -a universal -y`
 
 const claudeLink = `mkdir -p .claude/skills
 ln -s ../../.agents/skills/eskais-ui .claude/skills/eskais-ui
@@ -46,47 +52,58 @@ export default function AgentSkills() {
       <DocTitle
         eyebrow="Get started"
         title="Agent skills"
-        description="Three skills teach a coding agent to build with Eskais UI. They are registry items: shadcn writes them into .agents/skills in your project, next to your components."
+        description="Three skills teach a coding agent to build with Eskais UI. Vercel's skills CLI writes them into .agents/skills in your project, from the same release as your components."
       />
 
       <H2 id="install">Install</H2>
       <P>
-        With the <Code>@eskais</Code> registry in <Code>components.json</Code> (see{" "}
-        <A to="/docs/installation">Installation</A>), add the skills like any other item:
+        Install them with Vercel's <A href="https://github.com/vercel-labs/skills">skills CLI</A>, pinned to the release
+        your <Code>components.json</Code> names (see <A to="/docs/installation">Installation</A>). The command is the
+        same in bash and PowerShell; with pnpm or Bun, run it with <Code>pnpm dlx</Code> or <Code>bunx</Code>:
       </P>
       <Pre code={installAll} language="bash" />
       <P>
-        Each skill is a <Code>registry:file</Code> item whose files target <Code>~/.agents/skills/&lt;skill&gt;/</Code>,
-        where <Code>~</Code> is your project's root. They arrive byte for byte as written, outside your component
-        aliases, and you own them: commit them so every agent and teammate reads the same version. Run the command again
-        with <Code>--overwrite</Code> to update them to the registry's version.
+        <Code>-a universal</Code> writes them to <Code>.agents/skills</Code>, which most agents read;{" "}
+        <A href="#agents">add your agent</A> when it looks elsewhere. <Code>--full-depth</Code> finds{" "}
+        <Code>eskais-mockup</Code>, which lives beside the mockup CLI in the repository, and <Code>-y</Code> asks
+        nothing. The CLI records each skill's source and release in <Code>skills-lock.json</Code>. Commit both, so every
+        agent and teammate reads the same version, and run the command again with a newer tag to update them. The CLI
+        sends anonymous usage data unless <Code>DISABLE_TELEMETRY=1</Code> is set.
       </P>
+      <H3 id="shadcn">With shadcn</H3>
+      <P>
+        The skills are also registry items. Each is a <Code>registry:file</Code> item whose files target{" "}
+        <Code>~/.agents/skills/&lt;skill&gt;/</Code>, where <Code>~</Code> is your project's root, so shadcn writes them
+        byte for byte from the ref in your <Code>components.json</Code>. Run it again with <Code>--overwrite</Code> to
+        update them. shadcn writes only to <Code>.agents/skills</Code>: link them yourself for an agent that looks
+        elsewhere (<A href="#claude-code">Claude Code</A>).
+      </P>
+      <Pre code={installShadcn} language="bash" />
 
       <H2 id="skills">The skills</H2>
       <DocTable
         label="Eskais agent skills"
-        head={["Skill", "What it's for", "Install", "Lands in"]}
+        head={["Skill", "What it's for", "Select with", "Lands in"]}
         rows={[
           [
             <Code key="s">eskais-ui</Code>,
             "Building screens with the components: which one to reach for, install and aliases, forms, lists and navigation, styling tokens, toasts and testing, the AgentTaskBoard, and how agents operate the UI. The SKILL.md is the map; the references load only when a task needs them.",
-            <Code key="i">npx shadcn@latest add @eskais/eskais-ui-skill</Code>,
+            <Code key="i">--skill eskais-ui</Code>,
             <Code key="l">.agents/skills/eskais-ui/</Code>,
           ],
           [
             <Code key="s">eskais-perf</Code>,
             "Keeping screens fast: virtualized rows instead of thousands of mapped ones, effects in hooks, code React Compiler can compile, transform and opacity motion, fast links for navigation only, blur off large animated surfaces, and measuring with the React Profiler and the Performance panel.",
-            <Code key="i">npx shadcn@latest add @eskais/eskais-perf-skill</Code>,
+            <Code key="i">--skill eskais-perf</Code>,
             <Code key="l">.agents/skills/eskais-perf/SKILL.md</Code>,
           ],
           [
             <Code key="s">eskais-mockup</Code>,
             <>
               Building a throwaway, offline HTML mockup of a screen from your own components with the{" "}
-              <A to="/docs/mockups">mockup CLI</A>, in five levels, and validating it. It needs Bun and a checkout of
-              the eskais-ui repository.
+              <A to="/docs/mockups">mockup CLI</A>, in five levels, and validating it. The CLI needs Bun 1.4 or newer.
             </>,
-            <Code key="i">npx shadcn@latest add @eskais/eskais-mockup-skill</Code>,
+            <Code key="i">--skill eskais-mockup</Code>,
             <Code key="l">.agents/skills/eskais-mockup/SKILL.md</Code>,
           ],
         ]}
@@ -96,7 +113,8 @@ export default function AgentSkills() {
       <H3 id="ui-sdk">The ui-sdk skill</H3>
       <P>
         <Code>eskais-ui</Code> builds on UI SDK's own skill, which explains parts, controllers, agents and the agent
-        test. It ships inside <Code>@ui-sdk/core</Code>, which the components install, so copy it next to the others:
+        test. It ships inside <Code>@ui-sdk/core</Code>, which the components install, so add it from there and it
+        matches the UI SDK version you run:
       </P>
       <Pre code={uiSdk} language="bash" />
 
@@ -133,7 +151,7 @@ export default function AgentSkills() {
               <Code key="b">~/.claude/skills</Code>; not <Code key="c">.agents/skills</Code>. A skill folder may be a
               symlink
             </>,
-            "Link each skill into .claude/skills, below.",
+            "Add -a claude-code to the install, below.",
           ],
           [
             "Other agents",
@@ -150,8 +168,13 @@ export default function AgentSkills() {
 
       <H3 id="claude-code">Claude Code</H3>
       <P>
-        Link the skill folders so <Code>.agents/skills</Code> stays the one copy. On macOS and Linux:
+        Add <Code>-a claude-code</Code> to both skills commands: the CLI keeps the one copy in{" "}
+        <Code>.agents/skills</Code> and links each skill into <Code>.claude/skills</Code>. On Windows the link is a
+        junction, which stores an absolute path, so keep <Code>.claude/skills</Code> out of the repository there and run
+        the install on each machine. <Code>-a</Code> takes any agent the CLI knows, such as <Code>cursor</Code> or{" "}
+        <Code>codex</Code>, and repeats.
       </P>
+      <P>If you installed with shadcn, link the folders yourself. On macOS and Linux:</P>
       <Pre code={claudeLink} language="bash" />
       <P>
         On Windows, Git Bash's <Code>ln -s</Code> copies the folder instead of linking it unless symlinks are enabled.
@@ -171,11 +194,12 @@ export default function AgentSkills() {
       <Ul>
         <li>
           The skills describe the components at the registry ref in your <Code>components.json</Code>. Update them
-          together: <Code>npx shadcn@latest add @eskais/eskais-ui-skill --overwrite</Code> after you update components.
+          together: when you move <Code>components.json</Code> to a new release, rerun the install with that tag (or{" "}
+          <Code>--overwrite</Code> the shadcn items), and add the ui-sdk skill again after you update UI SDK.
         </li>
         <li>
-          Your own conventions belong in your <Code>AGENTS.md</Code>, not in the installed skill: an update with{" "}
-          <Code>--overwrite</Code> replaces the skill's files.
+          Your own conventions belong in your <Code>AGENTS.md</Code>, not in the installed skill: an update replaces the
+          skill's files.
         </li>
       </Ul>
       <Alert tone="info">

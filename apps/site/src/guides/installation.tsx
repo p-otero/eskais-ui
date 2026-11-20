@@ -1,7 +1,7 @@
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 
 import { A, Article, Code, DocTitle, H2, H3, Ol, P, Pre, Ul } from "../docs/prose"
-import { registryUrl } from "../registry"
+import { registryUrl, releaseTag, skillsCliVersion } from "../registry"
 
 const componentsJson = `{
   "$schema": "https://ui.shadcn.com/schema.json",
@@ -276,13 +276,13 @@ createRoot(root).render(
       </Ol>
       <H3 id="ai">Using an AI coding agent?</H3>
       <P>
-        Install the skills with shadcn: they teach your agent the conventions on this site, from spacing roles to the
-        agent test every interface gets, and land in <Code>.agents/skills</Code>. See{" "}
+        Install the skills with Vercel's skills CLI: they teach your agent the conventions on this site, from spacing
+        roles to the agent test every interface gets, and land in <Code>.agents/skills</Code>. See{" "}
         <A to="/docs/agent-skills">Agent skills</A> for what each one covers and how to point Claude Code, Codex or
         Cursor at them.
       </P>
       <Pre
-        code="npx shadcn@latest add @eskais/eskais-ui-skill @eskais/eskais-perf-skill @eskais/eskais-mockup-skill"
+        code={`npx skills@${skillsCliVersion} add p-otero/eskais-ui@${releaseTag} --full-depth --skill eskais-ui --skill eskais-perf --skill eskais-mockup -a universal -y`}
         language="bash"
       />
       <P>

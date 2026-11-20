@@ -26,7 +26,7 @@ Read a component's own file before you use it: the props, variants and the comme
 | `references/3d.md`                        | a 3D model to turn (ModelViewer), a photo becoming a 3D character (ModelScan)           |
 | `references/agents.md`                    | what an agent sees when an action is refused, and driving agent actions from Playwright |
 
-Keeping screens fast (long lists, effects, React Compiler, motion) has its own skill, `eskais-perf`; building a throwaway mockup of a screen has `eskais-mockup`. Both install with `npx shadcn@latest add @eskais/eskais-perf-skill @eskais/eskais-mockup-skill`.
+Keeping screens fast (long lists, effects, React Compiler, motion) has its own skill, `eskais-perf`; building a throwaway mockup of a screen has `eskais-mockup`. Both install with Vercel's skills CLI, from the release your `components.json` names: `npx skills add p-otero/eskais-ui@<tag> --full-depth --skill eskais-perf --skill eskais-mockup -a universal -y`, or as the `@eskais/eskais-perf-skill` and `@eskais/eskais-mockup-skill` registry items.
 
 ## Install
 
