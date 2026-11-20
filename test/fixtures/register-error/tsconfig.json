@@ -1,0 +1,5 @@
+{
+  "extends": "../../../tsconfig.json",
+  "include": ["./register-error.ts"],
+  "exclude": []
+}

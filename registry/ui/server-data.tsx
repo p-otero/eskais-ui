@@ -1,6 +1,12 @@
 "use client"
 
-import { QueryClient, QueryClientContext, QueryClientProvider, type QueryClientConfig } from "@tanstack/react-query"
+import {
+  QueryClient,
+  QueryClientContext,
+  QueryClientProvider,
+  type QueryClientConfig,
+  type Register,
+} from "@tanstack/react-query"
 import { use, useState, type ReactNode } from "react"
 
 function statusOf(error: unknown) {
@@ -24,14 +30,22 @@ function isTransientError(error: unknown) {
   return status === 408 || status === 425 || status === 429 || status >= 500
 }
 
+/**
+ * The `error` type of the data hooks when none is given: the `defaultError` an app registers with TanStack Query
+ * (`declare module "@tanstack/react-query" { interface Register { defaultError: ApiError } }`), else `unknown`. Not
+ * TanStack's `Error`: a fetch can reject with anything, and the hooks typed `error` as `unknown` before.
+ */
+type DefaultServerError = Register extends { defaultError: infer TError } ? TError : unknown
+
 type RetryRule = (failureCount: number, error: unknown) => boolean
 
 type DataClientOptions = {
   /**
    * When a failed read runs again. A number is the retries after a failure that isn't a 4xx (default 2); a function
    * decides alone, from the failures so far and the error: `(failures, error) => failures < 3 && isTransientError(error)`.
+   * `false` never retries, as `0` does.
    */
-  retry?: number | RetryRule
+  retry?: number | false | RetryRule
   /** @deprecated Use `retry`. */
   retries?: number
   /** How long a result counts as fresh, in ms. Default 30 s. */
@@ -42,8 +56,9 @@ type DataClientOptions = {
   retryDelay?: number | ((failureCount: number, error: unknown) => number)
 }
 
-function retryRule(retry: number | RetryRule): RetryRule {
+function retryRule(retry: number | false | RetryRule): RetryRule {
   if (typeof retry === "function") return retry
+  if (retry === false) return () => false
   return (failures, error) => !isClientError(error) && failures < retry
 }
 
@@ -101,4 +116,4 @@ function DataProvider({ client, options, children }: DataProviderProps) {
 }
 
 export { createDataClient, DataProvider, isClientError, isTransientError, useDataClient }
-export type { DataClientOptions, DataProviderProps, RetryRule }
+export type { DataClientOptions, DataProviderProps, DefaultServerError, RetryRule }

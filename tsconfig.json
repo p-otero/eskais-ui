@@ -32,5 +32,6 @@
     "apps/site/vite.config.ts",
     "vitest.config.ts",
     "tooling"
-  ]
+  ],
+  "exclude": ["test/fixtures/register-error"]
 }
