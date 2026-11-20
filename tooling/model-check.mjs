@@ -64,6 +64,13 @@ async function drawsDuring(page, ms) {
   return { all: after.all - before.all, points: after.points - before.points }
 }
 
+// CI renders in software, where easing the character's weights takes several times longer than on a GPU: wait for
+// the canvas to go still (or the time to run out) before measuring that it stays still.
+async function untilStill(page, timeout = 8000) {
+  const deadline = Date.now() + timeout
+  while (Date.now() < deadline && (await drawsDuring(page, 300)).all > 0);
+}
+
 function trackRequests(page) {
   const urls = []
   const listener = (request) => urls.push(request.url())
@@ -99,6 +106,14 @@ async function overflow(page) {
 }
 
 async function runScan(page, { capture } = {}) {
+  // Every stage the root passes through, recorded in the page: a short one can start and end between two polls.
+  await scanRoot(page).evaluate((root) => {
+    globalThis.scanStages = []
+    new MutationObserver(() => globalThis.scanStages.push(root.getAttribute("data-stage"))).observe(root, {
+      attributes: true,
+      attributeFilter: ["data-stage"],
+    })
+  })
   await page.getByRole("button", { name: "Start scan" }).click()
   const seen = []
   const deadline = Date.now() + 30_000
@@ -111,7 +126,8 @@ async function runScan(page, { capture } = {}) {
     if (stage === "ready" || stage === "error") break
     await page.waitForTimeout(50)
   }
-  return seen
+  const recorded = await page.evaluate(() => globalThis.scanStages)
+  return recorded.filter((stage, index) => stage !== recorded[index - 1])
 }
 
 // Where each drawn point sits against where its fraction of the photo lands on the photo's drawn box, worked out from
@@ -275,6 +291,7 @@ await withShowcase(
       commits <= 3,
       `${String(commits)} commits, ${String(morphDraws)} draws`,
     )
+    await untilStill(page)
     const settled = await drawsDuring(page, 800)
     check("once the weights arrive, drawing stops", settled.all === 0, JSON.stringify(settled))
     // The GLB stores its targets scaled to fill their bytes: an expression at 1 reaches the mesh times its scale.
@@ -288,6 +305,7 @@ await withShowcase(
       if (shots) await page.getByTestId("viewer").screenshot({ path: join(shots, "model-viewer-morphed.png") })
       await page.getByRole("button", { name: "Unmorph" }).click()
       await page.waitForTimeout(1200)
+      await untilStill(page)
       const back = await probe(page, "expr.jawOpen")
       check("unmorphed, the expression goes back to 0", back?.influence === 0, JSON.stringify(back))
     }
@@ -313,6 +331,7 @@ await withShowcase(
         swapCommits <= 8,
         `${String(swapCommits)} commits, ${String(swapDraws)} draws`,
       )
+      await untilStill(page)
       const after = await drawsDuring(page, 800)
       check("once swapped, drawing stops", after.all === 0, JSON.stringify(after))
     }
