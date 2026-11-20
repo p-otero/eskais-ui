@@ -2,45 +2,54 @@ import { useState } from "react"
 
 import { Button } from "@/components/ui/button"
 import { Field, FieldLabel } from "@/components/ui/field"
-import { Label } from "@/components/ui/label"
 import { ModelScan } from "@/components/ui/model-scan"
 import { ModelViewer } from "@/components/ui/model-viewer"
 import { SegmentedControl, SegmentedControlIndicator, SegmentedControlItem } from "@/components/ui/segmented-control"
 import { Slider, SliderControl, SliderIndicator, SliderThumb, SliderTrack, SliderValue } from "@/components/ui/slider"
-import { Switch } from "@/components/ui/switch"
 
 import { Section } from "../section"
-import { engineModels, figureFace, figureUrl, portrait, useFakeModelScan } from "./model-fixtures"
+import { character, characterFace, photo, restyle, useScanReplay } from "./model-fixtures"
 
-const morphs = [
-  { name: "body.pc00", label: "Build" },
-  { name: "face.head_size.incr", label: "Larger head" },
-  { name: "face.head_size.decr", label: "Smaller head" },
+// ARKit expressions over the character's own body and face weights, which its GLB carries.
+const expressions = [
+  { names: ["mouthSmileLeft", "mouthSmileRight"], label: "Smile" },
+  { names: ["eyeBlinkLeft", "eyeBlinkRight"], label: "Blink" },
+  { names: ["jawOpen"], label: "Jaw open" },
+  { names: ["browInnerUp"], label: "Brows up" },
 ] as const
 
 function ModelViewerSection() {
-  const [weights, setWeights] = useState<Record<string, number>>({})
-  const [smile, setSmile] = useState(0.4)
+  const [values, setValues] = useState<Record<string, number>>({ Smile: 0.3 })
+  const [style, setStyle] = useState<keyof typeof character>("soft")
   const [framing, setFraming] = useState<"full" | "face">("full")
-  const [toon, setToon] = useState(false)
+  const weights = Object.fromEntries(
+    expressions.flatMap(({ names, label }) => names.map((name) => [name, values[label] ?? 0])),
+  )
   return (
     <Section
       title="Model viewer"
-      description="A glTF character in a stage that turns with drag, wheel, pinch and keys, with views, zoom, clips and morph weights. The three.js scene loads only when the stage nears the viewport, and draws only while something moves."
+      description="A glTF character in a stage that turns with drag, wheel, pinch and keys, with views, zoom, clips and morph weights. The three.js scene loads only when the stage nears the viewport, and draws only while something moves. The character is a synthetic person scanned by an open-source engine, in two styles."
     >
       <div className="grid w-full gap-group md:grid-cols-2">
         <ModelViewer
-          model={figureUrl}
-          alt="A stylised figure in a teal shirt"
-          poster={portrait.src}
+          model={character[style]}
+          alt="A 3D character with a red bob, in a blue T-shirt and dark trousers"
           aspectRatio={3 / 4}
-          framing={framing === "face" ? figureFace : "full"}
-          material={toon ? "toon" : "standard"}
-          weights={weights}
-          expressions={{ mouthSmileLeft: smile, mouthSmileRight: smile }}
-          summary="A standing figure with short brown hair, a teal shirt and dark trousers. Clips: Idle, Wave."
+          framing={framing === "face" ? characterFace : "full"}
+          expressions={weights}
+          onModelLoad={restyle}
+          summary="A standing character with dark skin and a red fringed bob, in a blue T-shirt, dark trousers and white socks. Clips: idle, wave."
         />
         <div className="flex flex-col gap-group">
+          <SegmentedControl
+            aria-label="Style"
+            value={style}
+            onValueChange={(next) => next && setStyle(next as keyof typeof character)}
+          >
+            <SegmentedControlIndicator />
+            <SegmentedControlItem value="soft">Soft toon</SegmentedControlItem>
+            <SegmentedControlItem value="cel">Cel outline</SegmentedControlItem>
+          </SegmentedControl>
           <SegmentedControl
             aria-label="Framing"
             value={framing}
@@ -50,19 +59,11 @@ function ModelViewerSection() {
             <SegmentedControlItem value="full">Full body</SegmentedControlItem>
             <SegmentedControlItem value="face">Face</SegmentedControlItem>
           </SegmentedControl>
-          <Label>
-            <Switch checked={toon} onCheckedChange={setToon} />
-            Toon material
-          </Label>
-          {[...morphs, { name: "smile", label: "Smile" }].map(({ name, label }) => (
-            <Field key={name}>
+          {expressions.map(({ label }) => (
+            <Field key={label}>
               <Slider
-                value={Math.round((name === "smile" ? smile : (weights[name] ?? 0)) * 100)}
-                onValueChange={(next) =>
-                  name === "smile"
-                    ? setSmile(next / 100)
-                    : setWeights((current) => ({ ...current, [name]: next / 100 }))
-                }
+                value={Math.round((values[label] ?? 0) * 100)}
+                onValueChange={(next) => setValues((current) => ({ ...current, [label]: next / 100 }))}
                 min={0}
                 max={100}
                 step={5}
@@ -88,39 +89,35 @@ function ModelViewerSection() {
 }
 
 function ModelScanSection() {
-  const { props, start, cancel, fail, setFail, canRetry } = useFakeModelScan(engineModels)
+  const { props, start, cancel, running } = useScanReplay()
   return (
     <Section
       title="Model scan"
-      description="A photo becomes a 3D character, from an engine's events: points over the photo, the photo burning into particles while the camera turns and the model appears, then weights streaming in. This one is a fake engine with a generated figure."
+      description="A photo becomes a 3D character, from an engine's events: points over the photo, the photo burning into particles while the camera turns and the model appears, then weights streaming in. This one replays a recorded scan of a synthetic person, 15 times slower than the engine ran it."
     >
       <div className="flex w-full max-w-sm flex-col gap-group">
         <ModelScan
-          src={portrait.src}
-          alt="A front photo of a stylised figure"
-          width={portrait.width}
-          height={portrait.height}
+          src={photo.src}
+          alt="A full-length photo of a person with a red bob, in a grey top and shorts"
+          width={photo.width}
+          height={photo.height}
           {...props}
-          modelAlt="A 3D stylised figure in a teal shirt"
-          idleClip="Wave"
-          onCancel={props.stage === "photo" ? undefined : cancel}
-          onRetry={canRetry ? start : undefined}
+          modelAlt="A 3D character made from the photo"
+          idleClip="wave"
+          viewer={{ onModelLoad: restyle }}
+          onCancel={running ? cancel : undefined}
           actions={
             props.stage === "photo" ? (
               <Button size="sm" onClick={start}>
                 Make 3D
               </Button>
-            ) : props.stage === "ready" || props.stage === "error" ? (
+            ) : props.stage === "ready" ? (
               <Button variant="ghost" size="sm" onClick={cancel}>
                 Start over
               </Button>
             ) : null
           }
         />
-        <Label>
-          <Switch checked={fail !== false} onCheckedChange={setFail} />
-          Fail the next run
-        </Label>
       </div>
     </Section>
   )

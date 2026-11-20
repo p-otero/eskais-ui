@@ -8,6 +8,7 @@
     "bun.lock",
     ".agents/**",
     "skills-lock.json",
-    "tooling/fixtures/**"
+    "tooling/fixtures/**",
+    "test/fixtures/model/character/*.json"
   ]
 }

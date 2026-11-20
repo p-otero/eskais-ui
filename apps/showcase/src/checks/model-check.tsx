@@ -5,60 +5,67 @@ import { ModelScan } from "@/components/ui/model-scan"
 import { ModelViewer } from "@/components/ui/model-viewer"
 
 import {
+  character,
   engineModels,
-  figureFinalUrl,
-  figureTargetNames,
-  figureUrl,
+  photo,
   portrait,
-  tallPortrait,
+  restyle,
   useFakeModelScan,
+  useScanReplay,
   type EngineErrorCode,
 } from "../sections/model-fixtures"
+import { useModelProbe } from "./use-model-probe"
 
-// ?demo=model-check: a ModelViewer whose weights a button changes, and a ModelScan run by the fake engine (?speed=
-// scales its waits, ?fail ends it in an error, ?fail=<code> in that one, ?photo=tall takes a 9:16 photo, ?fit=cover and
-// ?stage=<ratio> crop it into a stage of another ratio) whose Start scan hides while a run goes, above a tall spacer to scroll them out of view, for tooling/model-check.mjs.
-// Weights as the engine sends them: a Float32Array aligned with the GLB's target names.
-const rest = new Float32Array(figureTargetNames.length)
-const morphed = Float32Array.from(figureTargetNames, (name) => (name.endsWith(".decr") ? 0 : 1))
+// ?demo=model-check, for tooling/model-check.mjs: the demo character with expression and style buttons, and a scan
+// replaying its recording (?slowdown= stretches it, ?fit=cover&stage=<ratio> crops the photo). ?fail[=<code>] runs a
+// fake engine that fails instead, since the recording has no error. A tall spacer scrolls both out of view.
+const rest = {}
+const morphed = { jawOpen: 1, mouthSmileLeft: 1, mouthSmileRight: 1, browInnerUp: 1 }
+
+function ViewerProbe() {
+  useModelProbe("viewer")
+  return null
+}
 
 function ModelCheck() {
   const params = new URLSearchParams(location.search)
-  const speed = Number(params.get("speed") ?? "1")
+  const slowdown = Number(params.get("slowdown") ?? "15")
   const failCode = params.get("fail")
-  const photo = params.get("photo") === "tall" ? "tall" : "portrait"
-  const shot = photo === "tall" ? tallPortrait : portrait
+  const failing = params.has("fail")
   const fit = params.get("fit") === "cover" ? "cover" : "contain"
   const stageRatio = params.has("stage") ? Number(params.get("stage")) : undefined
-  const { props, start, cancel, running, canRetry } = useFakeModelScan(engineModels, {
-    speed,
-    fail: failCode ? (failCode as EngineErrorCode) : params.has("fail"),
-    photo,
+  const replay = useScanReplay({ slowdown })
+  const fake = useFakeModelScan(engineModels, {
+    speed: 4,
+    fail: failCode ? (failCode as EngineErrorCode) : failing,
   })
-  const [weights, setWeights] = useState(rest)
-  const [model, setModel] = useState(figureUrl)
+  const scan = failing ? fake : replay
+  const shot = failing ? portrait : photo
+  const [expressions, setExpressions] = useState<Record<string, number>>(rest)
+  const [style, setStyle] = useState<keyof typeof character>("soft")
   return (
     <main className="flex flex-col items-start gap-section p-group">
       <section data-testid="viewer" aria-label="Viewer" className="flex w-full max-w-md flex-col gap-items">
         <ModelViewer
-          model={model}
-          alt="A stylised figure"
-          poster={portrait.src}
+          model={character[style]}
+          alt="A 3D character"
           aspectRatio={3 / 4}
-          weights={weights}
-          summary="A standing figure in a teal shirt."
+          expressions={expressions}
+          onModelLoad={restyle}
+          sceneChildren={<ViewerProbe />}
+          summary="A standing character with a red bob, in a blue T-shirt and dark trousers."
         />
         <div className="flex flex-wrap gap-items">
-          <Button size="sm" onClick={() => setWeights(morphed)}>
+          <Button size="sm" onClick={() => setExpressions(morphed)}>
             Morph
           </Button>
-          <Button size="sm" variant="outline" onClick={() => setWeights(rest)}>
+          <Button size="sm" variant="outline" onClick={() => setExpressions(rest)}>
             Unmorph
           </Button>
           <Button
             size="sm"
             variant="outline"
-            onClick={() => setModel((current) => (current === figureUrl ? figureFinalUrl : figureUrl))}
+            onClick={() => setStyle((current) => (current === "soft" ? "cel" : "soft"))}
           >
             Swap model
           </Button>
@@ -67,18 +74,20 @@ function ModelCheck() {
       <section data-testid="scan" aria-label="Scan" className="flex w-full max-w-sm flex-col gap-items">
         <ModelScan
           src={shot.src}
-          alt="A front photo of a stylised figure"
+          alt="A full-length photo of a person"
           width={shot.width}
           height={shot.height}
-          {...props}
-          modelAlt="A 3D stylised figure"
+          {...scan.props}
+          modelAlt="A 3D character"
+          idleClip="wave"
           fit={fit}
           aspectRatio={stageRatio}
-          onCancel={props.stage === "photo" ? undefined : cancel}
-          onRetry={canRetry ? start : undefined}
+          viewer={{ onModelLoad: failing ? undefined : restyle }}
+          onCancel={scan.props.stage === "photo" ? undefined : scan.cancel}
+          onRetry={failing && fake.canRetry ? fake.start : undefined}
           actions={
-            running ? null : (
-              <Button size="sm" onClick={start}>
+            scan.running ? null : (
+              <Button size="sm" onClick={scan.start}>
                 Start scan
               </Button>
             )
