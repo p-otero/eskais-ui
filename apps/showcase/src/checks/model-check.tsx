@@ -88,6 +88,15 @@ function ModelCheck() {
         aria-label="Scan"
         data-photo={photoTone ?? undefined}
         data-downloads={downloads}
+        // What the run has sent so far, for model-check's dump when a scan stalls.
+        data-replay={JSON.stringify({
+          stage: scan.props.stage,
+          running: scan.running,
+          points: (scan.props.points ?? []).length,
+          model: scan.props.model !== undefined,
+          progress: scan.props.progress,
+          masks: "masks" in scan.props ? (scan.props.masks?.length ?? 0) : null,
+        })}
         // oxlint-disable-next-line shadcn/no-arbitrary-values -- the brightest and darkest photo the controls must read over
         className="flex w-full max-w-sm flex-col gap-items data-[photo=dark]:[&_[data-slot=model-scan-photo]_img]:brightness-[.22] data-[photo=light]:[&_[data-slot=model-scan-photo]_img]:brightness-[1.8] data-[photo=light]:[&_[data-slot=model-scan-photo]_img]:saturate-[.3]"
       >
