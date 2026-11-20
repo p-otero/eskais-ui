@@ -69,5 +69,11 @@ await patch(savedTask(saved))
 // Or confirm with one reload of the key, resolved once the shown queries have reloaded.
 await patch(savedTask(saved), { refetch: true })
 
+// Write the answer and stop the reads in flight under the queries it writes, without reading again.
+await patch(savedTask(saved), { inFlight: "cancel" })
+
+// No new read, but wait for the reads the patch restarted and fail if one does.
+await patch(savedTask(saved), { awaitRestarted: true, throwOnError: true })
+
 // Outside React, as in a socket handler, on the app's client.
 socket.on("task", (saved: Task) => void patchSource(client, tasks, savedTask(saved)))`

@@ -151,10 +151,15 @@ await patch({
   resource: (current) => (current?.id === saved.id ? saved : undefined), // other queries; undefined leaves one alone
 })
 await patch(changes, { refetch: true }) // also reload the key; resolves once the shown queries reloaded
+await patch(changes, { inFlight: "cancel" }) // a written query's read in flight stops instead of restarting
+await patch(changes, { awaitRestarted: true, throwOnError: true }) // waits for the restarted reads; rejects if one fails
 patchSource(client, tasks, changes) // outside React, on the app's client
 ```
 
 - It reaches every cached query under the key, mounted or not. A read in flight whose query the patch writes, and any first read (no data to patch yet), is cancelled silently and started again in the same batch, with or without `refetch`, so an answer sent before the change never lands, the request count stays the same and nothing stays pending. Reads of queries it leaves alone go on.
+- `inFlight` picks what happens to a read in flight under a query the patch writes: `"restart"` (default) as above, or `"cancel"`, which keeps the patch and leaves the query not fetching, as a mutation's `settle` does, without a mutation. The cancelled read's late answer is dropped and nothing shows an error. A first read the patch writes nothing into restarts either way, since its query would otherwise stay pending.
+- `awaitRestarted: true` resolves once every read the patch restarted has settled, following each query through later restarts (another patch, an invalidation) to its latest read, and starts no read itself. With `throwOnError` it rejects with the first failure (the query function's own error, after retries); an aborted read never counts. A later `inFlight: "cancel"` patch settles it with the written data. Use it with `refetch: false` for a resource whose every read overwrites per-item ETags: it waits for the reads that would happen anyway, where `refetch: true` adds one. Never await the query's `promise` for this: a restart rejects it with a silent `CancelledError`.
+- With `refetch: true`, the reload restarts every read in flight under the key, so the patch doesn't restart them first (no request is sent and aborted at once). `awaitRestarted` then waits for the same reads, restarted by the reload.
 - Without `refetch` nothing new is requested and the patched queries count as fresh. A patch is what the server holds now; for an unconfirmed change use `useSourceMutation`'s `optimistic`.
 
 ## Reload on focus, reconnect and mount

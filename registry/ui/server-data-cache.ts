@@ -104,14 +104,56 @@ type PatchOptions = {
    * Default false: the patch is what the server holds now and nothing new is requested.
    */
   refetch?: boolean
-  /** With `refetch`, rejects when a reload fails after its retries. Default false. */
+  /**
+   * A read in flight under a query the patch writes may answer with the data from before it. `"restart"` (default)
+   * starts it again; `"cancel"` stops it and keeps the patch, as a mutation's `settle`. A first read the patch leaves
+   * empty restarts either way, or its query would stay pending.
+   */
+  inFlight?: "restart" | "cancel"
+  /**
+   * Resolves once every read the patch restarted has settled, following each query through later restarts (another
+   * write, an invalidation) to its latest read. Starts no read of its own. Default false.
+   */
+  awaitRestarted?: boolean
+  /** Rejects with the first failure, after its retries, of a read the call awaits: `refetch`'s or `awaitRestarted`'s. */
   throwOnError?: boolean
+}
+
+/**
+ * Settles once the query's latest read has: a restart (its read cancelled silently and started again) keeps it
+ * fetching, so this follows it. Rejects when that read failed, or resolves; resolves too when the query is removed.
+ */
+function latestRead(client: QueryClient, query: Query): Promise<void> {
+  const cache = client.getQueryCache()
+  const errors = query.state.errorUpdateCount
+  return new Promise((resolve, reject) => {
+    const settled = (removed: boolean) => {
+      if (removed) resolve()
+      else if (query.state.fetchStatus !== "idle") return false
+      else if (query.state.errorUpdateCount > errors) reject(query.state.error)
+      else resolve()
+      return true
+    }
+    if (settled(cache.get(query.queryHash) !== query)) return
+    const unsubscribe = cache.subscribe((event) => {
+      if (event.query === query && settled(event.type === "removed")) unsubscribe()
+    })
+  })
+}
+
+function awaitReads(client: QueryClient, queries: readonly Query[], throwOnError: boolean): Promise<void> {
+  return Promise.all(
+    queries.map((query) =>
+      throwOnError ? latestRead(client, query) : latestRead(client, query).catch(() => undefined),
+    ),
+  ).then(() => undefined)
 }
 
 /**
  * Writes what the server now holds into every cached query under the key, without a request. A read in flight that
  * could answer with the data from before it (its query is written, or has no data yet) restarts in the same batch,
- * `refetch` or not, so nothing stays pending; with `refetch`, the whole key reloads afterwards.
+ * or with `inFlight: "cancel"` a written query's read is cancelled; with `refetch`, the whole key reloads afterwards,
+ * and its restart of every read in flight stands in for the patch's.
  */
 function patchSource<T, Data = unknown>(
   client: QueryClient,
@@ -120,6 +162,10 @@ function patchSource<T, Data = unknown>(
   options: PatchOptions = {},
 ): Promise<void> {
   const { key } = source
+  const refetch = options.refetch === true
+  const throwOnError = options.throwOnError === true
+  const cancel = options.inFlight === "cancel"
+  const restarted: Query[] = []
   notifyManager.batch(() => {
     for (const query of client.getQueryCache().findAll({ queryKey: key })) {
       const current = query.state.data
@@ -128,13 +174,27 @@ function patchSource<T, Data = unknown>(
         kind === "resource"
           ? patch.resource?.(current as Data | undefined, query.queryKey)
           : patch.items && mapItems<T>(kind, current, patch.items)
-      const restart = query.state.fetchStatus === "fetching" && (next !== undefined || current === undefined)
-      if (restart) void query.cancel({ silent: true })
+      const fetching = query.state.fetchStatus === "fetching"
+      // A cancel with `revert` puts the state from before the read back at once (TanStack 5.107 reverts in the
+      // retryer's `onCancel`), so the write below lands on a query that isn't fetching and nothing reverts it later.
+      if (fetching && next !== undefined && cancel) void query.cancel({ revert: true })
+      else if (fetching && (next !== undefined || current === undefined)) restarted.push(query)
       if (next !== undefined) client.setQueryData(query.queryKey, next)
-      if (restart) query.fetch().catch(() => undefined)
+    }
+    // `refetch` restarts every read in flight under the key just after, so restarting here too would send a request
+    // that is aborted at once.
+    if (!refetch) {
+      for (const query of restarted) {
+        void query.cancel({ silent: true })
+        query.fetch().catch(() => undefined)
+      }
     }
   })
-  return options.refetch === true ? refreshKey(client, key, options.throwOnError === true) : Promise.resolve()
+  const reads = [
+    refetch ? refreshKey(client, key, throwOnError) : undefined,
+    options.awaitRestarted === true ? awaitReads(client, restarted, throwOnError) : undefined,
+  ].filter((read) => read !== undefined)
+  return Promise.all(reads).then(() => undefined)
 }
 
 export { mapItems, patchSource, queryKind, refreshKey, settleQueries, updateItems }
