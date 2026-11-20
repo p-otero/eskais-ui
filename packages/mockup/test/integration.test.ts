@@ -12,6 +12,9 @@ const ok = join(mockups, "zz-test-ok")
 const broken = join(mockups, "zz-test-broken")
 const custom = join(mockups, "zz-test-custom.html")
 const gallery = join(mockups, "gallery.html")
+const shell = join(mockups, "zz-test-shell")
+const viewport = join(mockups, "zz-test-viewport")
+const states = join(mockups, "zz-test-states")
 
 const screen = `import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -59,6 +62,54 @@ export default function Broken() {
 }
 `
 
+const shellScreen = `import { InboxIcon } from "lucide-react"
+
+import { Shell, type ShellRoute } from "@/components/ui/shell"
+
+const routes: ShellRoute[] = [{ id: "inbox", label: "Inbox", href: "/inbox", icon: InboxIcon }]
+
+export default function Environments() {
+  return (
+    <Shell routes={routes} currentHref="/inbox" as="div" brand={<span className="text-title-sm">Local</span>}>
+      <p>Environments</p>
+    </Shell>
+  )
+}
+`
+
+const viewportScreen = `export default function Tall() {
+  return <div className="min-h-screen">Tall</div>
+}
+`
+
+const statesScreen = `import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+
+import { sampleItems, type ScreenProps } from "./fixtures"
+
+export default function Items({ items = sampleItems, error }: ScreenProps) {
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>{error ?? String(items.length)}</CardTitle>
+      </CardHeader>
+      <CardContent>{items.map((item) => <p key={item.id}>{item.name}</p>)}</CardContent>
+    </Card>
+  )
+}
+`
+
+const statesFixtures = `export type Item = { id: string; name: string }
+export type ScreenProps = { items?: Item[]; error?: string }
+
+export const sampleItems: Item[] = [{ id: "a", name: "Alpha" }]
+
+export const states = {
+  empty: { items: [] },
+  error: { items: [], error: "Could not load the items" },
+  "long-list": { items: Array.from({ length: 30 }, (_, index) => ({ id: String(index), name: "Item " + String(index) })) },
+} satisfies Record<string, ScreenProps>
+`
+
 function run(args: string[]) {
   const result = spawnSync("bun", [cli, ...args], { cwd: repo, encoding: "utf8" })
   return { code: result.status ?? -1, stdout: result.stdout ?? "", stderr: result.stderr ?? "" }
@@ -75,10 +126,20 @@ beforeAll(() => {
   writeFileSync(join(ok, "fixtures.ts"), fixtures)
   writeFileSync(join(broken, "screen.tsx"), brokenScreen)
   writeFileSync(join(broken, "fixtures.ts"), "export const nothing = null\n")
+  const written: [string, Record<string, string>][] = [
+    [shell, { "screen.tsx": shellScreen }],
+    [viewport, { "screen.tsx": viewportScreen }],
+    [states, { "screen.tsx": statesScreen, "fixtures.ts": statesFixtures }],
+  ]
+  for (const [dir, files] of written) {
+    mkdirSync(dir, { recursive: true })
+    for (const [name, content] of Object.entries(files)) writeFileSync(join(dir, name), content)
+  }
 })
 
 afterAll(() => {
-  for (const path of [ok, broken, custom, gallery]) rmSync(path, { recursive: true, force: true })
+  for (const path of [ok, broken, custom, gallery, shell, viewport, states])
+    rmSync(path, { recursive: true, force: true })
   if (existsSync(mockups) && readdirSync(mockups).every((name) => name === ".gitignore")) {
     rmSync(mockups, { recursive: true, force: true })
   }
@@ -207,5 +268,81 @@ describe("inspect", () => {
     const index = JSON.parse(result.stdout) as { aliases: { name: string; files: { file: string }[] }[] }
     const ui = index.aliases.find((alias) => alias.name === "ui")
     expect(ui?.files.some((file) => file.file === "button")).toBe(true)
+  })
+})
+
+describe("viewport units", () => {
+  test("a Shell mockup builds: the installed Shell's 100dvh is not the mockup's", { timeout: 180_000 }, () => {
+    const result = run(["build", "zz-test-shell"])
+    expect(result.stdout).not.toContain("viewport")
+    expect(result.code).toBe(0)
+    expect(readFileSync(join(shell, "out.html"), "utf8")).toContain("100dvh")
+  })
+
+  test("a viewport unit in the mockup's own files is reported where it is", { timeout: 180_000 }, () => {
+    const result = run(["build", "zz-test-viewport"])
+    expect(result.code).toBe(1)
+    expect(problemLines(result.stdout)).toEqual([
+      ".mockups/zz-test-viewport/screen.tsx:2:26 viewport-unit min-h-screen is a viewport height unit; size the screen from its container (h-full, min-h-full)",
+    ])
+  })
+})
+
+function manifestState() {
+  return (JSON.parse(readFileSync(join(states, "manifest.json"), "utf8")) as { state: string | null }).state
+}
+
+function firstWords(stdout: string) {
+  return stdout
+    .trim()
+    .split("\n")
+    .map((line) => line.split(" ")[0])
+}
+
+describe("states", () => {
+  test("without --state, builds out.html with no props, as before", { timeout: 180_000 }, () => {
+    const result = run(["build", "zz-test-states"])
+    expect(result.code).toBe(0)
+    expect(firstWords(result.stdout)).toEqual([".mockups/zz-test-states/out.html"])
+    expect(manifestState()).toBeNull()
+  })
+
+  test("--state builds one state into out-<state>-<theme>.html", { timeout: 180_000 }, () => {
+    const result = run(["build", "zz-test-states", "--state", "error", "--scheme", "dark"])
+    expect(result.stderr).toBe("")
+    expect(result.code).toBe(0)
+    expect(firstWords(result.stdout)).toEqual([".mockups/zz-test-states/out-error-dark.html"])
+    expect(readFileSync(join(states, "out-error-dark.html"), "utf8")).toContain("Could not load the items")
+    expect(manifestState()).toBe("error")
+  })
+
+  test("--state all builds one page per state", { timeout: 300_000 }, () => {
+    const result = run(["build", "zz-test-states", "--state", "all"])
+    expect(result.code).toBe(0)
+    expect(firstWords(result.stdout)).toEqual([
+      ".mockups/zz-test-states/out-empty-system.html",
+      ".mockups/zz-test-states/out-error-system.html",
+      ".mockups/zz-test-states/out-long-list-system.html",
+    ])
+  })
+
+  test("validate renders every state and names them", { timeout: 300_000 }, () => {
+    const result = run(["validate", "zz-test-states", "--state", "all"])
+    expect(result.stdout.split("\n").filter((line) => line.startsWith("ok "))).toHaveLength(3)
+    expect(result.stdout).toContain("states 3: empty, error, long-list")
+    expect(result.code).toBe(0)
+  })
+
+  test("an unknown state, no states export or --out without {state} is a usage error", { timeout: 180_000 }, () => {
+    const unknown = run(["build", "zz-test-states", "--state", "loading"])
+    expect(unknown.code).toBe(2)
+    expect(unknown.stderr).toContain('fixtures.ts has no state "loading"; it has empty, error, long-list')
+    const none = run(["build", "zz-test-ok", "--state", "empty"])
+    expect(none.code).toBe(2)
+    expect(none.stderr).toContain("exports no states")
+    const out = run(["build", "zz-test-states", "--state", "all", "--out", custom])
+    expect(out.code).toBe(2)
+    expect(out.stderr).toContain("--out needs {state}")
+    expect(run(["inspect", "--state", "empty"]).code).toBe(2)
   })
 })

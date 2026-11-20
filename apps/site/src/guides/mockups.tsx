@@ -21,6 +21,7 @@ import {
   presentReply,
   quickstart,
   screen,
+  statesFixtures,
   validateOk,
   validateProblems,
 } from "./mockups/snippets"
@@ -222,7 +223,18 @@ export default function Mockups() {
             "Writes .mockups/gallery.html after a passing run and prints its path and count last.",
           ],
           [<Code key="f">--project dir</Code>, "all", "The project folder, when it isn't the current one."],
-          [<Code key="f">--css file</Code>, "all", "The stylesheet, when components.json doesn't name one."],
+          [<Code key="f">--css file</Code>, "all", "Another stylesheet; the tsconfig stays the project's."],
+          [<Code key="f">--tsconfig file</Code>, "all", "Another tsconfig for the aliases and the type check."],
+          [
+            <Code key="f">--tailwind dir</Code>,
+            "all",
+            "A folder whose packages resolve Tailwind, such as apps/web in a workspace where only the app installs it. Without it, the workspace root, its packages and pnpm's or Bun's store are searched.",
+          ],
+          [
+            <Code key="f">--state name|all</Code>,
+            "build, validate",
+            "Renders a named state from fixtures.ts into out-<state>-<theme>.html; all builds each (--out takes {state}).",
+          ],
           [<Code key="f">--max n</Code>, "build, validate", "How many problems to print (20 by default)."],
           [<Code key="f">--theme name</Code>, "build, validate", "Applies a theme, such as compact."],
           [
@@ -248,7 +260,8 @@ export default function Mockups() {
         </li>
         <li>
           <Code>fixtures.ts</Code> types the data and exports a sample. Reuse the project's own types when they import
-          through an alias.
+          through an alias. It may export <Code>states</Code>, an object of named states, each the props the screen gets
+          in it; <Code>build --state empty</Code> renders one, <Code>--state all</Code> every one.
         </li>
         <li>
           <Code>parts/</Code> and <Code>gaps.ts</Code> are levels 3 to 5. <Code>wrapper.tsx</Code> is optional and
@@ -261,12 +274,18 @@ export default function Mockups() {
         </li>
       </Ul>
       <Pre code={screen} title=".mockups/team/screen.tsx" />
+      <Pre code={statesFixtures} title=".mockups/team/fixtures.ts (states)" />
 
       <H2 id="validate">What validate checks</H2>
       <Ol>
         <li>
           <strong>The page is one offline file:</strong> no external script, stylesheet, image, <Code>@import</Code> or{" "}
-          <Code>url()</Code> that isn't inlined, no viewport height unit, and no React development build.
+          <Code>url()</Code> that isn't inlined, and no React development build.
+        </li>
+        <li>
+          <strong>No viewport height units</strong> (<Code>h-screen</Code>, <Code>100dvh</Code>) in the mockup's own
+          files (<Code>viewport-unit</Code>); an installed block such as <Code>Shell</Code> may size itself to the
+          viewport.
         </li>
         <li>
           <strong>No network:</strong> <Code>fetch</Code>, <Code>XMLHttpRequest</Code>, <Code>WebSocket</Code> or{" "}

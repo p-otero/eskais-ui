@@ -1,6 +1,9 @@
 import { existsSync, readFileSync, readdirSync, realpathSync, statSync } from "node:fs"
 import { createRequire } from "node:module"
-import { dirname, isAbsolute, join, relative, resolve } from "node:path"
+import { basename, dirname, isAbsolute, join, relative, resolve } from "node:path"
+
+import { mapAliases, mappedDirectory, mapPrefixes, SOURCE_CONDITIONS } from "./package-map"
+import { findWorkspace, packageRootOf, storePackages } from "./workspace"
 
 export class EnvironmentError extends Error {
   constructor(message: string) {
@@ -20,8 +23,21 @@ export type ConsumerRuntime = {
   tailwindOxide: string
   react: string
   reactServer: string
+  tailwindPackage: string | null
   tailwindVersion: string
   reactVersion: string
+}
+
+export type PackageImports = {
+  dir: string
+  map: unknown
+}
+
+// Where the project's packages resolve from: its own folders first, then the stylesheet's package, the
+// workspace root and every workspace package, then pnpm's and Bun's stores under the workspace roots.
+export type Resolution = {
+  bases: string[]
+  stores: string[]
 }
 
 export type MockupProject = {
@@ -31,8 +47,10 @@ export type MockupProject = {
   entry: string | null
   aliases: ProjectAlias[]
   pathPrefixes: string[]
+  imports: PackageImports | null
   registries: Record<string, string>
   dependencies: Set<string>
+  resolution: Resolution
   runtime: ConsumerRuntime
 }
 
@@ -40,6 +58,8 @@ export type ProjectOptions = {
   cwd: string
   project?: string | undefined
   css?: string | undefined
+  tsconfig?: string | undefined
+  tailwind?: string | undefined
 }
 
 export type TsconfigPaths = {
@@ -154,7 +174,32 @@ export function readTsconfigPaths(tsconfig: string): TsconfigPaths {
   return parent === null ? { base, entries } : readTsconfigPaths(parent)
 }
 
-function aliasDirectory(specifier: string, paths: TsconfigPaths): string | null {
+function directoryOrNull(path: string): string | null {
+  return existsSync(path) && statSync(path).isDirectory() ? path : null
+}
+
+// Node's subpath imports (`"imports": { "#components/*": "./src/components/*" }`) in the project's package.json,
+// which TypeScript and Bun read as aliases too.
+export function readPackageImports(start: string): PackageImports | null {
+  const dir = packageRootOf(start)
+  if (dir === null) return null
+  const parsed = readJsonc(join(dir, "package.json"))
+  const map = isRecord(parsed) ? parsed["imports"] : undefined
+  return isRecord(map) ? { dir, map } : null
+}
+
+function importsDirectory(specifier: string, imports: PackageImports | null): string | null {
+  if (imports === null || !specifier.startsWith("#")) return null
+  const target = mappedDirectory(imports.map, specifier, SOURCE_CONDITIONS)
+  if (target === null || !target.startsWith(".")) return null
+  return directoryOrNull(resolve(imports.dir, target))
+}
+
+function aliasDirectory(specifier: string, paths: TsconfigPaths, imports: PackageImports | null): string | null {
+  return pathsDirectory(specifier, paths) ?? importsDirectory(specifier, imports)
+}
+
+function pathsDirectory(specifier: string, paths: TsconfigPaths): string | null {
   for (const { pattern, target } of paths.entries) {
     if (pattern.endsWith("/*")) {
       const prefix = pattern.slice(0, -1)
@@ -171,23 +216,31 @@ function aliasDirectory(specifier: string, paths: TsconfigPaths): string | null 
   return null
 }
 
-function aliasesFromPaths(paths: TsconfigPaths): ProjectAlias[] {
+function aliasesFromPaths(paths: TsconfigPaths, imports: PackageImports | null): ProjectAlias[] {
   const aliases: ProjectAlias[] = []
   for (const { pattern, target } of paths.entries) {
     if (!pattern.endsWith("/*")) continue
     const specifier = pattern.slice(0, -2)
     if (aliases.some((alias) => alias.specifier === specifier)) continue
     const dir = resolve(paths.base, target.replace(/\/?\*$/, ""))
-    aliases.push({ name: specifier, specifier, dir: existsSync(dir) && statSync(dir).isDirectory() ? dir : null })
+    aliases.push({ name: specifier, specifier, dir: directoryOrNull(dir) })
+  }
+  for (const { specifier, target } of imports === null ? [] : mapAliases(imports.map, SOURCE_CONDITIONS)) {
+    if (aliases.some((alias) => alias.specifier === specifier) || !target.startsWith(".")) continue
+    aliases.push({ name: specifier, specifier, dir: directoryOrNull(resolve(imports?.dir ?? "", target)) })
   }
   return aliases
 }
 
-function readAliases(declared: Record<string, string>, paths: TsconfigPaths): ProjectAlias[] {
+function readAliases(
+  declared: Record<string, string>,
+  paths: TsconfigPaths,
+  imports: PackageImports | null,
+): ProjectAlias[] {
   const aliases = Object.entries(declared).map(([name, specifier]) => ({
     name,
     specifier,
-    dir: aliasDirectory(specifier, paths),
+    dir: aliasDirectory(specifier, paths, imports),
   }))
   for (const alias of aliases) {
     if (alias.dir !== null && !statSync(alias.dir).isDirectory()) alias.dir = null
@@ -293,39 +346,113 @@ function readVersion(directory: string): string {
   return typeof document["version"] === "string" ? document["version"] : "unknown"
 }
 
-function resolveRuntime(bases: string[], root: string): ConsumerRuntime {
+export type LocatedPackage = {
+  dir: string
+  from: string
+}
+
+// A package's folder, and a folder that resolves it and its own dependencies, from the first base or store that has it.
+export function locatePackage(resolution: Resolution, name: string): LocatedPackage | null {
+  for (const base of resolution.bases) {
+    const dir = packageDirectory(base, name)
+    if (dir !== null) return { dir, from: base }
+  }
+  for (const store of resolution.stores) {
+    const entry = storePackages(store, name)[0]
+    if (entry !== undefined) return { dir: entry.dir, from: entry.from }
+  }
+  return null
+}
+
+function locatedDirectory(resolution: Resolution, name: string): string | null {
+  return locatePackage(resolution, name)?.dir ?? null
+}
+
+function locatedEntry(resolution: Resolution, name: string): string | null {
+  const located = locatePackage(resolution, name)
+  return located === null ? null : packageEntry(located.from, name)
+}
+
+function resolveTailwind(resolution: Resolution, root: string, forced: string | null) {
+  const bases = forced === null ? resolution.bases : [forced]
+  const scoped: Resolution = forced === null ? resolution : { bases, stores: [] }
   const tailwindNode =
-    firstPresent(bases, (base) => packageDirectory(base, "@tailwindcss/node")) ??
+    locatedDirectory(scoped, "@tailwindcss/node") ??
     firstPresent(bases, (base) => throughTailwindPlugin(base, "@tailwindcss/node"))
   const tailwindOxide =
     (tailwindNode === null ? null : packageDirectory(tailwindNode, "@tailwindcss/oxide")) ??
-    firstPresent(bases, (base) => packageDirectory(base, "@tailwindcss/oxide")) ??
+    locatedDirectory(scoped, "@tailwindcss/oxide") ??
     firstPresent(bases, (base) => throughTailwindPlugin(base, "@tailwindcss/oxide"))
   if (tailwindNode === null || tailwindOxide === null) {
     throw new EnvironmentError(
-      `Tailwind is not installed for ${root}: add tailwindcss (with @tailwindcss/node and @tailwindcss/oxide) or @tailwindcss/vite to the project.`,
+      forced === null
+        ? `Tailwind is not installed for ${root} or its workspace: add tailwindcss (with @tailwindcss/node and @tailwindcss/oxide) or @tailwindcss/vite to the project, or pass --tailwind <dir> with the folder of a package that has it.`
+        : `--tailwind ${forced}: @tailwindcss/node and @tailwindcss/oxide do not resolve from it; pass the folder of a package that depends on tailwindcss and @tailwindcss/vite or @tailwindcss/postcss.`,
     )
   }
-  const reactDir = firstPresent(bases, (base) => packageDirectory(base, "react"))
-  const reactDomDir = firstPresent(bases, (base) => packageDirectory(base, "react-dom"))
-  const reactEntry = firstPresent(bases, (base) => packageEntry(base, "react"))
+  const tailwindPackage =
+    (forced === null ? null : packageDirectory(forced, "tailwindcss")) ??
+    packageDirectory(tailwindNode, "tailwindcss") ??
+    locatedDirectory(scoped, "tailwindcss")
+  return { tailwindNode, tailwindOxide, tailwindPackage }
+}
+
+function resolveRuntime(resolution: Resolution, root: string, forcedTailwind: string | null): ConsumerRuntime {
+  const { tailwindNode, tailwindOxide, tailwindPackage } = resolveTailwind(resolution, root, forcedTailwind)
+  const reactDir = locatedDirectory(resolution, "react")
+  const reactDomDir = locatedDirectory(resolution, "react-dom")
+  const reactEntry = locatedEntry(resolution, "react")
   if (reactDir === null || reactDomDir === null || reactEntry === null) {
     throw new EnvironmentError(`React is not installed for ${root}: add react and react-dom to the project.`)
   }
-  const reactServer =
-    packageEntry(reactDomDir, "react-dom/server") ??
-    firstPresent(bases, (base) => packageEntry(base, "react-dom/server"))
+  const reactServer = packageEntry(reactDomDir, "react-dom/server") ?? locatedEntry(resolution, "react-dom/server")
   if (reactServer === null) throw new EnvironmentError(`react-dom/server does not resolve from ${reactDomDir}`)
-
-  const tailwindPackage = firstPresent(bases, (base) => packageDirectory(base, "tailwindcss"))
   return {
     tailwindNode: packageEntry(tailwindNode, "@tailwindcss/node") ?? join(tailwindNode, "dist", "index.mjs"),
     tailwindOxide: packageEntry(tailwindOxide, "@tailwindcss/oxide") ?? join(tailwindOxide, "index.js"),
     react: reactEntry,
     reactServer,
+    tailwindPackage,
     tailwindVersion: tailwindPackage === null ? readVersion(tailwindNode) : readVersion(tailwindPackage),
     reactVersion: readVersion(reactDir),
   }
+}
+
+export function projectResolution(root: string, css: string, entry: string | null): Resolution {
+  const cssPackage = packageRootOf(css)
+  const workspaces = [findWorkspace(root), cssPackage === null ? null : findWorkspace(cssPackage)].filter(
+    (workspace) => workspace !== null,
+  )
+  const bases = [root, dirname(css)]
+  if (cssPackage !== null) bases.push(cssPackage)
+  if (entry !== null) bases.push(dirname(entry))
+  for (const workspace of workspaces) bases.push(workspace.root, ...workspace.packages)
+  const stores = [root, ...workspaces.map((workspace) => workspace.root)]
+  return { bases: [...new Set(bases)], stores: [...new Set(stores)] }
+}
+
+function forcedTailwindDirectory(cwd: string, value: string | undefined): string | null {
+  if (value === undefined) return null
+  const dir = resolve(cwd, value)
+  if (!existsSync(dir) || !statSync(dir).isDirectory()) throw new EnvironmentError(`--tailwind ${dir} is not a folder`)
+  return basename(dir) === "node_modules" ? dirname(dir) : dir
+}
+
+function projectTsconfig(options: ProjectOptions, root: string, css: string): string {
+  if (options.tsconfig !== undefined) {
+    const file = resolve(options.cwd, options.tsconfig)
+    if (!existsSync(file)) throw new EnvironmentError(`--tsconfig ${file} does not exist`)
+    return statSync(file).isDirectory() ? join(file, "tsconfig.json") : file
+  }
+  // The project's own tsconfig, not the one of the app whose stylesheet --css names: that one may carry the
+  // app's ambient types (vite/client) and other aliases.
+  const tsconfig = findUp(root, "tsconfig.json") ?? findUp(dirname(css), "tsconfig.json")
+  if (tsconfig === null) {
+    throw new EnvironmentError(
+      `no tsconfig.json above ${root}; the mockup reads the project's aliases from it (or pass --tsconfig <file>)`,
+    )
+  }
+  return tsconfig
 }
 
 export function findProject(options: ProjectOptions): MockupProject {
@@ -351,18 +478,19 @@ export function findProject(options: ProjectOptions): MockupProject {
   if (css === null) throw new EnvironmentError(`${componentsFile} has no tailwind.css; pass --css <stylesheet>`)
   if (!existsSync(css)) throw new EnvironmentError(`the stylesheet ${css} does not exist`)
 
-  const tsconfig = findUp(dirname(css), "tsconfig.json") ?? findUp(root, "tsconfig.json")
-  if (tsconfig === null) {
-    throw new EnvironmentError(`no tsconfig.json above ${root}; the mockup reads the project's aliases from it`)
-  }
+  const tsconfig = projectTsconfig(options, root, css)
   const paths = readTsconfigPaths(tsconfig)
-  const aliases = componentsFile === null ? aliasesFromPaths(paths) : readAliases(components.aliases, paths)
+  const imports = readPackageImports(root)
+  const aliases =
+    componentsFile === null ? aliasesFromPaths(paths, imports) : readAliases(components.aliases, paths, imports)
   const pathPrefixes = [
-    ...new Set(paths.entries.map(({ pattern }) => (pattern.endsWith("/*") ? pattern.slice(0, -1) : pattern))),
+    ...new Set([
+      ...paths.entries.map(({ pattern }) => (pattern.endsWith("/*") ? pattern.slice(0, -1) : pattern)),
+      ...(imports === null ? [] : mapPrefixes(imports.map)),
+    ]),
   ]
   const entry = findEntry(root, css)
-  const bases = [root, dirname(css)]
-  if (entry !== null) bases.push(dirname(entry))
+  const resolution = projectResolution(root, css, entry)
   return {
     root,
     css,
@@ -370,9 +498,11 @@ export function findProject(options: ProjectOptions): MockupProject {
     entry,
     aliases,
     pathPrefixes,
+    imports,
     registries: components.registries,
     dependencies: readDependencies(root),
-    runtime: resolveRuntime([...new Set(bases)], root),
+    resolution,
+    runtime: resolveRuntime(resolution, root, forcedTailwindDirectory(options.cwd, options.tailwind)),
   }
 }
 
@@ -411,6 +541,11 @@ function pathRoots(project: MockupProject): string[] {
     const fixed = star === -1 ? target : target.slice(0, star)
     const root = resolve(paths.base, fixed)
     if (existsSync(root)) roots.add(root)
+  }
+  const imports = project.imports
+  for (const { target } of imports === null ? [] : mapAliases(imports.map, SOURCE_CONDITIONS)) {
+    const root = resolve(imports?.dir ?? project.root, target)
+    if (target.startsWith(".") && existsSync(root)) roots.add(root)
   }
   for (const alias of project.aliases) if (alias.dir !== null) roots.add(alias.dir)
   return [...roots]

@@ -9,6 +9,7 @@ export type Problem = {
 export const DEFAULT_MAX_PROBLEMS = 20
 
 const VIEWPORT_HEIGHT_UNIT = /\b\d+(\.\d+)?[dls]?vh\b|\b(min-|max-)?h-(screen|[dls]?vh)\b/
+const VIEWPORT_HEIGHT_UNITS = new RegExp(VIEWPORT_HEIGHT_UNIT.source, "g")
 const REACT_DEV_BANNER = /Download the React DevTools[^"`]{0,40}/
 const TEMPLATE_PLACEHOLDER = /data-mockup-attributes|<!--mockup-(style|script)-->|\{\{title\}\}/
 
@@ -52,8 +53,6 @@ export function pageProblems(page: string): string[] {
   if (/<img[^>]+src="?(?!data:)/i.test(markup)) problems.push("still loads an external image")
   if (/@import\b/i.test(styles)) problems.push("still imports a stylesheet")
   if (/url\((?!\s*["']?data:)/i.test(styles)) problems.push("still loads an asset that is not inlined")
-  const unit = viewportHeightUnit(page)
-  if (unit !== undefined) problems.push(`uses a viewport height unit: ${unit}`)
   if (TEMPLATE_PLACEHOLDER.test(page)) problems.push("still has a template placeholder")
   return problems
 }
@@ -133,6 +132,15 @@ export function sdkImportProblems(file: string, source: string, publicSpecifiers
       ]
     })
   return problems
+}
+
+// Only the mockup's own files: an installed block may size itself to the viewport (Shell sets
+// --shell-height: 100dvh), and the bundle and stylesheet carry every installed component.
+export function viewportProblems(file: string, source: string): Problem[] {
+  return matches(source, VIEWPORT_HEIGHT_UNITS, (match) => ({
+    rule: "viewport-unit",
+    message: `${match[0]} is a viewport height unit; size the screen from its container (h-full, min-h-full)`,
+  })).map((problem) => ({ ...problem, file }))
 }
 
 export function partStyleProblems(file: string, source: string): Problem[] {

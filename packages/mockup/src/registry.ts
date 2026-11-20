@@ -11,6 +11,7 @@ import {
   projectSourceFiles,
   readTsconfigPaths,
   sourceBasenames,
+  specifierOf,
   toPosix,
   type MockupProject,
 } from "./project"
@@ -251,12 +252,21 @@ function writeFiles(load: RegistryLoad): Map<string, string> {
   return files
 }
 
-function rewriteCachedImports(files: Map<string, string>, installed: Set<string>) {
+// A fetched item imports `@/…`, as the registry ships it: a sibling in the cache becomes a relative path, and an
+// installed file the project's own specifier when `@/` isn't one of its aliases (a project on `#components/*`).
+function rewriteCachedImports(
+  project: MockupProject,
+  files: Map<string, string>,
+  installed: Map<string, string | null>,
+) {
+  const keepsAt = project.pathPrefixes.some((prefix) => prefix.startsWith("@/"))
   for (const file of files.values()) {
     const source = readFileSync(file, "utf8")
     const rewritten = source.replaceAll(/(["'])@\/([^"'\n]+)\1/g, (match: string, quote: string, path: string) => {
       const base = basename(path).replace(/\.(tsx|ts)$/, "")
-      if (base === "" || installed.has(base)) return match
+      if (base === "") return match
+      const own = installed.get(base)
+      if (own !== undefined) return keepsAt || own === null ? match : `${quote}${own}${quote}`
       const target = files.get(base)
       if (target === undefined) return match
       const shown = toPosix(relative(dirname(file), target)).replace(/\.(tsx|ts)$/, "")
@@ -264,6 +274,15 @@ function rewriteCachedImports(files: Map<string, string>, installed: Set<string>
     })
     if (rewritten !== source) writeFileSync(file, rewritten)
   }
+}
+
+function installedSpecifiers(project: MockupProject, files: string[]): Map<string, string | null> {
+  const found = new Map<string, string | null>()
+  for (const file of files) {
+    const base = basename(file).replace(/\.(tsx|ts|jsx|js)$/, "")
+    if (!found.has(base) || found.get(base) === null) found.set(base, specifierOf(project, file))
+  }
+  return found
 }
 
 function packageName(specifier: string): string {
@@ -335,11 +354,12 @@ export async function prepareRegistry(
   }
   const sources = await loadSources(project)
   const load: RegistryLoad = { sources, items: new Map(), cache: new Map() }
-  const installed = sourceBasenames(projectSourceFiles(project))
+  const ownFiles = projectSourceFiles(project)
+  const installed = sourceBasenames(ownFiles)
   // oxlint-disable-next-line no-await-in-loop -- each fetch fills the same cache and dependency chain
   for (const name of [...wanted].toSorted()) await ensureItem(project, load, name, installed, new Set(), true)
   const filesByBase = writeFiles(load)
-  rewriteCachedImports(filesByBase, installed)
+  rewriteCachedImports(project, filesByBase, installedSpecifiers(project, ownFiles))
   const missing = missingDependencies(project, load)
   if (missing.length > 0) {
     throw new EnvironmentError(

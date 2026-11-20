@@ -40,10 +40,10 @@ bun .agents/tools/eskais-mockup/cli.ts --version
 bun .agents/tools/eskais-mockup/cli.ts inspect
 bun .agents/tools/eskais-mockup/cli.ts validate team`
 
-const checkoutCommands = `# from your project, with a checkout of eskais-ui next to it
-bun ../eskais-ui/packages/mockup/src/cli.ts validate team
+const checkoutCommands = `# from your project; <eskais-ui checkout> is the path to your checkout of eskais-ui
+bun <eskais-ui checkout>/packages/mockup/src/cli.ts validate team
 # or link it once with Bun: adds node_modules/.bin/eskais-mockup until the next npm or pnpm install
-(cd ../eskais-ui/packages/mockup && bun link)
+(cd <eskais-ui checkout>/packages/mockup && bun link)
 bun link @eskais/mockup
 bunx eskais-mockup validate team`
 
@@ -182,7 +182,8 @@ const validateProblems = [
 
 const presentCommands = `# one page per state and theme, named out-<state>-<theme>.html
 bun .agents/tools/eskais-mockup/cli.ts build team --scheme light --out .mockups/team/out-light.html
-bun .agents/tools/eskais-mockup/cli.ts build team --scheme dark --out .mockups/team/out-empty-dark.html
+# every state that fixtures.ts exports in states: out-empty-dark.html, out-error-dark.html…
+bun .agents/tools/eskais-mockup/cli.ts build team --state all --scheme dark
 # a PNG with the same name beside each page, from any browser; headless Chrome:
 chrome --headless --hide-scrollbars --window-size=1280,800 \\
   --screenshot=.mockups/team/out-empty-dark.png "file://$PWD/.mockups/team/out-empty-dark.html"
@@ -205,6 +206,15 @@ const presentReply = [
   "2 of 2 screenshots. All of them: .mockups/gallery.html",
 ].join("\n")
 
+const statesFixtures = `export type ScreenProps = { members?: Member[]; loading?: boolean; error?: string }
+
+// one entry per named state: the props the screen gets in it
+export const states = {
+  empty: { members: [] },
+  loading: { loading: true },
+  error: { error: "The members could not be loaded" },
+} satisfies Record<string, ScreenProps>`
+
 export {
   agentPrompt,
   checkoutCommands,
@@ -224,6 +234,7 @@ export {
   presentReply,
   quickstart,
   screen,
+  statesFixtures,
   validateOk,
   validateProblems,
 }

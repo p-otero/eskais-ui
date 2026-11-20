@@ -6101,6 +6101,11 @@
           "target": "~/.agents/tools/eskais-mockup/inspect.ts"
         },
         {
+          "path": "packages/mockup/src/package-map.ts",
+          "type": "registry:file",
+          "target": "~/.agents/tools/eskais-mockup/package-map.ts"
+        },
+        {
           "path": "packages/mockup/src/parts.ts",
           "type": "registry:file",
           "target": "~/.agents/tools/eskais-mockup/parts.ts"
@@ -6121,9 +6126,19 @@
           "target": "~/.agents/tools/eskais-mockup/sdk.ts"
         },
         {
+          "path": "packages/mockup/src/states.ts",
+          "type": "registry:file",
+          "target": "~/.agents/tools/eskais-mockup/states.ts"
+        },
+        {
           "path": "packages/mockup/src/validate.ts",
           "type": "registry:file",
           "target": "~/.agents/tools/eskais-mockup/validate.ts"
+        },
+        {
+          "path": "packages/mockup/src/workspace.ts",
+          "type": "registry:file",
+          "target": "~/.agents/tools/eskais-mockup/workspace.ts"
         },
         {
           "path": "packages/mockup/src/version.ts",
