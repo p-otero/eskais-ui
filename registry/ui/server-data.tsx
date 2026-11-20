@@ -51,8 +51,18 @@ type DataClientOptions = {
   retries?: number
   /** How long a result counts as fresh, in ms. Default 30 s. */
   staleTime?: number
-  /** Default false: a table doesn't reload because the window got focus. */
-  refetchOnWindowFocus?: boolean
+  /**
+   * Reloads a stale query when the window gets focus (`"always"`: even a fresh one). Default false: a table doesn't
+   * reload because the window got focus. A hook's own `refetchOnWindowFocus` wins.
+   */
+  refetchOnWindowFocus?: boolean | "always"
+  /**
+   * Reloads a stale query when the browser fires `online` (`"always"`: even a fresh one). Default as TanStack's: true,
+   * but false with `networkMode: "always"`, whose reads never waited for the network.
+   */
+  refetchOnReconnect?: boolean | "always"
+  /** Reloads a stale query when a hook that reads it mounts (`"always"`: even a fresh one). Default true, TanStack's. */
+  refetchOnMount?: boolean | "always"
   /** Retry delay in ms, or a function of the failures so far and the error; TanStack's exponential backoff when unset. */
   retryDelay?: number | ((failureCount: number, error: unknown) => number)
   /**
@@ -77,6 +87,7 @@ function retryRule(retry: number | false | RetryRule): RetryRule {
  */
 function createDataClient(options: DataClientOptions = {}): QueryClient {
   const { retries = 2, staleTime = 30_000, refetchOnWindowFocus = false, retryDelay, networkMode } = options
+  const { refetchOnReconnect, refetchOnMount } = options
   const mode = networkMode === undefined ? {} : { networkMode }
   const config: QueryClientConfig = {
     defaultOptions: {
@@ -84,6 +95,8 @@ function createDataClient(options: DataClientOptions = {}): QueryClient {
         retry: retryRule(options.retry ?? retries),
         staleTime,
         refetchOnWindowFocus,
+        ...(refetchOnReconnect === undefined ? {} : { refetchOnReconnect }),
+        ...(refetchOnMount === undefined ? {} : { refetchOnMount }),
         ...(retryDelay === undefined ? {} : { retryDelay }),
         ...mode,
       },

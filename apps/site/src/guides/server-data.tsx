@@ -4,7 +4,8 @@ import { Skeleton } from "@/components/ui/skeleton"
 
 import { A, Article, Code, DocTable, DocTitle, H2, P, Pre, Ul } from "../docs/prose"
 
-import { networkCode, retryCode, serialCode } from "./server-data/snippets"
+import { NetworkMode, PatchAndRefetch } from "./server-data/patch-refetch"
+import { retryCode, serialCode } from "./server-data/snippets"
 
 const LatencyDemo = lazy(() => import("../examples/server-data-table"))
 const BackendSwitcher = lazy(() => import("./server-data/backend-switcher"))
@@ -248,9 +249,9 @@ export default function ServerData() {
         ])}
       />
       <P>
-        Navigation follows what the source gives (<Code>navigation="auto"</Code>); pass <Code>pages</Code>,{" "}
-        <Code>prev-next</Code>, <Code>load-more</Code> or <Code>infinite</Code> to choose. A source's{" "}
-        <Code>fetchTotal</Code> runs as its own cached query, so a slow count never holds back the rows.
+        Navigation follows what the source gives (<Code>navigation="auto"</Code>
+        ); pass <Code>pages</Code>, <Code>prev-next</Code>, <Code>load-more</Code> or <Code>infinite</Code> to choose. A
+        source's <Code>fetchTotal</Code> runs as its own cached query, so a slow count never holds back the rows.
       </P>
       <DocTable
         label="Navigation by what the source gives"
@@ -359,6 +360,8 @@ export default function ServerData() {
         </li>
       </Ul>
 
+      <PatchAndRefetch />
+
       <H2 id="shared-resources">Shared and seeded resources</H2>
       <P>
         When two screens read the same resource, declare it once with <Code>defineResource</Code> (its <Code>key</Code>,{" "}
@@ -391,18 +394,7 @@ export default function ServerData() {
       </P>
       <Pre code={retryCode} />
 
-      <H2 id="network-mode">Offline and network mode</H2>
-      <P>
-        TanStack Query's default <Code>networkMode</Code>, <Code>"online"</Code>, pauses every read and write after the
-        browser fires <Code>offline</Code>, until it fires <Code>online</Code>: a read stays pending, never reaching its
-        error state, and a write waits. When the backend is local (Electron IPC, a server on localhost) or the app shows
-        its own offline UI, use <Code>"always"</Code>, on <Code>createDataClient</Code> for every query and mutation or
-        on one hook: <Code>useServerQuery</Code>, <Code>defineResource</Code> and <Code>useServerResource</Code>,{" "}
-        <Code>useServerPage</Code>, <Code>useServerInfinite</Code>, <Code>useServerTotal</Code> and{" "}
-        <Code>useSourceMutation</Code> take <Code>networkMode</Code>. <Code>"offlineFirst"</Code> runs the first attempt
-        and pauses only the retries, for a service worker cache.
-      </P>
-      <Pre code={networkCode} />
+      <NetworkMode />
 
       <H2 id="serial-mutations">Mutations one at a time</H2>
       <P>
