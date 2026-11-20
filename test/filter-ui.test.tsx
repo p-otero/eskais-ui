@@ -142,6 +142,13 @@ test("a remote option says Any until something is chosen", () => {
   expect(screen.getByRole("combobox", { name: "Assignee" }).getAttribute("placeholder")).toBe("Any")
 })
 
+function chipNames(toolbar: HTMLElement) {
+  return within(toolbar)
+    .queryAllByRole("button")
+    .filter((button) => button.closest("[data-slot=filter-chip]") && !button.getAttribute("aria-label"))
+    .map((button) => button.textContent)
+}
+
 describe("FilterChips", () => {
   test("one chip per active filter; a pick applies at once; remove returns focus to Add filter", async () => {
     const user = userEvent.setup()
@@ -193,6 +200,55 @@ describe("FilterChips", () => {
 
     await user.click(within(toolbar).getByRole("button", { name: "Reset filters" }))
     expect(current()).toEqual({})
+  })
+
+  test("a chip keeps the place it was added in, not the schema's order, when set and when edited", async () => {
+    const user = userEvent.setup()
+    render(
+      <Scope filter={{ points: { op: "gte", value: 3 } }}>
+        <FilterChips />
+      </Scope>,
+    )
+    const toolbar = screen.getByRole("toolbar", { name: "Filters" })
+    await user.click(within(toolbar).getByRole("button", { name: "Add filter" }))
+    await user.click(await screen.findByRole("menuitem", { name: "Status" }))
+    expect(chipNames(toolbar)).toEqual(["Points: ≥ 3", "Status"])
+    await user.click(await screen.findByRole("checkbox", { name: "Open" }))
+    expect(chipNames(toolbar)).toEqual(["Points: ≥ 3", "Status: Open"])
+    await user.keyboard("{Escape}")
+    await waitFor(() => expect(chipNames(toolbar)).toEqual(["Points: ≥ 3", "Status: Open"]))
+
+    await user.click(within(toolbar).getByRole("button", { name: "Points: ≥ 3" }))
+    const value = await screen.findByRole("textbox", { name: "Value" })
+    await user.clear(value)
+    await user.type(value, "5{Enter}")
+    await waitFor(() => expect(chipNames(toolbar)).toEqual(["Points: ≥ 5", "Status: Open"]))
+
+    await user.click(within(toolbar).getByRole("button", { name: "Status: Open" }))
+    await user.click(await screen.findByRole("checkbox", { name: "Open" }))
+    await user.click(await screen.findByRole("checkbox", { name: "Done" }))
+    expect(chipNames(toolbar)).toEqual(["Points: ≥ 5", "Status: Done"])
+    await user.keyboard("{Escape}")
+
+    await user.click(within(toolbar).getByRole("button", { name: "Remove Points filter" }))
+    await user.click(within(toolbar).getByRole("button", { name: "Add filter" }))
+    await user.click(await screen.findByRole("menuitem", { name: "Points" }))
+    await user.type(await screen.findByRole("textbox", { name: "Value" }), "8{Enter}")
+    await waitFor(() => expect(chipNames(toolbar)).toEqual(["Status: Done", "Points: = 8"]))
+  })
+
+  test("a filter an agent adds goes after the chips already there", async () => {
+    render(
+      <Scope filter={{ points: { op: "gte", value: 3 } }}>
+        <FilterChips />
+      </Scope>,
+    )
+    const toolbar = screen.getByRole("toolbar", { name: "Filters" })
+    const result = await agent.act({
+      steps: [{ ref: "Task filters", action: "filter", args: ["Status", ["Open"]] }],
+    })
+    expect(result.ok, result.error?.message).toBe(true)
+    await waitFor(() => expect(chipNames(toolbar)).toEqual(["Points: ≥ 3", "Status: Open"]))
   })
 })
 

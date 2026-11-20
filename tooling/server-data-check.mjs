@@ -173,6 +173,27 @@ await withShowcase(async (page) => {
   check("chips: a pick filters at once", await page.getByRole("button", { name: "Status: Done" }).isVisible())
   check("chips: the filter is in the URL", (await page.evaluate(() => location.hash)).includes("status=done"))
 
+  // Status comes before Points in the schema; a chip added after Points stays after it once set.
+  const chipNames = () =>
+    page
+      .locator("[data-slot=filter-chip] [aria-haspopup=dialog]")
+      .evaluateAll((chips) => chips.map((chip) => chip.textContent))
+  await open(page, { ui: "chips", hash: "#?points=gte:3", width: 1440, scheme: "light", delay: 0 })
+  await page.getByRole("button", { name: "Add filter" }).click()
+  await page.getByRole("menuitem", { name: "Status" }).click()
+  const drafted = await chipNames()
+  await page.getByRole("checkbox", { name: "Open" }).click()
+  await page.getByRole("button", { name: "Status: Open" }).waitFor()
+  const picked = await chipNames()
+  await page.keyboard.press("Escape")
+  const closed = await chipNames()
+  const order = [drafted, picked, closed].map((names) => names.join(" | "))
+  check(
+    "chips: a new chip keeps its place when set",
+    order.join(" / ") === "Points: ≥ 3 | Status / Points: ≥ 3 | Status: Open / Points: ≥ 3 | Status: Open",
+    order.join(" / "),
+  )
+
   await open(page, { ui: "panel", width: 1440, scheme: "light", delay: 0 })
   await page.getByRole("button", { name: /^Filters/ }).click()
   const side = page.getByRole("complementary", { name: "Filters" })
