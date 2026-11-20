@@ -151,7 +151,11 @@ test("on narrow screens it is a bottom sheet unless sheet={false}", () => {
 test("while the on-screen keyboard is up, the content and the sheet fit above it", () => {
   render(<SizedDialog />)
   const sheet = screen.getByRole("dialog", { name: "Sized" })
-  expect(sheet.className).toContain("bottom-[calc(100%-var(--dialog-viewport-bottom,100%))]")
+  // The visible part is cut to the containing block: a stale `offsetTop` with the full height can't push it below.
+  expect(sheet.className).toContain("bottom-[max(0px,100%-var(--dialog-viewport-bottom,100%))]")
+  expect(sheet.className).toContain(
+    "top-[clamp(0px,var(--dialog-viewport-top,0px),100%-var(--dialog-viewport-height,100%))]",
+  )
   expect(sheet.className).toContain("data-dialog-keyboard:top-auto")
   expect(sheet.className).toContain("max-h-[min(var(--dialog-max-height),calc(var(--dialog-viewport-height,100%)")
   expect(sheet.className).toContain("narrow:max-h-[min(var(--sheet-max-height),calc(var(--dialog-viewport-height,100%)")
@@ -194,11 +198,14 @@ test("stays in the visible part of the page, and takes it for the keyboard only 
     act(() => screen.getByRole("textbox", { name: "Note" }).focus())
     expect(dialog.hasAttribute("data-dialog-keyboard")).toBe(true)
 
-    // Pinch-zoomed, it stays where it is instead of chasing the zoom.
+    // Pinch-zoomed, it stays on the box it had instead of chasing the zoom.
     viewport.scale = 2
+    viewport.height = (innerHeight - 90) / 2
+    viewport.offsetTop = 200
     act(() => viewport.dispatchEvent(new Event("resize")))
-    expect(dialog.style.getPropertyValue("--dialog-viewport-bottom")).toBe("")
-    expect(dialog.hasAttribute("data-dialog-keyboard")).toBe(false)
+    expect(dialog.style.getPropertyValue("--dialog-viewport-top")).toBe("40px")
+    expect(dialog.style.getPropertyValue("--dialog-viewport-bottom")).toBe(`${String(innerHeight - 50)}px`)
+    expect(dialog.hasAttribute("data-dialog-keyboard")).toBe(true)
   } finally {
     vi.unstubAllGlobals()
   }

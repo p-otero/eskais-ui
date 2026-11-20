@@ -1,7 +1,7 @@
 import { render, screen } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { createAgent } from "@ui-sdk/react/agent"
-import { expect, test } from "vitest"
+import { expect, test, vi } from "vitest"
 
 import {
   Drawer,
@@ -112,4 +112,34 @@ test("an agent can open the drawer and edit its field", async () => {
   const result = await agent.act({ steps: [{ ref: "Task title", action: "setValue", args: ["Index the API"] }] })
   expect(result.ok, result.error?.message).toBe(true)
   expect(screen.getByRole<HTMLInputElement>("textbox", { name: "Task title" }).value).toBe("Index the API")
+})
+
+test("the drawer's viewport takes the visible part of the page, not UI SDK's innerHeight inset", async () => {
+  // iOS 26 Safari: toolbars shorten the visible part while innerHeight stays stale at the full height.
+  const viewport = Object.assign(new EventTarget(), {
+    width: innerWidth,
+    height: innerHeight - 90,
+    offsetTop: 0,
+    scale: 1,
+  })
+  vi.stubGlobal("visualViewport", viewport)
+  try {
+    const user = userEvent.setup()
+    render(<TaskDrawer side="bottom" />)
+    await user.click(screen.getByRole("button", { name: "Open task" }))
+    const drawer = screen.getByRole("dialog", { name: "Index the docs" })
+    const box = drawer.parentElement as HTMLElement
+    expect(box.dataset.slot).toBe("drawer-viewport")
+    expect(box.style.getPropertyValue("--dialog-viewport-bottom")).toBe(`${String(innerHeight - 90)}px`)
+    // The rules on the content reach its parent, over the inline inset UI SDK writes.
+    expect(drawer.className).toContain(
+      "[:has(>&)]:[--keyboard-inset:max(0px,100%-var(--dialog-viewport-bottom,100%))]!",
+    )
+    expect(drawer.className).toContain(
+      "[:has(>&)]:top-[clamp(0px,var(--dialog-viewport-top,0px),100%-var(--dialog-viewport-height,100%))]!",
+    )
+    expect(drawer.className).toContain("max-h-[calc(min(100%,var(--dialog-viewport-height,100%))-2rem)]")
+  } finally {
+    vi.unstubAllGlobals()
+  }
 })
