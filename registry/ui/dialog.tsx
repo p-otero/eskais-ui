@@ -26,7 +26,7 @@ import {
   useRecordOpener,
   type FocusMemory,
 } from "@/components/ui/use-dialog-focus"
-import { useVisualViewportBox, type ViewportBoxScope } from "@/components/ui/use-dialog-viewport"
+import { useVisualViewportBox } from "@/components/ui/use-dialog-viewport"
 import { cn, cnState } from "@/lib/utils"
 
 // While they animate out, the backdrop and content let presses through, so the first click on the page counts.
@@ -116,8 +116,14 @@ function FocusMoved({ memoryRef }: { memoryRef: RefObject<FocusMemory> }) {
 }
 
 // Mounts with the content, so it follows the keyboard and the page's scroll only while the content is in the page.
-function OpenGuards({ contentRef, scope }: { contentRef: RefObject<HTMLElement | null>; scope: ViewportBoxScope }) {
-  useVisualViewportBox(contentRef, scope)
+function OpenGuards({
+  contentRef,
+  parentClassName,
+}: {
+  contentRef: RefObject<HTMLElement | null>
+  parentClassName?: string
+}) {
+  useVisualViewportBox(contentRef, parentClassName)
   useFocusAboveKeyboard(contentRef)
   useKeepPageStill(contentRef)
   return null
@@ -127,14 +133,14 @@ function withFocusMarkers(
   content: ReactNode,
   memoryRef: RefObject<FocusMemory>,
   contentRef: RefObject<HTMLElement | null>,
-  scope: ViewportBoxScope,
+  parentClassName?: string,
 ) {
   return (
     <>
       <FocusOpener memoryRef={memoryRef} />
       {content}
       <FocusMoved memoryRef={memoryRef} />
-      <OpenGuards contentRef={contentRef} scope={scope} />
+      <OpenGuards contentRef={contentRef} parentClassName={parentClassName} />
     </>
   )
 }
@@ -155,12 +161,12 @@ function resolveFocusTarget(target: Exclude<FinalFocus, "none">) {
 /**
  * Keeps focus return working where UI SDK misses it (an `autoFocus` field, another modal opening while this one
  * closes), a focused field above the keyboard and the locked page still. Give the content the returned `finalFocus`
- * and `attach` (its ref) and wrap its children. `viewportBox: "parent"` writes the visible box on its parent.
+ * and `attach` (its ref) and wrap its children. `viewportParentClassName` puts the visible box on its parent instead.
  */
 function useFocusReturn(
   finalFocus: FinalFocus,
   forwarded?: Ref<HTMLElement>,
-  { viewportBox = "content" }: { viewportBox?: ViewportBoxScope } = {},
+  { viewportParentClassName }: { viewportParentClassName?: string } = {},
 ) {
   const memoryRef = useRef<FocusMemory>({ opener: null, movedBeforeOpen: false })
   const contentRef = useRef<HTMLElement | null>(null)
@@ -175,8 +181,8 @@ function useFocusReturn(
   }
   function wrap<State>(children: ReactNode | ((state: State) => ReactNode)) {
     return typeof children === "function"
-      ? (state: State) => withFocusMarkers(children(state), memoryRef, contentRef, viewportBox)
-      : withFocusMarkers(children, memoryRef, contentRef, viewportBox)
+      ? (state: State) => withFocusMarkers(children(state), memoryRef, contentRef, viewportParentClassName)
+      : withFocusMarkers(children, memoryRef, contentRef, viewportParentClassName)
   }
   const attach = useCallback(
     (element: HTMLElement | null) => {
