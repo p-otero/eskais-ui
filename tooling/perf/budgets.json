@@ -120,6 +120,7 @@
   "bundles": {
     "acceptance-list": 64.6,
     "accordion": 29.8,
+    "action-refusal": 0.4,
     "activity-log": 75.2,
     "agent-badge": 25.9,
     "agent-task-board": 217.9,
@@ -250,7 +251,7 @@
     "slider": 31.7,
     "sortable": 35.6,
     "spinner": 11.4,
-    "stage-track": 59.8,
+    "stage-track": 60.2,
     "stat": 15.4,
     "states": 58.3,
     "status-pill": 12.4,

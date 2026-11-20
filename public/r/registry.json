@@ -4768,6 +4768,10 @@
           "type": "registry:ui"
         },
         {
+          "path": "registry/lib/image-scan-geometry.ts",
+          "type": "registry:lib"
+        },
+        {
           "path": "registry/ui/image-scan-status.tsx",
           "type": "registry:ui"
         },

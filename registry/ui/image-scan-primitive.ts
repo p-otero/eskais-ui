@@ -9,13 +9,16 @@ import {
 } from "@ui-sdk/core"
 
 import { settled, unavailable } from "@/lib/action-refusal"
+import {
+  clampBox,
+  clampFraction as clamp,
+  mapRegionBox,
+  type ImageScanBox,
+  type ImageScanFit,
+  type ImageScanSize,
+} from "@/lib/image-scan-geometry"
 
 type ImageScanStatus = "uploaded" | "scanning" | "result" | "error"
-
-type ImageScanFit = "contain" | "cover"
-
-/** A rectangle on the image, each value a fraction of its width or height, from its top left corner. */
-type ImageScanBox = { x: number; y: number; width: number; height: number }
 
 type ImageScanRegionItem = { value: string; label: string }
 
@@ -49,35 +52,6 @@ type ImageScanOptions = {
   aspectRatio?: number
   fit?: ImageScanFit
   announcements?: ImageScanAnnouncements
-}
-
-type ImageScanSize = { width: number; height: number }
-
-/**
- * Where a region's box lands in the frame, in the frame's pixels, for an image drawn with `object-fit` and a centred
- * `object-position`. With `cover` the result can reach past the frame, which clips it.
- */
-function mapRegionBox(
-  box: ImageScanBox,
-  { fit, image, frame }: { fit: ImageScanFit; image: ImageScanSize; frame: ImageScanSize },
-): ImageScanBox {
-  const scaleX = frame.width / image.width
-  const scaleY = frame.height / image.height
-  const scale = fit === "contain" ? Math.min(scaleX, scaleY) : Math.max(scaleX, scaleY)
-  const width = image.width * scale
-  const height = image.height * scale
-  const left = (frame.width - width) / 2
-  const top = (frame.height - height) / 2
-  return { x: left + box.x * width, y: top + box.y * height, width: box.width * width, height: box.height * height }
-}
-
-const clamp = (value: number) => Math.min(1, Math.max(0, Number.isFinite(value) ? value : 0))
-
-/** Keeps a box inside the image, so a detector's rounding never draws a box past its edge. */
-function clampBox(box: ImageScanBox): ImageScanBox {
-  const x = clamp(box.x)
-  const y = clamp(box.y)
-  return { x, y, width: Math.min(clamp(box.width), 1 - x), height: Math.min(clamp(box.height), 1 - y) }
 }
 
 const percentOf = (value: number) => `${String(Math.round(value * 10_000) / 100)}%`
