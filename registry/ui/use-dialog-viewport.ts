@@ -27,11 +27,13 @@ function opensKeyboard(target: EventTarget | null) {
 
 const viewportProperties = ["--dialog-viewport-top", "--dialog-viewport-bottom", "--dialog-viewport-height"]
 
-// Writes the visual viewport on the content, so CSS places it against its containing block (`calc(100% - bottom)`),
-// not against `innerHeight`, which iOS 26 Safari can leave stale, and the visible part can end above the layout one
-// with no keyboard (toolbars), so UI SDK's `data-keyboard` (beta.12) misfires there: `data-dialog-keyboard` also needs
-// a focused field. Pinch-zoomed, the properties go away and the content stays put.
-function useVisualViewportBox(contentRef: RefObject<HTMLElement | null>) {
+/** Where the properties go: the content, or its parent when that is what lays out against the page (a Drawer's viewport). */
+type ViewportBoxScope = "content" | "parent"
+
+// Writes the visual viewport for CSS to place against the containing block, not `innerHeight` (stale on iOS 26).
+// Toolbars also shorten the visible part, where UI SDK's `data-keyboard` (beta.12) misfires, so `data-dialog-keyboard`
+// also needs a focused field. Pinch-zoomed, the visual viewport is a window into the page: the last box stays.
+function useVisualViewportBox(contentRef: RefObject<HTMLElement | null>, scope: ViewportBoxScope = "content") {
   useEffect(() => {
     const viewport = window.visualViewport
     if (!viewport) return undefined
@@ -43,12 +45,12 @@ function useVisualViewportBox(contentRef: RefObject<HTMLElement | null>) {
       written?.removeAttribute("data-dialog-keyboard")
     }
     const update = (event?: Event) => {
-      const content = contentRef.current
+      const content = scope === "parent" ? (contentRef.current?.parentElement ?? null) : contentRef.current
       if (content !== written) clear()
       written = content
       if (!content) return undefined
       if (Math.abs(viewport.height - window.innerHeight) <= 1) pageScale = viewport.scale
-      if (viewport.scale > pageScale + 0.01) return clear()
+      if (viewport.scale > pageScale + 0.01) return undefined
       const bottom = viewport.offsetTop + viewport.height
       content.style.setProperty("--dialog-viewport-top", `${String(Math.round(viewport.offsetTop))}px`)
       content.style.setProperty("--dialog-viewport-bottom", `${String(Math.round(bottom))}px`)
@@ -75,7 +77,8 @@ function useVisualViewportBox(contentRef: RefObject<HTMLElement | null>) {
       document.removeEventListener("focusout", update)
       clear()
     }
-  }, [contentRef])
+  }, [contentRef, scope])
 }
 
 export { useVisualViewportBox }
+export type { ViewportBoxScope }

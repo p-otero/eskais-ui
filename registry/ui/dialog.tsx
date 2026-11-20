@@ -26,23 +26,23 @@ import {
   useRecordOpener,
   type FocusMemory,
 } from "@/components/ui/use-dialog-focus"
-import { useVisualViewportBox } from "@/components/ui/use-dialog-viewport"
+import { useVisualViewportBox, type ViewportBoxScope } from "@/components/ui/use-dialog-viewport"
 import { cn, cnState } from "@/lib/utils"
 
 // While they animate out, the backdrop and content let presses through, so the first click on the page counts.
 const backdropClassName =
   "fixed inset-0 z-overlay bg-overlay transition-opacity duration-dialog ease-standard data-ending-style:pointer-events-none data-ending-style:opacity-0 data-starting-style:opacity-0"
 
-// Sizes and offsets come from the containing block through %, never viewport units, and the content stays in the
-// visible part of it (`useVisualViewportBox`), not in `innerHeight`, which iOS 26 Safari can leave stale while its
-// toolbars cover the bottom. The keyboard covers the layout viewport without resizing it, so while it is up
-// (`data-dialog-keyboard`) the content sits on the visible part's bottom edge, above it.
+// Sizes come from the containing block through %, never viewport units. The content stays in the visible part of the
+// page (`useVisualViewportBox`), cut to the containing block: iOS Safari can leave `innerHeight` stale and keep a closed
+// keyboard's `offsetTop` with the full height. While the keyboard is up (`data-dialog-keyboard`), which covers the
+// layout viewport without resizing it, the content sits on the visible part's bottom edge.
 const dialogContentVariants = cva(
   [
     // oxlint-disable-next-line eskais/scroll-area -- the dialog element's fallback for content without a DialogBody, which is the scroll area
     "fixed inset-0 z-overlay m-auto flex h-fit w-(--dialog-width) min-w-0 flex-col gap-group overflow-y-auto overscroll-contain rounded-floating border border-floating-border bg-popover p-inset-surface field-label-surface-popover text-popover-foreground wrap-anywhere shadow-floating outline-none transition duration-dialog ease-standard data-ending-style:pointer-events-none data-ending-style:scale-95 data-ending-style:opacity-0 data-starting-style:scale-95 data-starting-style:opacity-0",
     // oxlint-disable-next-line shadcn/no-arbitrary-values -- no token can read the visual viewport, which useVisualViewportBox sets on the content itself
-    "top-[var(--dialog-viewport-top,0px)] bottom-[calc(100%-var(--dialog-viewport-bottom,100%))] max-h-[min(var(--dialog-max-height),calc(var(--dialog-viewport-height,100%)-2*var(--floating-offset)))]",
+    "top-[clamp(0px,var(--dialog-viewport-top,0px),100%-var(--dialog-viewport-height,100%))] bottom-[max(0px,100%-var(--dialog-viewport-bottom,100%))] max-h-[min(var(--dialog-max-height),calc(var(--dialog-viewport-height,100%)-2*var(--floating-offset)))]",
     "data-dialog-keyboard:top-auto data-dialog-keyboard:mb-floating",
   ],
   {
@@ -116,8 +116,8 @@ function FocusMoved({ memoryRef }: { memoryRef: RefObject<FocusMemory> }) {
 }
 
 // Mounts with the content, so it follows the keyboard and the page's scroll only while the content is in the page.
-function OpenGuards({ contentRef }: { contentRef: RefObject<HTMLElement | null> }) {
-  useVisualViewportBox(contentRef)
+function OpenGuards({ contentRef, scope }: { contentRef: RefObject<HTMLElement | null>; scope: ViewportBoxScope }) {
+  useVisualViewportBox(contentRef, scope)
   useFocusAboveKeyboard(contentRef)
   useKeepPageStill(contentRef)
   return null
@@ -127,13 +127,14 @@ function withFocusMarkers(
   content: ReactNode,
   memoryRef: RefObject<FocusMemory>,
   contentRef: RefObject<HTMLElement | null>,
+  scope: ViewportBoxScope,
 ) {
   return (
     <>
       <FocusOpener memoryRef={memoryRef} />
       {content}
       <FocusMoved memoryRef={memoryRef} />
-      <OpenGuards contentRef={contentRef} />
+      <OpenGuards contentRef={contentRef} scope={scope} />
     </>
   )
 }
@@ -152,12 +153,15 @@ function resolveFocusTarget(target: Exclude<FinalFocus, "none">) {
 }
 
 /**
- * Keeps focus return working where UI SDK misses it: a React `autoFocus` field took focus before UI SDK recorded the
- * opener, or another modal (one of ours or another library's) opened while this one closes or unmounts, which keeps
- * focus. It also keeps a focused field above the on-screen keyboard and the locked page still. Pass the content's
- * `finalFocus` and `ref`, give the content the returned `finalFocus` and `attach` (as its ref), and wrap its children.
+ * Keeps focus return working where UI SDK misses it (an `autoFocus` field, another modal opening while this one
+ * closes), a focused field above the keyboard and the locked page still. Give the content the returned `finalFocus`
+ * and `attach` (its ref) and wrap its children. `viewportBox: "parent"` writes the visible box on its parent.
  */
-function useFocusReturn(finalFocus: FinalFocus, forwarded?: Ref<HTMLElement>) {
+function useFocusReturn(
+  finalFocus: FinalFocus,
+  forwarded?: Ref<HTMLElement>,
+  { viewportBox = "content" }: { viewportBox?: ViewportBoxScope } = {},
+) {
   const memoryRef = useRef<FocusMemory>({ opener: null, movedBeforeOpen: false })
   const contentRef = useRef<HTMLElement | null>(null)
   const returnTo = () => {
@@ -171,8 +175,8 @@ function useFocusReturn(finalFocus: FinalFocus, forwarded?: Ref<HTMLElement>) {
   }
   function wrap<State>(children: ReactNode | ((state: State) => ReactNode)) {
     return typeof children === "function"
-      ? (state: State) => withFocusMarkers(children(state), memoryRef, contentRef)
-      : withFocusMarkers(children, memoryRef, contentRef)
+      ? (state: State) => withFocusMarkers(children(state), memoryRef, contentRef, viewportBox)
+      : withFocusMarkers(children, memoryRef, contentRef, viewportBox)
   }
   const attach = useCallback(
     (element: HTMLElement | null) => {

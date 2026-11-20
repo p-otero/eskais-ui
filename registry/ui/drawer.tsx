@@ -26,11 +26,15 @@ const drawerBackdropClassName = "fixed inset-0 z-overlay bg-overlay data-ending-
 const drawerContentClassName = [
   // oxlint-disable-next-line eskais/scroll-area -- the drawer element's fallback for content with no scrolling body of its own
   "data-ending-style:pointer-events-none! flex flex-col gap-group overflow-y-auto overscroll-contain border border-floating-border bg-popover p-inset-surface field-label-surface-popover wrap-anywhere text-popover-foreground shadow-floating outline-none",
-  // A bottom drawer reaches the bottom edge, so it clears the home indicator under `viewport-fit=cover`.
-  "data-[side=bottom]:mx-auto data-[side=bottom]:max-h-[calc(100%-2rem)] data-[side=bottom]:w-full data-[side=bottom]:max-w-2xl data-[side=bottom]:rounded-t-surface data-[side=bottom]:border-b-0 data-[side=bottom]:pb-[max(var(--spacing-inset-surface),env(safe-area-inset-bottom))]",
-  "data-[side=top]:mx-auto data-[side=top]:max-h-[calc(100%-2rem)] data-[side=top]:w-full data-[side=top]:max-w-2xl data-[side=top]:rounded-b-surface data-[side=top]:border-t-0",
+  // A bottom drawer reaches the bottom edge, so it clears the home indicator under `viewport-fit=cover`. Its viewport
+  // runs past the bottom edge for overscroll, so the height is capped by the visible part, not by the viewport.
+  "data-[side=bottom]:mx-auto data-[side=bottom]:max-h-[calc(min(100%,var(--dialog-viewport-height,100%))-2rem)] data-[side=bottom]:w-full data-[side=bottom]:max-w-2xl data-[side=bottom]:rounded-t-surface data-[side=bottom]:border-b-0 data-[side=bottom]:pb-[max(var(--spacing-inset-surface),env(safe-area-inset-bottom))]",
+  "data-[side=top]:mx-auto data-[side=top]:max-h-[calc(min(100%,var(--dialog-viewport-height,100%))-2rem)] data-[side=top]:w-full data-[side=top]:max-w-2xl data-[side=top]:rounded-b-surface data-[side=top]:border-t-0",
   "data-[side=right]:h-full data-[side=right]:w-[calc(100%-2rem)] data-[side=right]:max-w-sm data-[side=right]:rounded-l-surface data-[side=right]:border-r-0",
   "data-[side=left]:h-full data-[side=left]:w-[calc(100%-2rem)] data-[side=left]:max-w-sm data-[side=left]:rounded-r-surface data-[side=left]:border-l-0",
+  // UI SDK lays its viewport (the content's parent) out from `--keyboard-inset`, against `innerHeight` (beta.12), which
+  // iOS 26 can leave stale. It takes the visible box instead, as DialogContent does, and the drawer snaps inside it.
+  "[:has(>&)]:top-[clamp(0px,var(--dialog-viewport-top,0px),100%-var(--dialog-viewport-height,100%))]! [:has(>&)]:[--keyboard-inset:max(0px,100%-var(--dialog-viewport-bottom,100%))]!",
 ].join(" ")
 
 function DrawerTrigger({
@@ -58,7 +62,13 @@ function DrawerContent({
   children,
   ...props
 }: ComponentProps<typeof DrawerContentPrimitive>) {
-  const { attach, finalFocus: returnFocus, wrap } = useFocusReturn(finalFocus, ref as Ref<HTMLElement> | undefined)
+  const {
+    attach,
+    finalFocus: returnFocus,
+    wrap,
+  } = useFocusReturn(finalFocus, ref as Ref<HTMLElement> | undefined, {
+    viewportBox: "parent",
+  })
   return (
     <DrawerContentPrimitive
       ref={attach}
