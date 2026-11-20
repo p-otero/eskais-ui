@@ -16,6 +16,15 @@ const itemNotes: Record<string, ItemNotes> = {
     ],
     related: ["tone", "segmented-control", "switch"],
   },
+  ansi: {
+    usage:
+      "Use parseAnsi to read terminal output yourself (LogViewer already does): it returns the plain text and styled runs, and ansiCssColor turns a run's colour into theme-aware CSS. stripAnsi gives the text alone, for copying or search.",
+    a11y: [
+      "ansiCssColor keeps a colour's hue and clamps its lightness to --ansi-lightness-min and --ansi-lightness-max, so every terminal colour holds 4.5:1 on muted in light and dark.",
+      "Bidi overrides and control characters are dropped, so a line can't read differently from what it holds.",
+    ],
+    related: ["log-viewer", "code-block"],
+  },
   tone: {
     usage: "Import Tone wherever a component takes a status, instead of loose strings or component-specific words.",
     a11y: ["Every tone's soft foreground reaches 4.5:1 on its soft fill, in both modes and every palette."],
@@ -691,6 +700,19 @@ const itemNotes: Record<string, ItemNotes> = {
     agent:
       "Each block is a group named by its title (or aria-label) whose value is the code, with a copy action. The copy button is hidden from agents so every block's copy has one name.",
     related: ["markdown-view", "tabs", "button"],
+  },
+  "log-viewer": {
+    usage:
+      "Use LogViewer for live output of any process: a dev server, a build, a local environment's frontend, backend and database. Feed a createLogStore from a WebSocket, an EventSource or a child process with append (whole lines) or write (raw chunks); it holds the newest maxLines and the viewer renders only the lines in view.",
+    a11y: [
+      "The lines are a named role=log that takes focus: arrows scroll a line, PageUp and PageDown a page, Home and End the edges, F8 and Shift+F8 step through errors.",
+      'The log is aria-live off, since rows come and go as it scrolls; a polite status announces new errors at most every 5 seconds (announce="lines" counts every line, "off" stays quiet).',
+      "Terminal colours keep their hue with their lightness clamped by theme tokens, so text holds 4.5:1 in light and dark; error lines carry a tinted fill and are counted, not marked by colour alone.",
+      "Scrolling up stops following; Jump to end shows how many lines arrived and moves focus back to the log.",
+    ],
+    agent:
+      'Agents read the shown lines as the log\'s items ("[source] text", by line id), query them by text, and call filter (sources), search, nextError, previousError, copy, jumpToEnd and setWrap. A step with nowhere to go, or a change the app cancels, fails with the reason.',
+    related: ["code-block", "conversation", "scroll-area", "toggle-group"],
   },
   link: {
     usage:

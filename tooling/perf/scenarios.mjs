@@ -233,6 +233,13 @@ const keyScenarios = [
     held: "ArrowRight",
   },
   {
+    id: "log-viewer",
+    label: "LogViewer, 10,000 lines (↑, PageUp, F8)",
+    focus: '[data-slot="log-viewer-log"]',
+    keys: [...repeat("ArrowUp", 30), ...repeat("PageUp", 10), ...repeat("F8", 6)],
+    held: "ArrowUp",
+  },
+  {
     id: "typing",
     phase: "input",
     label: "Input (typing)",
@@ -287,6 +294,7 @@ const mountScenarios = [
   "markdown-view",
   "server-data-table",
   "server-list",
+  "log-viewer",
 ]
 
 export { keyScenarios, mountScenarios, overlays }

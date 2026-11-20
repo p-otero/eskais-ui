@@ -190,6 +190,8 @@
         "tooling/document-workspace-check.mjs",
         "tooling/server-data-check.mjs",
         "tooling/find-check.mjs",
+        "tooling/log-bench.mjs",
+        "tooling/log-viewer-check.mjs",
         "tooling/perf/**"
       ],
       "rules": {

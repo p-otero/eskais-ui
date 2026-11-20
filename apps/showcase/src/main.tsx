@@ -25,6 +25,7 @@ import { SettingsPageCheck } from "./checks/settings-page-check"
 import { MobileNavCheck } from "./checks/mobile-nav-check"
 import { GitBench } from "./checks/git-bench"
 import { ListBench } from "./checks/list-bench"
+import { LogBench } from "./checks/log-bench"
 import { OverlayCheck } from "./checks/overlay-check"
 import { PopoverCheck } from "./checks/popover-check"
 import { PressCheck } from "./checks/press-check"
@@ -41,6 +42,7 @@ import { PerfPage } from "./perf/perf-page"
 import { DocumentWorkspacePage } from "./sections/document-workspace"
 import { CommitBranchesDemo, CommitTrailDemo } from "./sections/git"
 import { InboxDemo } from "./sections/inbox"
+import { LogViewerDemo } from "./sections/log-viewer"
 import { TaskDialogPage } from "./sections/task-dialog"
 import { DashboardGridDemo, ListRowActionsDemo, MasterDetailDemo, SettingsPageDemo } from "./sections/layout-blocks"
 import { demoStatuses, PageDemo, type DemoStatus } from "./sections/page"
@@ -59,7 +61,7 @@ const ModelCheck = lazy(() =>
 const root = document.getElementById("root")
 if (!root) throw new Error("Missing #root element")
 
-// ?demo=page, site, shell, inbox, list-bench, shell-block, master-detail, list-row-actions, dashboard-grid, settings-page,
+// ?demo=page, site, shell, inbox, list-bench, log-viewer, log-bench, shell-block, master-detail, list-row-actions, dashboard-grid, settings-page,
 // document-workspace, agent-workspace, commit-history and the git views (sections/git-workspace) render one demo alone; ?demo=<name>-check pages are the
 // fixtures of tooling/<name>-check.mjs (dialog-mobile-check's: dialog-mobile, dialog-matrix; shell-check's: card-header, description-list, field-placement, gauge,
 // mobile-nav, palette-reopen, side-panel, table, master-detail, settings-page); *-bench and ?demo=perf pages are the benchmarks'.
@@ -81,6 +83,8 @@ const standalone = new Set([
   "icon-tooltip-check",
   "inbox",
   "list-bench",
+  "log-bench",
+  "log-viewer",
   "diff-bench",
   "calendar-check",
   "press-check",
@@ -141,6 +145,14 @@ function Demo() {
   if (demo === "icon-tooltip-check") return <IconTooltipCheck />
   if (demo === "inbox") return <InboxDemo />
   if (demo === "list-bench") return <ListBench />
+  if (demo === "log-bench") return <LogBench />
+  if (demo === "log-viewer") {
+    return (
+      <main className="flex h-dvh flex-col p-inset-surface">
+        <LogViewerDemo className="min-h-0 flex-1" />
+      </main>
+    )
+  }
   if (demo === "diff-bench") return <DiffBench />
   if (demo === "calendar-check") return <CalendarCheck />
   if (demo === "press-check") return <PressCheck />
