@@ -300,7 +300,8 @@ await withShowcase(
       )
       await page.getByRole("heading", { name: "Model viewer" }).scrollIntoViewIfNeeded()
       await page.waitForFunction(
-        () => document.querySelector("[data-slot=model-viewer]")?.getAttribute("data-status") === "ready",
+        // The scan above it holds its own viewer back until a scan starts.
+        () => [...document.querySelectorAll("[data-slot=model-viewer]")].some((v) => v.dataset.status === "ready"),
         undefined,
         { timeout: 20_000 },
       )
