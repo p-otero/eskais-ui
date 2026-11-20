@@ -12,6 +12,7 @@ import {
 import type { ModelViewerHandle } from "@/components/ui/model-viewer-primitive"
 import { ModelViewerSceneContext, type ModelViewerMaterial } from "@/components/ui/model-viewer-rig"
 import {
+  useModelFloor,
   useModelFrame,
   useModelRig,
   useSceneFrameloop,
@@ -32,6 +33,7 @@ type ModelViewerSceneProps = {
   loop: boolean
   speed: number
   autoRotate: number
+  floor: boolean
   onLoad?: (info: ModelViewerLoadInfo) => void
   onError?: (error: Error) => void
   onModelLoad?: ModelViewerModelLoad
@@ -50,11 +52,22 @@ function Lights() {
   )
 }
 
-function ModelLayer({ handle, model, onLoad, onError, onModelLoad, children, ...frame }: ModelViewerSceneProps) {
+function ModelLayer({
+  handle,
+  model,
+  floor: withFloor,
+  onLoad,
+  onError,
+  onModelLoad,
+  children,
+  ...frame
+}: ModelViewerSceneProps) {
   const { rig, leaving, finishSwap } = useModelRig(model, handle, onLoad, onError, onModelLoad)
   useModelFrame({ handle, rig, leaving, finishSwap, ...frame })
+  const floor = useModelFloor(withFloor, rig)
   return (
-    <ModelViewerSceneContext value={{ handle, rig, framing: frame.framing }}>
+    <ModelViewerSceneContext value={{ handle, rig, framing: frame.framing, floor }}>
+      {floor ? <primitive object={floor.mesh} /> : null}
       {/* Keyed by scene, so a swap mounts the new model and keeps the old one where it is. */}
       {leaving ? <primitive key={leaving.scene.uuid} object={leaving.scene} /> : null}
       {rig ? <primitive key={rig.scene.uuid} object={rig.scene} /> : null}
