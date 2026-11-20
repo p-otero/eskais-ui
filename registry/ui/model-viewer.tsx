@@ -26,7 +26,11 @@ import type { ModelViewerMaterial } from "@/components/ui/model-viewer-rig"
 import { NativeSelect } from "@/components/ui/native-select"
 import { SegmentedControl, SegmentedControlIndicator, SegmentedControlItem } from "@/components/ui/segmented-control"
 import { Toggle } from "@/components/ui/toggle"
-import type { ModelViewerLoadInfo, ModelViewerSource } from "@/components/ui/use-model-viewer-scene"
+import type {
+  ModelViewerLoadInfo,
+  ModelViewerModelLoad,
+  ModelViewerSource,
+} from "@/components/ui/use-model-viewer-scene"
 import { cnState } from "@/lib/utils"
 
 const {
@@ -83,9 +87,16 @@ type ModelViewerProps = Omit<PartProps<"div">, "children" | "onLoad" | "onError"
     speed?: number
     /**
      * Morph target weights, eased inside the render loop with no React render per frame: a `Float32Array` (or
-     * numbers) aligned with `targetNames`, or a map by name. Names are the GLB's (`extras.targetNames`).
+     * numbers) aligned with `targetNames`, or a map by name. Names are the GLB's (`extras.targetNames`). A GLB that
+     * stores its targets scaled names the multipliers in `extras.targetScales`, and each weight is multiplied by its
+     * target's before it reaches the mesh.
      */
     weights?: ModelViewerWeights
+    /**
+     * `weights` come already multiplied by the GLB's `extras.targetScales`, as an engine that wrote the GLB may send
+     * them, and reach the mesh as they are. Expressions are multiplied either way.
+     */
+    scaledWeights?: boolean
     /** The order aligned `weights` follow; the GLB's own `extras.targetNames` by default. */
     targetNames?: readonly string[]
     /** Expression weights by ARKit name (`mouthSmileLeft`), written to the `expr.<name>` targets over `weights`. */
@@ -105,6 +116,13 @@ type ModelViewerProps = Omit<PartProps<"div">, "children" | "onLoad" | "onError"
     sceneChildren?: ReactNode
     onLoad?: (info: ModelViewerLoadInfo) => void
     onError?: (error: Error) => void
+    /**
+     * Runs once per loaded model, before its first frame, with its three.js scene and clips: restyle its materials
+     * (the GLB's material `extras` are in each material's `userData`), add outlines, hide parts. Return a function to
+     * free what it made when the model goes. It may return a promise: the model shows once it resolves, so code
+     * that imports three.js can load with `import()` and stay out of the page's chunk.
+     */
+    onModelLoad?: ModelViewerModelLoad
     /** What went wrong, shown and read at once when loading fails; `labels.error` by default. */
     error?: string
     labels?: Partial<ModelViewerLabels>
@@ -141,6 +159,7 @@ function ModelViewer({
   loop = true,
   speed = 1,
   weights,
+  scaledWeights = false,
   targetNames,
   expressions,
   material = "standard",
@@ -152,6 +171,7 @@ function ModelViewer({
   sceneChildren,
   onLoad,
   onError,
+  onModelLoad,
   error,
   labels: ownLabels,
   className,
@@ -218,12 +238,14 @@ function ModelViewer({
               weights={weights}
               targetNames={targetNames}
               expressions={expressions}
+              scaledWeights={scaledWeights}
               material={material}
               loop={loop}
               speed={speed}
               autoRotate={spin}
               onLoad={onLoad}
               onError={onError}
+              onModelLoad={onModelLoad}
             >
               {sceneChildren}
             </ModelViewerScene>
@@ -366,6 +388,7 @@ export type {
   ModelViewerExpressions,
   ModelViewerFraming,
   ModelViewerLabels,
+  ModelViewerModelLoad,
   ModelViewerProps,
   ModelViewerSource,
   ModelViewerView,

@@ -16,6 +16,7 @@ import {
   useModelRig,
   useSceneFrameloop,
   type ModelViewerLoadInfo,
+  type ModelViewerModelLoad,
   type ModelViewerSource,
 } from "@/components/ui/use-model-viewer-scene"
 
@@ -26,12 +27,14 @@ type ModelViewerSceneProps = {
   weights: ModelViewerWeights | undefined
   targetNames: readonly string[] | undefined
   expressions: ModelViewerExpressions | undefined
+  scaledWeights: boolean
   material: ModelViewerMaterial
   loop: boolean
   speed: number
   autoRotate: number
   onLoad?: (info: ModelViewerLoadInfo) => void
   onError?: (error: Error) => void
+  onModelLoad?: ModelViewerModelLoad
   children?: ReactNode
 }
 
@@ -47,8 +50,8 @@ function Lights() {
   )
 }
 
-function ModelLayer({ handle, model, onLoad, onError, children, ...frame }: ModelViewerSceneProps) {
-  const { rig, leaving, finishSwap } = useModelRig(model, handle, onLoad, onError)
+function ModelLayer({ handle, model, onLoad, onError, onModelLoad, children, ...frame }: ModelViewerSceneProps) {
+  const { rig, leaving, finishSwap } = useModelRig(model, handle, onLoad, onError, onModelLoad)
   useModelFrame({ handle, rig, leaving, finishSwap, ...frame })
   return (
     <ModelViewerSceneContext value={{ handle, rig, framing: frame.framing }}>

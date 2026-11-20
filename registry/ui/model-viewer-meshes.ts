@@ -38,11 +38,6 @@ function toonOf(material: Material, gradientMap: DataTexture) {
 }
 
 /**
- * Everything a loaded model does per frame, outside React: the camera eased to the orbit the primitive holds, morph
- * weights eased to their targets, and the animation mixer. `update` says whether it needs another frame, so the
- * canvas draws only while something moves.
- */
-/**
  * The target names in the GLB's order: each mesh's `extras.targetNames` (GLTFLoader reads them into its morph
  * dictionary), meshes in scene order, each name once.
  */
@@ -53,6 +48,17 @@ function targetNamesOf(meshes: readonly MorphMesh[]) {
     for (const [name] of ordered) if (!names.includes(name)) names.push(name)
   }
   return names
+}
+
+/**
+ * A mesh's `extras.targetScales` (GLTFLoader copies a mesh's extras into its `userData`): one multiplier per target,
+ * in the order of its targets, for a GLB that stores each target scaled to fill its quantized range. A weight `w`
+ * becomes the influence `w × scale`. Undefined unless it is one finite number per target.
+ */
+function targetScalesOf(mesh: MorphMesh): readonly number[] | undefined {
+  const scales: unknown = (mesh.userData as { targetScales?: unknown }).targetScales
+  if (!Array.isArray(scales) || scales.length !== mesh.morphTargetInfluences.length) return undefined
+  return scales.every((scale) => typeof scale === "number" && Number.isFinite(scale)) ? (scales as number[]) : undefined
 }
 
 /**
@@ -81,5 +87,5 @@ function signatureOf(surfaces: readonly Mesh[]) {
     .join(";")
 }
 
-export { isMesh, signatureOf, targetNamesOf, toonGradient, toonOf }
+export { isMesh, signatureOf, targetNamesOf, targetScalesOf, toonGradient, toonOf }
 export type { MorphMesh }

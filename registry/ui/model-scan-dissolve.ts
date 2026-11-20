@@ -109,6 +109,9 @@ function createDissolve(texture: Texture, ratio: number, edge: Color) {
       vertexShader: planeVertex,
       fragmentShader: planeFragment,
       transparent: true,
+      // Over the model fading in where it stood, which writes depth (so its own eyes and hair stay behind its face)
+      // even while it's still all but invisible.
+      depthTest: false,
     }),
   )
   plane.renderOrder = 1
@@ -141,6 +144,7 @@ function createDissolve(texture: Texture, ratio: number, edge: Color) {
       fragmentShader: particleFragment,
       transparent: true,
       depthWrite: false,
+      depthTest: false,
     }),
   )
   particles.frustumCulled = false

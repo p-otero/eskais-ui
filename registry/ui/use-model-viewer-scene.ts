@@ -18,6 +18,18 @@ type ModelViewerSource = string | ArrayBuffer | { scene: Object3D; animations?: 
 
 type ModelViewerLoadInfo = { clips: string[]; morphTargets: string[] }
 
+type ModelCleanup = void | (() => void)
+
+/**
+ * Runs once per loaded model, before it is first drawn: restyle its materials, add meshes, hide parts. The model
+ * shows once it returns, or once the promise it returns resolves; what it returns or resolves to runs when the model
+ * is disposed, to free what it made.
+ */
+type ModelViewerModelLoad = (
+  scene: Object3D,
+  animations: readonly AnimationClip[],
+) => ModelCleanup | Promise<ModelCleanup>
+
 // Bytes from another realm (a worker, an iframe) aren't instanceof this one's ArrayBuffer.
 const isBytes = (source: unknown): source is ArrayBuffer =>
   source instanceof ArrayBuffer || Object.prototype.toString.call(source) === "[object ArrayBuffer]"
@@ -43,6 +55,7 @@ function useModelRig(
   handle: ModelViewerHandle,
   onLoad?: (info: ModelViewerLoadInfo) => void,
   onError?: (error: Error) => void,
+  onModelLoad?: ModelViewerModelLoad,
 ) {
   const [shown, setShown] = useState<{ rig: ModelRig; leaving: ModelRig | null } | null>(null)
   const newest = useRef<ModelRig | null>(null)
@@ -51,6 +64,7 @@ function useModelRig(
     handle.api.loaded(rig.clipNames)
     onLoad?.({ clips: [...rig.clipNames], morphTargets: [...rig.morphNames] })
   })
+  const prepareEvent = useEffectEvent((model: LoadedModel) => onModelLoad?.(model.scene, model.animations))
   const failedEvent = useEffectEvent((error: unknown) => {
     handle.api.failed()
     onError?.(error instanceof Error ? error : new Error(String(error)))
@@ -60,26 +74,28 @@ function useModelRig(
     let cancelled = false
     // A replacement loads under the model on screen: the viewer stays ready.
     if (!newest.current) handle.api.loading()
-    loadModel(source).then(
-      (model) => {
-        const rig = createModelRig(model, owns(source))
-        if (cancelled) {
-          rig.dispose()
-          return
-        }
-        made.current.add(rig)
-        const previous = newest.current
-        newest.current = rig
-        const same = previous?.signature === rig.signature
-        if (previous) rig.inherit(previous)
-        if (previous && !same) rig.setOpacity(0, "swap")
-        setShown({ rig, leaving: previous && !same ? previous : null })
-        loadedEvent(rig)
-      },
-      (error: unknown) => {
-        if (!cancelled) failedEvent(error)
-      },
-    )
+    loadModel(source)
+      .then(async (model) => ({ model, cleanup: (await prepareEvent(model)) ?? undefined }))
+      .then(
+        ({ model, cleanup }) => {
+          const rig = createModelRig(model, owns(source), cleanup)
+          if (cancelled) {
+            rig.dispose()
+            return
+          }
+          made.current.add(rig)
+          const previous = newest.current
+          newest.current = rig
+          const same = previous?.signature === rig.signature
+          if (previous) rig.inherit(previous)
+          if (previous && !same) rig.setOpacity(0, "swap")
+          setShown({ rig, leaving: previous && !same ? previous : null })
+          loadedEvent(rig)
+        },
+        (error: unknown) => {
+          if (!cancelled) failedEvent(error)
+        },
+      )
     return () => {
       cancelled = true
     }
@@ -124,6 +140,7 @@ type ModelFrameOptions = {
   weights: ModelViewerWeights | undefined
   targetNames: readonly string[] | undefined
   expressions: ModelViewerExpressions | undefined
+  scaledWeights: boolean
   material: ModelViewerMaterial
   loop: boolean
   speed: number
@@ -140,7 +157,8 @@ const swapHold = 0.6
  * nothing.
  */
 function useModelFrame(options: ModelFrameOptions) {
-  const { handle, rig, leaving, finishSwap, framing, weights, targetNames, expressions, material } = options
+  const { handle, rig, leaving, finishSwap, framing, weights, targetNames, expressions, scaledWeights, material } =
+    options
   const { loop, speed, autoRotate } = options
   const camera = useThree((state) => state.camera) as PerspectiveCamera
   const invalidate = useThree((state) => state.invalidate)
@@ -156,10 +174,10 @@ function useModelFrame(options: ModelFrameOptions) {
   useEffect(() => {
     if (!rig) return
     rig.setTargetNames(targetNames)
-    rig.setWeights(weights, expressions, !weighted.current)
+    rig.setWeights(weights, expressions, !weighted.current, scaledWeights)
     weighted.current = true
     invalidate()
-  }, [rig, targetNames, weights, expressions, invalidate])
+  }, [rig, targetNames, weights, expressions, scaledWeights, invalidate])
   useEffect(() => {
     rig?.setMaterial(material)
     leaving?.setMaterial(material)
@@ -203,4 +221,4 @@ function useModelFrame(options: ModelFrameOptions) {
 }
 
 export { loadModel, useModelFrame, useModelRig, useSceneFrameloop }
-export type { ModelViewerLoadInfo, ModelViewerSource }
+export type { ModelViewerLoadInfo, ModelViewerModelLoad, ModelViewerSource }
