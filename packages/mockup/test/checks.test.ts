@@ -7,6 +7,7 @@ import {
   reactDevBanner,
   sourceProblems,
   viewportHeightUnit,
+  viewportProblems,
 } from "../src/checks"
 
 const allowed = importRule(["@/components/", "@/lib/"], new Set(["react", "lucide-react"]))
@@ -41,8 +42,35 @@ describe("pageProblems", () => {
       "still loads an external image",
       "still imports a stylesheet",
       "still loads an asset that is not inlined",
-      "uses a viewport height unit: h-screen",
     ])
+  })
+
+  test("leaves viewport units in the bundle and stylesheet to the installed components", () => {
+    const page = '<style>[data-slot="shell"]{--shell-height:100dvh}</style><script type="module">h-screen</script>'
+    expect(pageProblems(page)).toEqual([])
+  })
+})
+
+describe("viewportProblems", () => {
+  test("reports every viewport height unit in a mockup file, where it is", () => {
+    const source = 'export function Screen() {\n  return <div className="min-h-dvh" style={{ height: "80vh" }} />\n}\n'
+    expect(viewportProblems("screen.tsx", source)).toEqual([
+      {
+        file: "screen.tsx",
+        line: 2,
+        column: 26,
+        rule: "viewport-unit",
+        message: "min-h-dvh is a viewport height unit; size the screen from its container (h-full, min-h-full)",
+      },
+      {
+        file: "screen.tsx",
+        line: 2,
+        column: 55,
+        rule: "viewport-unit",
+        message: "80vh is a viewport height unit; size the screen from its container (h-full, min-h-full)",
+      },
+    ])
+    expect(viewportProblems("screen.tsx", '<div className="h-full min-h-full" />')).toEqual([])
   })
 
   test("viewportHeightUnit and reactDevBanner read the first match", () => {

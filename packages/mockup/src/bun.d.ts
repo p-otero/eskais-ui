@@ -5,7 +5,10 @@ type MockupBuildResolve = { path: string } | { errors: { message: string }[] } |
 type MockupBuildPlugin = {
   name: string
   setup(build: {
-    onResolve(options: { filter: RegExp }, callback: (args: { path: string }) => MockupBuildResolve): void
+    onResolve(
+      options: { filter: RegExp },
+      callback: (args: { path: string; importer?: string; resolveDir?: string }) => MockupBuildResolve,
+    ): void
   }): void
 }
 
@@ -36,4 +39,5 @@ type MockupBuildResult = {
 declare const Bun: {
   build(options: MockupBuildOptions): Promise<MockupBuildResult>
   plugin(plugin: MockupBuildPlugin): void
+  resolveSync(specifier: string, from: string): string
 }

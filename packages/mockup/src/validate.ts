@@ -19,6 +19,7 @@ import { sdkPublicSpecifiers } from "./sdk"
 
 export type ValidateOutcome = {
   build: BuildOutcome
+  builds: BuildOutcome[]
   problems: Problem[]
   warnings: string[]
 }
@@ -67,15 +68,16 @@ function typecheck(project: MockupProject, mockup: string): Problem[] {
   return problems
 }
 
-function renderRunner(mockup: string): string {
+export function renderRunner(mockup: string, state?: string): string {
   const wrapper = existsSync(join(dirname(mockup), "wrapper.tsx"))
   return [
     'import { createElement } from "react"',
     'import { renderToString } from "react-dom/server"',
     'import Screen from "./screen"',
+    ...(state === undefined ? [] : ['import { states } from "./fixtures"']),
     ...(wrapper ? ['import Wrapper from "../wrapper"'] : []),
     "try {",
-    "  const screen = createElement(Screen, {})",
+    `  const screen = createElement(Screen, ${state === undefined ? "{}" : `states[${JSON.stringify(state)}]`})`,
     `  const html = renderToString(${wrapper ? "createElement(Wrapper, null, screen)" : "screen"})`,
     '  console.log(html.trim() === "" ? "MOCKUP_RENDER empty" : "MOCKUP_RENDER ok")',
     "} catch (error) {",
@@ -90,13 +92,18 @@ function firstLine(output: string): string {
   return output.split(/\r?\n/).find((line) => line.trim() !== "") ?? "the server render failed"
 }
 
-async function smokeRender(mockup: string, cwd: string): Promise<{ problems: Problem[]; warnings: string[] }> {
+function smokeRender(
+  mockup: string,
+  cwd: string,
+  state: string | undefined,
+): { problems: Problem[]; warnings: string[] } {
   const screen = join(mockup, "screen.tsx")
+  const inState = state === undefined ? "" : ` in the ${state} state`
   const located = (rule: string, message: string): Problem[] => [
-    { file: displayPath(screen, cwd), line: 1, column: 1, rule, message },
+    { file: displayPath(screen, cwd), line: 1, column: 1, rule, message: `${message}${inState}` },
   ]
   const runner = join(mockup, ".render-check.tsx")
-  writeFileSync(runner, renderRunner(mockup))
+  writeFileSync(runner, renderRunner(mockup, state))
   let result: ReturnType<typeof spawnSync>
   try {
     result = spawnSync(process.execPath, [".render-check.tsx"], {
@@ -110,7 +117,8 @@ async function smokeRender(mockup: string, cwd: string): Promise<{ problems: Pro
   const output = `${result.stdout ?? ""}${result.stderr ?? ""}`
   if (output.includes("MOCKUP_RENDER ok")) return { problems: [], warnings: [] }
   if (output.includes("MOCKUP_RENDER empty")) {
-    return { problems: [], warnings: [`${displayPath(screen, cwd)} renders no markup without props`] }
+    const props = state === undefined ? "without props" : `in the ${state} state`
+    return { problems: [], warnings: [`${displayPath(screen, cwd)} renders no markup ${props}`] }
   }
   const reported = output
     .split(/\r?\n/)
@@ -125,10 +133,22 @@ async function smokeRender(mockup: string, cwd: string): Promise<{ problems: Pro
   return { problems: located("render", message), warnings: [] }
 }
 
-export async function validateMockup(project: MockupProject, settings: BuildSettings): Promise<ValidateOutcome> {
-  const build = await buildMockup(project, settings)
+// Builds and server-renders each state (one undefined entry: the screen without props); the source rules
+// and the type check run once.
+export async function validateMockup(
+  project: MockupProject,
+  settings: BuildSettings,
+  states: (string | undefined)[] = [settings.state],
+): Promise<ValidateOutcome> {
+  const builds: BuildOutcome[] = []
+  for (const state of states) {
+    // oxlint-disable-next-line no-await-in-loop -- each build writes the same entry file and registry cache
+    builds.push(await buildMockup(project, { ...settings, state, out: outFor(settings.out, state, states) }))
+  }
+  const build = builds[0]
+  if (build === undefined) throw new EnvironmentError("validate needs a state to build")
   const mockup = mockupDirectory(project, settings.name)
-  const problems: Problem[] = [...build.problems, ...build.parts.problems]
+  const problems: Problem[] = [...dedupe(builds.flatMap((built) => built.problems)), ...build.parts.problems]
   const allowed = importRule([...project.pathPrefixes, "@registry/"], project.dependencies)
   const publicSpecifiers = sdkPublicSpecifiers(project)
   for (const file of sourceFiles(mockup)) {
@@ -141,17 +161,41 @@ export async function validateMockup(project: MockupProject, settings: BuildSett
     problems.push(...partStyleProblems(displayPath(file, settings.cwd), readFileSync(file, "utf8")))
   }
   problems.push(...typecheck(project, mockup))
-  const rendered = await smokeRender(mockup, settings.cwd)
-  problems.push(...rendered.problems)
+  const rendered = states.map((state) => smokeRender(mockup, settings.cwd, state))
+  problems.push(...rendered.flatMap((render) => render.problems))
   const warnings = [
-    ...build.warnings,
-    ...rendered.warnings,
+    ...builds.flatMap((built) => built.warnings),
+    ...rendered.flatMap((render) => render.warnings),
     ...sdkDuplicateWarnings(build.parts.sdkParts, sourceBasenames(projectSourceFiles(project))),
   ]
   const sorted = problems.toSorted(
     (left, right) => left.file.localeCompare(right.file) || left.line - right.line || left.column - right.column,
   )
-  return { build, problems: sorted, warnings }
+  return { build, builds, problems: sorted, warnings }
+}
+
+function dedupe(problems: Problem[]): Problem[] {
+  const seen = new Set<string>()
+  return problems.filter((problem) => {
+    const key = `${problem.file}:${problem.line}:${problem.column}:${problem.rule}:${problem.message}`
+    if (seen.has(key)) return false
+    seen.add(key)
+    return true
+  })
+}
+
+// --out with several states names one file per state: its {state} is replaced, and it must have one.
+export function outFor(
+  out: string | undefined,
+  state: string | undefined,
+  states: (string | undefined)[],
+): string | undefined {
+  if (out === undefined || state === undefined) return out
+  if (out.includes("{state}")) return out.replaceAll("{state}", state)
+  if (states.length > 1) {
+    throw new EnvironmentError(`--out needs {state} with --state all, like .mockups/<name>/out-{state}-dark.html`)
+  }
+  return out
 }
 
 export function partsSummary(manifest: MockupManifest): string[] {

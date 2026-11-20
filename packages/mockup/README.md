@@ -10,21 +10,21 @@ bun .agents/tools/eskais-mockup/cli.ts <command>
 bun .agents/tools/eskais-mockup/cli.ts --version
 ```
 
-From a checkout of this repository, the same CLI runs by path: `bun ../eskais-ui/packages/mockup/src/cli.ts <command>`. Everything in `src/` ships to consumers, so it imports only `node:*` modules and its own files by relative path, and finds `template.html` beside itself. `src/version.ts` is written by `bun run registry:build` from the root `package.json`.
+From a checkout of this repository, the same CLI runs by path, from the project: `bun <eskais-ui checkout>/packages/mockup/src/cli.ts <command>`, where `<eskais-ui checkout>` is the path to your checkout. Everything in `src/` ships to consumers, so it imports only `node:*` modules and its own files by relative path, and finds `template.html` beside itself. `src/version.ts` is written by `bun run registry:build` from the root `package.json`.
 
 ## Commands
 
-| Command                 | What it does                                                                                                         |
-| ----------------------- | -------------------------------------------------------------------------------------------------------------------- |
-| `inspect [Names…]`      | Lists the project's components, or prints each named one's import line, `*Props` and `cva` variants.                 |
-| `inspect --registry`    | Lists the registry items the project hasn't installed.                                                               |
-| `inspect --sdk [name…]` | Lists the installed `@ui-sdk/react` subpaths, or one primitive's parts.                                              |
-| `build <name>`          | Bundles `.mockups/<name>/screen.tsx` into `out.html` and writes `manifest.json`.                                     |
-| `validate <name>`       | Builds the page, checks the page and the sources, then prints the install, proposed, sdkParts, gaps and screenshots. |
-| `gallery [dir]`         | Writes `<dir>/gallery.html` (`.mockups` by default) with every screenshot, and lists them.                           |
-| `clean [name]`          | Removes one mockup, or the whole `.mockups` folder.                                                                  |
+| Command                 | What it does                                                                                                              |
+| ----------------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| `inspect [Names…]`      | Lists the project's components, or prints each named one's import line, `*Props` and `cva` variants.                      |
+| `inspect --registry`    | Lists the registry items the project hasn't installed.                                                                    |
+| `inspect --sdk [name…]` | Lists the installed `@ui-sdk/react` subpaths, or one primitive's parts.                                                   |
+| `build <name>`          | Bundles `.mockups/<name>/screen.tsx` into `out.html` (`out-<state>-<theme>.html` with `--state`), writes `manifest.json`. |
+| `validate <name>`       | Builds the page, checks the page and the sources, then prints the install, proposed, sdkParts, gaps and screenshots.      |
+| `gallery [dir]`         | Writes `<dir>/gallery.html` (`.mockups` by default) with every screenshot, and lists them.                                |
+| `clean [name]`          | Removes one mockup, or the whole `.mockups` folder.                                                                       |
 
-Flags: `--project <dir>`, `--css <file>`, `--theme <name>`, `--scheme light|dark|system`, `--out <file>`, `--max <n>`, `--json` (`inspect`, `gallery`) and `--gallery` (`build`, `validate`: write the gallery and print its path last). Exit codes: `0` fine, `1` problems to fix, `2` an environment or usage error.
+Flags: `--project <dir>`, `--css <file>` (the stylesheet only), `--tsconfig <file>`, `--tailwind <dir>` (a workspace package that installs Tailwind), `--state <name>|all` (`build`, `validate`: a named state from `fixtures.ts`), `--theme <name>`, `--scheme light|dark|system`, `--out <file>`, `--max <n>`, `--json` (`inspect`, `gallery`) and `--gallery` (`build`, `validate`: write the gallery and print its path last). Exit codes: `0` fine, `1` problems to fix, `2` an environment or usage error.
 
 ## Present every screen
 

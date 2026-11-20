@@ -4,9 +4,21 @@ Versions follow [semver](https://semver.org). Before 1.0, a minor version can br
 
 ## Unreleased
 
+### Added
+
+- `eskais-mockup-cli`: `build --state <name>` renders the screen with a named state's props, from `export const states = { empty: { … }, loading: { … }, error: { … } }` in `fixtures.ts`, into `out-<state>-<theme>.html`; `--state all` builds one page per state (`--out` takes `{state}`), and `validate --state` server-renders them and lists them (`states 3: empty, loading, error`). Without `--state`, `build` and `validate` work as before.
+- `eskais-mockup-cli`: `--tailwind <dir>` names a folder whose packages resolve Tailwind, and `--tsconfig <file>` the tsconfig for the aliases and the type check.
+
 ### Changed
 
 - CI runs `dialog-mobile-check --quick`: every dialog, short and tall, on a small iPhone, a large iPhone, an Android phone and a desktop window under 760px, under the viewport models that caught real bugs (open, a stale `innerHeight`, a visual viewport scrolled, an `offsetTop` left by a closed keyboard, the keyboard up with the visible part scrolled), in about 3 minutes instead of 12. `node tooling/dialog-mobile-check.mjs` with no flag still runs the full matrix, by hand after changing how a dialog, drawer or sheet is placed. `test:compiler` no longer runs it, since the React Compiler doesn't change CSS placement. The browser job's limits go back down (55 minutes, the checks 32, the compiler build 18).
+
+### Fixed
+
+- `eskais-mockup-cli` in a workspace, with `components.json` in a components package and Tailwind and React installed only by an app: the CLI finds them from the workspace root (package.json `workspaces` or `pnpm-workspace.yaml`), its packages and pnpm's or Bun's store, hoisted or isolated, and resolves the stylesheet's `@import "tailwindcss"`, its `@plugin`s and the bundle's packages the same way, so no stylesheet copies or `node_modules` links are needed. `--css` chooses only the stylesheet: the tsconfig is the project's (an app's tsconfig brought its `vite/client` types and aliases).
+- `eskais-mockup-cli`: aliases through package.json `imports` (`"#components/*": "./src/components/*"`, with conditions, fallback arrays and wildcards, as Node and TypeScript resolve them) are read beside tsconfig `paths`, so `inspect --registry` no longer lists every installed item as not installed, `import-specifier` accepts `#components/…`, and a fetched registry item's `@/` imports of installed files are rewritten to the project's specifiers.
+- `eskais-mockup-cli`: the viewport height rule (`viewport-unit`) reads only the mockup's own files (screen, fixtures, parts, gaps and the wrapper) and reports where the unit is, instead of the whole page, which failed every `Shell` mockup on the installed Shell's `--shell-height: 100dvh`.
+- The mockup skill, its README and the Mockups guide give the contributor's path as `<eskais-ui checkout>/packages/mockup/src/cli.ts`, the path to your checkout, not `../eskais-ui`.
 
 ## 0.2.8 (2026-11-20)
 

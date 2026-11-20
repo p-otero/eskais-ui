@@ -2,12 +2,22 @@ import { createHash } from "node:crypto"
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, statSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { basename, dirname, extname, join, relative, resolve } from "node:path"
+import { createRequire } from "node:module"
 import { pathToFileURL, fileURLToPath } from "node:url"
 
-import { pageProblems, reactDevBanner, type Problem } from "./checks"
+import { pageProblems, reactDevBanner, viewportProblems, type Problem } from "./checks"
+import { matchMap, STYLE_CONDITIONS } from "./package-map"
 import { readMockupParts, type Gap, type MockupParts, type ProposedPart, type SdkPart } from "./parts"
-import { displayPath, EnvironmentError, mockupDirectory, specifierOf, type MockupProject } from "./project"
+import {
+  displayPath,
+  EnvironmentError,
+  locatePackage,
+  mockupDirectory,
+  specifierOf,
+  type MockupProject,
+} from "./project"
 import { prepareRegistry, type InstallEntry } from "./registry"
+import { stateOutName } from "./states"
 
 export type Scheme = "light" | "dark" | "system"
 
@@ -17,6 +27,7 @@ export type BuildSettings = {
   cwd: string
   theme?: string | undefined
   out?: string | undefined
+  state?: string | undefined
 }
 
 export type BuildOutcome = {
@@ -37,6 +48,7 @@ export type MockupManifest = {
   date: string
   theme: string | null
   scheme: Scheme
+  state: string | null
   hashes: { screen: string | null; fixtures: string | null }
   components: string[]
   install: InstallEntry[]
@@ -46,11 +58,15 @@ export type MockupManifest = {
   size: { total: number; js: number; css: number; fonts: number }
 }
 
+type Resolver = (id: string, base: string) => Promise<string | undefined>
+
 type CompileOptions = {
   base: string
   from: string
   onDependency: (path: string) => void
   shouldRewriteUrls: boolean
+  customCssResolver: Resolver
+  customJsResolver: Resolver
 }
 
 type TailwindCompiler = {
@@ -112,6 +128,75 @@ function inlineAssets(css: string, base: string): { css: string; fonts: number }
   return { css: inlined, fonts }
 }
 
+export function bareName(id: string): string | null {
+  if (/^[./#\\]/.test(id) || id.includes(":")) return null
+  const parts = id.split("/")
+  if (!id.startsWith("@")) return parts[0] === "" ? null : (parts[0] ?? null)
+  return parts.length > 1 && parts[1] !== "" ? `${parts[0] ?? ""}/${parts[1] ?? ""}` : null
+}
+
+function installedAbove(base: string, name: string): boolean {
+  let current = resolve(base)
+  for (;;) {
+    if (existsSync(join(current, "node_modules", name))) return true
+    const parent = dirname(current)
+    if (parent === current) return false
+    current = parent
+  }
+}
+
+function isFile(path: string): boolean {
+  return existsSync(path) && statSync(path).isFile()
+}
+
+function exportsMap(exported: unknown): unknown {
+  const keyed =
+    typeof exported === "object" &&
+    exported !== null &&
+    !Array.isArray(exported) &&
+    Object.keys(exported).some((key) => key.startsWith("."))
+  return keyed ? exported : { ".": exported }
+}
+
+// A stylesheet the project's stylesheet imports from a package its own folder doesn't install, as in a workspace
+// where only an app depends on tailwindcss: found in the workspace, through the package's style export.
+export function workspaceStylesheet(project: MockupProject, id: string, base: string): string | undefined {
+  const name = bareName(id)
+  if (name === null || installedAbove(base, name)) return undefined
+  const dir =
+    (name === "tailwindcss" ? project.runtime.tailwindPackage : null) ??
+    locatePackage(project.resolution, name)?.dir ??
+    null
+  if (dir === null) return undefined
+  const packageJson = JSON.parse(readFileSync(join(dir, "package.json"), "utf8")) as {
+    exports?: unknown
+    style?: unknown
+  }
+  const subpath = `.${id.slice(name.length)}`
+  const exported = matchMap(exportsMap(packageJson.exports), subpath, STYLE_CONDITIONS)
+  const style = typeof packageJson.style === "string" ? packageJson.style : "index.css"
+  const fallback = subpath === "." ? style : subpath
+  for (const candidate of exported === null ? [fallback] : [exported, fallback]) {
+    for (const file of [join(dir, candidate), join(dir, `${candidate}.css`)]) {
+      if (file.endsWith(".css") && isFile(file)) return file
+    }
+  }
+  return undefined
+}
+
+// A plugin or config module (`@plugin "@tailwindcss/typography"`) from the workspace, likewise.
+export function workspaceModule(project: MockupProject, id: string, base: string): string | undefined {
+  const name = bareName(id)
+  if (name === null || installedAbove(base, name)) return undefined
+  const located = locatePackage(project.resolution, name)
+  if (located === null) return undefined
+  try {
+    return createRequire(join(located.from, "package.json")).resolve(id)
+  } catch {
+    return undefined
+  }
+}
+
 async function compileCss(project: MockupProject, files: string[]): Promise<{ css: string; fonts: number }> {
   const tailwind = await loadTailwind(project)
   const from = project.css
@@ -120,28 +205,32 @@ async function compileCss(project: MockupProject, files: string[]): Promise<{ cs
     from,
     onDependency: () => {},
     shouldRewriteUrls: true,
+    customCssResolver: async (id, base) => workspaceStylesheet(project, id, base),
+    customJsResolver: async (id, base) => workspaceModule(project, id, base),
   })
   const sources = files.map((file) => ({ base: dirname(file), pattern: basename(file), negated: false }))
   const candidates = new tailwind.Scanner({ sources }).scan()
   return inlineAssets(compiler.build(candidates), dirname(from))
 }
 
-function entrySource(hasWrapper: boolean): string {
+export function entrySource(hasWrapper: boolean, state?: string): string {
+  const screen = state === undefined ? `<Screen />` : `<Screen {...states[${JSON.stringify(state)}]} />`
   return [
     `import { createRoot } from "react-dom/client"`,
     `import Screen from "./screen"`,
+    ...(state === undefined ? [] : [`import { states } from "./fixtures"`]),
     ...(hasWrapper ? [`import Wrapper from "../wrapper"`] : []),
     ``,
     `const root = document.getElementById("root")`,
     `if (root === null) throw new Error("the mockup page has no #root element")`,
-    hasWrapper ? `createRoot(root).render(<Wrapper><Screen /></Wrapper>)` : `createRoot(root).render(<Screen />)`,
+    hasWrapper ? `createRoot(root).render(<Wrapper>${screen}</Wrapper>)` : `createRoot(root).render(${screen})`,
     ``,
   ].join("\n")
 }
 
-function writeEntry(mockup: string): string {
+function writeEntry(mockup: string, state: string | undefined): string {
   const entry = join(mockup, ".entry.tsx")
-  writeFileSync(entry, entrySource(existsSync(join(dirname(mockup), "wrapper.tsx"))))
+  writeFileSync(entry, entrySource(existsSync(join(dirname(mockup), "wrapper.tsx")), state))
   return entry
 }
 
@@ -186,7 +275,36 @@ function cachedImports(cacheDirs: string[]) {
   }
 }
 
-async function bundle(entry: string, outdir: string, cacheDirs: string[]): Promise<{ js: string; map: string | null }> {
+// A package the project's folder doesn't install but another workspace package does (react in a pnpm or Bun
+// isolated workspace whose components package declares it only as a peer).
+function workspacePackages(project: MockupProject): MockupBuildPlugin {
+  return {
+    name: "mockup-workspace-packages",
+    setup(build) {
+      build.onResolve({ filter: /^[^./#]/ }, (args) => {
+        if (args.path.startsWith("@registry/")) return undefined
+        if (project.pathPrefixes.some((prefix) => args.path.startsWith(prefix))) return undefined
+        const name = bareName(args.path)
+        const from = args.resolveDir ?? (args.importer === undefined ? undefined : dirname(args.importer))
+        if (name === null || from === undefined || installedAbove(from, name)) return undefined
+        const located = locatePackage(project.resolution, name)
+        if (located === null) return undefined
+        try {
+          return { path: Bun.resolveSync(args.path, located.from) }
+        } catch {
+          return undefined
+        }
+      })
+    },
+  }
+}
+
+async function bundle(
+  project: MockupProject,
+  entry: string,
+  outdir: string,
+  cacheDirs: string[],
+): Promise<{ js: string; map: string | null }> {
   const result = await Bun.build({
     entrypoints: [entry],
     outdir,
@@ -204,7 +322,7 @@ async function bundle(entry: string, outdir: string, cacheDirs: string[]): Promi
       ".webp": "dataurl",
       ".avif": "dataurl",
     },
-    plugins: [remoteImports, ...(cacheDirs.length === 0 ? [] : [cachedImports(cacheDirs)])],
+    plugins: [remoteImports, ...(cacheDirs.length === 0 ? [] : [cachedImports(cacheDirs)]), workspacePackages(project)],
   })
   if (!result.success) {
     const logs = result.logs.map((log) => `${log.level}: ${log.message}`).join("\n")
@@ -285,6 +403,7 @@ function manifest(
     date: new Date().toISOString(),
     theme: settings.theme ?? null,
     scheme: settings.scheme,
+    state: settings.state ?? null,
     hashes: {
       screen: hashFile(join(mockup, "screen.tsx")),
       fixtures: hashFile(join(mockup, "fixtures.ts")),
@@ -315,6 +434,18 @@ export function mockupSourceFiles(mockup: string): string[] {
   return found.toSorted()
 }
 
+// The theme segment of a page's name: a theme such as compact, or else the colour scheme.
+export function pageTheme(settings: Pick<BuildSettings, "theme" | "scheme">): string {
+  return settings.theme ?? settings.scheme
+}
+
+// The files written for the mockup (screen, fixtures, parts, gaps) and the shared wrapper, not the
+// installed components or the registry cache they import.
+function ownFiles(mockup: string): string[] {
+  const wrapper = join(dirname(mockup), "wrapper.tsx")
+  return [...mockupSourceFiles(mockup), ...(existsSync(wrapper) ? [wrapper] : [])]
+}
+
 export async function buildMockup(project: MockupProject, settings: BuildSettings): Promise<BuildOutcome> {
   const mockup = mockupDirectory(project, settings.name)
   const screen = join(mockup, "screen.tsx")
@@ -327,12 +458,12 @@ export async function buildMockup(project: MockupProject, settings: BuildSetting
   const parts = await readMockupParts(mockup, settings.cwd)
   const registry = await prepareRegistry(project, mockup, mockupSourceFiles(mockup))
 
-  const entry = writeEntry(mockup)
+  const entry = writeEntry(mockup, settings.state)
   const outdir = mkdtempSync(join(tmpdir(), "eskais-mockup-"))
   let built: { js: string; map: string | null }
   let files: string[]
   try {
-    built = await bundle(entry, outdir, registry.cacheDirs)
+    built = await bundle(project, entry, outdir, registry.cacheDirs)
     files = bundledFiles(built.map, outdir)
   } finally {
     rmSync(entry, { force: true })
@@ -341,7 +472,10 @@ export async function buildMockup(project: MockupProject, settings: BuildSetting
   const { css, fonts } = await compileCss(project, files)
   const page = assemble(settings, css, built.js)
 
-  const outPath = settings.out === undefined ? join(mockup, "out.html") : resolve(settings.cwd, settings.out)
+  const outPath =
+    settings.out === undefined
+      ? join(mockup, settings.state === undefined ? "out.html" : stateOutName(settings.state, pageTheme(settings)))
+      : resolve(settings.cwd, settings.out)
   mkdirSync(dirname(outPath), { recursive: true })
   writeFileSync(outPath, page)
 
@@ -351,13 +485,18 @@ export async function buildMockup(project: MockupProject, settings: BuildSetting
     css: Buffer.byteLength(css),
     fonts,
   }
-  const problems = pageProblems(page).map((message) => ({
-    file: displayPath(outPath, settings.cwd),
-    line: 1,
-    column: 1,
-    rule: "page",
-    message,
-  }))
+  const problems = [
+    ...pageProblems(page).map((message) => ({
+      file: displayPath(outPath, settings.cwd),
+      line: 1,
+      column: 1,
+      rule: "page",
+      message,
+    })),
+    ...ownFiles(mockup).flatMap((file) =>
+      viewportProblems(displayPath(file, settings.cwd), readFileSync(file, "utf8")),
+    ),
+  ]
   const outcome: BuildOutcome = {
     outPath,
     manifestPath: join(mockup, "manifest.json"),
