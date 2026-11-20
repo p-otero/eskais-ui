@@ -6,7 +6,6 @@ import { useState } from "react"
 import { renderToString } from "react-dom/server"
 import { afterEach, beforeAll, describe, expect, test, vi } from "vitest"
 
-import { Button } from "@/components/ui/button"
 import { ModelScan, type ModelScanProps } from "@/components/ui/model-scan"
 import { pointGroups, pointsAspect } from "@/components/ui/model-scan-points"
 import { modelScan } from "@/components/ui/model-scan-primitive"
@@ -39,6 +38,7 @@ vi.mock("@ui-sdk/core", async (importOriginal) => {
   }
 })
 vi.mock("@/components/ui/model-viewer-scene", () => import("./fixtures/model/fake-scene"))
+vi.mock("@/components/ui/model-scan-intro", () => import("./fixtures/model/fake-intro"))
 
 const agent = createAgent()
 
@@ -65,22 +65,53 @@ function outcome(call: () => unknown) {
 }
 
 describe("primitive", () => {
-  test("cancel works before ready, retry only after an error, and both say why otherwise", () => {
-    const onCancel = vi.fn()
-    const onRetry = vi.fn()
+  test("each action runs only in its stages, says why otherwise, and returns false to a press", () => {
+    const callbacks = {
+      onStart: vi.fn(),
+      onCancel: vi.fn(),
+      onRetry: vi.fn(),
+      onStartOver: vi.fn(),
+      onDownload: vi.fn(),
+    }
+    const offered = {
+      start: ["photo"],
+      cancel: ["detecting", "building", "refining"],
+      retry: ["error"],
+      restart: ["ready", "error"],
+      download: ["ready"],
+    } as const
+    const during = {
+      photo: "before a scan starts",
+      detecting: "while the scan runs",
+      building: "while the scan runs",
+      refining: "while the scan runs",
+      ready: "once the model is ready",
+      error: "after an error",
+    }
     for (const stage of ["photo", "detecting", "building", "refining", "ready", "error"] as const) {
-      const view = mount(modelScan, { stage, onCancel, onRetry }, markup)
+      const view = mount(modelScan, { stage, ...callbacks }, markup)
       try {
-        const early = ["ready", "error"].includes(stage)
-        expect(outcome(() => view.api.cancel())).toBe(
-          early ? `Cancel works only in photo, detecting, building, refining (stage: ${stage}).` : true,
-        )
-        expect(outcome(() => view.api.retry())).toBe(
-          stage === "error" || `Retry works only in error (stage: ${stage}).`,
-        )
+        for (const [action, stages] of Object.entries(offered) as [keyof typeof offered, readonly string[]][]) {
+          const runs = stages.includes(stage)
+          expect(
+            outcome(() => view.api[action]()),
+            `${action} at ${stage}`,
+          ).toBe(runs || `${action} isn't available ${during[stage]}. [unavailable:${action}]`)
+          expect(view.api.offers(action)).toBe(runs)
+          // A press the stage doesn't offer returns false instead of throwing.
+          expect(runs || view.api[action](new MouseEvent("click"))).toBe(runs)
+        }
       } finally {
         view.unmount()
       }
+    }
+    expect(callbacks.onStart).toHaveBeenCalledWith(null, expect.objectContaining({ reason: "imperative" }))
+    const bare = mount(modelScan, { stage: "photo" }, markup)
+    try {
+      expect(outcome(() => bare.api.start())).toBe("start isn't offered by the app. [unavailable:start]")
+      expect(bare.api.offers("start")).toBe(false)
+    } finally {
+      bare.unmount()
     }
   })
 
@@ -180,7 +211,8 @@ test("detecting: points light up, a determinate bar, Cancel, and the scene start
     ["face", 2],
     ["body", 1],
   ])
-  expect((groups[1]?.firstElementChild as HTMLElement | null)?.style.left).toBe("40%")
+  // The photo's box is 750 by 1000 units at 3:4.
+  expect(groups[1]?.firstElementChild?.getAttribute("cx")).toBe("300")
   expect(document.querySelector('[data-slot="model-scan-points"]')?.getAttribute("aria-hidden")).toBe("true")
   const bar = screen.getByRole("progressbar", { name: "Finding points on the photo" })
   expect(bar.getAttribute("aria-valuenow")).toBe("50")
@@ -200,13 +232,13 @@ test("points land on the photo as sent; points past its edges aren't drawn and d
     />,
   )
   await tick()
-  const group = document.querySelector<HTMLElement>('[data-slot="model-scan-points"] [data-source="body"]')
-  const dots = [...(group?.children ?? [])] as HTMLElement[]
+  const group = document.querySelector('[data-slot="model-scan-points"] [data-source="body"]')
+  const dots = [...(group?.children ?? [])] as SVGElement[]
   expect(group?.getAttribute("data-count")).toBe("3")
-  expect(dots.map((dot) => [dot.style.left, dot.style.top])).toEqual([
-    ["25%", "50%"],
-    ["100%", "100%"],
-    ["75%", "0%"],
+  expect(dots.map((dot) => [dot.getAttribute("cx"), dot.getAttribute("cy")])).toEqual([
+    ["187.5", "500"],
+    ["750", "1000"],
+    ["562.5", "0"],
   ])
   expect(dots.map((dot) => dot.style.getPropertyValue("--model-scan-point-index"))).toEqual(["0", "1", "2"])
 })
@@ -258,36 +290,31 @@ test("the stage takes the photo's ratio once it loads; until then its size's, or
   expect(scanGroup().getAttribute("style")).toContain("--model-scan-ratio: 0.75")
 })
 
-/** A demo's controls: Start in `actions`, left out while a run goes, as the docs recommend. */
 function StartableScan() {
   const [stage, setStage] = useState<ModelScanProps["stage"]>("photo")
-  const running = stage === "detecting" || stage === "building" || stage === "refining"
   return (
     <Scan
       stage={stage}
-      onCancel={running ? () => setStage("photo") : undefined}
+      onStart={() => setStage("detecting")}
+      onCancel={() => setStage("photo")}
       onRetry={() => setStage("detecting")}
-      actions={
-        running ? null : (
-          <Button size="sm" onClick={() => setStage("detecting")}>
-            Start scan
-          </Button>
-        )
-      }
+      // Before Make 3D in the controls: focus still goes to Make 3D, the stage's main control.
+      styles={[{ value: "soft", label: "Soft" }]}
+      onStyleChange={() => {}}
     />
   )
 }
 
-test("start: gone while a run goes, focus moves to Cancel, and back to Start after cancelling", async () => {
+test("start: Make 3D goes while a run goes, focus moves to Cancel, and back to Make 3D after cancelling", async () => {
   const user = userEvent.setup()
   render(<StartableScan />)
   await tick()
-  await user.click(screen.getByRole("button", { name: "Start scan" }))
-  expect(screen.queryByRole("button", { name: "Start scan" })).toBeNull()
+  await user.click(screen.getByRole("button", { name: "Make 3D" }))
+  expect(screen.queryByRole("button", { name: "Make 3D" })).toBeNull()
   expect(document.activeElement).toBe(screen.getByRole("button", { name: "Cancel" }))
   await user.keyboard("{Enter}")
   expect(screen.queryByRole("button", { name: "Cancel" })).toBeNull()
-  expect(document.activeElement).toBe(screen.getByRole("button", { name: "Start scan" }))
+  expect(document.activeElement).toBe(screen.getByRole("button", { name: "Make 3D" }))
 })
 
 test("focus the person moved away stays there when the stage changes", async () => {
@@ -299,7 +326,7 @@ test("focus the person moved away stays there when the stage changes", async () 
     </>,
   )
   await tick()
-  await user.click(screen.getByRole("button", { name: "Start scan" }))
+  await user.click(screen.getByRole("button", { name: "Make 3D" }))
   await user.click(screen.getByRole("button", { name: "Elsewhere" }))
   expect(document.activeElement).toBe(screen.getByRole("button", { name: "Elsewhere" }))
   act(() => {
@@ -308,7 +335,7 @@ test("focus the person moved away stays there when the stage changes", async () 
   expect(document.activeElement).toBe(screen.getByRole("button", { name: "Elsewhere" }))
 })
 
-test("building and refining hand the model and the weights to the viewer; ready shows its controls", async () => {
+test("building and refining hand the model and the weights to the viewer; ready shows the toolbar", async () => {
   const { rerender } = render(<Scan stage="building" model={{ glb: "figure.glb", targetNames: ["body.pc00"] }} />)
   await tick()
   expect(fakeScene.props?.model).toBe("figure.glb")
@@ -322,7 +349,10 @@ test("building and refining hand the model and the weights to the viewer; ready 
   rerender(<Scan stage="ready" model="figure.glb" weights={{ Smile: 1 }} modelAlt="A 3D figure" />)
   await tick()
   expect(screen.queryByRole("progressbar")).toBeNull()
-  expect(screen.getByRole("group", { name: "3D view controls" })).toBeTruthy()
+  // One bar: ModelScan's toolbar, with the viewer's drag and keys but not its own controls.
+  expect(await screen.findByRole("toolbar", { name: "3D model controls" })).toBeTruthy()
+  expect(screen.queryByRole("group", { name: "3D view controls" })).toBeNull()
+  expect(screen.getByRole("img", { name: "A 3D figure" }).getAttribute("tabindex")).toBe("0")
   expect(screen.queryByRole("button", { name: "Cancel" })).toBeNull()
 })
 
@@ -459,12 +489,12 @@ test("the fake engine emits the engine's events, and toModelScanProps maps them;
   const entries = () => agent.snapshot().filter((entry) => !entry.offPage && entry.component !== "more")
   for (const entry of entries()) expect(entry.label, `${entry.component} ${entry.ref} has no name`).toBeTruthy()
   const scan = entries().find((entry) => entry.component === "model-scan")
-  expect(scan?.actions).toEqual(expect.arrayContaining(["cancel", "retry"]))
+  expect(scan?.actions).toEqual(expect.arrayContaining(["start", "cancel", "retry", "restart", "download"]))
   const ref = "A front photo of a figure"
   expect((await agent.act({ steps: [{ ref, action: "cancel" }] })).ok).toBe(true)
   expect(onCancel).toHaveBeenCalledWith(expect.objectContaining({ source: "agent" }))
   const early = await agent.act({ steps: [{ ref, action: "retry" }] })
-  expect(early.error?.message).toContain("Retry works only in error (stage: detecting).")
+  expect(early.error?.message).toContain("retry isn't available while the scan runs.")
   rerender(<Scan stage="error" onCancel={onCancel} onRetry={onRetry} />)
   await tick()
   expect((await agent.act({ steps: [{ ref, action: "retry" }] })).ok).toBe(true)

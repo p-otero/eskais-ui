@@ -4,11 +4,15 @@ type ModelScanPoint = { x: number; y: number }
 /** Points as an engine sends them: interleaved x, y pairs, or objects. */
 type ModelScanPointList = Float32Array | readonly number[] | readonly ModelScanPoint[]
 
+/** Pairs of point indices in a group that a line joins, like a skeleton's bones. */
+type ModelScanEdges = readonly (readonly [number, number])[]
+
 /**
  * One detector's points, like the face or the body, which light up on their own. They are fractions of the original
- * photo; `aspect` is the photo's own width over its height, which lays them out before the photo has loaded.
+ * photo; `aspect` is the photo's own width over its height, which lays them out before the photo has loaded. `edges`
+ * join them into a mesh; a `body` group of the 33 pose landmarks has the pose skeleton by default.
  */
-type ModelScanPointGroup = { source: string; points: ModelScanPointList; aspect?: number }
+type ModelScanPointGroup = { source: string; points: ModelScanPointList; aspect?: number; edges?: ModelScanEdges }
 
 /** One list of points, or groups of them; a later group with the same `source` replaces the earlier one. */
 type ModelScanPoints = ModelScanPointList | readonly ModelScanPointGroup[]
@@ -17,7 +21,35 @@ type ModelScanPoints = ModelScanPointList | readonly ModelScanPointGroup[]
  * A group ready to draw: every point as interleaved x, y fractions of the photo, kept as sent, and how many of them
  * fall on the photo. Detectors report every landmark, also the ones a crop cut off, past 0 or 1.
  */
-type ModelScanDrawnGroup = { source: string; coords: Float32Array; onPhoto: number }
+type ModelScanDrawnGroup = { source: string; coords: Float32Array; onPhoto: number; edges?: ModelScanEdges }
+
+// The 33 pose landmarks' skeleton below the face, which a face group draws better.
+const poseEdges: ModelScanEdges = [
+  [11, 12],
+  [11, 13],
+  [13, 15],
+  [12, 14],
+  [14, 16],
+  [15, 17],
+  [15, 19],
+  [17, 19],
+  [16, 18],
+  [16, 20],
+  [18, 20],
+  [11, 23],
+  [12, 24],
+  [23, 24],
+  [23, 25],
+  [25, 27],
+  [24, 26],
+  [26, 28],
+  [27, 29],
+  [29, 31],
+  [27, 31],
+  [28, 30],
+  [30, 32],
+  [28, 32],
+]
 
 const isGroupList = (points: ModelScanPoints): points is readonly ModelScanPointGroup[] =>
   Array.isArray(points) && points.length > 0 && typeof points[0] === "object" && "source" in (points[0] as object)
@@ -46,7 +78,8 @@ function pointGroups(points: ModelScanPoints | undefined): ModelScanDrawnGroup[]
     const coords = interleaved(group.points)
     let onPhoto = 0
     for (let i = 0; i + 1 < coords.length; i += 2) if (isOnPhoto(coords[i] ?? -1, coords[i + 1] ?? -1)) onPhoto += 1
-    return { source: group.source, coords, onPhoto }
+    const edges = group.edges ?? (group.source === "body" && coords.length === 66 ? poseEdges : undefined)
+    return edges ? { source: group.source, coords, onPhoto, edges } : { source: group.source, coords, onPhoto }
   })
 }
 
@@ -56,5 +89,12 @@ function pointsAspect(points: ModelScanPoints | undefined) {
   return points.find((group) => group.aspect && Number.isFinite(group.aspect) && group.aspect > 0)?.aspect
 }
 
-export { isOnPhoto, pointGroups, pointsAspect }
-export type { ModelScanDrawnGroup, ModelScanPoint, ModelScanPointGroup, ModelScanPointList, ModelScanPoints }
+export { isOnPhoto, pointGroups, pointsAspect, poseEdges }
+export type {
+  ModelScanDrawnGroup,
+  ModelScanEdges,
+  ModelScanPoint,
+  ModelScanPointGroup,
+  ModelScanPointList,
+  ModelScanPoints,
+}

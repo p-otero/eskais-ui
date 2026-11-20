@@ -1,5 +1,7 @@
 import { announce, css, definePrimitive, dispatch, prepareAnnouncements, type ChangeDetails } from "@ui-sdk/core"
 
+import { settled, unavailable } from "@/lib/action-refusal"
+
 /**
  * `photo` before anything runs, `detecting` while points light up over it, `building` while the photo turns into
  * the base model, `refining` while weights stream in, `ready` to orbit, `error` to retry.
@@ -15,12 +17,17 @@ type ModelScanAnnouncements = {
   error: string
 }
 
+type ModelScanCallback = (value: null, details: ChangeDetails<ModelScanActionReason>) => void
+
 type ModelScanOptions = {
   stage?: ModelScanStage
   /** From 0 to 1 within the stage; undefined while the engine can't tell. */
   progress?: number
-  onCancel?: (value: null, details: ChangeDetails<ModelScanActionReason>) => void
-  onRetry?: (value: null, details: ChangeDetails<ModelScanActionReason>) => void
+  onStart?: ModelScanCallback
+  onCancel?: ModelScanCallback
+  onRetry?: ModelScanCallback
+  onStartOver?: ModelScanCallback
+  onDownload?: ModelScanCallback
   /** The photo's width over its height. */
   ratio?: number
   /** The model has taken the photo's place in the 3D scene. */
@@ -29,7 +36,27 @@ type ModelScanOptions = {
 }
 
 const working: readonly ModelScanStage[] = ["detecting", "building", "refining"]
-const cancelable: readonly ModelScanStage[] = ["photo", ...working]
+
+type ModelScanAction = "start" | "cancel" | "retry" | "restart" | "download"
+type ModelScanCallbackName = "onStart" | "onCancel" | "onRetry" | "onStartOver" | "onDownload"
+
+// Each action, the callback it runs and the stages that offer it.
+const actions: Record<ModelScanAction, { callback: ModelScanCallbackName; stages: readonly ModelScanStage[] }> = {
+  start: { callback: "onStart", stages: ["photo"] },
+  cancel: { callback: "onCancel", stages: working },
+  retry: { callback: "onRetry", stages: ["error"] },
+  restart: { callback: "onStartOver", stages: ["ready", "error"] },
+  download: { callback: "onDownload", stages: ["ready"] },
+}
+
+const during: Record<ModelScanStage, string> = {
+  photo: "before a scan starts",
+  detecting: "while the scan runs",
+  building: "while the scan runs",
+  refining: "while the scan runs",
+  ready: "once the model is ready",
+  error: "after an error",
+}
 
 const clamp = (value: number) => Math.min(1, Math.max(0, Number.isFinite(value) ? value : 0))
 
@@ -37,13 +64,23 @@ const clamp = (value: number) => Math.min(1, Math.max(0, Number.isFinite(value) 
 const progressStep = 10
 const progressInterval = 2000
 
+const sweepFrames: Keyframe[] = [
+  { transform: "translateY(-100%)", opacity: 0 },
+  { opacity: 1, offset: 0.12 },
+  { opacity: 1, offset: 0.88 },
+  { transform: "translateY(294%)", opacity: 0 },
+]
+
 const modelScan = definePrimitive({
   name: "model-scan",
   options: {
     stage: "string",
     progress: "number",
+    onStart: "callback",
     onCancel: "callback",
     onRetry: "callback",
+    onStartOver: "callback",
+    onDownload: "callback",
     ratio: "number",
     introDone: "boolean",
     announcements: "value",
@@ -63,22 +100,30 @@ const modelScan = definePrimitive({
   }),
   api: (context) => {
     const { store } = context
-    // A call that can't apply throws, so an agent's step fails with why instead of reporting success.
-    const run = (name: "onCancel" | "onRetry", allowed: readonly ModelScanStage[], event?: Event) => {
-      const current = store.get().stage
-      const action = name.slice(2)
-      if (!allowed.includes(current)) {
-        throw new Error(`${action} works only in ${allowed.join(", ")} (stage: ${current}).`)
-      }
-      if (!context.options()[name]) throw new Error(`${action} isn't offered: there is no ${name}.`)
-      return !dispatch(context, name, null, { reason: event ? "trigger-press" : "imperative", event })
+    // An agent's call that can't run throws with why; a person's press returns false.
+    const run = (action: ModelScanAction, event?: Event) => {
+      const reason: ModelScanActionReason = event ? "trigger-press" : "imperative"
+      const call = { reason, event }
+      const { stage } = store.get()
+      const { callback, stages } = actions[action]
+      if (!stages.includes(stage)) return unavailable(action, `isn't available ${during[stage]}`, call)
+      if (!context.options()[callback]) return unavailable(action, "isn't offered by the app", call)
+      return settled(!dispatch(context, callback, null, call), action, call)
     }
     return {
-      /** Stops the run at any stage before it's ready, through `onCancel`. */
-      cancel: (event?: Event) => run("onCancel", cancelable, event),
+      /** Starts a scan of the photo, through `onStart`. */
+      start: (event?: Event) => run("start", event),
+      /** Stops the scan while it runs, through `onCancel`. */
+      cancel: (event?: Event) => run("cancel", event),
       /** Starts again after an error, through `onRetry`. */
-      retry: (event?: Event) => run("onRetry", ["error"], event),
-      canCancel: () => cancelable.includes(store.get().stage) && Boolean(context.options().onCancel),
+      retry: (event?: Event) => run("retry", event),
+      /** Back to the photo from the finished model or an error, through `onStartOver`. */
+      restart: (event?: Event) => run("restart", event),
+      /** Saves the finished model, through `onDownload`. */
+      download: (event?: Event) => run("download", event),
+      /** Whether `action` runs in the current stage with the callbacks given. */
+      offers: (action: ModelScanAction) =>
+        actions[action].stages.includes(store.get().stage) && Boolean(context.options()[actions[action].callback]),
       announcements: () => context.options().announcements,
     }
   },
@@ -140,6 +185,35 @@ const modelScan = definePrimitive({
         "aria-hidden": "true",
         "data-determinate": state.progress === undefined ? undefined : "",
       }),
+      // Until the engine reports progress the beam sweeps down the photo again and again, and under reduced motion
+      // it stays put. A component can't ship CSS keyframes, so the sweep is a Web Animation.
+      bind: (el, part) => {
+        const motion = el.ownerDocument.defaultView?.matchMedia?.("(prefers-reduced-motion: reduce)")
+        let sweep: Animation | undefined
+        const update = () => {
+          const beam = el.querySelector<HTMLElement>("[data-beam]")
+          const loop =
+            part.store.get().progress === undefined && !motion?.matches && typeof beam?.animate === "function"
+          if (loop && !sweep && beam) {
+            sweep = beam.animate(sweepFrames, {
+              duration: 2600,
+              iterations: Infinity,
+              easing: "cubic-bezier(0.45, 0, 0.55, 1)",
+            })
+          } else if (!loop && sweep) {
+            sweep.cancel()
+            sweep = undefined
+          }
+        }
+        update()
+        motion?.addEventListener("change", update)
+        const unsubscribe = part.store.subscribe(update)
+        return () => {
+          unsubscribe()
+          motion?.removeEventListener("change", update)
+          sweep?.cancel()
+        }
+      },
     }),
     points: slot<{ handedOff?: boolean }>({
       props: { handedOff: "boolean" },
@@ -147,8 +221,8 @@ const modelScan = definePrimitive({
       attrs: () => ({ "aria-hidden": "true" }),
     }),
   }),
-  agent: { actions: ["cancel", "retry"] },
+  agent: { actions: ["start", "cancel", "retry", "restart", "download"] },
 })
 
 export { modelScan }
-export type { ModelScanActionReason, ModelScanAnnouncements, ModelScanOptions, ModelScanStage }
+export type { ModelScanAction, ModelScanActionReason, ModelScanAnnouncements, ModelScanOptions, ModelScanStage }

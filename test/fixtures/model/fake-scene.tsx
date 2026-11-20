@@ -11,7 +11,8 @@ const fakeScene = {
   },
 }
 
-// Stands in for the three.js scene in jsdom: it reports the model loaded with two clips, as the real one does.
+// Stands in for the three.js scene in jsdom: it reports the model loaded with two clips, as the real one does, and
+// renders the scene's children (ModelScan's transition) where a test can stand them in too.
 function ModelViewerScene(props: ModelViewerSceneProps) {
   fakeScene.record(props)
   return (
@@ -20,7 +21,9 @@ function ModelViewerScene(props: ModelViewerSceneProps) {
       ref={(element) => {
         if (element && props.model !== undefined) props.handle.api.loaded(fakeScene.clips)
       }}
-    />
+    >
+      {props.children}
+    </span>
   )
 }
 
