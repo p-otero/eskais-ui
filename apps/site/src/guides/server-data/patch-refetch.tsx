@@ -25,9 +25,26 @@ export function PatchAndRefetch() {
           read of a query the patch leaves alone goes on.
         </li>
         <li>
+          <Code>{'{ inFlight: "cancel" }'}</Code> cancels the read of each query the patch writes instead of starting it
+          again: the query keeps the patch and stops fetching, as after a mutation's <Code>settle</Code>, with no
+          mutation. The read's late answer is dropped and nothing shows an error. A first read the patch writes nothing
+          into still starts again, since its query would otherwise stay pending. <Code>"restart"</Code> is the default.
+        </li>
+        <li>
+          <Code>{"{ awaitRestarted: true }"}</Code> resolves once every read the patch started again has settled,
+          following each query through later restarts (another patch, an invalidation) to its latest read, and starts no
+          read of its own. With <Code>throwOnError</Code> it rejects with the first failure, after retries; an aborted
+          read never counts, and a later <Code>{'inFlight: "cancel"'}</Code> patch settles it with the data it wrote. It
+          is the way to know a restarted read failed without the extra read <Code>refetch</Code> makes, for a resource
+          whose every read overwrites per-item ETags. Awaiting the query's <Code>promise</Code> instead rejects with a
+          silent <Code>CancelledError</Code> whenever another write restarts the read.
+        </li>
+        <li>
           <Code>{"{ refetch: true }"}</Code> reloads the whole key afterwards, as <Code>useInvalidateSource</Code> does,
           and the promise resolves once the shown queries have reloaded (<Code>throwOnError</Code> rejects on a failed
-          reload). By default nothing new is requested and the patched queries count as fresh.
+          reload). That reload restarts every read in flight under the key, so the patch leaves the restart to it rather
+          than sending a request that is aborted at once. By default nothing new is requested and the patched queries
+          count as fresh.
         </li>
         <li>
           A patch is what the server holds now. For a change the server hasn't confirmed yet, use{" "}

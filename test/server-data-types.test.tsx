@@ -5,7 +5,13 @@ import type { ReactNode } from "react"
 import { describe, expect, expectTypeOf, test } from "vitest"
 
 import { createDataClient, DataProvider, type DefaultServerError } from "@/components/ui/server-data"
-import { useServerInfinite, useServerPage, useSourceMutation } from "@/components/ui/use-server-data"
+import {
+  patchSource,
+  useServerInfinite,
+  useServerPage,
+  useSourceMutation,
+  type PatchOptions,
+} from "@/components/ui/use-server-data"
 import { defineResource, useServerQuery, useServerResource } from "@/components/ui/use-server-query"
 import { arraySource } from "@/lib/array-source"
 import type { HttpError } from "@/lib/page-source"
@@ -80,6 +86,24 @@ describe("server data types", () => {
       key: ["tasks", "summary", "1"],
       data: { id: "1", title: "A" },
     })
+  })
+
+  test("patch options: inFlight is restart or cancel, awaitRestarted a boolean, and the call a void promise", async () => {
+    expectTypeOf<PatchOptions["inFlight"]>().toEqualTypeOf<"restart" | "cancel" | undefined>()
+    expectTypeOf<PatchOptions["awaitRestarted"]>().toEqualTypeOf<boolean | undefined>()
+    const client = createDataClient()
+    const done = patchSource<Task, Task>(
+      client,
+      tasks,
+      { resource: (current) => current },
+      { inFlight: "cancel", awaitRestarted: true, throwOnError: true },
+    )
+    expectTypeOf(done).toEqualTypeOf<Promise<void>>()
+    // @ts-expect-error inFlight takes "restart" or "cancel"
+    void patchSource(client, tasks, {}, { inFlight: "ignore" })
+    // @ts-expect-error awaitRestarted is a boolean
+    void patchSource(client, tasks, {}, { awaitRestarted: "yes" })
+    await expect(done).resolves.toBeUndefined()
   })
 
   test("createDataClient takes retry: false", () => {
