@@ -18,6 +18,8 @@ import { formRoot } from "@/components/ui/form-primitive"
 import { gitTree, type GitTreeLookup } from "@/components/ui/git-tree-primitive"
 import { inlineEdit } from "@/components/ui/inline-edit-primitive"
 import { lightbox } from "@/components/ui/lightbox-primitive"
+import { logViewer } from "@/components/ui/log-viewer-primitive"
+import { createLogStore } from "@/components/ui/log-viewer-store"
 import { link } from "@/components/ui/link-primitive"
 import { list } from "@/components/ui/list-primitive"
 import { masterDetail } from "@/components/ui/master-detail-primitive"
@@ -178,6 +180,27 @@ test("code block and description value: copy without a clipboard or text fails t
   const value = mounted(mount(descriptionValue, { text: "" }, `<root aria-label="Commit"></root>`))
   await failsWith("Commit", "copy", "copy has nothing to copy.")
   expect([code.state.copied, value.state.copied]).toEqual([false, false])
+})
+
+test("log viewer: a refused filter, search or wrap fails the step and keeps the view; no errors to step to fails", async () => {
+  const store = createLogStore({ schedule: (notify) => notify() })
+  store.append([
+    { text: "ready", source: "api" },
+    { text: "connected", source: "db" },
+  ])
+  const view = mounted(
+    mount(
+      logViewer,
+      { store, onHiddenSourcesChange: refuseAgent, onQueryChange: refuseAgent, onWrapChange: refuseAgent },
+      `<root aria-label="Logs"><log aria-label="Logs"></log></root>`,
+    ),
+  )
+  await failsWith("Logs", "filter", "filter was refused by the app.", ["api"])
+  await failsWith("Logs", "search", "search was refused by the app.", ["ready"])
+  await failsWith("Logs", "setWrap", "setWrap was refused by the app.", [true])
+  await failsWith("Logs", "nextError", "nextError has no errors to go to.")
+  await failsWith("Logs", "previousError", "previousError has no errors to go to.")
+  expect([view.state.hiddenSources, view.state.query, view.state.wrap, view.state.count]).toEqual([[], "", false, 2])
 })
 
 test("commit history: a refused selection, expansion or branch fails the step", async () => {

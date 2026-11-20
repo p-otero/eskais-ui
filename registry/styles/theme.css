@@ -176,6 +176,9 @@
   --syntax-property: oklch(0.48 0.16 20);
   --syntax-tag: oklch(0.47 0.18 345);
   --syntax-punctuation: oklch(0.42 0.01 260);
+  /* Terminal colours (LogViewer) keep their hue with their lightness clamped to this range, for 4.5:1 on muted. */
+  --ansi-lightness-min: 0;
+  --ansi-lightness-max: 0.48;
 }
 
 .dark {
@@ -222,6 +225,8 @@
   --syntax-property: oklch(0.8 0.1 20);
   --syntax-tag: oklch(0.8 0.11 345);
   --syntax-punctuation: oklch(0.8 0.01 260);
+  --ansi-lightness-min: 0.76;
+  --ansi-lightness-max: 1;
 }
 
 /* Derived from the seeds. A custom property computes where it's declared, so the derivation repeats on every
@@ -401,6 +406,8 @@
     --syntax-property: oklch(0.8 0.1 20);
     --syntax-tag: oklch(0.8 0.11 345);
     --syntax-punctuation: oklch(0.8 0.01 260);
+    --ansi-lightness-min: 0.76;
+    --ansi-lightness-max: 1;
   }
   :root:where(:not(.light, [data-color-scheme="light"])),
   :root:where(:not(.light, [data-color-scheme="light"])) [data-palette],

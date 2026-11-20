@@ -121,6 +121,8 @@
           "--neutral-hue": "0",
           "--neutral-chroma": "0",
           "--link-brand": "oklch(0.55 0.2 260)",
+          "--ansi-lightness-min": "0",
+          "--ansi-lightness-max": "0.48",
           "--primary": "var(--brand)",
           "--primary-foreground": "color( from var(--primary) xyz-d65 calc( 0.95047 * clamp(min(0.008615, max(0, (y - 0.179) * 0.2)), (0.179 - y) * 1e6, max(0.955672, 1 - (0.179 - y) * 4.5)) ) clamp(min(0.008615, max(0, (y - 0.179) * 0.2)), (0.179 - y) * 1e6, max(0.955672, 1 - (0.179 - y) * 4.5)) calc( 1.08883 * clamp(min(0.008615, max(0, (y - 0.179) * 0.2)), (0.179 - y) * 1e6, max(0.955672, 1 - (0.179 - y) * 4.5)) ) )",
           "--series-positive": "var(--success)",
@@ -142,6 +144,8 @@
         },
         ".dark": {
           "--floating-shadow": "inset 0 1px 0 oklch(1 0 0 / 0.05), 0 1px 2px oklch(0 0 0 / 0.3), 0 8px 20px -4px oklch(0 0 0 / 0.4), 0 24px 48px -12px oklch(0 0 0 / 0.55)",
+          "--ansi-lightness-min": "0.76",
+          "--ansi-lightness-max": "1",
           "--primary-foreground": "color( from var(--primary) xyz-d65 calc( 0.95047 * clamp(min(0.008615, max(0, (y - 0.179) * 0.2)), (0.179 - y) * 1e6, max(0.955672, 1 - (0.179 - y) * 4.5)) ) clamp(min(0.008615, max(0, (y - 0.179) * 0.2)), (0.179 - y) * 1e6, max(0.955672, 1 - (0.179 - y) * 4.5)) calc( 1.08883 * clamp(min(0.008615, max(0, (y - 0.179) * 0.2)), (0.179 - y) * 1e6, max(0.955672, 1 - (0.179 - y) * 4.5)) ) )",
           "--series-positive": "var(--success)",
           "--series-negative": "var(--destructive)",
@@ -405,6 +409,8 @@
             "--syntax-property": "oklch(0.8 0.1 20)",
             "--syntax-tag": "oklch(0.8 0.11 345)",
             "--syntax-punctuation": "oklch(0.8 0.01 260)",
+            "--ansi-lightness-min": "0.76",
+            "--ansi-lightness-max": "1",
             "--background": "oklch(0.145 var(--neutral-chroma) var(--neutral-hue))",
             "--foreground": "oklch(0.985 var(--neutral-chroma) var(--neutral-hue))",
             "--card": "oklch(0.205 var(--neutral-chroma) var(--neutral-hue))",
@@ -5545,6 +5551,21 @@
       ]
     },
     {
+      "name": "ansi",
+      "type": "registry:lib",
+      "title": "ANSI",
+      "description": "parseAnsi and stripAnsi read a line of terminal output in one linear pass: SGR codes (the 16 colours, 256 colours and truecolor in the semicolon and colon forms, bold, dim, italic, underline, inverse, strikethrough, reset) become styled runs, and every other escape sequence, OSC string (titles, hyperlinks), control character and bidi override is dropped; a carriage return redraws the line. The text comes back as strings, never markup. ansiCssColor maps a terminal colour to theme-aware CSS that clamps its lightness to --ansi-lightness-min and --ansi-lightness-max, for 4.5:1 on muted in light and dark.",
+      "registryDependencies": [
+        "@eskais/theme"
+      ],
+      "files": [
+        {
+          "path": "registry/lib/ansi.ts",
+          "type": "registry:lib"
+        }
+      ]
+    },
+    {
       "name": "diff-view",
       "type": "registry:ui",
       "title": "Diff View",
@@ -5954,6 +5975,64 @@
         },
         {
           "path": "registry/ui/activity-log.tsx",
+          "type": "registry:ui"
+        }
+      ]
+    },
+    {
+      "name": "log-viewer",
+      "type": "registry:ui",
+      "title": "Log Viewer",
+      "description": "LogViewer: a live log or terminal output viewer for any process. createLogStore takes lines from anywhere (append, or write for raw chunks with partial lines) into a bounded buffer and notifies once per frame; the viewer renders only the lines in view, on UI SDK's virtualizer inside a ScrollArea. It follows the end until the reader scrolls up, then shows Jump to end with a count of new lines (End or the button follows again); filters by source (a ToggleGroup, sources coloured with chart or tone colours) and by search; renders ANSI colours on theme tokens; marks error lines (by level or an isError pattern) and steps through them with F8 and Shift+F8; copies the shown lines or a selection as plain text; wraps on demand. A role=log with aria-live off and a polite status that announces new errors at most every 5 seconds. Agents read the shown lines and call filter, search, nextError, previousError, copy, jumpToEnd and setWrap.",
+      "docs": "Create the store once, outside render: `const store = createLogStore({ maxLines: 10000 })`. Feed it from anywhere: `store.append({ text, source: \"backend\", level: \"error\", time })` for whole lines, or `store.write(chunk, { source })` for a process's raw output (partial lines wait for the rest, colours carry across lines per source). Then `<LogViewer store={store} label=\"Environment output\" sources={[\"frontend\", \"backend\", { id: \"db\", label: \"postgres\" }]} timestamps />` in a box with a height (`className=\"h-96\"` or `min-h-0 flex-1`). `isError={/ERR!|Exception/}` marks lines without a level; `hiddenSources`, `query` and `wrap` can be controlled with their `on…Change`; `format` writes a line for copy and agents; `actions` adds toolbar buttons; `toolbar={false}` hides the toolbar. Every label is overridable through `labels`.",
+      "dependencies": [
+        "@ui-sdk/core@0.1.0-beta.12",
+        "@ui-sdk/react@0.1.0-beta.12",
+        "lucide-react"
+      ],
+      "registryDependencies": [
+        "@eskais/utils",
+        "@eskais/theme",
+        "@eskais/tone",
+        "@eskais/ansi",
+        "@eskais/action-refusal",
+        "@eskais/button",
+        "@eskais/toggle",
+        "@eskais/toggle-group",
+        "@eskais/search-field",
+        "@eskais/scroll-area"
+      ],
+      "files": [
+        {
+          "path": "registry/ui/log-viewer-store.ts",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/log-viewer-index.ts",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/log-viewer-scroller.ts",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/log-viewer-primitive.ts",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/log-viewer-labels.ts",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/log-viewer-rows.tsx",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/log-viewer-toolbar.tsx",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/log-viewer.tsx",
           "type": "registry:ui"
         }
       ]
