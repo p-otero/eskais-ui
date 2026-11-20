@@ -5,9 +5,9 @@ import { registryUrl, releaseTag, skillsCliVersion, uiSdkVersion } from "../regi
 
 const setupPrompt = `Set up Eskais UI in this React project (React 19 or newer, Tailwind CSS v4): the components, the agent skills and the mockup CLI. Use the project's package manager, and its runner where you see <x>: npx with npm, pnpm dlx with pnpm, bunx with Bun. Every command below works the same in bash and PowerShell. If a release-age policy (minimumReleaseAge in pnpm, Bun or Renovate) blocks an install, stop and ask me instead of changing it.
 
-1. If there is no components.json, create one (it asks nothing):
+1. shadcn reads only the root tsconfig.json, and init fails without an @/ alias there: if the alias lives in tsconfig.app.json, copy its paths up; if there is none, add "paths": { "@/*": ["./src/*"] } to both (no baseUrl: TypeScript 7 rejects it) and the same alias to the bundler (resolve.alias in vite.config). Then, if there is no components.json, create one (it asks nothing):
    <x> shadcn@latest init -b base -p nova
-2. Add the registry, pinned to the ${releaseTag} release. shadcn reads only the root tsconfig.json: if the @/ alias lives in tsconfig.app.json, copy its paths up first.
+2. Add the registry, pinned to the ${releaseTag} release:
    <x> shadcn@latest registry add "@eskais=${registryUrl}"
 3. Install UI SDK at exactly ${uiSdkVersion}, the version the registry pins (npm install -E, pnpm add -E or bun add -E):
    npm install -E @ui-sdk/react@${uiSdkVersion} @ui-sdk/core@${uiSdkVersion}
