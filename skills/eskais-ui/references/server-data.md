@@ -136,6 +136,17 @@ const summary = useServerResource(taskSummary, id, { select: (s) => s.title })
 - `useSourceMutation` refreshes the key after the change by default. `optimistic: (items, variables) => items` shows it before and rolls back on failure. `refreshOnError: false` adds no read after a failed command (the rollback still happens).
 - When the server answers with the saved state, write it instead of refreshing: `settleItems: (items, saved) => items.map((t) => (t.id === saved.id ? saved : t))` for page and infinite queries (totals stay), `settle: (saved, variables, current) => (current?.id === saved.id ? saved : undefined)` for each `useServerQuery` (`undefined` leaves it). They reach every cached query under the key, mounted or not (one filled by `setQueryData` or `seeds` too). Each written query's read in flight is cancelled first; nothing is requested; the rest of the key is marked stale (a read already in flight restarts). A failure still refreshes, unless `refreshOnError: false`.
 - `useInvalidateSource(tasks, { throwOnError: true })` (or `invalidate({ throwOnError: true })`) rejects on a failed reload: `invalidate().catch(() => toast.error("Couldn't reload"))`. By default it resolves.
+- Every reload the hooks make (`useInvalidateSource`, a mutation's refresh, the restart after `settle`) restarts any read in flight under the key, a first load included: its signal aborts, the query stays pending without an error, and its late answer is dropped. `client.invalidateQueries` joins a first load in flight instead, so it can show the answer from before the write: invalidate through the hooks.
+- `scope: { id }` runs mutations with that id one at a time, in call order, across hooks; each waits for the one before to settle, its refresh included. A failure doesn't stop the queue: to stop at the first, set a flag in `onError` and reject in `mutationFn` when it's set. `mutationKey` finds them with `useMutationState`.
+
+## Offline
+
+TanStack's default `networkMode: "online"` pauses reads and writes after the browser's `offline` event: a page stays pending and never reaches its error state. For a local backend (Electron IPC, localhost) or an app with its own offline UI:
+
+```ts
+createDataClient({ networkMode: "always" }) // queries and mutations
+useServerQuery(key, fetch, { networkMode: "always" }) // or per hook: resources, page, infinite, total, useSourceMutation
+```
 
 ## Typed errors
 
@@ -198,3 +209,4 @@ Counts, page sizes and the chips' numbers and dates follow the page's `<html lan
 | Dates          | ISO 8601                                                                        |
 | Query client   | the app's; a shared default, or `DataProvider`                                  |
 | Query defaults | keep previous data, 2 retries except 4xx, `staleTime` 30 s, no refetch on focus |
+| Network mode   | TanStack's `online`: paused while the browser is offline                        |
