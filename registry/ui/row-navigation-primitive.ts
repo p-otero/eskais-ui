@@ -128,5 +128,5 @@ const rowNavigation = definePrimitive({
   agent: { actions: [], shown: () => false },
 })
 
-export { rowNavigation }
+export { rowNavigation, rowsPerPage }
 export type { RowNavigationOptions }

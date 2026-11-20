@@ -1,75 +1,43 @@
 "use client"
 
 import type { ChangeDetails } from "@ui-sdk/core"
-import {
-  createListboxController,
-  Listbox,
-  ListboxGroup,
-  ListboxGroupLabel,
-  type ListboxValueChangeReason,
-} from "@ui-sdk/react/listbox"
+import { createListboxController, Listbox, type ListboxValueChangeReason } from "@ui-sdk/react/listbox"
 import { usePart, usePrimitive, type PartProps } from "@ui-sdk/react/primitive"
-import {
-  Children,
-  createContext,
-  isValidElement,
-  memo,
-  use,
-  useCallback,
-  useId,
-  useMemo,
-  useRef,
-  useState,
-  type FocusEvent,
-  type KeyboardEvent,
-  type ReactElement,
-  type ReactNode,
-  type Ref,
-} from "react"
+import { memo, useCallback, useMemo, useRef, useState, type FocusEvent, type ReactNode, type Ref } from "react"
 
+import {
+  containerClassNames,
+  ListContext,
+  PositionContext,
+  useListContext,
+  useListItemPosition,
+  type ItemHandle,
+  type ListContextValue,
+  type ListItemPosition,
+  type ListVariant,
+} from "@/components/ui/list-context"
+import { ListGridProvider, ListGridRoot, useListGridInstance } from "@/components/ui/list-grid"
 import { list, type ListEntry, type ListOptions } from "@/components/ui/list-primitive"
+import {
+  RowActionsContext,
+  type ListRowAction,
+  type ListRowActionLabels,
+  type ListRowActionsVisibility,
+} from "@/components/ui/list-row-actions"
 import { RowNavigationProvider, useRowNavigation } from "@/components/ui/row-navigation"
 import { ListSortableRows, type ListSortableRowsProps } from "@/components/ui/list-sortable"
+import { useListRowActions } from "@/components/ui/use-list-row-actions"
 import { useVirtualRows, type Virtualize } from "@/components/ui/virtual-rows"
+import {
+  childId,
+  childRowsOf,
+  childText,
+  defaultId,
+  defaultText,
+  listboxKeyDown,
+  renderChild,
+} from "@/components/ui/list-rows"
 import { cn } from "@/lib/utils"
-
-type ListVariant = "row" | "card"
-type ItemHandle = { label: string; activate: () => boolean }
-
-type ListContextValue = {
-  variant: ListVariant
-  selectable: boolean
-  register: (id: string, handle: ItemHandle) => () => void
-  select: (id: string, event: Event) => boolean
-  /** Rows that Space or `x` check, for bulk actions; undefined when the list has none. */
-  checked?: { has: (id: string) => boolean; toggle: (id: string) => void }
-  /** Set while rows reorder: each row gets a drag handle. */
-  sortable?: { labels?: ListSortableRowsProps["labels"] }
-}
-
-/** Where a data row sits among all rows, while the list is virtualized. */
-type ListItemPosition = {
-  index: number
-  setsize: number
-  /** The virtualizer's ref for the row; it returns the cleanup that stops measuring. */
-  measure?: (node: HTMLElement | null) => (() => void) | undefined
-}
-
-const ListContext = createContext<ListContextValue | null>(null)
-const PositionContext = createContext<ListItemPosition | null>(null)
-
-function useListContext() {
-  return use(ListContext)
-}
-
-function useListItemPosition() {
-  return use(PositionContext)
-}
-
-const containerClassNames = {
-  row: "flex flex-col",
-  card: "grid grid-cols-[repeat(auto-fill,minmax(min(100%,18rem),1fr))] gap-items",
-} satisfies Record<ListVariant, string>
 
 type ListProps<Item = unknown> = Omit<PartProps<"div">, "children" | "onSelect" | "defaultValue"> & {
   /** Names the list, for screen readers and agents. */
@@ -99,75 +67,26 @@ type ListProps<Item = unknown> = Omit<PartProps<"div">, "children" | "onSelect" 
   onReorder?: ListSortableRowsProps["onReorder"]
   /** The drag handle's name and what screen readers hear while a row moves. */
   sortableLabels?: ListSortableRowsProps["labels"]
+  /**
+   * The actions a row offers, by its id: buttons after its content that run without choosing the row. The list
+   * becomes a grid (one tab stop; Left and Right reach a row's actions), and agents get one component per action
+   * whose `run(id)` takes the row's id.
+   */
+  rowActions?: (id: string) => readonly ListRowAction[] | undefined
+  /** `hover` (default) shows a row's actions on a fine pointer while it's hovered, focused or selected. */
+  rowActionsVisibility?: ListRowActionsVisibility
+  /** Names of the rows' action buttons and of the actions for agents. */
+  rowActionLabels?: Partial<ListRowActionLabels>
   children?: ReactNode
 }
 
-function rootAttributes(variant: ListVariant, selectable: boolean) {
-  return { "data-slot": "list", "data-variant": variant, "data-selectable": selectable ? "" : undefined }
-}
-
-function defaultText(item: unknown) {
-  if (typeof item === "string") return item
-  if (typeof item === "object" && item !== null) {
-    const record = item as Record<string, unknown>
-    for (const key of ["title", "label", "name", "id"]) if (typeof record[key] === "string") return record[key]
+function rootAttributes(variant: ListVariant, selectable: boolean, grid: boolean) {
+  return {
+    "data-slot": "list",
+    "data-variant": variant,
+    "data-selectable": selectable ? "" : undefined,
+    "data-row-actions": grid ? "" : undefined,
   }
-  return ""
-}
-
-type ChildRow = ReactElement<{ id: string; title?: unknown }>
-
-// Flat rows given as children, each with a string `id` (`<ListItem id>`), are the list's data too, so they
-// virtualize like `items`. Anything else, like a ListGroup, keeps rendering as it is.
-function childRowsOf(children: ReactNode): ChildRow[] | undefined {
-  const all = Children.toArray(children)
-  if (all.length === 0) return undefined
-  const rows: ChildRow[] = []
-  for (const child of all) {
-    if (!isValidElement<{ id?: unknown }>(child) || typeof child.props.id !== "string") return undefined
-    rows.push(child as ChildRow)
-  }
-  return rows
-}
-
-const childId = (row: unknown) => (row as ChildRow).props.id
-const childText = (row: unknown) => {
-  const { id, title } = (row as ChildRow).props
-  return typeof title === "string" ? title : id
-}
-const renderChild = (row: unknown) => row as ChildRow
-
-function defaultId(item: unknown) {
-  if (typeof item === "object" && item !== null && "id" in item) return String((item as { id: unknown }).id)
-  return String(item)
-}
-
-const listboxKeys: Record<string, string> = { j: "ArrowDown", k: "ArrowUp" }
-
-// The listbox moves with arrows; j and k are the same moves, and the page keys jump by a screen of options.
-function listboxKeyDown(event: KeyboardEvent<HTMLElement>, setValue: (id: string) => void) {
-  if (event.altKey || event.ctrlKey || event.metaKey || !(event.target instanceof HTMLElement)) return
-  const option = event.target.closest<HTMLElement>('[role="option"]')
-  if (!option) return
-  const arrow = listboxKeys[event.key]
-  if (arrow) {
-    event.preventDefault()
-    event.stopPropagation()
-    option.dispatchEvent(new globalThis.KeyboardEvent("keydown", { key: arrow, bubbles: true, cancelable: true }))
-    return
-  }
-  if (event.key !== "PageDown" && event.key !== "PageUp") return
-  const options = [...event.currentTarget.querySelectorAll<HTMLElement>('[role="option"]')]
-  const viewport = event.currentTarget.closest<HTMLElement>("[data-slot=list]")?.parentElement?.clientHeight ?? 0
-  const page = Math.max(1, Math.floor(viewport / Math.max(1, option.offsetHeight)) - 1)
-  const from = options.indexOf(option)
-  const target = options[Math.min(options.length - 1, Math.max(0, from + (event.key === "PageDown" ? page : -page)))]
-  const id = target?.dataset.itemId
-  if (!target || id === undefined) return
-  event.preventDefault()
-  target.scrollIntoView({ block: "nearest" })
-  target.focus()
-  setValue(id)
 }
 
 type ListRowProps<Item> = {
@@ -205,6 +124,9 @@ function List<Item = unknown>({
   sortable = false,
   onReorder,
   sortableLabels,
+  rowActions,
+  rowActionsVisibility = "hover",
+  rowActionLabels,
   className,
   children,
   onFocus,
@@ -254,10 +176,15 @@ function List<Item = unknown>({
     setRegistered([...handles.current].map(([id, handle]) => ({ value: id, label: handle.label })))
   }, [fromData])
 
+  const entries = dataEntries ?? registered
+  const grid = rowActions !== undefined && !sorting
+  const rowIds = useMemo(() => ids ?? entries.map((entry) => entry.value), [ids, entries])
+
   const handle = usePrimitive(list, {
-    entries: dataEntries ?? registered,
+    entries,
     onSelect,
     activate: (id) => {
+      if (grid && selectable) return gridHandle.api.setValue(id)
       if (selectable) return listbox.setValue(id)
       const index = indexOf.get(id)
       if (!handles.current.has(id) && index !== undefined) virtual.renderNow(index)
@@ -280,6 +207,23 @@ function List<Item = unknown>({
     [checkedIds, checkedSet, onCheckedIdsChange],
   )
 
+  const gridHandle = useListGridInstance({
+    ids: rowIds,
+    cells: (id) => 1 + (rowActions?.(id)?.length ?? 0),
+    selectable: grid && selectable,
+    value,
+    defaultValue,
+    onValueChange,
+    entries,
+    onToggle: checked ? (id) => checked.toggle(id) : undefined,
+    reveal: (id) => {
+      const index = indexOf.get(id)
+      if (index !== undefined) virtual.scrollToIndex(index)
+    },
+  })
+
+  const actions = useListRowActions({ rowActions, entries, labels: rowActionLabels, visibility: rowActionsVisibility })
+
   const navigation = useRowNavigation({
     ids,
     onToggle: checked ? (id) => checked.toggle(id) : undefined,
@@ -294,6 +238,7 @@ function List<Item = unknown>({
     () => ({
       variant,
       selectable,
+      grid,
       checked,
       sortable: sortableContext,
       register: (id, item) => {
@@ -306,7 +251,7 @@ function List<Item = unknown>({
       },
       select: (id, event) => handle.api.select(id, { reason: "item-press", event }),
     }),
-    [variant, selectable, checked, sortableContext, refresh, handle],
+    [variant, selectable, grid, checked, sortableContext, refresh, handle],
   )
 
   let rows: ReactNode = children
@@ -331,7 +276,7 @@ function List<Item = unknown>({
       />
     )
   } else if (data && renderItem) {
-    const GapTag = selectable ? "div" : "li"
+    const GapTag = selectable || grid ? "div" : "li"
     rows = virtual.segments.map((segment) => {
       if (segment.type === "gap") {
         return <GapTag key={segment.key} aria-hidden="true" data-slot="list-gap" style={{ height: segment.size }} />
@@ -353,7 +298,7 @@ function List<Item = unknown>({
 
   const rootProps = {
     ...props,
-    ...rootAttributes(variant, selectable),
+    ...rootAttributes(variant, selectable, grid),
     ref: anchor,
     "aria-label": label,
     onFocus: (event: FocusEvent<HTMLElement>) => {
@@ -367,91 +312,67 @@ function List<Item = unknown>({
 
   // Selectable, the listbox is the List's own element, so one element carries the name. Agents see both: the List
   // takes `select` (through `onSelect`), the listbox `setValue`, so a step that names either action is unambiguous.
-  const partProps = selectable
+  const listChildren = (
+    <ListContext value={context}>
+      <RowActionsContext value={actions.context}>{rows}</RowActionsContext>
+    </ListContext>
+  )
+
+  // With row actions, the grid is the List's own element, as the listbox is when rows are selectable.
+  const partProps = grid
     ? {
         ...rootProps,
+        "aria-rowcount": virtual.enabled ? data?.length : undefined,
         className: cn(rootProps.className, "outline-none"),
-        children: <ListContext value={context}>{rows}</ListContext>,
-        render: ({ ref, ...part }: Record<string, unknown>) => (
-          <Listbox<string>
-            {...part}
-            ref={ref as Ref<HTMLDivElement>}
-            render={(listboxProps) => <div {...listboxProps} data-slot="list" />}
-            controller={listbox}
-            value={value}
-            defaultValue={defaultValue}
-            onValueChange={onValueChange}
-            onHighlight={(_value, details) => {
-              if (virtual.enabled && details.index >= 0) virtual.scrollToIndex(details.index)
-            }}
-            onKeyDownCapture={(event) => listboxKeyDown(event, (id) => listbox.setValue(id))}
-          />
-        ),
+        children: <ListGridProvider handle={gridHandle}>{listChildren}</ListGridProvider>,
+        render: (part: Record<string, unknown>) => <ListGridRoot {...part} handle={gridHandle} />,
       }
-    : {
-        ...rootProps,
-        // Preflight's list-style: none strips list semantics in Safari unless the role is explicit. Sorting, the
-        // list is the sortable's own element inside.
-        role: sorting ? "group" : "list",
-        className: sorting ? cn("min-w-0", className) : rootProps.className,
-        children: (
-          <ListContext value={context}>
-            <RowNavigationProvider handle={navigation}>{rows}</RowNavigationProvider>
-          </ListContext>
-        ),
-      }
+    : selectable
+      ? {
+          ...rootProps,
+          className: cn(rootProps.className, "outline-none"),
+          children: listChildren,
+          render: ({ ref, ...part }: Record<string, unknown>) => (
+            <Listbox<string>
+              {...part}
+              ref={ref as Ref<HTMLDivElement>}
+              render={(listboxProps) => <div {...listboxProps} data-slot="list" />}
+              controller={listbox}
+              value={value}
+              defaultValue={defaultValue}
+              onValueChange={onValueChange}
+              onHighlight={(_value, details) => {
+                if (virtual.enabled && details.index >= 0) virtual.scrollToIndex(details.index)
+              }}
+              onKeyDownCapture={(event) => listboxKeyDown(event, (id) => listbox.setValue(id))}
+            />
+          ),
+        }
+      : {
+          ...rootProps,
+          // Preflight's list-style: none strips list semantics in Safari unless the role is explicit. Sorting, the
+          // list is the sortable's own element inside.
+          role: sorting ? "group" : "list",
+          className: sorting ? cn("min-w-0", className) : rootProps.className,
+          children: (
+            <ListContext value={context}>
+              <RowActionsContext value={actions.context}>
+                <RowNavigationProvider handle={navigation}>{rows}</RowNavigationProvider>
+              </RowActionsContext>
+            </ListContext>
+          ),
+        }
 
-  return usePart(handle, "root", {}, partProps as PartProps<"ul">, selectable || sorting ? "div" : "ul")
-}
-
-type ListGroupProps = {
-  label: ReactNode
-  /** Shown beside the label, like "Proposed 3". */
-  count?: number
-  className?: string
-  children: ReactNode
-}
-
-const groupLabelClassName =
-  "flex items-center gap-inline px-inset-item text-meta tracking-meta text-muted-foreground uppercase"
-
-function ListGroup({ label, count, className, children }: ListGroupProps) {
-  const context = useListContext()
-  const labelId = useId()
-  const variant = context?.variant ?? "row"
-  const heading = (
+  const root = usePart(handle, "root", {}, partProps as PartProps<"ul">, selectable || sorting || grid ? "div" : "ul")
+  if (!actions.roots) return root
+  // Outside the list's element: a grid or list owns only rows.
+  return (
     <>
-      {label}
-      {count !== undefined && (
-        <>
-          {" "}
-          <span className="tabular-nums">{count}</span>
-        </>
-      )}
+      {root}
+      {actions.roots}
     </>
   )
-  if (context?.selectable) {
-    return (
-      <ListboxGroup
-        render={<div data-slot="list-group" />}
-        className={cn("flex flex-col gap-inline not-first:pt-group", className)}
-      >
-        <ListboxGroupLabel className={groupLabelClassName}>{heading}</ListboxGroupLabel>
-        <div className={containerClassNames[variant]}>{children}</div>
-      </ListboxGroup>
-    )
-  }
-  return (
-    <li data-slot="list-group" className={cn("flex flex-col gap-inline not-first:pt-group", className)}>
-      <div id={labelId} className={groupLabelClassName}>
-        {heading}
-      </div>
-      <ul aria-labelledby={labelId} className={containerClassNames[variant]}>
-        {children}
-      </ul>
-    </li>
-  )
 }
 
-export { List, ListGroup, useListContext, useListItemPosition }
-export type { ItemHandle, ListGroupProps, ListItemPosition, ListProps, ListVariant }
+export { containerClassNames, List, useListContext, useListItemPosition }
+export type { ItemHandle, ListItemPosition, ListProps, ListVariant }

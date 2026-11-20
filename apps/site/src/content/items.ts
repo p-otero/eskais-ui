@@ -835,9 +835,10 @@ const itemNotes: Record<string, ItemNotes> = {
       "The name is on the list itself: a list, or a listbox when rows are selectable, with no group around it.",
       "A row selects through a stretched link or button, while its own actions stay separate targets.",
       "With value or onValueChange, rows become listbox options with one tab stop.",
+      "With rowActions, the list is a grid: one tab stop, Left and Right reach a row's actions, and an action never selects the row.",
     ],
     agent:
-      "Agents see the list by its label with select(id); a sortable list adds move(id, index) and reorder(ids) under the same name.",
+      "Agents see the list by its label with select(id); a sortable list adds move(id, index) and reorder(ids) under the same name. Row actions are one component each, named by their label, with run(id) for any row that offers them.",
     related: ["stage-track", "status-pill", "card", "sortable"],
   },
   sortable: {

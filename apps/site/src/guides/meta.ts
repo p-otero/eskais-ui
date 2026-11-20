@@ -58,6 +58,13 @@ const guides: GuideMeta[] = [
     covers: ["row-navigation", "virtual-rows", "trail-rows"],
   },
   {
+    slug: "row-actions",
+    group: "Guides",
+    title: "Row actions",
+    description:
+      "Open, Copy and Start on a list row: a grid that keyboards and agents reach without selecting the row or moving a MasterDetail's detail.",
+  },
+  {
     slug: "performance",
     group: "Guides",
     title: "Performance",
