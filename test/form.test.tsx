@@ -9,6 +9,7 @@ import { Form, FormActions, FormField, FormRootError, FormServerError, formMessa
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Switch } from "@/components/ui/switch"
+import { ignoreAnnouncer } from "@/lib/test-utils"
 
 import { axeViolations } from "./axe"
 
@@ -79,11 +80,13 @@ test("shows translated errors and focuses the first invalid field", async () => 
   const name = screen.getByRole("textbox", { name: "Project name" })
   await waitFor(() => expect(document.activeElement).toBe(name))
   expect(name.getAttribute("aria-invalid")).toBe("true")
-  expect(screen.getAllByText("Este campo es obligatorio.").length).toBeGreaterThan(0)
+  expect(screen.getAllByText("Este campo es obligatorio.", { ignore: ignoreAnnouncer }).length).toBeGreaterThan(0)
   expect(onSubmit).not.toHaveBeenCalled()
 
   await user.type(name, "ab")
-  expect(await screen.findByText("Escribe al menos 3 caracteres.")).toBeTruthy()
+  // UI SDK announces the error too, 100 ms later, in a live region on <body>: on a loaded machine that text is there
+  // by the time the query runs, so it would match twice.
+  expect(await screen.findByText("Escribe al menos 3 caracteres.", { ignore: ignoreAnnouncer })).toBeTruthy()
   const email = screen.getByRole("textbox", { name: "Owner email" })
   expect(email.getAttribute("aria-describedby")).toBeTruthy()
 })
@@ -111,7 +114,7 @@ test("submits parsed values and maps a server error to its field", async () => {
   ])
   const email = screen.getByRole("textbox", { name: "Owner email" })
   await waitFor(() => expect(document.activeElement).toBe(email))
-  expect(screen.getByText("That owner is already on another plan.")).toBeTruthy()
+  expect(screen.getByText("That owner is already on another plan.", { ignore: ignoreAnnouncer })).toBeTruthy()
   expect(screen.getByRole("alert").textContent).toContain("Could not create the project.")
 })
 
@@ -138,6 +141,6 @@ test("has no axe violations with errors shown", async () => {
   const user = userEvent.setup()
   const { container } = render(<ProjectForm onSubmit={() => {}} />)
   await user.click(screen.getByRole("button", { name: "Create project" }))
-  await screen.findAllByText("This field is required.")
+  await screen.findAllByText("This field is required.", { ignore: ignoreAnnouncer })
   expect(await axeViolations(container)).toEqual([])
 })
