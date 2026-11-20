@@ -26,21 +26,24 @@ import {
   useRecordOpener,
   type FocusMemory,
 } from "@/components/ui/use-dialog-focus"
+import { useVisualViewportBox } from "@/components/ui/use-dialog-viewport"
 import { cn, cnState } from "@/lib/utils"
 
 // While they animate out, the backdrop and content let presses through, so the first click on the page counts.
 const backdropClassName =
   "fixed inset-0 z-overlay bg-overlay transition-opacity duration-dialog ease-standard data-ending-style:pointer-events-none data-ending-style:opacity-0 data-starting-style:opacity-0"
 
-// Sizes and offsets come from the containing block (the viewport for a top-layer dialog) through %, never viewport units.
-// The on-screen keyboard covers the layout viewport without resizing it, so while it is up (`data-keyboard`) the
-// content sits above it and fits the height UI SDK measures there; otherwise the footer or the field is under it.
+// Sizes and offsets come from the containing block through %, never viewport units, and the content stays in the
+// visible part of it (`useVisualViewportBox`), not in `innerHeight`, which iOS 26 Safari can leave stale while its
+// toolbars cover the bottom. The keyboard covers the layout viewport without resizing it, so while it is up
+// (`data-dialog-keyboard`) the content sits on the visible part's bottom edge, above it.
 const dialogContentVariants = cva(
   [
     // oxlint-disable-next-line eskais/scroll-area -- the dialog element's fallback for content without a DialogBody, which is the scroll area
-    "fixed inset-0 z-overlay m-auto flex h-fit max-h-(--dialog-max-height) w-(--dialog-width) min-w-0 flex-col gap-group overflow-y-auto overscroll-contain rounded-floating border border-floating-border bg-popover p-inset-surface field-label-surface-popover text-popover-foreground wrap-anywhere shadow-floating outline-none transition duration-dialog ease-standard data-ending-style:pointer-events-none data-ending-style:scale-95 data-ending-style:opacity-0 data-starting-style:scale-95 data-starting-style:opacity-0",
-    // oxlint-disable-next-line shadcn/no-arbitrary-values -- no token can read --visual-viewport-height, which UI SDK sets on the content itself
-    "data-keyboard:top-auto data-keyboard:bottom-(--keyboard-inset) data-keyboard:mb-floating data-keyboard:max-h-[min(var(--dialog-max-height),calc(var(--visual-viewport-height)-2*var(--floating-offset)))]",
+    "fixed inset-0 z-overlay m-auto flex h-fit w-(--dialog-width) min-w-0 flex-col gap-group overflow-y-auto overscroll-contain rounded-floating border border-floating-border bg-popover p-inset-surface field-label-surface-popover text-popover-foreground wrap-anywhere shadow-floating outline-none transition duration-dialog ease-standard data-ending-style:pointer-events-none data-ending-style:scale-95 data-ending-style:opacity-0 data-starting-style:scale-95 data-starting-style:opacity-0",
+    // oxlint-disable-next-line shadcn/no-arbitrary-values -- no token can read the visual viewport, which useVisualViewportBox sets on the content itself
+    "top-[var(--dialog-viewport-top,0px)] bottom-[calc(100%-var(--dialog-viewport-bottom,100%))] max-h-[min(var(--dialog-max-height),calc(var(--dialog-viewport-height,100%)-2*var(--floating-offset)))]",
+    "data-dialog-keyboard:top-auto data-dialog-keyboard:mb-floating",
   ],
   {
     variants: {
@@ -49,15 +52,15 @@ const dialogContentVariants = cva(
         md: "max-w-lg",
         lg: "max-w-3xl",
         xl: "max-w-6xl",
-        // oxlint-disable-next-line shadcn/no-arbitrary-values -- no token can read --visual-viewport-height, which UI SDK sets on the content itself
-        full: "h-(--dialog-max-height) max-w-none data-keyboard:h-[min(var(--dialog-max-height),calc(var(--visual-viewport-height)-2*var(--floating-offset)))]",
+        // oxlint-disable-next-line shadcn/no-arbitrary-values -- no token can read the visual viewport, which useVisualViewportBox sets on the content itself
+        full: "h-[min(var(--dialog-max-height),calc(var(--dialog-viewport-height,100%)-2*var(--floating-offset)))] max-w-none",
       },
       sheet: {
         true: [
-          "narrow:top-auto narrow:mb-0 narrow:data-keyboard:mb-0 narrow:h-fit narrow:max-h-(--sheet-max-height) narrow:data-keyboard:max-h-[min(var(--sheet-max-height),calc(var(--visual-viewport-height)-var(--floating-offset)))] narrow:w-full narrow:max-w-none narrow:rounded-b-none narrow:border-b-0 narrow:data-ending-style:translate-y-full narrow:data-ending-style:scale-100 narrow:data-starting-style:translate-y-full narrow:data-starting-style:scale-100 narrow:motion-reduce:data-ending-style:translate-y-0 narrow:motion-reduce:data-starting-style:translate-y-0",
+          "narrow:top-auto narrow:mb-0 narrow:data-dialog-keyboard:mb-0 narrow:h-fit narrow:max-h-[min(var(--sheet-max-height),calc(var(--dialog-viewport-height,100%)-var(--floating-offset)))] narrow:w-full narrow:max-w-none narrow:rounded-b-none narrow:border-b-0 narrow:data-ending-style:translate-y-full narrow:data-ending-style:scale-100 narrow:data-starting-style:translate-y-full narrow:data-starting-style:scale-100 narrow:motion-reduce:data-ending-style:translate-y-0 narrow:motion-reduce:data-starting-style:translate-y-0",
           // The sheet reaches the bottom edge, so it clears the home indicator when the page extends under it
           // (`viewport-fit=cover`); the keyboard covers that edge while it is up.
-          "narrow:pb-[max(var(--spacing-inset-surface),env(safe-area-inset-bottom))] narrow:data-keyboard:pb-inset-surface narrow:data-dialog-flush:pb-[env(safe-area-inset-bottom)] narrow:data-dialog-flush:data-keyboard:pb-0",
+          "narrow:pb-[max(var(--spacing-inset-surface),env(safe-area-inset-bottom))] narrow:data-dialog-keyboard:pb-inset-surface narrow:data-dialog-flush:pb-[env(safe-area-inset-bottom)] narrow:data-dialog-flush:data-dialog-keyboard:pb-0",
         ].join(" "),
         false: "",
       },
@@ -114,6 +117,7 @@ function FocusMoved({ memoryRef }: { memoryRef: RefObject<FocusMemory> }) {
 
 // Mounts with the content, so it follows the keyboard and the page's scroll only while the content is in the page.
 function OpenGuards({ contentRef }: { contentRef: RefObject<HTMLElement | null> }) {
+  useVisualViewportBox(contentRef)
   useFocusAboveKeyboard(contentRef)
   useKeepPageStill(contentRef)
   return null

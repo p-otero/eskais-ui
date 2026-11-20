@@ -4,11 +4,12 @@ import type { ChangeDetails } from "@ui-sdk/core"
 import { Button } from "@ui-sdk/react/button"
 import { Dialog, DialogClose, DialogContent, DialogTitle } from "@ui-sdk/react/dialog"
 import { usePart, usePrimitive } from "@ui-sdk/react/primitive"
-import { useMemo, useState, type ComponentProps, type ReactNode } from "react"
+import { useMemo, useRef, useState, type ComponentProps, type ReactNode, type RefObject } from "react"
 import { ChevronLeftIcon, ChevronRightIcon, ExternalLinkIcon, XIcon, ZoomInIcon } from "lucide-react"
 
 import { buttonVariants } from "@/components/ui/button"
 import { DialogBackdrop, dialogContentVariants } from "@/components/ui/dialog"
+import { useVisualViewportBox } from "@/components/ui/use-dialog-viewport"
 import { Link } from "@/components/ui/link"
 import { lightbox, type LightboxIndexChangeReason } from "@/components/ui/lightbox-primitive"
 import { ScrollArea, ScrollAreaCorner, ScrollAreaScrollbar, ScrollAreaViewport } from "@/components/ui/scroll-area"
@@ -203,6 +204,12 @@ function LightboxView({ items, index, onIndexChange, labels }: ViewProps) {
   )
 }
 
+// Mounts with the content, so the content sits in the part of the page you can see, as a DialogContent does.
+function ViewportBox({ contentRef }: { contentRef: RefObject<HTMLElement | null> }) {
+  useVisualViewportBox(contentRef)
+  return null
+}
+
 function Lightbox({
   items,
   index: indexProp,
@@ -219,12 +226,14 @@ function Lightbox({
 }: LightboxProps) {
   const [ownIndex, setOwnIndex] = useState(defaultIndex)
   const index = Math.min(Math.max(indexProp ?? ownIndex, 0), Math.max(items.length - 1, 0))
+  const contentRef = useRef<HTMLDivElement | null>(null)
 
   return (
     <Dialog open={open} defaultOpen={defaultOpen} onOpenChange={onOpenChange} controller={controller}>
       {children}
       <DialogBackdrop />
       <DialogContent
+        ref={contentRef}
         finalFocus={finalFocus}
         render={<div data-slot="lightbox" />}
         // Never a bottom sheet: a sheet fits its content, and the image stage has no height of its own.
@@ -245,6 +254,7 @@ function Lightbox({
             }}
           />
         )}
+        <ViewportBox contentRef={contentRef} />
       </DialogContent>
     </Dialog>
   )

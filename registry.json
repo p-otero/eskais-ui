@@ -1615,6 +1615,10 @@
         {
           "path": "registry/ui/use-dialog-focus.ts",
           "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/use-dialog-viewport.ts",
+          "type": "registry:ui"
         }
       ]
     },

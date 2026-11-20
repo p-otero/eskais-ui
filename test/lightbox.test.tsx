@@ -139,7 +139,7 @@ test("an agent can page through the images", async () => {
 test("fills the screen on a phone instead of becoming a sheet that fits its content", () => {
   render(<Opened />)
   const dialog = screen.getByRole("dialog")
-  expect(dialog.className).toContain("h-(--dialog-max-height)")
+  expect(dialog.className).toContain("h-[min(var(--dialog-max-height),")
   expect(dialog.className).not.toMatch(/narrow:h-fit|narrow:top-auto/)
   expect(dialog.hasAttribute("data-sheet")).toBe(false)
 })

@@ -47,8 +47,8 @@ function useRecordFocusMove(memoryRef: RefObject<FocusMemory>) {
 }
 
 /**
- * When the on-screen keyboard comes up, the content shrinks to the part of the page above it (UI SDK sets
- * `data-keyboard` on a dialog's content or a drawer's viewport), which can leave the field typed in below the fold of
+ * When the on-screen keyboard comes up, the content shrinks to the part of the page above it (`data-dialog-keyboard`
+ * on a dialog's content, UI SDK's `data-keyboard` on a drawer's viewport), which can leave the field typed in below the fold of
  * the content's scroll area. Scrolls it back into view once the new size is laid out.
  */
 function useFocusAboveKeyboard(contentRef: RefObject<HTMLElement | null>) {
@@ -61,7 +61,7 @@ function useFocusAboveKeyboard(contentRef: RefObject<HTMLElement | null>) {
       frame = requestAnimationFrame(() => {
         const content = contentRef.current
         const active = focusedElement()
-        if (active && content?.closest("[data-keyboard]") && content.contains(active)) {
+        if (active && content?.closest("[data-keyboard], [data-dialog-keyboard]") && content.contains(active)) {
           active.scrollIntoView({ block: "nearest", inline: "nearest" })
         }
       })

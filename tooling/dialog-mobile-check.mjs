@@ -1,6 +1,6 @@
 // Taps every dialog-like item of the showcase open on emulated phones and checks it is fully on screen, scrolls
 // inside, holds focus, keeps the page still, closes on a backdrop tap, and stays above the on-screen keyboard (a
-// shorter visual viewport, as iOS Safari and Chrome on Android report it) with the field typed in in view.
+// shorter visual viewport) with the field typed in in view, and inside the visible part under iOS Safari's toolbars.
 // Usage: node tooling/dialog-mobile-check.mjs [--engine=webkit] [--screenshots=<dir>] [--color-scheme=dark]
 import { mkdirSync } from "node:fs"
 import { join, resolve } from "node:path"
@@ -30,28 +30,45 @@ const devices = [
 const button = (name) => (page) => page.getByRole("button", { name, exact: true }).first()
 
 // `field`: a text field to type in with the keyboard up. `scrolls`: its content is longer than a phone's screen.
-// `dismissible: false`: an alert dialog, which a backdrop tap leaves open. `stage`: a part that must take at least
+// `toolbars: false`: a Drawer, which UI SDK places itself from its `--keyboard-inset` (beta.12), so the toolbar models
+// don't reach our styles. `dismissible: false`: an alert dialog, which a backdrop tap leaves open. `stage`: a part that must take at least
 // half the screen's height, as a lightbox's image does.
 const cases = [
   { name: "Dialog", trigger: button("Rename project"), field: "Project name" },
-  { name: "ConfirmDialog", trigger: button("Delete project"), dismissible: false },
+  {
+    name: "ConfirmDialog",
+    trigger: button("Delete project"),
+    dismissible: false,
+  },
   { name: "Dialog sm", trigger: button("Open sm"), scrolls: true },
   { name: "Dialog full", trigger: button("Open full"), scrolls: true },
-  { name: "Drawer right", trigger: button("Open task panel") },
-  { name: "Drawer bottom", trigger: button("Open task sheet") },
+  { name: "Drawer right", trigger: button("Open task panel"), toolbars: false },
+  {
+    name: "Drawer bottom",
+    trigger: button("Open task sheet"),
+    toolbars: false,
+  },
   {
     name: "FormDialog",
     trigger: button("Nuevo despliegue con revisión"),
     field: "Notas para el equipo",
     scrolls: true,
   },
-  { name: "StepDialog", trigger: button("Nuevo proyecto en pasos"), field: "Nombre del proyecto" },
+  {
+    name: "StepDialog",
+    trigger: button("Nuevo proyecto en pasos"),
+    field: "Nombre del proyecto",
+  },
   {
     name: "Lightbox",
     trigger: (page) => page.getByRole("button", { name: /^View / }).first(),
     stage: "[data-slot=lightbox-stage]",
   },
-  { name: "CommandDialog", trigger: button("Search commands"), field: "Run a command" },
+  {
+    name: "CommandDialog",
+    trigger: button("Search commands"),
+    field: "Run a command",
+  },
   {
     name: "Dialog from a menu item",
     path: "?demo=dialog-mobile-check",
@@ -59,9 +76,23 @@ const cases = [
     menuItem: (page) => page.getByRole("menuitem", { name: "Rename file" }),
     field: "Notes",
   },
-  { name: "ShortcutsDialog", path: "?demo=dialog-mobile-check", trigger: button("Keyboard shortcuts") },
-  { name: "TaskDetailDialog", path: "?demo=task-dialog", scrolls: true, insetBody: true },
-  { name: "SidePanel sheet", path: "?demo=side-panel-check&narrow=sheet", narrowOnly: true },
+  {
+    name: "ShortcutsDialog",
+    path: "?demo=dialog-mobile-check",
+    trigger: button("Keyboard shortcuts"),
+  },
+  {
+    name: "TaskDetailDialog",
+    path: "?demo=task-dialog",
+    scrolls: true,
+    insetBody: true,
+  },
+  {
+    name: "SidePanel sheet",
+    path: "?demo=side-panel-check&narrow=sheet",
+    narrowOnly: true,
+    toolbars: false,
+  },
 ]
 
 async function tap(page, locator) {
@@ -101,7 +132,12 @@ function measure() {
     (element.getAttribute("aria-label") ?? element.textContent ?? "").trim().slice(0, 40) || element.tagName
   const controls = [...dialog.querySelectorAll("button, a[href], input, textarea, [role=combobox]")].filter(visible)
   return {
-    rect: { left: rect.left, top: rect.top, right: rect.right, bottom: rect.bottom },
+    rect: {
+      left: rect.left,
+      top: rect.top,
+      right: rect.right,
+      bottom: rect.bottom,
+    },
     innerWidth,
     innerHeight,
     pageOverflow: document.documentElement.scrollWidth - innerWidth,
@@ -165,7 +201,10 @@ async function keyboardUp(name, field, device) {
   const keyboard = Math.round(device.viewport.height * 0.45)
   await page.evaluate((covered) => {
     const height = innerHeight - covered
-    Object.defineProperty(visualViewport, "height", { configurable: true, get: () => height })
+    Object.defineProperty(visualViewport, "height", {
+      configurable: true,
+      get: () => height,
+    })
     visualViewport.dispatchEvent(new Event("resize"))
   }, keyboard)
   await page.waitForTimeout(400)
@@ -194,11 +233,116 @@ async function keyboardUp(name, field, device) {
     result.inside && result.fieldTop >= Math.max(result.top, 0) - 0.5 && result.fieldBottom <= result.visible + 0.5,
     `field ${Math.round(result.fieldTop)}-${Math.round(result.fieldBottom)}`,
   )
-  if (shots) await page.screenshot({ path: join(shots, `${slug(name)}-${device.name}-keyboard.png`) })
+  if (shots)
+    await page.screenshot({
+      path: join(shots, `${slug(name)}-${device.name}-keyboard.png`),
+    })
   await page.evaluate(() => {
     delete visualViewport.height
     visualViewport.dispatchEvent(new Event("resize"))
   })
+}
+
+// iOS Safari's viewport without a keyboard: `visible` is how much of the layout viewport you can see, `offsetTop` how
+// far the visible part is scrolled down it, and `innerHeight` what the page reads (iOS 26 can leave it stale, so it no
+// longer matches where `position: fixed` lays out).
+const toolbarModels = [
+  { name: "the toolbars shorten the visible part", visible: -90, offsetTop: 0 },
+  {
+    name: "innerHeight is stale",
+    visible: -90,
+    offsetTop: 0,
+    innerHeight: -90,
+  },
+  { name: "the visible part is scrolled down", visible: -130, offsetTop: 40 },
+]
+
+function simulateViewport({ height, offsetTop, innerHeight: reported }) {
+  const own = Object.getOwnPropertyDescriptor(window, "innerHeight")
+  globalThis.restoreSimulatedViewport = () => {
+    delete visualViewport.height
+    delete visualViewport.offsetTop
+    if (own) Object.defineProperty(window, "innerHeight", own)
+    else delete window.innerHeight
+    visualViewport.dispatchEvent(new Event("resize"))
+    dispatchEvent(new Event("resize"))
+  }
+  Object.defineProperty(visualViewport, "height", {
+    configurable: true,
+    get: () => height,
+  })
+  Object.defineProperty(visualViewport, "offsetTop", {
+    configurable: true,
+    get: () => offsetTop,
+  })
+  if (reported !== undefined)
+    Object.defineProperty(window, "innerHeight", {
+      configurable: true,
+      get: () => reported,
+    })
+  visualViewport.dispatchEvent(new Event("resize"))
+  visualViewport.dispatchEvent(new Event("scroll"))
+  dispatchEvent(new Event("resize"))
+}
+
+function measureInViewport() {
+  const dialog = [...document.querySelectorAll("[role=dialog], [role=alertdialog]")].findLast((d) =>
+    d.checkVisibility(),
+  )
+  const top = visualViewport.offsetTop
+  const bottom = top + visualViewport.height
+  const rect = dialog.getBoundingClientRect()
+  // oxlint-disable-next-line unicorn/consistent-function-scoping -- runs in the page, which can't see module scope
+  const scrolls = (element) =>
+    element.scrollHeight > element.clientHeight + 1 && /auto|scroll/.test(getComputedStyle(element).overflowY)
+  const offView = [...dialog.querySelectorAll("button, a[href], input, textarea, [role=combobox]")]
+    .filter((element) => element.checkVisibility() && element.getBoundingClientRect().width > 0)
+    .filter((element) => {
+      for (let node = element.parentElement; node && node !== dialog.parentElement; node = node.parentElement) {
+        if (scrolls(node)) return false
+      }
+      return true
+    })
+    .filter((element) => {
+      const box = element.getBoundingClientRect()
+      return box.top < top - 0.5 || box.bottom > bottom + 0.5
+    })
+    .map((element) => (element.getAttribute("aria-label") ?? element.textContent ?? "").trim().slice(0, 30))
+  return {
+    top,
+    bottom,
+    rect: { top: rect.top, bottom: rect.bottom },
+    outside: offView,
+    keyboard: dialog.hasAttribute("data-dialog-keyboard"),
+    field:
+      document.activeElement?.matches(
+        "input:not([type=button], [type=checkbox], [type=radio]), textarea, [contenteditable]",
+      ) ?? false,
+  }
+}
+
+async function checkToolbars(label, item, device, focus = "") {
+  if (item.toolbars === false) return
+  await inTurn(toolbarModels, async (model) => {
+    const { height } = device.viewport
+    await page.evaluate(simulateViewport, {
+      height: height + model.visible,
+      offsetTop: model.offsetTop,
+      innerHeight: model.innerHeight === undefined ? undefined : height + model.innerHeight,
+    })
+    await page.waitForTimeout(150)
+    const result = await page.evaluate(measureInViewport)
+    await page.evaluate(() => globalThis.restoreSimulatedViewport())
+    const where = `dialog ${Math.round(result.rect.top)}-${Math.round(result.rect.bottom)}, visible ${Math.round(result.top)}-${Math.round(result.bottom)}`
+    check(
+      `${label}: when ${model.name}${focus}, the dialog stays inside the visible part`,
+      result.rect.top >= result.top - 0.5 && result.rect.bottom <= result.bottom + 0.5 && result.outside.length === 0,
+      result.outside.length > 0 ? `${where}; outside: ${result.outside.join(", ")}` : where,
+    )
+    // A field can't tell the toolbars from a short keyboard; with none focused it is never a keyboard.
+    if (!result.field) check(`${label}: when ${model.name}${focus}, it isn't taken for a keyboard`, !result.keyboard)
+  })
+  await page.waitForTimeout(150)
 }
 
 function slug(name) {
@@ -288,7 +432,10 @@ async function checkBackdrop(label, item, geometry) {
   check(`${label}: the page behind doesn't scroll`, after === geometry.scrollY, `${geometry.scrollY} -> ${after}`)
   if (item.dismissible === false) return
   await page.touchscreen.tap(point[0], point[1])
-  const closed = await waitsFor(topDialog(), { state: "hidden", timeout: 2000 })
+  const closed = await waitsFor(topDialog(), {
+    state: "hidden",
+    timeout: 2000,
+  })
   check(`${label}: a backdrop tap closes it`, closed, `tapped ${point.map(Math.round).join(", ")}`)
 }
 
@@ -319,8 +466,15 @@ async function checkCase(context, origin, device, item) {
       })
       check(`${label}: the body keeps its side inset`, inset >= 12, `${String(inset)}px`)
     }
-    if (shots) await page.screenshot({ path: join(shots, `${slug(item.name)}-${device.name}.png`) })
-    if (item.field) await keyboardUp(item.name, item.field, device)
+    if (shots)
+      await page.screenshot({
+        path: join(shots, `${slug(item.name)}-${device.name}.png`),
+      })
+    await checkToolbars(label, item, device)
+    if (item.field) {
+      await keyboardUp(item.name, item.field, device)
+      await checkToolbars(label, item, device, " with a field focused")
+    }
     await checkBackdrop(label, item, geometry)
   }
   check(`${label}: no page errors`, errors.length === 0, errors.join("; "))
