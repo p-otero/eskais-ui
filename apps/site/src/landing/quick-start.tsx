@@ -3,7 +3,7 @@ import { SectionHeading } from "@/components/ui/section-heading"
 
 import { registryUrl, releaseTag, skillsCliVersion, uiSdkVersion } from "../registry"
 
-const setupPrompt = `Set up Eskais UI in this React project (React 19 or newer, Tailwind CSS v4): the components, the agent skills and the mockup CLI. Use the project's package manager, and its runner where you see <x>: npx with npm, pnpm dlx with pnpm, bunx with Bun. Each step is one command that works in bash and PowerShell. If a release-age policy (minimumReleaseAge in pnpm, Bun or Renovate) blocks an install, stop and ask me instead of changing it.
+const setupPrompt = `Set up Eskais UI in this React project (React 19 or newer, Tailwind CSS v4): the components, the agent skills and the mockup CLI. Use the project's package manager, and its runner where you see <x>: npx with npm, pnpm dlx with pnpm, bunx with Bun. Every command below works the same in bash and PowerShell. If a release-age policy (minimumReleaseAge in pnpm, Bun or Renovate) blocks an install, stop and ask me instead of changing it.
 
 1. If there is no components.json, create one (it asks nothing):
    <x> shadcn@latest init -b base -p nova
