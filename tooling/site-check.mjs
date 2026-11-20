@@ -28,6 +28,8 @@ const pages = [
   "docs/components/filter-panel/",
   "docs/git-views/",
   "docs/components/repository-select/",
+  "docs/components/link/",
+  "docs/components/skip-link/",
 ]
 const viewports = [
   { width: 1440, height: 900 },
