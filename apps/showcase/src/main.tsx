@@ -7,6 +7,7 @@ import { ToastStack } from "@/components/ui/toast"
 
 import { App } from "./app"
 import { appearance } from "./appearance"
+import { AgentBridgeCheck } from "./checks/agent-bridge-check"
 import { ColorPickerCheck } from "./checks/color-picker-check"
 import { CalendarCheck } from "./checks/calendar-check"
 import { CardHeaderCheck } from "./checks/card-header-check"
@@ -102,6 +103,7 @@ const standalone = new Set([
   "tree-focus-check",
   "git-view-check",
   "voice-input-check",
+  "agent-bridge-check",
   ...Object.keys(gitWorkspaceDemos),
 ])
 
@@ -120,6 +122,7 @@ function Demo() {
   if (demo === "tree-focus-check") return <TreeFocusCheck />
   if (demo === "git-view-check") return <GitViewCheck />
   if (demo === "voice-input-check") return <VoiceInputCheck />
+  if (demo === "agent-bridge-check") return <AgentBridgeCheck />
   if (isGitWorkspaceDemo(demo)) return <GitWorkspaceDemo name={demo} />
   if (demo === "card-header-check") return <CardHeaderCheck />
   if (demo === "palette-reopen-check") return <PaletteReopenCheck />

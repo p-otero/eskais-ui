@@ -1,5 +1,5 @@
 import { createConfirm } from "@ui-sdk/react/alert-dialog"
-import { createAgent } from "@ui-sdk/react/agent"
+import { createAgent, registerTools } from "@ui-sdk/react/agent"
 
 type ApprovalRequest = { sentence: string }
 
@@ -13,6 +13,10 @@ const agent = createAgent({
     return approval({ sentence: step.confirm })
   },
 })
+
+// Publishes snapshot, query and act to the browser's agent (WebMCP) where the browser has it; tooling/agent-bridge-check.mjs
+// drives them from outside the page. A step on a data-agent-confirm control stays the person's.
+registerTools(agent, { allow: (step) => !step.confirm })
 
 export { agent, approval }
 export type { ApprovalRequest }
