@@ -29,6 +29,7 @@ import {
   isMesh,
   signatureOf,
   targetNamesOf,
+  targetScalesOf,
   toonGradient,
   toonOf,
   type MorphMesh,
@@ -37,7 +38,8 @@ import type { ModelViewerHandle } from "@/components/ui/model-viewer-primitive"
 
 type LoadedModel = { scene: Object3D; animations: readonly AnimationClip[] }
 
-type Binding = { influences: number[]; index: number }
+/** One target on one mesh, and what a weight is multiplied by there: its `extras.targetScales` entry, or 1. */
+type Binding = { influences: number[]; index: number; scale: number }
 
 type ModelViewerMaterial = "standard" | "toon"
 
@@ -77,7 +79,12 @@ type RigSnapshot = {
   reveal: () => number
 }
 
-function createModelRig(model: LoadedModel, owned = true) {
+/**
+ * Everything a loaded model does per frame, outside React: the camera eased to the orbit the primitive holds, morph
+ * weights eased to their targets, and the animation mixer. `update` says whether it needs another frame, so the
+ * canvas draws only while something moves. `cleanup` runs on dispose, for what an `onModelLoad` made.
+ */
+function createModelRig(model: LoadedModel, owned = true, cleanup?: () => void) {
   const box = new Box3().setFromObject(model.scene)
   const size = box.getSize(new Vector3())
   const boxCenter = box.getCenter(new Vector3())
@@ -90,6 +97,9 @@ function createModelRig(model: LoadedModel, owned = true) {
     if (object.morphTargetDictionary && object.morphTargetInfluences) meshes.push(object as MorphMesh)
   })
   const morphNames = targetNamesOf(meshes)
+  const scales = new Map(meshes.map((mesh) => [mesh, targetScalesOf(mesh)]))
+  // Meshes with their own scales bind first, so a copy that shares their influences without them doesn't win.
+  const scaledFirst = meshes.toSorted((a, b) => Number(!scales.get(a)) - Number(!scales.get(b)))
   const signature = signatureOf(surfaces)
   const clipNames = model.animations.map((clip) => clip.name)
   const mixer = new AnimationMixer(model.scene)
@@ -112,6 +122,8 @@ function createModelRig(model: LoadedModel, owned = true) {
   let target = new Float32Array(0)
   let active = new Uint8Array(0)
   let bindings: Binding[][] = []
+  // Each channel's multiplier, from its first binding: what weights sent already scaled are divided by.
+  let channelScales = new Float32Array(0)
   let weightsSettled = true
   const bind = (next: readonly string[]) => {
     const previous = { index, current, target, active }
@@ -120,12 +132,17 @@ function createModelRig(model: LoadedModel, owned = true) {
     current = new Float32Array(next.length)
     target = new Float32Array(next.length)
     active = new Uint8Array(next.length)
-    bindings = next.map((name) =>
-      meshes.flatMap((mesh) => {
+    // A mesh that shares another's influences (an outline hull drawn from the same morphs) is written once.
+    bindings = next.map((name) => {
+      const found: Binding[] = []
+      for (const mesh of scaledFirst) {
         const at = mesh.morphTargetDictionary[name]
-        return at === undefined ? [] : [{ influences: mesh.morphTargetInfluences, index: at }]
-      }),
-    )
+        if (at === undefined || found.some((binding) => binding.influences === mesh.morphTargetInfluences)) continue
+        found.push({ influences: mesh.morphTargetInfluences, index: at, scale: scales.get(mesh)?.[at] ?? 1 })
+      }
+      return found
+    })
+    channelScales = Float32Array.from(bindings, (found) => found[0]?.scale ?? 1)
     copyChannels(previous)
   }
   const copyChannels = (from: Channels) => {
@@ -162,7 +179,7 @@ function createModelRig(model: LoadedModel, owned = true) {
       const targets = bindings[i] ?? []
       for (let j = 0; j < targets.length; j += 1) {
         const binding = targets[j] as Binding
-        binding.influences[binding.index] = value
+        binding.influences[binding.index] = value * binding.scale
       }
     }
   }
@@ -177,7 +194,8 @@ function createModelRig(model: LoadedModel, owned = true) {
       if (item.transparent !== opacity < 1) item.needsUpdate = true
       item.transparent = opacity < 1
       item.opacity = opacity
-      item.depthWrite = opacity >= 1
+      // Depth writes stay on while fading: a model of several meshes (a body, eyes, hair) still hides what is behind
+      // its own surfaces, instead of showing its eyes and the back of its hair through its face.
     })
   }
 
@@ -196,9 +214,17 @@ function createModelRig(model: LoadedModel, owned = true) {
     targetNames: () => names,
     /** The box's centre and size, in the model's units. */
     bounds: { center: boxCenter, size },
-    /** New target weights and expressions; `immediate` jumps to them, like the first weights of a model. */
-    setWeights(weights: ModelViewerWeights | undefined, expressions?: ModelViewerExpressions, immediate = false) {
-      writeTargets(index, target, active, weights, expressions)
+    /**
+     * New target weights and expressions; `immediate` jumps to them, like the first weights of a model. `scaled`
+     * weights come already multiplied by the GLB's `extras.targetScales`; expressions never do.
+     */
+    setWeights(
+      weights: ModelViewerWeights | undefined,
+      expressions?: ModelViewerExpressions,
+      immediate = false,
+      scaled = false,
+    ) {
+      writeTargets(index, target, active, weights, expressions, scaled ? channelScales : undefined)
       weightsSettled = false
       if (immediate) {
         for (let i = 0; i < current.length; i += 1) if (active[i]) current[i] = target[i] ?? 0
@@ -206,7 +232,7 @@ function createModelRig(model: LoadedModel, owned = true) {
         applyWeights()
       }
     },
-    /** The current weight of a target, for tests and tools. */
+    /** The current weight of a target as given, before its `extras.targetScales` multiplier, for tests and tools. */
     weight: (name: string) => {
       const i = index.get(name)
       return i === undefined ? undefined : current[i]
@@ -376,6 +402,7 @@ function createModelRig(model: LoadedModel, owned = true) {
       return result
     },
     dispose() {
+      cleanup?.()
       mixer.stopAllAction()
       mixer.uncacheRoot(model.scene)
       for (const toon of toons.values()) toon.dispose()

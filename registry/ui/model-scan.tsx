@@ -61,6 +61,7 @@ type ModelScanViewerProps = Omit<
   | "model"
   | "alt"
   | "weights"
+  | "scaledWeights"
   | "targetNames"
   | "expressions"
   | "poster"
@@ -94,6 +95,8 @@ type ModelScanProps = Omit<PartProps<"div">, "children"> & {
   model?: ModelViewerSource | ModelScanModel
   /** Morph target weights from the engine, eased as they stream in: aligned with the target names, or by name. */
   weights?: ModelViewerWeights
+  /** `weights` come already multiplied by the GLB's `extras.targetScales`, as the engine may send them. */
+  scaledWeights?: boolean
   /** The order aligned `weights` follow, when `model` doesn't carry it; the GLB's `extras.targetNames` by default. */
   targetNames?: readonly string[]
   /** Expression weights by ARKit name, like a smile at the end. */
@@ -164,6 +167,7 @@ function ModelScan({
   points,
   model,
   weights,
+  scaledWeights,
   targetNames,
   expressions,
   progress,
@@ -270,6 +274,7 @@ function ModelScan({
         poster={src}
         aspectRatio={aspectRatio ?? ratio}
         weights={weights}
+        scaledWeights={scaledWeights}
         load={stage !== "photo"}
         controls={stage === "ready"}
         playing={stage === "ready" && introDone ? playing : false}

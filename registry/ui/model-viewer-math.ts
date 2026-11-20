@@ -71,10 +71,14 @@ const finite = (value: number | undefined) => (value !== undefined && Number.isF
 const isAligned = (weights: ModelViewerWeights): weights is Float32Array | readonly number[] =>
   ArrayBuffer.isView(weights) || Array.isArray(weights)
 
+// A weight sent already multiplied by its target's scale, back in the target's own units; a zero scale moves nothing.
+const unscale = (value: number, scale: number | undefined) => (scale ? value / scale : 0)
+
 /**
  * Writes the weights and expressions into `target`, by the index of each name in `names`, and marks in `active` the
  * targets they set, which the rig then writes every frame. A target set before and missing now goes back to 0; one
- * never set stays free for clips to animate. Runs once per new weights, never per frame.
+ * never set stays free for clips to animate. `scaledBy`, for weights already multiplied by each target's
+ * `extras.targetScales`, divides them back first. Runs once per new weights, never per frame.
  */
 function writeTargets(
   index: ReadonlyMap<string, number>,
@@ -82,20 +86,20 @@ function writeTargets(
   active: Uint8Array,
   weights: ModelViewerWeights | undefined,
   expressions: ModelViewerExpressions | undefined,
+  scaledBy?: Float32Array,
 ) {
   for (let i = 0; i < target.length; i += 1) if (active[i]) target[i] = 0
+  const write = (i: number, value: number | undefined) => {
+    target[i] = scaledBy ? unscale(finite(value), scaledBy[i]) : finite(value)
+    active[i] = 1
+  }
   if (weights && isAligned(weights)) {
     const count = Math.min(weights.length, target.length)
-    for (let i = 0; i < count; i += 1) {
-      target[i] = finite(weights[i])
-      active[i] = 1
-    }
+    for (let i = 0; i < count; i += 1) write(i, weights[i])
   } else if (weights) {
     for (const [name, value] of Object.entries(weights)) {
       const i = index.get(name)
-      if (i === undefined) continue
-      target[i] = finite(value)
-      active[i] = 1
+      if (i !== undefined) write(i, value)
     }
   }
   for (const [name, value] of Object.entries(expressions ?? {})) {
