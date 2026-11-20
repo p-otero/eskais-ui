@@ -14,7 +14,7 @@ import type { ComponentProps, ReactNode } from "react"
 
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { buttonVariants, withPendingSpinner } from "@/components/ui/button"
-import { backdropClassName, contentClassName, useFocusReturn } from "@/components/ui/dialog"
+import { DialogBody, backdropClassName, contentClassName, useFocusReturn } from "@/components/ui/dialog"
 import { Spinner } from "@/components/ui/spinner"
 import type { Tone } from "@/lib/tone"
 import { cn } from "@/lib/utils"
@@ -135,16 +135,19 @@ function ConfirmDialog({
       <AlertDialogContent ref={attach} className={cn(contentClassName, "max-w-md", className)} finalFocus={returnFocus}>
         {wrap(
           <>
-            <div className="flex flex-col gap-inline">
-              <AlertDialogTitle className="text-title leading-none">{title}</AlertDialogTitle>
+            {/* A long description scrolls under the title, and the actions stay in view. */}
+            <div className="flex min-h-0 flex-1 flex-col gap-inline">
+              <AlertDialogTitle className="shrink-0 text-title leading-none">{title}</AlertDialogTitle>
               {description === undefined && callout === null ? null : (
-                <AlertDialogDescription
-                  render={<div />}
-                  className="flex flex-col gap-items text-sm text-muted-foreground"
-                >
-                  {description === undefined ? null : <div>{description}</div>}
-                  {callout}
-                </AlertDialogDescription>
+                <DialogBody>
+                  <AlertDialogDescription
+                    render={<div />}
+                    className="flex flex-col gap-items text-sm text-muted-foreground"
+                  >
+                    {description === undefined ? null : <div>{description}</div>}
+                    {callout}
+                  </AlertDialogDescription>
+                </DialogBody>
               )}
             </div>
             <AlertDialogClose
@@ -153,7 +156,7 @@ function ConfirmDialog({
               data-tone={tone}
               data-agent-confirm={agentConfirm}
               render={(props, state) => (
-                <div className="flex flex-col gap-items">
+                <div className="flex shrink-0 flex-col gap-items">
                   <p role="alert" className="text-sm text-destructive empty:hidden">
                     {state.error === undefined || state.error === null ? null : renderError(state.error)}
                   </p>
