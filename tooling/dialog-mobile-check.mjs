@@ -1,7 +1,7 @@
-// Opens every kind of dialog, short and taller than the screen, on emulated phones, tablets, foldables and a narrow
-// desktop window, under each viewport model (toolbars, stale innerHeight, scrolled or stale visual viewport, keyboard,
-// heading focus, pinch-zoom), and prints the matrix. Usage: node tooling/dialog-mobile-check.mjs [--engine=webkit]
-// [--screenshots=<dir>] [--color-scheme=dark] [--device=<substring>] [--case=<substring>] [--report=<file.json>]
+// Opens every kind of dialog, short and tall, on emulated phones, tablets, foldables and a narrow desktop window, under
+// each viewport model (toolbars, stale innerHeight, scrolled visual viewport, keyboard, heading focus, pinch-zoom), and
+// prints the matrix. The full one takes about 12 minutes: run it by hand. Usage: node tooling/dialog-mobile-check.mjs
+// [--quick] [--engine=webkit] [--screenshots=<dir>] [--color-scheme=dark] [--device=<s>] [--case=<s>] [--report=<file>]
 import { mkdirSync, writeFileSync } from "node:fs"
 import { join, resolve } from "node:path"
 
@@ -13,6 +13,9 @@ const failures = []
 const arg = (name) => process.argv.find((value) => value.startsWith(`--${name}=`))?.slice(name.length + 3)
 const engine = arg("engine") ?? "chromium"
 const colorScheme = arg("color-scheme") ?? "light"
+// CI's `--quick` (about 3 minutes) keeps every dialog, short and tall, on the devices and models marked `quick`:
+// a small and a large iPhone, Android, a narrow desktop window, and the models that caught real bugs.
+const quick = process.argv.includes("--quick")
 const shots = arg("screenshots") ? resolve(arg("screenshots")) : undefined
 if (shots) mkdirSync(shots, { recursive: true })
 
@@ -32,19 +35,20 @@ function check(cell, label, ok, detail = "") {
 
 // `touch: false`: a desktop window, opened with the mouse, whose visual viewport never moves.
 const devices = [
-  { name: "iPhone SE", viewport: { width: 375, height: 667 } },
+  { name: "iPhone SE", viewport: { width: 375, height: 667 }, quick: true },
   { name: "iPhone", viewport: { width: 393, height: 852 } },
-  { name: "iPhone Max", viewport: { width: 430, height: 932 } },
+  { name: "iPhone Max", viewport: { width: 430, height: 932 }, quick: true },
   { name: "iPhone SE landscape", viewport: { width: 667, height: 375 } },
   { name: "iPhone landscape", viewport: { width: 852, height: 393 } },
   { name: "iPhone Max landscape", viewport: { width: 932, height: 430 } },
   { name: "iPad", viewport: { width: 820, height: 1180 } },
   { name: "iPad split view", viewport: { width: 375, height: 1180 } },
-  { name: "Android", viewport: { width: 412, height: 915 } },
+  { name: "Android", viewport: { width: 412, height: 915 }, quick: true },
   { name: "Foldable folded", viewport: { width: 344, height: 882 } },
   { name: "Foldable open", viewport: { width: 673, height: 841 } },
-  { name: "Desktop narrow", viewport: { width: 700, height: 800 }, touch: false },
+  { name: "Desktop narrow", viewport: { width: 700, height: 800 }, touch: false, quick: true },
 ].filter((device, _, all) => {
+  if (quick && !device.quick) return false
   const wanted = arg("device")?.toLowerCase()
   if (!wanted) return true
   // A whole name picks that device alone ("iPhone"); otherwise any name that contains it ("ipad").
@@ -225,14 +229,15 @@ function measureInViewport() {
 // iOS Safari's viewport, as fractions of the screen so no model depends on one toolbar's height: `visible` is how
 // much of the layout viewport you can see, `offsetTop` how far the visible part is scrolled down it, and
 // `innerHeight` what the page reads (iOS 26 can leave it stale; Android Chrome moves it with its toolbar).
+// `quick`: kept by `--quick`.
 const toolbarModels = [
   { name: "toolbars collapsed", visible: 1, offsetTop: 0 },
   { name: "toolbars expanded", visible: 0.88, offsetTop: 0 },
-  { name: "innerHeight stale", visible: 0.88, offsetTop: 0, innerHeight: 0.88 },
-  { name: "visual viewport scrolled", visible: 0.84, offsetTop: 0.05 },
+  { name: "innerHeight stale", visible: 0.88, offsetTop: 0, innerHeight: 0.88, quick: true },
+  { name: "visual viewport scrolled", visible: 0.84, offsetTop: 0.05, quick: true },
   // iOS Safari can keep the keyboard's offsetTop after it closes, with the full height: a box past the layout one.
-  { name: "offsetTop left by a closed keyboard", visible: 1, offsetTop: 0.4 },
-]
+  { name: "offsetTop left by a closed keyboard", visible: 1, offsetTop: 0.4, quick: true },
+].filter((model) => !quick || model.quick)
 
 function simulateViewport({ height, offsetTop, innerHeight: reported, scale, width }) {
   // oxlint-disable-next-line unicorn/consistent-function-scoping -- runs in the page, which can't see module scope
@@ -316,8 +321,8 @@ async function checkKeyboard(page, device, item) {
   // The keyboard covers the bottom; iOS can also scroll the visible part down the layout viewport.
   const keyboards = [
     { name: "keyboard up", visible: 0.55, offsetTop: 0 },
-    { name: "keyboard up, visible part scrolled", visible: 0.5, offsetTop: 0.12 },
-  ]
+    { name: "keyboard up, visible part scrolled", visible: 0.5, offsetTop: 0.12, quick: true },
+  ].filter((model) => !quick || model.quick)
   await inTurn(keyboards, (model) =>
     underModel(page, device, model, async () => {
       const cell = [device.name, caseName(item), model.name]
@@ -364,7 +369,7 @@ async function checkKeyboard(page, device, item) {
 // Pinch-zoomed, the visual viewport is a window into the page, not the page's frame: the dialog stays where it was,
 // on the box measured before the zoom.
 async function checkPinchZoom(page, device, item, before) {
-  if (device.touch === false) return
+  if (device.touch === false || quick) return
   const { height, width } = device.viewport
   const cell = [device.name, caseName(item), "pinch-zoom"]
   await page.evaluate(simulateViewport, {
@@ -631,7 +636,7 @@ function printMatrix() {
   for (const row of matrix.values())
     for (const cells of row.values()) for (const model of cells.keys()) models.add(model)
   const report = {}
-  console.log(`\nMatrix (${engine}): ✓ every check passed, ✗ one failed, · not applicable`)
+  console.log(`\nMatrix (${engine}${quick ? ", quick" : ""}): ✓ every check passed, ✗ one failed, · not applicable`)
   for (const [device, row] of matrix) {
     report[device] = {}
     console.log(`\n${device}`)

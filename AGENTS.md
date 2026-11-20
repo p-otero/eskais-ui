@@ -284,6 +284,7 @@ The `lint-rules` item ships consumers the `react` and `ui-tailwind` presets with
 | Contrast (CI)  | `bun run test:browser`: axe and pixel contrast in Chrome                               |
 | Contrast glass | `bun run test:browser:glass`: by hand, not in CI                                       |
 | React Compiler | `bun run test:compiler`: compiler build, then the browser checks                       |
+| Dialog matrix  | `node tooling/dialog-mobile-check.mjs`: every device and viewport model, by hand       |
 | Diff benchmark | `node tooling/diff-bench.mjs [--cpu=1,4]`; `--ci` runs in `test:browser`               |
 | Perf budgets   | `bun run perf:ci`: renders, forced layouts, layers, gzip per item                      |
 | Web Vitals     | `bun run perf:vitals`: TTFB, FCP, LCP, CLS, INP on cold loads (showcase blocks, site)  |

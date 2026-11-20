@@ -2,6 +2,12 @@
 
 Versions follow [semver](https://semver.org). Before 1.0, a minor version can break compatibility. Release with `bun pm version <patch|minor|major>`, which bumps `package.json`, rebuilds `public/r` (the mockup CLI reports the version) and tags `vX.Y.Z`.
 
+## Unreleased
+
+### Changed
+
+- CI runs `dialog-mobile-check --quick`: every dialog, short and tall, on a small iPhone, a large iPhone, an Android phone and a desktop window under 760px, under the viewport models that caught real bugs (open, a stale `innerHeight`, a visual viewport scrolled, an `offsetTop` left by a closed keyboard, the keyboard up with the visible part scrolled), in about 3 minutes instead of 12. `node tooling/dialog-mobile-check.mjs` with no flag still runs the full matrix, by hand after changing how a dialog, drawer or sheet is placed. `test:compiler` no longer runs it, since the React Compiler doesn't change CSS placement. The browser job's limits go back down (55 minutes, the checks 32, the compiler build 18).
+
 ## 0.2.8 (2026-11-20)
 
 ### Added
