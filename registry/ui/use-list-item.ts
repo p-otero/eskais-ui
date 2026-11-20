@@ -38,4 +38,14 @@ function useListItemRegistration(
   }, [register, option, id, title])
 }
 
-export { useListItemRegistration, useTruncated }
+/** Keeps `value` in `map` under `id` while the component is mounted. */
+function useHandleEntry<Value>(map: Map<string, Value>, id: string, value: Value) {
+  useLayoutEffect(() => {
+    map.set(id, value)
+    return () => {
+      if (map.get(id) === value) map.delete(id)
+    }
+  }, [map, id, value])
+}
+
+export { useHandleEntry, useListItemRegistration, useTruncated }

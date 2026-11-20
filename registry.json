@@ -5102,8 +5102,8 @@
       "name": "list-item",
       "type": "registry:ui",
       "title": "List Item",
-      "description": "Dense, Linear-style rows that also work as entity cards: List, ListGroup (label and count), ListItem with leading, title, subtitle, status, meta, trailing and actions, plus ListItemTitle, ListItemMeta, ListItemActions and IconTile. Agents get select(id).",
-      "docs": "`List aria-label` holds `ListItem`s, optionally inside `ListGroup label count`. The name goes on the list itself: a `ul` (`role=\"list\"`), or the listbox when rows are selectable, with no group around it. A row selects through a stretched link (`href`, `aria-current=\"page\"` when `selected`) or a stretched UI SDK Button (`onSelect`), and its actions, chips and status stay their own targets. Give `List` a `value`, `defaultValue` or `onValueChange` and the rows become options of a UI SDK Listbox (arrow keys, one tab stop); options can't hold controls, so `actions` are ignored there. `variant=\"card\"` lays rows out as cards in a responsive grid. Titles wrap to two lines, then show the full title in a tooltip; a status pill wraps below a narrow title, and trailing content and actions drop to their own line on a narrow row. `List onSelect(id, details)` runs before a row is chosen, for people and agents, and `details.cancel()` stops it. Agents see the list by its label with `select(id)`; a selectable list also shows its listbox under the same name with `setValue`, and each action resolves to one of them. Rows of a non-selectable list are one tab stop: arrows or j/k move, Home/End and PageUp/PageDown jump, Enter opens the row through its link or button, and the moved-to row scrolls into view with the least scrolling; a selectable list takes j/k and the page keys as its own arrows. Pass `items` with `renderItem` (and `getItemId`, `itemText`) to render rows from data, or give a row list `ListItem id` children directly (each child an element with a string `id`; `title` is its text), which the list reads as the same data: past 200 rows (`virtualize=\"auto\"`, `estimateSize`) only the rows in view render, with `aria-setsize`/`aria-posinset`, every row reachable by keyboard and by agents' `select`, and find in page through hidden stubs. `checkedIds` with `onCheckedIdsChange` checks rows for a bulk action: Space or x toggles the focused row, each row shows a checkbox outside the tab order (`checkLabel` names it). `sortable` with `onReorder(ids, details)` reorders the rows of a non-selectable list from data: each row gets a drag handle named after its title (`sortableLabels`), the row's link or button keeps its own tab stop, checked rows move together, and agents get `move` and `reorder` on a sortable named like the list. A sortable list renders every row instead of virtualizing.",
+      "description": "Dense, Linear-style rows that also work as entity cards: List, ListGroup (label and count), ListItem with leading, title, subtitle, status, meta, trailing and actions, row actions that keyboards and agents reach without selecting the row, plus ListItemTitle, ListItemMeta, ListItemActions and IconTile. Agents get select(id), and run(id) per row action.",
+      "docs": "`List aria-label` holds `ListItem`s, optionally inside `ListGroup label count`. The name goes on the list itself: a `ul` (`role=\"list\"`), or the listbox when rows are selectable, with no group around it. A row selects through a stretched link (`href`, `aria-current=\"page\"` when `selected`) or a stretched UI SDK Button (`onSelect`), and its actions, chips and status stay their own targets. Give `List` a `value`, `defaultValue` or `onValueChange` and the rows become options of a UI SDK Listbox (arrow keys, one tab stop); options can't hold controls, so `actions` are ignored there (use `rowActions`). `variant=\"card\"` lays rows out as cards in a responsive grid. Titles wrap to two lines, then show the full title in a tooltip; a status pill wraps below a narrow title, and trailing content and actions drop to their own line on a narrow row. `List onSelect(id, details)` runs before a row is chosen, for people and agents, and `details.cancel()` stops it. Agents see the list by its label with `select(id)`; a selectable list also shows its listbox under the same name with `setValue`, and each action resolves to one of them. Rows of a non-selectable list are one tab stop: arrows or j/k move, Home/End and PageUp/PageDown jump, Enter opens the row through its link or button, and the moved-to row scrolls into view with the least scrolling; a selectable list takes j/k and the page keys as its own arrows. Pass `items` with `renderItem` (and `getItemId`, `itemText`) to render rows from data, or give a row list `ListItem id` children directly (each child an element with a string `id`; `title` is its text), which the list reads as the same data: past 200 rows (`virtualize=\"auto\"`, `estimateSize`) only the rows in view render, with `aria-setsize`/`aria-posinset`, every row reachable by keyboard and by agents' `select`, and find in page through hidden stubs. `checkedIds` with `onCheckedIdsChange` checks rows for a bulk action: Space or x toggles the focused row, each row shows a checkbox outside the tab order (`checkLabel` names it). `sortable` with `onReorder(ids, details)` reorders the rows of a non-selectable list from data: each row gets a drag handle named after its title (`sortableLabels`), the row's link or button keeps its own tab stop, checked rows move together, and agents get `move` and `reorder` on a sortable named like the list. A sortable list renders every row instead of virtualizing. `rowActions={(id) => ListRowAction[]}` gives rows actions that run without choosing the row, also in a selectable list or a MasterDetail: the list becomes an APG layout grid (`role=\"grid\"`, rows with a primary cell, the row's link or button, and one `gridcell` per action), still one tab stop. Up/Down and j/k move between rows in the same column (clamped to a row's last cell), Left/Right (following the text direction) between a row's cells, Home/End to a row's ends and with Ctrl/⌘ to the grid's corners, Page Up/Down by a screen; Enter or Space presses the focused cell. Selectable, rows carry `aria-selected` and only the primary column selects (an arrow onto it or a press), never an action. A `ListRowAction` is `{ id, label, icon, onAction(details), href, newTab, disabled, confirm, tone }`: `id` is shared by the rows that offer it, an `icon` makes an icon button with the label in a tooltip, `onAction` runs for a press and an agent and `details.cancel()` refuses it, `href` makes it a link, `disabled` (true or why) keeps it focusable with the reason in its tooltip, `confirm` is its `data-agent-confirm` sentence and `tone: \"destructive\"` colours it. On a fine pointer the actions show while the row is hovered, focused or selected (`rowActionsVisibility=\"always\"` keeps them), always on touch, each with a 44px hit area. Agents see one component per action, named by its label (`rowActionLabels.group`), whose `run(id)` takes a row's id, rendered or not; the rows' own buttons stay out of the snapshot. A row that doesn't offer it, a disabled one or a cancelled run fails the step with why. `ListGroup` becomes a `rowgroup` named by its label. With `sortable`, row actions are plain buttons. MasterDetail's `followFocus` ignores focus on a row's actions.",
       "dependencies": [
         "@ui-sdk/core@0.1.0-beta.12",
         "@ui-sdk/react@0.1.0-beta.12"
@@ -5113,6 +5113,7 @@
         "@eskais/tone",
         "@eskais/theme",
         "@eskais/tooltip",
+        "@eskais/button",
         "@eskais/checkbox",
         "@eskais/row-navigation",
         "@eskais/virtual-rows",
@@ -5138,6 +5139,38 @@
         },
         {
           "path": "registry/ui/list-sortable.tsx",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/list-context.ts",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/list-rows.ts",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/list-group.tsx",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/list-grid-primitive.ts",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/list-grid.tsx",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/list-row-action-primitive.ts",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/list-row-actions.tsx",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/use-list-row-actions.tsx",
           "type": "registry:ui"
         }
       ]
@@ -5993,7 +6026,7 @@
           "type": "registry:ui"
         }
       ],
-      "docs": "`<MasterDetail label=\"Devices\" renderList={(state) => <List aria-label=\"Devices\">{devices.map((d) => <ListItem key={d.id} title={d.name} {...state.itemProps(d.id)} />)}</List>} renderDetail={(id) => ({ title, description, actions, content })} emptyDetail={<Empty … />} />`. It fills its parent's height (`--master-detail-height`, 100% by default), so give it a bounded box, like an app shell's main column; in a page that scrolls, `height=\"auto\"` sizes it to its content between `--master-detail-min-height` (16rem) and `--master-detail-max-height` (40rem) with the panes scrolling inside, instead of a hard-coded height (to fit what is left of the window, set the max from your app's own CSS). `idleDetail=\"visible\"` keeps `emptyDetail` (a monitor, a summary) under the list on containers under 42rem, capped at `--master-detail-idle-height` (50%), with a button that collapses it to its bar (beside the list too with `collapsible`); `emptyDetailTitle` titles that bar and names the pane. `selectedId`, `defaultSelectedId` and `onSelectedIdChange` (cancel with `details.cancel()`); `url={createUrlParam(\"device\")}` from `@/lib/url-param` keeps it in the URL (`{ in: \"hash\" }` for a hash route's query, `{ router: hashRouter() }` to go through a `UrlRouter` from `url-router` or your router's own API); for a route of your own shape (`#/devices/<id>`), control `selectedId` from the route instead; `followFocus` opens the row that j/k move to; `collapsible`, `resizable` and `storageKey` for the detail's width. Every label is in `labels`."
+      "docs": "`<MasterDetail label=\"Devices\" renderList={(state) => <List aria-label=\"Devices\">{devices.map((d) => <ListItem key={d.id} title={d.name} {...state.itemProps(d.id)} />)}</List>} renderDetail={(id) => ({ title, description, actions, content })} emptyDetail={<Empty … />} />`. It fills its parent's height (`--master-detail-height`, 100% by default), so give it a bounded box, like an app shell's main column; in a page that scrolls, `height=\"auto\"` sizes it to its content between `--master-detail-min-height` (16rem) and `--master-detail-max-height` (40rem) with the panes scrolling inside, instead of a hard-coded height (to fit what is left of the window, set the max from your app's own CSS). `idleDetail=\"visible\"` keeps `emptyDetail` (a monitor, a summary) under the list on containers under 42rem, capped at `--master-detail-idle-height` (50%), with a button that collapses it to its bar (beside the list too with `collapsible`); `emptyDetailTitle` titles that bar and names the pane. `selectedId`, `defaultSelectedId` and `onSelectedIdChange` (cancel with `details.cancel()`); `url={createUrlParam(\"device\")}` from `@/lib/url-param` keeps it in the URL (`{ in: \"hash\" }` for a hash route's query, `{ router: hashRouter() }` to go through a `UrlRouter` from `url-router` or your router's own API); for a route of your own shape (`#/devices/<id>`), control `selectedId` from the route instead; `followFocus` opens the row that j/k move to, but not a row whose action takes focus (give the `List` `rowActions` for Open, Copy or Start buttons on a row); `collapsible`, `resizable` and `storageKey` for the detail's width. Every label is in `labels`."
     },
     {
       "name": "dashboard-grid",

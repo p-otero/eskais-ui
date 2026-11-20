@@ -1,4 +1,4 @@
-// The layout blocks (?demo=master-detail and master-detail-check, ?demo=dashboard-grid, ?demo=settings-page and settings-page-check) at 1440, 768 and 390px, light
+// The layout blocks (?demo=master-detail and master-detail-check, ?demo=list-row-actions, ?demo=dashboard-grid, ?demo=settings-page and settings-page-check) at 1440, 768 and 390px, light
 // and dark: axe, no horizontal overflow, no overlapping panes, stacking on narrow screens, focus moves and sticky
 // navigation. Run by tooling/shell-check.mjs.
 import { createRequire } from "node:module"
@@ -8,10 +8,10 @@ const axePath = createRequire(import.meta.url).resolve("axe-core/axe.min.js")
 const widths = [1440, 768, 390]
 const schemes = ["light", "dark"]
 
-async function open(page, demo, width, scheme, query = "") {
+async function open(page, demo, width, scheme, query = "", ready = `[data-slot="${demo}"]`) {
   await page.setViewportSize({ width, height: width === 390 ? 844 : 900 })
   await page.goto(`${new URL(page.url()).origin}/?demo=${demo}${query}`)
-  await page.locator(`[data-slot="${demo}"]`).first().waitFor()
+  await page.locator(ready).first().waitFor()
   await page.evaluate((dark) => {
     localStorage.clear()
     const html = document.documentElement
@@ -146,6 +146,90 @@ async function masterDetail(page, check, shot, width, scheme) {
     await page.getByRole("button", { name: "Expand detail" }).click()
     const back = await page.locator('[data-slot="master-detail-detail"]').boundingBox()
     check(`${tag}: and expands again`, back !== null && back.width > 300, `${back?.width}px`)
+  }
+}
+
+const focusedAction = (page) =>
+  page.evaluate(() => {
+    const element = document.activeElement
+    return `${element?.closest("[data-item-id]")?.getAttribute("data-item-id")} ${element?.getAttribute("data-row-action") ?? element?.getAttribute("data-slot")}`
+  })
+
+// ?demo=list-row-actions: worktrees in a MasterDetail whose rows hold Open URL, Copy URL and Start/Stop. The list is a
+// grid: the arrows reach a row's actions, and an action never opens its row or moves the detail.
+async function listRowActions(page, check, shot, width, scheme) {
+  const tag = `list-row-actions ${width}px ${scheme}`
+  const narrow = width === 390
+  await open(page, "list-row-actions", width, scheme, "", '[data-slot="list"][data-row-actions]')
+  const grid = page.getByRole("grid", { name: "Worktrees" })
+  const view = await layout(page, '[data-slot="list-item"]')
+  check(`${tag}: no sideways scroll`, !view.overflow)
+  check(`${tag}: rows don't overlap`, view.boxes.length === 5 && !overlaps(view.boxes), `${view.boxes.length} rows`)
+  const violations = await axe(page)
+  check(`${tag}: axe`, violations.length === 0, violations.join(", "))
+
+  await grid.getByRole("button", { name: "main", exact: true }).focus()
+  await page.keyboard.press("ArrowRight")
+  check(`${tag}: Right reaches the row's first action`, (await focusedAction(page)) === "main open")
+  await page.keyboard.press("ArrowRight")
+  await page.keyboard.press("ArrowDown")
+  check(`${tag}: Down keeps the column`, (await focusedAction(page)) === "row-actions copy")
+  await page.keyboard.press("Enter")
+  check(
+    `${tag}: Enter on an action opens no row`,
+    (await page.getByRole("region", { name: "row-actions" }).count()) === 0 &&
+      (await focusedAction(page)) === "row-actions copy",
+  )
+  await settle(page)
+  const shown = await page.evaluate(
+    () => getComputedStyle(document.activeElement.closest('[data-slot="list-item-actions"]')).opacity,
+  )
+  check(`${tag}: a focused row shows its actions`, shown === "1", shown)
+  await shot(page, `list-row-actions-${width}-${scheme}.png`)
+  await page.keyboard.press("Home")
+  check(
+    `${tag}: Home goes back to the row's primary cell`,
+    (await focusedAction(page)) === "row-actions list-item-primary",
+  )
+
+  if (narrow) return
+  // By pointer: open one row, then stop another; the detail stays on the open row.
+  await grid.getByRole("button", { name: "row-actions", exact: true }).click()
+  await page.getByRole("region", { name: "row-actions" }).waitFor()
+  const main = page.locator('[data-item-id="main"]')
+  await main.hover()
+  await main.getByRole("button", { name: "Stop", exact: true }).click()
+  await main.getByRole("button", { name: "Start", exact: true }).waitFor()
+  check(
+    `${tag}: a press on another row's action leaves the detail`,
+    (await page.getByRole("region", { name: "row-actions" }).count()) === 1,
+  )
+  const rest = await page
+    .locator('[data-item-id="docs-search"] [data-slot="list-item-actions"]')
+    .evaluate((element) => getComputedStyle(element).opacity)
+  check(`${tag}: a row at rest hides its actions on a fine pointer`, rest === "0", rest)
+
+  if (width !== 1440 || scheme !== "light") return
+  const height = () => main.evaluate((element) => element.getBoundingClientRect().height)
+  const comfortable = await height()
+  for (const radius of ["none", "full"]) {
+    // oxlint-disable-next-line eslint/no-await-in-loop -- one page drives the steps, in order
+    await page.evaluate((value) => {
+      document.documentElement.dataset.density = "compact"
+      document.documentElement.dataset.radius = value
+    }, radius)
+    // oxlint-disable-next-line eslint/no-await-in-loop -- one page drives the steps, in order
+    await settle(page)
+    // oxlint-disable-next-line eslint/no-await-in-loop -- one page drives the steps, in order
+    const compact = await height()
+    check(`${tag} compact ${radius}: rows get shorter`, compact < comfortable, `${compact} < ${comfortable}`)
+    // oxlint-disable-next-line eslint/no-await-in-loop -- one page drives the steps, in order
+    const after = await layout(page, '[data-slot="list-item"]')
+    check(`${tag} compact ${radius}: no sideways scroll or overlap`, !after.overflow && !overlaps(after.boxes))
+    // oxlint-disable-next-line eslint/no-await-in-loop -- one page drives the steps, in order
+    await main.hover()
+    // oxlint-disable-next-line eslint/no-await-in-loop -- one page drives the steps, in order
+    await shot(page, `list-row-actions-compact-${radius}.png`)
   }
 }
 
@@ -463,6 +547,10 @@ async function checkLayoutBlocks(page, check, shot) {
   }
   // oxlint-disable-next-line eslint/no-await-in-loop -- one page drives the steps, in order
   for (const scheme of schemes) await masterDetailModes(page, check, shot, scheme)
+  for (const width of widths) {
+    // oxlint-disable-next-line eslint/no-await-in-loop -- one page drives the steps, in order
+    for (const scheme of schemes) await listRowActions(page, check, shot, width, scheme)
+  }
   for (const width of widths) {
     // oxlint-disable-next-line eslint/no-await-in-loop -- one page drives the steps, in order
     for (const scheme of schemes) await dashboardGrid(page, check, shot, width, scheme)

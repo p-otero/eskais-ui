@@ -42,7 +42,7 @@ import { DocumentWorkspacePage } from "./sections/document-workspace"
 import { CommitBranchesDemo, CommitTrailDemo } from "./sections/git"
 import { InboxDemo } from "./sections/inbox"
 import { TaskDialogPage } from "./sections/task-dialog"
-import { DashboardGridDemo, MasterDetailDemo, SettingsPageDemo } from "./sections/layout-blocks"
+import { DashboardGridDemo, ListRowActionsDemo, MasterDetailDemo, SettingsPageDemo } from "./sections/layout-blocks"
 import { demoStatuses, PageDemo, type DemoStatus } from "./sections/page"
 import { ShellBlockDemo } from "./shell/shell-block-demo"
 import { ShellDemo } from "./shell/shell-demo"
@@ -59,7 +59,7 @@ const ModelCheck = lazy(() =>
 const root = document.getElementById("root")
 if (!root) throw new Error("Missing #root element")
 
-// ?demo=page, site, shell, inbox, list-bench, shell-block, master-detail, dashboard-grid, settings-page,
+// ?demo=page, site, shell, inbox, list-bench, shell-block, master-detail, list-row-actions, dashboard-grid, settings-page,
 // document-workspace, agent-workspace, commit-history and the git views (sections/git-workspace) render one demo alone; ?demo=<name>-check pages are the
 // fixtures of tooling/<name>-check.mjs (dialog-mobile-check's: dialog-mobile, dialog-matrix; shell-check's: card-header, description-list, field-placement, gauge,
 // mobile-nav, palette-reopen, side-panel, table, master-detail, settings-page); *-bench and ?demo=perf pages are the benchmarks'.
@@ -95,6 +95,7 @@ const standalone = new Set([
   "model-check",
   "master-detail",
   "master-detail-check",
+  "list-row-actions",
   "dashboard-grid",
   "settings-page",
   "settings-page-check",
@@ -159,6 +160,7 @@ function Demo() {
     )
   }
   if (demo === "master-detail") return <MasterDetailDemo />
+  if (demo === "list-row-actions") return <ListRowActionsDemo />
   if (demo === "master-detail-check") return <MasterDetailCheck />
   if (demo === "dashboard-grid") return <DashboardGridDemo />
   if (demo === "settings-page") return <SettingsPageDemo />

@@ -6,15 +6,10 @@ import { renderElement, type PartProps } from "@ui-sdk/react/primitive"
 import { createElement, useState, type ComponentProps, type ReactElement, type ReactNode } from "react"
 
 import { Checkbox, CheckboxIndicator } from "@/components/ui/checkbox"
-import {
-  useListContext,
-  useListItemPosition,
-  type ListVariant,
-  List,
-  ListGroup,
-  type ListGroupProps,
-  type ListProps,
-} from "@/components/ui/list"
+import { useListContext, useListItemPosition, type ListVariant, List, type ListProps } from "@/components/ui/list"
+import { ListGroup, type ListGroupProps } from "@/components/ui/list-group"
+import { ListGridCell, ListGridRow, useListGrid } from "@/components/ui/list-grid"
+import { ListRowActionCells, useRowActions } from "@/components/ui/list-row-actions"
 import { NavigableRow } from "@/components/ui/row-navigation"
 import { SortableHandle, SortableItem } from "@/components/ui/sortable"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
@@ -110,7 +105,10 @@ type ListItemProps = {
   meta?: ReactNode
   /** An avatar or a time, at the end. */
   trailing?: ReactNode
-  /** Buttons or a menu. Rows of a selectable List are options, which can't hold controls, so it ignores them. */
+  /**
+   * Buttons or a menu, in a List without `rowActions`. Rows of a selectable List are options, which can't hold
+   * controls, so it ignores them there: give the List `rowActions` instead, which reach the keyboard as grid cells.
+   */
   actions?: ReactNode
   selected?: boolean
   href?: string
@@ -141,7 +139,11 @@ function ListItem({
   const context = useListContext()
   const position = useListItemPosition()
   const variant = variantProp ?? context?.variant ?? "row"
-  const option = context?.selectable ?? false
+  const grid = useListGrid()
+  const rowActions = useRowActions()
+  // In a grid, a selectable row is a row of the grid, not a listbox option, and its primary cell selects it.
+  const option = (context?.selectable ?? false) && !grid
+  const gridSelects = grid !== null && (context?.selectable ?? false)
   const [titleNode, setTitleNode] = useState<HTMLElement | null>(null)
   const truncated = useTruncated(titleNode)
   const [primary, setPrimary] = useState<HTMLElement | null>(null)
@@ -164,11 +166,11 @@ function ListItem({
       {title}
     </ListItemTitle>
   )
-  const pressable = !option && (href !== undefined || onSelect !== undefined)
+  const pressable = !option && (grid !== null || href !== undefined || onSelect !== undefined)
   const primaryProps = {
     ref: setPrimary,
     "data-slot": "list-item-primary",
-    "aria-current": selected ? (href ? ("page" as const) : ("true" as const)) : undefined,
+    "aria-current": selected && !gridSelects ? (href ? ("page" as const) : ("true" as const)) : undefined,
     className: cn(
       "min-w-0 cursor-pointer text-start outline-none after:absolute after:inset-0 focus-visible:after:ring-2 focus-visible:after:ring-ring",
       stretchedClassNames[variant],
@@ -183,6 +185,7 @@ function ListItem({
         event.preventDefault()
         return
       }
+      if (gridSelects && grid) grid.api.setValue(id, { reason: "item-press", event: event.nativeEvent })
       if (!href) onSelect?.()
     },
     children: titleText,
@@ -201,7 +204,11 @@ function ListItem({
     // rows fit, and a tooltip per row was a third of a long list's components.
     heading = (
       <Tooltip type="label" disabled={!truncated}>
-        <NavigableRow id={id} render={<TooltipTrigger render={element} />} />
+        {grid ? (
+          <ListGridCell handle={grid} id={id} col={0} render={<TooltipTrigger render={element} />} />
+        ) : (
+          <NavigableRow id={id} render={<TooltipTrigger render={element} />} />
+        )}
         {truncated && <TooltipContent>{title}</TooltipContent>}
       </Tooltip>
     )
@@ -228,7 +235,7 @@ function ListItem({
     </span>
   )
 
-  const body = (
+  const main = (
     <>
       <div className="flex min-w-0 grow basis-60 items-start gap-items">
         {handle}
@@ -255,7 +262,15 @@ function ListItem({
           {trailing}
         </div>
       )}
-      {actions && !option && <ListItemActions>{actions}</ListItemActions>}
+    </>
+  )
+  let actionsNode: ReactNode = null
+  if (rowActions) actionsNode = <ListRowActionCells id={id} title={title} grid={grid} />
+  else if (actions && !option) actionsNode = <ListItemActions>{actions}</ListItemActions>
+  const body = (
+    <>
+      {main}
+      {actionsNode}
     </>
   )
 
@@ -265,6 +280,33 @@ function ListItem({
     className,
   )
 
+  if (grid) {
+    const row = (
+      <div
+        ref={position?.measure}
+        data-index={position?.index}
+        aria-rowindex={position ? position.index + 1 : undefined}
+        data-slot="list-item"
+        data-item-id={id}
+        data-variant={variant}
+        data-selected={selected && !gridSelects ? "" : undefined}
+        data-checked={checked?.has(id) ? "" : undefined}
+        data-pressable=""
+        className={rowClassName}
+      >
+        <div
+          // oxlint-disable-next-line jsx-a11y/prefer-tag-over-role -- a grid of flex rows, not a table
+          role="gridcell"
+          data-slot="list-item-cell"
+          className="flex min-w-0 grow basis-60 flex-wrap items-start gap-items"
+        >
+          {main}
+        </div>
+        {actionsNode}
+      </div>
+    )
+    return <ListGridRow handle={grid} id={id} render={row} />
+  }
   if (option) {
     return (
       <ListboxItem

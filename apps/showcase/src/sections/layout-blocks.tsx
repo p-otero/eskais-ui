@@ -3,6 +3,7 @@ import type { CSSProperties } from "react"
 import DashboardGridExample from "../../../site/src/examples/dashboard-grid"
 import MasterDetailExample from "../../../site/src/examples/master-detail"
 import SettingsPageExample from "../../../site/src/examples/settings-page"
+import EnvironmentsExample from "../../../site/src/guides/row-actions/environments"
 
 /** The layout blocks alone: ?demo=master-detail fills the window, for tooling/shell-check.mjs and screenshots. */
 function MasterDetailDemo() {
@@ -10,6 +11,16 @@ function MasterDetailDemo() {
     <main className="flex h-dvh flex-col p-inset-surface narrow:p-0">
       <h1 className="sr-only">Devices</h1>
       <MasterDetailExample className="min-h-0 flex-1" />
+    </main>
+  )
+}
+
+/** ?demo=list-row-actions: worktree environments whose rows hold Open, Copy and Start/Stop, beside their detail. */
+function ListRowActionsDemo() {
+  return (
+    <main className="flex h-dvh flex-col p-inset-surface narrow:p-0">
+      <h1 className="sr-only">Environments</h1>
+      <EnvironmentsExample className="min-h-0 flex-1" />
     </main>
   )
 }
@@ -45,4 +56,4 @@ function SettingsPageDemo() {
   )
 }
 
-export { DashboardGridDemo, MasterDetailDemo, SettingsPageDemo }
+export { DashboardGridDemo, ListRowActionsDemo, MasterDetailDemo, SettingsPageDemo }

@@ -140,8 +140,9 @@ function rootAttributes(label: string, narrow: boolean, height: "fill" | "auto",
   }
 }
 
+// A row's actions run on that row without opening it, so focus on one doesn't move the detail.
 function rowIdOf(target: EventTarget) {
-  if (!(target instanceof Element)) return undefined
+  if (!(target instanceof Element) || target.closest("[data-slot=list-item-actions]")) return undefined
   const row = target.closest<HTMLElement>("[data-item-id], [data-row-id]")
   return row?.dataset.itemId ?? row?.dataset.rowId
 }
