@@ -151,10 +151,57 @@ test("on narrow screens it is a bottom sheet unless sheet={false}", () => {
 test("while the on-screen keyboard is up, the content and the sheet fit above it", () => {
   render(<SizedDialog />)
   const sheet = screen.getByRole("dialog", { name: "Sized" })
-  expect(sheet.className).toContain("data-keyboard:bottom-(--keyboard-inset)")
-  expect(sheet.className).toContain("data-keyboard:max-h-[min(var(--dialog-max-height),")
-  expect(sheet.className).toContain("narrow:data-keyboard:max-h-[min(var(--sheet-max-height),")
+  expect(sheet.className).toContain("bottom-[calc(100%-var(--dialog-viewport-bottom,100%))]")
+  expect(sheet.className).toContain("data-dialog-keyboard:top-auto")
+  expect(sheet.className).toContain("max-h-[min(var(--dialog-max-height),calc(var(--dialog-viewport-height,100%)")
+  expect(sheet.className).toContain("narrow:max-h-[min(var(--sheet-max-height),calc(var(--dialog-viewport-height,100%)")
   expect(sheet.className).toContain("env(safe-area-inset-bottom)")
+})
+
+test("stays in the visible part of the page, and takes it for the keyboard only while a field is focused", async () => {
+  // iOS Safari's toolbars shorten the visual viewport with no keyboard, and its innerHeight can be stale.
+  const viewport = Object.assign(new EventTarget(), {
+    width: innerWidth,
+    height: innerHeight - 90,
+    offsetTop: 0,
+    scale: 1,
+  })
+  vi.stubGlobal("visualViewport", viewport)
+  try {
+    render(
+      <Dialog defaultOpen>
+        <DialogContent>
+          <DialogTitle>Notes</DialogTitle>
+          <Field>
+            <FieldLabel>Note</FieldLabel>
+            <Input />
+          </Field>
+        </DialogContent>
+      </Dialog>,
+    )
+    const dialog = screen.getByRole("dialog", { name: "Notes" })
+    await frame()
+    act(() => dialog.focus())
+    expect(dialog.style.getPropertyValue("--dialog-viewport-bottom")).toBe(`${String(innerHeight - 90)}px`)
+    expect(dialog.style.getPropertyValue("--dialog-viewport-height")).toBe(`${String(innerHeight - 90)}px`)
+    expect(dialog.hasAttribute("data-dialog-keyboard")).toBe(false)
+
+    viewport.offsetTop = 40
+    act(() => viewport.dispatchEvent(new Event("scroll")))
+    expect(dialog.style.getPropertyValue("--dialog-viewport-top")).toBe("40px")
+    expect(dialog.style.getPropertyValue("--dialog-viewport-bottom")).toBe(`${String(innerHeight - 50)}px`)
+
+    act(() => screen.getByRole("textbox", { name: "Note" }).focus())
+    expect(dialog.hasAttribute("data-dialog-keyboard")).toBe(true)
+
+    // Pinch-zoomed, it stays where it is instead of chasing the zoom.
+    viewport.scale = 2
+    act(() => viewport.dispatchEvent(new Event("resize")))
+    expect(dialog.style.getPropertyValue("--dialog-viewport-bottom")).toBe("")
+    expect(dialog.hasAttribute("data-dialog-keyboard")).toBe(false)
+  } finally {
+    vi.unstubAllGlobals()
+  }
 })
 
 const frame = () => act(() => new Promise((done) => requestAnimationFrame(() => done(undefined))))
