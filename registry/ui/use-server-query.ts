@@ -1,23 +1,22 @@
 "use client"
 
-import { useQuery, type NetworkMode, type QueryClient } from "@tanstack/react-query"
+import { useQuery, type QueryClient } from "@tanstack/react-query"
 import { useCallback } from "react"
 
 import { useDataClient, type DefaultServerError } from "@/components/ui/server-data"
-import type { ServerStatus } from "@/components/ui/use-server-data"
+import { readOptionsOf, type ReadOptions, type ServerStatus } from "@/components/ui/use-server-data"
 
 /** Data that one resource's answer writes into another's query, as `resource.seed(params, data)` builds it. */
 type ResourceSeed = { key: readonly unknown[]; data: unknown }
 
-type ServerQueryOptions<T, TSelected = T> = {
-  enabled?: boolean
+/**
+ * `networkMode`: when the read may run, as `createDataClient`'s; `"always"` for a backend the browser's online state
+ * says nothing about (IPC, localhost). `refetchOnWindowFocus`, `refetchOnReconnect`, `refetchOnMount`: when it reloads
+ * on its own; otherwise the client's.
+ */
+type ServerQueryOptions<T, TSelected = T> = ReadOptions & {
   /** How long a result counts as fresh, in ms; otherwise the client's default (30 s with `createDataClient`). */
   staleTime?: number
-  /**
-   * When the read may run, as `createDataClient`'s `networkMode`; otherwise the client's. `"always"` for a backend the
-   * browser's online state says nothing about (IPC, localhost).
-   */
-  networkMode?: NetworkMode
   /** Keeps the previous key's data while the next loads, as the page hooks do. Default false: a detail never shows another's. */
   keepPrevious?: boolean
   /** Shown while the first load is pending, never cached. */
@@ -83,7 +82,7 @@ function useServerQuery<T, TError = DefaultServerError, TSelected = T>(
       },
       enabled: options.enabled !== false,
       meta: resourceMeta,
-      ...(options.networkMode === undefined ? {} : { networkMode: options.networkMode }),
+      ...readOptionsOf(options),
       ...(options.staleTime === undefined ? {} : { staleTime: options.staleTime }),
       ...(select === undefined ? {} : { select }),
       placeholderData: (previous) => (keepPrevious ? previous : undefined) ?? (placeholder as typeof previous),
@@ -104,13 +103,16 @@ function useServerQuery<T, TError = DefaultServerError, TSelected = T>(
   }
 }
 
-type ResourceDefinition<P, T> = {
+/**
+ * `networkMode`, `refetchOnWindowFocus`, `refetchOnReconnect` and `refetchOnMount` as `useServerQuery`'s, for every
+ * screen that reads the resource: `refetchOnWindowFocus: false, refetchOnReconnect: false` keeps one whose reads
+ * overwrite per-item ETags from reloading behind an edit.
+ */
+type ResourceDefinition<P, T> = Omit<ReadOptions, "enabled"> & {
   /** The query key for these parameters; put it under a source's key so mutations of the source reach it. */
   key: (params: P) => readonly unknown[]
   fetch: (params: P, context: { signal: AbortSignal }) => Promise<T>
   staleTime?: number
-  /** As `useServerQuery`'s `networkMode`, for every screen that reads the resource. */
-  networkMode?: NetworkMode
   /** Other resources this answer fills, as `useServerQuery`'s `seeds`. */
   seeds?: (data: T, params: P) => readonly ResourceSeed[]
 }
@@ -128,9 +130,29 @@ function defineResource<P, T>(definition: ResourceDefinition<P, T>): Resource<P,
   return { ...definition, seed: (params, data) => ({ key: definition.key(params), data }) }
 }
 
+const definedKeys = [
+  "staleTime",
+  "networkMode",
+  "refetchOnWindowFocus",
+  "refetchOnReconnect",
+  "refetchOnMount",
+] as const satisfies readonly (keyof ResourceDefinition<unknown, unknown> & keyof ServerQueryOptions<unknown>)[]
+
+type DefinedOptions = Pick<ServerQueryOptions<unknown>, (typeof definedKeys)[number]>
+
+/** The resource's own options under the call's: an option set in either, the call's when both set it. */
+function definedOptions(resource: DefinedOptions, options: DefinedOptions): DefinedOptions {
+  const merged: Record<string, unknown> = {}
+  for (const name of definedKeys) {
+    const value = options[name] ?? resource[name]
+    if (value !== undefined) merged[name] = value
+  }
+  return merged as DefinedOptions
+}
+
 /**
- * `useServerQuery` with a resource's key, fetch, `staleTime`, `networkMode` and `seeds`; `options` override its
- * `staleTime` and `networkMode`.
+ * `useServerQuery` with a resource's key, fetch, `seeds` and options (`staleTime`, `networkMode`, the refetch
+ * triggers); an option given here wins over the resource's.
  */
 function useServerResource<P, T, TError = DefaultServerError, TSelected = T>(
   resource: Resource<P, T>,
@@ -138,12 +160,9 @@ function useServerResource<P, T, TError = DefaultServerError, TSelected = T>(
   options: Omit<ServerQueryOptions<T, TSelected>, "seeds"> = {},
 ): ServerQueryState<TSelected, TError> {
   const { seeds } = resource
-  const staleTime = options.staleTime ?? resource.staleTime
-  const networkMode = options.networkMode ?? resource.networkMode
   return useServerQuery<T, TError, TSelected>(resource.key(params), (context) => resource.fetch(params, context), {
     ...options,
-    ...(staleTime === undefined ? {} : { staleTime }),
-    ...(networkMode === undefined ? {} : { networkMode }),
+    ...definedOptions(resource, options),
     ...(seeds === undefined ? {} : { seeds: (data: T) => seeds(data, params) }),
   })
 }

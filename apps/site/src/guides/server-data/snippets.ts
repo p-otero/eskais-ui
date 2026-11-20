@@ -33,3 +33,41 @@ async function saveAll(list: Step[]) {
   if (failed.current) await invalidate() // one reload for the whole run
   return results
 }`
+
+export const refetchCode = `import { createDataClient } from "@/components/ui/server-data"
+import { defineResource, useServerQuery, useServerResource } from "@/components/ui/use-server-query"
+
+// App-wide: reload stale queries on focus too (createDataClient's default is false).
+const client = createDataClient({ refetchOnWindowFocus: true })
+
+// One query: true reloads it when stale, "always" even when fresh, false never.
+useServerQuery([...tasks.key, "activity"], api.activity, { refetchOnWindowFocus: "always" })
+
+// A list whose reads overwrite each row's ETag, which a later save sends as If-Match: never reload it behind an edit.
+// Set it on the definition, so every screen that reads it agrees: one reader that reloads reloads it for all.
+export const editableTasks = defineResource({
+  key: (projectId: string) => [...tasks.key, "editable", projectId],
+  fetch: (projectId: string, { signal }) => api.editableTasks(projectId, { signal }),
+  refetchOnWindowFocus: false,
+  refetchOnReconnect: false,
+})
+
+// A call's option wins over the definition's.
+useServerResource(editableTasks, projectId, { refetchOnMount: false })`
+
+export const patchCode = `import { patchSource, usePatchSource, type SourcePatch } from "@/components/ui/use-server-data"
+
+// The server told the app a task changed (a push event, another mutation's answer): write it everywhere.
+const savedTask = (saved: Task): SourcePatch<Task, Task> => ({
+  items: (rows) => rows.map((task) => (task.id === saved.id ? saved : task)), // pages and infinite lists
+  resource: (current) => (current?.id === saved.id ? saved : undefined), // useServerQuery; undefined skips
+})
+
+const patch = usePatchSource<Task, Task>(tasks)
+await patch(savedTask(saved))
+
+// Or confirm with one reload of the key, resolved once the shown queries have reloaded.
+await patch(savedTask(saved), { refetch: true })
+
+// Outside React, as in a socket handler, on the app's client.
+socket.on("task", (saved: Task) => void patchSource(client, tasks, savedTask(saved)))`

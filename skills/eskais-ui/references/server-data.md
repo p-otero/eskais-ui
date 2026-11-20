@@ -139,6 +139,36 @@ const summary = useServerResource(taskSummary, id, { select: (s) => s.title })
 - Every reload the hooks make (`useInvalidateSource`, a mutation's refresh, the restart after `settle`) restarts any read in flight under the key, a first load included: its signal aborts, the query stays pending without an error, and its late answer is dropped. `client.invalidateQueries` joins a first load in flight instead, so it can show the answer from before the write: invalidate through the hooks.
 - `scope: { id }` runs mutations with that id one at a time, in call order, across hooks; each waits for the one before to settle, its refresh included. A failure doesn't stop the queue: to stop at the first, set a flag in `onError` and reject in `mutationFn` when it's set. `mutationKey` finds them with `useMutationState`.
 
+## Patch: a change the app learned of elsewhere
+
+When the server says what changed outside a mutation (a push event, a socket message, another request's answer), write it without a request:
+
+```ts
+// import { patchSource, usePatchSource } from "@/components/ui/use-server-data"
+const patch = usePatchSource<Task, Task>(tasks)
+await patch({
+  items: (rows) => rows.map((t) => (t.id === saved.id ? saved : t)), // pages and infinite lists; totals stay
+  resource: (current) => (current?.id === saved.id ? saved : undefined), // other queries; undefined leaves one alone
+})
+await patch(changes, { refetch: true }) // also reload the key; resolves once the shown queries reloaded
+patchSource(client, tasks, changes) // outside React, on the app's client
+```
+
+- It reaches every cached query under the key, mounted or not. A read in flight whose query the patch writes, and any first read (no data to patch yet), is cancelled silently and started again in the same batch, with or without `refetch`, so an answer sent before the change never lands, the request count stays the same and nothing stays pending. Reads of queries it leaves alone go on.
+- Without `refetch` nothing new is requested and the patched queries count as fresh. A patch is what the server holds now; for an unconfirmed change use `useSourceMutation`'s `optimistic`.
+
+## Reload on focus, reconnect and mount
+
+`refetchOnWindowFocus`, `refetchOnReconnect`, `refetchOnMount`: `true` reloads a stale query on the event, `"always"` a fresh one too, `false` never. Defaults on `createDataClient` (no reload on focus; reload a stale query on mount, and on reconnect unless `networkMode: "always"`, as TanStack); per hook on `useServerQuery`, `defineResource`, `useServerResource` (the call wins over the definition), `useServerPage`, `useServerInfinite` and `useServerTotal` (a page's total follows the page).
+
+```ts
+createDataClient({ refetchOnWindowFocus: true })
+useServerQuery(key, fetch, { refetchOnWindowFocus: "always" })
+const editable = defineResource({ key, fetch, refetchOnWindowFocus: false, refetchOnReconnect: false })
+```
+
+Never reload a resource whose reads overwrite per-item ETags (or versions) a later write sends back: a read on focus or reconnect during an edit swaps in an ETag for a version the person never saw, and the save that should conflict overwrites it. Turn both off on its `defineResource` (TanStack reloads a query when any reader asks to, so set it where every screen gets it) and write saves back with `settle` or `patch`.
+
 ## Offline
 
 TanStack's default `networkMode: "online"` pauses reads and writes after the browser's `offline` event: a page stays pending and never reaches its error state. For a local backend (Electron IPC, localhost) or an app with its own offline UI:
@@ -209,4 +239,5 @@ Counts, page sizes and the chips' numbers and dates follow the page's `<html lan
 | Dates          | ISO 8601                                                                        |
 | Query client   | the app's; a shared default, or `DataProvider`                                  |
 | Query defaults | keep previous data, 2 retries except 4xx, `staleTime` 30 s, no refetch on focus |
+| Refetch        | stale queries on mount and reconnect (not with `networkMode: "always"`)         |
 | Network mode   | TanStack's `online`: paused while the browser is offline                        |

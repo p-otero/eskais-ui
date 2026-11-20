@@ -2,19 +2,26 @@
 
 import {
   keepPreviousData,
-  notifyManager,
   useInfiniteQuery,
   useMutation,
   useQuery,
   type InfiniteData,
   type NetworkMode,
-  type Query,
-  type QueryClient,
   type QueryKey,
 } from "@tanstack/react-query"
 import { useCallback, useEffect, useState, useSyncExternalStore } from "react"
 
 import { useDataClient, type DefaultServerError } from "@/components/ui/server-data"
+import {
+  mapItems,
+  patchSource,
+  queryKind,
+  refreshKey,
+  settleQueries,
+  updateItems,
+  type PatchOptions,
+  type SourcePatch,
+} from "@/components/ui/server-data-cache"
 import {
   createPageController,
   type PageController,
@@ -35,17 +42,45 @@ import {
 
 type ServerStatus = "pending" | "error" | "success"
 
-type ServerPageOptions = {
+/** `true` reloads a stale query on the event, `"always"` a fresh one too, `false` never. */
+type RefetchTrigger = boolean | "always"
+
+/**
+ * When a query reloads on its own, per hook; otherwise the client's (`createDataClient`: no reload on focus, reload a
+ * stale query on mount, and on reconnect unless `networkMode` is `"always"`). TanStack reloads a query when any hook that reads it asks to, so a resource
+ * that must never reload this way (one whose reads overwrite per-item ETags kept for later writes) says so in
+ * `defineResource`, for every screen.
+ */
+type RefetchOptions = {
+  refetchOnWindowFocus?: RefetchTrigger
+  refetchOnReconnect?: RefetchTrigger
+  refetchOnMount?: RefetchTrigger
+}
+
+/** What every reading hook takes besides its request: when a read may run and when it reloads on its own. */
+type ReadOptions = RefetchOptions & {
   enabled?: boolean
-  /** Overrides the navigation `"auto"` picks from the source. */
-  navigation?: NavigationMode
   /** When a read may run, as `createDataClient`'s `networkMode`; otherwise the client's. */
   networkMode?: NetworkMode
+}
+
+type ServerPageOptions = ReadOptions & {
+  /** Overrides the navigation `"auto"` picks from the source. */
+  navigation?: NavigationMode
 }
 
 /** `networkMode` for a query or mutation's options, left out when unset so the client's default applies. */
 function networkModeOf(networkMode: NetworkMode | undefined) {
   return networkMode === undefined ? {} : { networkMode }
+}
+
+const refetchKeys = ["refetchOnWindowFocus", "refetchOnReconnect", "refetchOnMount"] as const
+
+/** A query's `networkMode` and refetch triggers, the unset ones left out so the client's defaults apply. */
+function readOptionsOf(options: ReadOptions): Omit<ReadOptions, "enabled"> {
+  const picked: Omit<ReadOptions, "enabled"> = { ...networkModeOf(options.networkMode) }
+  for (const name of refetchKeys) if (options[name] !== undefined) picked[name] = options[name]
+  return picked
 }
 
 type ServerPageState<T, TError = DefaultServerError> = {
@@ -83,7 +118,7 @@ const totalMeta = { serverData: "total" }
 function useServerTotal<T, F, TError = DefaultServerError>(
   source: PageSource<T, F>,
   filter: F,
-  options: { enabled?: boolean; networkMode?: NetworkMode } = {},
+  options: ReadOptions = {},
 ): ServerTotalState<TError> {
   const client = useDataClient()
   const fetchTotal = source.fetchTotal
@@ -93,7 +128,7 @@ function useServerTotal<T, F, TError = DefaultServerError>(
       queryFn: ({ signal }) => (fetchTotal as NonNullable<typeof fetchTotal>).call(source, filter, { signal }),
       enabled: fetchTotal !== undefined && options.enabled !== false,
       meta: totalMeta,
-      ...networkModeOf(options.networkMode),
+      ...readOptionsOf(options),
       placeholderData: keepPreviousData,
     },
     client,
@@ -117,15 +152,12 @@ function useServerPage<T, F, TError = DefaultServerError>(
       queryFn: ({ signal }) => source.fetchPage(request, { signal }),
       enabled: options.enabled !== false,
       meta: pageMeta,
-      ...networkModeOf(options.networkMode),
+      ...readOptionsOf(options),
       placeholderData: keepPreviousData,
     },
     client,
   )
-  const counted = useServerTotal(source, request.filter, {
-    enabled: options.enabled,
-    networkMode: options.networkMode,
-  })
+  const counted = useServerTotal(source, request.filter, options)
   const result = query.data
   const total = totalOf(result, counted.total)
   const { refetch } = query
@@ -168,7 +200,7 @@ type PageParam = number | string | null
 function useServerInfinite<T, F, TError = DefaultServerError>(
   source: PageSource<T, F>,
   request: InfiniteRequest<F>,
-  options: { enabled?: boolean; networkMode?: NetworkMode } = {},
+  options: ReadOptions = {},
 ): ServerInfiniteState<T, TError> {
   const client = useDataClient()
   const cursorMode = source.capabilities.position === "cursor"
@@ -195,15 +227,12 @@ function useServerInfinite<T, F, TError = DefaultServerError>(
       },
       enabled: options.enabled !== false,
       meta: infiniteMeta,
-      ...networkModeOf(options.networkMode),
+      ...readOptionsOf(options),
       placeholderData: keepPreviousData,
     },
     client,
   )
-  const counted = useServerTotal(source, request.filter, {
-    enabled: options.enabled,
-    networkMode: options.networkMode,
-  })
+  const counted = useServerTotal(source, request.filter, options)
   const pages = query.data?.pages ?? []
   const { fetchNextPage, refetch, hasNextPage, isFetchingNextPage } = query
   const loadMore = useCallback(async () => {
@@ -225,35 +254,6 @@ function useServerInfinite<T, F, TError = DefaultServerError>(
     error: query.error,
     retry,
   }
-}
-
-/**
- * Cancels every read in flight under the key silently, first loads included, for the caller to fetch again: one that
- * left before a write may answer with the data from before it, and `cancelRefetch` joins a first load. The query stays
- * pending or fetching without an error, and the aborted request's late answer or rejection is dropped.
- */
-function restartInFlight(
-  client: QueryClient,
-  filters: { queryKey: readonly unknown[]; predicate?: (query: Query) => boolean },
-) {
-  const inFlight = client.getQueryCache().findAll({ ...filters, fetchStatus: "fetching" })
-  for (const query of inFlight) void query.cancel({ silent: true })
-  return inFlight
-}
-
-/**
- * Invalidates the key, and refetches its shown queries and every read that was in flight, restarted. Resolves once
- * the shown ones have reloaded; with `throwOnError`, rejects with the first failure.
- */
-function refreshKey(client: QueryClient, key: readonly unknown[], throwOnError = false): Promise<void> {
-  return notifyManager.batch(() => {
-    const inFlight = restartInFlight(client, { queryKey: key })
-    const shown = client.invalidateQueries({ queryKey: key }, { throwOnError })
-    // An in-flight read the invalidation doesn't refetch (nothing observes it, as a prefetch) starts here; for one it
-    // did, `fetch` joins the read it just started.
-    for (const query of inFlight) query.fetch().catch(() => undefined)
-    return shown
-  })
 }
 
 type InvalidateOptions = {
@@ -283,61 +283,16 @@ function useInvalidateSource(
 
 type Snapshot = [QueryKey, unknown][]
 
-/**
- * What kind of query this is under the source's key. The hooks mark theirs; a query no hook has observed, such as one
- * filled with `setQueryData` or by a resource's `seeds`, is told by the segment after the key, and anything else is a
- * resource.
- */
-function queryKind(query: Query, key: readonly unknown[]): "page" | "infinite" | "total" | "resource" {
-  const marked = query.meta?.serverData
-  const kind = typeof marked === "string" ? marked : query.queryKey[key.length]
-  return kind === "page" || kind === "infinite" || kind === "total" ? kind : "resource"
-}
-
-/** A page or infinite query's data with each page's rows updated; `undefined` for any other query or no data. */
-function mapItems<T>(kind: unknown, data: unknown, update: (items: T[]) => T[]): unknown {
-  if (data === undefined) return undefined
-  if (kind === "page") {
-    const page = data as PageResult<T>
-    return { ...page, items: update(page.items) }
-  }
-  if (kind === "infinite") {
-    const infinite = data as InfiniteData<PageResult<T>>
-    return {
-      ...infinite,
-      pages: infinite.pages.map((page) => ({ ...page, items: update(page.items) })),
-    }
-  }
-  return undefined
-}
-
-function updateItems<T>(client: QueryClient, key: readonly unknown[], update: (items: T[]) => T[]) {
-  for (const [queryKey, data] of client.getQueriesData<unknown>({ queryKey: key })) {
-    const next = mapItems(queryKey[key.length], data, update)
-    if (next !== undefined) client.setQueryData(queryKey, next)
-  }
-}
-
-/**
- * Writes the server's answer where `next` returns data. Each query written has its read in flight cancelled first, so
- * an answer sent before the change can't overwrite it. The rest of the key is marked stale without a request, and a
- * read of it already in flight, which started before the change, starts again without holding the mutation.
- */
-async function settleQueries(client: QueryClient, key: readonly unknown[], next: (query: Query) => unknown) {
-  const writes = client
-    .getQueryCache()
-    .findAll({ queryKey: key })
-    .map((query) => [query, next(query)] as const)
-    .filter(([, data]) => data !== undefined)
-  await Promise.all(writes.map(([query]) => client.cancelQueries({ queryKey: query.queryKey, exact: true })))
-  for (const [query, data] of writes) client.setQueryData(query.queryKey, data)
-  const written = new Set<Query>(writes.map(([query]) => query))
-  const rest = (query: Query) => !written.has(query)
-  notifyManager.batch(() => {
-    void client.invalidateQueries({ queryKey: key, predicate: rest, refetchType: "none" })
-    for (const query of restartInFlight(client, { queryKey: key, predicate: rest }))
-      query.fetch().catch(() => undefined)
-  })
+/** `patchSource` bound to the app's client and this source, for a write the app learned of elsewhere. */
+function usePatchSource<T, Data = unknown>(
+  source: PageSource<T, never> | { key: readonly unknown[] },
+): (patch: SourcePatch<T, Data>, options?: PatchOptions) => Promise<void> {
+  const client = useDataClient()
+  const { key } = source
+  return useCallback(
+    (patch: SourcePatch<T, Data>, options?: PatchOptions) => patchSource<T, Data>(client, { key }, patch, options),
+    [client, key],
+  )
 }
 
 type SourceMutationOptions<T, Variables, Result, Data = Result, TError = DefaultServerError> = {
@@ -461,7 +416,10 @@ function usePageController<T, F>(
 
 export {
   pageKey,
+  patchSource,
+  readOptionsOf,
   useInvalidateSource,
+  usePatchSource,
   usePageController,
   useServerInfinite,
   useServerPage,
@@ -471,6 +429,10 @@ export {
 export type {
   InfiniteRequest,
   InvalidateOptions,
+  PatchOptions,
+  ReadOptions,
+  RefetchOptions,
+  RefetchTrigger,
   ServerInfiniteState,
   ServerPageOptions,
   ServerPageState,
@@ -478,4 +440,5 @@ export type {
   ServerTotalState,
   SourceMutationOptions,
   SourceMutationState,
+  SourcePatch,
 }
