@@ -54,7 +54,7 @@ The [full catalog](https://p-otero.github.io/eskais-ui/docs/components/) has 140
 
 ## Built with agents
 
-This repository is designed to be developed by coding agents. [AGENTS.md](AGENTS.md) holds the design-system rules (spacing and type roles, elevation, tone, icons, touch targets, accessibility) that lint rules and tests enforce, and the same conventions ship to consumers as [agent skills](https://p-otero.github.io/eskais-ui/docs/agent-skills/) installed with shadcn.
+This repository is designed to be developed by coding agents. [AGENTS.md](AGENTS.md) holds the design-system rules (spacing and type roles, elevation, tone, icons, touch targets, accessibility) that lint rules and tests enforce, and the same conventions ship to consumers as [agent skills](https://p-otero.github.io/eskais-ui/docs/agent-skills/) installed with Vercel's [skills CLI](https://github.com/vercel-labs/skills) (`npx skills add p-otero/eskais-ui@<tag> --full-depth`) or shadcn.
 
 ## Develop
 

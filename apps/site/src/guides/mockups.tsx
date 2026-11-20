@@ -1,6 +1,7 @@
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 
 import { A, Article, Code, DocTable, DocTitle, H2, H3, Ol, P, Pre, Ul } from "../docs/prose"
+import { releaseTag, skillsCliVersion } from "../registry"
 import {
   agentPrompt,
   checkoutCommands,
@@ -67,7 +68,10 @@ export default function Mockups() {
         An agent follows the same loop with the <Code>eskais-mockup</Code> skill. Install it into the project (see{" "}
         <A to="/docs/agent-skills">Agent skills</A> for pointing your agent at it):
       </P>
-      <Pre code="npx shadcn@latest add @eskais/eskais-mockup-skill" language="bash" />
+      <Pre
+        code={`npx skills@${skillsCliVersion} add p-otero/eskais-ui@${releaseTag} --full-depth --skill eskais-mockup -a universal -y`}
+        language="bash"
+      />
       <P>Then ask for a screen in plain words:</P>
       <Pre code={agentPrompt} language="plaintext" title="Prompt" />
       <Ol>
