@@ -1,5 +1,7 @@
 import { definePrimitive, dispatch, type ChangeDetails } from "@ui-sdk/core"
 
+import { unavailable } from "@/lib/action-refusal"
+
 type CodeBlockCopyDetails = ChangeDetails<"copy">
 
 type CodeBlockOptions = {
@@ -25,21 +27,21 @@ const codeBlock = definePrimitive({
       context.store.set({ copied: false })
     })
     return {
-      /** Writes the code to the clipboard; resolves false where the page has no clipboard access. */
-      async copy(event?: Event) {
+      /** Writes the code to the clipboard. Where the page has no clipboard access, a press gets false. */
+      copy(event?: Event) {
         const code = context.options().text ?? ""
         const clipboard = typeof navigator === "undefined" ? undefined : navigator.clipboard
-        if (!clipboard) return false
-        try {
-          await clipboard.writeText(code)
-        } catch {
-          return false
-        }
-        clearTimeout(timer)
-        context.store.set({ copied: true })
-        timer = setTimeout(() => context.store.set({ copied: false }), COPIED_FOR)
-        dispatch(context, "onCopy", code, { reason: "copy", event })
-        return true
+        if (!clipboard) return unavailable("copy", "isn't available: the page has no clipboard access", { event })
+        return clipboard.writeText(code).then(
+          () => {
+            clearTimeout(timer)
+            context.store.set({ copied: true })
+            timer = setTimeout(() => context.store.set({ copied: false }), COPIED_FOR)
+            dispatch(context, "onCopy", code, { reason: "copy", event })
+            return true
+          },
+          () => unavailable("copy", "was blocked by the browser", { event }),
+        )
       },
     }
   },

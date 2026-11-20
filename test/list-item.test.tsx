@@ -34,7 +34,8 @@ test("primitive: select validates the id and onSelect can cancel", () => {
   )
   try {
     expect(() => view.api.select("zzz")).toThrow(/Rows: a/)
-    expect(view.api.select("a")).toBe(false)
+    expect(() => view.api.select("a")).toThrow("select was refused by the app.")
+    expect(view.api.select("a", { reason: "item-press", event: new MouseEvent("click") })).toBe(false)
     expect(activate).not.toHaveBeenCalled()
   } finally {
     view.unmount()

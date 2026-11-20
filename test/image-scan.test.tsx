@@ -5,7 +5,12 @@ import { createAgent } from "@ui-sdk/react/agent"
 import { useState } from "react"
 import { afterEach, describe, expect, test, vi } from "vitest"
 
-import { ImageScan, type ImageScanProps, type ImageScanRegion } from "@/components/ui/image-scan"
+import {
+  ImageScan,
+  type ImageScanChangeDetails,
+  type ImageScanProps,
+  type ImageScanRegion,
+} from "@/components/ui/image-scan"
 import { clampBox, imageScan, mapRegionBox } from "@/components/ui/image-scan-primitive"
 import { readAnnouncements } from "@/lib/test-utils"
 
@@ -110,9 +115,9 @@ describe("primitive", () => {
           outcome(() => view.api.cancel()),
           outcome(() => view.api.retry()),
         ]).toEqual([
-          status === "uploaded" || `Scan works only before a scan (status: ${status}).`,
-          status === "scanning" || `Cancel works only while scanning (status: ${status}).`,
-          status === "error" || `Retry works only after an error (status: ${status}).`,
+          status === "uploaded" || `scan works only before a scan (status: ${status}).`,
+          status === "scanning" || `cancel works only while scanning (status: ${status}).`,
+          status === "error" || `retry works only after an error (status: ${status}).`,
         ])
       } finally {
         view.unmount()
@@ -383,8 +388,50 @@ test("an agent can scan, cancel, select a region and retry", async () => {
   expect(entries().find((entry) => entry.component === "image-scan")?.status).toBe("error")
   const early = await agent.act({ steps: [{ ref: "A potted plant", action: "cancel" }] })
   expect(early.ok).toBe(false)
-  expect(early.error?.message).toContain("Cancel works only while scanning (status: error).")
+  expect(early.error?.message).toContain("cancel works only while scanning (status: error).")
   expect((await agent.act({ steps: [{ ref: "A potted plant", action: "retry" }] })).ok).toBe(true)
   expect(onRetry).toHaveBeenCalledWith(expect.objectContaining({ source: "agent" }))
   unmount()
+})
+
+const refuse = (details: { source: string; cancel: () => void }) => {
+  if (details.source === "agent") details.cancel()
+}
+const step = (action: string, args?: unknown[]) => agent.act({ steps: [{ ref: "A potted plant", action, args }] })
+const status = () => screen.getByRole("group", { name: "A potted plant" }).dataset.status
+
+test("agent: a scan, cancel, retry or selection the app refuses fails the step and changes nothing", async () => {
+  const onScan = vi.fn(refuse)
+  const onCancel = vi.fn(refuse)
+  const onRetry = vi.fn(refuse)
+  const onSelectedRegionChange = vi.fn((_region: string | null, details: ImageScanChangeDetails) => refuse(details))
+  const handlers = { onScan, onCancel, onRetry, onSelectedRegionChange }
+  const { rerender } = render(<Scan {...handlers} />)
+  await tick()
+
+  for (const [state, action] of [
+    ["uploaded", "scan"],
+    ["scanning", "cancel"],
+    ["error", "retry"],
+  ] as const) {
+    rerender(<Scan status={state} {...handlers} />)
+    await tick()
+    const result = await step(action)
+    expect(result.ok, action).toBe(false)
+    expect(result.error?.message).toContain(`${action} was refused by the app.`)
+    expect(status()).toBe(state)
+  }
+  expect(onScan).toHaveBeenCalledOnce()
+  expect(onCancel).toHaveBeenCalledOnce()
+  expect(onRetry).toHaveBeenCalledOnce()
+
+  rerender(<Scan status="result" regions={regions} {...handlers} />)
+  await tick()
+  const select = await step("selectRegion", ["Leaf"])
+  expect(select.ok).toBe(false)
+  expect(select.error?.message).toContain("selectRegion was refused by the app.")
+  expect(screen.getByRole("button", { name: "Leaf 92%" }).getAttribute("aria-pressed")).toBe("false")
+
+  const early = await step("scan")
+  expect(early.error?.message).toContain("scan works only before a scan (status: result).")
 })

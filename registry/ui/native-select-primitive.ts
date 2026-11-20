@@ -1,5 +1,7 @@
 import { createChange, definePrimitive, type ChangeDetails } from "@ui-sdk/core"
 
+import { settled } from "@/lib/action-refusal"
+
 type NativeSelectChangeReason = "input-change" | "imperative"
 
 type NativeSelectItem = { value: string; label: string }
@@ -29,7 +31,8 @@ const nativeSelect = definePrimitive({
       // The agent bridge passes arguments unchecked; an unknown value is refused with the real ones by `closed`.
       setValue(value: unknown, event?: Event) {
         const next = value === "" || value === null || value === undefined ? null : String(value)
-        return change("value", next, { reason: event ? "input-change" : "imperative", event })
+        const call = { reason: event ? "input-change" : "imperative", event } as const
+        return settled(change("value", next, call), "setValue", call)
       },
     }
   },

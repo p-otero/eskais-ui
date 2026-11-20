@@ -24,6 +24,7 @@ Read a component's own file before you use it: the props, variants and the comme
 | `references/git.md`                       | a branch's commit history, a repository's files at a commit                             |
 | `references/image-scan.md`                | an image under analysis: scan states, detected regions, pick → crop → scan              |
 | `references/3d.md`                        | a 3D model to turn (ModelViewer), a photo becoming a 3D character (ModelScan)           |
+| `references/agents.md`                    | what an agent sees when an action is refused, and driving agent actions from Playwright |
 
 Keeping screens fast (long lists, effects, React Compiler, motion) has its own skill, `eskais-perf`; building a throwaway mockup of a screen has `eskais-mockup`. Both install with `npx shadcn@latest add @eskais/eskais-perf-skill @eskais/eskais-mockup-skill`.
 
@@ -162,6 +163,7 @@ Each line is a need, then what to use. Props are listed by name; read the compon
 - `SearchField` exposes a `submit` action to agents only when `onSearch` is set.
 - Show the approval prompt as its own alert dialog (`createConfirm` from `@ui-sdk/react/alert-dialog`), not as page content: when the agent opens a modal such as `ConfirmDialog`, the rest of the page goes inert and an inline prompt can't be clicked.
 - Every control needs a name a person would recognize; the agent finds it by that name.
+- An Eskais action that doesn't run fails the agent's step with why (`start was refused by the app.`, `start isn't available while listening.`) instead of reporting `ok: true`; refuse agents with `if (details.source === "agent") details.cancel()`. See `references/agents.md`, which also drives the page's WebMCP tools from Playwright.
 - Test every interface with the agent test from the ui-sdk skill (`.agents/skills/ui-sdk/references/agent-ready.md`).
 
 ## Style

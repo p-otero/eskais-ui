@@ -47,7 +47,8 @@ test("primitive: a canceled search reports that it did not run", () => {
     `<root><input aria-label="Query" /></root>`,
   )
   try {
-    expect(view.api.submit()).toBe(false)
+    expect(() => view.api.submit()).toThrow("submit was refused by the app.")
+    expect(view.api.submit(new KeyboardEvent("keydown", { key: "Enter" }))).toBe(false)
   } finally {
     view.unmount()
   }

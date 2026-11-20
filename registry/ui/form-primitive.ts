@@ -1,5 +1,7 @@
 import { definePrimitive } from "@ui-sdk/core"
 
+import { unavailable } from "@/lib/action-refusal"
+
 type FormRootOptions = {
   /** Whether the form has an accessible name, so an agent can find it. */
   named?: boolean
@@ -16,13 +18,14 @@ const formRoot = definePrimitive({
   api: (context) => ({
     submit() {
       const form = context.element("root")
-      if (!(form instanceof HTMLFormElement)) return false
+      if (!(form instanceof HTMLFormElement))
+        return unavailable("submit", "isn't available: the form isn't on the page")
       form.requestSubmit()
       return true
     },
     reset() {
       const onResetRequest = context.options().onResetRequest
-      if (!onResetRequest) return false
+      if (!onResetRequest) return unavailable("reset", "isn't offered: there is no onResetRequest")
       onResetRequest()
       return true
     },

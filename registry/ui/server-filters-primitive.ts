@@ -1,5 +1,7 @@
 import { definePrimitive } from "@ui-sdk/core"
 
+import { unavailable } from "@/lib/action-refusal"
+
 type ServerFiltersField = { value: string; label: string }
 
 type ServerFiltersOptions = {
@@ -19,12 +21,14 @@ const serverFilters = definePrimitive({
   api: (context) => ({
     filter(field: unknown, value?: unknown) {
       const apply = context.options().apply
-      if (!apply) return false
+      if (!apply) return unavailable("filter", "isn't offered: there is no apply")
       apply(field, value)
       return true
     },
     clearFilters() {
-      context.options().clear?.()
+      const clear = context.options().clear
+      if (!clear) return unavailable("clearFilters", "isn't offered: there is no clear")
+      clear()
       return true
     },
     fields: () => context.options().fields ?? [],

@@ -1,5 +1,6 @@
 import { definePrimitive, dispatch, type ChangeDetails, type ChangeOptions } from "@ui-sdk/core"
 
+import { settled } from "@/lib/action-refusal"
 import { TASK_STATUSES, type TaskMove } from "@/lib/agent-task-board-model"
 import type { TaskStatus, TaskView } from "@/lib/agent-task-types"
 import type { AgentApproval } from "@/components/ui/agent-task-board-primitive"
@@ -70,7 +71,7 @@ const agentTaskMoves = definePrimitive({
           before: column[at as number]?.id ?? null,
         }
         const details = { reason: options?.reason ?? "imperative", event: options?.event }
-        return !dispatch(context, "onMoveTask", move, details)
+        return settled(!dispatch(context, "onMoveTask", move, details), "moveTask", details)
       },
       tasks: () => tasks().map((task) => ({ value: task.id, label: `${task.id} ${task.title} (${task.status})` })),
     }

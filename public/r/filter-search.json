@@ -13,7 +13,8 @@
     "@eskais/theme",
     "@eskais/input",
     "@eskais/filter-schema",
-    "@eskais/page-source"
+    "@eskais/page-source",
+    "@eskais/action-refusal"
   ],
   "files": [
     {
@@ -28,7 +29,7 @@
     },
     {
       "path": "registry/ui/server-filters-primitive.ts",
-      "content": "import { definePrimitive } from \"@ui-sdk/core\"\n\ntype ServerFiltersField = { value: string; label: string }\n\ntype ServerFiltersOptions = {\n  /** The schema's fields, by key and label: what `filter` takes as its first argument. */\n  fields?: readonly ServerFiltersField[]\n  /** Sets one field from loose input; throws a `RangeError` that says what the field takes. */\n  apply?: (field: unknown, value: unknown) => void\n  clear?: () => void\n}\n\n// The agent bridge passes arguments unchecked; `apply` validates the field and the value against the schema.\nconst serverFilters = definePrimitive({\n  name: \"server-filters\",\n  options: { fields: \"list\", apply: \"value\", clear: \"value\" },\n  state: (options: ServerFiltersOptions) => ({ count: options.fields?.length ?? 0 }),\n  sync: (options) => ({ count: options.fields?.length ?? 0 }),\n  api: (context) => ({\n    filter(field: unknown, value?: unknown) {\n      const apply = context.options().apply\n      if (!apply) return false\n      apply(field, value)\n      return true\n    },\n    clearFilters() {\n      context.options().clear?.()\n      return true\n    },\n    fields: () => context.options().fields ?? [],\n  }),\n  slots: (slot) => ({\n    root: slot({ role: \"group\", attrs: (state) => ({ \"data-count\": String(state.count) }) }),\n  }),\n  agent: { actions: [\"filter\", \"clearFilters\"], items: (api) => api.fields() },\n})\n\nexport { serverFilters }\nexport type { ServerFiltersField, ServerFiltersOptions }\n",
+      "content": "import { definePrimitive } from \"@ui-sdk/core\"\n\nimport { unavailable } from \"@/lib/action-refusal\"\n\ntype ServerFiltersField = { value: string; label: string }\n\ntype ServerFiltersOptions = {\n  /** The schema's fields, by key and label: what `filter` takes as its first argument. */\n  fields?: readonly ServerFiltersField[]\n  /** Sets one field from loose input; throws a `RangeError` that says what the field takes. */\n  apply?: (field: unknown, value: unknown) => void\n  clear?: () => void\n}\n\n// The agent bridge passes arguments unchecked; `apply` validates the field and the value against the schema.\nconst serverFilters = definePrimitive({\n  name: \"server-filters\",\n  options: { fields: \"list\", apply: \"value\", clear: \"value\" },\n  state: (options: ServerFiltersOptions) => ({ count: options.fields?.length ?? 0 }),\n  sync: (options) => ({ count: options.fields?.length ?? 0 }),\n  api: (context) => ({\n    filter(field: unknown, value?: unknown) {\n      const apply = context.options().apply\n      if (!apply) return unavailable(\"filter\", \"isn't offered: there is no apply\")\n      apply(field, value)\n      return true\n    },\n    clearFilters() {\n      const clear = context.options().clear\n      if (!clear) return unavailable(\"clearFilters\", \"isn't offered: there is no clear\")\n      clear()\n      return true\n    },\n    fields: () => context.options().fields ?? [],\n  }),\n  slots: (slot) => ({\n    root: slot({ role: \"group\", attrs: (state) => ({ \"data-count\": String(state.count) }) }),\n  }),\n  agent: { actions: [\"filter\", \"clearFilters\"], items: (api) => api.fields() },\n})\n\nexport { serverFilters }\nexport type { ServerFiltersField, ServerFiltersOptions }\n",
       "type": "registry:ui"
     }
   ],

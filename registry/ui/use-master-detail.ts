@@ -123,9 +123,6 @@ function useDetailFocus({ selectedId, stacked, list, detail, getRowElement }: De
       request: (target: FocusRequest) => {
         pending.current = target
       },
-      cancel: () => {
-        pending.current = null
-      },
       /** Focuses the open item's heading now, like when its row is pressed again. */
       heading: () => focusHeading(panes.current.detail),
     }),

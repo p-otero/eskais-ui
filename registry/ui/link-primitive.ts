@@ -1,5 +1,7 @@
 import { definePrimitive, dispatch, type ChangeDetails } from "@ui-sdk/core"
 
+import { settled } from "@/lib/action-refusal"
+
 type LinkFollowDetails = ChangeDetails<"follow">
 
 type LinkOptions = {
@@ -31,7 +33,7 @@ const link = definePrimitive({
   api: (context) => ({
     follow(event?: Event) {
       const { href = "" } = context.options()
-      return !dispatch(context, "onFollow", href, { reason: "follow", event })
+      return settled(!dispatch(context, "onFollow", href, { reason: "follow", event }), "follow", { event })
     },
   }),
   slots: (slot) => ({

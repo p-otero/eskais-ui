@@ -34,9 +34,11 @@ test("primitive: Enter or F2 on the text and a press of the edit button start ed
 test("primitive: rename and cancel work without the field", () => {
   const view = mount(inlineEdit, { defaultValue: "Apollo", validate: (text) => text.trim() !== "" }, markup)
   try {
-    expect(view.api.rename("  ")).toBe(false)
+    expect(() => view.api.rename("  ")).toThrow("rename was refused by the app.")
+    expect(view.state.value).toBe("Apollo")
     expect(view.api.rename("Hermes")).toBe(true)
     expect(view.state.value).toBe("Hermes")
+    expect(() => view.api.cancel()).toThrow("cancel isn't available while not editing.")
     view.api.start()
     expect(view.api.cancel()).toBe(true)
     expect(view.state.editing).toBeNull()

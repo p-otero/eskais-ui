@@ -7,6 +7,7 @@ import {
   type ChangeOptions,
 } from "@ui-sdk/core"
 
+import { settled } from "@/lib/action-refusal"
 import { NO_STAGE, filterOptions, type TaskFilters } from "@/lib/agent-task-board-model"
 import type { AttemptView, TaskLink, TaskView, ThreadRef } from "@/lib/agent-task-types"
 
@@ -169,18 +170,21 @@ const agentTaskBoard = definePrimitive({
     return {
       setView(view: unknown, options?: ChangeOptions<ViewChangeReason>) {
         if (!VIEWS.includes(view as BoardView)) throw new TypeError(`setView takes one of: ${VIEWS.join(", ")}.`)
-        return change("view", view as BoardView, reasonOf(options))
+        const call = reasonOf<ViewChangeReason>(options)
+        return settled(change("view", view as BoardView, call), "setView", call)
       },
       filter(partial: unknown, options?: ChangeOptions<FiltersChangeReason>) {
         const { stageIds, noStageLabel } = context.options()
         const next = checkFilters(partial, context.store.get().filters, tasks(), stageIds, noStageLabel)
-        return change("filters", next, reasonOf(options))
+        const call = reasonOf<FiltersChangeReason>(options)
+        return settled(change("filters", next, call), "filter", call)
       },
       selectTask(id: unknown, options?: ChangeOptions<SelectReason>) {
         if (id !== null && !tasks().some((task) => task.id === id)) {
           throw new RangeError(`No task "${String(id)}". Pass a task id from the board, or null to close it.`)
         }
-        return change("selectedTaskId", id as string | null, reasonOf(options))
+        const call = reasonOf<SelectReason>(options)
+        return settled(change("selectedTaskId", id as string | null, call), "selectTask", call)
       },
       openThread(attemptId: unknown, options?: ChangeOptions<OpenThreadReason>) {
         const attempt = typeof attemptId === "string" ? findAttempt(tasks(), attemptId) : undefined
@@ -188,7 +192,7 @@ const agentTaskBoard = definePrimitive({
         if (!attempt.thread) throw new RangeError(`Attempt "${attempt.id}" has no thread.`)
         if (!context.options().onOpenThread) throw new Error("This board doesn't open threads.")
         const details = { ...reasonOf(options), attemptId: attempt.id }
-        return !dispatch(context, "onOpenThread", attempt.thread, details)
+        return settled(!dispatch(context, "onOpenThread", attempt.thread, details), "openThread", details)
       },
       openLink(taskId: unknown, link: unknown, options?: ChangeOptions<OpenLinkReason>) {
         const task = tasks().find((candidate) => candidate.id === taskId)
@@ -200,7 +204,8 @@ const agentTaskBoard = definePrimitive({
           throw new RangeError(`Task "${task.id}" has no link "${String(link)}". Links: ${choices}.`)
         }
         if (!context.options().onOpenLink) throw new Error("This board doesn't open links.")
-        return !dispatch(context, "onOpenLink", found, { ...reasonOf(options), taskId: task.id })
+        const details = { ...reasonOf<OpenLinkReason>(options), taskId: task.id }
+        return settled(!dispatch(context, "onOpenLink", found, details), "openLink", details)
       },
       tasks: () => tasks().map((task) => ({ value: task.id, label: `${task.id} ${task.title}` })),
     }

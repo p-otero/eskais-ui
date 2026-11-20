@@ -6,6 +6,8 @@ import {
   type InlineEditReason,
 } from "@ui-sdk/core"
 
+import { settled, unavailable } from "@/lib/action-refusal"
+
 type InlineEditOptions = {
   value?: string
   defaultValue?: string
@@ -68,15 +70,16 @@ const inlineEdit = definePrimitive({
       },
       /** Saves a new text at once, without opening the field. */
       rename(text: string) {
-        if (context.store.get().disabled) return false
-        if (context.options().validate?.(text) === false) return false
+        if (context.store.get().disabled) return unavailable("rename", "isn't available while disabled")
+        if (context.options().validate?.(text) === false) return settled(false, "rename")
         edit.cancel()
         if (text === context.store.get().value) return true
-        return change("value", text, { reason: "imperative" })
+        return settled(change("value", text, { reason: "imperative" }), "rename")
       },
       /** Stops editing and puts the text back. */
       cancel() {
-        if (edit.editing(context.store.get()) === null) return false
+        if (edit.editing(context.store.get()) === null)
+          return unavailable("cancel", "isn't available while not editing")
         edit.cancel()
         return true
       },

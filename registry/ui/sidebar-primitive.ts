@@ -1,5 +1,7 @@
 import { createChange, createController, definePrimitive, type ChangeDetails, type ChangeOptions } from "@ui-sdk/core"
 
+import { settled } from "@/lib/action-refusal"
+
 type SidebarCollapsedChangeReason = "trigger-press" | "imperative"
 
 type SidebarOptions = {
@@ -30,17 +32,18 @@ const sidebar = definePrimitive({
   controlled: ["collapsed"],
   api: (context) => {
     const change = createChange(context)
-    const setCollapsed = (collapsed: unknown, options?: ChangeOptions<SidebarCollapsedChangeReason>) => {
+    const set = (collapsed: unknown, action: string, options?: ChangeOptions<SidebarCollapsedChangeReason>) => {
       if (typeof collapsed !== "boolean") throw new TypeError("setCollapsed takes true or false.")
-      if (collapsed === context.store.get().collapsed) return false
-      return change("collapsed", collapsed, reasonOf(options))
+      if (collapsed === context.store.get().collapsed) return true
+      return settled(change("collapsed", collapsed, reasonOf(options)), action, reasonOf(options))
     }
     return {
-      setCollapsed,
-      collapse: (options?: ChangeOptions<SidebarCollapsedChangeReason>) => setCollapsed(true, options),
-      expand: (options?: ChangeOptions<SidebarCollapsedChangeReason>) => setCollapsed(false, options),
+      setCollapsed: (collapsed: unknown, options?: ChangeOptions<SidebarCollapsedChangeReason>) =>
+        set(collapsed, "setCollapsed", options),
+      collapse: (options?: ChangeOptions<SidebarCollapsedChangeReason>) => set(true, "collapse", options),
+      expand: (options?: ChangeOptions<SidebarCollapsedChangeReason>) => set(false, "expand", options),
       toggle: (options?: ChangeOptions<SidebarCollapsedChangeReason>) =>
-        setCollapsed(!context.store.get().collapsed, options),
+        set(!context.store.get().collapsed, "toggle", options),
     }
   },
   slots: (slot) => ({

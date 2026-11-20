@@ -10,6 +10,7 @@ import {
   type TransferReason,
 } from "@ui-sdk/core"
 
+import { settled } from "@/lib/action-refusal"
 import { transferLabels, type TransferLabels } from "@/components/ui/sortable-labels"
 
 type BoardMove = { key: string; from: string; to: string; index: number }
@@ -143,7 +144,8 @@ const boardTransfer = definePrimitive({
         if (list !== from && !(context.options().accepts?.(id, list) ?? true)) {
           throw new Error(`"${listLabel(list)}" doesn't take "${itemLabel(id)}".`)
         }
-        return transfer.move(id, list, at as number)
+        if (list === from && lists[list]?.indexOf(id) === at) return true
+        return settled(transfer.move(id, list, at as number), "move")
       },
       keydown(event: KeyboardEvent, key: string, el: HTMLElement, roving: typeof focus) {
         if (!transfer.keydown(event, key)) roving.keydown(event, el)

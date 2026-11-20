@@ -1,5 +1,7 @@
 import { definePrimitive } from "@ui-sdk/core"
 
+import { unavailable } from "@/lib/action-refusal"
+
 import type { ActivityLog } from "@/components/ui/activity-log-store"
 
 type ActivityLogOptions = {
@@ -41,15 +43,25 @@ const activityLog = definePrimitive({
       context.store.set(stateOf(current))
     })
     context.onDestroy(() => unsubscribe?.())
+    const connectedLog = (action: string) => log() ?? unavailable(action, "isn't available: no log is connected")
     return {
       /** Takes back the newest applied entry. Resolves with the changes it couldn't put back. */
-      undo: async () => (await log()?.undo()) ?? [],
+      undo: () => {
+        const connected = connectedLog("undo")
+        if (context.store.get().value === 0) return unavailable("undo", "has nothing to undo")
+        return connected.undo()
+      },
       /** Applies the next entry again. */
-      redo: async () => (await log()?.redo()) ?? [],
+      redo: () => {
+        const connected = connectedLog("redo")
+        const { value, count } = context.store.get()
+        if (value >= count) return unavailable("redo", "has nothing to redo")
+        return connected.redo()
+      },
       /** Puts the page back to how it was after `position` entries (0 is the start), or forward again. */
-      seek: async (position: unknown) => {
-        const target = positionOf(position, context.store.get().count)
-        return (await log()?.seek(target)) ?? []
+      seek: (position: unknown) => {
+        const connected = connectedLog("seek")
+        return connected.seek(positionOf(position, context.store.get().count))
       },
       /** The entries as items, oldest first: their value is the position that seeking to them restores. */
       items: () =>

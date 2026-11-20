@@ -92,6 +92,7 @@ const guides: GuideMeta[] = [
     title: "Agents",
     description:
       "Every control is a UI SDK part an agent can read and operate, with a person approving what can't be undone.",
+    covers: ["action-refusal"],
   },
   {
     slug: "accessibility",

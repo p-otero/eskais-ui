@@ -52,7 +52,8 @@ test("primitive: opening an unknown id lists the real ones, and onOpen can cance
   )
   try {
     expect(() => view.api.openAttachment("nope")).toThrow(/shot-1, shot-2, log, spec/)
-    expect(view.api.openAttachment("log")).toBe(false)
+    expect(() => view.api.openAttachment("log")).toThrow("openAttachment was refused by the app.")
+    expect(view.api.openAttachment("log", { reason: "item-press" })).toBe(false)
     expect(open).not.toHaveBeenCalled()
   } finally {
     view.unmount()

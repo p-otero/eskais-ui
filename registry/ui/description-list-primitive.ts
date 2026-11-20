@@ -1,5 +1,7 @@
 import { definePrimitive, dispatch, type ChangeDetails } from "@ui-sdk/core"
 
+import { unavailable } from "@/lib/action-refusal"
+
 type DescriptionCopyDetails = ChangeDetails<"copy">
 
 type DescriptionValueOptions = {
@@ -28,21 +30,22 @@ const descriptionValue = definePrimitive({
       context.store.set({ copied: false })
     })
     return {
-      /** Writes the value to the clipboard; resolves false where the page has no clipboard access or nothing to copy. */
-      async copy(event?: Event) {
+      /** Writes the value to the clipboard. Where the page has no clipboard access or nothing to copy, a press gets false. */
+      copy(event?: Event) {
         const value = context.options().text ?? ""
         const clipboard = typeof navigator === "undefined" ? undefined : navigator.clipboard
-        if (!clipboard || value === "") return false
-        try {
-          await clipboard.writeText(value)
-        } catch {
-          return false
-        }
-        clearTimeout(timer)
-        context.store.set({ copied: true })
-        timer = setTimeout(() => context.store.set({ copied: false }), COPIED_FOR)
-        dispatch(context, "onCopy", value, { reason: "copy", event })
-        return true
+        if (value === "") return unavailable("copy", "has nothing to copy", { event })
+        if (!clipboard) return unavailable("copy", "isn't available: the page has no clipboard access", { event })
+        return clipboard.writeText(value).then(
+          () => {
+            clearTimeout(timer)
+            context.store.set({ copied: true })
+            timer = setTimeout(() => context.store.set({ copied: false }), COPIED_FOR)
+            dispatch(context, "onCopy", value, { reason: "copy", event })
+            return true
+          },
+          () => unavailable("copy", "was blocked by the browser", { event }),
+        )
       },
     }
   },
