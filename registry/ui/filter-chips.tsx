@@ -152,10 +152,15 @@ function FilterChips<S extends FilterSchema>({
   const [editing, setEditing] = useState<{ key: string; draft: unknown } | null>(null)
   const [chosenLabels, setValueLabels] = useState<Record<string, string>>({})
   const valueLabels = { ...knownLabels, ...chosenLabels }
+  // The keys in the order their chips were added here, so a chip keeps its place when it's set or edited.
+  const [order, setOrder] = useState<readonly string[]>([])
   const addButton = useRef<HTMLButtonElement>(null)
 
   const active = activeFilterKeys(schema, state.filter).filter((key) => offered.includes(key))
-  const shown = editing && !active.includes(editing.key) ? [...active, editing.key] : active
+  // Chips added elsewhere (the URL, an agent, the app) follow in the order the filter gained them, not the schema's.
+  const shown = [...new Set([...order, ...Object.keys(values), ...(editing ? [editing.key] : [])])].filter(
+    (key) => active.includes(key) || editing?.key === key,
+  )
   const available = offered.filter((key) => !shown.includes(key))
 
   const apply = (key: string, value: unknown) =>
@@ -175,6 +180,7 @@ function FilterChips<S extends FilterSchema>({
       isFiltered={active.length > 0}
       onReset={() => {
         setEditing(null)
+        setOrder([])
         for (const key of active) apply(key, undefined)
       }}
       resetLabel={labels.reset}
@@ -218,6 +224,7 @@ function FilterChips<S extends FilterSchema>({
               className="size-control-sm rounded-s-none"
               onClick={() => {
                 if (open) setEditing(null)
+                setOrder(shown.filter((other) => other !== key))
                 apply(key, undefined)
                 requestAnimationFrame(() => addButton.current?.focus())
               }}
@@ -228,7 +235,13 @@ function FilterChips<S extends FilterSchema>({
         )
       })}
       {available.length > 0 && (
-        <DropdownMenu onAction={(key) => setEditing({ key: String(key), draft: undefined })}>
+        <DropdownMenu
+          onAction={(value) => {
+            const key = String(value)
+            setOrder([...shown, key])
+            setEditing({ key, draft: undefined })
+          }}
+        >
           <FilterBarButton ref={addButton} render={<MenuTrigger />} variant="ghost" size="sm">
             <PlusIcon />
             {labels.addFilter}
