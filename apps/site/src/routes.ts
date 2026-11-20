@@ -1,7 +1,8 @@
 import { guides } from "./guides/meta"
 import { componentItems } from "./registry"
 
-type Route = { path: string; title: string; description: string }
+// `noindex`: a page for debugging, kept out of search engines and the docs navigation.
+type Route = { path: string; title: string; description: string; noindex?: boolean }
 
 const siteName = "Eskais UI"
 const tagline =
@@ -27,6 +28,12 @@ const routes: Route[] = [
     title: `${item.title ?? item.name} · ${siteName}`,
     description: item.description ?? "",
   })),
+  {
+    path: "/debug/viewport",
+    title: `Viewport diagnostics · ${siteName}`,
+    description: "What this browser reports about its viewport, for debugging dialogs on phones.",
+    noindex: true,
+  },
 ]
 
 export { componentPath, guidePath, routes, siteName, tagline }

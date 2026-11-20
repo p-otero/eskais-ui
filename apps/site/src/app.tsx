@@ -21,6 +21,7 @@ const DocsRoutes = lazy(() =>
     routeGuide(routeFromPathname(location.pathname))?.catch(() => undefined),
   ]).then(([module]) => ({ default: module.DocsRoutes })),
 )
+const ViewportDebug = lazy(() => import("./debug/viewport").then((module) => ({ default: module.ViewportDebug })))
 const NotFound = lazy(() => import("./not-found").then((module) => ({ default: module.NotFound })))
 
 function Loading() {
@@ -34,6 +35,7 @@ function Loading() {
 function Page({ route }: { route: string }) {
   if (route === "/") return <Landing />
   if (route === "/docs" || route.startsWith("/docs/")) return <DocsRoutes route={route} />
+  if (route === "/debug/viewport") return <ViewportDebug />
   return <NotFound />
 }
 
