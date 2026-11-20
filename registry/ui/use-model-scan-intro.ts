@@ -151,6 +151,12 @@ function useModelScanIntro({ src, ratio, fit, mask, person, onHandOff, onDone }:
     },
     [rig, floor],
   )
+  // The canvas draws on demand, and the intro moves only inside a frame: once the photo's texture and the model are
+  // both here, ask for one. Without it, a texture that loads after the scene has gone still never starts the intro.
+  const loaded = texture?.src === src && rig !== undefined && rig !== null
+  useEffect(() => {
+    if (loaded) invalidate()
+  }, [loaded, invalidate])
 
   // useFrame calls the newest render's callback, so these are the newest props.
   const handOff = () => onHandOff()

@@ -1,7 +1,7 @@
 // ModelViewer and ModelScan in Chrome (SwiftShader) with the demo character: lazy three.js, no idle draws, clips,
 // scaled expressions with one React commit, the scan's stages, camera, landmark meshes, the person from the mask or the
 // landmarks, the cloud, every stage's controls (tooltips, 44px on a phone, 4.5:1 over any photo), focus, errors.
-// Usage: node tooling/model-check.mjs [--screenshots=<dir>] (after `bun run build:showcase`)
+// Usage: node tooling/model-check.mjs [--screenshots=<dir>] [--gpu: not SwiftShader] (after `bun run build:showcase`)
 /* oxlint-disable no-await-in-loop -- each width, mode and stage is measured in turn on one page */
 import { mkdirSync } from "node:fs"
 import { join, resolve } from "node:path"
@@ -272,6 +272,31 @@ const scanData = (page) =>
     .evaluate((canvas) => ({ ...canvas.dataset }))
 const toolbar = (page) => page.getByTestId("scan").getByRole("toolbar", { name: "3D model controls" })
 
+// Waits for the scan's toolbar (stage ready and the transition done), and on a timeout says where the run stopped: the
+// stage, the transition, the hand-off, the viewer, the canvas's own notes, what the replay sent and the page's errors.
+async function untilReady(page, label, errors = [], timeout = 60_000) {
+  try {
+    await toolbar(page).waitFor({ timeout })
+  } catch (error) {
+    const dump = await page.evaluate(() => {
+      const section = document.querySelector("[data-testid=scan]")
+      const root = section?.querySelector("[data-slot=model-scan]")
+      return {
+        stage: root?.dataset.stage,
+        intro: root?.dataset.intro ?? null,
+        handedOff: Boolean(section?.querySelector("[data-handed-off]")),
+        viewer: section?.querySelector("[data-slot=model-viewer]")?.dataset.status,
+        canvas: { ...section?.querySelector("canvas")?.dataset },
+        replay: section?.dataset.replay,
+        visibility: document.visibilityState,
+      }
+    })
+    throw new Error(`${label}: the scan never reached its toolbar: ${JSON.stringify({ ...dump, errors })}`, {
+      cause: error,
+    })
+  }
+}
+
 await withShowcase(
   async (page) => {
     await page.addInitScript(countDraws)
@@ -320,7 +345,9 @@ await withShowcase(
 
     // Scrolled away, nothing draws; back in view, the clip goes on.
     await page.getByTestId("spacer").evaluate((element) => element.scrollIntoView({ block: "end" }))
-    await page.waitForTimeout(300)
+    // The viewer hears it's off screen from an IntersectionObserver, a frame or more after the scroll, and frames in
+    // flight still land: wait for the canvas to go still (8 s at most, so a canvas that keeps drawing still fails).
+    await untilStill(page)
     const away = await drawsDuring(page, 1000)
     check("off screen, the canvas draws nothing", away.all === 0, JSON.stringify(away))
     await page.evaluate(() => window.scrollTo(0, 0))
@@ -575,6 +602,28 @@ await withShowcase(
       check("Start over goes back to the photo", await scan.getByRole("button", { name: "Make 3D" }).isVisible())
     }
 
+    // A photo texture that loads after the scene has gone still still starts the transition: the canvas draws on
+    // demand, so the texture's arrival has to ask for a frame. The 2D <img> is the photo's first request, three.js's
+    // TextureLoader its second.
+    {
+      let photos = 0
+      const hold = async (route) => {
+        if (route.request().url().includes("photo-body-mask")) return route.continue()
+        photos += 1
+        if (photos >= 2) await new Promise((done) => setTimeout(done, 6000))
+        await route.continue()
+      }
+      await page.route(/photo-body-[^/]*\.png$/, hold)
+      await open(page, { width: 1440, query: "&slowdown=10&scan-only" })
+      await page.getByRole("button", { name: "Make 3D" }).click()
+      const late = await untilReady(page, "a late photo texture", [], 90_000).then(
+        () => true,
+        (error) => error.message,
+      )
+      await page.unroute(/photo-body-[^/]*\.png$/, hold)
+      check("a photo texture that loads after the scene is still starts the transition", late === true, String(late))
+    }
+
     // Without a mask, the landmarks' hull picks the cloud's pixels.
     await open(page, { width: 1440, query: "&slowdown=10&mask=off" })
     await runScan(page)
@@ -629,6 +678,9 @@ await withShowcase(
         .browser()
         .newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 2, hasTouch: true, isMobile: true })
       const touch = await phone.newPage()
+      const touchErrors = []
+      touch.on("console", (message) => message.type() === "error" && touchErrors.push(message.text()))
+      touch.on("pageerror", (error) => touchErrors.push(error.message))
       const origin = new URL(page.url()).origin
       const audit = async (label) => {
         const result = await auditControls(touch)
@@ -655,10 +707,7 @@ await withShowcase(
           await touch.getByTestId("scan").getByRole("button", { name: "Make 3D" }).tap()
           await touch.getByTestId("scan").getByRole("progressbar").waitFor({ timeout: 20_000 })
           await audit(`${label}, working`)
-          await touch
-            .getByTestId("scan")
-            .getByRole("toolbar", { name: "3D model controls" })
-            .waitFor({ timeout: 60_000 })
+          await untilReady(touch, `phone, ${label}`, touchErrors)
           await touch.waitForTimeout(400)
           await audit(`${label}, ready`)
           if (shots)
@@ -744,7 +793,7 @@ await withShowcase(
     }
   },
   {},
-  { args: ["--enable-unsafe-swiftshader", "--use-angle=swiftshader"] },
+  { args: process.argv.includes("--gpu") ? [] : ["--enable-unsafe-swiftshader", "--use-angle=swiftshader"] },
 )
 
 if (failures.length > 0) {
