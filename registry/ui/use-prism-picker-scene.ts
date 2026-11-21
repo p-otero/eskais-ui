@@ -106,6 +106,18 @@ function paint(canvases: PrismCanvases, buffers: GlowBuffers, size: Size | null,
   return true
 }
 
+// Outside the hook: React Compiler can't compile `??=`.
+function glowBuffersOf(ref: { current: GlowBuffers | null }): GlowBuffers {
+  if (ref.current === null) {
+    ref.current = {
+      field: document.createElement("canvas"),
+      glow: document.createElement("canvas"),
+      soft: document.createElement("canvas"),
+    }
+  }
+  return ref.current
+}
+
 /** Paints the prism scene when the wavelength or the stage's size changes, and only then: nothing runs while idle. */
 function usePrismPickerScene(canvases: PrismCanvases, { wavelength, instant, onPaint }: SceneOptions) {
   const shown = useRef<number | null>(null)
@@ -115,12 +127,7 @@ function usePrismPickerScene(canvases: PrismCanvases, { wavelength, instant, onP
 
   const paintAt = useEffectEvent((at: number) => {
     const started = performance.now()
-    buffers.current ??= {
-      field: document.createElement("canvas"),
-      glow: document.createElement("canvas"),
-      soft: document.createElement("canvas"),
-    }
-    if (paint(canvases, buffers.current, size.current, at)) onPaint?.(performance.now() - started)
+    if (paint(canvases, glowBuffersOf(buffers), size.current, at)) onPaint?.(performance.now() - started)
   })
   const repaint = useEffectEvent(() => paintAt(shown.current ?? wavelength))
 
