@@ -63,8 +63,12 @@
     checkDCE() {},
   }
 
-  function afterPaint(callback) {
+  // Renders are read in `beforePaint`, as the frame starts: a virtualized list publishes rows that left the view with
+  // requestAnimationFrame then setTimeout, and whether that timer or this message runs first is the scheduler's choice.
+  // When the timer won, a press counted rows meant for after its paint (list-10k read 60 instead of 10 on one CI run).
+  function afterPaint(callback, beforePaint) {
     requestAnimationFrame(() => {
+      beforePaint?.()
       const channel = new MessageChannel()
       channel.port1.addEventListener("message", callback)
       channel.port1.start()
@@ -78,10 +82,14 @@
       (event) => {
         const entry = { type, key: event.key, start: event.timeStamp, rendersBefore: state.renders }
         state.inputs.push(entry)
-        afterPaint(() => {
-          entry.paint = performance.now() - event.timeStamp
-          entry.renders = state.renders - entry.rendersBefore
-        })
+        afterPaint(
+          () => {
+            entry.paint = performance.now() - event.timeStamp
+          },
+          () => {
+            entry.renders = state.renders - entry.rendersBefore
+          },
+        )
       },
       { capture: true },
     )

@@ -23,7 +23,7 @@ bun run perf --only=list-1k,table --cpu=1 --skip=held,overlays,mount,site,bundle
 ## Budgets in CI
 
 `bun run perf:ci` checks `tooling/perf/budgets.json` in about a minute: React renders per key press (the most any of
-20 presses caused) and forced layouts per press in each listed scenario, the board's composited layers, and every
+20 presses caused, counted as the press's frame starts, so work a component defers past the paint never counts) and forced layouts per press in each listed scenario, the board's composited layers, and every
 registry item's gzip size. Counts are exact on any machine, except that forced layouts get 0.1 per press of slack and
 render counts above 20 get 5% (a virtualized list renders a few more rows when a scroll event lands a frame later);
 sizes get 5% of headroom when written. A scenario whose forced layouts move from run to run, like a virtualized list
