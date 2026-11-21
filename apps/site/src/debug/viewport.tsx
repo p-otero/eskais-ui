@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useState, type ReactNode } from "react"
 import { z } from "zod"
 
 import { Button } from "@/components/ui/button"
@@ -32,7 +32,7 @@ import { Input } from "@/components/ui/input"
 import { SidePanel } from "@/components/ui/side-panel"
 import { StepDialog, type FormStep } from "@/components/ui/step-dialog"
 
-import { formatReport, useViewportReport, type Row } from "../hooks/use-viewport-report"
+import { currentReport, formatReport, useViewportReport, type Row } from "../hooks/use-viewport-report"
 
 const safeAreaPadding =
   "env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)"
@@ -40,8 +40,8 @@ const safeAreaPadding =
 function Rows({ rows }: { rows: Row[] }) {
   return (
     <dl className="grid grid-cols-2 gap-x-group gap-y-inline text-caption">
-      {rows.map(([label, value]) => (
-        <div key={label} className="contents">
+      {rows.map(([label, value], index) => (
+        <div key={`${String(index)} ${label}`} className="contents">
           <dt className="text-muted-foreground">{label}</dt>
           <dd className="font-mono wrap-anywhere">{value}</dd>
         </div>
@@ -50,10 +50,11 @@ function Rows({ rows }: { rows: Row[] }) {
   )
 }
 
-function useCopy(text: string) {
+// Measures when pressed, so the copy describes the dialog open now, also when its rows haven't rendered since.
+function useCopy() {
   const [copied, setCopied] = useState(false)
   const copy = () => {
-    void navigator.clipboard.writeText(text).then(
+    void navigator.clipboard.writeText(formatReport(currentReport())).then(
       () => setCopied(true),
       () => setCopied(false),
     )
@@ -69,11 +70,22 @@ function Fit({ report }: { report: Report }) {
   return <Rows rows={report.sheet.slice(0, 4)} />
 }
 
-function CopyButton({ copy, variant = "default" }: { copy: Copy; variant?: "default" | "outline" }) {
+function CopyButton({ copy, variant = "default", size }: { copy: Copy; variant?: "default" | "outline"; size?: "sm" }) {
   return (
-    <Button variant={variant} onClick={copy.copy}>
+    <Button variant={variant} size={size} onClick={copy.copy}>
       {copy.copied ? "Copied" : "Copy report"}
     </Button>
+  )
+}
+
+// The Copy button goes in the header's description, beside its text: the part of a dialog that stays in view when
+// the rest is cut off, as a FormDialog's body was on iOS 26.
+function Described({ copy, children }: { copy: Copy; children: ReactNode }) {
+  return (
+    <span className="flex flex-wrap items-center justify-between gap-items">
+      {children}
+      <CopyButton copy={copy} variant="outline" size="sm" />
+    </span>
   )
 }
 
@@ -85,7 +97,9 @@ function SampleSheet({ report, copy }: { report: Report; copy: Copy }) {
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Sample sheet</DialogTitle>
-          <DialogDescription>Its bottom edge and its buttons should sit above the toolbar.</DialogDescription>
+          <DialogDescription>
+            <Described copy={copy}>Its bottom edge and its buttons should sit above the toolbar.</Described>
+          </DialogDescription>
         </DialogHeader>
         <Fit report={report} />
         <Field>
@@ -94,7 +108,6 @@ function SampleSheet({ report, copy }: { report: Report; copy: Copy }) {
         </Field>
         <DialogFooter>
           <DialogClose>Close</DialogClose>
-          <CopyButton copy={copy} />
         </DialogFooter>
       </DialogContent>
     </Dialog>
@@ -104,13 +117,8 @@ function SampleSheet({ report, copy }: { report: Report; copy: Copy }) {
 const stepSchema = z.object({ name: z.string().min(3), region: z.string() })
 
 // The same steps as the StepDialog docs demo, with the measurements under each.
-function useSteps(report: Report, copy: Copy): FormStep<z.input<typeof stepSchema>>[] {
-  const measured = (
-    <>
-      <Fit report={report} />
-      <CopyButton copy={copy} variant="outline" />
-    </>
-  )
+function useSteps(report: Report): FormStep<z.input<typeof stepSchema>>[] {
+  const measured = <Fit report={report} />
   return [
     {
       id: "project",
@@ -135,9 +143,10 @@ function SampleStepDialog({ report, copy }: { report: Report; copy: Copy }) {
     <StepDialog
       schema={stepSchema}
       defaultValues={{ name: "", region: "eu" }}
-      steps={useSteps(report, copy)}
+      steps={useSteps(report)}
       trigger="Open StepDialog"
       title="New project"
+      description={<Described copy={copy}>Three steps.</Described>}
       labels={{ submit: "Create project" }}
       onSubmit={() => {}}
     />
@@ -153,7 +162,7 @@ function SampleFormDialog({ report, copy }: { report: Report; copy: Copy }) {
       defaultValues={{ title: "" }}
       trigger="Open FormDialog"
       title="New task"
-      description="An agent picks it up from the backlog."
+      description={<Described copy={copy}>An agent picks it up from the backlog.</Described>}
       submitLabel="Create task"
       cancelLabel="Cancel"
       onSubmit={() => {}}
@@ -162,7 +171,6 @@ function SampleFormDialog({ report, copy }: { report: Report; copy: Copy }) {
         <Input placeholder="Index the docs" />
       </FormField>
       <Fit report={report} />
-      <CopyButton copy={copy} variant="outline" />
     </FormDialog>
   )
 }
@@ -176,7 +184,9 @@ function SampleDrawer({ report, copy }: { report: Report; copy: Copy }) {
         <DrawerHandle />
         <DrawerHeader>
           <DrawerTitle>Sample drawer</DrawerTitle>
-          <DrawerDescription>UI SDK slides it; its bottom edge should sit above the toolbar.</DrawerDescription>
+          <DrawerDescription>
+            <Described copy={copy}>UI SDK slides it; its bottom edge should sit above the toolbar.</Described>
+          </DrawerDescription>
         </DrawerHeader>
         <Fit report={report} />
         <Field>
@@ -185,7 +195,6 @@ function SampleDrawer({ report, copy }: { report: Report; copy: Copy }) {
         </Field>
         <DrawerFooter>
           <DrawerClose>Close</DrawerClose>
-          <CopyButton copy={copy} />
         </DrawerFooter>
       </DrawerContent>
     </Drawer>
@@ -204,7 +213,7 @@ function SampleSidePanel({ report, copy }: { report: Report; copy: Copy }) {
         open={open}
         onOpenChange={setOpen}
         title="Sample panel"
-        description="A sheet on a phone"
+        description={<Described copy={copy}>A sheet on a phone</Described>}
         narrow="sheet"
       >
         <Fit report={report} />
@@ -212,7 +221,6 @@ function SampleSidePanel({ report, copy }: { report: Report; copy: Copy }) {
           <FieldLabel>A panel field, for the keyboard</FieldLabel>
           <Input placeholder="Tap to type" />
         </Field>
-        <CopyButton copy={copy} />
       </SidePanel>
     </>
   )
@@ -221,7 +229,7 @@ function SampleSidePanel({ report, copy }: { report: Report; copy: Copy }) {
 /** Not linked from the docs: prints what the browser reports about its viewport, to debug dialogs on real phones. */
 function ViewportDebug() {
   const report = useViewportReport()
-  const copy = useCopy(formatReport(report))
+  const copy = useCopy()
   return (
     <main
       id="main"
@@ -238,8 +246,9 @@ function ViewportDebug() {
       />
       <h1 className="text-display-sm tracking-tight">Viewport diagnostics</h1>
       <p className="text-body-sm text-muted-foreground">
-        Open a dialog, then copy the report or take a screenshot. The values update as the toolbars and the keyboard
-        move, and describe the dialog on top.
+        Open a dialog and press Copy report beside its description, at the top: the copy describes that dialog as it is
+        then, with each of its parts and their scroll and client heights, and the page. The values below update as the
+        toolbars and the keyboard move.
       </p>
       <div className="flex flex-wrap gap-items">
         <SampleSheet report={report} copy={copy} />
