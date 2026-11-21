@@ -6,6 +6,7 @@
 @import "../../../registry/styles/theme-compact.css";
 @import "../../../registry/styles/theme-glass.css";
 @import "../../../registry/styles/palettes.css";
+@import "../../../registry/styles/prism-picker.css";
 
 @source "../../../registry";
 /* The Theming guide renders the showcase's theme editor. Without this its classes never reach the site's

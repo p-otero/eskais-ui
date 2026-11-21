@@ -1,20 +1,17 @@
 // Paints the light: the white beam, the glass, the dispersed fan and the picked ray, additively on two canvases, a
 // sharp one at device resolution and a glow one at half the CSS size that the stage blurs with a CSS filter.
 
-import { sceneTilt, type Reading } from "./prism-dial"
+import { colourAt, sceneTilt, type Reading } from "@/components/ui/prism-picker-dial"
 import {
-  colourAtHue,
-  hueAtWavelength,
   luminousEfficiency,
   maxWavelength,
   minWavelength,
   prismRadius,
   prismVertices,
-  slitDirection,
   trace,
   type Rgb,
   type Vec,
-} from "./prism-optics"
+} from "@/components/ui/prism-picker-optics"
 
 /** The stage's layout, shared with the dial's CSS: the prism's centre and the ring's radius, in CSS px. */
 const stageCentre = { x: 0.5, y: 0.58 }
@@ -73,7 +70,7 @@ const fan = Array.from({ length: (maxWavelength - minWavelength) / fanStep + 1 }
   const wavelength = minWavelength + index * fanStep
   return {
     wavelength,
-    colour: colourAtHue(hueAtWavelength(wavelength)).srgb,
+    colour: colourAt(wavelength).srgb,
     weight: 0.45 + 0.55 * Math.sqrt(luminousEfficiency(wavelength)),
   }
 })
@@ -112,8 +109,11 @@ function paintBeam({ sharp, glow, layout }: Painter, entry: Vec) {
 }
 
 function paintGlass({ sharp, glow, layout }: Painter, rotation: number, entry: Vec) {
-  const corners = prismVertices(rotation).map((vertex) => toScreen(layout, vertex))
-  const [apex, left, right] = corners as [Vec, Vec, Vec]
+  const [apexVertex, leftVertex, rightVertex] = prismVertices(rotation)
+  const apex = toScreen(layout, apexVertex)
+  const left = toScreen(layout, leftVertex)
+  const right = toScreen(layout, rightVertex)
+  const corners = [apex, left, right]
   const outline = (context: CanvasRenderingContext2D, inset = 0) => {
     const centre = { x: (apex.x + left.x + right.x) / 3, y: (apex.y + left.y + right.y) / 3 }
     context.beginPath()
@@ -208,7 +208,7 @@ function paintScene(sharp: CanvasRenderingContext2D, glow: CanvasRenderingContex
     context.lineJoin = "round"
   }
   const rays = fan.map((ray) => ({ ...ray, traced: trace(reading.rotation, ray.wavelength) }))
-  const picked = reading.wavelength === undefined ? undefined : trace(reading.rotation, reading.wavelength)
+  const picked = trace(reading.rotation, reading.wavelength)
   const firstTrace = rays.find((ray) => ray.traced)?.traced ?? picked
   if (!firstTrace) return
   const entry = toScreen(layout, firstTrace.entry)
@@ -218,7 +218,7 @@ function paintScene(sharp: CanvasRenderingContext2D, glow: CanvasRenderingContex
   const glintEnd = along(entry, glint, layout.ring * 0.6)
   line(sharp, entry, glintEnd, 1, fade(sharp, entry, glintEnd, white, 0.14, 0))
 
-  const fanLevel = reading.wavelength === undefined ? 0.45 : 0.85
+  const fanLevel = 0.85
   const screenRays = rays.map((ray) => {
     if (!ray.traced) return undefined
     const exit = toScreen(layout, ray.traced.exit)
@@ -270,46 +270,22 @@ function paintScene(sharp: CanvasRenderingContext2D, glow: CanvasRenderingContex
 
   paintGlass(painter, reading.rotation, entry)
 
+  if (!picked) return
   const colour = reading.colour.srgb
-  const slit = turn({ x: Math.cos((slitDirection * Math.PI) / 180), y: Math.sin((slitDirection * Math.PI) / 180) })
-  if (picked) {
-    const path = picked.path.map((point) => toScreen(layout, point))
-    const exit = path.at(-1) ?? entry
-    const direction = turn(picked.direction)
-    const end = along(exit, direction, toEdge(layout, exit, direction))
-    const dot = along(end, direction, -16)
-    sharp.beginPath()
-    path.forEach((point, index) => (index === 0 ? sharp.moveTo(point.x, point.y) : sharp.lineTo(point.x, point.y)))
-    sharp.lineWidth = 1.2
-    sharp.strokeStyle = rgba(towardWhite(colour, 0.3), 0.6)
-    sharp.stroke()
-    line(glow, exit, dot, 6, rgba(colour, 0.95))
-    line(sharp, exit, dot, 2.6, rgba(colour, 0.75))
-    line(sharp, exit, dot, 1, rgba(towardWhite(colour, 0.6), 1))
-    paintSlit(painter, dot, direction)
-    paintDot(painter, dot, colour)
-    return
-  }
-  // A purple has no ray of its own: the slit receives the two ends of the spectrum together.
-  const exitPoint = toScreen(layout, firstTrace.exit)
-  const end = along(exitPoint, slit, toEdge(layout, exitPoint, slit))
-  const dot = along(end, slit, -16)
-  const ends = [
-    screenRays.find((ray) => ray && !ray.traced?.reflected),
-    screenRays.findLast((ray) => ray && !ray.traced?.reflected),
-  ]
-  const mix = reading.mix ?? 0
-  ends.forEach((ray, index) => {
-    if (!ray) return
-    const strength = index === 0 ? mix : 1 - mix
-    const reach = along(ray.exit, ray.direction, toEdge(layout, ray.exit, ray.direction) * 0.55)
-    line(glow, ray.exit, reach, 4, fade(glow, ray.exit, reach, ray.colour, 0.9 * strength + 0.15, 0))
-    line(sharp, reach, dot, 1, fade(sharp, reach, dot, ray.colour, 0, 0.55 * strength + 0.1))
-  })
-  sharp.setLineDash([2, 5])
-  line(sharp, exitPoint, dot, 1, rgba(colour, 0.6))
-  sharp.setLineDash([])
-  paintSlit(painter, dot, slit)
+  const path = picked.path.map((point) => toScreen(layout, point))
+  const exit = path.at(-1) ?? entry
+  const direction = turn(picked.direction)
+  const end = along(exit, direction, toEdge(layout, exit, direction))
+  const dot = along(end, direction, -16)
+  sharp.beginPath()
+  path.forEach((point, index) => (index === 0 ? sharp.moveTo(point.x, point.y) : sharp.lineTo(point.x, point.y)))
+  sharp.lineWidth = 1.2
+  sharp.strokeStyle = rgba(towardWhite(colour, 0.3), 0.6)
+  sharp.stroke()
+  line(glow, exit, dot, 6, rgba(colour, 0.95))
+  line(sharp, exit, dot, 2.6, rgba(colour, 0.75))
+  line(sharp, exit, dot, 1, rgba(towardWhite(colour, 0.6), 1))
+  paintSlit(painter, dot, direction)
   paintDot(painter, dot, colour)
 }
 

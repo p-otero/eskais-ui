@@ -7,8 +7,10 @@ type Vec = { x: number; y: number }
 const minWavelength = 380
 const maxWavelength = 700
 
-// A dense flint (SF11-like, n_d ≈ 1.78) with its Cauchy B raised about threefold, so the fan reads at a card's size;
-// at the real dispersion the spectrum spans 10° and the picked ray barely moves.
+// A flint-like glass (n_d ≈ 1.57) with an Abbe number near 12, about twice the dispersion of the densest real flints
+// (N-SF66, Abbe 21). The exaggeration is deliberate: with real glass the fan spans about 10° and reads as a thin
+// smear at a card's size. Everything else is plain Snell's law, so the fan, its order and its total internal
+// reflection near the red end still behave as a real prism's would.
 const cauchyA = 1.5
 const cauchyB = 0.025
 
@@ -161,6 +163,11 @@ function colourAtHue(hue: number): PickedColour {
 const flatBelow = 420
 const flatAbove = 650
 
+// The long end of the spectrum sits a few degrees past sRGB's red primary, toward magenta, so its cusp colour is a
+// crimson (#ff003b). Hues below orange are stretched onto sRGB red's own hue, so the red end shows #ff0000 and the
+// rays, swatch, hex and readout still come from this one table.
+const redAnchor = 60
+
 const hueTable = (() => {
   const table = new Float64Array(maxWavelength - minWavelength + 1)
   let previous = Infinity
@@ -169,10 +176,13 @@ const hueTable = (() => {
     previous = Math.min(previous, spectralHue(wavelength))
     table[index] = previous
   }
-  return table
+  const spectralRed = table.at(-1) ?? 0
+  return table.map((hue) =>
+    hue >= redAnchor ? hue : redHue + ((hue - spectralRed) * (redAnchor - redHue)) / (redAnchor - spectralRed),
+  )
 })()
 
-/** Spectral hues fall as the wavelength rises, from violet near 300° to red near 22°. */
+/** The hues the dial shows fall as the wavelength rises, from violet near 299° to sRGB red's 29°. */
 const violetHue = hueTable[0] ?? 0
 const redEndHue = hueTable.at(-1) ?? 0
 
@@ -220,7 +230,7 @@ function hueAtWavelength(wavelength: number) {
   return (hueTable[index] ?? 0) * (1 - f) + (hueTable[next] ?? 0) * f
 }
 
-/** The wavelength whose hue is closest to `hue`, or `undefined` for a non-spectral (magenta to purple) hue. */
+/** The wavelength whose hue is closest to `hue`, or `undefined` for a non-spectral one (magentas and purples). */
 function wavelengthAtHue(hue: number): number | undefined {
   const target = wrap(hue)
   const top = hueTable[0] ?? 0
@@ -235,16 +245,6 @@ function wavelengthAtHue(hue: number): number | undefined {
     else high = middle
   }
   return (low + high) / 2
-}
-
-/** The non-spectral hues between red and violet: from the red end (0) to the violet end (1), through magenta. */
-const purpleHue = (mix: number) => wrap(redEndHue - Math.min(1, Math.max(0, mix)) * wrap(redEndHue - violetHue))
-
-/** Where a non-spectral hue sits between the red end (0) and the violet end (1), or `undefined` for a spectral one. */
-function purpleMixAtHue(hue: number): number | undefined {
-  const span = wrap(redEndHue - violetHue)
-  const along = wrap(redEndHue - hue)
-  return along <= span ? along / span : undefined
 }
 
 // The prism: equilateral, apex down so the beam bends up, turned by `rotation` degrees about its centroid. Lengths
@@ -297,7 +297,12 @@ type Trace = {
 
 /** Traces one wavelength from the stage's left edge through the prism turned by `rotation` degrees. */
 function trace(rotation: number, wavelength: number): Trace | undefined {
-  const vertices = prismVertices(rotation)
+  const [first, second, third] = prismVertices(rotation)
+  const edges: [Vec, Vec][] = [
+    [first, second],
+    [second, third],
+    [third, first],
+  ]
   const n = refractiveIndex(wavelength)
   let origin: Vec = { x: -2, y: beamHeight }
   let direction: Vec = { x: 1, y: 0 }
@@ -309,17 +314,17 @@ function trace(rotation: number, wavelength: number): Trace | undefined {
   for (let bounce = 0; bounce < 4; bounce++) {
     let nearest = Infinity
     let edgeIndex = -1
-    for (let index = 0; index < 3; index++) {
-      if (index === lastEdge) continue
-      const t = hit(origin, direction, vertices[index] as Vec, vertices[(index + 1) % 3] as Vec)
+    edges.forEach(([start, end], index) => {
+      if (index === lastEdge) return
+      const t = hit(origin, direction, start, end)
       if (t !== undefined && t < nearest) {
         nearest = t
         edgeIndex = index
       }
-    }
-    if (edgeIndex < 0) return undefined
-    const a = vertices[edgeIndex] as Vec
-    const b = vertices[(edgeIndex + 1) % 3] as Vec
+    })
+    const edge = edges[edgeIndex]
+    if (!edge) return undefined
+    const [a, b] = edge
     const point = { x: origin.x + direction.x * nearest, y: origin.y + direction.y * nearest }
     const length = Math.hypot(b.x - a.x, b.y - a.y)
     let normal = { x: (b.y - a.y) / length, y: -(b.x - a.x) / length }
@@ -383,8 +388,6 @@ export {
   minWavelength,
   prismRadius,
   prismVertices,
-  purpleHue,
-  purpleMixAtHue,
   redEndHue,
   refractiveIndex,
   rotationForWavelength,

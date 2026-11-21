@@ -9,6 +9,7 @@ const collections = () => import("./perf-collections")
 const blocks = () => import("./perf-blocks")
 const overlays = () => import("./perf-overlays")
 const server = () => import("./perf-server")
+const prism = () => import("./perf-prism")
 
 const scenarios: Record<string, () => Promise<Render>> = {
   "list-1k": () =>
@@ -49,6 +50,8 @@ const scenarios: Record<string, () => Promise<Render>> = {
     blocks().then(({ MarkdownViewScenario }) => () => <MarkdownViewScenario />),
   "server-data-table": () =>
     server().then(({ ServerDataTableScenario }) => () => <ServerDataTableScenario />),
+  "prism-picker": () =>
+    prism().then(({ PrismPickerScenario }) => () => <PrismPickerScenario />),
   "server-list": () =>
     server().then(({ ServerListScenario }) => () => <ServerListScenario />),
 }

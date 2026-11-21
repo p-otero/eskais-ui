@@ -1,6 +1,7 @@
 // The performance budgets CI holds: React renders and forced layouts per key press, the board's composited
-// layers, and each registry item's gzip size, checked against tooling/perf/budgets.json. Counts are exact, so any
-// runner can check them. Usage: bun run perf:ci [--dir=<built showcase>] [--update]; see tooling/perf/README.md.
+// layers, key to next paint where a scenario sets a ceiling, and each registry item's gzip size, checked against
+// tooling/perf/budgets.json. Counts are exact, so any runner can check them. Usage: bun run perf:ci
+// [--dir=<built showcase>] [--update]; see tooling/perf/README.md.
 import { spawnSync } from "node:child_process"
 import { readFile, writeFile, mkdir } from "node:fs/promises"
 import { resolve } from "node:path"
@@ -102,6 +103,9 @@ const check = (kind, name, value, budget) => {
 for (const [label, counts] of Object.entries(measured.keys)) {
   check("renders per press", label, counts.rendersMax, budgets.keys[label].renders)
   check("forced layouts per press", label, counts.forcedLayoutsPerPress, budgets.keys[label].forcedLayouts)
+  // Only where a scenario declares one: times vary between machines, so the ceiling sits well above a fast run.
+  if (budgets.keys[label].paintP95 !== undefined)
+    check("key to next paint ms, p95", label, counts.paintP95, budgets.keys[label].paintP95)
 }
 for (const [scenario, count] of Object.entries(measured.layers))
   check("layers", scenario, count, budgets.layers[scenario])
@@ -125,8 +129,13 @@ await writeFile(resolve(here, "results", "ci.json"), JSON.stringify(measured, nu
 if (update) {
   // Counts become the budget as measured; sizes get 5% headroom, so a small fix doesn't fail the next change.
   for (const [label, counts] of Object.entries(measured.keys)) {
-    const { forcedSlack } = budgets.keys[label] ?? {}
-    budgets.keys[label] = { renders: counts.rendersMax, forcedLayouts: counts.forcedLayoutsPerPress, forcedSlack }
+    const { forcedSlack, paintP95 } = budgets.keys[label] ?? {}
+    budgets.keys[label] = {
+      renders: counts.rendersMax,
+      forcedLayouts: counts.forcedLayoutsPerPress,
+      forcedSlack,
+      paintP95,
+    }
   }
   for (const [scenario, count] of Object.entries(measured.layers)) budgets.layers[scenario] = count
   // CLS stays at its ceiling; LCP gets 15% over today's, rounded up to 100 ms.
