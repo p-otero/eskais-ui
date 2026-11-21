@@ -33,7 +33,7 @@ async function withShowcase(run, pageOptions = {}, launchOptions = {}) {
     page.on("console", (message) => message.type() === "error" && errors.push(message.text()))
     page.on("pageerror", (error) => errors.push(error.message))
     await page.goto(`http://localhost:${port}/`)
-    await page.evaluate(() => document.fonts.ready)
+    await rendered(page)
     await run(page)
   } finally {
     await browser.close()
@@ -43,6 +43,12 @@ async function withShowcase(run, pageOptions = {}, launchOptions = {}) {
     server.stdout.destroy()
   }
   if (errors.length > 0) throw new Error(`Console errors:\n${errors.join("\n")}`)
+}
+
+/** Waits for the showcase page to mount (it loads its page module first) and for its fonts. */
+async function rendered(page) {
+  await page.locator("#root > *").first().waitFor({ state: "attached" })
+  await page.evaluate(() => document.fonts.ready)
 }
 
 async function setAppearance(page, theme, mode, palette) {
@@ -62,4 +68,4 @@ async function setAppearance(page, theme, mode, palette) {
   })
 }
 
-export { setAppearance, withShowcase }
+export { rendered, setAppearance, withShowcase }

@@ -3,6 +3,8 @@ import { useState } from "react"
 import { ImageScan, type ImageScanStatus } from "@/components/ui/image-scan"
 import { VoiceInput, type VoiceInputState, type VoiceInputStateDetails } from "@/components/ui/voice-input"
 
+// oxlint-disable-next-line import/no-unassigned-import -- registers the showcase's WebMCP tools on this page, which loads without the rest of the showcase
+import "../agent"
 import { stillLife } from "../sections/image-scan-fixtures"
 
 const peopleOnly = (details: { source: string; cancel: () => void }) => {

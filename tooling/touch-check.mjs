@@ -4,7 +4,7 @@
 import { mkdirSync } from "node:fs"
 import { join, resolve } from "node:path"
 
-import { setAppearance, withShowcase } from "./showcase-browser.mjs"
+import { rendered, setAppearance, withShowcase } from "./showcase-browser.mjs"
 
 const failures = []
 const shotsArg = process.argv.find((arg) => arg.startsWith("--screenshots="))
@@ -85,7 +85,7 @@ await withShowcase(async (page) => {
   const context = await browser.newContext(phone)
   const touch = await context.newPage()
   await touch.goto(page.url())
-  await touch.evaluate(() => document.fonts.ready)
+  await rendered(touch)
   check(
     "phone: the pointer is coarse",
     await touch.evaluate(() => matchMedia("(pointer: coarse)").matches && navigator.maxTouchPoints > 0),
