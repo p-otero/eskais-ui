@@ -38,13 +38,18 @@ const backdropClassName =
 // page (`useVisualViewportBox`), cut to the containing block: iOS Safari can leave `innerHeight` stale and keep a closed
 // keyboard's `offsetTop` with the full height. While the keyboard is up (`data-dialog-keyboard`), which covers the
 // layout viewport without resizing it, the content sits on the visible part's bottom edge.
+
+// Placed from one edge with an auto height (centered: the middle of the visible part, moved up by half), never
+// `fit-content` between two: Safari 26 sizes such a box from its column flex children's `flex-basis: 0%`, which cut
+// a FormDialog or StepDialog (`flex-1` form and body) down to its header.
 const dialogContentVariants = cva(
   [
     // oxlint-disable-next-line eskais/scroll-area -- the dialog element's fallback for content without a DialogBody, which is the scroll area
-    "fixed inset-0 z-overlay m-auto flex h-fit w-(--dialog-width) min-w-0 flex-col gap-group overflow-y-auto overscroll-contain rounded-floating border border-floating-border bg-popover p-inset-surface field-label-surface-popover text-popover-foreground wrap-anywhere shadow-floating outline-none transition duration-dialog ease-standard data-ending-style:pointer-events-none data-ending-style:scale-95 data-ending-style:opacity-0 data-starting-style:scale-95 data-starting-style:opacity-0",
+    "fixed inset-x-0 z-overlay mx-auto flex w-(--dialog-width) min-w-0 -translate-y-1/2 flex-col gap-group overflow-y-auto overscroll-contain rounded-floating border border-floating-border bg-popover p-inset-surface field-label-surface-popover text-popover-foreground wrap-anywhere shadow-floating outline-none transition duration-dialog ease-standard data-ending-style:pointer-events-none data-ending-style:scale-95 data-ending-style:opacity-0 data-starting-style:scale-95 data-starting-style:opacity-0",
     // oxlint-disable-next-line shadcn/no-arbitrary-values -- no token can read the visual viewport, which useVisualViewportBox sets on the content itself
-    "top-[clamp(0px,var(--dialog-viewport-top,0px),100%-var(--dialog-viewport-height,100%))] bottom-[max(0px,100%-var(--dialog-viewport-bottom,100%))] max-h-[min(var(--dialog-max-height),calc(var(--dialog-viewport-height,100%)-2*var(--floating-offset)))]",
-    "data-dialog-keyboard:top-auto data-dialog-keyboard:mb-floating",
+    "top-[calc((clamp(0px,var(--dialog-viewport-top,0px),100%-var(--dialog-viewport-height,100%))+min(100%,var(--dialog-viewport-bottom,100%)))/2)] bottom-auto max-h-[min(var(--dialog-max-height),calc(var(--dialog-viewport-height,100%)-2*var(--floating-offset)))]",
+    // oxlint-disable-next-line shadcn/no-arbitrary-values -- no token can read the visual viewport, which useVisualViewportBox sets on the content itself
+    "data-dialog-keyboard:top-auto data-dialog-keyboard:bottom-[max(0px,100%-var(--dialog-viewport-bottom,100%))] data-dialog-keyboard:mb-floating data-dialog-keyboard:translate-y-0",
   ],
   {
     variants: {
@@ -58,7 +63,7 @@ const dialogContentVariants = cva(
       },
       sheet: {
         true: [
-          "narrow:top-auto narrow:mb-0 narrow:data-dialog-keyboard:mb-0 narrow:h-fit narrow:max-h-[min(var(--sheet-max-height),calc(var(--dialog-viewport-height,100%)-var(--floating-offset)))] narrow:w-full narrow:max-w-none narrow:rounded-b-none narrow:border-b-0 narrow:data-ending-style:translate-y-full narrow:data-ending-style:scale-100 narrow:data-starting-style:translate-y-full narrow:data-starting-style:scale-100 narrow:motion-reduce:data-ending-style:translate-y-0 narrow:motion-reduce:data-starting-style:translate-y-0",
+          "narrow:top-auto narrow:bottom-[max(0px,100%-var(--dialog-viewport-bottom,100%))] narrow:mb-0 narrow:translate-y-0 narrow:data-dialog-keyboard:mb-0 narrow:max-h-[min(var(--sheet-max-height),calc(var(--dialog-viewport-height,100%)-var(--floating-offset)))] narrow:w-full narrow:max-w-none narrow:rounded-b-none narrow:border-b-0 narrow:data-ending-style:translate-y-full narrow:data-ending-style:scale-100 narrow:data-starting-style:translate-y-full narrow:data-starting-style:scale-100 narrow:motion-reduce:data-ending-style:translate-y-0 narrow:motion-reduce:data-starting-style:translate-y-0",
           // The sheet reaches the bottom edge, so it clears the home indicator when the page extends under it
           // (`viewport-fit=cover`); the keyboard covers that edge while it is up.
           "narrow:pb-[max(var(--spacing-inset-surface),env(safe-area-inset-bottom))] narrow:data-dialog-keyboard:pb-inset-surface narrow:data-dialog-flush:pb-[env(safe-area-inset-bottom)] narrow:data-dialog-flush:data-dialog-keyboard:pb-0",
