@@ -4,6 +4,7 @@ import { useQuery, type QueryClient } from "@tanstack/react-query"
 import { useCallback } from "react"
 
 import { useDataClient, type DefaultServerError } from "@/components/ui/server-data"
+import { pausedRead } from "@/components/ui/server-data-cache"
 import { readOptionsOf, type ReadOptions, type ServerStatus } from "@/components/ui/use-server-data"
 import { assumeType } from "@/lib/narrow"
 
@@ -75,12 +76,14 @@ function useServerQuery<T, TError = DefaultServerError, TSelected = T>(
   const query = useQuery<T, TError, TSelected, readonly unknown[]>(
     {
       queryKey: key,
-      queryFn: async ({ signal }) => {
-        const requestedAt = Date.now()
-        const data = await fetch({ signal })
-        if (seeds && !signal.aborted) writeSeeds(client, seeds(data), requestedAt)
-        return data
-      },
+      queryFn: (context) =>
+        pausedRead(client, context, async () => {
+          const { signal } = context
+          const requestedAt = Date.now()
+          const data = await fetch({ signal })
+          if (seeds && !signal.aborted) writeSeeds(client, seeds(data), requestedAt)
+          return data
+        }),
       enabled: options.enabled !== false,
       meta: resourceMeta,
       ...readOptionsOf(options),

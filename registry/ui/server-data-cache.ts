@@ -1,4 +1,11 @@
-import { notifyManager, type InfiniteData, type Query, type QueryClient } from "@tanstack/react-query"
+import {
+  notifyManager,
+  partialMatchKey,
+  type InfiniteData,
+  type Query,
+  type QueryClient,
+  type QueryKey,
+} from "@tanstack/react-query"
 
 import { assumeType } from "@/lib/narrow"
 import type { PageResult } from "@/lib/page-source"
@@ -18,18 +25,30 @@ function restartInFlight(
 }
 
 /**
+ * Invalidates the key, and refetches its shown queries and every read that was in flight, restarted. `done` resolves
+ * once the shown ones have reloaded; with `throwOnError`, rejects with the first failure. `restarted` holds the reads
+ * that were in flight, `refetched` the queries that weren't reading and now are.
+ */
+function reloadKey(client: QueryClient, key: readonly unknown[], throwOnError = false) {
+  return notifyManager.batch(() => {
+    const cache = client.getQueryCache()
+    const idle = new Set(cache.findAll({ queryKey: key, fetchStatus: "idle" }))
+    const restarted = restartInFlight(client, { queryKey: key })
+    const done = client.invalidateQueries({ queryKey: key }, { throwOnError })
+    // An in-flight read the invalidation doesn't refetch (nothing observes it, as a prefetch) starts here; for one it
+    // did, `fetch` joins the read it just started.
+    for (const query of restarted) query.fetch().catch(() => undefined)
+    const refetched = [...idle].filter((query) => query.state.fetchStatus === "fetching")
+    return { restarted, refetched, done }
+  })
+}
+
+/**
  * Invalidates the key, and refetches its shown queries and every read that was in flight, restarted. Resolves once
  * the shown ones have reloaded; with `throwOnError`, rejects with the first failure.
  */
 function refreshKey(client: QueryClient, key: readonly unknown[], throwOnError = false): Promise<void> {
-  return notifyManager.batch(() => {
-    const inFlight = restartInFlight(client, { queryKey: key })
-    const shown = client.invalidateQueries({ queryKey: key }, { throwOnError })
-    // An in-flight read the invalidation doesn't refetch (nothing observes it, as a prefetch) starts here; for one it
-    // did, `fetch` joins the read it just started.
-    for (const query of inFlight) query.fetch().catch(() => undefined)
-    return shown
-  })
+  return reloadKey(client, key, throwOnError).done
 }
 
 /**
@@ -114,12 +133,32 @@ type PatchOptions = {
    */
   inFlight?: "restart" | "cancel"
   /**
-   * Resolves once every read the patch restarted has settled, following each query through later restarts (another
-   * write, an invalidation) to its latest read. Starts no read of its own. Default false.
+   * Resolves once every read in the result's `restarted` has settled, following each query through later restarts
+   * (another write, an invalidation) to its latest read. Starts no read of its own. Default false.
    */
   awaitRestarted?: boolean
   /** Rejects with the first failure, after its retries, of a read the call awaits: `refetch`'s or `awaitRestarted`'s. */
   throwOnError?: boolean
+}
+
+/** What a patch did, by query key, each list in the cache's order. */
+type PatchResult = {
+  /** The queries the patch wrote data into. */
+  written: readonly QueryKey[]
+  /**
+   * The queries whose read in flight the patch stopped without starting it again (`inFlight: "cancel"`, or a hold's
+   * patch): they show the patch and the read's late answer is dropped. With `refetch` a shown one is read again by the
+   * reload, so it is in `refetched` too.
+   */
+  cancelled: readonly QueryKey[]
+  /**
+   * The queries whose read in flight this call started again: a written query's under `"restart"`, a first read the
+   * patch left empty, with `refetch` every read in flight under the key, and under a hold's patch the reads the hold
+   * paused that now run. A read that another hold still pauses isn't listed.
+   */
+  restarted: readonly QueryKey[]
+  /** With `refetch`, the queries the reload started a read for that weren't reading before. */
+  refetched: readonly QueryKey[]
 }
 
 /**
@@ -153,23 +192,85 @@ function awaitReads(client: QueryClient, queries: readonly Query[], throwOnError
 }
 
 /**
- * Writes what the server now holds into every cached query under the key, without a request. A read in flight that
- * could answer with the data from before it (its query is written, or has no data yet) restarts in the same batch,
- * or with `inFlight: "cancel"` a written query's read is cancelled; with `refetch`, the whole key reloads afterwards,
- * and its restart of every read in flight stands in for the patch's.
+ * Holds open under a client, by key. A hook's read under one waits for it to end (`pausedRead`); `holdSource` adds and
+ * ends them.
  */
-function patchSource<T, Data = unknown>(
+type Hold = { key: readonly unknown[]; ended: Promise<void> }
+
+const holds = new WeakMap<QueryClient, Set<Hold>>()
+const pausedReads = new WeakMap<Query, number>()
+
+function holdOver(client: QueryClient, queryKey: readonly unknown[]): Hold | undefined {
+  for (const hold of holds.get(client) ?? []) if (partialMatchKey(queryKey, hold.key)) return hold
+  return undefined
+}
+
+/** The query's read is a hook's read waiting for a hold to end, so it hasn't sent a request. */
+function isPaused(query: Query) {
+  return (pausedReads.get(query) ?? 0) > 0
+}
+
+/** The hooks read through `pausedRead`; a query no hook owns (a prefetch) reads without waiting for a hold. */
+function knowsHolds(query: Query) {
+  return typeof query.meta?.serverData === "string"
+}
+
+/**
+ * Runs `read` once no hold covers the key; until then the query reads as fetching and nothing is requested. Aborting
+ * the signal (the read is cancelled or restarted) drops the wait without a request.
+ */
+function pausedRead<T>(
   client: QueryClient,
-  source: { key: readonly unknown[] },
+  context: { queryKey: readonly unknown[]; signal: AbortSignal },
+  read: () => Promise<T>,
+): Promise<T> {
+  const hold = holdOver(client, context.queryKey)
+  if (hold === undefined) return read()
+  const { signal } = context
+  const query = client.getQueryCache().find({ queryKey: context.queryKey, exact: true })
+  if (query !== undefined) pausedReads.set(query, (pausedReads.get(query) ?? 0) + 1)
+  let waiting = true
+  const stop = () => {
+    if (!waiting) return false
+    waiting = false
+    if (query !== undefined) pausedReads.set(query, (pausedReads.get(query) ?? 1) - 1)
+    return true
+  }
+  return new Promise<void>((resolve, reject) => {
+    const abort = () => {
+      if (stop()) reject(signal.reason)
+    }
+    if (signal.aborted) abort()
+    else signal.addEventListener("abort", abort, { once: true })
+    void hold.ended.then(() => {
+      signal.removeEventListener("abort", abort)
+      if (stop()) resolve()
+    })
+  }).then(() => pausedRead(client, context, read))
+}
+
+function keysOf(queries: Iterable<Query>): QueryKey[] {
+  return Array.from(queries, (query) => query.queryKey)
+}
+
+/**
+ * Writes the patch, restarts or cancels the reads it makes stale and reloads with `refetch`. `resume` runs in the
+ * write's batch with the queries written, and returns the reads a hold's patch lets run.
+ */
+function runPatch<T, Data>(
+  client: QueryClient,
+  key: readonly unknown[],
   patch: SourcePatch<T, Data>,
-  options: PatchOptions = {},
-): Promise<void> {
-  const { key } = source
+  options: PatchOptions,
+  resume?: (written: ReadonlySet<Query>) => readonly Query[],
+): Promise<PatchResult> {
   const refetch = options.refetch === true
   const throwOnError = options.throwOnError === true
   const cancel = options.inFlight === "cancel"
-  const restarted: Query[] = []
-  notifyManager.batch(() => {
+  const written = new Set<Query>()
+  const cancelled: Query[] = []
+  const stale: Query[] = []
+  const resumed = notifyManager.batch(() => {
     for (const query of client.getQueryCache().findAll({ queryKey: key })) {
       const current = query.state.data
       const kind = queryKind(query, key)
@@ -181,25 +282,68 @@ function patchSource<T, Data = unknown>(
       const fetching = query.state.fetchStatus === "fetching"
       // A cancel with `revert` puts the state from before the read back at once (TanStack 5.107 reverts in the
       // retryer's `onCancel`), so the write below lands on a query that isn't fetching and nothing reverts it later.
-      if (fetching && next !== undefined && cancel) void query.cancel({ revert: true })
-      else if (fetching && (next !== undefined || current === undefined)) restarted.push(query)
-      if (next !== undefined) client.setQueryData(query.queryKey, next)
+      if (fetching && next !== undefined && cancel) {
+        void query.cancel({ revert: true })
+        cancelled.push(query)
+      } else if (fetching && (next !== undefined || current === undefined)) stale.push(query)
+      if (next !== undefined) {
+        client.setQueryData(query.queryKey, next)
+        written.add(query)
+      }
     }
     // `refetch` restarts every read in flight under the key just after, so restarting here too would send a request
     // that is aborted at once.
     if (!refetch) {
-      for (const query of restarted) {
+      for (const query of stale) {
         void query.cancel({ silent: true })
         query.fetch().catch(() => undefined)
       }
     }
+    return resume?.(written) ?? []
   })
+  const reload = refetch ? reloadKey(client, key, throwOnError) : undefined
+  const running = (query: Query) => !(knowsHolds(query) && holdOver(client, query.queryKey) !== undefined)
+  const restarted = [...new Set([...(reload?.restarted ?? stale), ...resumed])].filter(running)
   const reads = [
-    refetch ? refreshKey(client, key, throwOnError) : undefined,
+    reload?.done,
     options.awaitRestarted === true ? awaitReads(client, restarted, throwOnError) : undefined,
   ].filter((read) => read !== undefined)
-  return Promise.all(reads).then(() => undefined)
+  const result: PatchResult = {
+    written: keysOf(written),
+    cancelled: keysOf(cancelled),
+    restarted: keysOf(restarted),
+    refetched: keysOf(reload?.refetched ?? []),
+  }
+  return Promise.all(reads).then(() => result)
 }
 
-export { mapItems, patchSource, queryKind, refreshKey, settleQueries, updateItems }
-export type { PatchOptions, SourcePatch }
+/**
+ * Writes what the server now holds into every cached query under the key, without a request. A read in flight that
+ * could answer with the data from before it (its query is written, or has no data yet) restarts in the same batch,
+ * or with `inFlight: "cancel"` a written query's read is cancelled; with `refetch`, the whole key reloads afterwards,
+ * and its restart of every read in flight stands in for the patch's. Resolves with what it did.
+ */
+function patchSource<T, Data = unknown>(
+  client: QueryClient,
+  source: { key: readonly unknown[] },
+  patch: SourcePatch<T, Data>,
+  options: PatchOptions = {},
+): Promise<PatchResult> {
+  return runPatch(client, source.key, patch, options)
+}
+
+export {
+  holdOver,
+  holds,
+  isPaused,
+  knowsHolds,
+  mapItems,
+  patchSource,
+  pausedRead,
+  queryKind,
+  refreshKey,
+  runPatch,
+  settleQueries,
+  updateItems,
+}
+export type { Hold, PatchOptions, PatchResult, SourcePatch }

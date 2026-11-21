@@ -15,13 +15,16 @@ import { useDataClient, type DefaultServerError } from "@/components/ui/server-d
 import {
   mapItems,
   patchSource,
+  pausedRead,
   queryKind,
   refreshKey,
   settleQueries,
   updateItems,
   type PatchOptions,
+  type PatchResult,
   type SourcePatch,
 } from "@/components/ui/server-data-cache"
+import { holdSource, type HoldPatchOptions, type SourceHold } from "@/components/ui/server-data-hold"
 import {
   createPageController,
   type PageController,
@@ -126,10 +129,12 @@ function useServerTotal<T, F, TError = DefaultServerError>(
   const query = useQuery<number, TError>(
     {
       queryKey: [...source.key, "total", filter],
-      queryFn: ({ signal }) =>
-        fetchTotal
-          ? fetchTotal.call(source, filter, { signal })
-          : Promise.reject(new TypeError("This source has no `fetchTotal`.")),
+      queryFn: (context) =>
+        pausedRead(client, context, () =>
+          fetchTotal
+            ? fetchTotal.call(source, filter, { signal: context.signal })
+            : Promise.reject(new TypeError("This source has no `fetchTotal`.")),
+        ),
       enabled: fetchTotal !== undefined && options.enabled !== false,
       meta: totalMeta,
       ...readOptionsOf(options),
@@ -153,7 +158,7 @@ function useServerPage<T, F, TError = DefaultServerError>(
   const query = useQuery<PageResult<T>, TError>(
     {
       queryKey: pageKey(source, request),
-      queryFn: ({ signal }) => source.fetchPage(request, { signal }),
+      queryFn: (context) => pausedRead(client, context, () => source.fetchPage(request, { signal: context.signal })),
       enabled: options.enabled !== false,
       meta: pageMeta,
       ...readOptionsOf(options),
@@ -211,15 +216,17 @@ function useServerInfinite<T, F, TError = DefaultServerError>(
   const query = useInfiniteQuery<PageResult<T>, TError, InfiniteData<PageResult<T>, PageParam>, QueryKey, PageParam>(
     {
       queryKey: [...source.key, "infinite", request.filter, request.sort, request.size],
-      queryFn: ({ signal, pageParam }: { signal: AbortSignal; pageParam: PageParam }) =>
-        source.fetchPage(
-          {
-            ...request,
-            position: cursorMode
-              ? { cursor: typeof pageParam === "number" ? null : pageParam, direction: "forward" }
-              : { page: typeof pageParam === "number" ? pageParam : 1 },
-          },
-          { signal },
+      queryFn: (context: { queryKey: QueryKey; signal: AbortSignal; pageParam: PageParam }) =>
+        pausedRead(client, context, () =>
+          source.fetchPage(
+            {
+              ...request,
+              position: cursorMode
+                ? { cursor: typeof context.pageParam === "number" ? null : context.pageParam, direction: "forward" }
+                : { page: typeof context.pageParam === "number" ? context.pageParam : 1 },
+            },
+            { signal: context.signal },
+          ),
         ),
       initialPageParam: (cursorMode ? null : 1) as PageParam,
       getNextPageParam: (last: PageResult<T>, all: PageResult<T>[]): PageParam | undefined => {
@@ -290,13 +297,38 @@ type Snapshot = [QueryKey, unknown][]
 /** `patchSource` bound to the app's client and this source, for a write the app learned of elsewhere. */
 function usePatchSource<T, Data = unknown>(
   source: PageSource<T, never> | { key: readonly unknown[] },
-): (patch: SourcePatch<T, Data>, options?: PatchOptions) => Promise<void> {
+): (patch: SourcePatch<T, Data>, options?: PatchOptions) => Promise<PatchResult> {
   const client = useDataClient()
   const { key } = source
   return useCallback(
     (patch: SourcePatch<T, Data>, options?: PatchOptions) => patchSource<T, Data>(client, { key }, patch, options),
     [client, key],
   )
+}
+
+/**
+ * `holdSource` bound to the app's client and this source: the returned function begins a hold. Every hold this
+ * component began and hasn't ended is released when it unmounts, so no read stays paused.
+ */
+function useHoldSource<T, Data = unknown>(
+  source: PageSource<T, never> | { key: readonly unknown[] },
+): () => SourceHold<T, Data> {
+  const client = useDataClient()
+  const { key } = source
+  const [open] = useState(() => new Set<SourceHold<T, Data>>())
+  useEffect(
+    () => () => {
+      for (const hold of open) hold.release()
+      open.clear()
+    },
+    [open],
+  )
+  return useCallback(() => {
+    for (const ended of open) if (!ended.active) open.delete(ended)
+    const hold = holdSource<T, Data>(client, { key })
+    open.add(hold)
+    return hold
+  }, [client, key, open])
 }
 
 type SourceMutationOptions<T, Variables, Result, Data = Result, TError = DefaultServerError> = {
@@ -421,10 +453,12 @@ function usePageController<T, F>(
 }
 
 export {
+  holdSource,
   pageKey,
   patchSource,
   readOptionsOf,
   useInvalidateSource,
+  useHoldSource,
   usePatchSource,
   usePageController,
   useServerInfinite,
@@ -433,9 +467,11 @@ export {
   useSourceMutation,
 }
 export type {
+  HoldPatchOptions,
   InfiniteRequest,
   InvalidateOptions,
   PatchOptions,
+  PatchResult,
   ReadOptions,
   RefetchOptions,
   RefetchTrigger,
@@ -445,6 +481,7 @@ export type {
   ServerStatus,
   ServerTotalState,
   SourceMutationOptions,
+  SourceHold,
   SourceMutationState,
   SourcePatch,
 }

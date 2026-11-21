@@ -88,7 +88,7 @@ function errorsOf(client: QueryClient) {
 }
 
 /** A promise's outcome, read without awaiting it. */
-function track(promise: Promise<void>) {
+function track(promise: Promise<unknown>) {
   const outcome: { state: "pending" | "resolved" | "rejected"; error?: unknown } = { state: "pending" }
   promise.then(
     () => {

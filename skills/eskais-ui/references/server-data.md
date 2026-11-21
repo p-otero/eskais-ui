@@ -154,6 +154,7 @@ await patch(changes, { refetch: true }) // also reload the key; resolves once th
 await patch(changes, { inFlight: "cancel" }) // a written query's read in flight stops instead of restarting
 await patch(changes, { awaitRestarted: true, throwOnError: true }) // waits for the restarted reads; rejects if one fails
 patchSource(client, tasks, changes) // outside React, on the app's client
+const { written, cancelled, restarted, refetched } = await patch(changes) // what it did, by query key
 ```
 
 - It reaches every cached query under the key, mounted or not. A read in flight whose query the patch writes, and any first read (no data to patch yet), is cancelled silently and started again in the same batch, with or without `refetch`, so an answer sent before the change never lands, the request count stays the same and nothing stays pending. Reads of queries it leaves alone go on.
@@ -161,6 +162,32 @@ patchSource(client, tasks, changes) // outside React, on the app's client
 - `awaitRestarted: true` resolves once every read the patch restarted has settled, following each query through later restarts (another patch, an invalidation) to its latest read, and starts no read itself. With `throwOnError` it rejects with the first failure (the query function's own error, after retries); an aborted read never counts. A later `inFlight: "cancel"` patch settles it with the written data. Use it with `refetch: false` for a resource whose every read overwrites per-item ETags: it waits for the reads that would happen anyway, where `refetch: true` adds one. Never await the query's `promise` for this: a restart rejects it with a silent `CancelledError`.
 - With `refetch: true`, the reload restarts every read in flight under the key, so the patch doesn't restart them first (no request is sent and aborted at once). `awaitRestarted` then waits for the same reads, restarted by the reload.
 - Without `refetch` nothing new is requested and the patched queries count as fresh. A patch is what the server holds now; for an unconfirmed change use `useSourceMutation`'s `optimistic`.
+- The call resolves with lists of query keys: `written` (the queries it wrote), `cancelled` (whose read it stopped, `inFlight: "cancel"`), `restarted` (whose read it started again: a written query's under `"restart"`, a first read it left empty under either, every read in flight under the key with `refetch`) and `refetched` (queries the `refetch` reload read that weren't reading; a shown cancelled query is in both). A read ran again when `restarted` or `refetched` isn't empty, so clear an error banner on that rather than on `isFetching` before the patch. `awaitRestarted` waits for exactly `restarted`. Ignoring the result works as before; a variable typed `Promise<void>` needs `Promise<unknown>`.
+
+## Hold: cancel now, write later
+
+When a screen fetches the answer itself (another request than the query's on a first load) and then writes it, stop the reads first:
+
+```ts
+// import { holdSource, useHoldSource } from "@/components/ui/use-server-data"
+const hold = useHoldSource<Task, Task>(tasks)
+const held = hold() // cancels the reads in flight under tasks now; the hooks' reads wait
+try {
+  const task = await api.openTask(id)
+  await held.patch({ resource: (current, queryKey) => (queryKey[2] === id ? task : undefined) })
+} catch (error) {
+  held.release() // the paused reads run; after the patch has ended the hold it does nothing
+  throw error
+}
+holdSource<Task, Task>(client, tasks) // outside React
+```
+
+- A paused read shows as fetching and sends nothing; one the hold cancelled waits as one, so a first load stays pending and fetching. Reads a mount, focus, reconnect, `retry` or invalidation starts during the hold wait too, deduplicated.
+- `held.patch(changes, { refetch, awaitRestarted, throwOnError })` is a patch with `inFlight: "cancel"`: each written query keeps the answer and its paused read is dropped without a request (a first load takes the caller's value); every other paused read runs then and is in `restarted`. Options apply after the hold ends, so `refetch` isn't paused.
+- `held.release()` lets every paused read run once (a first load with its own query function) and does nothing once the hold has ended. The hook releases its component's holds on unmount; a `patch` after the end still writes, as a cancelling patch. `held.active` says whether it is open, `held.cancelled` lists the reads it stopped.
+- Holds nest and overlap: a read waits for every hold over its key. A read the hooks don't own (`prefetchQuery`) can't wait: the hold cancels it and starts it again when it ends, unless the patch writes it.
+- No request is added: a cancelled or paused read gets the caller's answer or runs once at the end. Only a read in flight at the start that the hold then lets run is sent twice, the first aborted.
+- A handle rather than `patch(…, { firstLoad: fetcher })`: the cancel must happen before the caller's own request, the answer decides what to write, and the caller may decide not to write at all.
 
 ## Reload on focus, reconnect and mount
 

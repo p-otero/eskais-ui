@@ -76,4 +76,33 @@ await patch(savedTask(saved), { inFlight: "cancel" })
 await patch(savedTask(saved), { awaitRestarted: true, throwOnError: true })
 
 // Outside React, as in a socket handler, on the app's client.
-socket.on("task", (saved: Task) => void patchSource(client, tasks, savedTask(saved)))`
+socket.on("task", (saved: Task) => void patchSource(client, tasks, savedTask(saved)))
+
+// The call resolves with what it did, by query key: clear an error only when a read ran again.
+const { restarted, refetched } = await patch(savedTask(saved))
+if (restarted.length + refetched.length > 0) setLoadError(null)`
+
+export const holdCode = `import { holdSource, useHoldSource } from "@/components/ui/use-server-data"
+
+const hold = useHoldSource<Task, Task>(tasks)
+
+async function open(id: string) {
+  // Cancel the reads in flight under tasks now; the hooks' reads wait until the hold ends.
+  const held = hold()
+  try {
+    // Your own request, another endpoint than the resource's query function on a first load.
+    const task = await api.openTask(id)
+    // Write the answer and end the hold: a written query's paused read is dropped, the rest run.
+    await held.patch({
+      items: (rows) => rows.map((row) => (row.id === task.id ? task : row)),
+      resource: (current, queryKey) => (queryKey[2] === task.id ? task : undefined),
+    })
+  } catch (error) {
+    // The paused reads run again; after the patch has ended the hold, this does nothing.
+    held.release()
+    throw error
+  }
+}
+
+// Outside React, on the app's client.
+const held = holdSource<Task, Task>(client, tasks)`

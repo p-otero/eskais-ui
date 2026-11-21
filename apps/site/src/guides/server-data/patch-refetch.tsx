@@ -1,6 +1,6 @@
 import { Code, H2, P, Pre, Ul } from "../../docs/prose"
 
-import { networkCode, patchCode, refetchCode } from "./snippets"
+import { holdCode, networkCode, patchCode, refetchCode } from "./snippets"
 
 /** The guide's sections on `usePatchSource` and the refetch triggers. */
 export function PatchAndRefetch() {
@@ -47,8 +47,60 @@ export function PatchAndRefetch() {
           count as fresh.
         </li>
         <li>
+          The call resolves with what it did, as lists of query keys in the cache's order: <Code>written</Code>, the
+          queries it wrote; <Code>cancelled</Code>, those whose read it stopped (<Code>{'inFlight: "cancel"'}</Code>);{" "}
+          <Code>restarted</Code>, those whose read it started again (a written query's under <Code>"restart"</Code>, a
+          first read it left empty, which restarts under <Code>"cancel"</Code> too, and with <Code>refetch</Code> every
+          read that was in flight under the key); and <Code>refetched</Code>, those the <Code>refetch</Code> reload read
+          that weren't reading. A cancelled query that is shown is read again by <Code>refetch</Code>, so it is in both.
+          A read ran again when <Code>restarted</Code> or <Code>refetched</Code> isn't empty.{" "}
+          <Code>awaitRestarted</Code> waits for exactly the <Code>restarted</Code> reads. A caller that ignores the
+          result works as before.
+        </li>
+        <li>
           A patch is what the server holds now. For a change the server hasn't confirmed yet, use{" "}
           <Code>useSourceMutation</Code>'s <Code>optimistic</Code>, which rolls back on failure.
+        </li>
+      </Ul>
+
+      <H2 id="hold">Cancel now, write later</H2>
+      <P>
+        A screen that fetches the answer itself, with another request than the query's on a first load, must stop the
+        reads in flight before it waits, or one of them lands while it does. <Code>useHoldSource(source)</Code> returns
+        a function that begins a hold (<Code>holdSource(client, source)</Code> outside React). The hold cancels every
+        read in flight under the key at once and pauses the hooks' reads under it until it ends:{" "}
+        <Code>hold.patch(changes, options)</Code> writes the answer and ends it, and <Code>hold.release()</Code> ends it
+        without writing.
+      </P>
+      <Pre code={holdCode} />
+      <Ul>
+        <li>
+          A paused read shows as fetching and sends nothing. A read the hold cancelled waits as one, so a first load
+          stays pending and fetching, never pending and idle. A read a mount, a focus or reconnect refetch, a{" "}
+          <Code>retry</Code> or an invalidation starts during the hold waits too, deduplicated as TanStack does.
+        </li>
+        <li>
+          <Code>hold.patch</Code> is <Code>patch</Code> with <Code>{'inFlight: "cancel"'}</Code>: each query it writes
+          keeps the answer and its paused read is dropped without a request, so a first load gets its first value from
+          the caller. Every other paused read runs then, and is listed in <Code>restarted</Code>. <Code>refetch</Code>,{" "}
+          <Code>awaitRestarted</Code> and <Code>throwOnError</Code> work as on <Code>patch</Code>, after the hold has
+          ended, so the reload isn't paused.
+        </li>
+        <li>
+          <Code>hold.release()</Code>, after the caller's fetch failed, lets every paused read run, each once: a first
+          load reads with its own query function and nothing stays pending. It does nothing once the hold has ended. The
+          hook releases the holds its component began when it unmounts. A <Code>patch</Code> after the hold ended still
+          writes, as a cancelling patch.
+        </li>
+        <li>
+          Holds nest and overlap: a read waits until every hold over its key has ended. A read the hooks don't own (a{" "}
+          <Code>prefetchQuery</Code>) can't wait: the hold cancels it and starts it again when it ends, unless its patch
+          writes that query. <Code>hold.cancelled</Code> lists the reads it stopped.
+        </li>
+        <li>
+          The hold adds no request: the reads it cancels or pauses either get the caller's answer or run once when it
+          ends, as they would have. Only a read already in flight when the hold begins and that it lets run afterwards
+          is sent twice, the first time aborted.
         </li>
       </Ul>
 
