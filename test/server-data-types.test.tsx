@@ -1,3 +1,4 @@
+import type { QueryKey } from "@tanstack/react-query"
 import { renderHook } from "@testing-library/react"
 import { spawnSync } from "node:child_process"
 import { join } from "node:path"
@@ -6,11 +7,17 @@ import { describe, expect, expectTypeOf, test } from "vitest"
 
 import { createDataClient, DataProvider, type DefaultServerError } from "@/components/ui/server-data"
 import {
+  holdSource,
   patchSource,
+  useHoldSource,
+  usePatchSource,
   useServerInfinite,
   useServerPage,
   useSourceMutation,
   type PatchOptions,
+  type PatchResult,
+  type SourceHold,
+  type SourcePatch,
 } from "@/components/ui/use-server-data"
 import { defineResource, useServerQuery, useServerResource } from "@/components/ui/use-server-query"
 import { arraySource } from "@/lib/array-source"
@@ -88,7 +95,7 @@ describe("server data types", () => {
     })
   })
 
-  test("patch options: inFlight is restart or cancel, awaitRestarted a boolean, and the call a void promise", async () => {
+  test("patch options: inFlight is restart or cancel, awaitRestarted a boolean; the call resolves with its result", async () => {
     expectTypeOf<PatchOptions["inFlight"]>().toEqualTypeOf<"restart" | "cancel" | undefined>()
     expectTypeOf<PatchOptions["awaitRestarted"]>().toEqualTypeOf<boolean | undefined>()
     const client = createDataClient()
@@ -98,12 +105,43 @@ describe("server data types", () => {
       { resource: (current) => current },
       { inFlight: "cancel", awaitRestarted: true, throwOnError: true },
     )
-    expectTypeOf(done).toEqualTypeOf<Promise<void>>()
+    expectTypeOf(done).toEqualTypeOf<Promise<PatchResult>>()
+    expectTypeOf<PatchResult>().toEqualTypeOf<{
+      written: readonly QueryKey[]
+      cancelled: readonly QueryKey[]
+      restarted: readonly QueryKey[]
+      refetched: readonly QueryKey[]
+    }>()
+    // A caller written for the void promise still compiles: it ignores or awaits the result.
+    const ignored: () => Promise<unknown> = () => patchSource(client, tasks, {})
+    void ignored()
     // @ts-expect-error inFlight takes "restart" or "cancel"
     void patchSource(client, tasks, {}, { inFlight: "ignore" })
     // @ts-expect-error awaitRestarted is a boolean
     void patchSource(client, tasks, {}, { awaitRestarted: "yes" })
-    await expect(done).resolves.toBeUndefined()
+    await expect(done).resolves.toEqual({ written: [], cancelled: [], restarted: [], refetched: [] })
+  })
+
+  test("a hold is typed by its source: its patch takes the source's changes and no inFlight", async () => {
+    const client = createDataClient()
+    const hold = holdSource<Task, Task>(client, tasks)
+    expectTypeOf(hold).toEqualTypeOf<SourceHold<Task, Task>>()
+    expectTypeOf(hold.cancelled).toEqualTypeOf<readonly QueryKey[]>()
+    expectTypeOf(hold.active).toEqualTypeOf<boolean>()
+    expectTypeOf(hold.patch).parameter(0).toEqualTypeOf<SourcePatch<Task, Task>>()
+    expectTypeOf(hold.patch).returns.toEqualTypeOf<Promise<PatchResult>>()
+    // @ts-expect-error a hold's patch always cancels the reads of the queries it writes
+    void hold.patch({}, { inFlight: "restart" })
+    // @ts-expect-error a hold's rows are the source's
+    void hold.patch({ items: (items: string[]) => items })
+    const { result } = renderHook(
+      () => ({ hold: useHoldSource<Task, Task>(tasks), patch: usePatchSource<Task, Task>(tasks) }),
+      { wrapper },
+    )
+    expectTypeOf(result.current.hold).returns.toEqualTypeOf<SourceHold<Task, Task>>()
+    expectTypeOf(result.current.patch).returns.toEqualTypeOf<Promise<PatchResult>>()
+    const done = await hold.patch({ resource: (current) => current })
+    expect(done.written).toEqual([])
   })
 
   test("createDataClient takes retry: false", () => {
