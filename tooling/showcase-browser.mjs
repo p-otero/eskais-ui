@@ -1,11 +1,11 @@
-// Serves the built showcase with `vite preview` and opens it in the system Chrome.
+// Serves the built showcase (or the docs site, with `withSite`) with `vite preview` and opens it in the system Chrome.
 import { spawn, spawnSync } from "node:child_process"
 import { createServer } from "node:net"
 import { resolve } from "node:path"
 
 import { chromium } from "playwright"
 
-const showcase = resolve(import.meta.dirname, "..", "apps", "showcase")
+const apps = resolve(import.meta.dirname, "..", "apps")
 
 // A free port, so parallel checks (several worktrees at once) don't collide.
 async function freePort() {
@@ -16,10 +16,19 @@ async function freePort() {
   return port
 }
 
-async function withShowcase(run, pageOptions = {}, launchOptions = {}) {
+function withShowcase(run, pageOptions = {}, launchOptions = {}) {
+  return withApp("showcase", run, pageOptions, launchOptions)
+}
+
+/** The docs site, built with `bun run build:site`. */
+function withSite(run, pageOptions = {}, launchOptions = {}) {
+  return withApp("site", run, pageOptions, launchOptions)
+}
+
+async function withApp(app, run, pageOptions, launchOptions) {
   const port = await freePort()
   const server = spawn("npx", ["vite", "preview", "--port", String(port), "--strictPort"], {
-    cwd: showcase,
+    cwd: resolve(apps, app),
     stdio: ["ignore", "pipe", "inherit"],
     shell: process.platform === "win32",
     detached: process.platform !== "win32",
@@ -68,4 +77,4 @@ async function setAppearance(page, theme, mode, palette) {
   })
 }
 
-export { rendered, setAppearance, withShowcase }
+export { rendered, setAppearance, withShowcase, withSite }

@@ -1,8 +1,9 @@
 // Opens every kind of dialog, short and tall, on emulated phones, tablets, foldables and a narrow desktop window, under
 // each viewport model (toolbars, stale innerHeight, scrolled visual viewport, keyboard, heading focus, pinch-zoom), and
 // prints the matrix. The full one takes about 12 minutes: run it by hand. Usage: node tooling/dialog-mobile-check.mjs
-// [--quick] [--engine=webkit] [--screenshots=<dir>] [--color-scheme=dark] [--device=<s>] [--case=<s>] [--report=<file>]
-import { mkdirSync, writeFileSync } from "node:fs"
+// [--quick] [--engine=webkit|webkit26] [--screenshots=<dir>] [--color-scheme=dark] [--device=<s>] [--case=<s>] [--report=<file>]
+import { existsSync, mkdirSync, writeFileSync } from "node:fs"
+import { createRequire } from "node:module"
 import { join, resolve } from "node:path"
 
 import { webkit } from "playwright"
@@ -12,6 +13,19 @@ import { withShowcase } from "./showcase-browser.mjs"
 const failures = []
 const arg = (name) => process.argv.find((value) => value.startsWith(`--${name}=`))?.slice(name.length + 3)
 const engine = arg("engine") ?? "chromium"
+const webkit26Prefix = resolve(import.meta.dirname, ".webkit26")
+
+// `webkit26`: WebKit 26.0, Safari 26's engine, which lays out a fixed `height: fit-content` box unlike the WebKit
+// Playwright ships. Playwright drives only its own build, so install Playwright 1.56 once (git ignores the folder):
+// npm i --prefix tooling/.webkit26 playwright-core@1.56.1 && npx --prefix tooling/.webkit26 playwright-core install webkit
+function webkitEngine() {
+  if (engine !== "webkit26") return webkit
+  if (!existsSync(join(webkit26Prefix, "node_modules", "playwright-core"))) {
+    console.error("WebKit 26 isn't installed: see webkitEngine in tooling/dialog-mobile-check.mjs.")
+    process.exit(2)
+  }
+  return createRequire(join(webkit26Prefix, "package.json"))("playwright-core").webkit
+}
 const colorScheme = arg("color-scheme") ?? "light"
 // CI's `--quick` (about 3 minutes) keeps every dialog, short and tall, on the devices and models marked `quick`:
 // a small and a large iPhone, Android, a narrow desktop window, and the models that caught real bugs.
@@ -47,6 +61,10 @@ const devices = [
   { name: "Foldable folded", viewport: { width: 344, height: 882 } },
   { name: "Foldable open", viewport: { width: 673, height: 841 } },
   { name: "Desktop narrow", viewport: { width: 700, height: 800 }, touch: false, quick: true },
+  // An iPhone 17 Pro in Safari 26 (iOS 26), as measured on one: 402 × 660 under the expanded floating toolbar, 768
+  // with it collapsed. Under `--engine=webkit26` it shows a dialog cut off as that phone did.
+  { name: "iPhone Safari 26", viewport: { width: 402, height: 660 } },
+  { name: "iPhone Safari 26 collapsed", viewport: { width: 402, height: 768 } },
 ].filter((device, _, all) => {
   if (quick && !device.quick) return false
   const wanted = arg("device")?.toLowerCase()
@@ -628,7 +646,7 @@ async function run(origin, browser) {
     // oxlint-disable-next-line no-await-in-loop -- a worker takes the next device once its current one is done
     for (let device = queue.shift(); device; device = queue.shift()) await checkDevice(browser, origin, device)
   }
-  await Promise.all(Array.from({ length: engine === "webkit" ? 1 : 3 }, worker))
+  await Promise.all(Array.from({ length: engine.startsWith("webkit") ? 1 : 3 }, worker))
 }
 
 function printMatrix() {
@@ -653,8 +671,8 @@ function printMatrix() {
 
 await withShowcase(async (chromePage) => {
   const origin = new URL(chromePage.url()).origin
-  if (engine === "webkit") {
-    const browser = await webkit.launch()
+  if (engine.startsWith("webkit")) {
+    const browser = await webkitEngine().launch()
     try {
       await run(origin, browser)
     } finally {

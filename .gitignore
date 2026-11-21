@@ -7,3 +7,4 @@ coverage/
 .claude/skills/
 *.tsbuildinfo
 screenshots
+tooling/.webkit26/
