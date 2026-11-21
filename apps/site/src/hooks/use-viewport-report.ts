@@ -33,6 +33,7 @@ function pageRows(probe: HTMLElement | null): Row[] {
     ["pointer", [media("pointer: coarse"), media("pointer: fine"), media("hover: hover")].join(", ")],
     ["viewport meta", document.querySelector('meta[name="viewport"]')?.getAttribute("content") ?? "none"],
     ["focused", describe(document.activeElement)],
+    focusedField(),
     ["userAgent", navigator.userAgent],
   ]
 }
@@ -55,6 +56,35 @@ function openDialog() {
 function nameOf(dialog: HTMLElement) {
   const title = dialog.getAttribute("aria-labelledby")
   return (title ? document.getElementById(title)?.textContent : null) ?? dialog.getAttribute("aria-label") ?? "?"
+}
+
+// How much a transform shrinks or grows the element, as the text you see is scaled by it.
+function renderedScale(element: HTMLElement) {
+  return element.offsetHeight > 0 ? element.getBoundingClientRect().height / element.offsetHeight : 1
+}
+
+function measured(element: HTMLElement) {
+  const rect = element.getBoundingClientRect()
+  return `${px(rect.top)} / ${px(rect.bottom)} / ${px(rect.height)}, scroll ${String(element.scrollHeight)} / client ${String(element.clientHeight)}`
+}
+
+// The content's named parts (header, form, body, actions…) and the scrolling body: a part squeezed to 0 shows here.
+function partRows(dialog: HTMLElement): Row[] {
+  // Two levels: a FormDialog's form and a StepDialog's frame hold the body and the actions.
+  const parts = [...dialog.querySelectorAll<HTMLElement>(":scope > *, :scope > * > *, [data-slot=dialog-body]")]
+  return parts
+    .filter((part) => (part.dataset.slot !== undefined || part instanceof HTMLFormElement) && part.checkVisibility())
+    .map((part): Row => [
+      `part ${part.dataset.slot ?? part.tagName.toLowerCase()} top / bottom / height`,
+      measured(part),
+    ])
+}
+
+function focusedField(): Row {
+  const active = document.activeElement
+  if (!(active instanceof HTMLElement) || active === document.body) return ["focused font-size", "-"]
+  const size = Number.parseFloat(getComputedStyle(active).fontSize)
+  return ["focused font-size (computed / as rendered)", `${px(size)} / ${px(size * renderedScale(active))}`]
 }
 
 function flags(element: Element, names: string[]) {
@@ -80,6 +110,7 @@ function sheetRows(): Row[] {
   const rows: Row[] = [
     ["dialog", `${nameOf(sheet)} (${sheet.dataset.slot ?? sheet.tagName.toLowerCase()})`],
     ["rect top / bottom / height", `${px(rect.top)} / ${px(rect.bottom)} / ${px(rect.height)}`],
+    ["scroll height / client height", `${String(sheet.scrollHeight)} / ${String(sheet.clientHeight)}`],
     ["bottom past the visible bottom", px(rect.bottom - visibleBottom)],
     ["top above the visible top", px(visibleTop - rect.top)],
     ["computed top / bottom", `${style.top} / ${style.bottom}`],
@@ -91,6 +122,8 @@ function sheetRows(): Row[] {
     ["attributes", flags(sheet, ["data-keyboard", "data-dialog-keyboard", "data-starting-style", "data-ending-style"])],
     ["data-presentation / data-side", `${sheet.dataset.presentation ?? "-"} / ${sheet.dataset.side ?? "-"}`],
     ["focused", describe(document.activeElement)],
+    focusedField(),
+    ...partRows(sheet),
   ]
   const viewport = sheet.parentElement?.matches("[data-slot=drawer-viewport]") ? sheet.parentElement : null
   if (viewport) {
@@ -142,6 +175,11 @@ function subscribe(listener: () => void) {
   }
 }
 
+/** The report as it is now, for a copy taken while a dialog is open. */
+function currentReport() {
+  return snapshot()
+}
+
 /** Live viewport measurements for the diagnostics page, and the last ones of its sample sheet. */
 function useViewportReport() {
   return useSyncExternalStore(subscribe, snapshot, () => serverReport)
@@ -151,5 +189,5 @@ function formatReport(report: Report) {
   return [...report.page, ...report.sheet].map(([label, value]) => `${label}: ${value}`).join("\n")
 }
 
-export { formatReport, useViewportReport }
+export { currentReport, formatReport, useViewportReport }
 export type { Report, Row }
