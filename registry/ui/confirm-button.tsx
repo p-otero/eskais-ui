@@ -1,7 +1,7 @@
 "use client"
 
 import { createParts } from "@ui-sdk/react/primitive"
-import type { ComponentProps, CSSProperties, ReactNode } from "react"
+import type { ComponentProps, ReactNode } from "react"
 
 import { buttonVariants } from "@/components/ui/button"
 import {
@@ -11,7 +11,7 @@ import {
   type ConfirmButtonOptions,
 } from "@/components/ui/confirm-button-primitive"
 import { Spinner } from "@/components/ui/spinner"
-import { cn, cnState } from "@/lib/utils"
+import { cn, cnState, cssVars } from "@/lib/utils"
 
 const { Root: ConfirmButtonRoot } = createParts(confirmButton, { root: "button" })
 
@@ -61,7 +61,7 @@ function ConfirmButton({
   ...props
 }: ConfirmButtonProps) {
   const labels = { ...confirmButtonLabels, ...ownLabels }
-  const holdStyle = hold ? ({ "--confirm-hold-duration": `${String(hold)}ms` } as CSSProperties) : undefined
+  const holdStyle = hold ? cssVars({ "--confirm-hold-duration": `${String(hold)}ms` }) : undefined
   return (
     <ConfirmButtonRoot
       data-agent-confirm={agentConfirm}

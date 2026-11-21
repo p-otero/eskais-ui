@@ -19,7 +19,7 @@ const guides: GuideMeta[] = [
     title: "Installation",
     description:
       "Add the Eskais registry to components.json, set the aliases and install your first component with shadcn.",
-    covers: ["utils", "font-geist", "font-inter", "lint-rules", "test-utils"],
+    covers: ["utils", "font-geist", "font-inter", "lint-rules", "test-utils", "narrow"],
   },
   {
     slug: "theming",

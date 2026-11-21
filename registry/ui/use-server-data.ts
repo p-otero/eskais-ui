@@ -28,6 +28,7 @@ import {
   type PageControllerOptions,
   type PageControllerState,
 } from "@/lib/page-controller"
+import { assumeType } from "@/lib/narrow"
 import {
   resolveNavigation,
   totalOf,
@@ -125,7 +126,10 @@ function useServerTotal<T, F, TError = DefaultServerError>(
   const query = useQuery<number, TError>(
     {
       queryKey: [...source.key, "total", filter],
-      queryFn: ({ signal }) => (fetchTotal as NonNullable<typeof fetchTotal>).call(source, filter, { signal }),
+      queryFn: ({ signal }) =>
+        fetchTotal
+          ? fetchTotal.call(source, filter, { signal })
+          : Promise.reject(new TypeError("This source has no `fetchTotal`.")),
       enabled: fetchTotal !== undefined && options.enabled !== false,
       meta: totalMeta,
       ...readOptionsOf(options),
@@ -212,8 +216,8 @@ function useServerInfinite<T, F, TError = DefaultServerError>(
           {
             ...request,
             position: cursorMode
-              ? { cursor: pageParam as string | null, direction: "forward" }
-              : { page: pageParam as number },
+              ? { cursor: typeof pageParam === "number" ? null : pageParam, direction: "forward" }
+              : { page: typeof pageParam === "number" ? pageParam : 1 },
           },
           { signal },
         ),
@@ -379,7 +383,9 @@ function useSourceMutation<T, Variables = void, Result = unknown, Data = Result,
           await settleQueries(client, key, (query) => {
             const data = query.state.data
             const kind = queryKind(query, key)
-            if (kind === "resource") return settle?.(result, variables, data as Data | undefined, query.queryKey)
+            // TanStack's cache types data as unknown; a resource under the source's key holds the mutation's `Data`.
+            if (kind === "resource")
+              return settle?.(result, variables, assumeType<Data | undefined>(data), query.queryKey)
             return settleItems && mapItems<T>(kind, data, (items) => settleItems(items, result, variables))
           })
         }

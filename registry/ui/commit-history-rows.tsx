@@ -18,11 +18,11 @@ function treeItemsOf(graph: CommitGraph, workingTree?: string): TreeItemData[] {
   const items: TreeItemData[] = workingTree === undefined ? [] : [{ value: WORKING_TREE, label: workingTree }]
   const nodes: TreeItemData[] = []
   for (let row = 0; row < graph.size; row += 1) {
-    const commit = graph.commits[row] as Commit
+    const commit = graph.commits[row]!
     const node: TreeItemData = { value: commit.id, label: commitSubject(commit) }
     if (isMergeRow(graph, row)) node.children = []
     nodes.push(node)
-    const owner = graph.owner[row] as number
+    const owner = graph.owner[row]!
     if (owner < 0) items.push(node)
     else nodes[owner]?.children?.push(node)
   }
@@ -41,8 +41,8 @@ function doneCount(commits: readonly Commit[]) {
 }
 
 function ancestorIn(graph: CommitGraph, row: number, ids: ReadonlySet<string>) {
-  for (let owner = graph.owner[row] as number; owner >= 0; owner = graph.owner[owner] as number) {
-    if (ids.has((graph.commits[owner] as Commit).id)) return true
+  for (let owner = graph.owner[row]!; owner >= 0; owner = graph.owner[owner]!) {
+    if (ids.has(graph.commits[owner]!.id)) return true
   }
   return false
 }
@@ -67,8 +67,8 @@ function Rows({ trail, details, justExpanded, context, virtual, heads, upstreamR
       )
     }
     const { index, top } = segment
-    const row = visible.rows[index] as number
-    const commit = graph.commits[row] as Commit
+    const row = visible.rows[index]!
+    const commit = graph.commits[row]!
     return (
       <CommitRow
         key={commit.id}
@@ -76,7 +76,7 @@ function Rows({ trail, details, justExpanded, context, virtual, heads, upstreamR
         index={index}
         top={top}
         lanes={layout.at(index)}
-        depth={graph.depth[row] as number}
+        depth={graph.depth[row]!}
         merge={isMergeRow(graph, row)}
         detailsOpen={details.has(commit.id)}
         entering={justExpanded.size > 0 && ancestorIn(graph, row, justExpanded)}

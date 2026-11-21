@@ -10,6 +10,7 @@ import {
 import { createContext, use, useState, type ComponentProps, type PointerEvent } from "react"
 
 import { cnState } from "@/lib/utils"
+import { assumeType } from "@/lib/narrow"
 
 // Set only while activateOnPress is on: the controller an item checks through on pointerdown.
 const SegmentedControlPressContext = createContext<SegmentedControlController | null>(null)
@@ -31,8 +32,11 @@ function SegmentedControl<T extends string = string>({
 }: SegmentedControlProps<T>) {
   const [ownController] = useState(() => createSegmentedControlController<T>())
   const active = controller ?? ownController
+  // UI SDK types an item's `value` as a string, so the items below check through a controller of strings; each of
+  // them passes its own value, one of this control's `T`.
+  const pressController = activateOnPress ? assumeType<SegmentedControlController>(active) : null
   return (
-    <SegmentedControlPressContext value={activateOnPress ? (active as SegmentedControlController) : null}>
+    <SegmentedControlPressContext value={pressController}>
       <SegmentedControlPrimitive<T>
         controller={active}
         className={cnState(

@@ -52,6 +52,8 @@ function CollapseIcon({ collapsed }: { collapsed: boolean }) {
   return <Icon data-slot="board-column-collapse-icon" data-icon={collapsed ? "circle-plus" : "circle-minus"} />
 }
 
+const nextHeadingLevel = { 2: 3, 3: 4, 4: 5, 5: 6, 6: 6 } as const satisfies Record<HeadingLevel, HeadingLevel>
+
 const HeadingLevelContext = createContext<HeadingLevel>(3)
 
 function Count({ value, className }: { value: ReactNode; className?: string }) {
@@ -106,7 +108,7 @@ function BoardColumn({
   const [uncontrolled, setUncontrolled] = useState(defaultCollapsed ?? false)
   const collapsed = collapsible && (collapsedProp ?? uncontrolled)
   const Heading = `h${headingLevel}` as const
-  const groupHeadingLevel = Math.min(headingLevel + 1, 6) as HeadingLevel
+  const groupHeadingLevel = nextHeadingLevel[headingLevel]
   const { collapse, expand, collapseTooltip, expandTooltip } = { ...boardColumnLabels, ...labels }
   const lists = useBoardLists()
   const ids = value === undefined ? undefined : lists?.[value]

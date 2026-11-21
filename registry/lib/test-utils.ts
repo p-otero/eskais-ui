@@ -1,5 +1,6 @@
 import { getConfig, queryAllByRole, queryAllByText } from "@testing-library/dom"
 import type { ByRoleOptions, Matcher, SelectorMatcherOptions } from "@testing-library/dom"
+import { assumeType } from "@/lib/narrow"
 
 // UI SDK announces through two visually hidden live regions it appends to <body> (role="status" and role="alert") and
 // keeps for the page's life, with the last announced text left in them.
@@ -15,7 +16,9 @@ function isAnnouncer(node: Node | null | undefined): boolean {
 }
 
 function container(within?: ParentNode): HTMLElement {
-  return (within ?? document.body) as HTMLElement
+  // Testing Library's queries type their container as an HTMLElement but search any node with children, a document
+  // or a fragment included.
+  return assumeType<HTMLElement>(within ?? document.body)
 }
 
 /** Every `role="alert"` element, without UI SDK's assertive live region. */

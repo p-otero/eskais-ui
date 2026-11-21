@@ -1,9 +1,10 @@
 "use client"
 
 import type { CommandData, CommandDataItem, CommandValueChangeReason } from "@ui-sdk/react/command"
-import { useCallback, useLayoutEffect, useMemo, useRef, useState } from "react"
+import { useCallback, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from "react"
 
 import { useVirtualRows, type Virtualize } from "@/components/ui/virtual-rows"
+import { assumeType } from "@/lib/narrow"
 
 /** `"auto"` renders only the commands in view past this many. */
 const COMMAND_VIRTUALIZE_THRESHOLD = 50
@@ -44,7 +45,9 @@ function rowsOf<Item extends CommandDataItem>(items: CommandData) {
   const rows: CommandRow<Item>[] = []
   let index = 0
   const add = (entry: CommandDataItem | string, group?: string) => {
-    const item = (typeof entry === "string" ? { value: entry, label: entry } : entry) as Item
+    // UI SDK types command data by its base item; the entries are the app's Items, as its `renderItem` and
+    // `estimateItem` say, and a string entry stands for the item `{ value, label }`.
+    const item = assumeType<Item>(typeof entry === "string" ? { value: entry, label: entry } : entry)
     rows.push({ type: "item", key: `item:${item.value}`, item, index, group })
     index += 1
   }
@@ -123,4 +126,11 @@ function useCommandRows<Item extends CommandDataItem>(
 }
 
 export { COMMAND_VIRTUALIZE_THRESHOLD, createCommandHighlight, useCommandRows }
-export type { CommandHighlight, CommandRow }
+type CommandRowProps<Item extends CommandDataItem> = {
+  row: CommandRow<Item>
+  at: number
+  measure: ((node: HTMLElement | null) => (() => void) | undefined) | undefined
+  render: ((item: Item) => ReactNode) | undefined
+}
+
+export type { CommandHighlight, CommandRow, CommandRowProps }

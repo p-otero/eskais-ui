@@ -57,7 +57,10 @@ function nodeText(node: FilterNode, options: RsqlOptions): string {
   if ("or" in node) return node.or.map((child) => nodeText(child, options)).join(",")
   if ("not" in node) {
     const pushed = negate(node.not)
-    if ("not" in pushed) return leafText(pushed.not as FilterLeaf, options, true)
+    if ("not" in pushed) {
+      const inner = pushed.not
+      return "field" in inner ? leafText(inner, options, true) : nodeText(pushed, options)
+    }
     return nodeText(pushed, options)
   }
   return leafText(node, options, false)

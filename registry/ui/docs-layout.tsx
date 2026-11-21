@@ -12,7 +12,7 @@ import {
 import { Link, type LinkProps } from "@/components/ui/link"
 import { PageLayout } from "@/components/ui/page-layout"
 import { ScrollArea, ScrollAreaScrollbar, ScrollAreaViewport } from "@/components/ui/scroll-area"
-import { cn } from "@/lib/utils"
+import { cn, cssVars } from "@/lib/utils"
 import { DocsToc, useTocItems, type DocsTocItem, type DocsTocProps } from "@/components/ui/docs-toc"
 
 type DocsLayoutProps = ComponentProps<"div"> & {
@@ -43,11 +43,11 @@ type DocsLayoutProps = ComponentProps<"div"> & {
  * height of the box that scrolls the page, for a layout inside a pane.
  */
 // Derived below the root, where a consumer's `--docs-top`, `--docs-height` and `--docs-sidebar-width` are set.
-const columns = {
+const columns = cssVars({
   "--docs-column-height": "calc(var(--docs-height) - var(--docs-top))",
   "--docs-scroll-margin": "calc(var(--docs-top) + var(--gap-group))",
-} as CSSProperties
-const sidebarWidth = { "--sidebar-width": "var(--docs-sidebar-width)" } as CSSProperties
+})
+const sidebarWidth = cssVars({ "--sidebar-width": "var(--docs-sidebar-width)" })
 
 function DocsLayout({
   topbar,

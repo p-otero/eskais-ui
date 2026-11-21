@@ -33,12 +33,33 @@ const aliases: Record<string, CodeLanguage> = {
 }
 
 const known = new Set<string>(["ts", "tsx", "js", "jsx", "json", "css", "html", "bash", "sh", "md", "diff"])
+const isKnown = (key: string): key is CodeLanguage => known.has(key)
 
 /** Maps a fence's info string or a file extension ("typescript", "zsh") to a language, or `plaintext`. */
 function normalizeLanguage(name?: string): CodeLanguage {
   const key = (name ?? "").trim().split(/\s/)[0]?.toLowerCase() ?? ""
-  if (known.has(key)) return key as CodeLanguage
+  if (isKnown(key)) return key
   return aliases[key] ?? "plaintext"
+}
+
+const tones = new Set<string>([
+  "keyword",
+  "string",
+  "number",
+  "comment",
+  "function",
+  "type",
+  "property",
+  "tag",
+  "punctuation",
+])
+
+const isTone = (value: string | undefined): value is SyntaxTone => value !== undefined && tones.has(value)
+
+/** The tone of a token from the classes `syntaxHighlighter` gave it: the first, which is always one of the tones. */
+function syntaxToneOf(classes: string): SyntaxTone | undefined {
+  const first = classes.split(" ")[0]
+  return isTone(first) ? first : undefined
 }
 
 const highlighter = tagHighlighter([
@@ -135,7 +156,7 @@ function parsed(code: string, parser: Parser): CodeToken[] {
   let position = 0
   highlightTree(parser.parse(code), highlighter, (from, to, classes) => {
     if (from > position) tokens.push({ text: code.slice(position, from) })
-    tokens.push({ text: code.slice(from, to), tone: classes.split(" ")[0] as SyntaxTone })
+    tokens.push({ text: code.slice(from, to), tone: syntaxToneOf(classes) })
     position = to
   })
   if (position < code.length) tokens.push({ text: code.slice(position) })
@@ -210,6 +231,7 @@ export {
   needsParser,
   normalizeLanguage,
   parserFor,
+  syntaxToneOf,
   watchParser,
 }
 export type { CodeLanguage, CodeLine, CodeToken, DiffKind, SyntaxTone }

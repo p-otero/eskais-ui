@@ -6,6 +6,7 @@ import { createContext, use, useMemo, useSyncExternalStore, type ReactNode } fro
 import { serverFilters } from "@/components/ui/server-filters-primitive"
 import { findFilterKey, parseFilterInput } from "@/lib/filter-input"
 import { searchFieldOf, type FilterSchema, type FilterValues } from "@/lib/filter-schema"
+import { assumeType } from "@/lib/narrow"
 import type { PageController } from "@/lib/page-controller"
 
 type AnyController = PageController<FilterValues<FilterSchema>>
@@ -38,7 +39,13 @@ function FilterScope<S extends FilterSchema>({
   children,
 }: FilterScopeProps<S>) {
   const scope = useMemo(
-    () => ({ schema, controller: controller as unknown as AnyController, searchPlaceholder }),
+    () => ({
+      schema,
+      // React context isn't generic, so the scope keeps the controller as one of any schema's values; the filter
+      // type is invariant (taken and returned), and `useFilterScope` gives it back as the reader's `S`.
+      controller: assumeType<AnyController>(controller),
+      searchPlaceholder,
+    }),
     [schema, controller, searchPlaceholder],
   )
   const handle = usePrimitive(serverFilters, {
@@ -49,7 +56,8 @@ function FilterScope<S extends FilterSchema>({
       const value = parseFilterInput(field, input)
       if (key === searchFieldOf(schema))
         controller.setSearch(typeof value === "string" ? value : "", { immediate: true })
-      else controller.setFilterValue(key, value as FilterValues<S>[typeof key])
+      // `parseFilterInput` parsed `value` for this key's field; TypeScript can't relate the two through the key.
+      else controller.setFilterValue(key, assumeType<FilterValues<S>[typeof key]>(value))
     },
     clear: () => controller.resetFilters(),
   })
@@ -69,8 +77,9 @@ function FilterScope<S extends FilterSchema>({
 /** The schema and controller of the nearest `FilterScope`, or the ones passed; and the controller's state. */
 function useFilterScope<S extends FilterSchema>(props: { schema?: S; controller?: PageController<FilterValues<S>> }) {
   const scope = use(FilterScopeContext)
-  const schema = (props.schema ?? scope?.schema) as S | undefined
-  const controller = (props.controller ?? scope?.controller) as PageController<FilterValues<S>> | undefined
+  // The scope stored them for any schema (React context isn't generic); a UI inside it reads them as its own `S`.
+  const schema = props.schema ?? assumeType<S | undefined>(scope?.schema)
+  const controller = props.controller ?? assumeType<PageController<FilterValues<S>> | undefined>(scope?.controller)
   if (!schema || !controller)
     throw new Error("A filter UI needs `schema` and `controller`, or a FilterScope around it.")
   const state = useSyncExternalStore(controller.subscribe, controller.getState, controller.getState)

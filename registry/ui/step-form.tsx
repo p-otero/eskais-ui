@@ -17,6 +17,7 @@ import {
 import { useFormContext } from "@/components/ui/form-context"
 import { StepFormProgress } from "@/components/ui/step-form-progress"
 import { useHeadingFocus, useSeenFields, useSubmitInterceptor } from "@/components/ui/use-step-form"
+import { isRecord } from "@/lib/narrow"
 import { cn } from "@/lib/utils"
 
 type FormStep<Values extends FieldValues = FieldValues> = {
@@ -79,9 +80,9 @@ type StepMove = { direction: StepDirection }
 
 function errorPaths(errors: Record<string, unknown>, prefix = ""): string[] {
   return Object.entries(errors).flatMap(([key, value]) => {
-    if (!value || typeof value !== "object") return []
+    if (!isRecord(value)) return []
     const path = prefix ? `${prefix}.${key}` : key
-    return "type" in value || "message" in value ? [path] : errorPaths(value as Record<string, unknown>, path)
+    return "type" in value || "message" in value ? [path] : errorPaths(value, path)
   })
 }
 

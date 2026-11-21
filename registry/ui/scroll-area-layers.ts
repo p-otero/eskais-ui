@@ -1,3 +1,4 @@
+import { assumeType } from "@/lib/narrow"
 /**
  * UI SDK's virtualizer puts its findable layers, a stand-in for every row, at the start and end of the element it
  * scrolls. A ScrollArea viewport reads every focusable element below it again whenever a tabindex below it changes,
@@ -18,7 +19,7 @@ function layersBesideViewport(scroller: HTMLElement) {
 // UI SDK's virtualizer connects to a scrolling element; a list that scrolls with the page goes through this stand-in
 // for the window. It has no ResizeObserver of its own: its caller follows the window's resize instead.
 function windowScroller(view: Window) {
-  return {
+  const scroller = {
     get scrollTop() {
       return view.scrollY
     },
@@ -53,7 +54,10 @@ function windowScroller(view: Window) {
       createElement: (tag: string) => view.document.createElement(tag),
       createTextNode: (text: string) => view.document.createTextNode(text),
     },
-  } as unknown as HTMLElement
+  }
+  // A stand-in with only the members UI SDK's virtualizer reads from its scrolling element, which it types as an
+  // HTMLElement.
+  return assumeType<HTMLElement>(scroller)
 }
 
 export { layersBesideViewport, windowScroller }

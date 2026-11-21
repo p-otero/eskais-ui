@@ -38,6 +38,7 @@ const guideItems = [
   "eskais-perf-skill",
   "locale",
   "action-refusal",
+  "narrow",
 ]
 
 const componentItems = items.filter((item) => !guideItems.includes(item.name))

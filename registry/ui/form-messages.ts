@@ -1,5 +1,7 @@
 import type { StandardSchemaV1 } from "@standard-schema/spec"
 
+import { isRecord } from "@/lib/narrow"
+
 type FormIssueCode =
   | "required"
   | "minLength"
@@ -142,7 +144,7 @@ function formIssueMessage(code: string, params?: Record<string, unknown>) {
 function paramsFrom(json: string): Record<string, unknown> | undefined {
   try {
     const params: unknown = JSON.parse(json)
-    if (params && typeof params === "object" && !Array.isArray(params)) return params as Record<string, unknown>
+    if (isRecord(params) && !Array.isArray(params)) return params
   } catch {
     return undefined
   }
@@ -219,8 +221,8 @@ function issuePath(issue: StandardSchemaV1.Issue) {
 function valueAt(values: unknown, path: string) {
   let current = values
   for (const key of path.split(".")) {
-    if (current === null || typeof current !== "object") return undefined
-    current = (current as Record<string, unknown>)[key]
+    if (!isRecord(current)) return undefined
+    current = current[key]
   }
   return current
 }
@@ -238,7 +240,9 @@ function issueFromSchema(issue: StandardSchemaV1.Issue, values?: unknown): FormI
   const known =
     values !== undefined && isEmptyValue(value) && field !== "root"
       ? { code: "required", params: {} }
-      : vendorCode(issue as unknown as Record<string, unknown>, value)
+      : isRecord(issue)
+        ? vendorCode(issue, value)
+        : undefined
   return { ...(known ?? { code: "invalid", params: {} }), field, message: issue.message }
 }
 
@@ -268,6 +272,18 @@ function isIssueList(value: unknown): value is readonly StandardSchemaV1.Issue[]
   return Array.isArray(value) && value.every((item) => item && typeof item === "object" && "message" in item)
 }
 
+function isErrorInput(value: unknown): value is FormErrorInput {
+  return typeof value === "string" || (isRecord(value) && typeof value.code === "string")
+}
+
+/** The field errors an app threw, keeping the entries in a shape `FormErrorInput` describes. */
+function errorInputs(value: unknown): Record<string, FormErrorInput> | undefined {
+  if (!isRecord(value)) return undefined
+  const inputs: Record<string, FormErrorInput> = {}
+  for (const [field, input] of Object.entries(value)) if (isErrorInput(input)) inputs[field] = input
+  return inputs
+}
+
 function toIssueInput(issue: FormIssue): FormErrorInput {
   return { code: issue.code, params: issue.params, message: issue.message }
 }
@@ -281,11 +297,7 @@ function toFormErrors(error: unknown): FormErrors | undefined {
     const message = error.code ? { code: error.code, params: error.params, message: error.message } : error.message
     return { fieldErrors: error.fieldErrors, message: message || undefined }
   }
-  const issues = isIssueList(error)
-    ? error
-    : error && typeof error === "object" && isIssueList((error as { issues?: unknown }).issues)
-      ? (error as { issues: readonly StandardSchemaV1.Issue[] }).issues
-      : undefined
+  const issues = isIssueList(error) ? error : isRecord(error) && isIssueList(error.issues) ? error.issues : undefined
   if (issues) {
     const result: FormErrors = { fieldErrors: {} }
     for (const issue of issues) {
@@ -295,8 +307,9 @@ function toFormErrors(error: unknown): FormErrors | undefined {
     }
     return result
   }
-  if (error instanceof Error || !error || typeof error !== "object") return undefined
-  const { fieldErrors, message } = error as FormErrors
+  if (error instanceof Error || !isRecord(error)) return undefined
+  const fieldErrors = errorInputs(error.fieldErrors)
+  const message = isErrorInput(error.message) ? error.message : undefined
   if (fieldErrors === undefined && message === undefined) return undefined
   return { fieldErrors, message }
 }

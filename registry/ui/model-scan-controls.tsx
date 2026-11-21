@@ -123,12 +123,13 @@ function WorkingBar({
   cancel,
   actions,
   className,
-}: Pick<ModelScanControlsProps, "stage" | "progress" | "statusText" | "labels" | "cancel" | "actions"> & {
+}: Pick<ModelScanControlsProps, "progress" | "statusText" | "labels" | "cancel" | "actions"> & {
+  stage: Exclude<ModelScanStage, "photo" | "error">
   className: string
 }) {
   const value = stage === "ready" ? 1 : progress
   const step = Math.max(0, steps.indexOf(stage)) + 1
-  const label = statusText ?? labels.stage[stage as Exclude<ModelScanStage, "photo" | "error">]
+  const label = statusText ?? labels.stage[stage]
   return (
     <div data-slot="model-scan-progress" className={cn(className, "w-full ps-(--item-padding-x)")}>
       <Progress
@@ -319,7 +320,7 @@ function ModelScanControls(props: ModelScanControlsProps) {
         </div>
       ) : null
   } else if (stage !== "ready" || !ready) {
-    bottom = <WorkingBar {...props} className={bar} />
+    bottom = <WorkingBar {...props} stage={stage} className={bar} />
   } else {
     top = <StylePicker {...props} />
     bottom = <ModelToolbar {...props} className={bar} />

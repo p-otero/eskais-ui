@@ -7,13 +7,14 @@
     "@ui-sdk/core@0.1.0-beta.12"
   ],
   "registryDependencies": [
+    "@eskais/narrow",
     "@eskais/virtual-rows",
     "@eskais/scroll-area"
   ],
   "files": [
     {
       "path": "registry/ui/use-instance-state.ts",
-      "content": "import type { PrimitiveInstance } from \"@ui-sdk/core\"\nimport { useSyncExternalStore } from \"react\"\n\n/** A primitive instance's state, re-rendering the component that reads it on every change. */\nfunction useInstanceState<State>(instance: PrimitiveInstance): State {\n  return useSyncExternalStore(instance.subscribe, instance.get, instance.get) as State\n}\n\nexport { useInstanceState }\n",
+      "content": "import type { PrimitiveInstance } from \"@ui-sdk/core\"\nimport { useSyncExternalStore } from \"react\"\nimport { assumeType } from \"@/lib/narrow\"\n\n/** A primitive instance's state, re-rendering the component that reads it on every change. */\nfunction useInstanceState<State>(instance: PrimitiveInstance): State {\n  // UI SDK types `PrimitiveInstance.get()` as `object`; the caller names its primitive's state, `typeof handle.state`.\n  return assumeType<State>(useSyncExternalStore(instance.subscribe, instance.get, instance.get))\n}\n\nexport { useInstanceState }\n",
       "type": "registry:ui"
     },
     {

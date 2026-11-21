@@ -4,7 +4,7 @@ import { createContext, use, type ComponentProps, type CSSProperties, type React
 
 import { Card, CardContent, CardDescription, CardEyebrow, CardHeader, CardTitle } from "@/components/ui/card"
 import { Link, type LinkProps } from "@/components/ui/link"
-import { cn } from "@/lib/utils"
+import { cn, cssVars } from "@/lib/utils"
 
 const BentoColumns = createContext(6)
 
@@ -19,7 +19,7 @@ function Bento({ columns = 6, className, style, children, ...props }: BentoProps
     <div data-slot="bento" className={cn("@container w-full min-w-0", className)} style={style} {...props}>
       <div
         className="grid auto-rows-auto grid-flow-row-dense grid-cols-1 gap-items @3xl:grid-cols-2 @5xl:grid-cols-(--bento-columns)"
-        style={{ "--bento-columns": `repeat(${columns}, minmax(0, 1fr))` } as CSSProperties}
+        style={cssVars({ "--bento-columns": `repeat(${columns}, minmax(0, 1fr))` })}
       >
         <BentoColumns value={columns}>{children}</BentoColumns>
       </div>

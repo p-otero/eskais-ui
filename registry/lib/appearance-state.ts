@@ -1,4 +1,5 @@
 import { createColorScheme, createPreference, type ColorSchemeValue, type ValueStorage } from "@ui-sdk/core"
+import { assumeType } from "@/lib/narrow"
 
 const defaultThemes = ["default", "compact", "glass"] as const
 const defaultPalettes = ["default", "neutral", "blue", "violet", "green", "orange"] as const
@@ -42,8 +43,10 @@ function createAppearance<
   Theme extends string = (typeof defaultThemes)[number],
   Palette extends string = (typeof defaultPalettes)[number],
 >(options: AppearanceOptions<Theme, Palette> = {}) {
-  const themes = options.themes ?? (defaultThemes as unknown as readonly Theme[])
-  const palettes = options.palettes ?? (defaultPalettes as unknown as readonly Palette[])
+  // Without `themes` or `palettes`, the type parameters keep their defaults, the names of these lists; TypeScript
+  // can't tie a generic's default to the argument being left out.
+  const themes = options.themes ?? assumeType<readonly Theme[]>(defaultThemes)
+  const palettes = options.palettes ?? assumeType<readonly Palette[]>(defaultPalettes)
   const colorScheme = createColorScheme({
     defaultValue: options.colorScheme ?? "system",
     global: true,

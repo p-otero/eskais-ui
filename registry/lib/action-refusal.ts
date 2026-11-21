@@ -49,7 +49,11 @@ function parseActionRefusal(failure: unknown): ActionRefusal | null {
         : undefined
   const match = message === undefined ? null : refusalTag.exec(message)
   if (!match || message === undefined) return null
-  return { action: match[2] ?? "", kind: match[1] as ActionRefusalKind, text: message.slice(0, match.index) }
+  return {
+    action: match[2] ?? "",
+    kind: match[1] === "refused" ? "refused" : "unavailable",
+    text: message.slice(0, match.index),
+  }
 }
 
 const isImperative = (call: ActionCall) => !call?.event && (call?.reason ?? "imperative") === "imperative"

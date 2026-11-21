@@ -20,6 +20,9 @@ type LogLine = {
 /** A line to add: its raw text, which may hold ANSI escape codes, or the text with where it came from. */
 type LogInput = string | { text: string; source?: string; level?: LogLine["level"]; time?: number | Date }
 
+// `Array.isArray` doesn't narrow a readonly array out of a union.
+const isInputList = (input: LogInput | readonly LogInput[]): input is readonly LogInput[] => Array.isArray(input)
+
 type LogWriteOptions = { source?: string; level?: LogLine["level"]; time?: number | Date }
 
 type LogStoreSnapshot = {
@@ -128,7 +131,7 @@ function createLogStore(options: LogStoreOptions = {}): LogStore {
   const pending = new Map<string, Pending>()
   const carried = new Map<string, AnsiStyle>()
 
-  const firstId = () => (head < buffer.length ? (buffer[head] as LogLine).id : nextId)
+  const firstId = () => (head < buffer.length ? buffer[head]!.id : nextId)
 
   const notify = () => {
     scheduled = false
@@ -198,8 +201,8 @@ function createLogStore(options: LogStoreOptions = {}): LogStore {
   return {
     maxLines,
     append(input) {
-      if (typeof input === "string" || !Array.isArray(input)) appendOne(input as LogInput)
-      else for (const item of input as readonly LogInput[]) appendOne(item)
+      if (isInputList(input)) for (const item of input) appendOne(item)
+      else appendOne(input)
       request()
     },
     write(chunk, meta = {}) {

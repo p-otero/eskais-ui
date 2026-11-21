@@ -28,6 +28,7 @@ import {
 } from "@/components/ui/use-dialog-focus"
 import { useVisualViewportBox } from "@/components/ui/use-dialog-viewport"
 import { cn, cnState } from "@/lib/utils"
+import { assumeType } from "@/lib/narrow"
 
 // While they animate out, the backdrop and content let presses through, so the first click on the page counts.
 const backdropClassName =
@@ -176,7 +177,10 @@ function useFocusReturn(
   }
   // Returning the focused element leaves focus where it is; null sends UI SDK down its own fallback chain.
   const guarded = () => {
-    if (!mayReturnFocus(contentRef.current)) return focusedElement() ?? (document.activeElement as HTMLElement | null)
+    // The body, or an SVG element, which can hold focus too: returned as it is so focus stays there. UI SDK types the
+    // final focus as an HTMLElement but only focuses it.
+    if (!mayReturnFocus(contentRef.current))
+      return focusedElement() ?? assumeType<HTMLElement | null>(document.activeElement)
     return finalFocus === undefined ? returnTo() : resolveFocusTarget(finalFocus as Exclude<FinalFocus, "none">)
   }
   function wrap<State>(children: ReactNode | ((state: State) => ReactNode)) {

@@ -7,6 +7,7 @@ import {
   type SortSpec,
   type SourceCapabilities,
 } from "@/lib/page-source"
+import { isRecord } from "@/lib/narrow"
 
 type ArraySortValue = string | number | bigint | boolean | Date | null | undefined
 
@@ -46,7 +47,20 @@ function compareValues(a: ArraySortValue, b: ArraySortValue) {
   const left = a instanceof Date ? a.getTime() : a
   const right = b instanceof Date ? b.getTime() : b
   if (left === right) return 0
-  return (left as number) < (right as number) ? -1 : 1
+  return lessThan(left, right) ? -1 : 1
+}
+
+// `<` on mixed primitives compares them as numbers, which TypeScript only allows on numbers, bigints or two strings.
+function lessThan(left: string | number | bigint | boolean, right: string | number | bigint | boolean) {
+  if (typeof left === "bigint" && typeof right === "bigint") return left < right
+  return Number(left) < Number(right)
+}
+
+function asSortValue(value: unknown): ArraySortValue {
+  if (value === null || value === undefined || value instanceof Date) return value
+  if (typeof value === "string" || typeof value === "number" || typeof value === "bigint" || typeof value === "boolean")
+    return value
+  return String(value)
 }
 
 function defaultId(item: unknown) {
@@ -80,14 +94,14 @@ function arraySource<T, F = Record<string, unknown>>(
   let calls = 0
 
   const sortValue = (field: string) =>
-    options.sort?.[field] ?? ((item: T) => (item as Record<string, unknown>)[field] as ArraySortValue)
+    options.sort?.[field] ?? ((item: T) => asSortValue(isRecord(item) ? item[field] : undefined))
 
   const matches = (item: T, filter: F) => {
     if (options.filter && !options.filter(item, filter)) return false
     const search = options.search
     if (search === undefined) return true
     if (typeof search === "function") return search(item, filter)
-    const text = (filter as Record<string, unknown> | undefined)?.[search.param ?? "q"]
+    const text = isRecord(filter) ? filter[search.param ?? "q"] : undefined
     if (typeof text !== "string" || text.trim() === "") return true
     const needle = text.trim().toLocaleLowerCase()
     return search.fields.some((field) =>

@@ -10,6 +10,7 @@ import {
   type SourceCapabilities,
   type SourceContext,
 } from "@/lib/page-source"
+import { assumeType, isRecord } from "@/lib/narrow"
 
 /** What an adapter hands your `request`: the query to send, and the request it came from. */
 type RestCall<F> = {
@@ -51,9 +52,10 @@ function baseParams<T, F, Raw>(options: RestSourceOptions<T, F, Raw>, request: P
 }
 
 function asResult<T>(raw: unknown, where: string): PageResult<T> {
-  if (typeof raw !== "object" || raw === null || !Array.isArray((raw as { items?: unknown }).items))
+  if (!isRecord(raw) || !Array.isArray(raw.items))
     throw new TypeError(`${where} expected { items, total? }; pass \`read\` to map your response.`)
-  return raw as PageResult<T>
+  // The envelope is checked above; its items are the server's, typed by the source's `T`.
+  return assumeType<PageResult<T>>(raw)
 }
 
 // Without a total, a full page is taken to mean there may be more; a short one is the last.
@@ -159,9 +161,10 @@ type SpringSourceOptions<T, F, Raw> = Omit<RestSourceOptions<T, F, Raw>, "sortSt
 }
 
 function springContent<T>(raw: unknown, where: string): SpringPage<T> {
-  if (typeof raw !== "object" || raw === null || !Array.isArray((raw as { content?: unknown }).content))
+  if (!isRecord(raw) || !Array.isArray(raw.content))
     throw new TypeError(`${where} expected a Spring page with \`content\`; pass \`select\` to find it.`)
-  return raw as SpringPage<T>
+  // The envelope is checked above; its content is the server's, typed by the source's `T`.
+  return assumeType<SpringPage<T>>(raw)
 }
 
 function springParams<T, F, Raw>(options: SpringSourceOptions<T, F, Raw>, request: PageRequest<F>) {

@@ -22,6 +22,7 @@ import { caretOutOfPrefix, frontmatterEnd } from "@/components/ui/markdown-edito
 import { provisionalTriggers } from "@/components/ui/markdown-editor-provisional"
 import { markdownEditorTheme } from "@/components/ui/markdown-editor-theme"
 import { markdownExtensions } from "@/components/ui/markdown-syntax"
+import { assumeType } from "@/lib/narrow"
 
 /** Marks a transaction that came from `value`, so it never echoes back through `onChange`. */
 const fromValue = Annotation.define<boolean>()
@@ -59,7 +60,9 @@ function markdownSupport(languages: CodeLanguages) {
     if (!found) return null
     return found.support ? found.support.language.parser : ParseContext.getSkippingParser(found.load())
   }
-  const parser = (commonmarkLanguage.parser as MarkdownParser).configure([
+  // @codemirror/lang-markdown types its language's parser as Lezer's base `Parser`; it is the commonmark
+  // `MarkdownParser` configured with CodeMirror's fold and indent props, which a fresh one would lack.
+  const parser = assumeType<MarkdownParser>(commonmarkLanguage.parser).configure([
     ...markdownExtensions,
     parseCode({ codeParser }),
   ])

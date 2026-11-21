@@ -32,9 +32,11 @@ import {
   useCommandRows,
   type CommandHighlight,
   type CommandRow as CommandRowData,
+  type CommandRowProps,
 } from "@/components/ui/use-command-rows"
 import { useHighlightFirstOnOpen } from "@/components/ui/use-command-reset"
 import type { Virtualize } from "@/components/ui/virtual-rows"
+import { assumeType } from "@/lib/narrow"
 import { cn, cnState } from "@/lib/utils"
 
 const HighlightContext = createContext<CommandHighlight | null>(null)
@@ -372,15 +374,7 @@ const commandProps = ({ value, label, keywords, disabled, shortcut }: CommandDat
   shortcut,
 })
 
-type CommandRowProps<Item extends CommandDataItem> = {
-  row: CommandRowData<Item>
-  at: number
-  measure: ((node: HTMLElement | null) => (() => void) | undefined) | undefined
-  render: ((item: Item) => ReactNode) | undefined
-}
-
-// Memoized: moving the highlight or scrolling renders only the rows that come into view.
-const CommandRow = memo(function CommandRow<Item extends CommandDataItem>(props: CommandRowProps<Item>) {
+const MemoCommandRow = memo(function CommandRow<Item extends CommandDataItem>(props: CommandRowProps<Item>) {
   const { row, at, measure, render } = props
   if (row.type === "separator")
     return (
@@ -403,7 +397,10 @@ const CommandRow = memo(function CommandRow<Item extends CommandDataItem>(props:
       {render?.(row.item) ?? <CommandItemText />}
     </CommandItem>
   )
-}) as <Item extends CommandDataItem>(props: CommandRowProps<Item>) => ReactNode
+})
+// Memoized: moving the highlight or scrolling renders only the rows that come into view. `memo` drops the row's type
+// parameters, which this gives back.
+const CommandRow = assumeType<<Item extends CommandDataItem>(props: CommandRowProps<Item>) => ReactNode>(MemoCommandRow)
 
 function CommandItemIcon({ className, ...props }: ComponentProps<typeof CommandItemIconPrimitive>) {
   return (

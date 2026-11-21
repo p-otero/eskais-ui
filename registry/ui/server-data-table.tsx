@@ -24,6 +24,7 @@ import {
 import { usePageController, useServerInfinite, useServerPage } from "@/components/ui/use-server-data"
 import { useDelayedFlag, useReachEnd } from "@/components/ui/use-server-table"
 import { searchFieldOf, type FilterSchema, type FilterValues } from "@/lib/filter-schema"
+import { assumeType } from "@/lib/narrow"
 import { createUrlCodec } from "@/lib/filter-url"
 import type { PageController, UrlHistory } from "@/lib/page-controller"
 import {
@@ -137,7 +138,8 @@ function ServerDataTable<T, S extends FilterSchema = Record<never, never>>({
 }: ServerDataTableProps<T, S>) {
   const labels = { ...serverDataTableLabels, ...labelOverrides }
   const locale = useLocale(localeProp)
-  const schema = filters ?? ({} as S)
+  // Without `filters` the schema is empty, which TypeScript can't confirm is an `S` for a generic `S`.
+  const schema = filters ?? assumeType<S>({})
   const searchKey = searchFieldOf(schema)
   const [url] = useState(() =>
     controllerProp ? undefined : urlOptions(urlState, schema, { size: pageSize, sort: defaultSort }),

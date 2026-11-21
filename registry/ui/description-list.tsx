@@ -3,11 +3,11 @@
 import { renderElement, usePart, usePrimitive, type PartProps } from "@ui-sdk/react/primitive"
 import { cva } from "class-variance-authority"
 import { CheckIcon, CopyIcon } from "lucide-react"
-import { createContext, use, useId, useMemo, type CSSProperties, type ReactNode } from "react"
+import { createContext, use, useId, useMemo, type ReactNode } from "react"
 
 import { Button } from "@/components/ui/button"
 import { descriptionValue, type DescriptionValueOptions } from "@/components/ui/description-list-primitive"
-import { cn } from "@/lib/utils"
+import { cn, cssVars } from "@/lib/utils"
 
 type DescriptionListLayout = "stacked" | "inline" | "grid"
 
@@ -73,9 +73,9 @@ type ListStyle = DescriptionListProps["style"]
 // width that `columns` would give it.
 function gridStyle(columns: number, style: ListStyle): ListStyle {
   const share = `calc((100% - ${String(columns - 1)} * var(--gap-section)) / ${String(columns)})`
-  const variables = {
+  const variables = cssVars({
     "--description-grid": `repeat(auto-fill, minmax(min(100%, max(var(--description-column-min, 12rem), ${share})), 1fr))`,
-  } as CSSProperties
+  })
   if (typeof style === "function") return (state) => ({ ...variables, ...style(state) })
   return { ...variables, ...style }
 }
@@ -167,7 +167,7 @@ function DescriptionDetails({
 }: DescriptionDetailsProps) {
   const { labels } = use(ListContext)
   const empty = isEmpty(children)
-  let content: ReactNode = children as ReactNode
+  let content: DescriptionDetailsProps["children"] = children
   if (empty) {
     content = (
       <>
@@ -179,7 +179,7 @@ function DescriptionDetails({
     const text = copyValue ?? (typeof children === "string" || typeof children === "number" ? String(children) : "")
     content = (
       <CopyableValue text={text} onCopy={onCopy} labels={labels}>
-        {children as ReactNode}
+        {typeof children === "function" ? null : children}
       </CopyableValue>
     )
   }

@@ -1,3 +1,4 @@
+import { assumeType } from "@/lib/narrow"
 type Axis = "x" | "y"
 type Metrics = { position: number; client: number; scroll: number }
 
@@ -214,7 +215,9 @@ function focusViewport(el: HTMLElement) {
 type Listeners = { [Type in keyof HTMLElementEventMap]?: (event: HTMLElementEventMap[Type]) => void }
 
 function listen(el: HTMLElement, listeners: Listeners, options?: AddEventListenerOptions) {
-  const entries = Object.entries(listeners) as [string, EventListener][]
+  // Each listener takes the event of its own key; TypeScript can't correlate a key with its value through
+  // `Object.entries`.
+  const entries = assumeType<[string, EventListener][]>(Object.entries(listeners))
   for (const [type, listener] of entries) el.addEventListener(type, listener, options)
   return () => {
     for (const [type, listener] of entries) el.removeEventListener(type, listener, options)

@@ -95,7 +95,7 @@ const subjectKey = (text: string) => text.trim().toLocaleLowerCase()
 function createCommitFinder(graph: CommitGraph): (ref: string) => CommitMatch | undefined {
   let subjects: Map<string, number> | undefined
   const match = (row: number): CommitMatch => {
-    const commit = graph.commits[row] as Commit
+    const commit = graph.commits[row]!
     const hash = commit.hash ?? commit.id.slice(0, 7)
     return { id: commit.id, hash, subject: commitSubject(commit), merge: isMergeRow(graph, row) }
   }
@@ -105,7 +105,7 @@ function createCommitFinder(graph: CommitGraph): (ref: string) => CommitMatch | 
     if (!subjects) {
       subjects = new Map()
       for (let row = 0; row < graph.size; row += 1) {
-        const key = subjectKey(commitSubject(graph.commits[row] as Commit))
+        const key = subjectKey(commitSubject(graph.commits[row]!))
         if (!subjects.has(key)) subjects.set(key, row)
       }
     }
@@ -113,7 +113,7 @@ function createCommitFinder(graph: CommitGraph): (ref: string) => CommitMatch | 
     if (bySubject !== undefined) return match(bySubject)
     if (ref.length < 4) return undefined
     for (let row = 0; row < graph.size; row += 1) {
-      const commit = graph.commits[row] as Commit
+      const commit = graph.commits[row]!
       if (commit.id.startsWith(ref) || commit.hash?.startsWith(ref)) return match(row)
     }
     return undefined

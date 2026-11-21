@@ -14,6 +14,7 @@ import type { BoardColumnLabels } from "@/components/ui/board-column"
 import { livenessLabelsEs, type LivenessLabels } from "@/components/ui/liveness-indicator"
 import { taskStatusLabelsEs } from "@/components/ui/task-status"
 import { usageLabelsEs, type UsageLabels } from "@/components/ui/usage"
+import { assumeType } from "@/lib/narrow"
 
 interface AgentTaskComponentLabels {
   agentBadge?: Partial<AgentBadgeLabels>
@@ -69,7 +70,10 @@ const agentTaskBoardLabelsEs: AgentTaskBoardLabels = {
 }
 
 function resolveLabels(labels?: AgentTaskBoardLabelsInput): AgentTaskBoardLabels {
-  return labels ? (mergeLabels(baseLabels, labels as BaseLabelsInput) as AgentTaskBoardLabels) : agentTaskBoardLabels
+  if (!labels) return agentTaskBoardLabels
+  // The component labels are interfaces, which TypeScript won't take as the base file's loose
+  // `Record<string, Record<string, unknown>>`, though mergeLabels only copies them through.
+  return mergeLabels(baseLabels, assumeType<BaseLabelsInput>(labels)) as AgentTaskBoardLabels
 }
 
 export { agentTaskBoardLabels, agentTaskBoardLabelsEs, resolveLabels }

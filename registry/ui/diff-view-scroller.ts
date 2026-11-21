@@ -65,7 +65,7 @@ function connectDiffScroll(
     virtual.refresh()
   }
   const resize = scroller && typeof ResizeObserver === "function" ? new ResizeObserver(onResize) : undefined
-  resize?.observe(scroller as HTMLElement)
+  if (scroller) resize?.observe(scroller)
   if (!scroller) view.addEventListener("resize", onResize)
   const top = scroller ? () => scroller.scrollTop : () => view.scrollY
   const height = scroller ? () => scroller.clientHeight : () => view.innerHeight

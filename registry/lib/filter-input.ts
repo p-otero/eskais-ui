@@ -1,6 +1,7 @@
 import type { DateRange, FilterField, FilterSchema, NumberFilter } from "@/lib/filter-schema"
+import { isOneOf, isRecord } from "@/lib/narrow"
 
-const numberOps = new Set(["eq", "neq", "lt", "lte", "gt", "gte"])
+const numberOps = ["eq", "neq", "lt", "lte", "gt", "gte"] as const
 type NumberOp = Exclude<NumberFilter["op"], "between">
 
 const symbols: Record<string, NumberOp> = { "=": "eq", "!=": "neq", "<": "lt", "<=": "lte", ">": "gt", ">=": "gte" }
@@ -31,12 +32,10 @@ function list(input: unknown): unknown[] {
 
 function parseNumber(field: FilterField, input: unknown): NumberFilter {
   if (typeof input === "number" && Number.isFinite(input)) return { op: "eq", value: input }
-  if (typeof input === "object" && input !== null) {
-    const candidate = input as Partial<NumberFilter> & { min?: unknown; max?: unknown; value?: unknown }
-    if (candidate.op === "between" && typeof candidate.min === "number" && typeof candidate.max === "number")
-      return { op: "between", min: candidate.min, max: candidate.max }
-    if (numberOps.has(String(candidate.op)) && typeof candidate.value === "number" && Number.isFinite(candidate.value))
-      return { op: candidate.op as NumberOp, value: candidate.value }
+  if (isRecord(input)) {
+    const { op, min, max, value } = input
+    if (op === "between" && typeof min === "number" && typeof max === "number") return { op: "between", min, max }
+    if (isOneOf(numberOps, op) && typeof value === "number" && Number.isFinite(value)) return { op, value }
   }
   if (typeof input === "string") {
     const text = input.trim()
@@ -45,7 +44,8 @@ function parseNumber(field: FilterField, input: unknown): NumberFilter {
     const symbol = /^(!=|<=|>=|<|>|=)\s*(-?[\d.]+)$/.exec(text)
     if (symbol) return { op: symbols[symbol[1] ?? "="] ?? "eq", value: Number(symbol[2]) }
     const named = /^([a-z]+):\s*(-?[\d.]+)$/.exec(text)
-    if (named && numberOps.has(named[1] ?? "")) return { op: named[1] as NumberOp, value: Number(named[2]) }
+    const namedOp = named?.[1]
+    if (named && isOneOf(numberOps, namedOp)) return { op: namedOp, value: Number(named[2]) }
     if (text !== "" && Number.isFinite(Number(text))) return { op: "eq", value: Number(text) }
   }
   return fail(field, 'a number, ">= 10", "gte:10" or "10..20"', input)

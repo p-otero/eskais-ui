@@ -1,7 +1,7 @@
 "use client"
 
 import { createParts, usePart, usePrimitive } from "@ui-sdk/react/primitive"
-import { useMemo, useSyncExternalStore, type ComponentProps, type CSSProperties, type ReactNode } from "react"
+import { useMemo, useSyncExternalStore, type ComponentProps, type ReactNode } from "react"
 import { ArrowDownIcon } from "lucide-react"
 
 import { buttonVariants } from "@/components/ui/button"
@@ -11,7 +11,23 @@ import { LogRows, sourceStyles, type LogSource } from "@/components/ui/log-viewe
 import type { LogStore } from "@/components/ui/log-viewer-store"
 import { LogViewerToolbar } from "@/components/ui/log-viewer-toolbar"
 import { ScrollArea, ScrollAreaCorner, ScrollAreaScrollbar, ScrollAreaViewport } from "@/components/ui/scroll-area"
-import { cn } from "@/lib/utils"
+import { isOneOf, isRecord } from "@/lib/narrow"
+import { tones } from "@/lib/tone"
+import { cn, cssVars } from "@/lib/utils"
+
+const textOrUndefined = (value: unknown) => (typeof value === "string" ? value : undefined)
+
+/** The configured sources back from the JSON the styles' memo is keyed on, so a new array of the same ones is skipped. */
+function parseSources(json: string): LogSource[] {
+  const parsed: unknown = JSON.parse(json)
+  if (!Array.isArray(parsed)) return []
+  return parsed.filter(isRecord).map((source) => ({
+    id: String(source.id),
+    label: textOrUndefined(source.label),
+    color: textOrUndefined(source.color),
+    tone: isOneOf(tones, source.tone) ? source.tone : undefined,
+  }))
+}
 
 const Parts = createParts(logViewer, { root: "div", log: "div", jump: "button", status: "div" })
 
@@ -94,7 +110,7 @@ function LogViewer({
   // render a new line's count causes.
   const known = useSyncExternalStore(api.subscribe, api.sources, api.sources)
   const configuredKey = JSON.stringify(configured)
-  const styles = useMemo(() => sourceStyles(known, JSON.parse(configuredKey) as LogSource[]), [known, configuredKey])
+  const styles = useMemo(() => sourceStyles(known, parseSources(configuredKey)), [known, configuredKey])
   const widest = Math.max(0, ...[...styles.values()].map((source) => source.label.length))
 
   return usePart(
@@ -139,7 +155,7 @@ function LogViewer({
               />
             )}
             <ScrollArea
-              style={{ "--log-source-width": `${String(widest + 2)}ch` } as CSSProperties}
+              style={cssVars({ "--log-source-width": `${String(widest + 2)}ch` })}
               className="flex min-h-0 flex-1 flex-col font-mono text-caption leading-relaxed"
             >
               <ScrollAreaViewport

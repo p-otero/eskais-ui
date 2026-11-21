@@ -124,14 +124,15 @@ const trailingParts = new Set<unknown>()
 
 // The layout the floating styles assume: the label, the control right under it, and only a description or an error
 // after them. Text, a wrapper or any other element between or after them changes where the control sits.
-function inFloatingLayout(children: unknown, className: unknown) {
+function inFloatingLayout(children: FieldProps["children"], className: unknown) {
   if (typeof children === "function" || padsItself(className)) return false
-  const [label, control, ...rest] = Children.toArray(children as ReactNode)
+  const [label, control, ...rest] = Children.toArray(children)
   return (
     isValidElement(label) &&
     label.type === FieldLabel &&
     isValidElement(control) &&
-    floatingLabelControls.has(control.type as object) &&
+    typeof control.type !== "string" &&
+    floatingLabelControls.has(control.type) &&
     rest.every((part) => isValidElement(part) && trailingParts.has(part.type))
   )
 }

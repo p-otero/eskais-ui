@@ -4,6 +4,8 @@ import { colorDistance, formatColor, isInGamut, toGamut, type Color, type ColorG
 import type { ColorChannel, ColorPickerController, ColorPickerSpace } from "@ui-sdk/react/color-picker"
 import { useCallback, useLayoutEffect, useRef } from "react"
 
+import { keysOf } from "@/lib/narrow"
+
 /** A key pressed on a thumb: the area's, across `x` and up `y`, or a slider's for `channel`. */
 type KeyStep = { key: string; shift: boolean; rtl: boolean } & (
   | { x: ColorChannel; y: ColorChannel }
@@ -47,8 +49,9 @@ function write(color: Color, spec: Spec, value: number): Color {
 
 function placed(color: Color, fractions: Partial<Record<ColorChannel, number>>): Color | null {
   let next = color
-  for (const [channel, fraction] of Object.entries(fractions)) {
-    const spec = oklchChannels[channel as ColorChannel]
+  for (const channel of keysOf(fractions)) {
+    const fraction = fractions[channel]
+    const spec = oklchChannels[channel]
     if (!spec || fraction === undefined) return null
     next = write(next, spec, snap(Math.min(1, Math.max(0, fraction)) * spec.max, spec))
   }

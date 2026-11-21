@@ -8,7 +8,6 @@ import {
   useState,
   type ComponentProps,
   type CSSProperties,
-  type ReactElement,
   type ReactNode,
 } from "react"
 
@@ -79,10 +78,10 @@ type SettingsPageProps = Omit<ComponentProps<"div">, "onChange"> & {
 function sectionsOf(children: ReactNode): SettingsSectionLink[] {
   const links: SettingsSectionLink[] = []
   for (const child of Children.toArray(children)) {
-    if (!isValidElement(child)) continue
-    const props = (child as ReactElement<Partial<SettingsSectionProps>>).props
-    const label = props.navLabel ?? (typeof props.title === "string" ? props.title : undefined)
-    if (typeof props.id === "string" && label !== undefined) links.push({ id: props.id, label })
+    if (!isValidElement<Record<string, unknown>>(child)) continue
+    const { id, navLabel, title } = child.props
+    const label = typeof navLabel === "string" ? navLabel : typeof title === "string" ? title : undefined
+    if (typeof id === "string" && label !== undefined) links.push({ id, label })
   }
   return links
 }
@@ -281,7 +280,7 @@ function SettingsSection({
   const titleId = useId()
   const descriptionId = useId()
   useSectionMounted(id)
-  const Heading = `h${String(headingLevel)}` as "h2"
+  const Heading = headingLevel === 3 ? "h3" : "h2"
   return (
     <section
       id={id}

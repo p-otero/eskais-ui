@@ -1,6 +1,7 @@
-import type { CSSProperties, ReactNode } from "react"
+import type { ReactNode } from "react"
 
 import { isOnPhoto, type ModelScanDrawnGroup } from "@/components/ui/model-scan-points"
+import { cssVars } from "@/lib/utils"
 
 /* oxlint-disable shadcn/no-arbitrary-values -- the mesh draws in from each line's and point's place in its group */
 // Each group's lines draw in one after another, then its points pop in, at most 0.7 s and 0.4 s behind the first: a
@@ -16,7 +17,7 @@ const pointClassName =
 // Float32 fractions carry noise past a tenth of a unit, which is far under a pixel.
 const tenth = (value: number) => Math.round(value * 10) / 10
 
-const order = (index: number) => ({ "--model-scan-point-index": String(index) }) as CSSProperties
+const order = (index: number) => cssVars({ "--model-scan-point-index": String(index) })
 
 /**
  * One group's points and the lines its `edges` join, in a box `width` × 1000 units over the photo. Points past the

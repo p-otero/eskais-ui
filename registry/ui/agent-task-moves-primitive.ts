@@ -4,6 +4,7 @@ import { settled } from "@/lib/action-refusal"
 import { TASK_STATUSES, type TaskMove } from "@/lib/agent-task-board-model"
 import type { TaskStatus, TaskView } from "@/lib/agent-task-types"
 import type { AgentApproval } from "@/components/ui/agent-task-board-primitive"
+import { isOneOf } from "@/lib/narrow"
 
 type TaskMoveReason = "drag" | "move-key" | "imperative"
 
@@ -51,24 +52,24 @@ const agentTaskMoves = definePrimitive({
         const task = tasks().find((candidate) => candidate.id === id)
         if (!task) throw new RangeError(`No task "${String(id)}" on the board.`)
         const statuses = context.options().statuses ?? []
-        if (!statuses.includes(status as TaskStatus)) {
-          const known = TASK_STATUSES.includes(status as TaskStatus) ? " isn't shown" : " isn't a status"
+        if (!isOneOf(statuses, status)) {
+          const known = isOneOf(TASK_STATUSES, status) ? " isn't shown" : " isn't a status"
           throw new RangeError(`"${String(status)}"${known}. Columns: ${statuses.join(", ")}.`)
         }
-        const to = status as TaskStatus
+        const to = status
         const canMove = context.options().canMove
         if (canMove && !canMove(task, to)) throw new Error(`Task "${task.id}" can't move to "${to}".`)
         const column = tasks().filter((candidate) => candidate.status === to && candidate.id !== task.id)
         const at = index === undefined || index === null ? column.length : index
-        if (!Number.isInteger(at) || (at as number) < 0 || (at as number) > column.length) {
+        if (typeof at !== "number" || !Number.isInteger(at) || at < 0 || at > column.length) {
           throw new RangeError(`moveTask takes an index from 0 to ${String(column.length)} in "${to}".`)
         }
         const move: TaskMove = {
           id: task.id,
           from: task.status,
           to,
-          index: at as number,
-          before: column[at as number]?.id ?? null,
+          index: at,
+          before: column[at]?.id ?? null,
         }
         const details = { reason: options?.reason ?? "imperative", event: options?.event }
         return settled(!dispatch(context, "onMoveTask", move, details), "moveTask", details)

@@ -11,6 +11,7 @@ import {
   type SourceContext,
 } from "@/lib/page-source"
 import type { RestCall } from "@/lib/page-source-rest"
+import { assumeType } from "@/lib/narrow"
 
 type CursorPosition = { cursor: string | null; direction: "forward" | "backward" }
 
@@ -80,7 +81,8 @@ function cursorSource<T, F = unknown, Raw = PageResult<T>>(options: CursorSource
         params.set(position.direction === "forward" ? afterParam : beforeParam, position.cursor)
       params.set(sizeParam, String(keyset ? request.size + 1 : request.size))
       const raw = await options.request({ params, query: params.toString(), request, signal: context.signal })
-      const result = options.read ? options.read(raw, request) : (raw as PageResult<T>)
+      // Without `read` the body is the page: its `items` is checked below, and they are typed by the source's `T`.
+      const result = options.read ? options.read(raw, request) : assumeType<PageResult<T>>(raw)
       if (!Array.isArray(result.items)) throw new TypeError("cursorSource expected { items }; pass `read`.")
       if (keyset) return keysetResult(result.items, request.size, position, keyset.cursor)
       return { ...result, hasMore: result.hasMore ?? (result.nextCursor ?? null) !== null }
@@ -129,7 +131,8 @@ function relaySource<T, F = unknown, Raw = RelayConnection<T>>(
           ? { first: request.size, ...(position.cursor === null ? {} : { after: position.cursor }) }
           : { last: request.size, ...(position.cursor === null ? {} : { before: position.cursor }) }
       const raw = await options.request({ variables, request, signal: context.signal })
-      const connection = options.connection ? options.connection(raw) : (raw as RelayConnection<T>)
+      // Without `connection` the body is the connection: its `pageInfo` is checked below, its nodes typed by `T`.
+      const connection = options.connection ? options.connection(raw) : assumeType<RelayConnection<T>>(raw)
       if (typeof connection !== "object" || connection === null || typeof connection.pageInfo !== "object")
         throw new TypeError("relaySource expected a connection with `pageInfo`; pass `connection` to find it.")
       const items = connection.edges
@@ -270,7 +273,8 @@ function linkHeaderSource<T, F = unknown>(options: LinkHeaderSourceOptions<T, F>
       if (!Array.isArray(items)) throw new TypeError("linkHeaderSource expected an array body; pass `read`.")
       const links = parseLinkHeader(headers.get("link"))
       const result: PageResult<T> = {
-        items: items as T[],
+        // The body (or what `read` returned) is checked as an array above; its items are typed by the source's `T`.
+        items: assumeType<T[]>(items),
         hasMore: links.next !== undefined,
         hasPrevious: links.prev !== undefined || links.previous !== undefined,
       }

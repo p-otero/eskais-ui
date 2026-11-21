@@ -27,6 +27,7 @@ import { ControlTooltip } from "@/components/ui/tooltip"
 import { Spinner } from "@/components/ui/spinner"
 import type { Tone } from "@/lib/tone"
 import { cn, cnState } from "@/lib/utils"
+import { isOneOf, keysOf } from "@/lib/narrow"
 
 // The region is a manual popover in the top layer, so the UA popover box (inset, margin, border, canvas) is reset.
 // It takes no pointer events, so only the toasts cover the page beneath.
@@ -194,6 +195,8 @@ const toneIconClassNames = {
   destructive: "text-destructive",
 } satisfies Record<keyof typeof toneIcons, string>
 
+const iconTones = keysOf(toneIcons)
+
 type ToastIconProps = Omit<ComponentProps<"span">, "children"> & {
   /** The toast's type: `loading` shows a spinner, and the others the icon of their tone. */
   type?: ToastType
@@ -205,18 +208,22 @@ type ToastIconProps = Omit<ComponentProps<"span">, "children"> & {
 function ToastIcon({ type = "default", tone, className, ...props }: ToastIconProps) {
   const resolved = tone ?? toastTone(type)
   const loading = type === "loading" && tone === undefined
-  if (!loading && !(resolved in toneIcons)) return null
-  const key = resolved as keyof typeof toneIcons
-  const Icon = toneIcons[key]
+  const key = isOneOf(iconTones, resolved) ? resolved : undefined
+  if (!loading && key === undefined) return null
+  const Icon = key === undefined ? undefined : toneIcons[key]
   return (
     <span
       data-slot="toast-icon"
       data-tone={loading ? "loading" : resolved}
       aria-hidden="true"
-      className={cn("flex shrink-0", loading ? "text-muted-foreground" : toneIconClassNames[key], className)}
+      className={cn(
+        "flex shrink-0",
+        loading || key === undefined ? "text-muted-foreground" : toneIconClassNames[key],
+        className,
+      )}
       {...props}
     >
-      {loading ? <Spinner size="md" /> : <Icon className="size-4" />}
+      {loading || !Icon ? <Spinner size="md" /> : <Icon className="size-4" />}
     </span>
   )
 }

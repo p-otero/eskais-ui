@@ -19,7 +19,7 @@ function BoardNavigationProvider({ handle, children }: { handle: BoardNavigation
 }
 
 function BoardCardPart({ handle, id, render }: { handle: BoardNavigationHandle; id: string; render: ReactElement }) {
-  return usePart(handle, "card", { value: id }, { render: render as ReactElement<Record<string, unknown>> })
+  return usePart(handle, "card", { value: id }, { render })
 }
 
 /**

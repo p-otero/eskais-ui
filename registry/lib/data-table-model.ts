@@ -26,7 +26,14 @@ function compareSortValues(a: SortValue, b: SortValue): number {
   const left = a instanceof Date ? a.getTime() : a
   const right = b instanceof Date ? b.getTime() : b
   if (left === right) return 0
-  return (left as number) < (right as number) ? -1 : 1
+  return lessThan(left, right) ? -1 : 1
+}
+
+// `<` on mixed values compares them as numbers, which TypeScript only allows on numbers, bigints or two strings.
+function lessThan(left: Exclude<SortValue, Date>, right: Exclude<SortValue, Date>) {
+  if (typeof left === "bigint" && typeof right === "bigint") return left < right
+  if (typeof left === "string" && typeof right === "string") return left < right
+  return Number(left) < Number(right)
 }
 
 // Missing values sort last in both directions, so a descending sort doesn't open on a page of blanks.
@@ -68,7 +75,7 @@ function paginate<Row>(rows: readonly Row[], page: number, pageSize: number | un
   const pageCount = pageCountOf(total, pageSize)
   const current = clampPage(page, pageCount)
   if (pageCount === 1) return { rows: [...rows], page: current, pageCount, total }
-  const size = pageSize as number
+  const size = pageSize ?? total
   return { rows: rows.slice((current - 1) * size, current * size), page: current, pageCount, total }
 }
 

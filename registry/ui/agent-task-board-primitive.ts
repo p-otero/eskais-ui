@@ -10,6 +10,7 @@ import {
 import { settled } from "@/lib/action-refusal"
 import { NO_STAGE, filterOptions, type TaskFilters } from "@/lib/agent-task-board-model"
 import type { AttemptView, TaskLink, TaskView, ThreadRef } from "@/lib/agent-task-types"
+import { isOneOf, isStringArray } from "@/lib/narrow"
 
 type BoardView = "board" | "table" | "backlog"
 type BoardMode = "snapshot" | "live"
@@ -55,7 +56,7 @@ type FilterChange = Partial<Record<Exclude<keyof TaskFilters, "stage">, string |
 }
 
 const VIEWS: readonly BoardView[] = ["board", "table", "backlog"]
-const FILTER_KEYS = ["project", "profile", "model", "query", "stage"] as const
+const FILTER_KEYS = ["project", "profile", "model", "query", "stage"] as const satisfies readonly (keyof TaskFilters)[]
 const CHOICE_KEYS = { project: "projects", profile: "profiles", model: "models" } as const
 
 function reasonOf<Reason extends string>(options: unknown): { reason: Reason | "imperative"; event?: Event } {
@@ -69,10 +70,10 @@ const sameText = (a: string, b: string) => a.trim().localeCompare(b.trim(), unde
 
 function checkStages(value: unknown, allowed: readonly string[], noStageLabel?: string): string[] | undefined {
   const list = typeof value === "string" ? [value] : value
-  if (!Array.isArray(list) || list.some((stage) => typeof stage !== "string")) {
+  if (!isStringArray(list)) {
     throw new TypeError(`Filter "stage" takes a list of stage ids, or null to clear it.`)
   }
-  const stages = (list as string[]).map((stage) =>
+  const stages = list.map((stage) =>
     noStageLabel && !allowed.includes(stage) && sameText(stage, noStageLabel) ? NO_STAGE : stage,
   )
   for (const stage of stages) {
@@ -101,10 +102,10 @@ function checkFilters(
   const choices = filterOptions(tasks)
   const next: TaskFilters = { ...current }
   for (const [key, value] of Object.entries(partial)) {
-    if (!(FILTER_KEYS as readonly string[]).includes(key)) {
+    if (!isOneOf(FILTER_KEYS, key)) {
       throw new TypeError(`Unknown filter "${key}". Filters: ${FILTER_KEYS.join(", ")}.`)
     }
-    const filterKey = key as keyof TaskFilters
+    const filterKey = key
     if (value === null || value === undefined || value === "") {
       delete next[filterKey]
       continue
@@ -169,9 +170,9 @@ const agentTaskBoard = definePrimitive({
     const tasks = () => context.options().tasks ?? []
     return {
       setView(view: unknown, options?: ChangeOptions<ViewChangeReason>) {
-        if (!VIEWS.includes(view as BoardView)) throw new TypeError(`setView takes one of: ${VIEWS.join(", ")}.`)
+        if (!isOneOf(VIEWS, view)) throw new TypeError(`setView takes one of: ${VIEWS.join(", ")}.`)
         const call = reasonOf<ViewChangeReason>(options)
-        return settled(change("view", view as BoardView, call), "setView", call)
+        return settled(change("view", view, call), "setView", call)
       },
       filter(partial: unknown, options?: ChangeOptions<FiltersChangeReason>) {
         const { stageIds, noStageLabel } = context.options()
@@ -180,11 +181,12 @@ const agentTaskBoard = definePrimitive({
         return settled(change("filters", next, call), "filter", call)
       },
       selectTask(id: unknown, options?: ChangeOptions<SelectReason>) {
-        if (id !== null && !tasks().some((task) => task.id === id)) {
+        const selected = id === null ? null : tasks().find((task) => task.id === id)?.id
+        if (selected === undefined) {
           throw new RangeError(`No task "${String(id)}". Pass a task id from the board, or null to close it.`)
         }
         const call = reasonOf<SelectReason>(options)
-        return settled(change("selectedTaskId", id as string | null, call), "selectTask", call)
+        return settled(change("selectedTaskId", selected, call), "selectTask", call)
       },
       openThread(attemptId: unknown, options?: ChangeOptions<OpenThreadReason>) {
         const attempt = typeof attemptId === "string" ? findAttempt(tasks(), attemptId) : undefined

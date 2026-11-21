@@ -116,6 +116,20 @@ function ColorPicker({ className, children, labels, controller, ...props }: Colo
 
 type Fractions = Partial<Record<ColorChannel, number>>
 
+// Every channel once: the record's type fails to compile when UI SDK adds or drops one.
+const colorChannels: Record<ColorChannel, true> = {
+  hue: true,
+  saturation: true,
+  brightness: true,
+  lightness: true,
+  chroma: true,
+  red: true,
+  green: true,
+  blue: true,
+  alpha: true,
+}
+const isColorChannel = (value: string): value is ColorChannel => Object.hasOwn(colorChannels, value)
+
 // UI SDK ends a drag on the document's pointerup, after the captured pointer's own lifts through the area or slider.
 function useReleaseHandlers(
   { onPointerUpCapture, onPointerCancelCapture }: ReleaseHandlers,
@@ -260,7 +274,7 @@ function ColorPickerSliderThumb({
     <ColorPickerSliderThumbPrimitive
       onKeyDownCapture={(event) => {
         const channel = event.currentTarget.dataset.channel
-        if (channel) recordEnding({ ...keyOf(event), channel: channel as ColorChannel })
+        if (channel && isColorChannel(channel)) recordEnding({ ...keyOf(event), channel })
         onKeyDownCapture?.(event)
       }}
       className={cnState(

@@ -24,6 +24,7 @@ import {
   ComboboxTrigger,
 } from "@/components/ui/combobox"
 import { useLocale } from "@/lib/locale"
+import { isRecord, isStringArray } from "@/lib/narrow"
 import { formatCount, type PageSource } from "@/lib/page-source"
 import { cn } from "@/lib/utils"
 
@@ -52,6 +53,9 @@ const serverComboboxLabels: ServerComboboxLabels = {
 }
 
 type Option = { value: string; label: string }
+
+const isOption = (item: unknown): item is Option =>
+  isRecord(item) && typeof item.value === "string" && typeof item.label === "string"
 
 /** What a change chose, by label: an id's label is only known once its option has loaded. */
 type ServerComboboxChange = { labels: Readonly<Record<string, string>> }
@@ -166,7 +170,7 @@ function ServerCombobox<T>({ className, locale: localeProp, ...props }: ServerCo
       <ComboboxEmpty>{(state) => (state.empty && !state.loading ? labels.empty(state.query) : null)}</ComboboxEmpty>
       <ComboboxList>
         {(state) =>
-          (state.items as Option[]).map((option) => (
+          state.items.filter(isOption).map((option) => (
             <ComboboxItem key={option.value} value={option.value} label={option.label}>
               {option.label}
               <ComboboxItemIndicator />
@@ -190,7 +194,7 @@ function ServerCombobox<T>({ className, locale: localeProp, ...props }: ServerCo
           <ComboboxChipsPrimitive className="flex min-w-0 flex-1 flex-wrap items-center gap-inline">
             <ComboboxValue>
               {(state) =>
-                (state.value as string[]).map((value, index) => (
+                (isStringArray(state.value) ? state.value : []).map((value, index) => (
                   <ComboboxChipPrimitive key={value} value={value} className={chipClassName}>
                     <span className="truncate">{state.labels[index]}</span>
                     <ComboboxChipRemovePrimitive

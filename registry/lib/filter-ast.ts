@@ -1,3 +1,5 @@
+import { isRecord } from "@/lib/narrow"
+
 type FilterOp =
   | "eq"
   | "neq"
@@ -136,8 +138,8 @@ function valuesOf(leaf: FilterLeaf): readonly FilterScalar[] {
 function readPath(item: unknown, path: string): unknown {
   let current = item
   for (const key of path.split(".")) {
-    if (typeof current !== "object" || current === null) return undefined
-    current = (current as Record<string, unknown>)[key]
+    if (!isRecord(current)) return undefined
+    current = current[key]
   }
   return current
 }
@@ -153,7 +155,7 @@ function comparable(left: unknown, right: FilterScalar, isDate: boolean): [unkno
   }
   const ms = (value: unknown) =>
     value instanceof Date || isTemporalLike(value) || typeof value === "string" ? epochOf(value) : Number.NaN
-  return [ms(left), ms(right as Date | TemporalLike | string)]
+  return [ms(left), ms(right)]
 }
 
 function compare(left: unknown, right: unknown) {

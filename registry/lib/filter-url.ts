@@ -1,6 +1,9 @@
 import { assertFieldName, hasGroups } from "@/lib/filter-ast"
 import {
   isActiveValue,
+  isDateInput,
+  isNumberFilter,
+  isNumberOp,
   type DateInput,
   type DateRange,
   type FilterField,
@@ -8,6 +11,7 @@ import {
   type FilterValues,
   type NumberFilter,
 } from "@/lib/filter-schema"
+import { assumeType, isRecord, isStringArray } from "@/lib/narrow"
 import type { SortSpec } from "@/lib/page-source"
 
 /** What a table keeps in the URL: schema values, never the wire format. */
@@ -41,8 +45,6 @@ type UrlCodec<F> = {
   merge(current: URLSearchParams, state: PageUrlState<F>): URLSearchParams
   owns(name: string): boolean
 }
-
-const numberOps = new Set(["eq", "neq", "lt", "lte", "gt", "gte"])
 
 function joinList(values: readonly string[]) {
   return values.map((value) => value.replaceAll("\\", "\\\\").replaceAll(",", "\\,")).join(",")
@@ -82,19 +84,21 @@ function encodeField(field: FilterField, value: unknown): string | undefined {
       return String(value)
     case "options":
     case "remoteOption":
-      return field.multiple ? joinList(value as readonly string[]) : String(value)
+      if (!field.multiple) return String(value)
+      return isStringArray(value) ? joinList(value) : undefined
     case "boolean":
       return String(value === true)
     case "number": {
-      const number = value as NumberFilter
-      if (number.op === "between") return `${String(number.min)}..${String(number.max)}`
-      return number.op === "eq" ? String(number.value) : `${number.op}:${String(number.value)}`
+      if (!isNumberFilter(value)) return undefined
+      if (value.op === "between") return `${String(value.min)}..${String(value.max)}`
+      return value.op === "eq" ? String(value.value) : `${value.op}:${String(value.value)}`
     }
     case "date":
-      return dateText(value as DateInput)
+      return isDateInput(value) ? dateText(value) : undefined
     case "dateRange": {
-      const range = value as DateRange
-      return `${dateText(range.from)}..${dateText(range.to)}`
+      if (!isRecord(value)) return undefined
+      const { from, to } = value
+      return `${dateText(isDateInput(from) ? from : undefined)}..${dateText(isDateInput(to) ? to : undefined)}`
     }
     default:
       return undefined
@@ -112,7 +116,7 @@ function decodeNumber(text: string): NumberFilter | undefined {
   if (match) {
     const op = match[1] ?? ""
     const value = parseNumber(match[2] ?? "")
-    return numberOps.has(op) && value !== undefined ? ({ op, value } as NumberFilter) : undefined
+    return isNumberOp(op) && value !== undefined ? { op, value } : undefined
   }
   const value = parseNumber(text)
   return value === undefined ? undefined : { op: "eq", value }
@@ -234,15 +238,15 @@ function createUrlCodec<S extends FilterSchema>(schema: S, options: UrlCodecOpti
   const decodeEncoded = (text: string): Record<string, unknown> => {
     try {
       const parsed = JSON.parse(base64UrlDecode(text)) as unknown
-      if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) return {}
+      if (!isRecord(parsed) || Array.isArray(parsed)) return {}
       const filter: Record<string, unknown> = {}
       for (const [key, field] of fields) {
-        const value = (parsed as Record<string, unknown>)[key]
+        const value = parsed[key]
         const written = encodeField(field, value)
         const decoded = written === undefined ? undefined : decodeField(field, written)
         if (decoded !== undefined) filter[key] = decoded
       }
-      const where = (parsed as Record<string, unknown>).$where
+      const where = parsed.$where
       if (typeof where === "object" && where !== null) filter.$where = where
       return filter
     } catch {
@@ -263,7 +267,8 @@ function createUrlCodec<S extends FilterSchema>(schema: S, options: UrlCodecOpti
     const pageNumber = Number(params.get(page) ?? "1")
     const sizeNumber = Number(params.get(size) ?? String(defaultSize))
     const state: PageUrlState<FilterValues<S>> = {
-      filter: filter as FilterValues<S>,
+      // Each value was decoded by its own field of `S` above; TypeScript can't relate a key loop to the mapped type.
+      filter: assumeType<FilterValues<S>>(filter),
       sort: decodeSort(params.get(sort)) ?? [...defaultSort],
       page: Number.isInteger(pageNumber) && pageNumber > 0 ? pageNumber : 1,
       size: Number.isInteger(sizeNumber) && sizeNumber > 0 ? sizeNumber : defaultSize,

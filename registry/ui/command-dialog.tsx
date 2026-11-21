@@ -44,7 +44,7 @@ function CommandDialog({ controller, escapeKey = "close", dismissible, ...props 
     () =>
       closes
         ? (event: Event | undefined) => {
-            dialog.close({ reason: "escape-key", event: event as KeyboardEvent | undefined })
+            dialog.close({ reason: "escape-key", event })
           }
         : undefined,
     [closes, dialog],

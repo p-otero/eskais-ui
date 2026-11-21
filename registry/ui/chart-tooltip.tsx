@@ -1,12 +1,13 @@
 "use client"
 
-import type { CSSProperties, ReactNode } from "react"
+import type { ReactNode } from "react"
 import type { TooltipPayloadEntry } from "recharts"
 
 import { useLocale } from "@/lib/locale"
 import { chartSwatchColor, formatChartValue, resolveChartSeries, type ChartFormatOptions } from "@/lib/chart-config"
-import { cn } from "@/lib/utils"
+import { cn, cssVars } from "@/lib/utils"
 import { useChart } from "@/components/ui/chart-context"
+import { isRecord } from "@/lib/narrow"
 
 type ChartIndicator = "dot" | "line" | "dashed"
 
@@ -78,8 +79,8 @@ function ChartTooltipContent({
         {items.map((item, index) => {
           const key = nameKey ?? String(item.name ?? item.dataKey ?? "value")
           const { key: seriesKey, series } = resolveChartSeries(config, item, key)
-          const row = item.payload as { fill?: string } | undefined
-          const indicatorColor = color ?? chartSwatchColor(config, seriesKey, row?.fill ?? item.color)
+          const fill = isRecord(item.payload) && typeof item.payload.fill === "string" ? item.payload.fill : undefined
+          const indicatorColor = color ?? chartSwatchColor(config, seriesKey, fill ?? item.color)
           const Icon = series?.icon
           return (
             <div
@@ -97,7 +98,7 @@ function ChartTooltipContent({
                       data-slot="chart-indicator"
                       data-indicator={indicator}
                       aria-hidden="true"
-                      style={{ "--indicator-color": indicatorColor } as CSSProperties}
+                      style={cssVars({ "--indicator-color": indicatorColor })}
                       // oxlint-disable-next-line p-otero/spacing-tokens -- centres the dashed bar on the label's line
                       className={cn(indicatorClassName, nested && indicator === "dashed" && "my-0.5")}
                     />

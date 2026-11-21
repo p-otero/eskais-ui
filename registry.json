@@ -44,6 +44,18 @@
       ]
     },
     {
+      "name": "narrow",
+      "type": "registry:lib",
+      "title": "Narrow",
+      "description": "Type guards for values TypeScript sees too widely (isRecord, isOneOf, isStringArray, and isElementOf, an instanceof that also takes an iframe's elements), plus keysOf, recordOf and assumeType, the few documented casts the registry needs, so its code passes typescript/no-unsafe-type-assertion.",
+      "files": [
+        {
+          "path": "registry/lib/narrow.ts",
+          "type": "registry:lib"
+        }
+      ]
+    },
+    {
       "name": "locale",
       "type": "registry:lib",
       "title": "Locale",
@@ -63,6 +75,9 @@
       "docs": "For tests only. UI SDK announces through two hidden live regions in <body> (`role=\"status\"` and `role=\"alert\"`, marked `data-ui-sdk-announcer`) that keep the last text they announced, so `getByRole(\"alert\")` and `getByText` can find them after a toast has closed. Find toasts with `getToast(text)` or `[data-slot=\"toast\"]`, query inside `within(screen.getByRole(\"region\", { name: \"Notifications\" }))`, pass `{ ignore: ignoreAnnouncer }` to text queries, and call `resetAnnouncer()` in `afterEach`.",
       "devDependencies": [
         "@testing-library/dom@10.4.2"
+      ],
+      "registryDependencies": [
+        "@eskais/narrow"
       ],
       "files": [
         {
@@ -1371,6 +1386,7 @@
         "@ui-sdk/react@0.1.0-beta.12"
       ],
       "registryDependencies": [
+        "@eskais/narrow",
         "@eskais/theme"
       ],
       "files": [
@@ -1419,6 +1435,7 @@
         "class-variance-authority@0.7.1"
       ],
       "registryDependencies": [
+        "@eskais/narrow",
         "@eskais/utils",
         "@eskais/theme",
         "@eskais/spinner",
@@ -1595,6 +1612,7 @@
         "lucide-react"
       ],
       "registryDependencies": [
+        "@eskais/narrow",
         "@eskais/utils",
         "@eskais/theme",
         "@eskais/tooltip",
@@ -1622,6 +1640,7 @@
         "@ui-sdk/react@0.1.0-beta.12"
       ],
       "registryDependencies": [
+        "@eskais/narrow",
         "@eskais/utils",
         "@eskais/theme",
         "@eskais/button",
@@ -1709,6 +1728,7 @@
         "lucide-react"
       ],
       "registryDependencies": [
+        "@eskais/narrow",
         "@eskais/utils",
         "@eskais/theme",
         "@eskais/field",
@@ -1772,6 +1792,7 @@
         "class-variance-authority@0.7.1"
       ],
       "registryDependencies": [
+        "@eskais/narrow",
         "@eskais/utils",
         "@eskais/form",
         "@eskais/dialog",
@@ -1800,6 +1821,7 @@
         "lucide-react"
       ],
       "registryDependencies": [
+        "@eskais/narrow",
         "@eskais/utils",
         "@eskais/form",
         "@eskais/dialog",
@@ -1904,6 +1926,7 @@
         "lucide-react"
       ],
       "registryDependencies": [
+        "@eskais/narrow",
         "@eskais/utils",
         "@eskais/theme",
         "@eskais/button"
@@ -1951,6 +1974,7 @@
         "@ui-sdk/react@0.1.0-beta.12"
       ],
       "registryDependencies": [
+        "@eskais/narrow",
         "@eskais/utils",
         "@eskais/theme"
       ],
@@ -2077,6 +2101,7 @@
         "lucide-react"
       ],
       "registryDependencies": [
+        "@eskais/narrow",
         "@eskais/utils",
         "@eskais/theme",
         "@eskais/button",
@@ -2320,6 +2345,7 @@
         "lucide-react"
       ],
       "registryDependencies": [
+        "@eskais/narrow",
         "@eskais/utils",
         "@eskais/tone",
         "@eskais/theme",
@@ -2346,6 +2372,7 @@
         "lucide-react"
       ],
       "registryDependencies": [
+        "@eskais/narrow",
         "@eskais/utils",
         "@eskais/theme",
         "@eskais/field",
@@ -2370,6 +2397,7 @@
         "lucide-react"
       ],
       "registryDependencies": [
+        "@eskais/narrow",
         "@eskais/utils",
         "@eskais/theme",
         "@eskais/input",
@@ -2399,6 +2427,7 @@
         "lucide-react"
       ],
       "registryDependencies": [
+        "@eskais/narrow",
         "@eskais/utils",
         "@eskais/theme",
         "@eskais/field",
@@ -2449,6 +2478,7 @@
         "@ui-sdk/react@0.1.0-beta.12"
       ],
       "registryDependencies": [
+        "@eskais/narrow",
         "@eskais/utils",
         "@eskais/theme",
         "@eskais/field"
@@ -2678,6 +2708,7 @@
         "lucide-react"
       ],
       "registryDependencies": [
+        "@eskais/narrow",
         "@eskais/utils",
         "@eskais/theme",
         "@eskais/action-refusal"
@@ -2712,6 +2743,7 @@
         "lucide-react"
       ],
       "registryDependencies": [
+        "@eskais/narrow",
         "@eskais/utils",
         "@eskais/theme",
         "@eskais/badge",
@@ -2957,6 +2989,7 @@
         "@ui-sdk/react@0.1.0-beta.12"
       ],
       "registryDependencies": [
+        "@eskais/narrow",
         "@eskais/agent-task-types",
         "@eskais/quantity",
         "@eskais/action-refusal"
@@ -3021,6 +3054,7 @@
         "lucide-react"
       ],
       "registryDependencies": [
+        "@eskais/narrow",
         "@eskais/utils",
         "@eskais/theme",
         "@eskais/agent-task-types",
@@ -3136,6 +3170,7 @@
         "lucide-react"
       ],
       "registryDependencies": [
+        "@eskais/narrow",
         "@eskais/utils",
         "@eskais/theme",
         "@eskais/theme-compact",
@@ -3373,6 +3408,7 @@
         "lucide-react"
       ],
       "registryDependencies": [
+        "@eskais/narrow",
         "@eskais/utils",
         "@eskais/theme",
         "@eskais/dialog",
@@ -3752,6 +3788,7 @@
         "lucide-react"
       ],
       "registryDependencies": [
+        "@eskais/narrow",
         "@eskais/utils",
         "@eskais/theme",
         "@eskais/input",
@@ -3902,6 +3939,7 @@
         "lucide-react"
       ],
       "registryDependencies": [
+        "@eskais/narrow",
         "@eskais/utils",
         "@eskais/theme",
         "@eskais/button",
@@ -4113,6 +4151,9 @@
       "title": "Page Source",
       "description": "A backend-agnostic contract for paged data (PageSource, PageRequest, PageResult) with adapters for page/size, limit/offset, cursors and keysets, Relay connections, RFC 8288 Link headers, Spring Page and Slice, and an in-memory arraySource, plus createPageController, which derives the request, resets paging, debounces search, syncs the URL and writes the live region's status.",
       "docs": "A `PageSource<T, F>` is `{ key, getId, capabilities, fetchPage(request, { signal }), fetchTotal? }`. `capabilities.position` is `\"page\"` or `\"cursor\"`; `total` says whether responses carry an exact count, an estimate or none, and navigation follows: page numbers with an exact total, previous and next with an estimate or only `hasMore`, load more for a cursor (`resolveNavigation`). Adapters build one from your `request` function and never fetch themselves: `pagedSource({ base: 0 | 1 })`, `offsetSource`, `cursorSource` (opaque, or `keyset` cursors built from the rows), `relaySource` (`edges`/`pageInfo`/`totalCount`), `linkHeaderSource` (parses `Link`, an estimate from `last`, exact on the last page), `springPageSource` (`Page<T>`, or the PagedModel of `VIA_DTO`, `sort=field,asc` repeated) and `springSliceSource`. Each takes `params: (filter) => …` for a serializer's output and `read` or `select` to map another response. Return `readJson(response)` from `request` so a failed status throws an `HttpError` with `status`. `arraySource(items, { filter, search, sort, delay, fail, count })` pages an array in memory for demos and tests, honouring abort. With Effect: `fetchPage: (request, { signal }) => Effect.runPromise(program, { signal })`. `createPageController(source, { filter, sort, sortMode, pageSize, pageSizes, search, url, labels })` holds the state outside React: a new filter, sort or size returns to page 1 (or a null cursor), `setSearch` commits after 250 ms, `url: { adapter, codec, history }` keeps it in the URL (`connect()` follows back and forward), and `statusText(result)` writes \"Showing 21–40 of 312\" (`labels.range` translates it). `formatCount(value, locale)` writes a number with a cached `Intl.NumberFormat`; `labels.range(range, locale)` and `statusText(result, counted, locale)` take the locale the components resolve.",
+      "registryDependencies": [
+        "@eskais/narrow"
+      ],
       "files": [
         {
           "path": "registry/lib/page-source.ts",
@@ -4143,6 +4184,7 @@
       "description": "Typed filters declared once: defineFilters with text, options, boolean, number, date, dateRange and remoteOption fields, FilterValues inferred from it, a canonical AST, serializers for query params, JSON, RSQL, OData, Spring Filter, GraphQL where and q-only search, and a URL codec that round-trips readable params.",
       "docs": "`defineFilters({ status: { kind: \"options\", label, options, multiple: true }, … })` is the whitelist: keys and wire `field` names must be identifiers, and nothing a person types becomes a field name. `FilterValues<typeof schema>` types the values. `toFilterAst(schema, values)` joins the active ones into a `FilterNode` (`and`, `or`, `not`, `{ field, op, value }`); text fields send `{ param: \"q\" }` by default (read with `searchTerms`) or match `{ fields, op: \"contains\" }`, joined by `or`. A date range's end is inclusive: `lte` the last day, or `end: \"next-day\"` for `lt` the day after when the backend stores date-times. `$where` adds an expression with groups, checked against `schemaFields(schema)`. Serializers, each its own module: `queryParams(ast, { style: \"suffix\" | \"dto\" | \"bracket\" })` (and only), `jsonAst` (POST body), `rsql`, `odata` (`$filter`), `springFilter` (turkraft), `graphqlWhere` (`dialect: \"hasura\" | \"prisma\"`) and `searchOnly`. Each escapes per its grammar and throws a `FilterSerializeError` for what it can't write safely, like a wildcard inside a text match. Dates are ISO 8601 by default (`dates: \"iso\" | \"iso-date\" | \"epoch-ms\" | fn`), from strings, `Date` or Temporal values. `matchesFilter(ast, item)` evaluates a filter in memory. `createUrlCodec(schema, { prefix, format, defaults })` keeps schema values, not the wire format, in readable params (`?status=open,closed&created=2026-01-01..2026-02-01&page=2&sort=name.asc`), one encoded `f` param when `$where` has groups, and drops anything a tampered URL puts there that doesn't fit. `parseFilterInput(field, input)` reads loose input (option labels, `\"yes\"`, `\">= 10\"`, `\"2026-01-01..2026-01-31\"`) into a field's value and `findFilterKey(schema, name)` finds a field by key or label, for agents and command palettes.",
       "registryDependencies": [
+        "@eskais/narrow",
         "@eskais/page-source"
       ],
       "files": [
@@ -4239,6 +4281,7 @@
         "@tanstack/react-query@5.107.1"
       ],
       "registryDependencies": [
+        "@eskais/narrow",
         "@eskais/page-source"
       ],
       "files": [
@@ -4275,6 +4318,7 @@
         "@ui-sdk/react@0.1.0-beta.12"
       ],
       "registryDependencies": [
+        "@eskais/narrow",
         "@eskais/utils",
         "@eskais/theme",
         "@eskais/button",
@@ -4313,6 +4357,7 @@
         "@ui-sdk/react@0.1.0-beta.12"
       ],
       "registryDependencies": [
+        "@eskais/narrow",
         "@eskais/utils",
         "@eskais/theme",
         "@eskais/button",
@@ -4416,6 +4461,7 @@
         "lucide-react"
       ],
       "registryDependencies": [
+        "@eskais/narrow",
         "@eskais/utils",
         "@eskais/theme",
         "@eskais/commit-graph",
@@ -4540,6 +4586,7 @@
         "lucide-react"
       ],
       "registryDependencies": [
+        "@eskais/narrow",
         "@eskais/utils",
         "@eskais/theme",
         "@eskais/input",
@@ -4574,6 +4621,7 @@
         "lucide-react"
       ],
       "registryDependencies": [
+        "@eskais/narrow",
         "@eskais/utils",
         "@eskais/theme",
         "@eskais/filter-bar",
@@ -4604,6 +4652,7 @@
         "lucide-react"
       ],
       "registryDependencies": [
+        "@eskais/narrow",
         "@eskais/utils",
         "@eskais/theme",
         "@eskais/badge",
@@ -4632,6 +4681,7 @@
         "@ui-sdk/react@0.1.0-beta.12"
       ],
       "registryDependencies": [
+        "@eskais/narrow",
         "@eskais/utils",
         "@eskais/theme",
         "@eskais/field",
@@ -4668,6 +4718,7 @@
         "lucide-react"
       ],
       "registryDependencies": [
+        "@eskais/narrow",
         "@eskais/utils",
         "@eskais/theme",
         "@eskais/combobox",
@@ -4691,6 +4742,7 @@
         "recharts@3.10.1"
       ],
       "registryDependencies": [
+        "@eskais/narrow",
         "@eskais/utils",
         "@eskais/theme",
         "@eskais/table",
@@ -4735,6 +4787,7 @@
         "lucide-react"
       ],
       "registryDependencies": [
+        "@eskais/narrow",
         "@eskais/utils",
         "@eskais/theme",
         "@eskais/button",
@@ -4795,6 +4848,7 @@
         "lucide-react"
       ],
       "registryDependencies": [
+        "@eskais/narrow",
         "@eskais/utils",
         "@eskais/theme",
         "@eskais/tone",
@@ -4838,6 +4892,7 @@
         "@types/three@0.185.4"
       ],
       "registryDependencies": [
+        "@eskais/narrow",
         "@eskais/utils",
         "@eskais/theme",
         "@eskais/button",
@@ -4909,6 +4964,7 @@
         "@types/three@0.185.4"
       ],
       "registryDependencies": [
+        "@eskais/narrow",
         "@eskais/utils",
         "@eskais/theme",
         "@eskais/button",
@@ -5090,6 +5146,7 @@
         "@ui-sdk/core@0.1.0-beta.12"
       ],
       "registryDependencies": [
+        "@eskais/narrow",
         "@eskais/utils",
         "@eskais/scroll-area"
       ],
@@ -5114,6 +5171,7 @@
         "@ui-sdk/core@0.1.0-beta.12"
       ],
       "registryDependencies": [
+        "@eskais/narrow",
         "@eskais/virtual-rows",
         "@eskais/scroll-area"
       ],
@@ -5143,6 +5201,7 @@
         "@ui-sdk/react@0.1.0-beta.12"
       ],
       "registryDependencies": [
+        "@eskais/narrow",
         "@eskais/utils",
         "@eskais/tone",
         "@eskais/theme",
@@ -5349,6 +5408,7 @@
         "lucide-react"
       ],
       "registryDependencies": [
+        "@eskais/narrow",
         "@eskais/utils",
         "@eskais/theme",
         "@eskais/markdown-view",
@@ -6019,6 +6079,7 @@
         "lucide-react"
       ],
       "registryDependencies": [
+        "@eskais/narrow",
         "@eskais/utils",
         "@eskais/theme",
         "@eskais/tone",

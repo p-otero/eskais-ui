@@ -1,4 +1,5 @@
 import { clsx, type ClassValue } from "clsx"
+import type { CSSProperties } from "react"
 import { extendTailwindMerge } from "tailwind-merge"
 
 // The theme's tokens, so a consumer's `gap-4` or `text-lg` replaces `gap-items` or `text-title` instead of both
@@ -46,5 +47,10 @@ function cnState<State>(base: string, className: StateClassName<State>) {
   return cn(base, className)
 }
 
-export { cn, cnState }
+/** CSS custom properties for a `style` prop, typed without a cast: `style={cssVars({ "--lanes": 3 })}`. */
+function cssVars(variables: Record<`--${string}`, string | number | undefined>): CSSProperties {
+  return variables
+}
+
+export { cn, cnState, cssVars }
 export type { StateClassName }

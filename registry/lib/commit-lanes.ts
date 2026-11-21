@@ -53,24 +53,24 @@ function createFreeLanes() {
     heap.push(lane)
     for (let at = heap.length - 1; at > 0;) {
       const parent = (at - 1) >> 1
-      if ((heap[parent] as number) <= (heap[at] as number)) break
-      ;[heap[parent], heap[at]] = [heap[at] as number, heap[parent] as number]
+      if (heap[parent]! <= heap[at]!) break
+      ;[heap[parent], heap[at]] = [heap[at]!, heap[parent]!]
       at = parent
     }
   }
   const pop = () => {
-    const top = heap[0] as number
-    const last = heap.pop() as number
+    const top = heap[0]!
+    const last = heap.pop()!
     if (heap.length > 0) {
       heap[0] = last
       for (let at = 0; ;) {
         const left = at * 2 + 1
         const right = left + 1
         let smallest = at
-        if (left < heap.length && (heap[left] as number) < (heap[smallest] as number)) smallest = left
-        if (right < heap.length && (heap[right] as number) < (heap[smallest] as number)) smallest = right
+        if (left < heap.length && heap[left]! < heap[smallest]!) smallest = left
+        if (right < heap.length && heap[right]! < heap[smallest]!) smallest = right
         if (smallest === at) break
-        ;[heap[smallest], heap[at]] = [heap[at] as number, heap[smallest] as number]
+        ;[heap[smallest], heap[at]] = [heap[at]!, heap[smallest]!]
         at = smallest
       }
     }
@@ -81,7 +81,7 @@ function createFreeLanes() {
     /** The smallest free lane at `from` or after, else `fallback` (a new lane at the end). */
     take(lanes: readonly (string | null)[], from: number, fallback: number) {
       while (heap.length > 0) {
-        const lane = heap[0] as number
+        const lane = heap[0]!
         if (lane >= lanes.length || lanes[lane] !== null) {
           pop()
           continue
@@ -151,8 +151,8 @@ function createLaneLayout(graph: CommitGraph, visible: VisibleRows, options: Lan
       if (expected !== null && expected !== commit.id) through.push(lane)
     }
     const hiddenTop = beyond
-    const node = into.length > 0 ? (into[0] as number) : free.take(lanes, 0, lanes.length)
-    const tag = into.length > 0 ? (tags[node] as number) : (options.headTag?.(commit) ?? 0)
+    const node = into.length > 0 ? into[0]! : free.take(lanes, 0, lanes.length)
+    const tag = into.length > 0 ? tags[node]! : (options.headTag?.(commit) ?? 0)
     for (const lane of into) set(lane, null)
     if (node === lanes.length) lanes.push(null)
 
@@ -202,10 +202,10 @@ function createLaneLayout(graph: CommitGraph, visible: VisibleRows, options: Lan
     at(position) {
       if (position < 0 || position >= visible.count) throw new RangeError(`No shown row ${String(position)}`)
       while (done.length <= position) {
-        const row = visible.rows[done.length] as number
-        done.push(step(graph.commits[row] as Commit))
+        const row = visible.rows[done.length]!
+        done.push(step(graph.commits[row]!))
       }
-      return done[position] as LaneRow
+      return done[position]!
     },
   }
 }

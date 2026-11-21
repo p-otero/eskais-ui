@@ -29,6 +29,7 @@ import {
   type BoardItemProps,
 } from "@/components/ui/board-transfer"
 import type { BoardTransferOptions } from "@/components/ui/board-transfer-primitive"
+import { assumeType } from "@/lib/narrow"
 
 export { BoardItem, BoardItemHandle, BoardColumn, BoardColumnGroup, BoardList, boardColumnLabels, useBoardLists }
 export type { BoardItemHandleProps, BoardItemProps, BoardColumnLabels, BoardColumnProps, BoardColumnGroupProps }
@@ -69,7 +70,8 @@ function splitTransfer<Props extends BoardTransferOptions>(props: Props) {
       delete rest[key]
     }
   }
-  return { transfer, rest: rest as Omit<Props, (typeof transferKeys)[number]> }
+  // The loop deletes exactly `transferKeys`; TypeScript can't follow a `delete` on a generic object.
+  return { transfer, rest: assumeType<Omit<Props, (typeof transferKeys)[number]>>(rest) }
 }
 
 /**

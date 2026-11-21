@@ -25,6 +25,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { StageFilter, type Stage } from "@/components/ui/stage-track"
+import { recordOf } from "@/lib/narrow"
 
 type ChoiceKey = "project" | "profile" | "model"
 
@@ -89,8 +90,7 @@ type AgentTaskBoardToolbarProps = {
   controls: readonly FilterControl[]
 }
 
-const clearedFilters = (controls: readonly FilterControl[]) =>
-  Object.fromEntries(controls.map((key) => [key, null])) as Record<FilterControl, null>
+const clearedFilters = (controls: readonly FilterControl[]) => recordOf(controls, () => null)
 
 function AgentTaskBoardToolbar({
   options,

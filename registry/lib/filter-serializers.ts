@@ -41,7 +41,8 @@ function andLeaves(node: FilterNode, format: string): FilterLeaf[] {
   if ("and" in node) return node.and.flatMap((child) => andLeaves(child, format))
   if ("not" in node) {
     const pushed = negate(node.not)
-    if ("not" in pushed) throw new FilterSerializeError(`${format} can't negate "${(pushed.not as FilterLeaf).op}".`)
+    if ("not" in pushed && "field" in pushed.not)
+      throw new FilterSerializeError(`${format} can't negate "${pushed.not.op}".`)
     return andLeaves(pushed, format)
   }
   if ("or" in node)

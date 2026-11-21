@@ -31,15 +31,16 @@ const list = definePrimitive({
     return {
       // The agent bridge passes arguments unchecked.
       select(id: unknown, options?: ChangeOptions<ListSelectReason>) {
-        if (!entries().some((entry) => entry.value === id)) {
+        const row = entries().find((entry) => entry.value === id)
+        if (!row) {
           const ids = entries().map((entry) => entry.value)
           throw new RangeError(`No row "${String(id)}". Rows: ${ids.join(", ")}.`)
         }
         const details = reasonOf(options)
-        if (dispatch(context, "onSelect", id as string, details)) return settled(false, "select", details)
+        if (dispatch(context, "onSelect", row.value, details)) return settled(false, "select", details)
         // A person's click already follows the link or presses the button; only other callers need it done.
         if (details.event) return true
-        return context.options().activate?.(id as string) ?? true
+        return context.options().activate?.(row.value) ?? true
       },
       entries,
     }

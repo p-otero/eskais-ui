@@ -1,7 +1,7 @@
 "use client"
 
 import { usePart, usePrimitive, type PrimitiveHandle } from "@ui-sdk/react/primitive"
-import { cloneElement, createContext, use, useId, type ReactElement, type ReactNode } from "react"
+import { cloneElement, createContext, isValidElement, use, useId, type ReactElement, type ReactNode } from "react"
 
 import { cellNavigation, type CellNavigationOptions } from "@/components/ui/cell-navigation-primitive"
 
@@ -43,7 +43,9 @@ function NavigableCellPart({
     { row, col, id },
     {
       render: (part: Record<string, unknown>) =>
-        cloneElement(render as ReactElement<Record<string, unknown>>, { ...part, "data-slot": "table-cell" }),
+        isValidElement<Record<string, unknown>>(render)
+          ? cloneElement(render, { ...part, "data-slot": "table-cell" })
+          : render,
     },
   )
 }

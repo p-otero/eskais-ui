@@ -58,7 +58,7 @@ type CommitGraph = {
 
 type Claim = { owner: number; depth: number; first: boolean }
 
-type NestState = { claims: Map<string, Claim>; stack: number[] }
+type NestState = { claims: Map<string, Claim>; stack: number[]; rowOf: Map<string, number> }
 
 const graphState = new WeakMap<CommitGraph, NestState>()
 
@@ -82,10 +82,9 @@ function nest(graph: CommitGraph, state: NestState, from: number): CommitGraph {
   const owner = grow(graph.owner, size)
   const end = grow(graph.end, size)
   const children = grow(graph.children, size)
-  const rowOf = graph.rowOf as Map<string, number>
-  const { claims, stack } = state
+  const { claims, stack, rowOf } = state
   for (let row = from; row < size; row += 1) {
-    const commit = commits[row] as Commit
+    const commit = commits[row]!
     rowOf.set(commit.id, row)
     const claim = claims.get(commit.id)
     claims.delete(commit.id)
@@ -100,15 +99,15 @@ function nest(graph: CommitGraph, state: NestState, from: number): CommitGraph {
       } else stack.length = 0
     } else stack.length = 0
     owner[row] = parent
-    depth[row] = parent < 0 ? 0 : (depth[parent] as number) + 1
+    depth[row] = parent < 0 ? 0 : depth[parent]! + 1
     end[row] = row + 1
     children[row] = 0
-    if (parent >= 0) children[parent] = (children[parent] as number) + 1
-    for (let ancestor = parent; ancestor >= 0; ancestor = owner[ancestor] as number) end[ancestor] = row + 1
+    if (parent >= 0) children[parent] = children[parent]! + 1
+    for (let ancestor = parent; ancestor >= 0; ancestor = owner[ancestor]!) end[ancestor] = row + 1
     const parents = commit.parents
-    const own = depth[row] as number
+    const own = depth[row]!
     for (let index = 0; index < parents.length; index += 1) {
-      const id = parents[index] as string
+      const id = parents[index]!
       const placed = rowOf.get(id)
       if (placed !== undefined && placed < row && commits[placed]?.id === id) continue
       const next: Claim =
@@ -124,16 +123,17 @@ function nest(graph: CommitGraph, state: NestState, from: number): CommitGraph {
 
 /** Builds the trail's structure in one pass over the commits, children before parents (`git log` order). */
 function createCommitGraph(commits: readonly Commit[]): CommitGraph {
+  const rowOf = new Map<string, number>()
   const empty: CommitGraph = {
     commits,
-    rowOf: new Map(),
+    rowOf,
     depth: new Int32Array(0),
     owner: new Int32Array(0),
     end: new Int32Array(0),
     children: new Int32Array(0),
     size: 0,
   }
-  return nest(empty, { claims: new Map(), stack: [] }, 0)
+  return nest(empty, { claims: new Map(), stack: [], rowOf }, 0)
 }
 
 function sameShape(a: Commit, b: Commit) {
@@ -152,14 +152,18 @@ function updateCommitGraph(previous: CommitGraph | undefined, commits: readonly 
   if (!state) return createCommitGraph(commits)
   const old = previous.commits
   for (let row = 0; row < previous.size; row += 1) {
-    if (!sameShape(old[row] as Commit, commits[row] as Commit)) return createCommitGraph(commits)
+    if (!sameShape(old[row]!, commits[row]!)) return createCommitGraph(commits)
   }
   if (commits.length === previous.size) {
     const next = { ...previous, commits }
     graphState.set(next, state)
     return next
   }
-  return nest({ ...previous, commits }, { claims: new Map(state.claims), stack: [...state.stack] }, previous.size)
+  return nest(
+    { ...previous, commits },
+    { claims: new Map(state.claims), stack: [...state.stack], rowOf: state.rowOf },
+    previous.size,
+  )
 }
 
 /**
@@ -197,15 +201,15 @@ function visibleRows(graph: CommitGraph, expanded: ReadonlySet<string>, skip?: (
   let row = 0
   while (row < graph.size) {
     if (skip?.(row)) {
-      row = graph.end[row] as number
+      row = graph.end[row]!
       continue
     }
     rows[count] = row
     shown[row] = 1
     position[row] = count
     count += 1
-    const commit = graph.commits[row] as Commit
-    row = isMergeRow(graph, row) && !expanded.has(commit.id) ? (graph.end[row] as number) : row + 1
+    const commit = graph.commits[row]!
+    row = isMergeRow(graph, row) && !expanded.has(commit.id) ? graph.end[row]! : row + 1
   }
   return { rows: rows.subarray(0, count), count, shown, position }
 }
@@ -214,7 +218,7 @@ function visibleRows(graph: CommitGraph, expanded: ReadonlySet<string>, skip?: (
 function mergeIds(graph: CommitGraph) {
   const ids: string[] = []
   for (let row = 0; row < graph.size; row += 1) {
-    if (isMergeRow(graph, row)) ids.push((graph.commits[row] as Commit).id)
+    if (isMergeRow(graph, row)) ids.push(graph.commits[row]!.id)
   }
   return ids
 }

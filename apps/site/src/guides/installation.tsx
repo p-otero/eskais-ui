@@ -229,6 +229,13 @@ createRoot(root).render(
         in a <Code>ScrollArea</Code> (both come as <Code>eskais-oxlint-plugin.js</Code> beside the config). Extend it
         from your <Code>.oxlintrc.json</Code>.
       </P>
+      <P>
+        It carries no type-aware rules, which need <Code>oxlint --type-aware</Code> and <Code>oxlint-tsgolint</Code>.
+        The components you install pass <Code>typescript/no-unsafe-type-assertion</Code> and{" "}
+        <Code>typescript/restrict-template-expressions</Code>, so you can turn both on in a type-aware config and lint
+        them with your own code. The few casts they need go through <Code>assumeType</Code>, <Code>keysOf</Code> and{" "}
+        <Code>recordOf</Code> from <Code>lib/narrow</Code>, each with its reason.
+      </P>
 
       <H2 id="testing">Optional: test helpers</H2>
       <P>

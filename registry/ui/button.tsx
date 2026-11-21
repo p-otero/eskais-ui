@@ -8,6 +8,7 @@ import { ShortcutHint, useAriaKeyshortcuts, useShortcut } from "@/components/ui/
 import { Spinner } from "@/components/ui/spinner"
 import { ControlTooltip, type ControlTooltipOption } from "@/components/ui/tooltip"
 import { cnState } from "@/lib/utils"
+import { assumeType } from "@/lib/narrow"
 
 const buttonVariants = cva(
   "touch-target inline-flex shrink-0 not-data-pending:[&>[data-show=pending]]:hidden cursor-pointer items-center justify-center gap-inline rounded-control text-sm font-medium whitespace-nowrap transition-colors outline-none select-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background data-disabled:not-data-pending:cursor-not-allowed data-disabled:not-data-pending:opacity-50 active:not-data-disabled:translate-y-px data-pending:relative data-pending:cursor-progress data-pending:[&>[data-slot=spinner]+*]:hidden data-pending:has-[>[data-slot=spinner][data-overlay]]:text-transparent! [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
@@ -159,7 +160,8 @@ function Button({
     <ButtonPrimitive
       ref={(node: HTMLElement | null) => {
         element.current = node
-        if (typeof ref === "function") return ref(node as never)
+        // `render` can make the button a link or any element, which UI SDK's ref, typed for a <button>, still receives.
+        if (typeof ref === "function") return ref(assumeType<HTMLButtonElement | null>(node))
         if (ref) (ref as { current: unknown }).current = node
         return undefined
       }}

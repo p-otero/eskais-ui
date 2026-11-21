@@ -70,7 +70,7 @@ function random(seed: number) {
 }
 
 function pick<T>(list: readonly T[], next: () => number): T {
-  return list[Math.floor(next() * list.length)] as T
+  return list[Math.floor(next() * list.length)]!
 }
 
 /** Sample messages for demos and tests, newest first, ending at `now`. */

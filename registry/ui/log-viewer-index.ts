@@ -15,7 +15,7 @@ function createIdList() {
     let high = ids.length
     while (low < high) {
       const mid = (low + high) >>> 1
-      if ((ids[mid] as number) < id) low = mid + 1
+      if (ids[mid]! < id) low = mid + 1
       else high = mid
     }
     return low
@@ -29,7 +29,7 @@ function createIdList() {
     /** Drops the ids below `id`; returns how many. */
     dropBelow(id: number) {
       const from = start
-      while (start < ids.length && (ids[start] as number) < id) start++
+      while (start < ids.length && ids[start]! < id) start++
       if (start > 1024 && start * 2 > ids.length) {
         ids = ids.slice(start)
         start = 0

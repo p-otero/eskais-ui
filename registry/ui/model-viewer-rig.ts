@@ -27,6 +27,7 @@ import {
 } from "@/components/ui/model-viewer-math"
 import {
   isMesh,
+  isMorphMesh,
   signatureOf,
   targetNamesOf,
   targetScalesOf,
@@ -95,7 +96,7 @@ function createModelRig(model: LoadedModel, owned = true, cleanup?: () => void) 
   model.scene.traverse((object) => {
     if (!isMesh(object)) return
     surfaces.push(object)
-    if (object.morphTargetDictionary && object.morphTargetInfluences) meshes.push(object as MorphMesh)
+    if (isMorphMesh(object)) meshes.push(object)
   })
   const morphNames = targetNamesOf(meshes)
   const scales = new Map(meshes.map((mesh) => [mesh, targetScalesOf(mesh)]))
@@ -179,7 +180,7 @@ function createModelRig(model: LoadedModel, owned = true, cleanup?: () => void) 
       const value = current[i] ?? 0
       const targets = bindings[i] ?? []
       for (let j = 0; j < targets.length; j += 1) {
-        const binding = targets[j] as Binding
+        const binding = targets[j]!
         binding.influences[binding.index] = value * binding.scale
       }
     }
@@ -275,7 +276,7 @@ function createModelRig(model: LoadedModel, owned = true, cleanup?: () => void) 
         const swap = (item: Material) => {
           let toon = toons.get(item)
           if (!toon) {
-            toon = toonOf(item, gradient as DataTexture)
+            toon = toonOf(item, (gradient ??= toonGradient()))
             toons.set(item, toon)
           }
           return toon

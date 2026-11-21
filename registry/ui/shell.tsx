@@ -31,7 +31,7 @@ import { setSidebarDrawerOpen } from "@/components/ui/sidebar-trigger"
 import { SkipLink } from "@/components/ui/skip-link"
 import { Topbar } from "@/components/ui/topbar"
 import { ShellSidebarContext, useShellRoutes, useShellSidebar } from "@/components/ui/use-shell"
-import { cn } from "@/lib/utils"
+import { cn, cssVars } from "@/lib/utils"
 
 type ShellLabels = {
   skipToContent: string
@@ -152,11 +152,11 @@ type ShellProps<Route extends ShellRoute = ShellRoute> = Omit<ComponentProps<"di
 const narrowQuery = "(width <= 47.5rem)"
 
 // Derived below the root, where a consumer's `--shell-height` is set.
-const columns = {
+const columns = cssVars({
   "--shell-column-height": "calc(var(--shell-height) - var(--topbar-height))",
   "--shell-scroll-margin": "calc(var(--topbar-height) + var(--gap-group))",
   "--shell-column-height-above-bar": "calc(var(--shell-column-height) - var(--mobile-nav-offset))",
-} as CSSProperties
+})
 
 /**
  * An application's shell from its routes: a skip link, a topbar with the sidebar trigger, a brand, search and

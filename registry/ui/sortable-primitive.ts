@@ -14,6 +14,7 @@ import {
 
 import { settled } from "@/lib/action-refusal"
 import { sortableLabels, type SortableLabels } from "@/components/ui/sortable-labels"
+import { isStringArray } from "@/lib/narrow"
 
 type SortableReason = ReorderReason
 type SortableSelectReason = "item-press" | "imperative"
@@ -47,10 +48,8 @@ type SortableOptions = {
 const asList = (value: readonly string[] | undefined) => (value ? [...value] : undefined)
 
 function checkOrder(next: unknown, current: readonly string[]): string[] {
-  if (!Array.isArray(next) || next.some((key) => typeof key !== "string")) {
-    throw new TypeError("reorder takes the full list of item ids, in their new order.")
-  }
-  const keys = next as string[]
+  if (!isStringArray(next)) throw new TypeError("reorder takes the full list of item ids, in their new order.")
+  const keys = next
   const missing = current.filter((key) => !keys.includes(key))
   const unknown = keys.filter((key) => !current.includes(key))
   if (missing.length > 0 || unknown.length > 0 || new Set(keys).size !== keys.length) {
@@ -169,14 +168,14 @@ const sortable = definePrimitive({
       move(key: unknown, index: unknown) {
         const id = check(key)
         const { value } = context.store.get()
-        if (!Number.isInteger(index) || (index as number) < 0 || (index as number) >= value.length) {
+        if (typeof index !== "number" || !Number.isInteger(index) || index < 0 || index >= value.length) {
           throw new RangeError(`move takes an index from 0 to ${String(value.length - 1)}.`)
         }
         if (disabled(id)) throw new Error(`Item "${id}" can't be moved.`)
         const { selected } = context.store.get()
         const alone = !selected.includes(id) || selected.length === 1
         if (alone && value.indexOf(id) === index) return true
-        return settled(reorder.move(id, index as number), "move")
+        return settled(reorder.move(id, index), "move")
       },
       /** Replaces the whole order at once. */
       reorder(order: unknown, options?: ChangeOptions<SortableReason>) {

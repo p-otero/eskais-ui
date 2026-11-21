@@ -2,8 +2,8 @@
 
 import type { ChangeDetails } from "@ui-sdk/core"
 import { createListboxController, Listbox, type ListboxValueChangeReason } from "@ui-sdk/react/listbox"
-import { usePart, usePrimitive, type PartProps } from "@ui-sdk/react/primitive"
-import { memo, useCallback, useMemo, useRef, useState, type FocusEvent, type ReactNode, type Ref } from "react"
+import { usePart, usePrimitive, type PartProps, type RenderProp } from "@ui-sdk/react/primitive"
+import { memo, useCallback, useMemo, useRef, useState, type FocusEvent, type ReactElement, type ReactNode } from "react"
 
 import {
   containerClassNames,
@@ -37,6 +37,7 @@ import {
   listboxKeyDown,
   renderChild,
 } from "@/components/ui/list-rows"
+import { assumeType } from "@/lib/narrow"
 import { cn } from "@/lib/utils"
 
 type ListProps<Item = unknown> = Omit<PartProps<"div">, "children" | "onSelect" | "defaultValue"> & {
@@ -89,6 +90,14 @@ function rootAttributes(variant: ListVariant, selectable: boolean, grid: boolean
   }
 }
 
+type ItemFunctions = {
+  getId: (item: unknown) => string
+  itemText: (item: unknown) => string
+  renderItem?: (item: unknown, index: number) => ReactNode
+}
+
+type PartRenderProps = Parameters<Exclude<RenderProp, ReactElement>>[0]
+
 type ListRowProps<Item> = {
   item: Item
   index: number
@@ -98,13 +107,15 @@ type ListRowProps<Item> = {
 }
 
 // Memoized: scrolling re-renders the list for its new range, and rows already in view stay as they are.
-const ListRow = memo(function ListRow<Item>({ item, index, setsize, measure, renderItem }: ListRowProps<Item>) {
+const MemoListRow = memo(function ListRow<Item>({ item, index, setsize, measure, renderItem }: ListRowProps<Item>) {
   const position = useMemo(
     () => (setsize === undefined ? null : { index, setsize, measure }),
     [index, setsize, measure],
   )
   return <PositionContext value={position}>{renderItem(item, index)}</PositionContext>
-}) as <Item>(props: ListRowProps<Item>) => ReactNode
+})
+// `memo` drops a component's type parameters; this gives ListRow back its generic signature.
+const ListRow = assumeType<<Item>(props: ListRowProps<Item>) => ReactNode>(MemoListRow)
 
 function List<Item = unknown>({
   "aria-label": label,
@@ -142,11 +153,16 @@ function List<Item = unknown>({
     [items, variant, children],
   )
   const data: readonly unknown[] | undefined = items ?? childRows
-  const getId = (childRows ? childId : getItemId) as (item: unknown) => string
-  const itemText = (childRows ? childText : itemTextProp) as (item: unknown) => string
-  const renderItem = (childRows ? renderChild : renderItemProp) as
-    | ((item: unknown, index: number) => ReactNode)
-    | undefined
+  // `items` and the functions that read them come together, so these only ever see Items; TypeScript can't relate the
+  // two choices, so the functions are typed by what `data` holds.
+  const itemFunctions = assumeType<ItemFunctions>({
+    getId: getItemId,
+    itemText: itemTextProp,
+    renderItem: renderItemProp,
+  })
+  const getId = childRows ? childId : itemFunctions.getId
+  const itemText = childRows ? childText : itemFunctions.itemText
+  const renderItem = childRows ? renderChild : itemFunctions.renderItem
 
   const ids = useMemo(() => data?.map(getId), [data, getId])
   const indexOf = useMemo(() => new Map(ids?.map((id, index) => [id, index])), [ids])
@@ -301,8 +317,8 @@ function List<Item = unknown>({
     ...rootAttributes(variant, selectable, grid),
     ref: anchor,
     "aria-label": label,
-    onFocus: (event: FocusEvent<HTMLElement>) => {
-      onFocus?.(event as FocusEvent<HTMLDivElement>)
+    onFocus: (event: FocusEvent<HTMLDivElement>) => {
+      onFocus?.(event)
       if (!virtual.enabled || !(event.target instanceof Element)) return
       const index = Number(event.target.closest<HTMLElement>("[data-index]")?.dataset.index ?? Number.NaN)
       if (!Number.isNaN(index)) virtual.pin(index)
@@ -332,10 +348,10 @@ function List<Item = unknown>({
           ...rootProps,
           className: cn(rootProps.className, "outline-none"),
           children: listChildren,
-          render: ({ ref, ...part }: Record<string, unknown>) => (
+          render: ({ ref, ...part }: PartRenderProps) => (
             <Listbox<string>
               {...part}
-              ref={ref as Ref<HTMLDivElement>}
+              ref={ref}
               render={(listboxProps) => <div {...listboxProps} data-slot="list" />}
               controller={listbox}
               value={value}
@@ -363,7 +379,8 @@ function List<Item = unknown>({
           ),
         }
 
-  const root = usePart(handle, "root", {}, partProps as PartProps<"ul">, selectable || sorting || grid ? "div" : "ul")
+  const tag: "div" | "ul" = selectable || sorting || grid ? "div" : "ul"
+  const root = usePart(handle, "root", {}, partProps, tag)
   if (!actions.roots) return root
   // Outside the list's element: a grid or list owns only rows.
   return (

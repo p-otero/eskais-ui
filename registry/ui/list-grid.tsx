@@ -35,7 +35,7 @@ function ListGridRoot({ handle, ...props }: { handle: ListGridHandle } & Record<
 
 /** Makes `render` the row with `id`: `role="row"`, with `aria-selected` in a selectable list. */
 function ListGridRow({ handle, id, render }: { handle: ListGridHandle; id: string; render: ReactElement }) {
-  return usePart(handle, "row", { value: id }, { render: render as ReactElement<Record<string, unknown>> })
+  return usePart(handle, "row", { value: id }, { render })
 }
 
 /**
@@ -53,12 +53,7 @@ function ListGridCell({
   col: number
   render: ReactElement | ((part: Record<string, unknown>) => ReactElement)
 }) {
-  return usePart(
-    handle,
-    "cell",
-    { value: cellKey(id, col) },
-    { render: typeof render === "function" ? render : (render as ReactElement<Record<string, unknown>>) },
-  )
+  return usePart(handle, "cell", { value: cellKey(id, col) }, { render })
 }
 
 export { ListGridCell, ListGridProvider, ListGridRoot, ListGridRow, useListGrid, useListGridInstance }

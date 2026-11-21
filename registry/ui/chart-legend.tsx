@@ -1,10 +1,9 @@
 "use client"
 
-import type { CSSProperties } from "react"
 import type { LegendPayload } from "recharts"
 
 import { chartSwatchColor, resolveChartSeries } from "@/lib/chart-config"
-import { cn } from "@/lib/utils"
+import { cn, cssVars } from "@/lib/utils"
 import { useChart } from "@/components/ui/chart-context"
 
 // Recharts clones the content with every Legend prop, so only these are read and nothing is spread onto the DOM.
@@ -46,7 +45,7 @@ function ChartLegendContent({
               <span
                 aria-hidden="true"
                 data-slot="chart-legend-swatch"
-                style={{ "--indicator-color": chartSwatchColor(config, seriesKey, item.color) } as CSSProperties}
+                style={cssVars({ "--indicator-color": chartSwatchColor(config, seriesKey, item.color) })}
                 className="size-2.5 shrink-0 rounded-xs bg-(--indicator-color)"
               />
             ) : null}

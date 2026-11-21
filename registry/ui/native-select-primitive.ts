@@ -1,6 +1,7 @@
 import { createChange, definePrimitive, type ChangeDetails } from "@ui-sdk/core"
 
 import { settled } from "@/lib/action-refusal"
+import { isElementOf } from "@/lib/narrow"
 
 type NativeSelectChangeReason = "input-change" | "imperative"
 
@@ -40,17 +41,20 @@ const nativeSelect = definePrimitive({
     root: slot({
       on: {
         change: (event, { api, el, store }) => {
-          api.setValue((event.target as HTMLSelectElement).value, event)
+          const select = event.target
+          if (!isElementOf(select, "HTMLSelectElement")) return
+          api.setValue(select.value, event)
           // A refused or still-controlled change leaves the element showing the old value until state says otherwise.
           queueMicrotask(() => {
-            const select = el as HTMLSelectElement
+            if (!isElementOf(el, "HTMLSelectElement")) return
             const value = store.get().value ?? ""
-            if (select.value !== value) select.value = value
+            if (el.value !== value) el.value = value
           })
         },
       },
       bind: (el, part) => {
-        const select = el as HTMLSelectElement
+        if (!isElementOf(el, "HTMLSelectElement")) return undefined
+        const select = el
         const show = () => {
           const value = part.store.get().value ?? ""
           if (select.value !== value) select.value = value
