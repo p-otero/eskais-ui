@@ -86,6 +86,11 @@
       "renders": 10,
       "forcedLayouts": 2.75,
       "forcedSlack": 0.3
+    },
+    "prism-picker": {
+      "renders": 8,
+      "forcedLayouts": 0.05,
+      "paintP95": 24
     }
   },
   "layers": {
@@ -224,6 +229,7 @@
     "pagination": 54.4,
     "password-input": 57.2,
     "popover": 54.9,
+    "prism-picker": 40.5,
     "progress": 22.1,
     "proposal-actions": 71.4,
     "quantity": 12.1,

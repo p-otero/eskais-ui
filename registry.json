@@ -3814,6 +3814,164 @@
       ]
     },
     {
+      "name": "prism-picker",
+      "type": "registry:ui",
+      "title": "Prism Picker",
+      "description": "A hue picker built on optics: a white beam refracts through a glass prism (Snell's law, a Cauchy dispersion curve), a dial turns the prism, and the wavelength that leaves through a fixed exit slit is the colour, from the CIE 1931 observer through OKLCH to sRGB. UI SDK's slider in nanometres, painted additively on a canvas only when it changes, with setWavelength and setHue for agents.",
+      "docs": "`<PrismPicker label value|defaultValue onValueChange onColorChange disabled name labels>`. The value is a whole wavelength from 380 to 700 nm; `onColorChange` gets `{ hex, oklchHue, hslHue, wavelength }`, where the hex is the most saturated sRGB colour of that OKLCH hue (the red end is #ff0000), the same one the rays, the swatch and the readout show. The dial is UI SDK's Slider: arrows step 1 nm, Page Up and Down 10, Home and End go to the ends, and the value text is \"470 nm, blue\" (colour names in `labels.names`). A drag on the ring jumps the knob there; a drag on the prism turns it from where it was grabbed. Spectral colours only: magentas and purples have no wavelength, so `setHue` refuses them with why. The stage is a dark optical bench in every theme (the item's `css`); the card, readout and radius follow the theme.",
+      "dependencies": [
+        "@ui-sdk/core@0.1.0-beta.12",
+        "@ui-sdk/react@0.1.0-beta.12"
+      ],
+      "registryDependencies": [
+        "@eskais/utils",
+        "@eskais/theme",
+        "@eskais/action-refusal"
+      ],
+      "files": [
+        {
+          "path": "registry/ui/prism-picker.tsx",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/prism-picker-primitive.ts",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/prism-picker-dial.ts",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/prism-picker-optics.ts",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/prism-picker-scene.ts",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/use-prism-picker-scene.ts",
+          "type": "registry:ui"
+        }
+      ],
+      "css": {
+        "[data-slot=\"prism-picker\"]": {
+          "container-type": "inline-size"
+        },
+        "[data-slot=\"prism-stage\"]": {
+          "--prism-cx": "50cqw",
+          "--prism-cy": "58cqh",
+          "--prism-ring": "min(31cqh, 30cqw)",
+          "position": "relative",
+          "width": "100%",
+          "overflow": "hidden",
+          "aspect-ratio": "16 / 10",
+          "container-type": "size",
+          "user-select": "none",
+          "color": "white",
+          "background-color": "#040507",
+          "background-image": "radial-gradient(circle at 50% 58%, rgb(40 46 66 / 0.55), transparent 55%), linear-gradient(rgb(255 255 255 / 0.045) 1px, transparent 1px), linear-gradient(90deg, rgb(255 255 255 / 0.045) 1px, transparent 1px), linear-gradient(rgb(255 255 255 / 0.022) 1px, transparent 1px), linear-gradient(90deg, rgb(255 255 255 / 0.022) 1px, transparent 1px)",
+          "background-size": "100% 100%, 64px 64px, 64px 64px, 16px 16px, 16px 16px",
+          "background-position": "0 0, center 58%, center 58%, center 58%, center 58%"
+        },
+        "@container (width < 32rem)": {
+          "[data-slot=\"prism-stage\"]": {
+            "aspect-ratio": "1"
+          }
+        },
+        "[data-slot=\"prism-stage\"][data-disabled]": {
+          "filter": "saturate(0.3) brightness(0.7)"
+        },
+        "[data-slot=\"prism-glow\"]": {
+          "position": "absolute",
+          "inset": "0",
+          "width": "100%",
+          "height": "100%",
+          "pointer-events": "none",
+          "filter": "blur(7px)",
+          "mix-blend-mode": "plus-lighter"
+        },
+        "[data-slot=\"prism-light\"]": {
+          "position": "absolute",
+          "inset": "0",
+          "width": "100%",
+          "height": "100%",
+          "pointer-events": "none"
+        },
+        "[data-slot=\"prism-grip\"]": {
+          "position": "absolute",
+          "top": "var(--prism-cy)",
+          "left": "var(--prism-cx)",
+          "translate": "-50% -50%",
+          "width": "calc(var(--prism-ring) * 2 + 48px)",
+          "aspect-ratio": "1",
+          "border-radius": "50%",
+          "touch-action": "none"
+        },
+        "[data-slot=\"prism-scale\"]": {
+          "position": "absolute",
+          "top": "var(--prism-cy)",
+          "left": "var(--prism-cx)",
+          "translate": "-50% -50%",
+          "width": "calc(var(--prism-ring) * 2.6)",
+          "aspect-ratio": "1",
+          "overflow": "visible",
+          "pointer-events": "none"
+        },
+        "[data-slot=\"prism-tick\"]": {
+          "position": "absolute",
+          "top": "calc(var(--prism-cy) + sin(var(--prism-tick-angle)) * var(--prism-tick-radius))",
+          "left": "calc(var(--prism-cx) + cos(var(--prism-tick-angle)) * var(--prism-tick-radius))",
+          "translate": "-50% -50%",
+          "--prism-tick-radius": "calc(var(--prism-ring) * 1.2 + 12px)",
+          "pointer-events": "none",
+          "font-family": "var(--font-mono)",
+          "font-size": "var(--type-meta-size)",
+          "font-variant-numeric": "tabular-nums",
+          "color": "rgb(255 255 255 / 0.5)"
+        },
+        "[data-slot=\"prism-stage\"][data-disabled] [data-slot=\"prism-grip\"]": {
+          "touch-action": "auto"
+        },
+        "[data-slot=\"prism-stage\"] [data-slot=\"slider-thumb\"]": {
+          "position": "absolute !important",
+          "inset": "auto !important",
+          "margin": "0 !important",
+          "top": "calc(var(--prism-cy) + sin(var(--prism-dial)) * var(--prism-ring)) !important",
+          "left": "calc(var(--prism-cx) + cos(var(--prism-dial)) * var(--prism-ring)) !important",
+          "translate": "-50% -50% !important",
+          "width": "1.25rem",
+          "height": "1.25rem",
+          "border": "1.5px solid rgb(255 255 255 / 0.9)",
+          "border-radius": "50%",
+          "background": "var(--prism-shown, var(--prism-picked))",
+          "box-shadow": "0 0 0 3px rgb(0 0 0 / 0.55), 0 0 14px 2px var(--prism-shown, var(--prism-picked))",
+          "transition": "scale var(--transition-duration-micro) var(--ease-standard)"
+        },
+        "[data-slot=\"prism-stage\"][data-dragging] [data-slot=\"slider-thumb\"]": {
+          "scale": "1.1"
+        },
+        "[data-slot=\"prism-stage\"] [data-slot=\"slider-thumb\"]:has(:focus-visible)": {
+          "outline": "2px solid white",
+          "outline-offset": "3px"
+        },
+        "[data-slot=\"prism-colour\"]": {
+          "display": "grid",
+          "grid-template-columns": "auto 1fr",
+          "align-items": "center"
+        },
+        "[data-slot=\"prism-colour\"]::before": {
+          "content": "\"\"",
+          "grid-row": "span 2",
+          "width": "var(--control-height)",
+          "aspect-ratio": "1",
+          "border": "1px solid var(--input-strong)",
+          "border-radius": "var(--control-radius)",
+          "background": "var(--prism-picked)"
+        }
+      }
+    },
+    {
       "name": "date-time-picker",
       "type": "registry:ui",
       "title": "Date Time Picker",

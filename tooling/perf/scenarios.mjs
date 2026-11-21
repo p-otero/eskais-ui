@@ -233,6 +233,13 @@ const keyScenarios = [
     held: "ArrowRight",
   },
   {
+    id: "prism-picker",
+    label: "PrismPicker (→, Page Up, ←)",
+    focus: '[data-slot="prism-stage"] input[type="range"]',
+    keys: [...repeat("ArrowRight", 8), ...repeat("PageUp", 6), ...repeat("ArrowLeft", 6)],
+    held: "ArrowRight",
+  },
+  {
     id: "log-viewer",
     label: "LogViewer, 10,000 lines (↑, PageUp, F8)",
     focus: '[data-slot="log-viewer-log"]',

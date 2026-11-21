@@ -200,7 +200,20 @@ const itemNotes: Record<string, ItemNotes> = {
     agent: "Agents find it by its label and set any CSS colour with setValue.",
     usage:
       "In OKLCH the area paints its whole box: inside the gamut each point is its own colour, and past the edge it shows the colour the picker holds there, so the thumb always sits on the colour chosen. A thumb dragged or stepped past the edge stays where it was left, and the value is the closest colour inside.",
-    related: ["slider", "input", "popover"],
+    related: ["slider", "input", "popover", "prism-picker"],
+  },
+  "prism-picker": {
+    usage:
+      "Reach for it where picking a hue is part of the experience, like a brand or theme playground: the light is physics, not decoration. For any colour, alpha or a typed value, use ColorPicker.",
+    a11y: [
+      'The dial is a slider in nanometres: arrows step 1 nm, Page Up and Page Down 10, Home and End go to 380 and 700, and it reads as "470 nm, blue".',
+      "Touch takes the ring and 24px either side of it, and the prism inside; the page scrolls everywhere else. The knob keeps a 44px hit area.",
+      "Under reduced motion the prism jumps instead of gliding; the light stays.",
+      "The stage is dark in every theme, so the focus ring on it is white; the readout below follows the theme.",
+    ],
+    agent:
+      "Agents find it by its label and call setWavelength (380 to 700) or setHue (OKLCH degrees); a magenta or purple hue fails the step with why, since no single wavelength shows it.",
+    related: ["color-picker", "slider"],
   },
   "image-cropper": {
     usage:

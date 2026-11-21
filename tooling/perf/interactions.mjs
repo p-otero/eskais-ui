@@ -254,6 +254,12 @@ async function measureCounts(browser, origin, definition, { presses = 20 } = {})
     return {
       presses: keydowns.length,
       rendersMax: Math.max(0, ...keydowns.map((input) => input.renders)),
+      paintP95: round(
+        percentile(
+          keydowns.map((input) => input.paint),
+          95,
+        ),
+      ),
       forcedLayoutsPerPress: round(summary.forced.count / count, 2),
       mainThreadPerPress: round(Object.values(summary.totals).reduce((sum, ms) => sum + ms, 0) / count, 2),
       errors,

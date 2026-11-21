@@ -25,6 +25,7 @@ import { list } from "@/components/ui/list-primitive"
 import { masterDetail } from "@/components/ui/master-detail-primitive"
 import { modelScan } from "@/components/ui/model-scan-primitive"
 import { nativeSelect } from "@/components/ui/native-select-primitive"
+import { prismPicker } from "@/components/ui/prism-picker-primitive"
 import { searchField } from "@/components/ui/search-field-primitive"
 import { serverFilters } from "@/components/ui/server-filters-primitive"
 import { sidebar } from "@/components/ui/sidebar-primitive"
@@ -395,6 +396,29 @@ test("native select: a refused value fails the step and keeps the value", async 
   )
   await failsWith("Region", "setValue", "setValue was refused by the app.", ["us"])
   expect(view.state.value).toBe("eu")
+})
+
+test("prism picker: a refused turn, a wavelength outside the spectrum, a purple or a disabled picker fail the step", async () => {
+  let value = 520
+  const slider = { getValue: () => value, setValue: vi.fn((_next: number): boolean => false) }
+  mounted(mount(prismPicker, { slider }, `<root aria-label="Prism colour"></root>`))
+  await failsWith("Prism colour", "setWavelength", "setWavelength was refused by the app.", [470])
+  await failsWith("Prism colour", "setHue", "setHue was refused by the app.", [200])
+  await failsWith("Prism colour", "setWavelength", "takes 380 to 700 nm, the visible spectrum, not 900", [900])
+  await failsWith("Prism colour", "setHue", "can't reach 330°: magentas and purples", [330])
+  expect(value).toBe(520)
+  slider.setValue.mockImplementation((next: number) => {
+    value = next
+    return true
+  })
+  mounted(mount(prismPicker, { slider, disabled: true }, `<root aria-label="Disabled prism"></root>`))
+  await failsWith(
+    "Disabled prism",
+    "setWavelength",
+    "setWavelength isn't available while the picker is disabled",
+    [470],
+  )
+  expect(value).toBe(520)
 })
 
 test("search field: a refused search fails the step", async () => {

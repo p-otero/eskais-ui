@@ -145,5 +145,6 @@ item("theme").css = oneSelectorPerRule({
 item("palettes").css = oneSelectorPerRule(tree(read("palettes.css")))
 item("theme-compact").css = oneSelectorPerRule(tree(read("theme-compact.css")))
 item("theme-glass").css = oneSelectorPerRule(tree(read("theme-glass.css")))
+item("prism-picker").css = oneSelectorPerRule(tree(read("prism-picker.css")))
 
 writeFileSync(registryPath, `${JSON.stringify(registry, null, 2)}\n`)

@@ -37,6 +37,7 @@ const categories = [
       "date-input",
       "date-time-picker",
       "color-picker",
+      "prism-picker",
     ],
   },
   {

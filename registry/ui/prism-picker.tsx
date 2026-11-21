@@ -9,83 +9,94 @@ import {
   SliderTrack,
   type SliderValueChangeDetails,
 } from "@ui-sdk/react/slider"
-import { memo, useRef, useState, type CSSProperties, type PointerEvent as ReactPointerEvent } from "react"
-
-import { cn } from "@/lib/utils"
-
-import "./prism-picker.css"
+import { memo, useRef, useState, type PointerEvent as ReactPointerEvent } from "react"
 
 import {
   angleAt,
+  colourAt,
   colourName,
-  defaultColourNames,
-  dialMax,
-  positionAtAngle,
   readingAt,
+  wavelengthAtAngle,
   type ColourNames,
-  type Reading,
-} from "./prism-dial"
-import { maxWavelength, minWavelength } from "./prism-optics"
-import { prismPicker } from "./prism-picker-primitive"
-import { ringRadius, stageCentre } from "./prism-scene"
-import { usePrismScene } from "./use-prism-scene"
+} from "@/components/ui/prism-picker-dial"
+import { maxWavelength, minWavelength } from "@/components/ui/prism-picker-optics"
+import { prismPicker } from "@/components/ui/prism-picker-primitive"
+import { ringRadius, stageCentre } from "@/components/ui/prism-picker-scene"
+import { usePrismPickerScene } from "@/components/ui/use-prism-picker-scene"
+import { cn, cssVars } from "@/lib/utils"
 
 const { Root: PrismPickerRoot } = createParts(prismPicker, { root: "div" })
 
 type PrismPickerLabels = {
-  /** Names the dial for people using a screen reader, and for agents. */
+  /** Names the dial, a slider in nanometres, for screen readers and agents. */
   dial: string
-  /** Says a purple has no wavelength of its own. */
-  nonSpectral: string
+  /** The readout's terms. */
   hex: string
   wavelength: string
   hue: string
   prism: string
+  /** The colour names the value text and the readout use, by hue. */
   names: ColourNames
 }
 
-const defaultLabels: PrismPickerLabels = {
+const prismPickerLabels: PrismPickerLabels = {
   dial: "Wavelength",
-  nonSpectral: "non-spectral",
   hex: "Hex",
   wavelength: "Wavelength",
   hue: "Hue",
   prism: "Prism",
-  names: defaultColourNames,
+  names: {
+    red: "red",
+    orange: "orange",
+    yellow: "yellow",
+    green: "green",
+    cyan: "cyan",
+    blue: "blue",
+    violet: "violet",
+  },
 }
 
+/** The picked colour: the sRGB hex the rays and swatch show, its hues, and the wavelength behind it. */
+type PrismColor = { hex: string; oklchHue: number; hslHue: number; wavelength: number }
+
+type PrismPickerState = { disabled: boolean }
+
 type PrismPickerProps = {
-  /** The dial position: the wavelength in nm from 380 to 700, and with `purples`, 701 to 800 past the red end. */
-  value?: number
-  defaultValue?: number
-  onValueChange?: (value: number, details: SliderValueChangeDetails) => void
-  /** Closes the dial over the top with the non-spectral purples, from red back to violet. */
-  purples?: boolean
   /** The accessible name of the picker as a whole. */
   label: string
-  labels?: Partial<PrismPickerLabels>
-  className?: string
-  /** Called with each canvas paint's duration in ms. */
+  /** The picked wavelength in nm, a whole number from 380 to 700. Pass it to control the picker. */
+  value?: number
+  defaultValue?: number
+  /** Runs on every step of a drag or a key, with UI SDK's slider details (`reason`, `source`, `cancel()`). */
+  onValueChange?: (value: number, details: SliderValueChangeDetails) => void
+  /** Runs once a drag or a key press that changed the value ends, for saving. */
+  onValueCommit?: (value: number) => void
+  /** Runs with the colour on every change, with the same details. */
+  onColorChange?: (color: PrismColor, details: SliderValueChangeDetails) => void
+  disabled?: boolean
+  /** Submits the wavelength under this name in a form. */
+  name?: string
+  /** Overrides any label; `names` overrides colour names one by one. */
+  labels?: Partial<Omit<PrismPickerLabels, "names">> & { names?: Partial<ColourNames> }
+  /** Classes for the root; a function gets the picker's state. */
+  className?: string | ((state: PrismPickerState) => string | undefined)
+  /** Called with each canvas paint's duration in ms, for measuring. */
   onPaint?: (milliseconds: number) => void
+}
+
+const prismColor = (wavelength: number): PrismColor => {
+  const colour = colourAt(wavelength)
+  return { hex: colour.hex, oklchHue: colour.hue, hslHue: colour.hslHue, wavelength }
 }
 
 const signed = (value: number) => `${value < 0 ? "−" : ""}${Math.abs(value).toFixed(1)}`
 
-function valueText(reading: Reading, labels: PrismPickerLabels) {
-  const name = colourName(reading.colour.hue, labels.names)
-  if (reading.wavelength !== undefined) return `${String(Math.round(reading.wavelength))} nm, ${name}`
-  return `${name}, ${labels.nonSpectral}`
-}
-
 const ticks = Array.from({ length: (maxWavelength - minWavelength) / 10 + 1 }, (_, index) => minWavelength + index * 10)
 const numbered = [450, 500, 550, 600, 650]
-const segment = (from: number, to: number) => ({ from, to, colour: readingAt(from).colour.hex })
-const arcSegments = Array.from({ length: 80 }, (_, index) =>
-  segment(minWavelength + index * 4, minWavelength + (index + 1) * 4),
-)
-const purpleSegments = Array.from({ length: 25 }, (_, index) =>
-  segment(maxWavelength + index * 4, maxWavelength + (index + 1) * 4),
-)
+const arcSegments = Array.from({ length: 80 }, (_, index) => {
+  const from = minWavelength + index * 4
+  return { from, to: from + 4, colour: colourAt(from).hex }
+})
 
 const polar = (angle: number, radius: number) => {
   const radians = (angle * Math.PI) / 180
@@ -99,28 +110,15 @@ function arcPath(from: number, to: number, radius: number) {
 }
 
 // The engraved scale: the ring is 100 units in a 260-unit square, so the CSS sizes it from the ring's radius.
-const DialScale = memo(function DialScale({ purples }: { purples: boolean }) {
+const DialScale = memo(function DialScale() {
   return (
-    // oxlint-disable-next-line eskais/no-inline-icons -- an instrument scale, not an icon
+    // oxlint-disable-next-line eskais/no-inline-icons -- an instrument's engraved scale, not an icon
     <svg data-slot="prism-scale" aria-hidden="true" viewBox="-130 -130 260 260">
       <circle r="100" fill="none" stroke="currentColor" strokeOpacity="0.1" strokeWidth="0.6" />
       <circle r="100" fill="none" stroke="currentColor" strokeOpacity="0.05" strokeWidth="14" />
       {arcSegments.map(({ from, to, colour }) => (
         <path key={from} d={arcPath(from, to, 93)} fill="none" strokeWidth="1.6" stroke={colour} strokeOpacity="0.85" />
       ))}
-      {purples
-        ? purpleSegments.map(({ from, to, colour }) => (
-            <path
-              key={from}
-              d={arcPath(from, to, 93)}
-              fill="none"
-              strokeWidth="1.6"
-              stroke={colour}
-              strokeOpacity="0.7"
-              strokeDasharray="1.5 2"
-            />
-          ))
-        : null}
       {ticks.map((nanometres) => {
         const major = nanometres % 50 === 0
         const inner = polar(angleAt(nanometres), 104)
@@ -153,52 +151,62 @@ function pointerOnDial(event: ReactPointerEvent<HTMLElement>) {
   }
 }
 
+type Drag = { pointer: number; relative: boolean; from: number; dial: number }
+
+/**
+ * A hue picker built on a prism: a white beam refracts through glass the dial turns, and the wavelength that leaves
+ * through the fixed exit slit is the colour. The dial is UI SDK's slider in nanometres (arrows, Page Up and Down,
+ * Home and End); a drag on the ring or on the prism turns it. Spectral colours only, 380 to 700 nm.
+ */
 function PrismPicker({
+  label,
   value,
   defaultValue = 520,
   onValueChange,
-  purples = false,
-  label,
+  onValueCommit,
+  onColorChange,
+  disabled = false,
+  name,
   labels: labelOverrides,
   className,
   onPaint,
 }: PrismPickerProps) {
-  const labels = { ...defaultLabels, ...labelOverrides }
+  const labels = { ...prismPickerLabels, ...labelOverrides }
+  const names = { ...prismPickerLabels.names, ...labelOverrides?.names }
   const [slider] = useState(() => createSliderController<number>())
   const [ownValue, setOwnValue] = useState(defaultValue)
-  const position = value ?? ownValue
+  const wavelength = value ?? ownValue
   const [instant, setInstant] = useState(false)
   const [dragging, setDragging] = useState(false)
   const stage = useRef<HTMLDivElement>(null)
   const sharp = useRef<HTMLCanvasElement>(null)
   const glow = useRef<HTMLCanvasElement>(null)
   const [canvases] = useState(() => ({ stage, sharp, glow }))
-  const drag = useRef<{ pointer: number; relative: boolean; from: number; dial: number } | null>(null)
-  usePrismScene(canvases, { position, instant, onPaint })
+  const drag = useRef<Drag | null>(null)
+  usePrismPickerScene(canvases, { wavelength, instant, onPaint })
 
-  const reading = readingAt(position)
-  const max = dialMax(purples)
+  const reading = readingAt(wavelength)
+  const colourNameOf = (nanometres: number) => colourName(colourAt(nanometres).hue, names)
 
   const moveTo = (event: ReactPointerEvent<HTMLElement>) => {
     const current = drag.current
     if (!current) return
     const { angle, distance } = pointerOnDial(event)
     if (current.relative && distance < 8) return
-    let delta = angle - current.from
-    delta = ((((delta + 180) % 360) + 360) % 360) - 180
+    const delta = ((((angle - current.from + 180) % 360) + 360) % 360) - 180
     const dial = current.relative ? current.dial + delta : angle
     if (current.relative) {
       current.from = angle
       current.dial = dial
     }
-    const next = positionAtAngle(dial, purples, slider.getValue())
+    const next = wavelengthAtAngle(dial, slider.getValue())
     if (next !== slider.getValue()) slider.setValue(next, { reason: "drag", event: event.nativeEvent })
   }
 
   const onPointerDown = (event: ReactPointerEvent<HTMLElement>) => {
-    if (event.button !== 0) return
+    if (disabled || event.button !== 0) return
     const { angle, distance, ring } = pointerOnDial(event)
-    // The ring takes a press anywhere across a band 48px wide; inside it, the prism turns from where it's grabbed.
+    // The ring takes a press across a band 48px wide; inside it, the prism turns from where it's grabbed.
     const onRing = Math.abs(distance - ring) <= 24
     if (!onRing && distance > ring - 24) return
     event.preventDefault()
@@ -216,67 +224,68 @@ function PrismPicker({
   }
 
   const onChange = (next: number, details: SliderValueChangeDetails) => {
+    onValueChange?.(next, details)
+    if (details.canceled) return
     setInstant(details.reason === "drag")
     setOwnValue(next)
-    onValueChange?.(next, details)
+    onColorChange?.(prismColor(next), details)
   }
 
-  const hue = Math.round(reading.colour.hue)
   return (
     <PrismPickerRoot
       slider={slider}
-      purples={purples}
+      disabled={disabled}
       aria-label={label}
       className={cn(
         "flex w-full flex-col overflow-hidden rounded-surface border bg-card text-card-foreground shadow-surface",
-        className,
+        typeof className === "function" ? className({ disabled }) : className,
       )}
     >
       <div
         ref={stage}
         data-slot="prism-stage"
         data-dragging={dragging ? "" : undefined}
+        data-disabled={disabled ? "" : undefined}
         onPointerDown={onPointerDown}
         onPointerMove={moveTo}
         onPointerUp={endDrag}
         onPointerCancel={endDrag}
-        style={{ "--prism-picked": reading.colour.hex } as CSSProperties}
-        className="dark relative w-full overflow-hidden select-none"
+        style={cssVars({
+          "--prism-picked": reading.colour.hex,
+          "--prism-dial": `${String(angleAt(wavelength))}deg`,
+        })}
       >
         <div data-slot="prism-grip" aria-hidden="true" />
-        <canvas
-          ref={glow}
-          data-slot="prism-glow"
-          aria-hidden="true"
-          className="pointer-events-none absolute inset-0 size-full"
-        />
-        <canvas ref={sharp} aria-hidden="true" className="pointer-events-none absolute inset-0 size-full" />
-        <DialScale purples={purples} />
+        <canvas ref={glow} data-slot="prism-glow" aria-hidden="true" />
+        <canvas ref={sharp} data-slot="prism-light" aria-hidden="true" />
+        <DialScale />
         {numbered.map((nanometres) => (
           <span
             key={nanometres}
             data-slot="prism-tick"
             aria-hidden="true"
-            style={{ "--prism-tick-angle": `${String(angleAt(nanometres))}deg` } as CSSProperties}
-            className="font-mono tabular-nums"
+            style={cssVars({ "--prism-tick-angle": `${String(angleAt(nanometres))}deg` })}
           >
             {nanometres}
           </span>
         ))}
         <Slider
           controller={slider}
-          value={position}
+          value={wavelength}
           onValueChange={onChange}
+          onValueCommit={onValueCommit ? (next: number) => onValueCommit(next) : undefined}
           min={minWavelength}
-          max={max}
+          max={maxWavelength}
           step={1}
           largeStep={10}
-          format={(next: number) => valueText(readingAt(next), labels)}
+          disabled={disabled}
+          name={name}
+          format={(next: number) => `${String(next)} nm, ${colourNameOf(next)}`}
           className="pointer-events-none absolute inset-0"
         >
           <SliderControl className="absolute inset-0">
             <SliderTrack className="absolute inset-0">
-              <SliderThumb aria-label={labels.dial} className="touch-target outline-none" />
+              <SliderThumb aria-label={labels.dial} className="touch-target" />
             </SliderTrack>
           </SliderControl>
         </Slider>
@@ -284,36 +293,35 @@ function PrismPicker({
       <dl className="flex flex-wrap items-start gap-group p-inset-surface">
         <div
           data-slot="prism-colour"
-          style={{ "--prism-picked": reading.colour.hex } as CSSProperties}
+          style={cssVars({ "--prism-picked": reading.colour.hex })}
           className="min-w-40 grow basis-0 gap-x-items"
         >
           <dt className="sr-only">{labels.hex}</dt>
           <dd className="font-mono text-title-sm tracking-tight uppercase">{reading.colour.hex}</dd>
-          <dd className="text-caption text-muted-foreground">{colourName(reading.colour.hue, labels.names)}</dd>
+          <dd className="text-caption text-muted-foreground">{colourName(reading.colour.hue, names)}</dd>
         </div>
         <div className="flex grow basis-0 flex-col">
           <dt className="text-meta tracking-meta text-muted-foreground uppercase">{labels.wavelength}</dt>
-          <dd className="font-mono text-body tabular-nums">
-            {reading.wavelength === undefined ? labels.nonSpectral : `${String(Math.round(reading.wavelength))} nm`}
-          </dd>
+          <dd className="font-mono text-body tabular-nums">{`${String(Math.round(wavelength))} nm`}</dd>
         </div>
         <div className="flex grow basis-0 flex-col">
           <dt className="text-meta tracking-meta text-muted-foreground uppercase">{labels.hue}</dt>
           <dd className="font-mono text-body tabular-nums">
-            {String(hue)}° <span className="text-caption text-muted-foreground">OKLCH</span>
+            {`${String(Math.round(reading.colour.hue))}°`}{" "}
+            <span className="text-caption text-muted-foreground">OKLCH</span>
           </dd>
           <dd className="font-mono text-caption text-muted-foreground tabular-nums">
-            {String(Math.round(reading.colour.hslHue))}° HSL
+            {`${String(Math.round(reading.colour.hslHue))}° HSL`}
           </dd>
         </div>
         <div className="flex grow basis-0 flex-col">
           <dt className="text-meta tracking-meta text-muted-foreground uppercase">{labels.prism}</dt>
-          <dd className="font-mono text-body tabular-nums">{signed(reading.rotation)}°</dd>
+          <dd className="font-mono text-body tabular-nums">{`${signed(reading.rotation)}°`}</dd>
         </div>
       </dl>
     </PrismPickerRoot>
   )
 }
 
-export { PrismPicker }
-export type { PrismPickerLabels, PrismPickerProps }
+export { PrismPicker, prismPickerLabels }
+export type { PrismColor, PrismPickerLabels, PrismPickerProps, PrismPickerState }

@@ -1,14 +1,16 @@
 import { useState } from "react"
 
 import { Label } from "@/components/ui/label"
+import { PrismPicker, type PrismColor } from "@/components/ui/prism-picker"
 import { Switch } from "@/components/ui/switch"
 
 import { agent } from "../agent"
-import { PrismPicker } from "./prism-picker"
+// Only this page's chunk carries the instrument's styles; the registry item ships them as its `css`.
+import "../../../../registry/styles/prism-picker.css"
 
 declare global {
   interface Window {
-    /** Read by the prism measurements: each paint's duration in ms, and the agent bridge. */
+    /** Read by tooling/prism-check.mjs: each paint's duration in ms, and the agent bridge. */
     prismProbe?: { paints: number[]; agent: typeof agent }
   }
 }
@@ -19,26 +21,33 @@ const recordPaint = (milliseconds: number) => {
   probe.paints.push(milliseconds)
 }
 
-/** `?demo=prism-picker`: the prism hue picker prototype, alone on a page. */
+/** `?demo=prism-picker`: the prism hue picker alone on a page, controlled, with what it reports. */
 function PrismPickerDemo() {
-  const [purples, setPurples] = useState(false)
+  const [wavelength, setWavelength] = useState(520)
+  const [color, setColor] = useState<PrismColor | null>(null)
+  const [disabled, setDisabled] = useState(false)
   return (
     <main className="flex min-h-dvh justify-center bg-background p-inset-surface text-foreground">
       <div className="flex w-full max-w-3xl flex-col gap-group">
         <header className="flex flex-wrap items-end justify-between gap-items">
-          <div className="flex flex-col gap-inline">
-            <p className="text-meta tracking-meta text-muted-foreground uppercase">Prototype</p>
-            <h1 className="text-display-sm tracking-tight">Prism picker</h1>
-          </div>
+          <h1 className="text-display-sm tracking-tight">Prism picker</h1>
           <Label>
-            <Switch checked={purples} onCheckedChange={setPurples} />
-            Purples past the red end
+            <Switch checked={disabled} onCheckedChange={setDisabled} />
+            Disabled
           </Label>
         </header>
-        <PrismPicker label="Prism colour" purples={purples} onPaint={recordPaint} />
-        <p className="max-w-prose text-body-sm text-muted-foreground">
-          Drag the ring, or grab the prism and turn it. Focus the knob for the arrow keys, Page Up and Page Down, Home
-          and End. The exit slit stays put: turning the prism sweeps the spectrum across it, as in a monochromator.
+        <PrismPicker
+          label="Prism colour"
+          value={wavelength}
+          onValueChange={setWavelength}
+          onColorChange={setColor}
+          disabled={disabled}
+          onPaint={recordPaint}
+        />
+        <p className="max-w-prose text-body-sm text-muted-foreground" aria-live="polite">
+          {color
+            ? `onColorChange: ${color.hex}, ${String(color.wavelength)} nm, OKLCH hue ${color.oklchHue.toFixed(1)}°`
+            : "Drag the ring, or grab the prism and turn it. Focus the knob for the arrow keys, Page Up and Page Down, Home and End."}
         </p>
       </div>
     </main>
