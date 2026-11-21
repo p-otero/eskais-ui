@@ -179,13 +179,15 @@ function PrismPicker({
   const [instant, setInstant] = useState(false)
   const [dragging, setDragging] = useState(false)
   const stage = useRef<HTMLDivElement>(null)
-  const sharp = useRef<HTMLCanvasElement>(null)
-  const glow = useRef<HTMLCanvasElement>(null)
-  const [canvases] = useState(() => ({ stage, sharp, glow }))
+  const light = useRef<HTMLCanvasElement>(null)
+  const [canvases] = useState(() => ({ stage, light }))
   const drag = useRef<Drag | null>(null)
   usePrismPickerScene(canvases, { wavelength, instant, onPaint })
 
   const reading = readingAt(wavelength)
+  // What the server renders, before the hook sets the knob's own angle and colour; it never changes after, so a key
+  // press doesn't restyle the stage.
+  const [firstPaint] = useState(() => ({ colour: reading.colour.hex, dial: `${String(angleAt(wavelength))}deg` }))
   const colourNameOf = (nanometres: number) => colourName(colourAt(nanometres).hue, names)
 
   const moveTo = (event: ReactPointerEvent<HTMLElement>) => {
@@ -251,13 +253,12 @@ function PrismPicker({
         onPointerUp={endDrag}
         onPointerCancel={endDrag}
         style={cssVars({
-          "--prism-picked": reading.colour.hex,
-          "--prism-dial": `${String(angleAt(wavelength))}deg`,
+          "--prism-picked": firstPaint.colour,
+          "--prism-dial": firstPaint.dial,
         })}
       >
         <div data-slot="prism-grip" aria-hidden="true" />
-        <canvas ref={glow} data-slot="prism-glow" aria-hidden="true" />
-        <canvas ref={sharp} data-slot="prism-light" aria-hidden="true" />
+        <canvas ref={light} data-slot="prism-light" aria-hidden="true" />
         <DialScale />
         {numbered.map((nanometres) => (
           <span

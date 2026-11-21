@@ -1,5 +1,6 @@
-// Paints the light: the white beam, the glass, the dispersed fan and the picked ray, additively on two canvases, a
-// sharp one at device resolution and a glow one at half the CSS size that the stage blurs with a CSS filter.
+// Paints the light: the white beam, the glass, the dispersed fan and the picked ray, additively. Thin lines go to
+// the canvas at device resolution; the fan, a soft field of colour, to a buffer at half the CSS size; the bloom to
+// one at a quarter, which the hook blurs. Rasterized on a CPU, the fan at full size was most of a frame.
 
 import { colourAt, sceneTilt, type Reading } from "@/components/ui/prism-picker-dial"
 import {
@@ -65,6 +66,7 @@ const towardWhite = ([red, green, blue]: Rgb, amount: number): Rgb => [
 
 const fanStep = 4
 const glowStride = 8
+const reflectedStride = 4
 // The ends of the spectrum are dim to the eye; a floor keeps them visible on the dial.
 const fan = Array.from({ length: (maxWavelength - minWavelength) / fanStep + 1 }, (_, index) => {
   const wavelength = minWavelength + index * fanStep
@@ -198,9 +200,78 @@ function paintSlit({ sharp }: Painter, at: Vec, direction: Vec) {
   sharp.globalCompositeOperation = "lighter"
 }
 
-function paintScene(sharp: CanvasRenderingContext2D, glow: CanvasRenderingContext2D, layout: Layout, reading: Reading) {
+type FanRay = {
+  wavelength: number
+  colour: Rgb
+  weight: number
+  traced: NonNullable<ReturnType<typeof trace>>
+  exit: Vec
+  direction: Vec
+  far: Vec
+}
+
+// One fill for the whole fan: a conic gradient from the rays' common exit, a stop per ray in its colour, then one
+// radial fade with distance. Eighty wedges, each its own gradient, were most of a frame on a CPU.
+function paintFan(context: CanvasRenderingContext2D, rays: FanRay[], level: number) {
+  const first = rays[0]
+  const last = rays.at(-1)
+  if (!first || !last || rays.length < 2) return
+  const origin = {
+    x: rays.reduce((sum, ray) => sum + ray.exit.x, 0) / rays.length,
+    y: rays.reduce((sum, ray) => sum + ray.exit.y, 0) / rays.length,
+  }
+  const angleOf = (ray: FanRay) => Math.atan2(ray.far.y - origin.y, ray.far.x - origin.x)
+  const sorted = rays.toSorted((a, b) => angleOf(a) - angleOf(b))
+  const start = angleOf(sorted[0]!) - 0.05
+  const conic = context.createConicGradient(start, origin.x, origin.y)
+  for (const ray of sorted) {
+    const turned = (((angleOf(ray) - start) % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2)
+    conic.addColorStop(turned / (Math.PI * 2), rgba(ray.colour, ray.weight * level))
+  }
+  context.beginPath()
+  context.moveTo(first.exit.x, first.exit.y)
+  for (const ray of rays) context.lineTo(ray.exit.x, ray.exit.y)
+  for (const ray of rays.toReversed()) context.lineTo(ray.far.x, ray.far.y)
+  context.closePath()
+  context.fillStyle = conic
+  context.fill()
+  // The shortest ray sets the fade, so the rays that leave through the top dim at the edge as the long ones do.
+  const reach = Math.min(...rays.map((ray) => Math.hypot(ray.far.x - origin.x, ray.far.y - origin.y)))
+  const falloff = context.createRadialGradient(origin.x, origin.y, 0, origin.x, origin.y, reach)
+  falloff.addColorStop(0, "rgba(0,0,0,1)")
+  falloff.addColorStop(0.55, "rgba(0,0,0,0.58)")
+  falloff.addColorStop(1, "rgba(0,0,0,0.16)")
+  context.globalCompositeOperation = "destination-in"
+  context.fillStyle = falloff
+  context.fillRect(0, 0, context.canvas.width * 4, context.canvas.height * 4)
+  context.globalCompositeOperation = "lighter"
+}
+
+// The rays inside the glass, from the entry to where each leaves: one thin triangle with their colours across it.
+function paintSheen(context: CanvasRenderingContext2D, entry: Vec, rays: FanRay[]) {
+  const first = rays[0]
+  const last = rays.at(-1)
+  if (!first || !last || rays.length < 2) return
+  const across = context.createLinearGradient(first.exit.x, first.exit.y, last.exit.x, last.exit.y)
+  rays.forEach((ray, index) => {
+    if (index % 4 === 0 || ray === last)
+      across.addColorStop(index / (rays.length - 1), rgba(ray.colour, 0.22 * ray.weight))
+  })
+  context.beginPath()
+  context.moveTo(entry.x, entry.y)
+  context.lineTo(first.exit.x, first.exit.y)
+  context.lineTo(last.exit.x, last.exit.y)
+  context.closePath()
+  context.fillStyle = across
+  context.fill()
+}
+
+/** The three contexts a scene paints into: thin lines at full resolution, the fan at half, the glow at a quarter. */
+type SceneTargets = { sharp: CanvasRenderingContext2D; field: CanvasRenderingContext2D; glow: CanvasRenderingContext2D }
+
+function paintScene({ sharp, field, glow }: SceneTargets, layout: Layout, reading: Reading) {
   const painter: Painter = { sharp, glow, layout }
-  for (const context of [sharp, glow]) {
+  for (const context of [sharp, field, glow]) {
     context.globalCompositeOperation = "source-over"
     context.clearRect(0, 0, layout.width, layout.height)
     context.globalCompositeOperation = "lighter"
@@ -219,45 +290,40 @@ function paintScene(sharp: CanvasRenderingContext2D, glow: CanvasRenderingContex
   line(sharp, entry, glintEnd, 1, fade(sharp, entry, glintEnd, white, 0.14, 0))
 
   const fanLevel = 0.85
-  const screenRays = rays.map((ray) => {
-    if (!ray.traced) return undefined
-    const exit = toScreen(layout, ray.traced.exit)
-    const direction = turn(ray.traced.direction)
-    return { ...ray, exit, direction, far: along(exit, direction, toEdge(layout, exit, direction)) }
+  const screenRays = rays.map((ray): FanRay | undefined => {
+    const { traced } = ray
+    if (!traced) return undefined
+    const exit = toScreen(layout, traced.exit)
+    const direction = turn(traced.direction)
+    return { ...ray, traced, exit, direction, far: along(exit, direction, toEdge(layout, exit, direction)) }
   })
 
-  for (let index = 0; index < screenRays.length - 1; index++) {
+  const lit = screenRays.filter((ray): ray is FanRay => ray !== undefined && !ray.traced.reflected)
+  paintFan(field, lit, 0.5 * fanLevel)
+
+  // The glow is blurred, so a wedge every few rays is enough.
+  for (let index = 0; index + glowStride < screenRays.length; index += glowStride) {
     const ray = screenRays[index]
-    const next = screenRays[index + 1]
-    if (!ray || !next || ray.traced?.reflected || next.traced?.reflected) continue
-    const weight = ((ray.weight + next.weight) / 2) * fanLevel
-    // The glow is blurred, so it takes one wedge for every few of the sharp fan's.
-    const glowNext = screenRays[Math.min(screenRays.length - 1, index + glowStride)]
-    const contexts: [CanvasRenderingContext2D, number, typeof next][] = [[sharp, 0.5, next]]
-    if (index % glowStride === 0 && glowNext && !glowNext.traced?.reflected) contexts.push([glow, 0.85, glowNext])
-    for (const [context, level, edge] of contexts) {
-      context.beginPath()
-      context.moveTo(ray.exit.x, ray.exit.y)
-      context.lineTo(edge.exit.x, edge.exit.y)
-      context.lineTo(edge.far.x, edge.far.y)
-      context.lineTo(ray.far.x, ray.far.y)
-      context.closePath()
-      context.fillStyle = fade(context, ray.exit, ray.far, ray.colour, weight * level, weight * level * 0.16)
-      context.fill()
-    }
+    const edge = screenRays[index + glowStride]
+    if (!ray || !edge || ray.traced.reflected || edge.traced.reflected) continue
+    const level = ((ray.weight + edge.weight) / 2) * fanLevel * 0.85
+    glow.beginPath()
+    glow.moveTo(ray.exit.x, ray.exit.y)
+    glow.lineTo(edge.exit.x, edge.exit.y)
+    glow.lineTo(edge.far.x, edge.far.y)
+    glow.lineTo(ray.far.x, ray.far.y)
+    glow.closePath()
+    glow.fillStyle = fade(glow, ray.exit, ray.far, ray.colour, level, level * 0.16)
+    glow.fill()
   }
 
-  for (const ray of screenRays) {
-    if (!ray?.traced) continue
-    const path = ray.traced.path.map((point) => toScreen(layout, point))
-    sharp.beginPath()
-    path.forEach((point, index) => (index === 0 ? sharp.moveTo(point.x, point.y) : sharp.lineTo(point.x, point.y)))
-    sharp.lineWidth = 1
-    sharp.strokeStyle = rgba(ray.colour, (ray.traced.reflected ? 0.025 : 0.07) * ray.weight)
-    sharp.stroke()
-    if (ray.traced.reflected)
-      line(sharp, ray.exit, ray.far, 1, fade(sharp, ray.exit, ray.far, ray.colour, 0.035 * ray.weight, 0))
-  }
+  paintSheen(sharp, toScreen(layout, firstTrace.entry), lit)
+  // Rays the far face reflects leave faintly through another face; a few of them draw that.
+  screenRays.forEach((ray, index) => {
+    if (!ray?.traced.reflected || index % reflectedStride !== 0) return
+    const level = 0.035 * reflectedStride * ray.weight
+    line(sharp, ray.exit, ray.far, 1, fade(sharp, ray.exit, ray.far, ray.colour, level, 0))
+  })
   glow.beginPath()
   firstTrace.path.forEach((point, index) => {
     const screen = toScreen(layout, point)
@@ -290,4 +356,4 @@ function paintScene(sharp: CanvasRenderingContext2D, glow: CanvasRenderingContex
 }
 
 export { layoutFor, paintScene, ringRadius, stageCentre }
-export type { Layout }
+export type { Layout, SceneTargets }

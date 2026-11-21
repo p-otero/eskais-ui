@@ -1,12 +1,12 @@
-// Checks PrismPicker on the built showcase (?demo=prism-picker) in Chrome: a drag around the ring sweeps the
-// spectrum and a drag on the prism turns it, at 1× and 4× CPU (canvas paint time, and pointer move to the next
-// frame, with a ceiling at 1×); keys and an agent's step glide the prism; nothing paints while idle; reduced motion
-// jumps in one paint; and a disabled picker ignores the pointer. `bun run test:browser` builds the showcase first.
+// Checks PrismPicker on the built showcase (?demo=prism-picker): drags at 1× and 4× CPU with a move-to-frame ceiling
+// at 1×, key and agent glides, no paint while idle, one paint under reduced motion, and a disabled picker.
+// `--software` renders with SwiftShader, as a runner without a GPU does. Build the showcase first.
 /* oxlint-disable no-await-in-loop -- each pointer move waits for the frame the one before painted */
 import { withShowcase } from "./showcase-browser.mjs"
 
 // A frame at 60 Hz; the median run here is near 3 ms.
 const moveToFrameP95Ms = 16
+const software = process.argv.includes("--software")
 
 const percentile = (values, p) => {
   const sorted = values.toSorted((a, b) => a - b)
@@ -76,69 +76,74 @@ const paintsAfter = async (page, action) => {
   return page.evaluate(() => window.prismProbe.paints.length)
 }
 
-await withShowcase(async (page) => {
-  await page.goto(page.url().replace(/\/$/, "/?demo=prism-picker"))
-  await page.waitForSelector('[data-slot="slider-thumb"]')
-  await page.waitForTimeout(300)
-  const client = await page.context().newCDPSession(page)
+await withShowcase(
+  async (page) => {
+    await page.goto(page.url().replace(/\/$/, "/?demo=prism-picker"))
+    await page.waitForSelector('[data-slot="slider-thumb"]')
+    await page.waitForTimeout(300)
+    const client = await page.context().newCDPSession(page)
 
-  for (const rate of [1, 4]) {
-    await client.send("Emulation.setCPUThrottlingRate", { rate })
-    const { paints, latency } = await dragRing(page, 120)
-    console.log(`CPU ×${String(rate)} drag: paint ${summary(paints)}; pointer move to next frame ${summary(latency)}`)
-    if (rate === 1) {
-      expect(
-        percentile(latency, 95) <= moveToFrameP95Ms,
-        `A drag at 1× takes over ${String(moveToFrameP95Ms)} ms from pointer move to frame`,
-      )
+    for (const rate of [1, 4]) {
+      await client.send("Emulation.setCPUThrottlingRate", { rate })
+      const { paints, latency } = await dragRing(page, 120)
+      console.log(`CPU ×${String(rate)} drag: paint ${summary(paints)}; pointer move to next frame ${summary(latency)}`)
+      if (rate === 1) {
+        expect(
+          percentile(latency, 95) <= moveToFrameP95Ms,
+          `A drag at 1× takes over ${String(moveToFrameP95Ms)} ms from pointer move to frame`,
+        )
+      }
     }
-  }
-  await client.send("Emulation.setCPUThrottlingRate", { rate: 1 })
-  expect((await value(page)) === "700", `A drag past the red end should hold at 700, not ${await value(page)}`)
+    await client.send("Emulation.setCPUThrottlingRate", { rate: 1 })
+    expect((await value(page)) === "700", `A drag past the red end should hold at 700, not ${await value(page)}`)
 
-  // Grabbing the prism turns it by the angle the pointer travels, from where the knob was.
-  const at = await dial(page)
-  const before = Number(await value(page))
-  await page.mouse.move(...at(0, 20))
-  await page.mouse.down()
-  for (let step = 1; step <= 10; step++) {
-    await page.mouse.move(...at(step * 8, 20))
-    await nextFrame(page)
-  }
-  await page.mouse.up()
-  expect(Number(await value(page)) < before, "Turning the prism clockwise should move toward violet")
+    // Grabbing the prism turns it by the angle the pointer travels, from where the knob was.
+    const at = await dial(page)
+    const before = Number(await value(page))
+    await page.mouse.move(...at(0, 20))
+    await page.mouse.down()
+    for (let step = 1; step <= 10; step++) {
+      await page.mouse.move(...at(step * 8, 20))
+      await nextFrame(page)
+    }
+    await page.mouse.up()
+    expect(Number(await value(page)) < before, "Turning the prism clockwise should move toward violet")
 
-  await page.getByRole("slider", { name: "Wavelength" }).focus()
-  const glide = await paintsAfter(page, () => page.keyboard.press("PageUp"))
-  console.log(`Page Up glides in ${String(glide)} paints`)
-  expect(glide > 2, "A key press should glide the prism")
+    await page.getByRole("slider", { name: "Wavelength" }).focus()
+    const glide = await paintsAfter(page, () => page.keyboard.press("PageUp"))
+    console.log(`Page Up glides in ${String(glide)} paints`)
+    expect(glide > 2, "A key press should glide the prism")
 
-  const stepped = await page.evaluate(() =>
-    window.prismProbe.agent.act({ steps: [{ ref: "Prism colour", action: "setWavelength", args: [470] }] }),
-  )
-  expect(stepped.ok && (await value(page)) === "470", "An agent's setWavelength should turn the dial to 470")
+    const stepped = await page.evaluate(() =>
+      window.prismProbe.agent.act({ steps: [{ ref: "Prism colour", action: "setWavelength", args: [470] }] }),
+    )
+    expect(stepped.ok && (await value(page)) === "470", "An agent's setWavelength should turn the dial to 470")
 
-  await page.waitForTimeout(400)
-  const idle = await paintsAfter(page, () => page.waitForTimeout(2000))
-  console.log(`Idle for 2 s: ${String(idle)} paints`)
-  expect(idle === 0, "The prism picker paints while idle")
+    await page.waitForTimeout(400)
+    const idle = await paintsAfter(page, () => page.waitForTimeout(2000))
+    console.log(`Idle for 2 s: ${String(idle)} paints`)
+    expect(idle === 0, "The prism picker paints while idle")
 
-  await page.emulateMedia({ reducedMotion: "reduce" })
-  const reduced = await paintsAfter(page, () => page.keyboard.press("PageDown"))
-  console.log(`Page Down with reduced motion: ${String(reduced)} paint`)
-  expect(reduced === 1, `Reduced motion should jump in one paint, not ${String(reduced)}`)
+    await page.emulateMedia({ reducedMotion: "reduce" })
+    const reduced = await paintsAfter(page, () => page.keyboard.press("PageDown"))
+    console.log(`Page Down with reduced motion: ${String(reduced)} paint`)
+    expect(reduced === 1, `Reduced motion should jump in one paint, not ${String(reduced)}`)
 
-  expect(
-    (await page.locator('[data-slot="prism-grip"]').evaluate((grip) => getComputedStyle(grip).touchAction)) === "none",
-    "The ring should take touches from page scrolling",
-  )
+    expect(
+      (await page.locator('[data-slot="prism-grip"]').evaluate((grip) => getComputedStyle(grip).touchAction)) ===
+        "none",
+      "The ring should take touches from page scrolling",
+    )
 
-  await page.getByRole("switch", { name: "Disabled" }).click()
-  const held = await value(page)
-  await page.mouse.move(...at(90))
-  await page.mouse.down()
-  await page.mouse.move(...at(30))
-  await page.mouse.up()
-  expect((await value(page)) === held, "A disabled picker should ignore a drag")
-  console.log("prism-check: ok")
-})
+    await page.getByRole("switch", { name: "Disabled" }).click()
+    const held = await value(page)
+    await page.mouse.move(...at(90))
+    await page.mouse.down()
+    await page.mouse.move(...at(30))
+    await page.mouse.up()
+    expect((await value(page)) === held, "A disabled picker should ignore a drag")
+    console.log("prism-check: ok")
+  },
+  {},
+  software ? { args: ["--use-angle=swiftshader", "--enable-unsafe-swiftshader"] } : {},
+)

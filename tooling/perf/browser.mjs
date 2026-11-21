@@ -58,10 +58,18 @@ async function serve(dir, { base = "/", spa = true } = {}) {
 
 const probe = resolve(import.meta.dirname, "probe.js")
 
+// Without a GPU, as on CI's Linux runner, Chrome composites in software, so a paint or filter only a GPU makes cheap
+// shows up there first. PERF_SOFTWARE=1 (--disable-gpu, closest to CI) or =swiftshader (GL emulated) reproduces it.
+const softwareModes = {
+  1: ["--disable-gpu"],
+  swiftshader: ["--use-angle=swiftshader", "--enable-unsafe-swiftshader"],
+}
+const softwareArgs = softwareModes[process.env.PERF_SOFTWARE ?? ""] ?? []
+
 async function launch() {
   return chromium.launch({
     channel: "chrome",
-    args: ["--enable-blink-features=LongAnimationFrameTiming", "--disable-renderer-backgrounding"],
+    args: ["--enable-blink-features=LongAnimationFrameTiming", "--disable-renderer-backgrounding", ...softwareArgs],
   })
 }
 

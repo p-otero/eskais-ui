@@ -38,6 +38,12 @@ is mostly the transfer, so it moves less between machines than render-bound time
 - A new registry item or scenario: `bun run perf:ci --update` writes today's values; commit them.
 - A change that lowers a count: run `--update` too, so the budget holds the gain.
 
+A scenario can also set `paintP95`, a ceiling in ms on key to next paint (PrismPicker sets 24). CI's runner has no
+GPU, so Chrome composites there in software and a canvas, filter or blend that a GPU makes cheap can cost a frame
+more. `PERF_SOFTWARE=1 bun run perf:ci` (`--disable-gpu`) reproduces it locally; `PERF_SOFTWARE=swiftshader` emulates
+GL in software too, the worst case. Compare with another scenario run the same way: the frame itself sets a floor near
+16 ms there.
+
 ## Load and layout shift
 
 `bun run perf:vitals` loads pages cold (a new browser context each time) on a slow 4G profile and reads TTFB, FCP,
