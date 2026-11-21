@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/markdown-editor-commands"
 import { setHeading } from "@/components/ui/markdown-editor-lines"
 import { activeProvisional, committedDoc, committedSelection } from "@/components/ui/markdown-editor-provisional"
+import { isOneOf } from "@/lib/narrow"
 
 const LEVELS = ["paragraph", "heading1", "heading2", "heading3", "heading4", "heading5", "heading6"] as const
 
@@ -119,9 +120,9 @@ function runCommand(view: EditorView, name: MarkdownEditorCommand) {
   if (!COMMANDS.includes(name)) {
     throw new RangeError(`Unknown command "${String(name)}". Commands: ${COMMANDS.join(", ")}.`)
   }
-  if ((BLOCK_KINDS as readonly string[]).includes(name)) return insertBlock(view, name as MarkdownBlockKind)
-  const level = (LEVELS as readonly string[]).indexOf(name)
-  return level >= 0 ? setHeading(view, level) : toggleFormat(view, name as MarkdownFormat)
+  if (isOneOf(BLOCK_KINDS, name)) return insertBlock(view, name)
+  if (isOneOf(LEVELS, name)) return setHeading(view, LEVELS.indexOf(name))
+  return toggleFormat(view, name)
 }
 
 function createEditorHandle(view: EditorView, menus: HandleMenus): MarkdownEditorHandle {

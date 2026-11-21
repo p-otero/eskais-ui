@@ -5,6 +5,7 @@ import { useCallback } from "react"
 
 import { useDataClient, type DefaultServerError } from "@/components/ui/server-data"
 import { readOptionsOf, type ReadOptions, type ServerStatus } from "@/components/ui/use-server-data"
+import { assumeType } from "@/lib/narrow"
 
 /** Data that one resource's answer writes into another's query, as `resource.seed(params, data)` builds it. */
 type ResourceSeed = { key: readonly unknown[]; data: unknown }
@@ -85,7 +86,10 @@ function useServerQuery<T, TError = DefaultServerError, TSelected = T>(
       ...readOptionsOf(options),
       ...(options.staleTime === undefined ? {} : { staleTime: options.staleTime }),
       ...(select === undefined ? {} : { select }),
-      placeholderData: (previous) => (keepPrevious ? previous : undefined) ?? (placeholder as typeof previous),
+      placeholderData: (previous) =>
+        // TanStack types placeholder data as `NonFunctionGuard<T>`, which a generic `T` can't be narrowed to; a
+        // placeholder is data, never a function.
+        (keepPrevious ? previous : undefined) ?? assumeType<typeof previous>(placeholder),
     },
     client,
   )

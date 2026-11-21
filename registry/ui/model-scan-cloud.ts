@@ -177,7 +177,7 @@ function surfacePoints(root: Object3D, count: number) {
   let total = 0
   for (const mesh of meshes) {
     if (mesh instanceof SkinnedMesh) mesh.skeleton.update()
-    const geometry = mesh.geometry as BufferGeometry
+    const geometry = mesh.geometry
     const position = geometry.getAttribute("position")
     const index = geometry.getIndex()
     const corners = index ? index.count : position.count
@@ -206,7 +206,7 @@ function surfacePoints(root: Object3D, count: number) {
       if ((areas[mid] ?? 0) < pick) low = mid + 1
       else high = mid
     }
-    const { mesh, a, b, c } = triangles[low] as (typeof triangles)[number]
+    const { mesh, a, b, c } = triangles[low]!
     mesh.getVertexPosition(a, pa)
     mesh.getVertexPosition(b, pb)
     mesh.getVertexPosition(c, pc)

@@ -1,3 +1,4 @@
+import { assumeType } from "@/lib/narrow"
 import {
   capPageSize,
   capPageSizes,
@@ -99,6 +100,9 @@ function requestOf<F>(state: Omit<PageControllerState<F>, "request">, cursorMode
   }
 }
 
+// A filter is data, never a function, so a function passed to `setFilter` is an updater.
+const isUpdater = <F>(next: F | ((previous: F) => F)): next is (previous: F) => F => typeof next === "function"
+
 /**
  * The state of one paged view, outside React: filter, sort, size and position, as a `PageRequest`. A new filter,
  * sort or size goes back to the first page; search is debounced; the URL follows when `url` is set.
@@ -111,7 +115,8 @@ function createPageController<T, F>(
   const cursorMode = capabilities.position === "cursor"
   const labels = { ...pageStatusLabels, ...options.labels }
   const pageSizes = capPageSizes(options.pageSizes ?? [10, 25, 50, 100], capabilities)
-  const initialFilter = options.filter ?? ({} as F)
+  // A controller without `filter` starts unfiltered; filters are records of optional fields, which `F` doesn't state.
+  const initialFilter = options.filter ?? assumeType<F>({})
   const searchKey = options.search?.key
   const debounce = options.search?.debounce ?? 250
   const listeners = new Set<() => void>()
@@ -173,7 +178,7 @@ function createPageController<T, F>(
   const firstPage = { page: 1, cursor: null, direction: "forward" as const, cursorIndex: 0 }
 
   const setFilter = (next: F | ((previous: F) => F)) => {
-    const filter = typeof next === "function" ? (next as (previous: F) => F)(state.filter) : next
+    const filter = isUpdater(next) ? next(state.filter) : next
     if (same(filter, state.filter)) return
     clearTimeout(timer)
     set({ filter, searchText: searchTextOf(filter), ...firstPage })
@@ -185,7 +190,8 @@ function createPageController<T, F>(
     if (same(state.filter[searchKey], value)) return
     const filter = { ...state.filter }
     if (value === undefined) delete filter[searchKey]
-    else filter[searchKey] = value as F[typeof searchKey]
+    // `search.key` names the filter's text field; TypeScript can't tie a key from options to a string value.
+    else filter[searchKey] = assumeType<F[typeof searchKey]>(value)
     set({ filter, ...firstPage })
   }
 

@@ -2,7 +2,7 @@
 
 import { TreeItem, TreeItemIndicator, TreeItemLabel } from "@ui-sdk/react/tree"
 import { ArrowDownIcon, ArrowUpIcon, CheckIcon, ChevronRightIcon, CloudUploadIcon, CopyIcon } from "lucide-react"
-import { memo, useState, type CSSProperties, type ReactNode } from "react"
+import { memo, useState, type ReactNode } from "react"
 
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -14,7 +14,7 @@ import type { Commit, CommitMessageSegment } from "@/lib/commit-graph"
 import type { LaneRow } from "@/lib/commit-lanes"
 import { commitSubject, segmentsOf } from "@/lib/commit-message"
 import { formatElapsed, formatInstant, formatRelative, toISO, type Instant } from "@/lib/time"
-import { cn } from "@/lib/utils"
+import { cn, cssVars } from "@/lib/utils"
 
 const NONE: readonly BranchInfo[] = []
 
@@ -281,7 +281,7 @@ const CommitRow = memo(function CommitRow({
   const more = columns > lanes.width
   const below = more ? columns : Math.max(lanes.width, ...lanes.out.map((lane) => lane + 1))
   const indent = more ? columns : Math.max(lanes.lane, ...lanes.through, ...lanes.into) + 1
-  const style = { "--indent": indent, "--indent-below": below } as CSSProperties
+  const style = cssVars({ "--indent": indent, "--indent-below": below })
   const detailsId = `commit-details-${commit.id}`
   const tags = commit.tags ?? []
   const subtle = finished ? easeIn : undefined

@@ -3,6 +3,7 @@ import { EditorView } from "@codemirror/view"
 
 import { dispatchLineChanges, headingLevel, setHeading } from "@/components/ui/markdown-editor-lines"
 import { wikilinkText } from "@/components/ui/markdown-syntax"
+import { keysOf } from "@/lib/narrow"
 
 type InlineFormat = "bold" | "italic" | "strikethrough" | "code"
 type LineFormat = "heading" | "quote" | "bulletList" | "orderedList" | "taskList"
@@ -17,7 +18,9 @@ const LINE_PREFIXES: Record<LineFormat, { add: string; match: RegExp }> = {
   taskList: { add: "- [ ] ", match: /^[-*+] \[[ xX]\] / },
 }
 
-const FORMATS = [...Object.keys(INLINE_MARKERS), ...Object.keys(LINE_PREFIXES), "link"] as MarkdownFormat[]
+const FORMATS: MarkdownFormat[] = [...keysOf(INLINE_MARKERS), ...keysOf(LINE_PREFIXES), "link"]
+
+const isInlineFormat = (format: MarkdownFormat): format is InlineFormat => format in INLINE_MARKERS
 
 /** The document's line break, so CRLF files keep CRLF; mixed files keep every byte by splitting on "\n" only. */
 function lineSeparatorOf(text: string) {
@@ -141,10 +144,10 @@ function toggleFormat(view: EditorView, format: MarkdownFormat) {
       selection: EditorSelection.range(urlStart, urlStart + 3),
       userEvent: "input.format",
     })
-  } else if (format in INLINE_MARKERS) {
-    toggleInline(view, format as InlineFormat)
+  } else if (isInlineFormat(format)) {
+    toggleInline(view, format)
   } else {
-    toggleLines(view, format as LineFormat)
+    toggleLines(view, format)
   }
   return true
 }
@@ -204,7 +207,7 @@ const BLOCKS: Record<MarkdownBlockKind, { text: string; caret: number }> = {
   divider: { text: "---\n", caret: 4 },
 }
 
-const BLOCK_KINDS = Object.keys(BLOCKS) as MarkdownBlockKind[]
+const BLOCK_KINDS = keysOf(BLOCKS)
 
 /**
  * Replaces `range` (the selection by default) with a block, after a blank line when text comes before it on the

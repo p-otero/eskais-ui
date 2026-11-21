@@ -6,7 +6,7 @@ import { CircleExclamationPointIcon } from "lucide-react"
 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
-import { errorText, useFormContext, type IssueError } from "@/components/ui/form-context"
+import { errorText, useFormContext, type ErrorLike } from "@/components/ui/form-context"
 import { useFormFlag } from "@/components/ui/use-form-sync"
 import { cn } from "@/lib/utils"
 
@@ -20,9 +20,9 @@ type FormRootErrorProps = {
 function FormRootError({ title, className }: FormRootErrorProps) {
   const { form, messages, setRoot } = useFormContext("FormRootError")
   const { errors } = useFormState({ control: form.control, name: "root" })
-  const root = errors.root as (IssueError & Record<string, IssueError | undefined>) | undefined
+  const root = errors.root
   const lines = [root?.server, root?.message === undefined ? undefined : root]
-    .filter((error): error is IssueError => Boolean(error?.message || error?.type))
+    .filter((error): error is ErrorLike => Boolean(error?.message || error?.type))
     .flatMap((error) => errorText(error, "root", undefined, messages).split("\n"))
 
   if (lines.length === 0) return null

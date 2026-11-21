@@ -8,7 +8,7 @@ import { ansiCssColor, type AnsiSpan, type AnsiStyle } from "@/lib/ansi"
 import type { Tone } from "@/lib/tone"
 import type { logViewer } from "@/components/ui/log-viewer-primitive"
 import type { LogLine } from "@/components/ui/log-viewer-store"
-import { cn } from "@/lib/utils"
+import { cn, cssVars } from "@/lib/utils"
 
 type LogViewerApi = ReturnType<typeof usePrimitive<typeof logViewer>>["api"]
 
@@ -66,10 +66,10 @@ function formatTime(time: number, locale: string | undefined) {
 // A line mounts again each time it scrolls back into view: format its time once per locale.
 const times = new WeakMap<LogLine, { locale: string | undefined; text: string; iso: string }>()
 
-function timeOf(line: LogLine & { time: number }, locale: string | undefined) {
+function timeOf(line: LogLine, time: number, locale: string | undefined) {
   const known = times.get(line)
   if (known && known.locale === locale) return known
-  const formatted = { locale, text: formatTime(line.time, locale), iso: new Date(line.time).toISOString() }
+  const formatted = { locale, text: formatTime(time, locale), iso: new Date(time).toISOString() }
   times.set(line, formatted)
   return formatted
 }
@@ -210,16 +210,16 @@ const LogRow = memo(function LogRow({
       {timestamps && line.time !== undefined && (
         <time
           data-slot="log-viewer-time"
-          dateTime={timeOf(line as LogLine & { time: number }, locale).iso}
+          dateTime={timeOf(line, line.time, locale).iso}
           className="shrink-0 text-muted-foreground tabular-nums in-data-error:text-inherit"
         >
-          {timeOf(line as LogLine & { time: number }, locale).text}
+          {timeOf(line, line.time, locale).text}
         </time>
       )}
       {source && (
         <span
           data-slot="log-viewer-source"
-          style={{ "--log-source": source.color } as CSSProperties}
+          style={cssVars({ "--log-source": source.color })}
           className="flex w-(--log-source-width) shrink-0 items-center gap-inline truncate text-muted-foreground before:size-2 before:shrink-0 before:rounded-full before:bg-(--log-source) in-data-error:text-inherit"
         >
           {source.label}

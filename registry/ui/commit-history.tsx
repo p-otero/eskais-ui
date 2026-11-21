@@ -43,6 +43,7 @@ import type { BranchInfo, CommitBranch } from "@/lib/commit-branches"
 import { rowOfCommit, type Commit } from "@/lib/commit-graph"
 import { createCommitFinder, subjectPieces } from "@/lib/commit-message"
 import { useLocale } from "@/lib/locale"
+import { assumeType } from "@/lib/narrow"
 import type { Instant } from "@/lib/time"
 import { cn } from "@/lib/utils"
 
@@ -241,7 +242,7 @@ function CommitHistory({
     onOpenCommit: onOpenCommit
       ? (id, change) => {
           const row = rowOfCommit(graph, id)
-          if (row !== undefined) onOpenCommit(graph.commits[row] as Commit, change)
+          if (row !== undefined) onOpenCommit(graph.commits[row]!, change)
         }
       : undefined,
   })
@@ -261,10 +262,7 @@ function CommitHistory({
   // The working-tree row comes before the commits' rows in the tree's order.
   const rowOffset = workingTree ? 1 : 0
 
-  const commitAt = useCallback(
-    (index: number) => graph.commits[visible.rows[index] as number] as Commit,
-    [graph, visible],
-  )
+  const commitAt = useCallback((index: number) => graph.commits[visible.rows[index]!]!, [graph, visible])
   const keyAt = useCallback((index: number) => commitAt(index).id, [commitAt])
   const textAt = useCallback((index: number) => subjectPieces(commitAt(index)), [commitAt])
   const { setScroller, anchor, ...virtual } = useTrailRows({
@@ -387,7 +385,7 @@ function CommitHistory({
                   onValueChange={(next, change) => {
                     if (typeof next === "string" || next === null)
                       handle.api.select(next, {
-                        reason: change.reason as CommitHistoryChangeReason,
+                        reason: change.reason,
                         event: change.event,
                       })
                   }}
@@ -396,7 +394,9 @@ function CommitHistory({
                   expanded={state.expanded as string[]}
                   onExpandedChange={(next, change) =>
                     handle.api.setExpanded(next, {
-                      reason: change.reason as CommitHistoryChangeReason,
+                      // Tree also reports "find-in-page", which CommitHistoryChangeReason doesn't name yet; it is
+                      // passed through unchanged, as before.
+                      reason: assumeType<CommitHistoryChangeReason>(change.reason),
                       event: change.event,
                     })
                   }

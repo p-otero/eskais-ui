@@ -105,7 +105,7 @@ function createBranchModel(
       const parent = graph.commits[row]?.parents[0]
       row = parent === undefined ? undefined : rowOfCommit(graph, parent)
     }
-    const headCommit = head === undefined ? undefined : (graph.commits[head] as Commit)
+    const headCommit = head === undefined ? undefined : graph.commits[head]!
     const updatedAt = branch.updatedAt ?? headCommit?.date
     const merged = head !== undefined && (graph.depth[head] ?? 0) > 0
     const stale = updatedAt !== undefined && now - toTime(updatedAt) > staleAfter
@@ -114,12 +114,12 @@ function createBranchModel(
       name: branch.name,
       head: branch.head,
       ahead: branch.ahead ?? (isBase ? 0 : rows.length),
-      behind: branch.behind ?? (isBase || mergeBase === undefined ? 0 : (onBase[mergeBase] as number)),
+      behind: branch.behind ?? (isBase || mergeBase === undefined ? 0 : onBase[mergeBase]!),
       updatedAt,
       author: branch.author ?? headCommit?.author,
       tone: branch.tone,
       tag: isBase ? 0 : tagOf(branch),
-      mergeBase: mergeBase === undefined ? undefined : (graph.commits[mergeBase] as Commit).id,
+      mergeBase: mergeBase === undefined ? undefined : graph.commits[mergeBase]!.id,
       state: isBase ? "base" : merged ? "merged" : stale ? "stale" : "active",
     }
     all.push(info)

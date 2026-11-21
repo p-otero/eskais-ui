@@ -76,7 +76,7 @@ function createForm<Schema extends StandardSchemaV1>(): TypedForm<Schema> {
     useFormInstance,
     useFormWatch,
     useFormFieldArray,
-  } as unknown as TypedForm<Schema>
+  }
 }
 
 export { Form, createForm }

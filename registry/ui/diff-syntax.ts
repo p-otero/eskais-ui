@@ -6,6 +6,7 @@ import {
   normalizeLanguage,
   parserFor,
   syntaxHighlighter,
+  syntaxToneOf,
   type CodeLanguage,
   type SyntaxTone,
 } from "@/components/ui/code-highlight"
@@ -149,8 +150,8 @@ function createDiffSyntax(onReady: () => void) {
       entry.tree,
       syntaxHighlighter,
       (start, end, classes) => {
-        const tone = classes.split(" ")[0] as SyntaxTone
-        out.push({ from: Math.max(start, from) - from, to: Math.min(end, to) - from, tone })
+        const tone = syntaxToneOf(classes)
+        if (tone) out.push({ from: Math.max(start, from) - from, to: Math.min(end, to) - from, tone })
       },
       from,
       to,

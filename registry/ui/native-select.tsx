@@ -73,7 +73,7 @@ function NativeSelect({
       className,
     ),
   }
-  const merged = field ? (field.props(own) as typeof own) : own
+  const merged = field ? { ...own, ...field.props(own) } : own
   return (
     <div data-slot="native-select-wrapper" className="relative w-full min-w-0">
       <NativeSelectRoot

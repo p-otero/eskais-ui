@@ -13,10 +13,15 @@ type SkipLinkProps = Omit<ComponentProps<"a">, "children" | "target"> & {
   target?: string | RefObject<HTMLElement | null>
 }
 
+// A document or a shadow root; a detached link is its own root, which has no ids to search.
+function findsById(root: Node): root is Document | ShadowRoot {
+  return "getElementById" in root
+}
+
 function resolveTarget(target: SkipLinkProps["target"], link: HTMLAnchorElement) {
   if (typeof target !== "string") return target?.current ?? null
-  const root = link.getRootNode() as Document | ShadowRoot
-  return root.getElementById?.(target) ?? link.ownerDocument.getElementById(target)
+  const root = link.getRootNode()
+  return (findsById(root) ? root.getElementById(target) : null) ?? link.ownerDocument.getElementById(target)
 }
 
 function focusTarget(element: HTMLElement) {

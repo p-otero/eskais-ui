@@ -3,7 +3,7 @@
 import type { StandardSchemaV1 } from "@standard-schema/spec"
 import type { DialogOpenChangeReason } from "@ui-sdk/react/dialog"
 import { useRef, useState, type ComponentProps, type ReactNode } from "react"
-import type { FieldValues, Path, UseFormReturn } from "react-hook-form"
+import type { FieldValues, UseFormReturn } from "react-hook-form"
 
 import { Button, type buttonVariants } from "@/components/ui/button"
 import { ConfirmDialog } from "@/components/ui/confirm-dialog"
@@ -26,6 +26,7 @@ import {
   type FormActionsProps,
   type FormProps,
 } from "@/components/ui/form"
+import { assumeType, isRecord } from "@/lib/narrow"
 import { cn } from "@/lib/utils"
 import type { VariantProps } from "class-variance-authority"
 
@@ -195,14 +196,20 @@ function FormDialog<Schema extends StandardSchemaV1>({
     ).finally(stop)
     if (prepared && prepared.error !== undefined) throw prepared.error
     if (prepared?.values !== undefined) {
-      for (const [name, value] of Object.entries(prepared.values as Record<string, unknown>))
-        instance.setValue(name as Path<Input>, value as Input[Path<Input>], { shouldDirty: true })
+      // react-hook-form types setValue by the form's own paths; the prepared values are keyed by the same field names,
+      // but as the schema's output TypeScript can't relate them. Its methods are closures, so it runs unbound.
+      const setValue = assumeType<(name: string, value: unknown, options: { shouldDirty: boolean }) => void>(
+        instance.setValue,
+      )
+      if (isRecord(prepared.values))
+        for (const [name, value] of Object.entries(prepared.values)) setValue(name, value, { shouldDirty: true })
       return prepared.values
     }
     if (!wrote) return values
     const result = await form.schema["~standard"].validate(instance.getValues())
     if (result.issues) throw { issues: result.issues }
-    return result.value as Output
+    // A generic Schema's validate is typed by its constraint, StandardSchemaV1<unknown>, not by Schema's output.
+    return assumeType<Output>(result.value)
   }
 
   const showSubmitError = (error: unknown) => {

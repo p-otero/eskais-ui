@@ -1,6 +1,7 @@
 import { createChange, definePrimitive, type ChangeDetails, type ChangeOptions } from "@ui-sdk/core"
 
 import { settled, unavailable } from "@/lib/action-refusal"
+import { isElementOf } from "@/lib/narrow"
 
 type LightboxIndexChangeReason = "item-press" | "list-navigation" | "imperative"
 
@@ -69,8 +70,8 @@ const lightbox = definePrimitive({
           const keyboard = event as KeyboardEvent
           if (keyboard.defaultPrevented || keyboard.altKey || keyboard.ctrlKey || keyboard.metaKey) return
           if (keyboard.key !== "ArrowLeft" && keyboard.key !== "ArrowRight") return
-          const target = keyboard.currentTarget as Element
-          const forward = (keyboard.key === "ArrowRight") !== isRtl(target)
+          const target = keyboard.currentTarget
+          const forward = (keyboard.key === "ArrowRight") !== (isElementOf(target, "Element") && isRtl(target))
           const options = { reason: "list-navigation" as const, event: keyboard }
           if (forward ? api.next(options) : api.previous(options)) keyboard.preventDefault()
         },

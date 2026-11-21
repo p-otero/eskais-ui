@@ -1,4 +1,5 @@
 import type { TaskLink, TaskStatus } from "@/lib/agent-task-types"
+import { assumeType } from "@/lib/narrow"
 
 interface ProposalLabels {
   /** Accessible name of the agent-only proposals group. */
@@ -486,7 +487,9 @@ function mergeLabels(
       merged[key] = isPlainObject(current) && isPlainObject(value) ? { ...current, ...value } : value
     }
   }
-  return merged as unknown as AgentTaskBoardLabels
+  // Every key of `base` is copied before the overrides, each of which replaces a key with its own value or a
+  // shallow merge of it; TypeScript can't follow the keys of an interface through `Object.entries`.
+  return assumeType<AgentTaskBoardLabels>(merged)
 }
 
 export { agentTaskBoardLabels, agentTaskBoardLabelsEs, mergeLabels }

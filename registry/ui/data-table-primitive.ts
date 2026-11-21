@@ -2,6 +2,7 @@ import { createChange, createController, definePrimitive, type ChangeDetails, ty
 
 import { settled } from "@/lib/action-refusal"
 import { toggleIds, type DataTableSort, type SortDirection } from "@/lib/data-table-model"
+import { isStringArray } from "@/lib/narrow"
 
 type DataTableSortChangeReason = "item-press" | "imperative"
 type DataTableSelectionChangeReason = "press" | "select-all" | "imperative"
@@ -118,10 +119,10 @@ const dataTable = definePrimitive({
       },
       setSelection(ids: unknown, options?: ChangeOptions<DataTableSelectionChangeReason>) {
         const known = new Set((context.options().rowItems ?? []).map((item) => item.value))
-        if (!Array.isArray(ids) || ids.some((id) => typeof id !== "string" || !known.has(id))) {
+        if (!isStringArray(ids) || ids.some((id) => !known.has(id))) {
           throw new RangeError("setSelection takes a list of row ids from the table.")
         }
-        return select([...new Set(ids as string[])], "setSelection", options)
+        return select([...new Set(ids)], "setSelection", options)
       },
       toggleRows(ids: readonly string[], checked?: boolean, options?: ChangeOptions<DataTableSelectionChangeReason>) {
         const current = latest()

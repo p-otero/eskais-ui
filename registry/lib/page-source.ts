@@ -1,3 +1,5 @@
+import { assumeType } from "@/lib/narrow"
+
 type SortDirection = "asc" | "desc"
 
 type SortSpec = { field: string; direction: SortDirection }
@@ -144,7 +146,7 @@ function appendParams(target: URLSearchParams, init: ParamsInit | undefined) {
   for (const [name, value] of entries) {
     for (const item of Array.isArray(value) ? (value as unknown[]) : [value]) {
       if (item === undefined || item === null) continue
-      target.append(name, String(item as string | number | boolean))
+      target.append(name, String(item))
     }
   }
   return target
@@ -180,7 +182,9 @@ class HttpError extends Error {
 /** Reads a response's JSON body, or throws an `HttpError` with its status. */
 async function readJson<Raw>(response: Response): Promise<Raw> {
   if (!response.ok) throw new HttpError(response.status, response.statusText || undefined, response)
-  return (await response.json()) as Raw
+  const body: unknown = await response.json()
+  // The caller names the body's shape; a JSON body can't be checked against a type it only knows by name.
+  return assumeType<Raw>(body)
 }
 
 function abortError(signal: AbortSignal): unknown {

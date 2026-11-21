@@ -7,7 +7,6 @@ import {
   isValidElement,
   useContext,
   useMemo,
-  type ComponentType,
   type ReactElement,
   type ReactNode,
 } from "react"
@@ -101,7 +100,7 @@ function adapterFor(child: ReactElement, bind: FormFieldProps["bind"]) {
   if (bind === "checked") return checkedAdapter
   if (bind === "value") return valueAdapter
   if (bind) return bind
-  return formControlAdapters.get(child.type as ComponentType) ?? valueAdapter
+  return formControlAdapters.get(child.type) ?? valueAdapter
 }
 
 function chain(own: unknown, bound: (...args: unknown[]) => void) {
@@ -170,7 +169,7 @@ function FormField<Values extends FieldValues = FieldValues>({
     if (!isValidElement<Record<string, unknown>>(child)) throw new Error("FormField needs one control as its child.")
     const adapter = adapterFor(child, bind)
     checkedLayout = adapter === checkedAdapter
-    floats = floatingLabelControls.has(child.type as object)
+    floats = typeof child.type !== "string" && floatingLabelControls.has(child.type)
     control = cloneElement(child, {
       name: child.props.name ?? name,
       required: child.props.required ?? (required || undefined),

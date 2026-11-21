@@ -1,15 +1,19 @@
 import { Children, isValidElement, type KeyboardEvent, type ReactElement, type ReactNode } from "react"
 
+import { isRecord } from "@/lib/narrow"
+
 function defaultText(item: unknown) {
   if (typeof item === "string") return item
-  if (typeof item === "object" && item !== null) {
-    const record = item as Record<string, unknown>
-    for (const key of ["title", "label", "name", "id"]) if (typeof record[key] === "string") return record[key]
+  if (isRecord(item)) {
+    for (const key of ["title", "label", "name", "id"]) {
+      const text = item[key]
+      if (typeof text === "string") return text
+    }
   }
   return ""
 }
 
-type ChildRow = ReactElement<{ id: string; title?: unknown }>
+type ChildRow = ReactElement<{ id?: unknown; title?: unknown }>
 
 // Flat rows given as children, each with a string `id` (`<ListItem id>`), are the list's data too, so they
 // virtualize like `items`. Anything else, like a ListGroup, keeps rendering as it is.
@@ -19,20 +23,22 @@ function childRowsOf(children: ReactNode): ChildRow[] | undefined {
   const rows: ChildRow[] = []
   for (const child of all) {
     if (!isValidElement<{ id?: unknown }>(child) || typeof child.props.id !== "string") return undefined
-    rows.push(child as ChildRow)
+    rows.push(child)
   }
   return rows
 }
 
-const childId = (row: unknown) => (row as ChildRow).props.id
+// Rows reach these as the list's data, typed `unknown`; `childRowsOf` made each one, with a string `id`.
+const childId = (row: unknown) => (isValidElement<ChildRow["props"]>(row) ? String(row.props.id) : "")
 const childText = (row: unknown) => {
-  const { id, title } = (row as ChildRow).props
-  return typeof title === "string" ? title : id
+  if (!isValidElement<ChildRow["props"]>(row)) return ""
+  const { id, title } = row.props
+  return typeof title === "string" ? title : String(id)
 }
-const renderChild = (row: unknown) => row as ChildRow
+const renderChild = (row: unknown) => (isValidElement(row) ? row : null)
 
 function defaultId(item: unknown) {
-  if (typeof item === "object" && item !== null && "id" in item) return String((item as { id: unknown }).id)
+  if (typeof item === "object" && item !== null && "id" in item) return String(item.id)
   return String(item)
 }
 

@@ -1,17 +1,26 @@
 import {
+  Color,
   DataTexture,
   MeshToonMaterial,
   NearestFilter,
   RedFormat,
+  Texture,
   type Material,
   type Mesh,
-  type MeshStandardMaterial,
   type Object3D,
 } from "three"
 
 type MorphMesh = Mesh & { morphTargetDictionary: Record<string, number>; morphTargetInfluences: number[] }
 
-const isMesh = (object: Object3D): object is Mesh => (object as Mesh).isMesh === true
+const isMesh = (object: Object3D): object is Mesh => "isMesh" in object && object.isMesh === true
+
+const isMorphMesh = (mesh: Mesh): mesh is MorphMesh =>
+  mesh.morphTargetDictionary !== undefined && mesh.morphTargetInfluences !== undefined
+
+// `Material` declares neither: the standard, physical, basic and toon materials a GLB loads each add their own.
+const colorOf = (material: Material) =>
+  "color" in material && material.color instanceof Color ? material.color : undefined
+const mapOf = (material: Material) => ("map" in material && material.map instanceof Texture ? material.map : null)
 
 /** Three tones of light, read nearest, for the toon look. */
 function toonGradient() {
@@ -24,15 +33,14 @@ function toonGradient() {
 }
 
 function toonOf(material: Material, gradientMap: DataTexture) {
-  const source = material as MeshStandardMaterial
   return new MeshToonMaterial({
     name: material.name,
-    color: source.color,
-    map: source.map ?? null,
-    vertexColors: source.vertexColors,
-    transparent: source.transparent,
-    opacity: source.opacity,
-    side: source.side,
+    color: colorOf(material),
+    map: mapOf(material),
+    vertexColors: material.vertexColors,
+    transparent: material.transparent,
+    opacity: material.opacity,
+    side: material.side,
     gradientMap,
   })
 }
@@ -56,9 +64,11 @@ function targetNamesOf(meshes: readonly MorphMesh[]) {
  * becomes the influence `w × scale`. Undefined unless it is one finite number per target.
  */
 function targetScalesOf(mesh: MorphMesh): readonly number[] | undefined {
-  const scales: unknown = (mesh.userData as { targetScales?: unknown }).targetScales
+  const scales: unknown = mesh.userData["targetScales"]
   if (!Array.isArray(scales) || scales.length !== mesh.morphTargetInfluences.length) return undefined
-  return scales.every((scale) => typeof scale === "number" && Number.isFinite(scale)) ? (scales as number[]) : undefined
+  return scales.every((scale): scale is number => typeof scale === "number" && Number.isFinite(scale))
+    ? scales
+    : undefined
 }
 
 /**
@@ -77,9 +87,9 @@ function signatureOf(surfaces: readonly Mesh[]) {
         for (let i = 0; i < values.length; i += 97) sum += values[i] ?? 0
         parts.push(`${name}:${String(attribute.count)}:${sum.toFixed(4)}`)
       }
-      parts.push(Object.keys((mesh as Partial<MorphMesh>).morphTargetDictionary ?? {}).join(","))
+      parts.push(Object.keys(mesh.morphTargetDictionary ?? {}).join(","))
       for (const material of [mesh.material].flat()) {
-        const color = (material as MeshStandardMaterial).color
+        const color = colorOf(material)
         parts.push(color ? color.getHexString() : material.type)
       }
       return parts.join("|")
@@ -87,5 +97,5 @@ function signatureOf(surfaces: readonly Mesh[]) {
     .join(";")
 }
 
-export { isMesh, signatureOf, targetNamesOf, targetScalesOf, toonGradient, toonOf }
+export { isMesh, isMorphMesh, signatureOf, targetNamesOf, targetScalesOf, toonGradient, toonOf }
 export type { MorphMesh }

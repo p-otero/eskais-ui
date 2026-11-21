@@ -31,6 +31,7 @@ import type { MarkdownFormat } from "@/components/ui/markdown-editor-commands"
 import type { MarkdownEditorLabels } from "@/components/ui/markdown-editor-labels"
 import { ControlTooltip } from "@/components/ui/tooltip"
 import { useResizeObserver } from "@/components/ui/use-markdown-editor"
+import { isOneOf } from "@/lib/narrow"
 
 type ToolbarFormat = Exclude<MarkdownFormat, "heading">
 
@@ -47,9 +48,19 @@ const ITEMS: { format: ToolbarFormat; glyph: ReactNode; group: number; shortcut?
   { group: 1, format: "taskList", glyph: <ListTodoIcon /> },
 ]
 
+const TOOLBAR_FORMATS = ITEMS.map((item) => item.format)
+
 const LEVELS = [0, 1, 2, 3, 4, 5, 6] as const
-const levelLabel = (labels: MarkdownEditorLabels, level: number) =>
-  level === 0 ? labels.paragraph : labels[`heading${level}` as `heading${1 | 2 | 3 | 4 | 5 | 6}`]
+const LEVEL_LABELS = [
+  "paragraph",
+  "heading1",
+  "heading2",
+  "heading3",
+  "heading4",
+  "heading5",
+  "heading6",
+] as const satisfies readonly (keyof MarkdownEditorLabels)[]
+const levelLabel = (labels: MarkdownEditorLabels, level: (typeof LEVELS)[number]) => labels[LEVEL_LABELS[level]]
 
 const buttonClassName =
   "touch-target inline-flex size-control-sm shrink-0 items-center justify-center rounded-control text-muted-foreground outline-none hover:bg-accent hover:text-accent-foreground focus-visible:ring-2 focus-visible:ring-ring data-disabled:opacity-50 data-open:bg-accent data-open:text-accent-foreground [&_svg]:size-4"
@@ -154,7 +165,11 @@ function MarkdownEditorToolbar({
         </ControlTooltip>,
       ])}
       {overflow.length > 0 && (
-        <DropdownMenu onAction={(value) => onFormat(value as ToolbarFormat)}>
+        <DropdownMenu
+          onAction={(value) => {
+            if (isOneOf(TOOLBAR_FORMATS, value)) onFormat(value)
+          }}
+        >
           <ControlTooltip label={labels.more}>
             <ToolbarButton
               render={<MenuTrigger />}

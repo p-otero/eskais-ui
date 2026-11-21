@@ -1,5 +1,6 @@
 import { notifyManager, type InfiniteData, type Query, type QueryClient } from "@tanstack/react-query"
 
+import { assumeType } from "@/lib/narrow"
 import type { PageResult } from "@/lib/page-source"
 
 /**
@@ -46,11 +47,13 @@ function queryKind(query: Query, key: readonly unknown[]): "page" | "infinite" |
 function mapItems<T>(kind: unknown, data: unknown, update: (items: T[]) => T[]): unknown {
   if (data === undefined) return undefined
   if (kind === "page") {
-    const page = data as PageResult<T>
+    // TanStack's cache types data as unknown; the hooks store a `PageResult<T>` under a "page" query.
+    const page = assumeType<PageResult<T>>(data)
     return { ...page, items: update(page.items) }
   }
   if (kind === "infinite") {
-    const infinite = data as InfiniteData<PageResult<T>>
+    // TanStack's cache types data as unknown; the hooks store pages of `PageResult<T>` under an "infinite" query.
+    const infinite = assumeType<InfiniteData<PageResult<T>>>(data)
     return {
       ...infinite,
       pages: infinite.pages.map((page) => ({ ...page, items: update(page.items) })),
@@ -172,7 +175,8 @@ function patchSource<T, Data = unknown>(
       const kind = queryKind(query, key)
       const next =
         kind === "resource"
-          ? patch.resource?.(current as Data | undefined, query.queryKey)
+          ? // TanStack's cache types data as unknown; a resource under the source's key holds the patch's `Data`.
+            patch.resource?.(assumeType<Data | undefined>(current), query.queryKey)
           : patch.items && mapItems<T>(kind, current, patch.items)
       const fetching = query.state.fetchStatus === "fetching"
       // A cancel with `revert` puts the state from before the read back at once (TanStack 5.107 reverts in the

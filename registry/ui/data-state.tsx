@@ -8,6 +8,7 @@ import { LoadingState } from "@/components/ui/loading-state"
 import { Spinner } from "@/components/ui/spinner"
 import { useLastSuccess } from "@/components/ui/use-last-success"
 import { cn } from "@/lib/utils"
+import { assumeType } from "@/lib/narrow"
 
 type DataStatus = "pending" | "error" | "success"
 
@@ -98,7 +99,8 @@ function DataState<T, E = unknown>(props: DataStateProps<T, E>) {
   let content: ReactNode
   if (status === "error") {
     content = props.renderError ? (
-      props.renderError(error as E, props.onRetry)
+      // An error status comes with its error; the props don't tie `error` to `status`, and renderError keeps its type.
+      props.renderError(assumeType<E>(error), props.onRetry)
     ) : props.onRetry ? (
       <ErrorState
         size={size}

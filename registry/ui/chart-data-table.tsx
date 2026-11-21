@@ -10,6 +10,9 @@ import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, Tabl
 /** Any row object; an `interface` works too, since rows don't need an index signature. */
 type ChartRow = object
 
+// A row typed as an interface has no index signature, so its cells are read by name, as unknown values.
+const cell = (row: ChartRow, key: string): unknown => Reflect.get(row, key)
+
 type ChartDataTableProps<TRow extends ChartRow> = ChartName &
   ChartFormatOptions & {
     data: readonly TRow[]
@@ -37,9 +40,9 @@ function ChartDataTable<TRow extends ChartRow>({
 }: ChartDataTableProps<TRow>) {
   const config = configProp ?? use(ChartContext)?.config ?? {}
   const locale = useLocale(localeProp)
-  const rows = data as readonly Record<string, unknown>[]
   const columns: readonly string[] =
-    keys ?? Object.keys(config).filter((key) => key !== labelKey && rows.some((row) => typeof row[key] === "number"))
+    keys ??
+    Object.keys(config).filter((key) => key !== labelKey && data.some((row) => typeof cell(row, key) === "number"))
   const headerFor = (key: string) => config[key]?.label ?? key
 
   const table = (
@@ -56,14 +59,14 @@ function ChartDataTable<TRow extends ChartRow>({
         </TableRow>
       </TableHeader>
       <TableBody>
-        {rows.map((row) => {
-          const category = String(row[labelKey] ?? "")
+        {data.map((row) => {
+          const category = String(cell(row, labelKey) ?? "")
           return (
             <TableRow key={category}>
               <TableHead scope="row">{config[category]?.label ?? category}</TableHead>
               {columns.map((key) => (
                 <TableCell key={key} className="text-end tabular-nums">
-                  {formatChartValue(row[key], { locale, format })}
+                  {formatChartValue(cell(row, key), { locale, format })}
                 </TableCell>
               ))}
             </TableRow>

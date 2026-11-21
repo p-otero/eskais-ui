@@ -69,6 +69,8 @@ function DetailValue({
 }
 
 // Escape inside a popup the panel holds (a reject confirmation, a tooltip) belongs to that popup.
+const headingTags = ["h1", "h2", "h3", "h4", "h5", "h6"] as const
+
 function insidePopup(target: EventTarget, panel: Element) {
   const popup = target instanceof Element ? target.closest('[role="dialog"],[role="alertdialog"],[popover]') : null
   return popup !== null && popup !== panel && panel.contains(popup)
@@ -85,7 +87,7 @@ function Block({
   className?: string
   children: ReactNode
 }) {
-  const Heading = `h${Math.min(level, 6)}` as "h3"
+  const Heading = headingTags[Math.min(level, 6) - 1] ?? "h6"
   return (
     <section className={cn("flex flex-col gap-inline", className)}>
       <Heading className="text-meta tracking-meta text-muted-foreground uppercase">{title}</Heading>

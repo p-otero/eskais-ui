@@ -126,18 +126,18 @@ const boardTransfer = definePrimitive({
       /** Moves a card to `index` in `list`, counting from 0, at once. */
       move(key: unknown, list: unknown, index?: unknown) {
         const lists = context.store.get().value
-        const from = typeof key === "string" ? listOf(key) : undefined
-        if (from === undefined) {
+        const id = typeof key === "string" ? key : undefined
+        const from = id === undefined ? undefined : listOf(id)
+        if (id === undefined || from === undefined) {
           const keys = Object.values(lists).flat()
           throw new RangeError(`No card "${String(key)}". Cards: ${keys.join(", ") || "none"}.`)
         }
-        const id = key as string
         if (typeof list !== "string" || !(list in lists)) {
           throw new RangeError(`No list "${String(list)}". Lists: ${order().join(", ")}.`)
         }
         const size = lists[list]?.filter((each) => each !== id).length ?? 0
         const at = index === undefined ? size : index
-        if (!Number.isInteger(at) || (at as number) < 0 || (at as number) > size) {
+        if (typeof at !== "number" || !Number.isInteger(at) || at < 0 || at > size) {
           throw new RangeError(`move takes an index from 0 to ${String(size)} in "${list}".`)
         }
         if (disabled(id)) throw new Error(`Card "${id}" can't be moved.`)
@@ -145,7 +145,7 @@ const boardTransfer = definePrimitive({
           throw new Error(`"${listLabel(list)}" doesn't take "${itemLabel(id)}".`)
         }
         if (list === from && lists[list]?.indexOf(id) === at) return true
-        return settled(transfer.move(id, list, at as number), "move")
+        return settled(transfer.move(id, list, at), "move")
       },
       keydown(event: KeyboardEvent, key: string, el: HTMLElement, roving: typeof focus) {
         if (!transfer.keydown(event, key)) roving.keydown(event, el)

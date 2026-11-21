@@ -18,6 +18,7 @@ import {
   type FormIssue,
   type FormMessages,
 } from "@/components/ui/form-messages"
+import { assumeType, isRecord } from "@/lib/narrow"
 
 type SubmitInterceptor = {
   /** `false` stops the submit before validation. */
@@ -61,9 +62,9 @@ function emptyLike(value: unknown) {
 function withValueAt(values: unknown, path: string[], value: unknown): unknown {
   const [key, ...rest] = path
   if (key === undefined) return value
-  const source = values && typeof values === "object" ? (values as Record<string, unknown>) : {}
-  const copy = (Array.isArray(source) ? [...source] : { ...source }) as Record<string, unknown>
-  copy[key] = withValueAt(source[key], rest, value)
+  const source: Record<string, unknown> = isRecord(values) ? values : {}
+  const copy: object = Array.isArray(source) ? [...source] : { ...source }
+  Reflect.set(copy, key, withValueAt(source[key], rest, value))
   return copy
 }
 
@@ -94,8 +95,8 @@ function requiredProbe(schema: StandardSchemaV1, defaults: unknown) {
 function valueAt(values: unknown, path: string[]) {
   let current = values
   for (const key of path) {
-    if (current === null || typeof current !== "object") return undefined
-    current = (current as Record<string, unknown>)[key]
+    if (!isRecord(current)) return undefined
+    current = current[key]
   }
   return current
 }
@@ -108,13 +109,16 @@ function useFormContext(part: string) {
 
 type IssueError = FieldError & { params?: Record<string, unknown> }
 
+/** What `errorText` reads from an error: a field's, or the form's root error, whose `type` may be a number. */
+type ErrorLike = { type?: string | number; message?: string; params?: Record<string, unknown> }
+
 function errorAt(errors: Record<string, unknown>, path: string) {
   let current: unknown = errors
   for (const key of path.split(".")) {
-    if (!current || typeof current !== "object") return undefined
-    current = (current as Record<string, unknown>)[key]
+    if (!isRecord(current)) return undefined
+    current = current[key]
   }
-  return current as IssueError | undefined
+  return isRecord(current) ? current : undefined
 }
 
 /**
@@ -136,7 +140,9 @@ function issueResolver(schema: StandardSchemaV1): Resolver<FieldValues> {
       },
     },
   }
-  const resolve = standardSchemaResolver(watched as StandardSchemaV1<FieldValues>) as Resolver<FieldValues>
+  // standardSchemaResolver takes its generics from the schema's declared types, which an untyped Standard Schema
+  // doesn't carry: the form's values are whatever this schema validates.
+  const resolve = standardSchemaResolver(assumeType<StandardSchemaV1<FieldValues, FieldValues>>(watched))
   return async (values, context, options) => {
     const result = await resolve(values, context, options)
     const seen = new Set<string>()
@@ -160,9 +166,9 @@ function toFieldError(input: FormErrorInput): IssueError {
   return { type: issue.code, message: issue.message, params: issue.params }
 }
 
-function issueFromError(error: IssueError, field: string, label?: string): FormIssue {
+function issueFromError(error: ErrorLike, field: string, label?: string): FormIssue {
   return {
-    code: error.type || "invalid",
+    code: error.type ? String(error.type) : "invalid",
     field,
     label,
     params: error.params ?? {},
@@ -171,7 +177,7 @@ function issueFromError(error: IssueError, field: string, label?: string): FormI
 }
 
 function errorText(
-  error: IssueError,
+  error: ErrorLike,
   field: string,
   label: string | undefined,
   ...layers: (FormMessages | undefined)[]
@@ -180,4 +186,4 @@ function errorText(
 }
 
 export { FormContext, errorAt, errorText, issueResolver, requiredProbe, toFieldError, useFormContext }
-export type { FormContextValue, IssueError, SubmitInterceptor }
+export type { ErrorLike, FormContextValue, IssueError, SubmitInterceptor }

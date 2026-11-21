@@ -1,6 +1,6 @@
 "use client"
 
-import { memo, type CSSProperties, type ReactNode } from "react"
+import { memo, type ReactNode } from "react"
 import { CheckIcon, ChevronDownIcon, ChevronUpIcon, CopyIcon, WrapTextIcon } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
@@ -9,6 +9,7 @@ import type { LogViewerApi, SourceStyle } from "@/components/ui/log-viewer-rows"
 import { SearchField } from "@/components/ui/search-field"
 import { Toggle } from "@/components/ui/toggle"
 import { ToggleGroup } from "@/components/ui/toggle-group"
+import { cssVars } from "@/lib/utils"
 
 type ToolbarProps = {
   api: LogViewerApi
@@ -59,7 +60,7 @@ const LogViewerToolbar = memo(function LogViewerToolbar({
               <Toggle key={source} value={source} variant="outline" size="sm" className="h-control-sm">
                 <span
                   aria-hidden="true"
-                  style={{ "--log-source": style?.color } as CSSProperties}
+                  style={cssVars({ "--log-source": style?.color })}
                   className="size-2 rounded-full bg-(--log-source) ring-1 ring-background"
                 />
                 {style?.label ?? source}

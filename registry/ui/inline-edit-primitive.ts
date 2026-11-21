@@ -7,6 +7,7 @@ import {
 } from "@ui-sdk/core"
 
 import { settled, unavailable } from "@/lib/action-refusal"
+import { isElementOf } from "@/lib/narrow"
 
 type InlineEditOptions = {
   value?: string
@@ -140,7 +141,10 @@ const inlineEdit = definePrimitive({
           else api.edit.end("focus-out", event)
         },
       },
-      bind: (el, part) => part.api.edit.bindInput(el as HTMLInputElement),
+      bind: (el, part) =>
+        isElementOf(el, "HTMLInputElement") || isElementOf(el, "HTMLTextAreaElement")
+          ? part.api.edit.bindInput(el)
+          : undefined,
     }),
   }),
   agent: { actions: ["rename", "cancel"] },

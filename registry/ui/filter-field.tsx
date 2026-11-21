@@ -11,14 +11,15 @@ import { NumberInput, NumberInputControl, NumberInputGroup } from "@/components/
 import { Select } from "@/components/ui/select"
 import { filterFieldLabels, type FilterFieldLabels } from "@/components/ui/filter-field-labels"
 import { ServerCombobox } from "@/components/ui/server-combobox"
-import type {
-  DateRange,
-  FilterField as FilterFieldDefinition,
-  NumberField,
-  NumberFilter,
-  NumberOp,
+import {
+  isNumberFilter,
+  type DateRange,
+  type FilterField as FilterFieldDefinition,
+  type NumberField,
+  type NumberOp,
 } from "@/lib/filter-schema"
 import { useLocale } from "@/lib/locale"
+import { isStringArray } from "@/lib/narrow"
 import { cn } from "@/lib/utils"
 
 type FilterFieldProps = {
@@ -88,7 +89,7 @@ function OptionsControl({
       </Field>
     )
   }
-  const checked = Array.isArray(value) ? (value as string[]) : []
+  const checked = isStringArray(value) ? value : []
   return (
     <div data-slot="filter-field" className={cn("flex flex-col gap-items", className)}>
       <OptionsLabel id={labelId}>{field.label}</OptionsLabel>
@@ -189,7 +190,7 @@ function NumberControl({
   className,
   locale,
 }: FilterFieldProps & { labels: FilterFieldLabels }) {
-  const current = value as NumberFilter | undefined
+  const current = isNumberFilter(value) ? value : undefined
   const operators = field.kind === "number" ? (field.operators ?? defaultOperators) : defaultOperators
   const [op, setOp] = useState<NumberOp | "between">(current?.op ?? operators[0] ?? "eq")
   // A range applies once both ends are set; until then the end typed first waits here.
@@ -346,7 +347,7 @@ function RemoteControl({
           getValue={getValue}
           valueLabels={valueLabels}
           placeholder={Array.isArray(value) && value.length > 0 ? undefined : labels.any}
-          value={Array.isArray(value) ? (value as string[]) : []}
+          value={isStringArray(value) ? value : []}
           onValueChange={(next, change) => {
             onValueLabels?.(change.labels)
             onValueChange(next.length === 0 ? undefined : next)

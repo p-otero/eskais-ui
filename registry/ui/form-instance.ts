@@ -14,6 +14,13 @@ import {
 } from "react-hook-form"
 
 import { useFormContext } from "@/components/ui/form-context"
+import { assumeType } from "@/lib/narrow"
+
+function useTypedForm<Values extends FieldValues>(part: string): UseFormReturn<Values> {
+  // The Form keeps its instance as UseFormReturn<FieldValues>; react-hook-form's instance is invariant in its values,
+  // so the caller's Values (the schema's input, which the Form was created with) can't be related to it by type.
+  return assumeType<UseFormReturn<Values>>(useFormContext(part).form)
+}
 
 /**
  * The react-hook-form instance of the surrounding `Form`, typed by its input values: `trigger`, `setValue`,
@@ -21,7 +28,7 @@ import { useFormContext } from "@/components/ui/form-context"
  * `useFormWatch(name)` instead.
  */
 function useFormInstance<Values extends FieldValues = FieldValues>(): UseFormReturn<Values> {
-  return useFormContext("useFormInstance").form as unknown as UseFormReturn<Values>
+  return useTypedForm<Values>("useFormInstance")
 }
 
 /** react-hook-form's `useFieldArray` options without `name` and `control`; `keyName` names the rows' key property. */
@@ -35,7 +42,7 @@ type UseFormFieldArrayOptions<
 function useFormWatch<Values extends FieldValues = FieldValues, Name extends FieldPath<Values> = FieldPath<Values>>(
   name: Name,
 ): FieldPathValue<Values, Name> {
-  const form = useFormContext("useFormWatch").form as unknown as UseFormReturn<Values>
+  const form = useTypedForm<Values>("useFormWatch")
   return useWatch<Values, Name>({ name, control: form.control })
 }
 
@@ -49,7 +56,7 @@ function useFormFieldArray<
   Name extends ArrayPath<Values> = ArrayPath<Values>,
   KeyName extends string = "id",
 >(name: Name, options?: UseFormFieldArrayOptions<Values, Name, KeyName>): UseFieldArrayReturn<Values, Name, KeyName> {
-  const form = useFormContext("useFormFieldArray").form as unknown as UseFormReturn<Values>
+  const form = useTypedForm<Values>("useFormFieldArray")
   return useFieldArray<Values, Name, KeyName>({
     ...options,
     name,

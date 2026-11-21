@@ -225,7 +225,7 @@ function renderBlock(cx: Context, node: SyntaxNode, tight = false): ReactNode {
   const key = node.from
   const heading = /^(ATX|Setext)Heading(\d)$/.exec(node.name)
   if (heading) {
-    const Tag = `h${heading[2]}` as "h1"
+    const Tag = (["h1", "h2", "h3", "h4", "h5", "h6"] as const)[Number(heading[2]) - 1] ?? "h6"
     const marks = node.getChildren("HeaderMark")
     const from = heading[1] === "ATX" ? (marks[0]?.to ?? node.from) : node.from
     const to = heading[1] === "ATX" ? (marks[1]?.from ?? node.to) : (marks[0]?.from ?? node.to)

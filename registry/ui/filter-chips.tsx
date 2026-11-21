@@ -13,15 +13,16 @@ import { Popover, PopoverContent } from "@/components/ui/popover"
 import {
   activeFilterKeys,
   isActiveValue,
+  isDateInput,
+  isNumberFilter,
   searchFieldOf,
   type DateInput,
-  type DateRange,
   type FilterField as FilterFieldDefinition,
   type FilterSchema,
   type FilterValues,
-  type NumberFilter,
 } from "@/lib/filter-schema"
 import { useLocale } from "@/lib/locale"
+import { assumeType, isRecord } from "@/lib/narrow"
 import type { PageController } from "@/lib/page-controller"
 import { formatCount } from "@/lib/page-source"
 
@@ -69,9 +70,10 @@ function dateText(value: DateInput | undefined, locale: string | undefined) {
     return new Intl.DateTimeFormat(locale, { dateStyle: "medium", timeStyle: "short" }).format(time)
   }
   if (value instanceof Date) return new Intl.DateTimeFormat(locale, { dateStyle: "medium" }).format(value)
-  const temporal = value as { toLocaleString?: (locale?: string, options?: Intl.DateTimeFormatOptions) => string }
-  return typeof temporal.toLocaleString === "function"
-    ? temporal.toLocaleString(locale, { dateStyle: "medium" })
+  // A Temporal value's `toLocaleString` takes a locale and options, which `Object`'s, in its type, doesn't.
+  const format: unknown = Reflect.get(value, "toLocaleString")
+  return typeof format === "function"
+    ? String(Reflect.apply(format, value, [locale, { dateStyle: "medium" }]))
     : value.toString()
 }
 
@@ -90,7 +92,7 @@ function summarizeFilter(
   switch (field.kind) {
     case "options":
     case "remoteOption": {
-      const values = Array.isArray(value) ? (value as string[]) : [String(value)]
+      const values = Array.isArray(value) ? value.map(String) : [String(value)]
       const name = (item: string) =>
         field.kind === "options"
           ? (field.options.find((option) => option.value === item)?.label ?? item)
@@ -100,14 +102,18 @@ function summarizeFilter(
     case "boolean":
       return value === true ? (field.trueLabel ?? labels.yes) : (field.falseLabel ?? labels.no)
     case "number": {
-      const number = value as NumberFilter
-      if (number.op === "between") return `${formatCount(number.min, locale)}–${formatCount(number.max, locale)}`
-      return `${symbols[number.op]} ${formatCount(number.value, locale)}`
+      if (!isNumberFilter(value)) return String(value)
+      if (value.op === "between") return `${formatCount(value.min, locale)}–${formatCount(value.max, locale)}`
+      return `${symbols[value.op]} ${formatCount(value.value, locale)}`
     }
     case "date":
-      return dateText(value as DateInput, locale)
+      return isDateInput(value) ? dateText(value, locale) : String(value)
     case "dateRange": {
-      const range = value as DateRange
+      if (!isRecord(value)) return String(value)
+      const range = {
+        from: isDateInput(value.from) ? value.from : undefined,
+        to: isDateInput(value.to) ? value.to : undefined,
+      }
       const from = dateText(range.from, locale)
       const to = dateText(range.to, locale)
       if (range.from !== undefined && range.to !== undefined) return `${from} – ${to}`
@@ -163,8 +169,10 @@ function FilterChips<S extends FilterSchema>({
   )
   const available = offered.filter((key) => !shown.includes(key))
 
+  // Each chip sets its own field by key with what that field's editor produced; the controller's filter type is
+  // invariant (it takes and returns `F`), so it can't be widened to a record without a cast.
   const apply = (key: string, value: unknown) =>
-    (controller as unknown as PageController<Record<string, unknown>>).setFilterValue(key, value)
+    assumeType<PageController<Record<string, unknown>>>(controller).setFilterValue(key, value)
 
   const close = (key: string) => {
     if (editing?.key !== key) return
@@ -187,7 +195,8 @@ function FilterChips<S extends FilterSchema>({
       className={className}
     >
       {shown.map((key) => {
-        const field = schema[key] as FilterFieldDefinition
+        const field: FilterFieldDefinition | undefined = schema[key]
+        if (!field) return null
         const open = editing?.key === key
         const value = open ? editing.draft : values[key]
         const summary = summarizeFilter(field, values[key], labels, valueLabels, locale)

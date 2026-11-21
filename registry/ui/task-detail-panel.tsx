@@ -47,7 +47,7 @@ function TaskDetailPanel({
   ...props
 }: TaskDetailPanelProps) {
   const titleId = useId()
-  const Title = `h${headingLevel}` as "h2"
+  const Title = `h${headingLevel}` as const
   const content = {
     task,
     mode,

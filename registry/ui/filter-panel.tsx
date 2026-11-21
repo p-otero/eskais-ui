@@ -9,13 +9,8 @@ import { FilterField, type FilterFieldLabels } from "@/components/ui/filter-fiel
 import { useFilterScope } from "@/components/ui/filter-scope"
 import { SidePanel } from "@/components/ui/side-panel"
 import { narrowQuery, useMediaQuery } from "@/components/ui/use-media-query"
-import {
-  activeFilterKeys,
-  searchFieldOf,
-  type FilterField as FilterFieldDefinition,
-  type FilterSchema,
-  type FilterValues,
-} from "@/lib/filter-schema"
+import { activeFilterKeys, searchFieldOf, type FilterSchema, type FilterValues } from "@/lib/filter-schema"
+import { assumeType } from "@/lib/narrow"
 import type { PageController } from "@/lib/page-controller"
 
 type FilterPanelLabels = {
@@ -68,17 +63,20 @@ function FilterPanelForm({ schema, keys, values, labels, valueLabels, locale, on
   }
   return (
     <form onSubmit={submit} data-slot="filter-panel-form" className="flex min-h-0 flex-1 flex-col gap-group">
-      {keys.map((key) => (
-        <FilterField
-          locale={locale}
-          key={key}
-          field={schema[key] as FilterFieldDefinition}
-          value={draft[key]}
-          labels={labels.field}
-          valueLabels={valueLabels}
-          onValueChange={(value) => setDraft((previous) => ({ ...previous, [key]: value }))}
-        />
-      ))}
+      {keys.map((key) => {
+        const field = schema[key]
+        return field ? (
+          <FilterField
+            locale={locale}
+            key={key}
+            field={field}
+            value={draft[key]}
+            labels={labels.field}
+            valueLabels={valueLabels}
+            onValueChange={(value) => setDraft((previous) => ({ ...previous, [key]: value }))}
+          />
+        ) : null
+      })}
       <div className="mt-auto flex flex-wrap justify-end gap-items">
         <Button
           variant="ghost"
@@ -123,7 +121,8 @@ function FilterPanel<S extends FilterSchema>({
       if (draft[key] === undefined) delete next[key]
       else next[key] = draft[key]
     }
-    controller.setFilter(next as FilterValues<S>)
+    // Each value is the draft of its own field's editor; TypeScript can't relate a key loop to the mapped type.
+    controller.setFilter(assumeType<FilterValues<S>>(next))
     if (narrow) onOpenChange(false)
   }
   // A new form whenever the applied filters change elsewhere (chips, the URL), so the draft starts from them.

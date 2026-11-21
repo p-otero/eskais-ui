@@ -38,10 +38,11 @@ function writePanels(key: string | undefined, patch: StoredPanels) {
 /** The sizes of the panels that are open in a committed layout, by key; `null` marks a panel that isn't there. */
 function openSizes(controller: ResizableController, layout: number[], panels: Record<string, string | null>) {
   const present = Object.entries(panels).filter((entry): entry is [string, string] => entry[1] !== null)
-  const sizes = present.flatMap(([key, panel], index) =>
-    key.endsWith("Size") && !controller.isCollapsed(panel) ? [[key, layout[index]]] : [],
-  )
-  return Object.fromEntries(sizes) as StoredPanels
+  const sizes: StoredPanels = {}
+  present.forEach(([key, panel], index) => {
+    if ((key === "explorerSize" || key === "asideSize") && !controller.isCollapsed(panel)) sizes[key] = layout[index]
+  })
+  return sizes
 }
 
 /** Whether `ref`'s element is at most `width` px wide; false until it has been measured. */

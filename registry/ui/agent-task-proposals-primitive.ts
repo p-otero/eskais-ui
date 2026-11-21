@@ -80,13 +80,14 @@ const agentTaskProposals = definePrimitive({
     ) => {
       const state = context.store.get()
       if (!state.available || !context.options()[name]) throw new Error("Proposals can't be decided on this board now.")
-      if (!state.proposals.some((proposal) => proposal.value === id)) {
+      const found = state.proposals.find((candidate) => candidate.value === id)
+      if (!found) {
         const ids = state.proposals.map((proposal) => proposal.value).join(", ") || "none"
         throw new RangeError(`No proposal "${String(id)}". Proposals: ${ids}.`)
       }
       const call = { reason: options?.reason ?? "imperative", event: options?.event }
       const action = name === "onApproveProposal" ? "approveProposal" : "rejectProposal"
-      return settled(run(context.options, name, id as string, call), action, call)
+      return settled(run(context.options, name, found.value, call), action, call)
     }
     return {
       approveProposal: (id: unknown, options?: ChangeOptions<ProposalReason>) => act("onApproveProposal", id, options),

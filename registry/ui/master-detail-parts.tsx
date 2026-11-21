@@ -130,7 +130,7 @@ function MasterDetailDetailHeader({
   onClose,
   onCollapse,
 }: DetailHeaderProps) {
-  const Heading = `h${String(headingLevel)}` as "h2"
+  const Heading = `h${headingLevel}` as const
   const close = stacked ? undefined : onClose
   const collapse = stacked ? undefined : onCollapse
   return (

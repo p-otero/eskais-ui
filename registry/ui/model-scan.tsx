@@ -2,7 +2,7 @@
 
 import type { ChangeDetails } from "@ui-sdk/core"
 import { createParts, usePart, usePrimitive, type PartProps } from "@ui-sdk/react/primitive"
-import { lazy, useMemo, useState, type CSSProperties, type ReactNode } from "react"
+import { lazy, useMemo, useState, type ReactNode } from "react"
 
 import {
   ModelScanControls,
@@ -38,7 +38,7 @@ import {
 } from "@/components/ui/model-viewer"
 import { modelViewerLabels } from "@/components/ui/model-viewer-labels"
 import { useModelScanFocus } from "@/components/ui/use-model-scan-focus"
-import { cn, cnState } from "@/lib/utils"
+import { cn, cnState, cssVars } from "@/lib/utils"
 
 const {
   Photo: ModelScanPhoto,
@@ -347,7 +347,7 @@ function ModelScan({
 
   const content = (
     <>
-      <div className="relative" style={{ "--model-scan-stage": String(stageRatio) } as CSSProperties}>
+      <div className="relative" style={cssVars({ "--model-scan-stage": String(stageRatio) })}>
         <ModelViewer
           floor
           {...viewerProps}

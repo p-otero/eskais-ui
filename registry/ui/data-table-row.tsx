@@ -8,6 +8,7 @@ import { NavigableRow } from "@/components/ui/row-navigation"
 import { Empty } from "@/components/ui/empty"
 import { Skeleton } from "@/components/ui/skeleton"
 import { TableCell, TableRow } from "@/components/ui/table"
+import { assumeType } from "@/lib/narrow"
 import { cn } from "@/lib/utils"
 
 // Plain values and stable callbacks, so `memo` keeps a row as it is while the table re-renders for a scroll, a
@@ -36,15 +37,18 @@ const rowClassName =
 // The cell's focus ring sits inside it, like the row's.
 const cellClassName = "outline-none focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring"
 
-const DataTableRow = memo(function DataTableRow<Row>(props: DataTableRowProps<Row>) {
-  const cells = useCellNavigationActive()
-  if (cells) return <DataTableRowElement {...props} cells />
-  return <NavigableRow id={props.id} render={<DataTableRowElement {...props} />} />
-}) as <Row>(props: DataTableRowProps<Row>) => ReactNode
+// `memo` drops a component's type parameters (React's types), so the row is typed back as generic in `Row`.
+const DataTableRow = assumeType<<Row>(props: DataTableRowProps<Row>) => ReactNode>(
+  memo(function DataTableRow<Row>(props: DataTableRowProps<Row>) {
+    const cells = useCellNavigationActive()
+    if (cells) return <DataTableRowElement {...props} cells />
+    return <NavigableRow id={props.id} render={<DataTableRowElement {...props} />} />
+  }),
+)
 
 function assignRef(ref: unknown, node: HTMLElement | null) {
-  if (typeof ref === "function") return (ref as (node: HTMLElement | null) => unknown)(node)
-  if (ref && typeof ref === "object") (ref as { current: unknown }).current = node
+  if (typeof ref === "function") return Reflect.apply(ref, undefined, [node])
+  if (ref && typeof ref === "object") Reflect.set(ref, "current", node)
 }
 
 // Rendered by NavigableRow, which passes the roving tab stop's ref and handlers along with the row's own props.

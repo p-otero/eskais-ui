@@ -7,8 +7,6 @@ import {
   SRGBColorSpace,
   TextureLoader,
   Vector3,
-  type Material,
-  type Mesh,
   type Object3D,
   type PerspectiveCamera,
   type Texture,
@@ -17,9 +15,11 @@ import {
 import { cloudGrid, createCloud, shimmerHeight, type Cloud } from "@/components/ui/model-scan-cloud"
 import { personCells, type ModelScanMask, type ModelScanPersonSource } from "@/components/ui/model-scan-mask"
 import { fitSize, viewSizeAt } from "@/components/ui/model-viewer-math"
+import { isMesh } from "@/components/ui/model-viewer-meshes"
 import type { ModelViewerHandle } from "@/components/ui/model-viewer-primitive"
 import { ModelViewerSceneContext, type ModelRig } from "@/components/ui/model-viewer-rig"
 import { isDark, onThemeChange, tokenColor } from "@/components/ui/model-viewer-theme"
+import { assumeType } from "@/lib/narrow"
 
 // Seconds: the cloud flies while the camera turns, or the photo crossfades under reduced motion.
 const flight = 3.4
@@ -40,8 +40,8 @@ function turn(handle: ModelViewerHandle) {
 // cloud has landed.
 function setClipping(root: Object3D, planes: Plane[] | null) {
   root.traverse((object) => {
-    if (!(object as Mesh).isMesh) return
-    for (const material of [(object as Mesh).material].flat() as Material[]) {
+    if (!isMesh(object)) return
+    for (const material of [object.material].flat()) {
       material.clippingPlanes = planes
       material.needsUpdate = true
     }
@@ -83,7 +83,9 @@ type IntroOptions = {
  */
 function useModelScanIntro({ src, ratio, fit, mask, person, onHandOff, onDone }: IntroOptions) {
   const scene = use(ModelViewerSceneContext)
-  const camera = useThree((state) => state.camera) as PerspectiveCamera
+  // R3F types `state.camera` as any `Camera`; the model viewer's canvas isn't `orthographic`, so it is R3F's default
+  // PerspectiveCamera.
+  const camera = assumeType<PerspectiveCamera>(useThree((state) => state.camera))
   const gl = useThree((state) => state.gl)
   const invalidate = useThree((state) => state.invalidate)
   // `texture: null` once the photo failed to load.

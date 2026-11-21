@@ -1,4 +1,5 @@
 import type { ComponentType, ReactNode } from "react"
+import { isRecord } from "@/lib/narrow"
 
 type ChartSeriesTheme = { light: string; dark: string }
 
@@ -55,7 +56,8 @@ type ChartPayloadItem = { dataKey?: unknown; name?: unknown; payload?: unknown }
 // A pie's payload names its series in a data field (nameKey), so that field's value is the config key.
 function resolveChartSeries(config: ChartConfig, item: ChartPayloadItem | undefined, key: string) {
   const own = item as Record<string, unknown> | undefined
-  const row = item?.payload as Record<string, unknown> | undefined
+  const payload = item?.payload
+  const row = isRecord(payload) ? payload : undefined
   let configKey = key
   if (typeof own?.[key] === "string") configKey = own[key] as string
   else if (typeof row?.[key] === "string") configKey = row[key] as string

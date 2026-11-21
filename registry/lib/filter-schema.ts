@@ -2,11 +2,13 @@ import {
   assertFieldName,
   fieldsOf,
   FilterSerializeError,
+  isTemporalLike,
   type FilterLeaf,
   type FilterNode,
   type FilterOp,
   type TemporalLike,
 } from "@/lib/filter-ast"
+import { assumeType, isOneOf, isRecord, isStringArray } from "@/lib/narrow"
 import type { PageSource } from "@/lib/page-source"
 
 type FilterOption = { value: string; label: string }
@@ -91,11 +93,46 @@ type FilterValues<S extends FilterSchema> = { -readonly [Key in keyof S]?: Field
 
 const reserved = new Set(["$where"])
 
+const numberOps = ["eq", "neq", "lt", "lte", "gt", "gte"] as const satisfies readonly NumberOp[]
+
+/** A comparison a number field offers besides `between`: `eq`, `neq`, `lt`, `lte`, `gt` or `gte`. */
+function isNumberOp(value: unknown): value is NumberOp {
+  return isOneOf(numberOps, value)
+}
+
+/** A number field's value: `{ op, value }` or `{ op: "between", min, max }`. */
+function isNumberFilter(value: unknown): value is NumberFilter {
+  if (!isRecord(value)) return false
+  if (value.op === "between") return typeof value.min === "number" && typeof value.max === "number"
+  return isNumberOp(value.op) && typeof value.value === "number"
+}
+
+/** A date field's value: an ISO string, a `Date` or a Temporal-like object. */
+function isDateInput(value: unknown): value is DateInput {
+  return typeof value === "string" || value instanceof Date || isTemporalLike(value)
+}
+
+/** A date range's value: `{ from?, to? }`, each a date input. */
+function isDateRange(value: unknown): value is DateRange {
+  return (
+    isRecord(value) &&
+    !(value instanceof Date) &&
+    ("from" in value || "to" in value) &&
+    (value.from === undefined || isDateInput(value.from)) &&
+    (value.to === undefined || isDateInput(value.to))
+  )
+}
+
+type AddsDays = { add(duration: { days: number }): TemporalLike }
+
+const addsDays = (value: object): value is AddsDays => "add" in value && typeof value.add === "function"
+
 /** A `remoteOption` field typed by its source, so `getLabel` knows the option: `owner: remoteOption({ … })`. */
 function remoteOption<Option, const Multiple extends boolean = false>(
   field: Omit<RemoteOptionField<Option>, "kind" | "multiple"> & { multiple?: Multiple },
 ): RemoteOptionField<Option> & { kind: "remoteOption"; multiple: Multiple } {
-  return { ...field, kind: "remoteOption", multiple: (field.multiple ?? false) as Multiple }
+  // `Multiple` defaults to false when `multiple` is left out, a link TypeScript can't draw from the property.
+  return { ...field, kind: "remoteOption", multiple: assumeType<Multiple>(field.multiple ?? false) }
 }
 
 /** Declares the filters a source accepts. Keys and wire fields must be identifiers: they are the whitelist. */
@@ -139,8 +176,8 @@ function isActiveValue(value: unknown): boolean {
   if (value === undefined || value === null) return false
   if (typeof value === "string") return value.trim() !== ""
   if (Array.isArray(value)) return value.length > 0
-  if (typeof value === "object" && !(value instanceof Date) && ("from" in value || "to" in value))
-    return isActiveValue((value as DateRange).from) || isActiveValue((value as DateRange).to)
+  if (isRecord(value) && !(value instanceof Date) && ("from" in value || "to" in value))
+    return isActiveValue(value.from) || isActiveValue(value.to)
   return true
 }
 
@@ -156,9 +193,8 @@ function nextDay(value: DateInput): DateInput {
     if (!day) throw new FilterSerializeError(`"next-day" needs a date like 2026-01-31, not "${value}".`)
     return new Date(Date.UTC(Number(day[1]), Number(day[2]) - 1, Number(day[3]) + 1)).toISOString().slice(0, 10)
   }
-  const add = (value as { add?: (duration: { days: number }) => TemporalLike }).add
-  if (typeof add !== "function") throw new FilterSerializeError(`"next-day" can't add a day to ${String(value)}.`)
-  return add.call(value, { days: 1 })
+  if (!addsDays(value)) throw new FilterSerializeError(`"next-day" can't add a day to ${String(value)}.`)
+  return value.add({ days: 1 })
 }
 
 function leaf(field: string, op: FilterOp, value: FilterLeaf["value"], type?: "date"): FilterLeaf {
@@ -178,23 +214,23 @@ function fieldNodes(key: string, field: FilterField, value: unknown): FilterNode
     }
     case "options":
     case "remoteOption":
-      if (field.multiple) return [leaf(name, "in", [...(value as readonly string[])])]
+      if (field.multiple) return isStringArray(value) ? [leaf(name, "in", [...value])] : []
       return [leaf(name, "eq", String(value))]
     case "boolean":
       return [leaf(name, "eq", value === true)]
     case "number": {
-      const number = value as NumberFilter
-      if (number.op === "between") return [leaf(name, "gte", number.min), leaf(name, "lte", number.max)]
-      return [leaf(name, number.op, number.value)]
+      if (!isNumberFilter(value)) return []
+      if (value.op === "between") return [leaf(name, "gte", value.min), leaf(name, "lte", value.max)]
+      return [leaf(name, value.op, value.value)]
     }
     case "date":
-      return [leaf(name, field.op ?? "eq", value as DateInput, "date")]
+      return isDateInput(value) ? [leaf(name, field.op ?? "eq", value, "date")] : []
     case "dateRange": {
-      const range = value as DateRange
+      if (!isRecord(value)) return []
+      const { from, to } = value
       const nodes: FilterNode[] = []
-      if (isActiveValue(range.from)) nodes.push(leaf(name, "gte", range.from as DateInput, "date"))
-      if (isActiveValue(range.to)) {
-        const to = range.to as DateInput
+      if (isActiveValue(from) && isDateInput(from)) nodes.push(leaf(name, "gte", from, "date"))
+      if (isActiveValue(to) && isDateInput(to)) {
         nodes.push(field.end === "next-day" ? leaf(name, "lt", nextDay(to), "date") : leaf(name, "lte", to, "date"))
       }
       return nodes
@@ -218,7 +254,7 @@ function toFilterAst<S extends FilterSchema>(schema: S, values: FilterValues<S>)
     nodes.push(values.$where)
   }
   if (nodes.length === 0) return null
-  return nodes.length === 1 ? (nodes[0] as FilterNode) : { and: nodes }
+  return nodes.length === 1 ? nodes[0]! : { and: nodes }
 }
 
 /** Text fields mapped to their own param (`{ param: "q" }`, the default), as `{ q: "text" }`. */
@@ -242,6 +278,10 @@ export {
   activeFilterKeys,
   defineFilters,
   isActiveValue,
+  isDateInput,
+  isDateRange,
+  isNumberFilter,
+  isNumberOp,
   remoteOption,
   schemaFields,
   searchFieldOf,

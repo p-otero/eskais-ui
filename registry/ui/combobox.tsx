@@ -31,6 +31,7 @@ import {
   listPopupClassName,
   listSeparatorClassName,
 } from "@/components/ui/select"
+import { assumeType } from "@/lib/narrow"
 import { cn, cnState } from "@/lib/utils"
 
 // Distributes over the single and multiple variants, so `onValueChange` keeps its parameter type.
@@ -45,16 +46,10 @@ type ComboboxProps<T = string, Multiple extends boolean | undefined = false> = W
 
 // UI SDK 0.1.0-beta.10 types `items` as a mutable array, though it only reads it.
 /** UI SDK's Combobox, taking `items` as a readonly array too. */
-function Combobox<T = string, Multiple extends boolean | undefined = false>({
-  items,
-  ...props
-}: ComboboxProps<T, Multiple>) {
-  return (
-    <ComboboxPrimitive<T, Multiple>
-      {...(props as ComboboxPrimitiveProps<T, Multiple>)}
-      items={items as ListData<T> | undefined}
-    />
-  )
+function Combobox<T = string, Multiple extends boolean | undefined = false>(props: ComboboxProps<T, Multiple>) {
+  // The readonly `items` above, and `Omit` over props that distribute over a generic `Multiple`, which TypeScript can't
+  // put back together: these are UI SDK's own props.
+  return <ComboboxPrimitive<T, Multiple> {...assumeType<ComboboxPrimitiveProps<T, Multiple>>(props)} />
 }
 
 const iconButtonClassName =

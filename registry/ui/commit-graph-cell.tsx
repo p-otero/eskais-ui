@@ -1,8 +1,8 @@
 import { CheckIcon } from "lucide-react"
-import { memo, type CSSProperties } from "react"
+import { memo } from "react"
 
 import type { LaneRow } from "@/lib/commit-lanes"
-import { cn } from "@/lib/utils"
+import { cn, cssVars } from "@/lib/utils"
 
 type CommitNodeKind = "commit" | "branch" | "pending"
 
@@ -104,7 +104,7 @@ const CommitGraphCell = memo(function CommitGraphCell({ row, node, finished, dra
   const curvesIn = into.filter((from) => from !== lane)
   const curvesOut = out.filter((to) => to !== lane)
   const more = hidden > 0 || nodeHidden
-  const style = { "--lanes": graphColumns(row), "--lane": nodeHidden ? width : lane, "--drawn": width } as CSSProperties
+  const style = cssVars({ "--lanes": graphColumns(row), "--lane": nodeHidden ? width : lane, "--drawn": width })
   return (
     <span
       aria-hidden="true"
@@ -117,7 +117,7 @@ const CommitGraphCell = memo(function CommitGraphCell({ row, node, finished, dra
           key={`${String(run.lane)}${run.from}`}
           data-slot="commit-lane"
           data-tag={run.tag}
-          style={{ "--at": run.lane } as CSSProperties}
+          style={cssVars({ "--at": run.lane })}
           className={cn(
             "absolute bg-current",
             laneColor(run.tag),

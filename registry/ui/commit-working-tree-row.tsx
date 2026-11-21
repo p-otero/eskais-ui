@@ -1,13 +1,13 @@
 "use client"
 
 import { TreeItem, TreeItemLabel } from "@ui-sdk/react/tree"
-import { memo, type CSSProperties } from "react"
+import { memo } from "react"
 
 import { Badge } from "@/components/ui/badge"
 import type { CommitHistoryLabels } from "@/components/ui/commit-history-labels"
 import { WORKING_TREE } from "@/components/ui/commit-history-primitive"
 import { lineIndent, selectedLine } from "@/components/ui/commit-history-row"
-import { cn } from "@/lib/utils"
+import { cn, cssVars } from "@/lib/utils"
 
 // oxlint-disable-next-line shadcn/no-arbitrary-values -- the node's stroke matches the lanes' 1.5px
 const workingTreeNode = "size-3 rounded-full border-[1.5px] border-dashed border-current bg-card"
@@ -40,7 +40,7 @@ const WorkingTreeRow = memo(function WorkingTreeRow({ workingTree, labels, local
     <TreeItem
       value={WORKING_TREE}
       label={label}
-      style={{ "--indent": 1 } as CSSProperties}
+      style={cssVars({ "--indent": 1 })}
       className="group/commit relative flex flex-col outline-none group-data-focus-mode/history:not-data-selected:not-hover:not-focus-within:text-muted-foreground"
       render={(props) => <div {...props} data-slot="commit-working-tree" />}
     >

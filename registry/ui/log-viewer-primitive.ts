@@ -290,7 +290,7 @@ const logViewer = definePrimitive({
       const current = logStore()
       current?.flush()
       for (let position = 0; position < index.count; position++) {
-        const line = current?.get(index.idAt(position) as number)
+        const line = current?.get(index.idAt(position)!)
         if (line) read(line)
       }
     }

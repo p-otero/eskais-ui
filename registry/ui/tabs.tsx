@@ -14,6 +14,7 @@ import { createContext, use, useState, type ComponentProps, type PointerEvent } 
 
 import { TabsScroll, type TabsScrollLabels } from "@/components/ui/tabs-scroll"
 import { cn, cnState } from "@/lib/utils"
+import { assumeType } from "@/lib/narrow"
 
 // Set only while activateOnPress is on: the controller a tab selects through on pointerdown.
 const TabsPressContext = createContext<TabsController | null>(null)
@@ -29,8 +30,11 @@ type TabsProps<T extends string = string> = ComponentProps<typeof TabsPrimitive<
 function Tabs<T extends string = string>({ className, activateOnPress = false, controller, ...props }: TabsProps<T>) {
   const [ownController] = useState(() => createTabsController<T>())
   const active = controller ?? ownController
+  // UI SDK types a tab's `value` as a string, so the tabs below select through a controller of strings; each of them
+  // passes its own value, one of this Tabs' `T`.
+  const pressController = activateOnPress ? assumeType<TabsController>(active) : null
   return (
-    <TabsPressContext value={activateOnPress ? (active as TabsController) : null}>
+    <TabsPressContext value={pressController}>
       <TabsPrimitive<T>
         controller={active}
         className={cnState("flex flex-col gap-items data-[orientation=vertical]:flex-row", className)}

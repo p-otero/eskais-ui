@@ -19,7 +19,7 @@ function RowNavigationProvider({ handle, children }: { handle: RowNavigationHand
 }
 
 function NavigableRowPart({ handle, id, render }: { handle: RowNavigationHandle; id: string; render: ReactElement }) {
-  return usePart(handle, "row", { value: id }, { render: render as ReactElement<Record<string, unknown>> })
+  return usePart(handle, "row", { value: id }, { render })
 }
 
 /**

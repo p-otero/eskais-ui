@@ -23,7 +23,7 @@ function ToggleGroup<T extends string = string>({
       className,
     ),
   }
-  return <ToggleGroupPrimitive<T> {...(field ? (field.props(own) as typeof own) : own)} />
+  return <ToggleGroupPrimitive<T> {...(field ? { ...own, ...field.props(own) } : own)} />
 }
 
 export { createToggleGroupController, ToggleGroup }

@@ -17,6 +17,7 @@ import {
 import { toFormErrors, type FormErrorInput, type FormMessages } from "@/components/ui/form-messages"
 import { formRoot } from "@/components/ui/form-primitive"
 import { useFocusRequest, useReportChange, useRestoreFocusAfterPending } from "@/components/ui/use-form-sync"
+import { assumeType } from "@/lib/narrow"
 import { cn } from "@/lib/utils"
 
 const { Root: FormRoot } = createParts(formRoot, { root: "form" })
@@ -143,7 +144,9 @@ function Form<Schema extends StandardSchemaV1>({
     if (element.current) focusTarget(element.current, rootElement.current)?.focus()
   })
 
-  const untyped = form as unknown as UseFormReturn<FieldValues>
+  // Context and error helpers take UseFormReturn<FieldValues>; react-hook-form's instance is invariant in its values,
+  // so this form of the schema's input values can't be passed as one without it.
+  const untyped = assumeType<UseFormReturn<FieldValues>>(form)
   const setError: FormSubmitHelpers<Values>["setError"] = (name, error) => setFormError(untyped, name, error)
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {

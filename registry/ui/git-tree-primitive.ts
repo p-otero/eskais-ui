@@ -43,9 +43,9 @@ const gitTree = definePrimitive({
     // The agent bridge passes arguments unchecked.
     const check = (path: unknown, kind?: "file" | "folder") => {
       const found = typeof path === "string" ? context.options().lookup?.kind(path) : undefined
-      if (!found) throw new RangeError(`No path "${String(path)}" in the tree.`)
-      if (kind && found !== kind) throw new RangeError(`"${String(path)}" is a ${found}, not a ${kind}.`)
-      return path as string
+      if (!found || typeof path !== "string") throw new RangeError(`No path "${String(path)}" in the tree.`)
+      if (kind && found !== kind) throw new RangeError(`"${path}" is a ${found}, not a ${kind}.`)
+      return path
     }
     const setExpanded = (next: string[], options?: unknown, action = "setExpanded") =>
       settled(change("expanded", next, reasonOf(options)), action, reasonOf(options))

@@ -14,6 +14,7 @@ import {
   type RigInput,
 } from "@/components/ui/model-viewer-rig"
 import { onThemeChange, tokenColor } from "@/components/ui/model-viewer-theme"
+import { assumeType } from "@/lib/narrow"
 
 /** A glTF or GLB: its URL, its bytes, or a scene loaded already (a GLTFLoader result works). */
 type ModelViewerSource = string | ArrayBuffer | { scene: Object3D; animations?: readonly AnimationClip[] }
@@ -162,7 +163,9 @@ function useModelFrame(options: ModelFrameOptions) {
   const { handle, rig, leaving, finishSwap, framing, weights, targetNames, expressions, scaledWeights, material } =
     options
   const { loop, speed, autoRotate } = options
-  const camera = useThree((state) => state.camera) as PerspectiveCamera
+  // R3F types `state.camera` as any `Camera`; this canvas isn't `orthographic`, so it is R3F's default
+  // PerspectiveCamera.
+  const camera = assumeType<PerspectiveCamera>(useThree((state) => state.camera))
   const invalidate = useThree((state) => state.invalidate)
   const frameloop = useThree((state) => state.frameloop)
 

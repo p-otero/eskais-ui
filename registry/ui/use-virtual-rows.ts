@@ -5,6 +5,7 @@ import { useCallback, useLayoutEffect, useMemo, useState, useSyncExternalStore }
 import { flushSync } from "react-dom"
 
 import { layersBesideViewport, windowScroller } from "@/components/ui/scroll-area-layers"
+import { isElementOf } from "@/lib/narrow"
 
 /** `"auto"` virtualizes past `VIRTUALIZE_THRESHOLD` rows. */
 type Virtualize = boolean | "auto"
@@ -132,7 +133,7 @@ function createRows(initial: RowsProps, overscan: number) {
             }
             if (findable || size !== knownSize(row)) {
               sizes?.unobserve(entry.target)
-              give(row, entry.target as HTMLElement, size)
+              if (isElementOf(entry.target, "HTMLElement")) give(row, entry.target, size)
             }
           }
         })

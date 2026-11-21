@@ -1,5 +1,6 @@
 import { effectiveAgent, type AttemptView, type TaskStatus, type TaskView } from "@/lib/agent-task-types"
 import type { Quantity } from "@/lib/quantity"
+import { recordOf } from "@/lib/narrow"
 
 interface TaskFilters {
   project?: string
@@ -223,7 +224,7 @@ function needsDecision(task: TaskView): boolean {
 }
 
 function summarize(tasks: readonly TaskView[]): BoardSummary {
-  const byStatus = Object.fromEntries(TASK_STATUSES.map((status) => [status, 0])) as Record<TaskStatus, number>
+  const byStatus = recordOf(TASK_STATUSES, () => 0)
   let accepted = 0
   let rated = 0
   let awaitingDecision = 0

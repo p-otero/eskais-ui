@@ -3,12 +3,20 @@
 import type { ChangeDetails, TransferLists, TransferReason } from "@ui-sdk/core"
 import { useMemo, type ReactNode } from "react"
 
-import { columnOrder, isReady, type ColumnConfig, type StatusColumn, type TaskMove } from "@/lib/agent-task-board-model"
+import {
+  TASK_STATUSES,
+  columnOrder,
+  isReady,
+  type ColumnConfig,
+  type StatusColumn,
+  type TaskMove,
+} from "@/lib/agent-task-board-model"
 import type { TaskStatus, TaskView } from "@/lib/agent-task-types"
 import type { Tone } from "@/lib/tone"
 import type { AgentTaskBoardLabels } from "@/components/ui/agent-task-labels"
 import { Board, BoardItem, BoardColumn, BoardColumnGroup, BoardList, useBoardLists } from "@/components/ui/board"
 import { TaskCard, type TaskDisplayOptions } from "@/components/ui/task-card"
+import { isOneOf } from "@/lib/narrow"
 
 type AgentTaskBoardColumnsProps = {
   columns: StatusColumn[]
@@ -27,7 +35,10 @@ type Group = "ready" | "waiting"
 
 // The to-do column's groups are lists of their own, so a card lands in the one its readiness puts it in.
 const groupList = (group: Group) => `todo:${group}`
-const statusOf = (list: string) => list.split(":")[0] as TaskStatus
+const statusOf = (list: string) => {
+  const status = list.split(":")[0]
+  return isOneOf(TASK_STATUSES, status) ? status : undefined
+}
 
 // Writes the full order, so changing one column never moves it ahead of the columns that had no config yet.
 function withColumn(columns: readonly ColumnConfig[], status: TaskStatus, change: Partial<ColumnConfig>) {
@@ -99,6 +110,7 @@ function AgentTaskBoardColumns({
     const task = byId.get(id)
     if (!task || !lists || !(list in lists)) return false
     const to = statusOf(list)
+    if (!to) return false
     if (to === "todo" && list !== to && list !== groupList(isReady(task) ? "ready" : "waiting")) return false
     return task.status === to || (canMoveTask ? canMoveTask(task, to) : task.status !== "proposed" && to !== "proposed")
   }
@@ -108,8 +120,8 @@ function AgentTaskBoardColumns({
     details: ChangeDetails<TransferReason> & { key: string; from: string; to: string; index: number },
   ) => {
     const task = byId.get(details.key)
-    if (!task || !onMoveTask) return
     const to = statusOf(details.to)
+    if (!task || !onMoveTask || !to) return
     const before = next[details.to]?.[details.index + 1] ?? null
     onMoveTask({ id: task.id, from: task.status, to, index: details.index, before }, details)
   }
@@ -163,7 +175,10 @@ function AgentTaskBoardColumns({
       handleFocus="card"
       agentMoves={false}
       itemLabel={(id) => byId.get(id)?.title}
-      listLabel={(list) => labels.columns[statusOf(list)]}
+      listLabel={(list) => {
+        const status = statusOf(list)
+        return status && labels.columns[status]
+      }}
       labels={labels.moves}
     >
       {board}

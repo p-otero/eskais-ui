@@ -11,6 +11,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { usePageController, useServerInfinite } from "@/components/ui/use-server-data"
 import { useDelayedFlag, useReachEnd } from "@/components/ui/use-server-table"
 import { searchFieldOf, type FilterSchema, type FilterValues } from "@/lib/filter-schema"
+import { assumeType } from "@/lib/narrow"
 import type { PageController } from "@/lib/page-controller"
 import { pageRange, pageStatusLabels, type PageSource, type PageStatusLabels, type SortSpec } from "@/lib/page-source"
 import { useLocale } from "@/lib/locale"
@@ -106,7 +107,8 @@ function ServerList<T, S extends FilterSchema = Record<never, never>>({
 }: ServerListProps<T, S>) {
   const labels = { ...serverListLabels, ...labelOverrides }
   const locale = useLocale(localeProp)
-  const schema = filters ?? ({} as S)
+  // Without `filters` the schema is empty, which TypeScript can't confirm is an `S` for a generic `S`.
+  const schema = filters ?? assumeType<S>({})
   const searchKey = searchFieldOf(schema)
   const own = usePageController<T, FilterValues<S>>(source, {
     filter: defaultFilters,

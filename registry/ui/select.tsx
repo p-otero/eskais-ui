@@ -22,6 +22,7 @@ import { CheckIcon, ChevronDownIcon } from "lucide-react"
 
 import { floatingLabelControls } from "@/components/ui/field"
 import { fieldSurfaceClassName } from "@/components/ui/input"
+import { assumeType } from "@/lib/narrow"
 import { cnState } from "@/lib/utils"
 
 const triggerClassName = `${fieldSurfaceClassName} flex w-full min-w-0 cursor-pointer items-center justify-between gap-inline rounded-control px-control-x text-start text-entry outline-none focus-visible:ring-2 focus-visible:ring-ring [&>svg]:size-4 [&>svg]:shrink-0 [&>svg]:text-muted-foreground`
@@ -117,6 +118,9 @@ type SelectValueChangeDetails = Parameters<NonNullable<SelectPrimitiveProps<stri
 // Distributes over the single and multiple variants, so `onValueChange` keeps its parameter type.
 type WithoutItems<Props> = Props extends unknown ? Omit<Props, "items"> : never
 
+// UI SDK's `SelectProps<T, false>` still admits `multiple: true`; this is its single-value variant only.
+type SingleSelectProps<T> = SelectPrimitiveProps<T, false> & { multiple?: false }
+
 type SelectOption<T = string> = { value: T; label: string; disabled?: boolean; description?: ReactNode }
 type SelectOptionGroup<T = string> = { label: string; options: readonly SelectOption<T>[] }
 type SelectOptions<T = string> = readonly (SelectOption<T> | SelectOptionGroup<T>)[]
@@ -143,6 +147,12 @@ type DataAttributes = { [attribute: `data-${string}`]: string | number | boolean
 // Never held by the select: choosing it reports null, and the controlled value stays null.
 const noneValue = "\u0000eskais-select-none"
 
+function noneOf<T>(): T {
+  // A sentinel the list holds in T's place for the "none" choice; it is never reported, since onValueChange maps it to
+  // null, so a T that isn't a string never meets it.
+  return assumeType<T>(noneValue)
+}
+
 const isGroup = <T,>(option: SelectOption<T> | SelectOptionGroup<T>): option is SelectOptionGroup<T> =>
   "options" in option
 
@@ -156,7 +166,7 @@ function toListData<T>(options: SelectOptions<T>, clearable?: string): ListData<
         }
       : { value: option.value, label: option.label, disabled: option.disabled },
   )
-  return clearable === undefined ? items : ([{ value: noneValue, label: clearable }, ...items] as ListData<T>)
+  return clearable === undefined ? items : [{ value: noneOf<T>(), label: clearable }, ...items]
 }
 
 function OptionItem<T>({ option }: { option: SelectOption<T> }) {
@@ -179,7 +189,7 @@ function OptionList<T>({ options, clearable }: { options: SelectOptions<T>; clea
   return (
     <SelectContent>
       {clearable === undefined ? null : (
-        <SelectItem<T> value={noneValue as T} className="text-muted-foreground">
+        <SelectItem<T> value={noneOf<T>()} className="text-muted-foreground">
           {clearable}
         </SelectItem>
       )}
@@ -205,9 +215,14 @@ function OptionList<T>({ options, clearable }: { options: SelectOptions<T>; clea
 /** UI SDK's Select, plus `options` and `clearable`. With children it renders them, as the parts API always has. */
 function Select<T = string, Multiple extends boolean | undefined = false>(props: SelectProps<T, Multiple>) {
   const { options, clearable, "aria-label": ariaLabel, size, triggerProps, children, ...root } = props
-  const single = root.multiple !== true
-  const [own, setOwn] = useState(() => (root.defaultValue ?? null) as T | null)
-  const items = options ? toListData(options, single ? clearable : undefined) : (root.items as ListData<T> | undefined)
+  // `Omit` over UI SDK's props, which distribute over a generic `Multiple`, can't be put back together by TypeScript;
+  // `root` is those props less ours, with `items` readonly, which UI SDK only reads.
+  const primitive = assumeType<SelectPrimitiveProps<T, Multiple>>(root)
+  // The single-value view of the same props, read only when `multiple` isn't true.
+  const one = assumeType<SingleSelectProps<T>>(root)
+  const single = primitive.multiple !== true
+  const [own, setOwn] = useState<SingleSelectProps<T>["value"] | T>(() => one.defaultValue ?? null)
+  const items = options ? toListData(options, single ? clearable : undefined) : primitive.items
   const rendered =
     children ??
     (options ? (
@@ -221,23 +236,22 @@ function Select<T = string, Multiple extends boolean | undefined = false>(props:
 
   if (clearable === undefined || !single) {
     return (
-      <SelectPrimitive<T, Multiple> {...(root as SelectPrimitiveProps<T, Multiple>)} items={items}>
+      <SelectPrimitive<T, Multiple> {...primitive} items={items}>
         {rendered}
       </SelectPrimitive>
     )
   }
-  const one = root as { value?: T | null; onValueChange?: (value: T | null, details: SelectValueChangeDetails) => void }
   const controlled = one.value !== undefined
-  const clearing = {
-    ...root,
+  const clearing: SingleSelectProps<T> = {
+    ...one,
     items,
     value: controlled ? one.value : own,
     onValueChange: (next: T | null, details: SelectValueChangeDetails) => {
-      const value = next === (noneValue as T) ? null : next
+      const value = next === noneOf<T>() ? null : next
       one.onValueChange?.(value, details)
       if (!details.canceled && !controlled) setOwn(value)
     },
-  } as SelectPrimitiveProps<T, false>
+  }
   return <SelectPrimitive<T, false> {...clearing}>{rendered}</SelectPrimitive>
 }
 

@@ -52,13 +52,16 @@ const poseEdges: ModelScanEdges = [
 ]
 
 const isGroupList = (points: ModelScanPoints): points is readonly ModelScanPointGroup[] =>
-  Array.isArray(points) && points.length > 0 && typeof points[0] === "object" && "source" in (points[0] as object)
+  Array.isArray(points) && points.length > 0 && typeof points[0] === "object" && "source" in points[0]
+
+const isNumberList = (list: readonly number[] | readonly ModelScanPoint[]): list is readonly number[] =>
+  list.length > 0 && typeof list[0] === "number"
 
 function interleaved(list: ModelScanPointList) {
   if (ArrayBuffer.isView(list)) return list
-  if (list.length > 0 && typeof list[0] === "number") return Float32Array.from(list as readonly number[])
+  if (isNumberList(list)) return Float32Array.from(list)
   const coords = new Float32Array(list.length * 2)
-  ;(list as readonly ModelScanPoint[]).forEach((point, i) => {
+  list.forEach((point, i) => {
     coords[i * 2] = point.x
     coords[i * 2 + 1] = point.y
   })

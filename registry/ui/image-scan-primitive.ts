@@ -17,6 +17,7 @@ import {
   type ImageScanFit,
   type ImageScanSize,
 } from "@/lib/image-scan-geometry"
+import { isElementOf } from "@/lib/narrow"
 
 type ImageScanStatus = "uploaded" | "scanning" | "result" | "error"
 
@@ -209,7 +210,8 @@ const imageScan = definePrimitive({
     image: slot({
       attrs: (state) => ({ "data-fit": state.fit, "data-status": state.status }),
       bind: (el, part) => {
-        const image = el as HTMLImageElement
+        if (!isElementOf(el, "HTMLImageElement")) return
+        const image = el
         const read = () => {
           if (image.naturalWidth > 0 && image.naturalHeight > 0)
             part.api.measured(image.naturalWidth / image.naturalHeight)

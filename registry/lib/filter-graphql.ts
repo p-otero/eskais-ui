@@ -41,14 +41,15 @@ function likeText(text: string) {
 }
 
 function nest(field: string, condition: GraphqlValue): GraphqlWhere {
-  return field
-    .split(".")
-    .reduceRight<GraphqlValue>((inner, segment) => ({ [segment]: inner }), condition) as GraphqlWhere
+  const segments = field.split(".")
+  let where: GraphqlWhere = { [segments.pop()!]: condition }
+  for (let index = segments.length - 1; index >= 0; index--) where = { [segments[index]!]: where }
+  return where
 }
 
 function scalar(leaf: FilterLeaf, value: FilterScalar, options: GraphqlWhereOptions): JsonScalar {
-  const json = jsonAst({ ...leaf, op: "eq", value }, { dates: options.dates }) as { value: JsonScalar }
-  return json.value
+  const json = jsonAst({ ...leaf, op: "eq", value }, { dates: options.dates })
+  return json && "value" in json && !Array.isArray(json.value) ? json.value : null
 }
 
 function hasuraLeaf(leaf: FilterLeaf, options: GraphqlWhereOptions): GraphqlWhere {
