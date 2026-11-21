@@ -1,0 +1,121 @@
+/* The prism stage is an optical bench, dark in every theme: additive light only reads on black. Its geometry lives
+   here, from the stage's own size (a size container), so the canvas, the engraved scale and the knob agree. */
+[data-slot="prism-stage"] {
+  --prism-cx: 50cqw;
+  --prism-cy: 58cqh;
+  --prism-ring: min(31cqh, 30cqw);
+  --prism-bench: #040507;
+  container-type: size;
+  aspect-ratio: 16 / 10;
+  background-color: var(--prism-bench);
+  /* A faint technical grid in two weights, and a lift of light around the prism. */
+  background-image:
+    radial-gradient(circle at 50% 58%, rgb(40 46 66 / 0.55), transparent 55%),
+    linear-gradient(rgb(255 255 255 / 0.045) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(255 255 255 / 0.045) 1px, transparent 1px),
+    linear-gradient(rgb(255 255 255 / 0.022) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(255 255 255 / 0.022) 1px, transparent 1px);
+  background-size:
+    100% 100%,
+    64px 64px,
+    64px 64px,
+    16px 16px,
+    16px 16px;
+  background-position:
+    0 0,
+    center 58%,
+    center 58%,
+    center 58%,
+    center 58%;
+}
+
+@media (width <= 47.5rem) {
+  [data-slot="prism-stage"] {
+    aspect-ratio: 1;
+  }
+}
+
+[data-slot="prism-grip"],
+[data-slot="prism-scale"],
+[data-slot="prism-tick"] {
+  position: absolute;
+  top: var(--prism-cy);
+  left: var(--prism-cx);
+  translate: -50% -50%;
+}
+
+/* Where the dial takes a touch: the ring and a band of 24px on either side, round so the page scrolls past it. */
+[data-slot="prism-grip"] {
+  width: calc(var(--prism-ring) * 2 + 48px);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  touch-action: none;
+}
+
+[data-slot="prism-glow"] {
+  filter: blur(7px);
+  mix-blend-mode: plus-lighter;
+}
+
+[data-slot="prism-scale"] {
+  width: calc(var(--prism-ring) * 2.6);
+  aspect-ratio: 1;
+  overflow: visible;
+  pointer-events: none;
+  color: white;
+}
+
+[data-slot="prism-tick"] {
+  --prism-tick-radius: calc(var(--prism-ring) * 1.2 + 12px);
+  top: calc(var(--prism-cy) + sin(var(--prism-tick-angle)) * var(--prism-tick-radius));
+  left: calc(var(--prism-cx) + cos(var(--prism-tick-angle)) * var(--prism-tick-radius));
+  pointer-events: none;
+  font-size: 0.625rem;
+  color: rgb(255 255 255 / 0.45);
+}
+
+/* UI SDK places a thumb along a straight track with inline styles; on the dial it sits at the shown angle. */
+[data-slot="prism-stage"] [data-slot="slider-thumb"] {
+  position: absolute !important;
+  inset: auto !important;
+  margin: 0 !important;
+  top: calc(var(--prism-cy) + sin(var(--prism-dial, 90deg)) * var(--prism-ring)) !important;
+  left: calc(var(--prism-cx) + cos(var(--prism-dial, 90deg)) * var(--prism-ring)) !important;
+  translate: -50% -50% !important;
+  width: 1.25rem;
+  height: 1.25rem;
+  border: 1.5px solid rgb(255 255 255 / 0.9);
+  border-radius: 50%;
+  background: var(--prism-shown, var(--prism-picked));
+  box-shadow:
+    0 0 0 3px rgb(0 0 0 / 0.55),
+    0 0 14px 2px var(--prism-shown, var(--prism-picked));
+  transition: scale var(--duration-micro) var(--ease-standard);
+}
+
+[data-slot="prism-stage"][data-dragging] [data-slot="slider-thumb"] {
+  scale: 1.1;
+}
+
+[data-slot="prism-stage"] [data-slot="slider-thumb"]:has(:focus-visible) {
+  outline: 2px solid white;
+  outline-offset: 3px;
+}
+
+/* The readout's swatch: a grid cell of its own beside the hex and the name, since a row of a list holds only terms
+   and descriptions. */
+[data-slot="prism-colour"] {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+}
+
+[data-slot="prism-colour"]::before {
+  content: "";
+  grid-row: span 2;
+  width: var(--control-height);
+  aspect-ratio: 1;
+  border: 1px solid var(--input-strong);
+  border-radius: var(--control-radius);
+  background: var(--prism-picked);
+}

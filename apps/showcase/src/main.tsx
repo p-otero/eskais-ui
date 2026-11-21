@@ -12,7 +12,7 @@ const root = document.getElementById("root")
 if (!root) throw new Error("Missing #root element")
 
 // ?demo=page, site, shell, inbox, list-bench, log-viewer, log-bench, shell-block, master-detail, list-row-actions, dashboard-grid, settings-page,
-// document-workspace, agent-workspace, commit-history and the git views (sections/git-workspace) render one demo alone; ?demo=<name>-check pages are the
+// document-workspace, agent-workspace, commit-history, prism-picker and the git views (sections/git-workspace) render one demo alone; ?demo=<name>-check pages are the
 // fixtures of tooling/<name>-check.mjs (dialog-mobile-check's: dialog-mobile, dialog-matrix; shell-check's: card-header, description-list, field-placement, gauge,
 // mobile-nav, palette-reopen, side-panel, table, master-detail, settings-page); *-bench and ?demo=perf pages are the benchmarks'.
 const params = new URLSearchParams(location.search)
@@ -140,6 +140,7 @@ const pages: Record<string, Page> = {
       }
     }),
   perf: loadPerfPage,
+  "prism-picker": () => import("./prism/prism-picker-demo").then((module) => module.PrismPickerDemo),
   ...Object.fromEntries(
     gitWorkspaceDemoNames.map((name) => [
       name,
