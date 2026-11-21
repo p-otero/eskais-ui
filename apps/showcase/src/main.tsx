@@ -25,7 +25,6 @@ import { SettingsPageCheck } from "./checks/settings-page-check"
 import { MobileNavCheck } from "./checks/mobile-nav-check"
 import { GitBench } from "./checks/git-bench"
 import { ListBench } from "./checks/list-bench"
-import { LogBench } from "./checks/log-bench"
 import { OverlayCheck } from "./checks/overlay-check"
 import { PopoverCheck } from "./checks/popover-check"
 import { PressCheck } from "./checks/press-check"
@@ -42,7 +41,6 @@ import { PerfPage } from "./perf/perf-page"
 import { DocumentWorkspacePage } from "./sections/document-workspace"
 import { CommitBranchesDemo, CommitTrailDemo } from "./sections/git"
 import { InboxDemo } from "./sections/inbox"
-import { LogViewerDemo } from "./sections/log-viewer"
 import { TaskDialogPage } from "./sections/task-dialog"
 import { DashboardGridDemo, ListRowActionsDemo, MasterDetailDemo, SettingsPageDemo } from "./sections/layout-blocks"
 import { demoStatuses, PageDemo, type DemoStatus } from "./sections/page"
@@ -50,6 +48,10 @@ import { ShellBlockDemo } from "./shell/shell-block-demo"
 import { ShellDemo } from "./shell/shell-demo"
 import { SiteDemo } from "./shell/site-demo"
 import "./index.css"
+
+// The log viewer and its bench load apart, like the model check: the page chunk the vitals measure stays the same.
+const LogBench = lazy(() => import("./checks/log-bench").then((module) => ({ default: module.LogBench })))
+const LogViewerDemo = lazy(() => import("./sections/log-viewer").then((module) => ({ default: module.LogViewerDemo })))
 
 // Its probe reads the three.js rig, so the check loads apart: three.js stays out of the page chunk the vitals measure.
 const ModelCheck = lazy(() =>
@@ -145,11 +147,19 @@ function Demo() {
   if (demo === "icon-tooltip-check") return <IconTooltipCheck />
   if (demo === "inbox") return <InboxDemo />
   if (demo === "list-bench") return <ListBench />
-  if (demo === "log-bench") return <LogBench />
+  if (demo === "log-bench") {
+    return (
+      <Suspense>
+        <LogBench />
+      </Suspense>
+    )
+  }
   if (demo === "log-viewer") {
     return (
       <main className="flex h-dvh flex-col p-inset-surface">
-        <LogViewerDemo className="min-h-0 flex-1" />
+        <Suspense>
+          <LogViewerDemo className="min-h-0 flex-1" />
+        </Suspense>
       </main>
     )
   }
