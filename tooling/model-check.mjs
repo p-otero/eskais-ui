@@ -185,9 +185,18 @@ async function pointPlacement(page) {
 
 // The scan's controls: each one's name, its hit area (the larger of its box and its touch-target ::before), and the
 // text contrast inside the floating bars, each bar's translucent fill laid over white and over black, the two
-// extremes a photo can put behind it.
+// extremes a photo can put behind it. Colour transitions finish first: after a `.dark` toggle a segment's text still
+// fades from the light colour over an indicator already dark (1.21:1).
 const auditControls = (page) =>
-  page.evaluate(() => {
+  page.evaluate(async () => {
+    const colours = new Set(["color", "background-color", "all"])
+    const settling = () =>
+      document
+        .querySelector("[data-testid=scan] [data-slot=model-scan-controls]")
+        .getAnimations({ subtree: true })
+        .filter((animation) => animation instanceof CSSTransition && colours.has(animation.transitionProperty))
+    for (let pending = settling(); pending.length > 0; pending = settling())
+      await Promise.allSettled(pending.map((animation) => animation.finished))
     const canvas = document.createElement("canvas")
     canvas.width = 1
     canvas.height = 1

@@ -7,6 +7,7 @@ Versions follow [semver](https://semver.org). Before 1.0, a minor version can br
 ### Fixed
 
 - `FormDialog` and `StepDialog` on Safari 26 (iOS 26, iPadOS and macOS): the dialog showed only its title and description (or the step progress) and cut the fields and actions off at the bottom of the screen. Safari 26's WebKit sizes a fixed box with an intrinsic height (`height: fit-content`, as `DialogContent` had) from its column flex children's `flex-basis: 0%`, so the `flex-1` form and body got no height at all, which WebKit 26.0 reproduces at the same pixel heights as the phone; WebKit 27 and Chromium lay it out fully. `DialogContent` (and so every dialog built on it: `ConfirmDialog`, `CommandDialog`, `ShortcutsDialog`, `TaskDetailDialog`, `Lightbox`) now has an auto height, placed from one edge: a sheet from the bottom of the visible part of the page, a centered dialog from its middle, moved up by half its height.
+- `model-check`'s phone contrast audit failed now and then with "Soft toon" at 1.21:1 over the photo. It read computed colours right after switching to dark mode, while the checked segment's text was still fading from the light theme's `primary-foreground` (`transition-colors`, 150 ms) over an indicator whose fill had already switched to the dark theme's `primary`. At rest the text reads at full contrast; the audit now waits for the controls' colour transitions to finish before it measures.
 
 ### Added
 
