@@ -348,9 +348,9 @@ test("building and refining hand the model and the weights to the viewer; ready 
   expect(screen.queryByRole("group", { name: "3D view controls" })).toBeNull()
   rerender(<Scan stage="ready" model="figure.glb" weights={{ Smile: 1 }} modelAlt="A 3D figure" />)
   await tick()
-  expect(screen.queryByRole("progressbar")).toBeNull()
   // One bar: ModelScan's toolbar, with the viewer's drag and keys but not its own controls.
   expect(await screen.findByRole("toolbar", { name: "3D model controls" })).toBeTruthy()
+  await waitFor(() => expect(screen.queryByRole("progressbar")).toBeNull())
   expect(screen.queryByRole("group", { name: "3D view controls" })).toBeNull()
   expect(screen.getByRole("img", { name: "A 3D figure" }).getAttribute("tabindex")).toBe("0")
   expect(screen.queryByRole("button", { name: "Cancel" })).toBeNull()
