@@ -152,14 +152,27 @@ test("while the on-screen keyboard is up, the content and the sheet fit above it
   render(<SizedDialog />)
   const sheet = screen.getByRole("dialog", { name: "Sized" })
   // The visible part is cut to the containing block: a stale `offsetTop` with the full height can't push it below.
-  expect(sheet.className).toContain("bottom-[max(0px,100%-var(--dialog-viewport-bottom,100%))]")
+  expect(sheet.className).toContain("narrow:bottom-[max(0px,100%-var(--dialog-viewport-bottom,100%))]")
+  expect(sheet.className).toContain("data-dialog-keyboard:bottom-[max(0px,100%-var(--dialog-viewport-bottom,100%))]")
+  // Centered, its top is the middle of the visible part, cut the same way.
   expect(sheet.className).toContain(
-    "top-[clamp(0px,var(--dialog-viewport-top,0px),100%-var(--dialog-viewport-height,100%))]",
+    "top-[calc((clamp(0px,var(--dialog-viewport-top,0px),100%-var(--dialog-viewport-height,100%))+min(100%,var(--dialog-viewport-bottom,100%)))/2)]",
   )
   expect(sheet.className).toContain("data-dialog-keyboard:top-auto")
   expect(sheet.className).toContain("max-h-[min(var(--dialog-max-height),calc(var(--dialog-viewport-height,100%)")
   expect(sheet.className).toContain("narrow:max-h-[min(var(--sheet-max-height),calc(var(--dialog-viewport-height,100%)")
   expect(sheet.className).toContain("env(safe-area-inset-bottom)")
+})
+
+test("the content is placed from one edge with an auto height, never an intrinsic height between two", () => {
+  render(<SizedDialog />)
+  const sheet = screen.getByRole("dialog", { name: "Sized" })
+  // Safari 26 sizes a fixed box with an intrinsic height from its column flex children's `flex-basis: 0%`, which cut
+  // a FormDialog and a StepDialog down to their header (`node tooling/dialog-mobile-check.mjs --engine=webkit26`).
+  expect(sheet.className).not.toMatch(/(^|\s|:)(h|size)-(fit|max|min)(\s|$)|inset-0|(^|\s)m-auto/)
+  expect(sheet.className).toContain("inset-x-0")
+  expect(sheet.className).toContain("-translate-y-1/2")
+  expect(sheet.className).toContain("narrow:translate-y-0")
 })
 
 test("stays in the visible part of the page, and takes it for the keyboard only while a field is focused", async () => {

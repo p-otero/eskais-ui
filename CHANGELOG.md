@@ -2,6 +2,18 @@
 
 Versions follow [semver](https://semver.org). Before 1.0, a minor version can break compatibility. Release with `bun pm version <patch|minor|major>`, which bumps `package.json`, rebuilds `public/r` (the mockup CLI reports the version) and tags `vX.Y.Z`.
 
+## Unreleased
+
+### Fixed
+
+- `FormDialog` and `StepDialog` on Safari 26 (iOS 26, iPadOS and macOS): the dialog showed only its title and description (or the step progress) and cut the fields and actions off at the bottom of the screen. Safari 26's WebKit sizes a fixed box with an intrinsic height (`height: fit-content`, as `DialogContent` had) from its column flex children's `flex-basis: 0%`, so the `flex-1` form and body got no height at all, which WebKit 26.0 reproduces at the same pixel heights as the phone; WebKit 27 and Chromium lay it out fully. `DialogContent` (and so every dialog built on it: `ConfirmDialog`, `CommandDialog`, `ShortcutsDialog`, `TaskDetailDialog`, `Lightbox`) now has an auto height, placed from one edge: a sheet from the bottom of the visible part of the page, a centered dialog from its middle, moved up by half its height.
+
+### Added
+
+- `dialog-mobile-check` takes `--engine=webkit26`, WebKit 26.0 driven by Playwright 1.56 installed in `tooling/.webkit26` (see `webkitEngine` in the script), and adds two devices measured on an iPhone in Safari 26: 402 × 660 under the expanded floating toolbar and 402 × 768 with it collapsed. Before the fix, FormDialog and StepDialog failed every viewport model there; after it, all 2044 checks pass.
+- `touch-check` also measures the text-entry controls inside every kind of dialog, in default and compact density and at the size they render after transforms, and the docs site's `/debug/viewport/` dialogs and search once `bun run build:site` has built it (`withSite` in `showcase-browser.mjs`).
+- The docs site's `/debug/viewport/` page puts Copy report in each dialog's description, where it stays in view when the rest is cut off, and copies the dialog open at that moment: its content's scroll and client heights, each named part (header, form, body, actions) with its edges and scroll and client heights, and the focused field's font size, computed and as rendered.
+
 ## 0.2.10 (2026-11-21)
 
 ### Added
