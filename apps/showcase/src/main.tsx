@@ -1,64 +1,12 @@
-import { lazy, StrictMode, Suspense } from "react"
+import { StrictMode, type ComponentType } from "react"
 import { createRoot } from "react-dom/client"
 
 import { Appearance } from "@/components/ui/appearance"
-import { SkipLink } from "@/components/ui/skip-link"
-import { ToastStack } from "@/components/ui/toast"
 
-import { App } from "./app"
 import { appearance } from "./appearance"
-import { AgentBridgeCheck } from "./checks/agent-bridge-check"
-import { ColorPickerCheck } from "./checks/color-picker-check"
-import { CalendarCheck } from "./checks/calendar-check"
-import { CardHeaderCheck } from "./checks/card-header-check"
-import { PaletteReopenCheck } from "./checks/palette-reopen-check"
-import { DescriptionListCheck } from "./checks/description-list-check"
-import { DialogMatrixCheck } from "./checks/dialog-matrix-check"
-import { DialogMobileCheck } from "./checks/dialog-mobile-check"
-import { DiffBench } from "./checks/diff-bench"
-import { FieldPlacementCheck } from "./checks/field-placement-check"
-import { GaugeCheck } from "./checks/gauge-check"
-import { IconTooltipCheck } from "./checks/icon-tooltip-check"
-import { ImageScanCheck } from "./checks/image-scan-check"
-import { MasterDetailCheck } from "./checks/master-detail-check"
-import { SettingsPageCheck } from "./checks/settings-page-check"
-import { MobileNavCheck } from "./checks/mobile-nav-check"
-import { GitBench } from "./checks/git-bench"
-import { ListBench } from "./checks/list-bench"
-import { OverlayCheck } from "./checks/overlay-check"
-import { PopoverCheck } from "./checks/popover-check"
-import { PressCheck } from "./checks/press-check"
-import { SidePanelCheck } from "./checks/side-panel-check"
-import { SortableCheck } from "./checks/sortable-check"
-import { TableCheck } from "./checks/table-check"
-import { ServerDataCheck } from "./checks/server-data-check"
-import { TreeFocusCheck } from "./checks/tree-focus-check"
-import { GitViewCheck } from "./checks/git-view-check"
-import { VoiceInputCheck } from "./checks/voice-input-check"
-import { GitWorkspaceDemo, gitWorkspaceDemos, isGitWorkspaceDemo } from "./sections/git-workspace/demos"
-import { AgentWorkspace } from "./sections/agent-workspace"
-import { PerfPage } from "./perf/perf-page"
-import { DocumentWorkspacePage } from "./sections/document-workspace"
-import { CommitBranchesDemo, CommitTrailDemo } from "./sections/git"
-import { InboxDemo } from "./sections/inbox"
-import { TaskDialogPage } from "./sections/task-dialog"
-import { DashboardGridDemo, ListRowActionsDemo, MasterDetailDemo, SettingsPageDemo } from "./sections/layout-blocks"
-import { demoStatuses, PageDemo, type DemoStatus } from "./sections/page"
-import { ShellBlockDemo } from "./shell/shell-block-demo"
-import { ShellDemo } from "./shell/shell-demo"
-import { SiteDemo } from "./shell/site-demo"
+import { loadPerfPage } from "./perf/perf-page"
+import { gitWorkspaceDemoNames } from "./sections/git-workspace/names"
 import "./index.css"
-
-// The log viewer and its bench load apart, like the model check: the page chunk the vitals measure stays the same.
-const LogBench = lazy(() => import("./checks/log-bench").then((module) => ({ default: module.LogBench })))
-const LogViewerDemo = lazy(() => import("./sections/log-viewer").then((module) => ({ default: module.LogViewerDemo })))
-
-// Its probe reads the three.js rig, so the check loads apart: three.js stays out of the page chunk the vitals measure.
-const ModelCheck = lazy(() =>
-  import("./checks/model-check").then((module) => ({
-    default: module.ModelCheck,
-  })),
-)
 
 const root = document.getElementById("root")
 if (!root) throw new Error("Missing #root element")
@@ -68,164 +16,156 @@ if (!root) throw new Error("Missing #root element")
 // fixtures of tooling/<name>-check.mjs (dialog-mobile-check's: dialog-mobile, dialog-matrix; shell-check's: card-header, description-list, field-placement, gauge,
 // mobile-nav, palette-reopen, side-panel, table, master-detail, settings-page); *-bench and ?demo=perf pages are the benchmarks'.
 const params = new URLSearchParams(location.search)
-const status = demoStatuses.find((name) => name === params.get("status")) ?? "success"
 const demo = params.get("demo")
 
-const standalone = new Set([
-  "page",
-  "site",
-  "shell",
-  "overlay-check",
-  "dialog-mobile-check",
-  "dialog-matrix-check",
-  "card-header-check",
-  "palette-reopen-check",
-  "field-placement-check",
-  "mobile-nav-check",
-  "icon-tooltip-check",
-  "inbox",
-  "list-bench",
-  "log-bench",
-  "log-viewer",
-  "diff-bench",
-  "calendar-check",
-  "press-check",
-  "color-picker-check",
-  "popover-check",
-  "task-dialog",
-  "side-panel-check",
-  "table-check",
-  "description-list-check",
-  "gauge-check",
-  "image-scan-check",
-  "model-check",
-  "master-detail",
-  "master-detail-check",
-  "list-row-actions",
-  "dashboard-grid",
-  "settings-page",
-  "settings-page-check",
-  "shell-block",
-  "document-workspace",
-  "server-data-check",
-  "agent-workspace",
-  "commit-history",
-  "commit-branches",
-  "commit-bench",
-  "git-tree-bench",
-  "perf",
-  "sortable-check",
-  "tree-focus-check",
-  "git-view-check",
-  "voice-input-check",
-  "agent-bridge-check",
-  ...Object.keys(gitWorkspaceDemos),
-])
+// Each page loads apart, so a page downloads only its own demo: the perf server sends files uncompressed on a slow 4G
+// profile, where every byte before the first paint is LCP. The page renders once loaded, with no Suspense fallback
+// before it: React holds a boundary's content for 300 ms after its fallback shows.
+type Page = () => Promise<ComponentType>
 
-function Demo() {
-  if (demo === "page") {
-    return (
-      <>
-        <SkipLink>Skip to content</SkipLink>
-        <PageDemo status={status satisfies DemoStatus} as="main" />
-      </>
-    )
-  }
-  if (demo === "overlay-check") return <OverlayCheck />
-  if (demo === "dialog-mobile-check") return <DialogMobileCheck />
-  if (demo === "dialog-matrix-check") return <DialogMatrixCheck />
-  if (demo === "sortable-check") return <SortableCheck />
-  if (demo === "tree-focus-check") return <TreeFocusCheck />
-  if (demo === "git-view-check") return <GitViewCheck />
-  if (demo === "voice-input-check") return <VoiceInputCheck />
-  if (demo === "agent-bridge-check") return <AgentBridgeCheck />
-  if (isGitWorkspaceDemo(demo)) return <GitWorkspaceDemo name={demo} />
-  if (demo === "card-header-check") return <CardHeaderCheck />
-  if (demo === "palette-reopen-check") return <PaletteReopenCheck />
-  if (demo === "field-placement-check") return <FieldPlacementCheck />
-  if (demo === "mobile-nav-check") return <MobileNavCheck />
-  if (demo === "icon-tooltip-check") return <IconTooltipCheck />
-  if (demo === "inbox") return <InboxDemo />
-  if (demo === "list-bench") return <ListBench />
-  if (demo === "log-bench") {
-    return (
-      <Suspense>
-        <LogBench />
-      </Suspense>
-    )
-  }
-  if (demo === "log-viewer") {
-    return (
-      <main className="flex h-dvh flex-col p-inset-surface">
-        <Suspense>
-          <LogViewerDemo className="min-h-0 flex-1" />
-        </Suspense>
-      </main>
-    )
-  }
-  if (demo === "diff-bench") return <DiffBench />
-  if (demo === "calendar-check") return <CalendarCheck />
-  if (demo === "press-check") return <PressCheck />
-  if (demo === "color-picker-check") return <ColorPickerCheck />
-  if (demo === "popover-check") return <PopoverCheck />
-  if (demo === "task-dialog") return <TaskDialogPage params={params} />
-  if (demo === "side-panel-check") return <SidePanelCheck />
-  if (demo === "table-check") return <TableCheck />
-  if (demo === "description-list-check") return <DescriptionListCheck />
-  if (demo === "gauge-check") return <GaugeCheck />
-  if (demo === "image-scan-check") return <ImageScanCheck />
-  if (demo === "model-check") {
-    return (
-      <Suspense>
-        <ModelCheck />
-      </Suspense>
-    )
-  }
-  if (demo === "master-detail") return <MasterDetailDemo />
-  if (demo === "list-row-actions") return <ListRowActionsDemo />
-  if (demo === "master-detail-check") return <MasterDetailCheck />
-  if (demo === "dashboard-grid") return <DashboardGridDemo />
-  if (demo === "settings-page") return <SettingsPageDemo />
-  if (demo === "settings-page-check") return <SettingsPageCheck />
-  if (demo === "shell-block") return <ShellBlockDemo />
-  if (demo === "document-workspace") return <DocumentWorkspacePage />
-  if (demo === "server-data-check") return <ServerDataCheck />
-  if (demo === "agent-workspace") {
-    return (
-      <main className="p-inset-surface">
-        <AgentWorkspace />
-        <ToastStack />
-      </main>
-    )
-  }
-  if (demo === "commit-bench") return <GitBench kind="commits" />
-  if (demo === "git-tree-bench") return <GitBench kind="files" />
-  if (demo === "commit-branches") {
-    return (
-      <main className="flex min-h-dvh items-start justify-center bg-background p-inset-surface">
-        <CommitBranchesDemo />
-      </main>
-    )
-  }
-  if (demo === "commit-history") {
-    return (
-      <main className="flex min-h-dvh items-start justify-center bg-background p-inset-surface">
-        <CommitTrailDemo />
-      </main>
-    )
-  }
-  if (demo === "perf") return <PerfPage />
-  return demo === "shell" ? <ShellDemo /> : <SiteDemo />
+const pages: Record<string, Page> = {
+  page: () =>
+    Promise.all([import("./sections/page"), import("@/components/ui/skip-link")]).then(
+      ([{ demoStatuses, PageDemo }, { SkipLink }]) => {
+        const status = demoStatuses.find((name) => name === params.get("status")) ?? "success"
+        return function Page() {
+          return (
+            <>
+              <SkipLink>Skip to content</SkipLink>
+              <PageDemo status={status} as="main" />
+            </>
+          )
+        }
+      },
+    ),
+  site: () => import("./shell/site-demo").then((module) => module.SiteDemo),
+  shell: () => import("./shell/shell-demo").then((module) => module.ShellDemo),
+  "overlay-check": () => import("./checks/overlay-check").then((module) => module.OverlayCheck),
+  "dialog-mobile-check": () => import("./checks/dialog-mobile-check").then((module) => module.DialogMobileCheck),
+  "dialog-matrix-check": () => import("./checks/dialog-matrix-check").then((module) => module.DialogMatrixCheck),
+  "sortable-check": () => import("./checks/sortable-check").then((module) => module.SortableCheck),
+  "tree-focus-check": () => import("./checks/tree-focus-check").then((module) => module.TreeFocusCheck),
+  "git-view-check": () => import("./checks/git-view-check").then((module) => module.GitViewCheck),
+  "voice-input-check": () => import("./checks/voice-input-check").then((module) => module.VoiceInputCheck),
+  "agent-bridge-check": () => import("./checks/agent-bridge-check").then((module) => module.AgentBridgeCheck),
+  "card-header-check": () => import("./checks/card-header-check").then((module) => module.CardHeaderCheck),
+  "palette-reopen-check": () => import("./checks/palette-reopen-check").then((module) => module.PaletteReopenCheck),
+  "field-placement-check": () => import("./checks/field-placement-check").then((module) => module.FieldPlacementCheck),
+  "mobile-nav-check": () => import("./checks/mobile-nav-check").then((module) => module.MobileNavCheck),
+  "icon-tooltip-check": () => import("./checks/icon-tooltip-check").then((module) => module.IconTooltipCheck),
+  inbox: () => import("./sections/inbox").then((module) => module.InboxDemo),
+  "list-bench": () => import("./checks/list-bench").then((module) => module.ListBench),
+  "log-bench": () => import("./checks/log-bench").then((module) => module.LogBench),
+  "log-viewer": () =>
+    import("./sections/log-viewer").then(({ LogViewerDemo }) => {
+      return function LogViewerPage() {
+        return (
+          <main className="flex h-dvh flex-col p-inset-surface">
+            <LogViewerDemo className="min-h-0 flex-1" />
+          </main>
+        )
+      }
+    }),
+  "diff-bench": () => import("./checks/diff-bench").then((module) => module.DiffBench),
+  "calendar-check": () => import("./checks/calendar-check").then((module) => module.CalendarCheck),
+  "press-check": () => import("./checks/press-check").then((module) => module.PressCheck),
+  "color-picker-check": () => import("./checks/color-picker-check").then((module) => module.ColorPickerCheck),
+  "popover-check": () => import("./checks/popover-check").then((module) => module.PopoverCheck),
+  "task-dialog": () =>
+    import("./sections/task-dialog").then(({ TaskDialogPage }) => {
+      return function TaskDialog() {
+        return <TaskDialogPage params={params} />
+      }
+    }),
+  "side-panel-check": () => import("./checks/side-panel-check").then((module) => module.SidePanelCheck),
+  "table-check": () => import("./checks/table-check").then((module) => module.TableCheck),
+  "description-list-check": () =>
+    import("./checks/description-list-check").then((module) => module.DescriptionListCheck),
+  "gauge-check": () => import("./checks/gauge-check").then((module) => module.GaugeCheck),
+  "image-scan-check": () => import("./checks/image-scan-check").then((module) => module.ImageScanCheck),
+  "model-check": () => import("./checks/model-check").then((module) => module.ModelCheck),
+  "master-detail": () => import("./sections/layout-blocks/master-detail").then((module) => module.MasterDetailDemo),
+  "list-row-actions": () =>
+    import("./sections/layout-blocks/list-row-actions").then((module) => module.ListRowActionsDemo),
+  "master-detail-check": () => import("./checks/master-detail-check").then((module) => module.MasterDetailCheck),
+  "dashboard-grid": () => import("./sections/layout-blocks/dashboard-grid").then((module) => module.DashboardGridDemo),
+  "settings-page": () => import("./sections/layout-blocks/settings-page").then((module) => module.SettingsPageDemo),
+  "settings-page-check": () => import("./checks/settings-page-check").then((module) => module.SettingsPageCheck),
+  "shell-block": () => import("./shell/shell-block-demo").then((module) => module.ShellBlockDemo),
+  "document-workspace": () => import("./sections/document-workspace").then((module) => module.DocumentWorkspacePage),
+  "server-data-check": () => import("./checks/server-data-check").then((module) => module.ServerDataCheck),
+  "agent-workspace": () =>
+    Promise.all([import("./sections/agent-workspace"), import("@/components/ui/toast")]).then(
+      ([{ AgentWorkspace }, { ToastStack }]) => {
+        return function AgentWorkspacePage() {
+          return (
+            <main className="p-inset-surface">
+              <AgentWorkspace />
+              <ToastStack />
+            </main>
+          )
+        }
+      },
+    ),
+  "commit-bench": () =>
+    import("./checks/git-bench").then(({ GitBench }) => {
+      return function CommitBench() {
+        return <GitBench kind="commits" />
+      }
+    }),
+  "git-tree-bench": () =>
+    import("./checks/git-bench").then(({ GitBench }) => {
+      return function GitTreeBench() {
+        return <GitBench kind="files" />
+      }
+    }),
+  "commit-branches": () =>
+    import("./sections/git").then(({ CommitBranchesDemo }) => {
+      return function CommitBranches() {
+        return (
+          <main className="flex min-h-dvh items-start justify-center bg-background p-inset-surface">
+            <CommitBranchesDemo />
+          </main>
+        )
+      }
+    }),
+  "commit-history": () =>
+    import("./sections/git").then(({ CommitTrailDemo }) => {
+      return function CommitHistory() {
+        return (
+          <main className="flex min-h-dvh items-start justify-center bg-background p-inset-surface">
+            <CommitTrailDemo />
+          </main>
+        )
+      }
+    }),
+  perf: loadPerfPage,
+  ...Object.fromEntries(
+    gitWorkspaceDemoNames.map((name) => [
+      name,
+      () =>
+        import("./sections/git-workspace/demos").then(({ GitWorkspaceDemo }) => {
+          return function GitWorkspacePage() {
+            return <GitWorkspaceDemo name={name} />
+          }
+        }),
+    ]),
+  ),
 }
 
-createRoot(root).render(
-  <StrictMode>
-    {demo !== null && standalone.has(demo) ? (
-      <Appearance appearance={appearance}>
-        <Demo />
-      </Appearance>
-    ) : (
-      <App />
-    )}
-  </StrictMode>,
-)
+const loadApp: Page = () => import("./app").then((module) => module.App)
+const load = demo !== null && Object.hasOwn(pages, demo) ? pages[demo] : undefined
+
+void (load ?? loadApp)().then((Loaded) => {
+  createRoot(root).render(
+    <StrictMode>
+      {load ? (
+        <Appearance appearance={appearance}>
+          <Loaded />
+        </Appearance>
+      ) : (
+        <Loaded />
+      )}
+    </StrictMode>,
+  )
+})
