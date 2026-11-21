@@ -1,9 +1,11 @@
-import type { CSSProperties } from "react"
+import { lazy, Suspense, type CSSProperties } from "react"
 
 import DashboardGridExample from "../../../site/src/examples/dashboard-grid"
 import MasterDetailExample from "../../../site/src/examples/master-detail"
 import SettingsPageExample from "../../../site/src/examples/settings-page"
-import EnvironmentsExample from "../../../site/src/guides/row-actions/environments"
+
+// Loads apart so the row-actions demo stays out of the page chunk the vitals measure.
+const EnvironmentsExample = lazy(() => import("../../../site/src/guides/row-actions/environments"))
 
 /** The layout blocks alone: ?demo=master-detail fills the window, for tooling/shell-check.mjs and screenshots. */
 function MasterDetailDemo() {
@@ -20,7 +22,9 @@ function ListRowActionsDemo() {
   return (
     <main className="flex h-dvh flex-col p-inset-surface narrow:p-0">
       <h1 className="sr-only">Environments</h1>
-      <EnvironmentsExample className="min-h-0 flex-1" />
+      <Suspense>
+        <EnvironmentsExample className="min-h-0 flex-1" />
+      </Suspense>
     </main>
   )
 }

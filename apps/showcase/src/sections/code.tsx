@@ -1,9 +1,13 @@
+import { lazy, Suspense } from "react"
+
 import { Code, CodeBlock } from "@/components/ui/code-block"
 import { CodeTabs } from "@/components/ui/code-tabs"
 import { toast } from "@/components/ui/toast"
 
 import { Section } from "../section"
-import { LogViewerSection } from "./log-viewer"
+
+// Loads apart so the log viewer stays out of the page chunk the vitals measure.
+const LogViewerSection = lazy(() => import("./log-viewer").then((module) => ({ default: module.LogViewerSection })))
 
 // Touches every syntax tone, so the contrast check measures each on the code surface and on a highlighted line.
 const sample = `import { Card, type CardProps } from "@/components/ui/card"
@@ -52,7 +56,9 @@ function CodeSection() {
           </p>
         </div>
       </Section>
-      <LogViewerSection />
+      <Suspense>
+        <LogViewerSection />
+      </Suspense>
     </>
   )
 }
