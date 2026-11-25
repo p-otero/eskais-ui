@@ -336,7 +336,6 @@ function useVirtualRows({
     [enabled, rows],
   )
   const pin = useCallback((index: number | undefined) => rows.pin(index), [rows])
-  /** Renders a row now, wherever the list is scrolled, like one an agent is about to activate. */
   const renderNow = useCallback(
     (index: number) => {
       if (!enabled) return

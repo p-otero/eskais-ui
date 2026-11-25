@@ -138,7 +138,7 @@ function ServerDataTable<T, S extends FilterSchema = Record<never, never>>({
 }: ServerDataTableProps<T, S>) {
   const labels = { ...serverDataTableLabels, ...labelOverrides }
   const locale = useLocale(localeProp)
-  // Without `filters` the schema is empty, which TypeScript can't confirm is an `S` for a generic `S`.
+  // Workaround: without `filters` the schema is empty, which TypeScript can't confirm is an `S` for a generic `S`.
   const schema = filters ?? assumeType<S>({})
   const searchKey = searchFieldOf(schema)
   const [url] = useState(() =>

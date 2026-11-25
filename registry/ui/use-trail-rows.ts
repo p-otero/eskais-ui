@@ -59,7 +59,6 @@ function useTrailRows({ count, estimate, getKey, text, findable }: TrailRowsOpti
     [absolute, pinFlow, pinLayered],
   )
   const { renderNow } = flow
-  /** Renders a row wherever the list is scrolled and scrolls to it, like a branch's head about to take focus. */
   const reveal = useCallback(
     (index: number) => {
       if (absolute) {
@@ -77,15 +76,11 @@ function useTrailRows({ count, estimate, getKey, text, findable }: TrailRowsOpti
   )
 
   return {
-    /** Rows render only in view, by either engine. */
     virtual: absolute || flow.enabled,
-    /** The rows' box is `height` px tall and rows sit at their `top`. */
     absolute,
     height: absolute ? layered.size : undefined,
     segments,
-    /** Pass as the `ref` of the element the rows are in, in flow. */
     anchor: flow.anchor,
-    /** Pass as the `ref` of the scroller, for UI SDK's virtualizer. */
     setScroller,
     measure: absolute || flow.enabled ? measure : undefined,
     textSlot: absolute ? layered.findableText : undefined,

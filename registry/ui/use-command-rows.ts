@@ -45,7 +45,7 @@ function rowsOf<Item extends CommandDataItem>(items: CommandData) {
   const rows: CommandRow<Item>[] = []
   let index = 0
   const add = (entry: CommandDataItem | string, group?: string) => {
-    // UI SDK types command data by its base item; the entries are the app's Items, as its `renderItem` and
+    // Workaround: UI SDK types command data by its base item; the entries are the app's Items, as its `renderItem` and
     // `estimateItem` say, and a string entry stands for the item `{ value, label }`.
     const item = assumeType<Item>(typeof entry === "string" ? { value: entry, label: entry } : entry)
     rows.push({ type: "item", key: `item:${item.value}`, item, index, group })

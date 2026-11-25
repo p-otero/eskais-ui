@@ -52,7 +52,6 @@ function holdSource<T, Data = unknown>(client: QueryClient, source: { key: reado
   const open = holds.get(client) ?? new Set<Hold>()
   holds.set(client, open)
   open.add(hold)
-  // A read no hook owns would send its request again at once if restarted, so it is stopped and runs when the hold ends.
   const stopped: Query[] = []
   const cancelled = notifyManager.batch(() => {
     const inFlight = client
@@ -86,7 +85,6 @@ function holdSource<T, Data = unknown>(client: QueryClient, source: { key: reado
       return runPatch(client, key, changes, { ...options, inFlight: "cancel" }, (written) => {
         if (!held) return []
         const resumed = paused.filter((query) => !written.has(query))
-        // With `refetch` the reload right after stands in for these restarts.
         if (options.refetch !== true) {
           for (const query of stopped) if (!written.has(query) && runAgain(client, query)) resumed.push(query)
         }
