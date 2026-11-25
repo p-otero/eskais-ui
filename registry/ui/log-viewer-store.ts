@@ -20,7 +20,7 @@ type LogLine = {
 /** A line to add: its raw text, which may hold ANSI escape codes, or the text with where it came from. */
 type LogInput = string | { text: string; source?: string; level?: LogLine["level"]; time?: number | Date }
 
-// `Array.isArray` doesn't narrow a readonly array out of a union.
+// Workaround: TypeScript's `Array.isArray` doesn't narrow a readonly array out of a union.
 const isInputList = (input: LogInput | readonly LogInput[]): input is readonly LogInput[] => Array.isArray(input)
 
 type LogWriteOptions = { source?: string; level?: LogLine["level"]; time?: number | Date }
@@ -79,8 +79,7 @@ type LogStore = {
 
 type Pending = { text: string; style: AnsiStyle }
 
-// Listeners that took a long time last frame (a slow device, a flood of lines) get frames to themselves in between:
-// nobody reads thousands of lines a second, and the frames left over keep scrolling and typing responsive.
+// Perf: slow listeners skip frames between notifications, so a flood of lines leaves scrolling and typing responsive.
 const BUSY_FRAME_MS = 8
 const MAX_SKIPPED_FRAMES = 3
 
@@ -118,8 +117,8 @@ function createLogStore(options: LogStoreOptions = {}): LogStore {
   const pace = frames()
   const schedule = options.schedule ?? pace.schedule
   const listeners = new Set<() => void>()
-  // The buffer is an array read from `head`: dropping old lines moves `head`, and the array is cut down once
-  // `head` passes `maxLines`, so each line is copied at most once more.
+  // Perf: dropping old lines moves `head`; cutting the array once `head` passes `maxLines` copies each line at
+  // most once more.
   let buffer: LogLine[] = []
   let head = 0
   let nextId = 1
@@ -146,8 +145,8 @@ function createLogStore(options: LogStoreOptions = {}): LogStore {
     }
     const started = performance.now()
     for (const listener of listeners) listener()
-    // React renders what the listeners changed in a microtask queued before this one, so this counts it too.
-    queueMicrotask(() => pace.took(performance.now() - started))
+    const recordTimeIncludingReactRender = () => pace.took(performance.now() - started)
+    queueMicrotask(recordTimeIncludingReactRender)
   }
 
   const request = () => {

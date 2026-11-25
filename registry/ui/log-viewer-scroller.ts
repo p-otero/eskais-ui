@@ -2,8 +2,7 @@ import { createVirtualizer } from "@ui-sdk/core"
 
 import { layersBesideViewport } from "@/components/ui/scroll-area-layers"
 
-// How close to the end, in px, still counts as at the end: a fraction of a row, so a scroll of one line lets go.
-const END_TOLERANCE = 4
+const AT_END_TOLERANCE_PX = 4
 
 type LogScrollerOptions = {
   count: () => number
@@ -26,8 +25,7 @@ function createLogScroller(options: LogScrollerOptions) {
   let scroller: HTMLElement | undefined
   let rows: HTMLElement | undefined
   let written = -1
-  // The scroll position this code last set, so its own scroll event isn't read as the reader scrolling.
-  let ownScroll: number | undefined
+  let scrollTopSetHere: number | undefined
 
   const virtual = createVirtualizer({
     count: options.count,
@@ -47,11 +45,9 @@ function createLogScroller(options: LogScrollerOptions) {
   const setTop = (top: number) => {
     if (!scroller) return
     scroller.scrollTop = top
-    ownScroll = scroller.scrollTop
+    scrollTopSetHere = scroller.scrollTop
   }
 
-  // The box grows first, so the browser doesn't clamp the new position to the old height; the virtualizer then
-  // reads the new position, and the rows at the end render in the same frame.
   const toEnd = () => {
     if (!scroller) return
     writeSize()
@@ -65,15 +61,14 @@ function createLogScroller(options: LogScrollerOptions) {
     virtual,
     rowHeight: () => rowHeight,
     connected: () => scroller !== undefined,
-    /** Reads the shown lines again after they changed, and keeps the end in view while following. */
     refresh(removedAbove = 0, averageRow = rowHeight) {
       virtual.refresh()
       writeSize()
       if (!scroller) return
       if (options.following()) toEnd()
-      // Lines that left the buffer above the view would pull the text up under the reader: scroll by as much.
       else if (removedAbove > 0) {
-        setTop(Math.max(0, scroller.scrollTop - removedAbove * averageRow))
+        const keepTextUnderReader = scroller.scrollTop - removedAbove * averageRow
+        setTop(Math.max(0, keepTextUnderReader))
         virtual.refresh()
       }
     },
@@ -84,11 +79,8 @@ function createLogScroller(options: LogScrollerOptions) {
       if (options.following()) toEnd()
     },
     toEnd,
-    /**
-     * Scrolls from the keyboard: a line for the arrows, a page less a line for PageUp and PageDown, the start for
-     * Home. Instant, and handled here: Chrome's smooth keyboard scroll keeps moving after a later scroll to the end,
-     * which would take the view away again as soon as End or the jump button brought it back.
-     */
+    // Workaround: Chrome's smooth keyboard scroll keeps moving after a later scroll to the end, so keys scroll
+    // instantly here.
     scrollByKey(key: string) {
       if (!scroller) return false
       const page = Math.max(rowHeight, scroller.clientHeight - rowHeight)
@@ -102,16 +94,14 @@ function createLogScroller(options: LogScrollerOptions) {
       const top = key === "Home" ? 0 : scroller.scrollTop + (deltas[key] ?? Number.NaN)
       if (Number.isNaN(top)) return false
       setTop(Math.max(0, Math.min(end, top)))
-      options.setFollowing(end - scroller.scrollTop <= END_TOLERANCE)
+      options.setFollowing(end - scroller.scrollTop <= AT_END_TOLERANCE_PX)
       virtual.refresh()
       return true
     },
-    /** Brings a line into view, centred. */
     reveal(position: number) {
       virtual.scrollToIndex(position, { align: "center" })
-      ownScroll = scroller?.scrollTop
+      scrollTopSetHere = scroller?.scrollTop
     },
-    /** The first and last positions in view; -1 and the count when nothing is. */
     inView() {
       if (!scroller) return { first: -1, last: options.count() }
       const top = scroller.scrollTop
@@ -119,7 +109,6 @@ function createLogScroller(options: LogScrollerOptions) {
       const shown = virtual.items().filter((item) => item.start + item.size > top && item.start < bottom)
       return { first: shown[0]?.index ?? -1, last: shown.at(-1)?.index ?? options.count() }
     },
-    /** The text a person selected inside the log, if any. */
     selectedText() {
       const selection = scroller?.ownerDocument.getSelection()
       if (!scroller || !selection || selection.isCollapsed) return undefined
@@ -128,23 +117,20 @@ function createLogScroller(options: LogScrollerOptions) {
     },
     connect(el: HTMLElement) {
       scroller = el
-      const onScroll = () => {
+      const onScrollBeforeVirtualizer = () => {
         const top = el.scrollTop
-        const own = ownScroll !== undefined && Math.abs(top - ownScroll) < 2
-        ownScroll = undefined
-        if (!own) options.setFollowing(el.scrollHeight - el.clientHeight - top <= END_TOLERANCE)
+        const scrolledHere = scrollTopSetHere !== undefined && Math.abs(top - scrollTopSetHere) < 2
+        scrollTopSetHere = undefined
+        if (!scrolledHere) options.setFollowing(el.scrollHeight - el.clientHeight - top <= AT_END_TOLERANCE_PX)
       }
-      // While following, a viewport that grows or shrinks keeps the end in view.
-      const resize =
+      const followEndOnResize =
         typeof ResizeObserver === "function"
           ? new ResizeObserver(() => {
               if (options.following()) toEnd()
             })
           : undefined
-      resize?.observe(el)
-      // Before the virtualizer's own listener: a scroll away from the end lets go before the rows it brings in
-      // render, so nothing pulls the view back.
-      el.addEventListener("scroll", onScroll, { passive: true })
+      followEndOnResize?.observe(el)
+      el.addEventListener("scroll", onScrollBeforeVirtualizer, { passive: true })
       el.addEventListener("keydown", options.onKeyDown)
       const restore = layersBesideViewport(el)
       const disconnect = virtual.connect(el)
@@ -156,22 +142,20 @@ function createLogScroller(options: LogScrollerOptions) {
         if (options.following()) toEnd()
       })
       return () => {
-        el.removeEventListener("scroll", onScroll)
+        el.removeEventListener("scroll", onScrollBeforeVirtualizer)
         el.removeEventListener("keydown", options.onKeyDown)
-        resize?.disconnect()
+        followEndOnResize?.disconnect()
         stopSize()
         disconnect()
         restore()
         if (scroller === el) scroller = undefined
       }
     },
-    /** Holds the element the rows sit in, sized to all of them. */
     bindRows(el: HTMLElement | null) {
       rows = el ?? undefined
       written = -1
       writeSize()
     },
-    /** Takes the height of one unwrapped line from an element styled like a row, and follows it as it changes. */
     measureRow(el: HTMLElement | null) {
       if (!el || typeof ResizeObserver !== "function") return undefined
       const observer = new ResizeObserver(([entry]) => {
