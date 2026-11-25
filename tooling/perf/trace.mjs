@@ -66,6 +66,7 @@ function mainThread(events) {
   return best
 }
 
+/** `window`: [startUs, endUs] in trace time, or undefined for the whole trace. */
 function summarizeTrace(trace, window) {
   const events = Array.isArray(trace) ? trace : trace.traceEvents
   const main = mainThread(events)

@@ -18,6 +18,7 @@ function withShowcase(run, pageOptions = {}, launchOptions = {}) {
   return withApp("showcase", run, pageOptions, launchOptions)
 }
 
+/** Needs the docs site built with `bun run build:site`. */
 function withSite(run, pageOptions = {}, launchOptions = {}) {
   return withApp("site", run, pageOptions, launchOptions)
 }
@@ -51,6 +52,7 @@ async function withApp(app, run, pageOptions, launchOptions) {
   if (errors.length > 0) throw new Error(`Console errors:\n${errors.join("\n")}`)
 }
 
+/** Waits for the showcase page to mount (it loads its page module first) and for its fonts. */
 async function rendered(page) {
   await page.locator("#root > *").first().waitFor({ state: "attached" })
   await page.evaluate(() => document.fonts.ready)
