@@ -133,8 +133,10 @@ function smokeRender(
   return { problems: located("render", message), warnings: [] }
 }
 
-// Builds and server-renders each state (one undefined entry: the screen without props); the source rules
-// and the type check run once.
+/**
+ * Builds and server-renders each state (one undefined entry: the screen without props); the source rules
+ * and the type check run once.
+ */
 export async function validateMockup(
   project: MockupProject,
   settings: BuildSettings,
@@ -184,7 +186,7 @@ function dedupe(problems: Problem[]): Problem[] {
   })
 }
 
-// --out with several states names one file per state: its {state} is replaced, and it must have one.
+/** --out with several states names one file per state: its {state} is replaced, and it must have one. */
 export function outFor(
   out: string | undefined,
   state: string | undefined,

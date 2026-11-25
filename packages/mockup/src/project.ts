@@ -33,8 +33,10 @@ export type PackageImports = {
   map: unknown
 }
 
-// Where the project's packages resolve from: its own folders first, then the stylesheet's package, the
-// workspace root and every workspace package, then pnpm's and Bun's stores under the workspace roots.
+/**
+ * Where the project's packages resolve from: its own folders first, then the stylesheet's package, the
+ * workspace root and every workspace package, then pnpm's and Bun's stores under the workspace roots.
+ */
 export type Resolution = {
   bases: string[]
   stores: string[]
@@ -140,8 +142,10 @@ function setsJsx(tsconfig: string): boolean {
   return parent !== null && setsJsx(parent)
 }
 
-// A root tsconfig.json that only lists references (Vite's template keeps the app's options in tsconfig.app.json)
-// can't type-check a .tsx file on its own: use the referenced config that sets jsx, as tsc -b would.
+/**
+ * A root tsconfig.json that only lists references (Vite's template keeps the app's options in tsconfig.app.json)
+ * can't type-check a .tsx file on its own: use the referenced config that sets jsx, as tsc -b would.
+ */
 export function checkTsconfig(tsconfig: string): string {
   const parsed = readJsonc(tsconfig)
   const references = isRecord(parsed) && Array.isArray(parsed["references"]) ? parsed["references"] : []
@@ -178,8 +182,10 @@ function directoryOrNull(path: string): string | null {
   return existsSync(path) && statSync(path).isDirectory() ? path : null
 }
 
-// Node's subpath imports (`"imports": { "#components/*": "./src/components/*" }`) in the project's package.json,
-// which TypeScript and Bun read as aliases too.
+/**
+ * Node's subpath imports (`"imports": { "#components/*": "./src/components/*" }`) in the project's package.json,
+ * which TypeScript and Bun read as aliases too.
+ */
 export function readPackageImports(start: string): PackageImports | null {
   const dir = packageRootOf(start)
   if (dir === null) return null
@@ -297,7 +303,7 @@ function packageDirectory(base: string, specifier: string): string | null {
   }
 }
 
-// Some packages don't export their package.json, so the entry's directory is walked up to the first manifest.
+// Workaround: some packages don't export their package.json, so the entry's directory is walked up to the first manifest.
 function packageDirectoryOfEntry(require: NodeRequire, specifier: string): string | null {
   let current: string
   try {
@@ -351,7 +357,7 @@ export type LocatedPackage = {
   from: string
 }
 
-// A package's folder, and a folder that resolves it and its own dependencies, from the first base or store that has it.
+/** A package's folder, and a folder that resolves it and its own dependencies, from the first base or store that has it. */
 export function locatePackage(resolution: Resolution, name: string): LocatedPackage | null {
   for (const base of resolution.bases) {
     const dir = packageDirectory(base, name)
@@ -444,8 +450,6 @@ function projectTsconfig(options: ProjectOptions, root: string, css: string): st
     if (!existsSync(file)) throw new EnvironmentError(`--tsconfig ${file} does not exist`)
     return statSync(file).isDirectory() ? join(file, "tsconfig.json") : file
   }
-  // The project's own tsconfig, not the one of the app whose stylesheet --css names: that one may carry the
-  // app's ambient types (vite/client) and other aliases.
   const tsconfig = findUp(root, "tsconfig.json") ?? findUp(dirname(css), "tsconfig.json")
   if (tsconfig === null) {
     throw new EnvironmentError(

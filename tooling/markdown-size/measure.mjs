@@ -21,7 +21,7 @@ const rows = []
 for (const name of entries) {
   rmSync(out, { recursive: true, force: true })
   // Perf: one build at a time: they share the output folder and each one is memory-heavy.
-  // oxlint-disable-next-line no-await-in-loop
+  // oxlint-disable-next-line no-await-in-loop -- one build at a time, so the sizes don't compete for the CPU
   const result = await build({
     configFile: false,
     logLevel: "silent",

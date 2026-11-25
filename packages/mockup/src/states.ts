@@ -8,7 +8,6 @@ export const ALL_STATES = "all"
 
 const STATE_NAME = /^[A-Za-z0-9][\w-]*$/
 
-// fixtures.ts may export `states`: one entry per named state, each the props the screen gets in it.
 const LISTER = [
   'import * as fixtures from "./fixtures"',
   "const states = (fixtures as Record<string, unknown>).states",
@@ -59,7 +58,7 @@ export function readStates(mockup: string): string[] | null {
   return parsed.names
 }
 
-// The states one run builds: none without --state (the screen with no props), one, or every one with "all".
+/** The states one run builds: none without --state (the screen with no props), one, or every one with "all". */
 export function selectStates(mockup: string, requested: string | undefined): (string | undefined)[] {
   if (requested === undefined) return [undefined]
   const states = readStates(mockup)

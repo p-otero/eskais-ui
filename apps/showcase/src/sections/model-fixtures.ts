@@ -12,8 +12,7 @@ export type { EngineErrorCode } from "../../../../test/fixtures/model/fake-engin
 export { useFakeModelScan } from "../../../../test/fixtures/model/use-fake-model-scan"
 export { useScanReplay } from "../../../../test/fixtures/model/character/use-scan-replay"
 
-// A synthetic person scanned by an open-source photo-to-3D engine (CC0 demo assets, no real person): the character in
-// two styles, the full-length photo the scan used, and its recorded events (use-scan-replay).
+/*! Synthetic person from CC0 demo assets (no real person), scanned by an open-source photo-to-3D engine. */
 const character = { soft: softUrl, cel: celUrl }
 const photo = { src: photoUrl, width: 540, height: 960 }
 const characterFace = { center: [0, 0.84, 0.04] as [number, number, number], radius: 0.16 }
