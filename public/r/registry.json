@@ -5078,6 +5078,10 @@
           "type": "registry:ui"
         },
         {
+          "path": "registry/ui/model-viewer-rig-types.ts",
+          "type": "registry:ui"
+        },
+        {
           "path": "registry/ui/model-viewer-floor.ts",
           "type": "registry:ui"
         },
@@ -5154,6 +5158,10 @@
         },
         {
           "path": "registry/ui/model-scan-cloud.ts",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/model-scan-cloud-types.ts",
           "type": "registry:ui"
         },
         {
