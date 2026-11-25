@@ -254,13 +254,8 @@
 [data-slot="safe-dial-rotor"] {
   inset: 0;
   rotate: var(--safe-dial-turn);
-  transition: rotate var(--safe-dial-ease) var(--ease-standard);
   will-change: rotate;
   pointer-events: none;
-}
-
-[data-slot="safe-dial-dial"][data-dragging] [data-slot="safe-dial-rotor"] {
-  transition: none;
 }
 
 [data-slot="safe-dial-face"] {

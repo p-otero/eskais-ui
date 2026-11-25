@@ -109,7 +109,7 @@
     },
     "safe-dial": {
       "renders": 26,
-      "forcedLayouts": 0.15,
+      "forcedLayouts": 0.05,
       "paintP95": 24
     },
     "vinyl-scrubber": {
@@ -289,7 +289,7 @@
     "resizable": 33.2,
     "retro-tv": 52.4,
     "row-navigation": 13.2,
-    "safe-dial": 37.4,
+    "safe-dial": 37.6,
     "scroll-area": 29.9,
     "search-field": 55.2,
     "section": 12.7,

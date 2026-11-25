@@ -6685,6 +6685,10 @@
         {
           "path": "registry/ui/safe-dial-primitive.ts",
           "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/use-safe-dial-turn.ts",
+          "type": "registry:ui"
         }
       ],
       "css": {
@@ -6807,7 +6811,6 @@
           "border-radius": "50%",
           "inset": "0",
           "rotate": "var(--safe-dial-turn)",
-          "transition": "rotate var(--safe-dial-ease) var(--ease-standard)",
           "will-change": "rotate",
           "pointer-events": "none"
         },
@@ -6831,9 +6834,6 @@
           "border-radius": "50%",
           "background": "repeating-conic-gradient(#3b4045 0 1.2deg, #a7adb3 1.2deg 2.4deg)",
           "box-shadow": "0 0 0 1px rgb(0 0 0 / 0.6)"
-        },
-        "[data-slot=\"safe-dial-dial\"][data-dragging] [data-slot=\"safe-dial-rotor\"]": {
-          "transition": "none"
         },
         "[data-slot=\"safe-dial-face\"]": {
           "width": "100%",

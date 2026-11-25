@@ -20,6 +20,7 @@ import {
 import { Fragment, memo, useRef, useState, type KeyboardEvent, type PointerEvent as ReactPointerEvent } from "react"
 
 import { digitsPer, safeDial } from "@/components/ui/safe-dial-primitive"
+import { useSafeDialTurn } from "@/components/ui/use-safe-dial-turn"
 import { cn, cssVars } from "@/lib/utils"
 
 const { Root: SafeDialRoot } = createParts(safeDial, { root: "div" })
@@ -61,7 +62,6 @@ type SafeDialProps = {
   className?: string | ((state: SafeDialState) => string | undefined)
 }
 
-const dialRotationMs = 160
 const fullTurn = 360
 
 const numberedEvery = (numbers: number) => (numbers > 60 ? 10 : 5)
@@ -144,17 +144,12 @@ function SafeDial({
   const [dialed, setDialed] = useState(0)
   const [dragging, setDragging] = useState(false)
   const rotor = useRef<HTMLDivElement>(null)
-  const turn = useRef(0)
+  const { turnTo, target: turn } = useSafeDialTurn(rotor)
   const drag = useRef<Drag | null>(null)
-
-  const showTurn = (degrees: number) => {
-    turn.current = degrees
-    rotor.current?.style.setProperty("--safe-dial-turn", `${degrees.toFixed(2)}deg`)
-  }
 
   const onDial = (next: number, details: SliderValueChangeDetails) => {
     if (details.canceled) return
-    if (details.reason !== "drag") showTurn(turn.current + (shortest(dialed, next, numbers) * fullTurn) / numbers)
+    if (details.reason !== "drag") turnTo(turn.current + (shortest(dialed, next, numbers) * fullTurn) / numbers, true)
     setDialed(next)
   }
 
@@ -170,17 +165,26 @@ function SafeDial({
     write(current.slice(0, Math.floor((current.length - 1) / digits) * digits))
   }
 
-  const onKeyDownCapture = (event: KeyboardEvent<HTMLElement>) => {
-    if (disabled || event.altKey || event.ctrlKey || event.metaKey) return
-    const native = event.nativeEvent
+  const withoutModifiers = (event: KeyboardEvent<HTMLElement>) =>
+    !disabled && !event.altKey && !event.ctrlKey && !event.metaKey
+
+  const wrapPastTheEnds = (event: KeyboardEvent<HTMLElement>) => {
+    if (!withoutModifiers(event)) return
     const up = event.key === "ArrowUp" || event.key === "ArrowRight"
     const down = event.key === "ArrowDown" || event.key === "ArrowLeft"
     const step = event.shiftKey ? 10 : 1
     if ((up && dialed + step > numbers - 1) || (down && dialed - step < 0)) {
       event.preventDefault()
       event.stopPropagation()
-      slider.setValue(wrapped(dialed + (up ? step : -step), numbers), { reason: "step-key", event: native })
-    } else if (event.key === "Enter") {
+      slider.setValue(wrapped(dialed + (up ? step : -step), numbers), { reason: "step-key", event: event.nativeEvent })
+    }
+  }
+
+  // Perf: React reads the focused range input's selection at the start of its bubble-phase keydown and keyup, so a code
+  // written in the capture phase made that read lay the page out. Written here, it lands after the read, as a slider's does.
+  const enterOrEdit = (event: KeyboardEvent<HTMLElement>) => {
+    if (!withoutModifiers(event)) return
+    if (event.key === "Enter") {
       event.preventDefault()
       enterNumber(dialed)
     } else if (event.key === "Backspace" || event.key === "Delete") {
@@ -211,7 +215,7 @@ function SafeDial({
     const delta = ((((angle - active.from + 180) % fullTurn) + fullTurn) % fullTurn) - 180
     active.from = angle
     active.turn += delta
-    showTurn(active.turn)
+    turnTo(active.turn, false)
     const next = wrapped((active.turn * numbers) / fullTurn, numbers)
     if (next !== slider.getValue()) slider.setValue(next, { reason: "drag", event: event.nativeEvent })
   }
@@ -222,7 +226,7 @@ function SafeDial({
     drag.current = null
     setDragging(false)
     const settledNumber = wrapped((ended.turn * numbers) / fullTurn, numbers)
-    showTurn((Math.round((ended.turn * numbers) / fullTurn) * fullTurn) / numbers)
+    turnTo((Math.round((ended.turn * numbers) / fullTurn) * fullTurn) / numbers, true)
     const turnedANumber = Math.abs(ended.turn - ended.start) >= fullTurn / numbers / 2
     if (turnedANumber && event.type === "pointerup") enterNumber(settledNumber)
   }
@@ -248,6 +252,8 @@ function SafeDial({
       numbers={numbers}
       disabled={disabled}
       aria-label={label}
+      onKeyDownCapture={wrapPastTheEnds}
+      onKeyDown={enterOrEdit}
       className={cn(
         "flex w-full flex-col overflow-hidden rounded-surface border bg-card text-card-foreground shadow-surface",
         typeof className === "function" ? className(state) : className,
@@ -257,7 +263,6 @@ function SafeDial({
         data-slot="safe-dial-stage"
         data-disabled={disabled ? "" : undefined}
         data-complete={complete ? "" : undefined}
-        onKeyDownCapture={onKeyDownCapture}
       >
         <OTPInput
           controller={code}
@@ -306,7 +311,7 @@ function SafeDial({
             ref={rotor}
             data-slot="safe-dial-rotor"
             aria-hidden="true"
-            style={cssVars({ "--safe-dial-turn": "0deg", "--safe-dial-ease": `${String(dialRotationMs)}ms` })}
+            style={cssVars({ "--safe-dial-turn": "0deg" })}
           >
             <DialFace numbers={numbers} />
             <div data-slot="safe-dial-knob" />
