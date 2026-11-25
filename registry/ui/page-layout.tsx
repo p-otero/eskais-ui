@@ -49,7 +49,7 @@ function PageLayout({
 }: PageLayoutProps) {
   const Element = as
   const workspace = variant === "workspace"
-  // tabIndex -1 lets a skip link move focus into <main>, not only scroll to it, so the next Tab starts there.
+  // Spec: tabIndex -1 lets a skip link move focus into <main>, not only scroll to it.
   return (
     <Element
       data-slot="page-layout"
