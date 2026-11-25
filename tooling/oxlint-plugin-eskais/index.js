@@ -1,9 +1,6 @@
-import {
-  iconButtonNeedsLabel,
-  scrollArea,
-} from "../../registry/rules/eskais-oxlint-plugin.js";
-import commentTags from "./comment-tags.js";
-import noInlineIcons from "./no-inline-icons.js";
+import { iconButtonNeedsLabel, scrollArea } from "../../registry/rules/eskais-oxlint-plugin.js"
+import commentTags from "./comment-tags.js"
+import noInlineIcons from "./no-inline-icons.js"
 
 export default {
   meta: { name: "eskais" },
@@ -13,4 +10,4 @@ export default {
     "no-inline-icons": noInlineIcons,
     "scroll-area": scrollArea,
   },
-};
+}

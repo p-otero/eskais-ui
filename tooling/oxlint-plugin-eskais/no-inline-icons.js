@@ -9,14 +9,13 @@ export default {
   create(context) {
     return {
       JSXOpeningElement(node) {
-        if (node.name.type !== "JSXIdentifier" || node.name.name !== "svg")
-          return;
+        if (node.name.type !== "JSXIdentifier" || node.name.name !== "svg") return
         context.report({
           node,
           message:
             'Hand-drawn <svg>. Import the icon from lucide-react (see AGENTS.md "Icons"); for a drawing that is not an icon, disable this rule with the reason.',
-        });
+        })
       },
-    };
+    }
   },
-};
+}
