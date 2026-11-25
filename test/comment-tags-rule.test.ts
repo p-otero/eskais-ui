@@ -171,6 +171,29 @@ export { counter, short, named }`),
   ).toEqual([4, 14])
 })
 
+test("allows JSDoc on the members of an object an exported factory returns", () => {
+  expect(
+    flaggedLines(`function createIndex() {
+  return {
+    /** The shown error after (\`1\`) or before (\`-1\`), or -1. */
+    error: (direction: 1 | -1) => direction,
+  }
+}
+export function createStore() {
+  const api = { /** private */ size: 0 }
+  return {
+    /** Resolves once flushed. */
+    flush: () => Promise.resolve(api.size),
+  }
+}
+const createLater = () => ({ /** Milliseconds. */ delay: 5 })
+function helper() {
+  return { /** private factory */ value: 1 }
+}
+export { createIndex, createLater }`),
+  ).toEqual([8, 16])
+})
+
 test("JSDoc reaches its declaration through a suppression between them", () => {
   expect(
     flaggedLines(`/** Milliseconds, 200 by default. */
@@ -179,13 +202,14 @@ export const delay = 200`),
   ).toEqual([])
 })
 
-test("the repo's config runs it as an error", () => {
+test("the repo's config runs it everywhere but tests and the docs examples", () => {
   const config = JSON.parse(readFileSync(".oxlintrc.json", "utf8")) as {
+    rules: Record<string, unknown>
     overrides: { files: string[]; rules: Record<string, unknown> }[]
   }
-  const covered = config.overrides
-    .filter((override) => override.rules["eskais/comment-tags"] === "error")
+  expect(config.rules["eskais/comment-tags"]).toBe("error")
+  const exempt = config.overrides
+    .filter((override) => override.rules["eskais/comment-tags"] !== undefined)
     .flatMap((override) => override.files)
-  expect(covered.length).toBeGreaterThan(0)
-  expect(covered.some((glob) => glob.startsWith("test/"))).toBe(false)
+  expect(exempt).toEqual(["test/**", "apps/site/src/examples/**"])
 })

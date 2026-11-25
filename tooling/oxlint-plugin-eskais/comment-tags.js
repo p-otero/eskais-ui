@@ -58,16 +58,31 @@ function enclosingFunction(node) {
   return current
 }
 
-function isPrimitiveApiMember(property) {
+function returnedObjectBuilder(property) {
   const object = property.parent
-  if (object?.type !== "ObjectExpression") return false
+  if (object?.type !== "ObjectExpression") return undefined
   const holder = object.parent
-  const returned = holder?.type === "ReturnStatement"
-  const arrowBody = holder?.type === "ArrowFunctionExpression" && holder.body === object
-  const namedApi = holder?.type === "VariableDeclarator" && holder.id?.name === "api"
-  if (!returned && !arrowBody && !namedApi) return false
-  const builder = arrowBody ? holder : enclosingFunction(holder)
+  if (holder?.type === "ArrowFunctionExpression" && holder.body === object) return holder
+  if (holder?.type === "ReturnStatement") return enclosingFunction(holder)
+  if (holder?.type === "VariableDeclarator" && holder.id?.name === "api") return enclosingFunction(holder)
+  return undefined
+}
+
+function isPrimitiveApiBuilder(builder) {
   return builder?.parent?.type === "Property" && keyName(builder.parent) === "api"
+}
+
+function topLevelFunctionName(builder) {
+  if (builder?.type === "FunctionDeclaration" && builder.parent?.type !== "ExportDefaultDeclaration")
+    return builder.parent?.type === "Program" || builder.parent?.type === "ExportNamedDeclaration"
+      ? builder.id?.name
+      : undefined
+  const declarator = builder?.parent
+  if (declarator?.type !== "VariableDeclarator" || declarator.id?.type !== "Identifier") return undefined
+  const declaration = declarator.parent?.parent
+  return declaration?.type === "Program" || declaration?.type === "ExportNamedDeclaration"
+    ? declarator.id.name
+    : undefined
 }
 
 function commentText(comment) {
@@ -139,18 +154,31 @@ export default {
     const documented = new Set()
     const declarations = []
     const exported = new Set()
+    const factoryMembers = []
 
     const visitTypeMember = (node) => documented.add(start(node))
 
     return {
       ...Object.fromEntries([...TYPE_MEMBERS].map((type) => [type, visitTypeMember])),
       Property(node) {
-        if (isPrimitiveApiMember(node)) documented.add(start(node))
+        const builder = returnedObjectBuilder(node)
+        if (!builder) return
+        const heldByApiVariable = node.parent.parent?.type === "VariableDeclarator"
+        if (isPrimitiveApiBuilder(builder)) documented.add(start(node))
+        else if (
+          !heldByApiVariable &&
+          (builder.type !== "ArrowFunctionExpression" || builder.parent?.type === "VariableDeclarator")
+        ) {
+          const name = topLevelFunctionName(builder)
+          if (name) factoryMembers.push({ name, start: start(node) })
+        }
       },
       Program(program) {
         for (const statement of program.body) {
           if (statement.type === "ExportNamedDeclaration" || statement.type === "ExportDefaultDeclaration") {
             documented.add(start(statement))
+            if (statement.type === "ExportNamedDeclaration" && statement.declaration)
+              for (const name of declaredNames(statement.declaration)) exported.add(name)
             if (statement.type === "ExportNamedDeclaration")
               for (const specifier of statement.specifiers ?? [])
                 if (specifier.local?.type === "Identifier") exported.add(specifier.local.name)
@@ -162,6 +190,7 @@ export default {
         }
       },
       "Program:exit"() {
+        for (const member of factoryMembers) if (exported.has(member.name)) documented.add(member.start)
         for (const declaration of declarations)
           if (declaredNames(declaration).some((name) => exported.has(name))) documented.add(start(declaration))
 
@@ -188,7 +217,7 @@ export default {
           if (isLicense(comment)) return "allowed"
           if (isJsdoc(comment)) {
             if (documented.has(nextCodeOffset(text, comments, index))) return "allowed"
-            return "JSDoc belongs on an exported declaration, a type member or a primitive's `api` member, and only for a contract its name and type can't state. Rename or extract instead."
+            return "JSDoc belongs on an exported declaration, a type member, or a member of the object a primitive's `api` or an exported factory returns, and only for a contract its name and type can't state. Rename or extract instead."
           }
           return "Make the code say it (rename, extract a named function, constant or boolean) and delete the comment. Keep one only for what code can't express, starting with Workaround:, Spec:, Perf: or Security:."
         }
