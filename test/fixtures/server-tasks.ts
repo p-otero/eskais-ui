@@ -149,6 +149,7 @@ function serve(request: PageRequest<ServerTaskFilter>, signal: AbortSignal, dela
   })
 }
 
+/** `onWire` gets each request as it would go over the network. */
 function backendSource(
   backend: Backend,
   onWire: (wire: string) => void,

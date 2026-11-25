@@ -284,6 +284,7 @@ const statuses: TaskStatus[] = ["proposed", "todo", "working", "review", "blocke
 const agents = [codex, claude, pi]
 const generatedShot = image("G-shot", "screenshot.png", "A generated screenshot", "#3b6fe0", 3)
 
+/** Deterministic: `count` tasks with up to `maxAttempts` attempts each. */
 function generateTasks(count = 200, maxAttempts = 30): TaskView[] {
   return Array.from({ length: count }, (_, index) => {
     const status = statuses[index % statuses.length] ?? "todo"
