@@ -143,6 +143,5 @@ for (const name of ["led-matrix", "neon-sign", "chalkboard", "teletext"])
   item(name).css = oneSelectorPerRule(tree(read(`${name}.css`)))
 item("retro-tv").css = oneSelectorPerRule(tree(read("retro-tv.css")))
 item("pill-dialog").css = oneSelectorPerRule(tree(read("pill-dialog.css")))
-item("ejector-button").css = oneSelectorPerRule(tree(read("ejector-button.css")))
 
 writeFileSync(registryPath, `${JSON.stringify(registry, null, 2)}\n`)

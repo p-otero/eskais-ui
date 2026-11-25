@@ -359,19 +359,7 @@ const itemNotes: Record<string, ItemNotes> = {
     ],
     agent:
       "Agents press the pills by their text. The red pill carries data-agent-confirm, so its press waits for your allow callback.",
-    related: ["confirm-dialog", "confirm-button", "ejector-button"],
-  },
-  "ejector-button": {
-    usage:
-      "For one destructive action that should take two deliberate gestures, like deleting an environment: open the cover, then press the button. For a plain two-step button use ConfirmButton; for a decision that needs explaining, ConfirmDialog.",
-    a11y: [
-      "The cover is a toggle named Safety cover (labels.cover), pressed while open; the red button is named by label and leaves the tab order while covered.",
-      "Escape closes the cover, as does the timeout, counted only while nothing runs; focus on the button returns to the cover.",
-      "The red button keeps a hit area over 44px, and under reduced motion the cover fades instead of swinging open.",
-    ],
-    agent:
-      "Agents call arm and disarm on the group and eject on the button. eject waits for your allow callback, and fails with why while the cover is closed.",
-    related: ["confirm-button", "confirm-dialog", "pill-dialog"],
+    related: ["confirm-dialog", "confirm-button"],
   },
   "image-cropper": {
     usage:

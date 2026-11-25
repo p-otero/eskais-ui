@@ -1,8 +1,6 @@
-import { EjectorButton } from "@/components/ui/ejector-button"
 import { PillDialog } from "@/components/ui/pill-dialog"
 import { RetroTv } from "@/components/ui/retro-tv"
 
-import "../../../../registry/styles/ejector-button.css"
 import "../../../../registry/styles/pill-dialog.css"
 import "../../../../registry/styles/retro-tv.css"
 
@@ -32,12 +30,4 @@ function PillDialogScenario() {
   )
 }
 
-function EjectorButtonScenario() {
-  return (
-    <div className="w-full max-w-sm">
-      <EjectorButton label="Delete staging" agentConfirm="Deletes staging" armTimeoutMs={0} onEject={() => {}} />
-    </div>
-  )
-}
-
-export { EjectorButtonScenario, PillDialogScenario, RetroTvScenario }
+export { PillDialogScenario, RetroTvScenario }

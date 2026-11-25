@@ -74,8 +74,6 @@ const scenarios: Record<string, () => Promise<Render>> = {
     retro().then(({ RetroTvScenario }) => () => <RetroTvScenario />),
   "pill-dialog": () =>
     retro().then(({ PillDialogScenario }) => () => <PillDialogScenario />),
-  "ejector-button": () =>
-    retro().then(({ EjectorButtonScenario }) => () => <EjectorButtonScenario />),
   "server-list": () =>
     server().then(({ ServerListScenario }) => () => <ServerListScenario />),
 }
