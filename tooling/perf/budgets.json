@@ -91,6 +91,26 @@
       "renders": 8,
       "forcedLayouts": 0.05,
       "paintP95": 24
+    },
+    "sun-arc": {
+      "renders": 14,
+      "forcedLayouts": 0.05,
+      "paintP95": 24
+    },
+    "mixer": {
+      "renders": 38,
+      "forcedLayouts": 0.05,
+      "paintP95": 24
+    },
+    "safe-dial": {
+      "renders": 26,
+      "forcedLayouts": 0.15,
+      "paintP95": 24
+    },
+    "vinyl-scrubber": {
+      "renders": 23,
+      "forcedLayouts": 0.05,
+      "paintP95": 24
     }
   },
   "layers": {
@@ -215,6 +235,7 @@
     "master-detail": 80.3,
     "menubar": 61.4,
     "meter": 22.7,
+    "mixer": 62.6,
     "mobile-nav": 55.7,
     "model-scan": 90.4,
     "model-viewer": 77.7,
@@ -239,6 +260,7 @@
     "repository-select": 69.8,
     "resizable": 33.2,
     "row-navigation": 13.2,
+    "safe-dial": 37.4,
     "scroll-area": 29.9,
     "search-field": 55.2,
     "section": 12.7,
@@ -270,6 +292,7 @@
     "status-pill": 12.4,
     "step-dialog": 106.3,
     "steps": 11.3,
+    "sun-arc": 67.6,
     "switch": 25.1,
     "table": 29.8,
     "tabs": 64.4,
@@ -292,6 +315,7 @@
     "url-state": 0.9,
     "usage": 32.4,
     "utils": 10.5,
+    "vinyl-scrubber": 62.9,
     "virtual-rows": 4.8,
     "voice-input": 63.9
   },

@@ -10,6 +10,7 @@ const blocks = () => import("./perf-blocks")
 const overlays = () => import("./perf-overlays")
 const server = () => import("./perf-server")
 const prism = () => import("./perf-prism")
+const instruments = () => import("./perf-instruments")
 
 const scenarios: Record<string, () => Promise<Render>> = {
   "list-1k": () =>
@@ -52,6 +53,14 @@ const scenarios: Record<string, () => Promise<Render>> = {
     server().then(({ ServerDataTableScenario }) => () => <ServerDataTableScenario />),
   "prism-picker": () =>
     prism().then(({ PrismPickerScenario }) => () => <PrismPickerScenario />),
+  "sun-arc": () =>
+    instruments().then(({ SunArcScenario }) => () => <SunArcScenario />),
+  mixer: () =>
+    instruments().then(({ MixerScenario }) => () => <MixerScenario />),
+  "safe-dial": () =>
+    instruments().then(({ SafeDialScenario }) => () => <SafeDialScenario />),
+  "vinyl-scrubber": () =>
+    instruments().then(({ VinylScrubberScenario }) => () => <VinylScrubberScenario />),
   "server-list": () =>
     server().then(({ ServerListScenario }) => () => <ServerListScenario />),
 }
