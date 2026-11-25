@@ -114,6 +114,7 @@ const MemoListRow = memo(function ListRow<Item>({ item, index, setsize, measure,
   )
   return <PositionContext value={position}>{renderItem(item, index)}</PositionContext>
 })
+// Workaround: `memo` drops the row's type parameter; this gives it back.
 const ListRow = assumeType<<Item>(props: ListRowProps<Item>) => ReactNode>(MemoListRow)
 
 function List<Item = unknown>({
@@ -152,6 +153,7 @@ function List<Item = unknown>({
     [items, variant, children],
   )
   const data: readonly unknown[] | undefined = items ?? childRows
+  // Workaround: TypeScript can't relate `items` to the functions that read them, so they are typed by what `data` holds.
   const itemFunctions = assumeType<ItemFunctions>({
     getId: getItemId,
     itemText: itemTextProp,

@@ -195,6 +195,7 @@ function FormDialog<Schema extends StandardSchemaV1>({
     ).finally(stop)
     if (prepared && prepared.error !== undefined) throw prepared.error
     if (prepared?.values !== undefined) {
+      // Workaround: react-hook-form types setValue by the form's paths, which TypeScript can't relate to the schema output's keys.
       const setValueByFieldName = assumeType<(name: string, value: unknown, options: { shouldDirty: boolean }) => void>(
         instance.setValue,
       )
@@ -206,6 +207,7 @@ function FormDialog<Schema extends StandardSchemaV1>({
     if (!wrote) return values
     const result = await form.schema["~standard"].validate(instance.getValues())
     if (result.issues) throw { issues: result.issues }
+    // Workaround: a generic Schema's validate is typed by its constraint, StandardSchemaV1<unknown>, not by its output.
     return assumeType<Output>(result.value)
   }
 

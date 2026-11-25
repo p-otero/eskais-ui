@@ -38,6 +38,7 @@ const cellClassName = "outline-none focus-visible:outline-2 focus-visible:-outli
 
 type GenericDataTableRow = <Row>(props: DataTableRowProps<Row>) => ReactNode
 
+// Workaround: `memo` drops the row's type parameter; this gives it back.
 const DataTableRow = assumeType<GenericDataTableRow>(
   memo(function DataTableRow<Row>(props: DataTableRowProps<Row>) {
     const cells = useCellNavigationActive()

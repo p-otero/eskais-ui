@@ -390,6 +390,7 @@ const MemoCommandRow = memo(function CommandRow<Item extends CommandDataItem>(pr
     </CommandItem>
   )
 })
+// Workaround: `memo` drops the row's type parameters; this gives them back.
 const CommandRow = assumeType<<Item extends CommandDataItem>(props: CommandRowProps<Item>) => ReactNode>(MemoCommandRow)
 
 function CommandItemIcon({ className, ...props }: ComponentProps<typeof CommandItemIconPrimitive>) {
