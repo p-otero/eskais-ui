@@ -52,7 +52,11 @@ type Drag = { pointer: number; kind: "sun" | "mark" }
  * default), the arc across it, and dragging the sun along that arc or marking where the sun stands.
  */
 function useSunArcPhoto({ photo, onPhotoChange, place, minutes, timeZone, slider, disabled }: PhotoOptions) {
-  const sky = useSkyPhoto(photo?.src, photo?.skyMask)
+  const sky = useSkyPhoto(photo?.src, {
+    skyMask: photo?.skyMask,
+    clouds: photo?.keepClouds ?? false,
+    windows: photo?.windowGlow ?? true,
+  })
   const analysis = sky?.status === "ready" ? sky.analysis : undefined
   const [own, setOwn] = useState<{ src: string; view: Partial<SunArcPhotoView> } | null>(null)
   const [marking, setMarking] = useState(false)

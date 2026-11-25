@@ -7,31 +7,35 @@ type SkyPhotoState =
   | { status: "ready"; analysis: SkyPhotoAnalysis }
   | { status: "failed"; error: string }
 
-type Settled = { src: string; skyMask: string | undefined } & (
-  | { status: "ready"; analysis: SkyPhotoAnalysis }
-  | { status: "failed"; error: string }
-)
+/** What to read from the photo besides its sky. */
+type SkyPhotoFeatures = { skyMask?: string | undefined; clouds?: boolean | undefined; windows?: boolean | undefined }
+
+type Settled = { key: string } & ({ status: "ready"; analysis: SkyPhotoAnalysis } | { status: "failed"; error: string })
 
 /**
- * Reads a photo and finds its sky, again whenever `src` or `skyMask` changes; frees the last one's mask URL when it is
- * replaced or the component unmounts. Undefined without a photo.
+ * Reads a photo and finds its sky (and its clouds or windows, when asked), again whenever any of them changes; frees the
+ * last one's URLs when it is replaced or the component unmounts. Undefined without a photo.
  */
-function useSkyPhoto(src: string | undefined, skyMask: string | undefined): SkyPhotoState | undefined {
+function useSkyPhoto(
+  src: string | undefined,
+  { skyMask, clouds = false, windows = false }: SkyPhotoFeatures = {},
+): SkyPhotoState | undefined {
   const [settled, setSettled] = useState<Settled | null>(null)
+  const key = JSON.stringify([src, skyMask, clouds, windows])
 
   useEffect(() => {
     if (!src) return
     const controller = new AbortController()
     let analysis: SkyPhotoAnalysis | undefined
-    analyzeSkyPhoto(src, { skyMask, signal: controller.signal }).then(
+    analyzeSkyPhoto(src, { skyMask, clouds, windows, signal: controller.signal }).then(
       (result) => {
         analysis = result
         if (controller.signal.aborted) result.dispose()
-        else setSettled({ src, skyMask, status: "ready", analysis: result })
+        else setSettled({ key, status: "ready", analysis: result })
       },
       (error: unknown) => {
         if (!controller.signal.aborted) {
-          setSettled({ src, skyMask, status: "failed", error: error instanceof Error ? error.message : String(error) })
+          setSettled({ key, status: "failed", error: error instanceof Error ? error.message : String(error) })
         }
       },
     )
@@ -39,10 +43,10 @@ function useSkyPhoto(src: string | undefined, skyMask: string | undefined): SkyP
       controller.abort()
       analysis?.dispose()
     }
-  }, [src, skyMask])
+  }, [key, src, skyMask, clouds, windows])
 
   if (!src) return undefined
-  if (settled?.src !== src || settled.skyMask !== skyMask) return { status: "reading" }
+  if (settled?.key !== key) return { status: "reading" }
   return settled.status === "ready"
     ? { status: "ready", analysis: settled.analysis }
     : { status: "failed", error: settled.error }
@@ -65,4 +69,4 @@ function useObjectUrlOwner() {
 }
 
 export { useObjectUrlOwner, useSkyPhoto }
-export type { SkyPhotoState }
+export type { SkyPhotoFeatures, SkyPhotoState }

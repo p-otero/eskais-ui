@@ -20,6 +20,11 @@ type SunArcPhoto = {
   horizon?: number
   /** An image to use as the sky instead of finding it: white is sky, black is the foreground. */
   skyMask?: string
+  /** Keeps the photo's own clouds over the rendered sky, lit by the sun: white by day, golden low, dark at night. Off by
+   * default. */
+  keepClouds?: boolean
+  /** Lights a seeded share of the windows found on the buildings at dusk and at night. On by default. */
+  windowGlow?: boolean
   /** When the photo was taken, `"2025-04-14T06:43:28"` local or with an offset; from the EXIF without it. Marking the
    * sun uses the sun's position at this time. */
   capturedAt?: string
@@ -50,11 +55,22 @@ type StageProps = {
   path: { day: string; night: string }
 }
 
+const maskOf = (url: string) => cssVars({ "--sun-arc-layer-mask": `url("${url}")` })
+
 function SunArcPhotoLayers({ src, sky, path }: StageProps) {
-  const foreground = sky?.status === "ready" ? sky.analysis.foregroundUrl : undefined
-  const size = sky?.status === "ready" ? sky.analysis : { width: 4, height: 3 }
+  const analysis = sky?.status === "ready" ? sky.analysis : undefined
+  const foreground = analysis?.foregroundUrl
+  const size = analysis ?? { width: 4, height: 3 }
   return (
     <>
+      {analysis?.clouds ? (
+        <div data-slot="sun-arc-clouds" aria-hidden="true">
+          <div data-cloud="shade" style={maskOf(analysis.clouds.shadeUrl)} />
+          <div data-cloud="day" style={maskOf(analysis.clouds.lightUrl)} />
+          <div data-cloud="golden" style={maskOf(analysis.clouds.lightUrl)} />
+          <div data-cloud="moon" style={maskOf(analysis.clouds.lightUrl)} />
+        </div>
+      ) : null}
       {/* oxlint-disable-next-line eskais/no-inline-icons -- the sun's path across the photo, not an icon */}
       <svg data-slot="sun-arc-path" aria-hidden="true" viewBox="0 0 1000 1000" preserveAspectRatio="none">
         <path data-part="night" d={path.night} vectorEffect="non-scaling-stroke" />
@@ -69,6 +85,7 @@ function SunArcPhotoLayers({ src, sky, path }: StageProps) {
         <img src={src} alt="" draggable={false} width={size.width} height={size.height} />
         <div data-light="warm" />
         <div data-light="shade" />
+        {analysis?.windowsUrl ? <div data-light="windows" style={maskOf(analysis.windowsUrl)} /> : null}
       </div>
     </>
   )

@@ -4,7 +4,7 @@ import { fovFromFocalLength35mm } from "@/lib/sky-photo-projection"
 const src = "/sky/cebu-skyline.jpg"
 
 export default function SkyPhotoDemo() {
-  const sky = useSkyPhoto(src, undefined)
+  const sky = useSkyPhoto(src)
   const analysis = sky?.status === "ready" ? sky.analysis : undefined
   const fov = analysis?.exif.focalLength35mm
     ? fovFromFocalLength35mm(analysis.exif.focalLength35mm, analysis.aspect)
