@@ -20,10 +20,10 @@ const loadingStateVariants = cva("flex min-w-0 flex-col", {
 })
 
 type LoadingStateProps = Omit<ComponentProps<"div">, "children"> & {
-  /** What is loading, for screen readers, in the page's language. It isn't shown. */
+  /** Read by screen readers, never shown. */
   label: string
   variant?: "spinner" | "skeleton"
-  /** How many placeholder lines the skeleton shows. */
+  /** Placeholder lines, with `variant="skeleton"`. */
   rows?: number
   size?: EmptySize
 }

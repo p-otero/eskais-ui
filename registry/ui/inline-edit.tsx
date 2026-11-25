@@ -16,9 +16,9 @@ const {
 } = createParts(inlineEdit, { root: "div", display: "button", trigger: "button", input: "input" })
 
 type InlineEditLabels = {
-  /** Names the edit button, and its tooltip, from the field's label. */
+  /** Names the edit button and its tooltip. */
   edit: (label: string) => string
-  /** Tells screen readers how to start editing. */
+  /** Read by screen readers: how to start editing. */
   hint: string
 }
 
@@ -28,14 +28,14 @@ const inlineEditLabels: InlineEditLabels = {
 }
 
 type InlineEditProps = Omit<ComponentProps<typeof InlineEditRoot>, "children"> & {
-  /** Names the group and the field while editing, like "Project name". */
+  /** Names the group, and the field while editing. */
   label: string
-  /** Shows an edit button (a pencil with a tooltip) beside the text; `false` for none, as in a dense list. */
+  /** A pencil button beside the text. @defaultValue true */
   editButton?: boolean
   /** What the text shows, when it isn't the value itself. */
   children?: ReactNode
   labels?: Partial<InlineEditLabels>
-  /** The text's size, shared by the field so nothing moves when editing starts: `body`, or a title's. */
+  /** Shared by the field, so nothing moves when editing starts. */
   size?: InlineEditSize
 }
 
@@ -50,11 +50,6 @@ const sizeClassNames = {
 const textBoxClassName =
   "min-w-0 rounded-control px-inline py-px text-start outline-none focus-visible:ring-2 focus-visible:ring-ring"
 
-/**
- * Renames in place: a press (or a double click with `startOn="double-click"`), Enter, F2 or typing turns the text
- * into a field. Enter and Tab save, Escape puts the text back, and leaving the field saves too, or cancels with
- * `blur="cancel"`. `validate` returning `false` keeps editing. Agents call `rename(text)` and `cancel`.
- */
 function InlineEdit({
   label,
   editButton = true,
