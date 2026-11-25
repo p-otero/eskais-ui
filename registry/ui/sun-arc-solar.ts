@@ -54,8 +54,9 @@ function refraction(altitude: number) {
   return 1.02 / Math.tan((altitude + 10.3 / (altitude + 5.11)) * radians) / 60
 }
 
-/** The sun's apparent altitude in degrees at a local minute of the day: negative below the horizon. */
-function sunAltitude(place: SolarPlace, minutes: number) {
+/** The sun's apparent position at a local minute of the day: altitude in degrees, negative below the horizon, and
+ * azimuth in degrees clockwise from true north. */
+function sunPosition(place: SolarPlace, minutes: number) {
   const utc = minutes - place.utcOffset
   const { equationOfTime, declination } = solarTerms(place, utc)
   const trueSolarTime = utc + equationOfTime + 4 * place.longitude
@@ -64,8 +65,19 @@ function sunAltitude(place: SolarPlace, minutes: number) {
   const cosZenith =
     Math.sin(latitude) * Math.sin(declination) + Math.cos(latitude) * Math.cos(declination) * Math.cos(hourAngle)
   const altitude = 90 - Math.acos(Math.max(-1, Math.min(1, cosZenith))) * degrees
-  return altitude + refraction(altitude)
+  const azimuth =
+    (Math.atan2(
+      Math.sin(hourAngle),
+      Math.cos(hourAngle) * Math.sin(latitude) - Math.tan(declination) * Math.cos(latitude),
+    ) *
+      degrees +
+      540) %
+    360
+  return { altitude: altitude + refraction(altitude), azimuth }
 }
+
+/** The sun's apparent altitude in degrees at a local minute of the day: negative below the horizon. */
+const sunAltitude = (place: SolarPlace, minutes: number) => sunPosition(place, minutes).altitude
 
 const local = (place: SolarPlace, utcMinutes: number) =>
   (((utcMinutes + place.utcOffset) % minutesPerDay) + minutesPerDay) % minutesPerDay
@@ -184,5 +196,5 @@ function skyAt(altitude: number): Sky {
   }
 }
 
-export { calendarIn, minutesPerDay, skyAt, solarDay, sunAltitude }
+export { calendarIn, minutesPerDay, skyAt, solarDay, sunAltitude, sunPosition }
 export type { Sky, SolarDay, SolarPlace }

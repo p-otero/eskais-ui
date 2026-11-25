@@ -6,10 +6,15 @@ import { settled, unavailable } from "@/lib/action-refusal"
 
 type SunArcSlider = Pick<ReturnType<typeof createSliderController<number>>, "getValue" | "setValue">
 
+/** Points the photo's view: returns `false` when the app cancelled it. */
+type SunArcCalibrate = (view: { heading: number; fov?: number; horizon?: number }, event: Event | undefined) => boolean
+
 type SunArcOptions = {
   slider?: SunArcSlider
   disabled?: boolean
   day?: SolarDay
+  /** Present while the arc shows a photo. */
+  calibrate?: SunArcCalibrate | undefined
 }
 
 type Call = { action: string; event: Event | undefined }
@@ -61,7 +66,7 @@ function toEvent(options: SunArcOptions, which: "sunrise" | "sunset", call: Call
 /** A time-of-day picker's agent surface: the arc is UI SDK's slider in minutes since local midnight. */
 const sunArc = definePrimitive({
   name: "sun-arc",
-  options: { slider: "value", disabled: "value", day: "value" },
+  options: { slider: "value", disabled: "value", day: "value", calibrate: "value" },
   // Workaround: not `disabled`: the bridge would hide every action from a disabled part without saying why.
   state: (options: SunArcOptions) => ({ inert: Boolean(options.disabled) }),
   sync: (options) => ({ inert: Boolean(options.disabled) }),
@@ -98,6 +103,30 @@ const sunArc = definePrimitive({
       if (!options.day) return unavailable("solarNoon", "isn't available: the day isn't known", { event })
       return toMinutes(slider, Math.round(options.day.noon), call)
     },
+    /**
+     * Points the photo's view: `heading` in degrees from north (0 to 360), and optionally the horizontal field of view
+     * (20 to 130°) and the horizon (0 to 1 down the photo). Only with a photo.
+     */
+    calibrate(heading: number, fov?: number, horizon?: number, event?: Event) {
+      const options = context.options()
+      if (options.disabled) return unavailable("calibrate", "isn't available while the picker is disabled", { event })
+      if (!options.calibrate) return unavailable("calibrate", "isn't available without a photo", { event })
+      if (!Number.isFinite(heading) || heading < 0 || heading > 360) {
+        return unavailable("calibrate", `takes a heading from 0 to 360°, not ${String(heading)}`, { event })
+      }
+      if (fov !== undefined && (!Number.isFinite(fov) || fov < 20 || fov > 130)) {
+        return unavailable("calibrate", `takes a field of view from 20 to 130°, not ${String(fov)}`, { event })
+      }
+      if (horizon !== undefined && (!Number.isFinite(horizon) || horizon < 0 || horizon > 1)) {
+        return unavailable("calibrate", `takes a horizon from 0 to 1 down the photo, not ${String(horizon)}`, { event })
+      }
+      const view = {
+        heading: heading % 360,
+        ...(fov === undefined ? {} : { fov }),
+        ...(horizon === undefined ? {} : { horizon }),
+      }
+      return settled(options.calibrate(view, event), "calibrate", { event })
+    },
   }),
   slots: (slot) => ({
     root: slot({
@@ -105,8 +134,8 @@ const sunArc = definePrimitive({
       attrs: (state) => ({ "data-disabled": state.inert ? "" : undefined }),
     }),
   }),
-  agent: { actions: ["setTime", "sunrise", "sunset", "solarNoon"] },
+  agent: { actions: ["setTime", "sunrise", "sunset", "solarNoon", "calibrate"] },
 })
 
 export { minutesOf, sunArc }
-export type { SunArcOptions, SunArcSlider }
+export type { SunArcCalibrate, SunArcOptions, SunArcSlider }

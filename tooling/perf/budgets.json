@@ -97,6 +97,11 @@
       "forcedLayouts": 0.05,
       "paintP95": 24
     },
+    "sun-arc-photo": {
+      "renders": 19,
+      "forcedLayouts": 0.05,
+      "paintP95": 24
+    },
     "mixer": {
       "renders": 38,
       "forcedLayouts": 0.05,
@@ -283,6 +288,7 @@
     "site-header": 89,
     "skeleton": 11.3,
     "skip-link": 11.2,
+    "sky-photo": 5,
     "slider": 31.7,
     "sortable": 35.6,
     "spinner": 11.4,
@@ -292,7 +298,7 @@
     "status-pill": 12.4,
     "step-dialog": 106.3,
     "steps": 11.3,
-    "sun-arc": 67.6,
+    "sun-arc": 85.2,
     "switch": 25.1,
     "table": 29.8,
     "tabs": 64.4,

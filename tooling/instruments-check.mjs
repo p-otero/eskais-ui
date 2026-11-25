@@ -119,6 +119,58 @@ async function sunArc(page, client) {
   console.log("sun-arc: ok")
 }
 
+async function sunArcPhoto(page, client) {
+  await open(page, "sun-arc&mode=photo")
+  await page.locator('[data-slot="sun-arc-photo"][data-masked]').waitFor({ timeout: 15_000 })
+  const sun = page.getByRole("slider", { name: "Time" })
+  const stageOf = () => page.locator('[data-slot="sun-arc-stage"]')
+  expect(
+    await page.getByRole("slider", { name: "Heading" }).isVisible(),
+    "A photo without a heading should open the calibration",
+  )
+  const calibrated = await act(page, "Meeting time", "calibrate", [82, 67])
+  expect(calibrated.ok, `An agent's calibrate should point the photo: ${calibrated.error?.message ?? ""}`)
+  await act(page, "Meeting time", "setTime", ["06:20"])
+  await page.waitForTimeout(600)
+  expect((await stageOf().getAttribute("data-sun-out")) === null, "At 6:20 facing east the sun should be in the photo")
+  await act(page, "Meeting time", "setTime", ["12:00"])
+  await page.waitForTimeout(600)
+  console.log(`sun-arc photo: at noon the sun is out by the ${String(await stageOf().getAttribute("data-sun-out"))}`)
+  expect((await stageOf().getAttribute("data-sun-out")) !== null, "At noon the sun is overhead, out of the photo")
+
+  await act(page, "Meeting time", "setTime", ["06:20"])
+  await page.waitForTimeout(600)
+  const thumb = await page.locator('[data-slot="sun-arc-stage"] [data-slot="slider-thumb"]').boundingBox()
+  const from = [thumb.x + thumb.width / 2, thumb.y + thumb.height / 2]
+  const before = Number(await sun.inputValue())
+  await latency(page)
+  await drag(page, from, [from[0] + 10, from[1] - 120], 30)
+  const moves = await latency(page)
+  const after = Number(await sun.inputValue())
+  console.log(
+    `sun-arc photo drag up the arc: ${String(before)} to ${String(after)} min; move to frame ${summary(moves)}`,
+  )
+  expect(after > before, "Dragging the sun up its morning arc should move later")
+  expect(percentile(moves, 95) <= moveToFrameP95Ms, "A photo sun drag takes over 16 ms to a frame")
+
+  await sun.focus()
+  for (let press = 0; press < 6; press++) await page.keyboard.press("PageUp")
+  await page.waitForTimeout(400)
+  await clearPaints(page)
+  const idle = await styleWorkWhileIdle(page, client)
+  console.log(
+    `sun-arc photo: idle for 2 s, ${String(await paints(page))} paints, ${String(idle)} style recalcs and layouts`,
+  )
+  expect((await paints(page)) === 0 && idle === 0, "The photo sun arc works while idle")
+
+  await page.emulateMedia({ reducedMotion: "reduce" })
+  await clearPaints(page)
+  await page.getByRole("button", { name: /Sunset/ }).click()
+  await page.waitForTimeout(500)
+  expect((await paints(page)) === 1, `Reduced motion should jump in one paint, not ${String(await paints(page))}`)
+  console.log("sun-arc photo: ok")
+}
+
 async function mixer(page, client) {
   await open(page, "mixer")
   const faders = ["Sales", "Support", "Product", "Brand"]
@@ -244,6 +296,7 @@ await withShowcase(async (page) => {
   const client = await page.context().newCDPSession(page)
   await client.send("Performance.enable")
   await sunArc(page, client)
+  await sunArcPhoto(page, client)
   await mixer(page, client)
   await safeDial(page, client)
   await vinyl(page)

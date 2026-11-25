@@ -12,16 +12,26 @@ import {
 import { memo, useMemo, useRef, useState } from "react"
 
 import { Button } from "@/components/ui/button"
+import { Toggle } from "@/components/ui/toggle"
+import {
+  SunArcCalibration,
+  SunArcPhotoLayers,
+  sunArcPhotoLabels,
+  type SunArcPhoto,
+  type SunArcPhotoLabels,
+  type SunArcPhotoView,
+} from "@/components/ui/sun-arc-photo"
 import { sunArc } from "@/components/ui/sun-arc-primitive"
-import { domeScale, sceneVars, skyline, stars, sunPath, timeToX } from "@/components/ui/sun-arc-scene"
+import { domeLocator, domeScale, sceneAt, skyline, stars, sunPath, timeToX } from "@/components/ui/sun-arc-scene"
 import { calendarIn, minutesPerDay, solarDay, sunAltitude, type SolarDay } from "@/components/ui/sun-arc-solar"
+import { useSunArcPhoto } from "@/components/ui/use-sun-arc-photo"
 import { useSunArcScene } from "@/components/ui/use-sun-arc-scene"
 import { useLocale } from "@/lib/locale"
 import { cn, cssVars } from "@/lib/utils"
 
 const { Root: SunArcRoot } = createParts(sunArc, { root: "div" })
 
-type SunArcLabels = {
+type SunArcLabels = SunArcPhotoLabels & {
   /** Names the arc, a slider in minutes, for screen readers and agents. */
   time: string
   /** The readout's term for the sun's height above the horizon. */
@@ -37,6 +47,7 @@ const sunArcLabels: SunArcLabels = {
   sunrise: "Sunrise",
   solarNoon: "Solar noon",
   sunset: "Sunset",
+  ...sunArcPhotoLabels,
 }
 
 type SunArcState = { disabled: boolean; day: SolarDay }
@@ -72,6 +83,13 @@ type SunArcProps = {
   className?: string | ((state: SunArcState) => string | undefined)
   /** Called with each sky paint's duration in ms, for measuring. */
   onPaint?: (milliseconds: number) => void
+  /**
+   * A photo of the place to draw the sky into instead of the drawn city: its own sky is replaced by the one for the
+   * chosen time, the sun stands at its true azimuth and altitude through the photo's lens, and the foreground is relit.
+   */
+  photo?: SunArcPhoto
+  /** Runs with the photo and its resolved view each time it is calibrated, for the app to keep; nothing is stored here. */
+  onPhotoChange?: (photo: SunArcPhoto & SunArcPhotoView) => void
 }
 
 const snap = (minutes: number, step: number) =>
@@ -127,6 +145,7 @@ function useTimeFormat(locale: string | undefined) {
       time: (minutes: number) => clock.format(at(minutes)),
       hour: (hours: number) => hour.format(at((hours % 24) * 60)),
       altitude: (degrees: number) => `${angle.format(Math.round(degrees) || 0)}°`,
+      number: (value: number) => angle.format(value),
     }
   }, [locale])
 }
@@ -153,6 +172,8 @@ function SunArc({
   labels: labelOverrides,
   className,
   onPaint,
+  photo,
+  onPhotoChange,
 }: SunArcProps) {
   const labels = { ...sunArcLabels, ...labelOverrides }
   const [today] = useState(() => new Date())
@@ -166,15 +187,23 @@ function SunArc({
   const solar = useMemo(() => solarDay(place), [place])
   const scale = useMemo(() => domeScale(place), [place])
   const path = useMemo(() => sunPath(place, scale), [place, scale])
+  const dome = useMemo(() => domeLocator(scale), [scale])
   const [slider] = useState(() => createSliderController<number>())
   const [ownValue, setOwnValue] = useState(() => defaultValue ?? snap(solar.noon, step))
   const minutes = value ?? ownValue
   const [instant, setInstant] = useState(true)
+  const [calibrating, setCalibrating] = useState<{ src: string; open: boolean } | null>(null)
   const stage = useRef<HTMLDivElement>(null)
   const locale = useLocale(localeProp)
   const format = useTimeFormat(locale)
-  useSunArcScene(stage, { place, scale, minutes, instant, onPaint })
-  const [firstPaint] = useState(() => sceneVars(place, scale, minutes))
+  const scene = useSunArcPhoto({ photo, onPhotoChange, place, minutes, timeZone, slider, disabled })
+  useSunArcScene(stage, { place, locate: scene.active ? scene.locate : dome, minutes, instant, onPaint })
+  const [firstPaint] = useState(() => sceneAt(place, scene.active ? scene.locate : dome, minutes))
+  const showCalibration =
+    photo !== undefined && (calibrating?.src === photo.src ? calibrating.open : !scene.headingGiven)
+  const keepCalibrating = (open: boolean) => {
+    if (photo) setCalibrating({ src: photo.src, open })
+  }
 
   const altitude = sunAltitude(place, minutes)
 
@@ -201,6 +230,14 @@ function SunArc({
       slider={slider}
       disabled={disabled}
       day={solar}
+      calibrate={
+        scene.active
+          ? (view) => {
+              keepCalibrating(true)
+              return scene.setView(view)
+            }
+          : undefined
+      }
       aria-label={label}
       className={cn(
         "flex w-full flex-col overflow-hidden rounded-surface border bg-card text-card-foreground shadow-surface",
@@ -212,17 +249,28 @@ function SunArc({
         data-slot="sun-arc-stage"
         data-disabled={disabled ? "" : undefined}
         data-polar={solar.kind === "day" ? undefined : solar.kind}
-        style={cssVars(firstPaint)}
+        data-photo={scene.active ? "" : undefined}
+        data-marking={scene.marking ? "" : undefined}
+        data-sun-out={firstPaint.out}
+        aria-busy={scene.sky?.status === "reading" ? true : undefined}
+        style={cssVars({ ...firstPaint.vars, "--sun-arc-aspect": scene.aspect.toFixed(4) })}
+        {...scene.handlers}
       >
         <div data-slot="sun-arc-sky" aria-hidden="true" />
         <Stars />
         <div data-slot="sun-arc-dusk" aria-hidden="true" />
         <div data-slot="sun-arc-glow" data-light="pale" aria-hidden="true" />
         <div data-slot="sun-arc-glow" data-light="warm" aria-hidden="true" />
-        <Skyline />
-        <Windows />
+        {photo ? (
+          <SunArcPhotoLayers src={photo.src} sky={scene.sky} path={scene.path} />
+        ) : (
+          <>
+            <Skyline />
+            <Windows />
+          </>
+        )}
         <div data-slot="sun-arc-ground" aria-hidden="true">
-          <div data-slot="sun-arc-glint" />
+          {photo ? null : <div data-slot="sun-arc-glint" />}
           {rulerHours.map((hours) => (
             <span
               key={hours}
@@ -242,10 +290,12 @@ function SunArc({
             ),
           )}
         </div>
-        {/* oxlint-disable-next-line eskais/no-inline-icons -- the sun's path over the day, not an icon */}
-        <svg data-slot="sun-arc-path" aria-hidden="true" viewBox="0 0 1000 1000" preserveAspectRatio="none">
-          <path d={path} vectorEffect="non-scaling-stroke" />
-        </svg>
+        {photo ? null : (
+          // oxlint-disable-next-line eskais/no-inline-icons -- the sun's path over the day, not an icon
+          <svg data-slot="sun-arc-path" aria-hidden="true" viewBox="0 0 1000 1000" preserveAspectRatio="none">
+            <path d={path} vectorEffect="non-scaling-stroke" />
+          </svg>
+        )}
         <Slider
           controller={slider}
           value={minutes}
@@ -268,6 +318,23 @@ function SunArc({
           </SliderControl>
         </Slider>
       </div>
+      {showCalibration ? (
+        <SunArcCalibration
+          view={scene.view}
+          marking={scene.marking}
+          disabled={disabled}
+          labels={labels}
+          onView={(change) => {
+            keepCalibrating(true)
+            scene.setView(change)
+          }}
+          onMarking={(marking) => {
+            keepCalibrating(true)
+            scene.setMarking(marking)
+          }}
+          format={format.number}
+        />
+      ) : null}
       <div className="flex flex-wrap items-end justify-between gap-group p-inset-surface">
         <dl className="flex flex-wrap items-end gap-group">
           <div className="flex flex-col">
@@ -279,6 +346,20 @@ function SunArc({
             <dd className="font-mono text-title-sm tabular-nums">{format.altitude(altitude)}</dd>
           </div>
         </dl>
+        {scene.active ? (
+          <Toggle
+            variant="outline"
+            size="sm"
+            pressed={showCalibration}
+            disabled={disabled}
+            onPressedChange={(pressed) => {
+              keepCalibrating(pressed)
+              if (!pressed) scene.setMarking(false)
+            }}
+          >
+            {labels.calibrate}
+          </Toggle>
+        ) : null}
         <div className="grid grow grid-cols-3 gap-items sm:max-w-md">
           {presets.map((preset) => (
             <Button

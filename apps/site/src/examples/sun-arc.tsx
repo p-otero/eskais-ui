@@ -1,21 +1,35 @@
 import { useState } from "react"
 
 import { SunArc } from "@/components/ui/sun-arc"
+import { SunArcPhotoUpload, type SunArcPhoto } from "@/components/ui/sun-arc-photo"
+
+const cebu = { latitude: 10.326725, longitude: 123.904889, timeZone: "Asia/Manila" }
 
 export default function SunArcDemo() {
-  const [minutes, setMinutes] = useState<number>()
+  const [photo, setPhoto] = useState<SunArcPhoto>({ src: "/sky/cebu-skyline.jpg" })
+  const [place, setPlace] = useState(cebu)
   return (
     <div className="flex w-full max-w-2xl flex-col gap-items">
       <SunArc
         label="Golden hour walk"
-        latitude={40.42}
-        longitude={-3.7}
-        timeZone="Europe/Madrid"
-        onValueChange={setMinutes}
+        {...place}
+        date={new Date("2025-04-14T04:00:00Z")}
+        defaultValue={6 * 60 + 20}
+        photo={photo}
+        onPhotoChange={setPhoto}
       />
-      <p className="text-body-sm text-muted-foreground">
-        {minutes === undefined ? "Drag the sun to pick a time." : `${String(minutes)} minutes after midnight`}
-      </p>
+      <div className="flex flex-wrap items-center gap-items">
+        <SunArcPhotoUpload
+          label="Use your own photo"
+          onPhoto={(next, location) => {
+            setPhoto(next)
+            if (location) setPlace((current) => ({ ...current, ...location }))
+          }}
+        />
+        <p className="text-caption text-muted-foreground">
+          Read on this device, never uploaded. Cebu City skyline by DisRaptor18, CC0, Wikimedia Commons.
+        </p>
+      </div>
     </div>
   )
 }

@@ -4,6 +4,7 @@
 
 [data-slot="sun-arc-stage"] {
   --sun-arc-horizon-at: 76%;
+  --sun-arc-track-top: 76cqh;
   position: relative;
   width: 100%;
   overflow: hidden;
@@ -233,7 +234,8 @@
   margin: 0 !important;
   top: 0 !important;
   left: 0 !important;
-  translate: calc(var(--sun-arc-fx) * 100cqw - 4cqw - 50%) calc(var(--sun-arc-fy) * 100cqh - 76cqh - 50%) !important;
+  translate: calc(var(--sun-arc-fx) * 100cqw - 4cqw - 50%)
+    calc(var(--sun-arc-fy) * 100cqh - var(--sun-arc-track-top) - 50%) !important;
   width: 1.75rem;
   height: 1.75rem;
   border-radius: 50%;
@@ -271,4 +273,130 @@
     0 0 0 1px color-mix(in oklab, var(--sun-arc-sun), white 30%),
     0 0 0 8px rgb(0 0 0 / 0.45),
     0 0 46px 14px color-mix(in oklab, var(--sun-arc-glow) 30%, transparent);
+}
+
+[data-slot="sun-arc-stage"][data-photo] {
+  --sun-arc-band: 2.25rem;
+  --sun-arc-horizon-at: calc(100% - var(--sun-arc-band));
+  --sun-arc-track-top: calc(100cqh - var(--sun-arc-band));
+  aspect-ratio: var(--sun-arc-aspect);
+}
+
+[data-slot="sun-arc-stage"][data-marking] {
+  cursor: crosshair;
+}
+
+[data-slot="sun-arc-photo"] {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  isolation: isolate;
+  pointer-events: none;
+}
+
+[data-slot="sun-arc-photo"][data-masked] {
+  mask-image: var(--sun-arc-photo-mask);
+  mask-size: 100% 100%;
+  mask-repeat: no-repeat;
+}
+
+[data-slot="sun-arc-photo"] img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  user-select: none;
+}
+
+/* Perf: the foreground is relit by fading two fixed-colour layers over it, so a step of the sun composites the
+   photo instead of filtering it again. */
+[data-slot="sun-arc-photo"] [data-light] {
+  position: absolute;
+  inset: 0;
+  will-change: opacity;
+}
+
+[data-slot="sun-arc-photo"] [data-light="warm"] {
+  background: #ff8a3d;
+  mix-blend-mode: soft-light;
+  opacity: calc(var(--sun-arc-dusk) * 0.9);
+}
+
+[data-slot="sun-arc-photo"] [data-light="shade"] {
+  background: #0b1533;
+  mix-blend-mode: multiply;
+  opacity: calc((1 - var(--sun-arc-daylight)) * 0.82);
+}
+
+[data-slot="sun-arc-stage"][data-photo] [data-slot="sun-arc-path"] {
+  mask-image: none;
+}
+
+[data-slot="sun-arc-path"] [data-part="night"] {
+  stroke-opacity: 0.22;
+}
+
+[data-slot="sun-arc-stage"][data-photo] [data-slot="sun-arc-ground"] {
+  background: linear-gradient(to bottom, rgb(4 6 12 / 0.35), rgb(4 6 12 / 0.7));
+  box-shadow: 0 -1px 0 rgb(255 255 255 / 0.18);
+}
+
+[data-slot="sun-arc-stage"][data-photo] [data-slot="slider-control"] {
+  top: var(--sun-arc-horizon-at);
+}
+
+[data-slot="sun-arc-stage"][data-photo] [data-slot="slider-track"] {
+  height: 100%;
+}
+
+/* Spec: a sun out of the photo's view waits at the edge it left by, smaller and ringed, pointing the way it went. */
+[data-slot="sun-arc-stage"][data-sun-out] [data-slot="slider-thumb"] {
+  width: 1.125rem;
+  height: 1.125rem;
+  outline: 1.5px dashed rgb(255 255 255 / 0.85);
+  outline-offset: 3px;
+}
+
+[data-slot="sun-arc-stage"][data-sun-out] [data-slot="slider-thumb"]::after {
+  content: "";
+  position: absolute;
+  width: 0.5rem;
+  height: 0.625rem;
+  background: white;
+}
+
+[data-sun-out="left"] [data-slot="slider-thumb"]::after {
+  top: 50%;
+  left: -0.875rem;
+  translate: 0 -50%;
+  clip-path: polygon(100% 0, 0 50%, 100% 100%);
+}
+
+[data-sun-out="right"] [data-slot="slider-thumb"]::after {
+  top: 50%;
+  right: -0.875rem;
+  translate: 0 -50%;
+  clip-path: polygon(0 0, 100% 50%, 0 100%);
+}
+
+[data-sun-out="top"] [data-slot="slider-thumb"]::after {
+  left: 50%;
+  top: -0.875rem;
+  width: 0.625rem;
+  height: 0.5rem;
+  translate: -50% 0;
+  clip-path: polygon(0 100%, 50% 0, 100% 100%);
+}
+
+[data-sun-out="bottom"] [data-slot="slider-thumb"]::after {
+  left: 50%;
+  bottom: -0.875rem;
+  width: 0.625rem;
+  height: 0.5rem;
+  translate: -50% 0;
+  clip-path: polygon(0 0, 50% 100%, 100% 0);
+}
+
+[data-sun-out="behind"] [data-slot="slider-thumb"]::after {
+  display: none;
 }
