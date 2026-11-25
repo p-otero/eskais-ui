@@ -11,6 +11,7 @@
 @import "../../../registry/styles/mixer.css";
 @import "../../../registry/styles/safe-dial.css";
 @import "../../../registry/styles/vinyl-scrubber.css";
+@import "../../../registry/styles/live-sky.css";
 
 @source "../../../registry";
 @source "../../showcase/src/theme-editor.tsx";

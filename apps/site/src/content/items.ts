@@ -275,6 +275,19 @@ const itemNotes: Record<string, ItemNotes> = {
       'Agents find it by its label and call seek (seconds or "m:ss"), play and pause; a seek past the end, or before the duration is known, fails the step with why.',
     related: ["slider", "toggle"],
   },
+  "live-sky": {
+    usage:
+      'Reach for it where the weather outside is part of the experience: a home screen, a travel or events page, a weather card. Pass a place, or leave location as "geolocate" and let the person share theirs or search. Open-Meteo\'s free API is for non-commercial use; for a commercial app, createOpenMeteo({ apiKey, forecastUrl, geocodingUrl }) or your own fetchWeather.',
+    a11y: [
+      'The scene is decorative and hidden from assistive tech; the readout and a summary sentence ("Moderate rain, 12 °C, sun behind clouds") say what it shows, and the summary is announced politely when it changes.',
+      "The place search is UI SDK's combobox: it waits for typing to pause, announces the number of places found and lists each with its region and country.",
+      "Location is asked for only when the person presses Use my location; when they've blocked it, the button is off and says why.",
+      "Under reduced motion the rain holds still: a new still every few seconds, crossfaded slowly, and no lightning.",
+    ],
+    agent:
+      "Agents read the summary as the sky's value and call setLocation (a place name, or a latitude and longitude), geolocate and refresh; denied location access, simulated weather or a missing place fails the step with why.",
+    related: ["model-viewer", "combobox"],
+  },
   "image-cropper": {
     usage:
       'Reach for it to crop an upload before saving: a cover image with a box, an avatar with mode="frame" and shape="circle".',

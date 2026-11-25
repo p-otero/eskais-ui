@@ -181,7 +181,7 @@ const categories = [
   },
   {
     name: "3D",
-    items: ["model-viewer", "model-scan"],
+    items: ["model-viewer", "model-scan", "live-sky"],
   },
   {
     name: "Editor",
