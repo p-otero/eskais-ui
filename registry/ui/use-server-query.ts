@@ -48,7 +48,6 @@ type ServerQueryState<T, TError = DefaultServerError> = {
   retry: () => void
 }
 
-// Marks the queries `useServerQuery` owns, so a mutation's `settle` tells them from pages under the same key.
 const resourceMeta = { serverData: "resource" }
 
 /** Writes each seed unless its query got data after `requestedAt`, which is fresher than the answer seeding it. */

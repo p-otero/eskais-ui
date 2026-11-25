@@ -19,7 +19,6 @@ type Ending = KeyStep | { release: Partial<Record<ColorChannel, number>> }
 
 type Spec = { index: number; max: number; step: number; scale: number }
 
-// UI SDK's OKLCH channels: only OKLCH reaches past a gamut's edge, since HSV, HSL and sRGB hold sRGB colours.
 const oklchChannels: Partial<Record<ColorChannel, Spec>> = {
   lightness: { index: 0, max: 100, step: 0.1, scale: 100 },
   chroma: { index: 1, max: 0.4, step: 0.001, scale: 1 },
@@ -58,7 +57,6 @@ function placed(color: Color, fractions: Partial<Record<ColorChannel, number>>):
   return next
 }
 
-// The step UI SDK takes for a key, applied to the colour the thumbs held before it rather than the one it holds.
 function stepped(color: Color, step: KeyStep): Color | null {
   const times = step.shift ? 10 : 1
   const across = step.rtl ? -1 : 1
@@ -125,13 +123,12 @@ function useHeldColor({ color, space, gamut = "srgb", controller }: HeldColorOpt
         colorDistance(toGamut(option, gamut), color) <= 1e-6,
     )
     if (!candidate) return
-    // UI SDK reads a hue of 360 as 0, which would send a hue thumb from one end to the other.
+    // Workaround: UI SDK reads a hue of 360 as 0, which would send a hue thumb from one end to the other.
     const [l, c, h] = candidate.coords
     const kept = { ...candidate, coords: [l, c, h !== null && h >= 360 ? 360 - 1e-9 : h] satisfies Color["coords"] }
-    // 17 significant digits write a double exactly, so UI SDK reads back the same colour and keeps the value.
+    // Spec: 17 significant digits write a double exactly, so UI SDK reads back the same colour.
     controller.setValue(formatColor(kept, "oklch", { precision: 17 }))
   }, [color, space, gamut, controller])
-  // Only the render the ending event causes may use it: one that changed nothing leaves no render behind.
   return useCallback((next: Ending) => {
     ending.current = next
     setTimeout(() => {

@@ -31,7 +31,7 @@ type SidebarState = {
 
 const listeners = new Map<string, Set<() => void>>()
 
-// Storage can throw (blocked site data, a sandboxed frame); the sidebar then just doesn't remember.
+// Spec: storage can throw (blocked site data, a sandboxed frame).
 function readStored(key: string): boolean | undefined {
   let value: string | null = null
   try {
@@ -45,9 +45,7 @@ function readStored(key: string): boolean | undefined {
 function writeStored(key: string, collapsed: boolean) {
   try {
     localStorage.setItem(key, collapsed ? "collapsed" : "expanded")
-  } catch {
-    // Not remembered, still applied for this page.
-  }
+  } catch {}
   for (const listener of listeners.get(key) ?? []) listener()
 }
 

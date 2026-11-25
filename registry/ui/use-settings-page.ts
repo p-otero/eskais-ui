@@ -4,8 +4,8 @@ import { createContext, use, useEffect, useEffectEvent, useLayoutEffect, useRef,
 
 import type { UrlParamAdapter } from "@/lib/url-param"
 
-// A smooth scroll that never fires scrollend (nothing to scroll) still unlocks after this long.
-const jumpLock = 1000
+// Spec: a smooth scroll with nothing to scroll never fires scrollend.
+const jumpLockMs = 1000
 
 /**
  * The section being read among `ids` (newline-separated, in page order): the first one across a band just below the
@@ -56,14 +56,13 @@ function useObservedSection(ids: string, onChange: (id: string) => void) {
       locked.current = true
       last.current = id
       setObserved(id)
-      // The scroll landing, or the person taking over with a wheel, a touch or a key, ends the hold.
       const ends = ["scrollend", "wheel", "touchstart", "keydown"] as const
       const release = () => {
         clearTimeout(timer)
         for (const type of ends) removeEventListener(type, release, true)
         locked.current = false
       }
-      const timer = setTimeout(release, jumpLock)
+      const timer = setTimeout(release, jumpLockMs)
       for (const type of ends) addEventListener(type, release, { capture: true, passive: true })
     },
   }
@@ -92,14 +91,8 @@ function useUrlSection(url: UrlParamAdapter | undefined, jump: (id: string) => v
   }
 }
 
-// What counts as the person taking over the page before a section the URL named has mounted.
 const interactions = ["pointerdown", "keydown", "wheel", "touchstart", "scroll", "focusin"] as const
 
-/**
- * A section the URL named before it mounted, like one that renders after its data loads. Its `SettingsSection`
- * reports in when it mounts and `arrive` runs once, unless the person has pressed, typed, scrolled or moved focus
- * since: then the page stays where they put it.
- */
 function createPendingSection() {
   let waiting: { id: string; arrive: (id: string) => void } | null = null
   const cancel = () => {
@@ -116,7 +109,6 @@ function createPendingSection() {
       arrive(id)
     },
     cancel,
-    /** Listens for the person taking over while the page is mounted; returns the cleanup. */
     listen() {
       for (const type of interactions) addEventListener(type, cancel, { capture: true, passive: true })
       return () => {
