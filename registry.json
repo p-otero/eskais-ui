@@ -6595,8 +6595,7 @@
           "flex": "1",
           "border-radius": "1px",
           "--mixer-led": "#58e07a",
-          "background": "color-mix(in oklab, var(--mixer-led) 14%, #15171b)",
-          "transition": "background-color var(--transition-duration-micro) var(--ease-standard), box-shadow var(--transition-duration-micro) var(--ease-standard)"
+          "background": "color-mix(in oklab, var(--mixer-led) 14%, #15171b)"
         },
         "[data-slot=\"mixer-meter\"] span[data-tone=\"hot\"]": {
           "--mixer-led": "#ffb547"
