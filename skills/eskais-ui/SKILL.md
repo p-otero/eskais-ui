@@ -7,7 +7,7 @@ description: Builds React screens with Eskais UI, a shadcn-style registry of age
 
 Eskais UI components are UI SDK parts styled with Tailwind v4 and semantic tokens, copied into your project as source: the files under your `ui` alias (`src/components/ui/` by default) are yours to read and edit. Load the `ui-sdk` skill as well: everything it says about parts, controllers, change details and agents applies here unchanged.
 
-Read a component's own file before you use it: its exported parts, props (with their JSDoc for units, defaults and when a callback fires) and variants are the API. The code describes itself; a comment there marks only a browser workaround, a spec constraint, a measured performance choice or a security reason (`Workaround:`, `Spec:`, `Perf:`, `Security:`), so keep it when you edit the file. This file says which component to reach for; the references say how the bigger ones work.
+Read a component's own file before you use it: its exported parts, props (with their JSDoc for units, defaults and when a callback fires) and variants are the API. This file says which component to reach for; the references say how the bigger ones work.
 
 | Read                                      | When                                                                                    |
 | ----------------------------------------- | --------------------------------------------------------------------------------------- |
