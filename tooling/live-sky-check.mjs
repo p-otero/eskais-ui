@@ -56,7 +56,15 @@ await withShowcase(
     console.log(`Renderer: ${String(renderer)}`)
     expect(renderer === "webgl-software", `SwiftShader should be detected as software GL, not ${String(renderer)}`)
 
+    await page.waitForFunction(() => document.querySelector('[data-slot="live-sky-scene"]').dataset.staticPaints >= 3)
+    await page.waitForTimeout(2500)
+    const paintsBefore = await scene(page).getAttribute("data-static-paints")
     const running = await framesOver(page, 1500)
+    const paintsAfter = await scene(page).getAttribute("data-static-paints")
+    expect(
+      paintsBefore === paintsAfter,
+      `The street and sky were painted again while the weather held (${String(paintsBefore)} → ${String(paintsAfter)})`,
+    )
     console.log(
       `Downpour on software GL: ${String(running.length)} frames in 1.5 s, p95 ${percentile(running, 95).toFixed(2)} ms`,
     )
