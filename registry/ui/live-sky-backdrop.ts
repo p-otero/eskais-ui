@@ -4,6 +4,7 @@ import type { SkyConditions } from "@/components/ui/live-sky-conditions"
 import { facadeLightingFor, type FacadeLighting, type Skyline } from "@/components/ui/live-sky-facade-light"
 import type { GBuffer } from "@/components/ui/live-sky-gbuffer"
 import type { GlassDrop } from "@/components/ui/live-sky-glass"
+import type { IdleJob } from "@/components/ui/live-sky-idle"
 import { lightFor, type SkyLight } from "@/components/ui/live-sky-light"
 import type { SkyPalette } from "@/components/ui/live-sky-palette"
 import {
@@ -51,12 +52,13 @@ type SkyBackground =
 /** Draws a scene: the WebGL renderer, or the 2D canvas one where WebGL is missing. */
 type SkyRenderer = {
   kind: "webgl" | "canvas"
-  /** Takes a new weather state; the street is lit again once, on the next frame. */
-  setScene: (scene: SkyScene) => void
+  /**
+   * Prepares a new weather state, over a newly traced street or photo or the background shown, off screen a short step
+   * per `yield`, and shows it when the job ends. A job dropped halfway leaves the scene shown as it was.
+   */
+  show: (scene: SkyScene, background: SkyBackground | null) => IdleJob
   /** Takes new rain, snow or veil for the scene shown, without painting or lighting anything again. */
   setMotion: (motion: SceneMotion) => void
-  /** Takes a newly traced street or a photo; it is lit again once, on the next frame. */
-  setBackground: (background: SkyBackground) => void
   /** Draws the frame at `seconds` since the scene started, with the glass drops and a lightning flash from 0 to 1. */
   draw: (seconds: number, drops: readonly GlassDrop[], flash: number) => void
   dispose: () => void

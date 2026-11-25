@@ -11,18 +11,19 @@ type StreetRequest = { width: number; height: number; ratio: number; location: S
 const previewDownscale = 4
 
 /**
- * Traces the street for a size and place once: a quarter-size preview at once, then the full size a slice at a time
- * through `work`, handing each to `onReady`. A new size or place starts over; the weather never does.
+ * Traces the street for a size and place once: a quarter-size preview at once from `request`, then the full size a
+ * slice at a time from `work`. A new size or place starts over; the weather never does.
  */
-function createStreetBuilder(onReady: (facades: StreetFacades) => void) {
+function createStreetBuilder() {
   let key = ""
   let build: GBufferBuild | null = null
   let finish: ((build: GBufferBuild) => StreetFacades) | null = null
 
   return {
-    request({ width, height, ratio, location, palette }: StreetRequest) {
+    /** Starts tracing the street for a size and place, and returns its preview; null when it's the street asked last. */
+    request({ width, height, ratio, location, palette }: StreetRequest): StreetFacades | null {
       const next = [width, height, ratio, location.latitude, location.longitude].join(",")
-      if (next === key) return
+      if (next === key) return null
       key = next
       const street = streetFor(location.latitude, location.longitude)
       const camera = cameraFor(width, height)
@@ -36,8 +37,8 @@ function createStreetBuilder(onReady: (facades: StreetFacades) => void) {
         Math.ceil(height / previewDownscale),
       )
       preview.step(Number.POSITIVE_INFINITY)
-      onReady(finish(preview))
       build = buildGBuffer(street, camera, palette, Math.round(width * ratio), Math.round(height * ratio))
+      return finish(preview)
     },
     pending: () => build !== null,
     /** Forgets the street shown, so the next request traces it again, after a photo stood in for it. */
@@ -45,13 +46,13 @@ function createStreetBuilder(onReady: (facades: StreetFacades) => void) {
       key = ""
       build = null
     },
-    /** Traces for up to `budgetMs`; true once the full street is ready. */
-    work(budgetMs: number) {
-      if (!build || !finish) return true
-      if (!build.step(budgetMs)) return false
-      onReady(finish(build))
+    /** Traces for up to `budgetMs` or until `interrupted`, and returns the full street once it's ready. */
+    work(budgetMs: number, interrupted?: () => boolean): StreetFacades | null {
+      if (!build || !finish) return null
+      if (!build.step(budgetMs, interrupted)) return null
+      const done = finish(build)
       build = null
-      return true
+      return done
     },
   }
 }

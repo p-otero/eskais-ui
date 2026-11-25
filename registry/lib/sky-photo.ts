@@ -36,15 +36,21 @@ type SkyPhotoOptions = {
 
 const nextTask = () => new Promise<void>((resolve) => setTimeout(resolve, 0))
 
-// Perf: the finder takes 60 to 90 ms on a 512 px photo; run in stages, it leaves the page a frame between them.
+const sliceMs = 6
+
+// Perf: the finder takes hundreds of ms on a 1024 px photo on a slow device; run in slices of a few ms, it holds no
+// frame or key press for longer than one slice.
 async function findSkyYielding(pixels: ImageData, signal: AbortSignal | undefined) {
   const steps = findSkySteps(pixels)
+  let until = performance.now() + sliceMs
   for (;;) {
     const step = steps.next()
     if (step.done) return step.value
-    // oxlint-disable-next-line no-await-in-loop -- each stage waits for the page to take its turn before the next one
+    if (performance.now() < until) continue
+    // oxlint-disable-next-line no-await-in-loop -- each slice waits for the page to take its turn before the next one
     await nextTask()
     signal?.throwIfAborted()
+    until = performance.now() + sliceMs
   }
 }
 

@@ -1,6 +1,7 @@
 import { withShowcase } from "./showcase-browser.mjs"
 
 const frameP95BudgetMs = 12
+const readingTaskBudgetMs = 120
 
 function expect(condition, message) {
   if (!condition) throw new Error(message)
@@ -77,6 +78,9 @@ const darkestAndBrightestFifth = (page) =>
   )
 
 const scene = (page) => page.locator('[data-slot="live-sky-scene"]').first()
+
+const photoShown = (page) =>
+  page.locator('[data-slot="live-sky-scene"][data-background="photo"]').first().waitFor({ timeout: 60_000 })
 
 await withShowcase(
   async (page) => {
@@ -181,11 +185,24 @@ await withShowcase(
       "A simulated sky should refuse refresh with why",
     )
 
+    await page.addInitScript(() => {
+      window.longTasks = []
+      new PerformanceObserver((list) => window.longTasks.push(...list.getEntries())).observe({ type: "longtask" })
+    })
     await page.goto(page.url().replace(/\/(\?.*)?$/, "/?demo=live-sky&live=0&background=photo&preset=downpour"))
     await page.waitForFunction(
-      () => Number(document.querySelector('[data-slot="live-sky-scene"][data-photo]')?.dataset.staticPaints) >= 2,
-      undefined,
-      { timeout: 30_000 },
+      () => Number(document.querySelector('[data-slot="live-sky-scene"]')?.dataset.staticPaints) >= 2,
+    )
+    const readingFrom = await page.evaluate(() => performance.now())
+    await photoShown(page)
+    const longestWhileReading = await page.evaluate(
+      (from) => Math.max(0, ...window.longTasks.filter((task) => task.startTime >= from).map((task) => task.duration)),
+      readingFrom,
+    )
+    console.log(`Reading the photo: the longest task held the page ${longestWhileReading.toFixed(0)} ms`)
+    expect(
+      longestWhileReading < readingTaskBudgetMs,
+      `Reading a photo should leave the page frames, not hold it for ${longestWhileReading.toFixed(0)} ms`,
     )
     await page.waitForTimeout(500)
     const overPhoto = await framesOver(page, 1500)
@@ -203,11 +220,7 @@ await withShowcase(
     )
 
     await page.goto(page.url().replace(/\/(\?.*)?$/, "/?demo=live-sky&live=0&background=photo&preset=rain"))
-    await page.waitForFunction(
-      () => Number(document.querySelector('[data-slot="live-sky-scene"][data-photo]')?.dataset.staticPaints) >= 2,
-      undefined,
-      { timeout: 30_000 },
-    )
+    await photoShown(page)
     await page.getByRole("switch", { name: "Glass" }).click()
     await page.waitForTimeout(800)
     const wet = await darkestAndBrightestFifth(page)

@@ -12,7 +12,12 @@ import { createHit, indexStreet, traceRay } from "@/components/ui/live-sky-trace
 type GBuffer = { width: number; height: number; albedo: Uint8Array; surface: Uint8Array; place: Uint8Array }
 
 /** A G-buffer filled a few rows at a time, so a large one never holds a frame. */
-type GBufferBuild = { buffer: GBuffer; done: () => boolean; step: (budgetMs: number) => boolean }
+type GBufferBuild = {
+  buffer: GBuffer
+  done: () => boolean
+  /** Traces rows until `budgetMs` runs out or `interrupted` says to stop; true once every row is traced. */
+  step: (budgetMs: number, interrupted?: () => boolean) => boolean
+}
 
 const byte = (value: number) => Math.max(0, Math.min(255, Math.round(value * 255)))
 const placeStartM = -64
@@ -68,12 +73,12 @@ function buildGBuffer(
   return {
     buffer,
     done: () => row >= height,
-    step(budgetMs) {
+    step(budgetMs, interrupted) {
       const until = performance.now() + budgetMs
       while (row < height) {
         traceRow(row)
         row += 1
-        if (performance.now() >= until) break
+        if (performance.now() >= until || interrupted?.()) break
       }
       return row >= height
     },
