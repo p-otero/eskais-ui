@@ -103,7 +103,8 @@
         "allow": ["**/hooks/**", "**/use-*.ts"]
       }
     ],
-    "eskais/icon-button-needs-label": "error"
+    "eskais/icon-button-needs-label": "error",
+    "eskais/comment-tags": "error"
   },
   "overrides": [
     {
@@ -151,9 +152,9 @@
       }
     },
     {
-      "files": ["registry/ui/[a-l]*", "tooling/oxlint-plugin-eskais/**"],
+      "files": ["test/**", "apps/site/src/examples/**"],
       "rules": {
-        "eskais/comment-tags": "error"
+        "eskais/comment-tags": "off"
       }
     },
     {
