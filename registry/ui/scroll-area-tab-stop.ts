@@ -59,7 +59,7 @@ function bindTabStop(el: HTMLElement, wanted: () => boolean) {
     for (const node of witness ? [] : touched) {
       if (node.isConnected && el.contains(node)) witness ??= focusableIn(node, el)
     }
-    // Only a witness that left with no newcomer to replace it costs a look at the whole content.
+    // Perf: only a witness that left with no newcomer to replace it costs a look at the whole content.
     if (before && !witness) witness = focusableIn(el, el)
     check()
   })

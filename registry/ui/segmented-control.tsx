@@ -12,7 +12,6 @@ import { createContext, use, useState, type ComponentProps, type PointerEvent } 
 import { cnState } from "@/lib/utils"
 import { assumeType } from "@/lib/narrow"
 
-// Set only while activateOnPress is on: the controller an item checks through on pointerdown.
 const SegmentedControlPressContext = createContext<SegmentedControlController | null>(null)
 
 type SegmentedControlProps<T extends string = string> = ComponentProps<typeof SegmentedControlPrimitive<T>> & {
@@ -49,7 +48,7 @@ function SegmentedControl<T extends string = string>({
   )
 }
 
-// The indicator is the checked state, so it takes the primary fill: muted against background is far below 3:1.
+// Spec: the indicator is the checked state, and muted against background is far below 3:1 (WCAG 1.4.11).
 function SegmentedControlIndicator({ className, ...props }: ComponentProps<typeof SegmentedControlIndicatorPrimitive>) {
   return (
     <SegmentedControlIndicatorPrimitive
@@ -69,8 +68,7 @@ function SegmentedControlItem({
   ...props
 }: ComponentProps<typeof SegmentedControlItemPrimitive>) {
   const pressController = use(SegmentedControlPressContext)
-  // Checking on press is allowed by WCAG 2.5.2 (Pointer Cancellation) because it's reversible: pressing another
-  // item undoes it. It goes through the controller, so onValueChange, cancel(), disabled and read-only still apply.
+  // Spec: checking on press is allowed by WCAG 2.5.2 (Pointer Cancellation) because pressing another item undoes it.
   const checkOnPress = (event: PointerEvent<HTMLButtonElement>) => {
     onPointerDown?.(event)
     if (!pressController || event.defaultPrevented || event.button !== 0 || event.pointerType === "touch") return

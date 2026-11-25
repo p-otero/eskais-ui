@@ -9,7 +9,7 @@ import type { ComponentProps } from "react"
 
 import { cnState } from "@/lib/utils"
 
-// The unchecked track takes the input color, not muted: the control's outline must reach 3:1 against the page.
+// Spec: the unchecked track takes the input color: the control's outline must reach 3:1 against the page.
 function Switch({ className, children, ...props }: ComponentProps<typeof SwitchPrimitive>) {
   return (
     <SwitchPrimitive

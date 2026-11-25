@@ -27,7 +27,6 @@ import { cnState } from "@/lib/utils"
 
 const triggerClassName = `${fieldSurfaceClassName} flex w-full min-w-0 cursor-pointer items-center justify-between gap-inline rounded-control px-control-x text-start text-entry outline-none focus-visible:ring-2 focus-visible:ring-ring [&>svg]:size-4 [&>svg]:shrink-0 [&>svg]:text-muted-foreground`
 
-// `default` follows the Field (taller with a floating label); `sm` is a fixed compact height for toolbars and filters.
 const selectTriggerVariants = cva(triggerClassName, {
   variants: { size: { default: "h-field-control", sm: "h-control-sm" } },
   defaultVariants: { size: "default" },
@@ -39,7 +38,7 @@ const listPopupClassName =
   // oxlint-disable-next-line eskais/scroll-area -- the floating list of Select, Combobox and Autocomplete, capped by UI SDK like dropdown-menu's; SelectList inside it can be a scroll area
   "m-0 max-h-(--available-height) min-w-(--anchor-width) overflow-y-auto overscroll-contain surface-floating p-inline outline-none transition-opacity duration-micro ease-standard data-ending-style:opacity-0 data-starting-style:opacity-0"
 
-// A tint alone misses the 3:1 a state needs, so the highlight also draws a full ring.
+// Spec: a tint alone misses the 3:1 a state needs (WCAG 1.4.11), so the highlight also draws a full ring.
 const listItemClassName =
   "flex min-h-control-sm cursor-default items-center gap-inline rounded-control px-inset-item text-sm outline-none select-none data-disabled:cursor-not-allowed data-disabled:opacity-50 data-highlighted:bg-accent data-highlighted:text-accent-foreground data-highlighted:ring-2 data-highlighted:ring-ring data-highlighted:ring-inset [&_svg]:size-4 [&_svg]:shrink-0"
 
@@ -115,7 +114,6 @@ function SelectSeparator({ className, ...props }: ComponentProps<typeof SelectSe
 
 type SelectValueChangeDetails = Parameters<NonNullable<SelectPrimitiveProps<string, false>["onValueChange"]>>[1]
 
-// Distributes over the single and multiple variants, so `onValueChange` keeps its parameter type.
 type WithoutItems<Props> = Props extends unknown ? Omit<Props, "items"> : never
 
 // UI SDK's `SelectProps<T, false>` still admits `multiple: true`; this is its single-value variant only.
@@ -144,7 +142,6 @@ type SelectProps<T = string, Multiple extends boolean | undefined = false> = Wit
 
 type DataAttributes = { [attribute: `data-${string}`]: string | number | boolean | undefined }
 
-// Never held by the select: choosing it reports null, and the controlled value stays null.
 const noneValue = "\u0000eskais-select-none"
 
 function noneOf<T>(): T {

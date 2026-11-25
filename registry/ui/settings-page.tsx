@@ -133,7 +133,6 @@ function SettingsPage({
   const sections = sectionsProp ?? sectionsOf(children)
   const ids = sections.map((section) => section.id).join("\n")
   const [chosen, setChosen] = useState<string>()
-  // The picker's list returns focus to its trigger once it has closed, so the heading takes focus after that.
   const focusOnClose = useRef<string | null>(null)
   const { observed, pin } = useObservedSection(ids, (id) => {
     if (currentSection === undefined) onSectionChange?.(id, { reason: "scroll" })
@@ -199,8 +198,6 @@ function SettingsPage({
                   href={hrefOf(section.id)}
                   current={section.id === current ? "location" : undefined}
                   onFollow={() => choose(section.id)}
-                  // A hash route follows on pointerdown and focuses the heading; the same press would then focus the
-                  // link. A plain press keeps focus where it is, and the click puts it back if a browser moved it anyway.
                   onMouseDown={(event) => {
                     if (isPlainClick(event.nativeEvent)) event.preventDefault()
                   }}

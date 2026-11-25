@@ -42,7 +42,6 @@ function StatValue({ value, format, locale, labels, className, render, children,
       "data-slot": "stat-value",
       "data-kind": numeric ? "number" : "text",
       title: !numeric && typeof children === "string" ? children : undefined,
-      // Text such as "2 minutes ago" would wrap at display size, so it stays on one line, smaller.
       className: cn("tabular-nums", numeric ? "text-display-sm leading-none" : "truncate text-title", className),
       ...props,
       children: content,
@@ -58,7 +57,7 @@ function StatGroup({ className, render, children, ...props }: StatGroupProps) {
     "ul",
     {
       "data-slot": "stat-group",
-      // Preflight's list-style: none strips list semantics in Safari unless the role is explicit.
+      // Workaround: Safari drops list semantics under Preflight's `list-style: none` unless the role is explicit.
       role: "list",
       className: cn("flex flex-wrap gap-section", className),
       ...props,

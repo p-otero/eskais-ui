@@ -75,7 +75,6 @@ type StepFormFrameProps<Schema extends StandardSchemaV1> = StepFormProps<Schema>
   actionsClassName?: string
 }
 
-/** A new object for every move, so moving to the same direction twice still runs the focus effect. */
 type StepMove = { direction: StepDirection }
 
 function errorPaths(errors: Record<string, unknown>, prefix = ""): string[] {
@@ -140,7 +139,6 @@ function StepFormContent({
       return paths.some((path) => names.some((name) => related(path, name)))
     })
     if (found >= 0) return found
-    // A step never shown (after `defaultStep`) and without `fields` is the only place the field can be.
     const unknown = steps.findIndex((candidate) => !candidate.fields && !seen.current.has(candidate.id))
     return unknown < 0 ? index : unknown
   }
@@ -158,7 +156,7 @@ function StepFormContent({
       go(index + 1, "next")
     }
     setValidating(true)
-    // A promise's finally, not a try/finally block: React Compiler 1.0 can't compile a component that has one.
+    // Workaround: a promise's finally, not a try/finally block: React Compiler 1.0 can't compile a component with one.
     return validate().finally(() => setValidating(false))
   }
 

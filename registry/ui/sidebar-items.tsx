@@ -65,7 +65,6 @@ function SidebarGroup({
           render={(part) => <button {...part} data-slot="sidebar-group-trigger" />}
         >
           <span className="min-w-0 flex-1 truncate">{label}</span>
-          {/* Mirrored in right-to-left, so it turns the other way to point down when open. */}
           <ChevronRightIcon
             data-slot="sidebar-group-chevron"
             className="transition-transform duration-micro ease-standard group-data-open/collapsible-trigger:rotate-90 rtl:-scale-x-100 rtl:group-data-open/collapsible-trigger:-rotate-90 motion-reduce:transition-none"

@@ -25,7 +25,6 @@ function isCurrent(item: SiteHeaderItem): boolean {
   return Boolean(item.current) || (item.items?.some(isCurrent) ?? false)
 }
 
-// A router link brings its own href, and a second one on top could point somewhere else.
 function linkTarget(item: SiteHeaderItem, renderLink: SiteHeaderRenderLink | undefined) {
   const render = item.render ?? renderLink?.(item)
   return render ? { render } : { href: item.href }

@@ -144,8 +144,7 @@ function ShortcutsDialog({
  * (`variant`, `size`); give it visible text or an `aria-label`. It lists the shortcuts of the `ShortcutScope` it is in.
  */
 function ShortcutsDialogTrigger({ onClick, ...props }: ComponentProps<typeof DialogTrigger>) {
-  // Safari and touch don't focus a pressed button, and a scope is active while focus is inside it, so take focus
-  // before the dialog reads the shortcuts that can run here.
+  // Workaround: Safari and touch don't focus a pressed button, and a scope is active only while focus is inside it.
   const focusFirst = (event: MouseEvent<HTMLButtonElement>) => {
     onClick?.(event)
     event.currentTarget.focus({ preventScroll: true })

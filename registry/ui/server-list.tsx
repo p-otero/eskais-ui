@@ -68,12 +68,6 @@ type ServerListProps<T, S extends FilterSchema> = Pick<
   className?: string
 }
 
-/**
- * A List over a `PageSource` that grows as you scroll: ListItem rows, virtualized past 200, one tab stop with row
- * navigation, the next page when the end comes into view, and a Load more button for keyboards and agents.
- */
-// Rows shaped like a ListItem's title and subtitle, enough to push the footer out of view as the first page will, so
-// the page loads without moving it.
 function ServerListLoading({ rows, label }: { rows: number; label: string }) {
   return (
     <div data-slot="server-list-loading" aria-busy="true" className="flex min-w-0 flex-col">

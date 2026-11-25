@@ -110,7 +110,6 @@ type StepDialogProps<Schema extends StandardSchemaV1, Result = unknown> = Omit<
 
 type Shown<Result> = { result: Result } | null
 
-// A stable ref callback runs once, when the heading mounts.
 const focusOnMount = (node: HTMLElement | null) => node?.focus()
 
 function ResultStep<Result>({
@@ -194,7 +193,6 @@ function StepDialog<Schema extends StandardSchemaV1, Result = unknown>({
       setOpen(false, { reason: "submit" })
       return
     }
-    // The form unmounts before it reports the end of the submit.
     setPending(false)
     setShown({ result })
   }

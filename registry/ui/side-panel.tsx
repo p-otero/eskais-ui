@@ -19,7 +19,6 @@ import { narrowQuery, useMediaQuery } from "@/components/ui/use-media-query"
 import { cn } from "@/lib/utils"
 
 type SidePanelLabels = {
-  /** The close button's name. */
   close: string
 }
 
@@ -36,7 +35,6 @@ const sidePanelVariants = cva(
   {
     variants: {
       narrow: {
-        // The parent wraps on narrow screens, so the full-width panel goes below the list instead of squeezing it.
         stack: "narrow:w-full narrow:border-s-0 narrow:border-t narrow:[:has(>&)]:flex-wrap",
         overlay: "narrow:absolute narrow:inset-0 narrow:z-sticky narrow:w-full narrow:border-s-0 narrow:bg-card",
         sheet: "",
@@ -88,7 +86,8 @@ function SidePanel({
   const titleId = useId()
   const descriptionId = useId()
   const panel = useRef<HTMLElement>(null)
-  // The drawer asks for finalFocus after onOpenChange, when the caller may already have cleared what returnFocus reads.
+  // Workaround: the drawer asks for finalFocus after onOpenChange, when the caller may already have cleared what
+  // returnFocus reads.
   const sheetReturn = useRef<HTMLElement | null>(null)
   const sheet = useMediaQuery(narrowQuery) && narrow === "sheet"
 
@@ -99,7 +98,6 @@ function SidePanel({
     onOpenChange(false)
   }
 
-  // The sheet is a modal Drawer, which takes Escape itself and returns focus through finalFocus.
   useShortcut("escape", close, { enabled: open && !sheet, scope, allowInInput: true, description: labels.close })
 
   const shortcutLabel = scopeLabel ?? (typeof title === "string" ? title : undefined)
@@ -207,8 +205,6 @@ function SidePanel({
 
 type SidePanelHeaderProps = { title: ReactNode; description: ReactNode; actions: ReactNode; close: ReactNode }
 
-// Like CardHeader: the heading grows from --card-heading-basis, so the actions wrap below it as soon as the title
-// would get narrower than that, whatever their width; the close button keeps its corner.
 function SidePanelHeader({ title, description, actions, close }: SidePanelHeaderProps) {
   return (
     <header data-slot="side-panel-header" className="flex shrink-0 items-start gap-items border-b p-inset-surface">

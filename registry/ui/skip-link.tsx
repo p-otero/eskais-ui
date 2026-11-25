@@ -2,7 +2,6 @@ import type { ComponentProps, MouseEvent, ReactNode, RefObject } from "react"
 
 import { cn } from "@/lib/utils"
 
-// `target` replaces the anchor attribute: a skip link never opens another browsing context.
 type SkipLinkProps = Omit<ComponentProps<"a">, "children" | "target"> & {
   /** The link text, in the page's language, like "Skip to content". */
   children: ReactNode
@@ -35,14 +34,12 @@ function focusTarget(element: HTMLElement) {
   return false
 }
 
-// Fixed, not absolute, so it shows at the top of the viewport wherever the page is scrolled when it takes focus.
 function SkipLink({ href, target, onClick, className, children, ...props }: SkipLinkProps) {
   const id = target ?? (href?.startsWith("#") && href.length > 1 ? href.slice(1) : "main")
   const resolvedHref = href ?? (typeof id === "string" ? `#${id}` : "#main")
 
   const handleClick = (event: MouseEvent<HTMLAnchorElement>) => {
     onClick?.(event)
-    // A modified or middle click opens the link elsewhere, where the plain #fragment is right.
     if (event.defaultPrevented || event.button !== 0) return
     if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return
     const element = resolveTarget(id, event.currentTarget)

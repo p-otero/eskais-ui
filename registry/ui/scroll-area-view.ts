@@ -69,8 +69,8 @@ function createScrollView(store: ScrollAreaStore) {
     if (store.get()[key] !== value) store.set({ [key]: value } as Partial<ScrollAreaModel>)
   }
 
-  // Reads every metric, then writes what changed, in the scroll event itself. Writing in an animation frame, as UI SDK
-  // does, cost a 20,000-line DiffView 9 ms more per key press at 4× CPU in Chrome.
+  // Perf: reads every metric, then writes what changed, in the scroll event itself. Writing in an animation frame,
+  // as UI SDK does, cost a 20,000-line DiffView 9 ms more per key press at 4× CPU in Chrome.
   function update(resized = false) {
     if (!viewport) return
     measure()
@@ -218,7 +218,7 @@ function createScrollView(store: ScrollAreaStore) {
     scrollTo(axis, edge === "start" ? 0 : maxScroll(metrics[axis]), smooth ? "smooth" : "instant")
   }
 
-  // In capture, the viewport also hears the scrolls of scrollers inside it.
+  // Spec: scroll doesn't bubble; in capture, the viewport also hears the scrolls of scrollers inside it.
   const onScroll = (event: Event) => {
     if (event.target === viewport) update()
   }
@@ -299,7 +299,6 @@ function createScrollView(store: ScrollAreaStore) {
       view.addEventListener("pointercancel", lift, true)
     }
     const unlisten = [
-      // Capture runs before the target's own listeners, like a virtualizer's: the metrics are read before it writes rows.
       listen(el, { scroll: onScroll }, { capture: true, passive: true }),
       listen(
         el,
@@ -350,7 +349,7 @@ function createScrollView(store: ScrollAreaStore) {
     track,
     rtl: () => rtl,
     measure,
-    // At the start, scrollLeft has no sign to show a turned direction.
+    // Spec: at the start, scrollLeft is 0 in either direction, so it can't show a turned one.
     readDirection: () => {
       if (viewport) rtl = isRTL(viewport)
     },
@@ -385,7 +384,6 @@ function createScrollView(store: ScrollAreaStore) {
     resize.observe(el)
     const unlisten = listen(el, {
       wheel: input.forwardWheel,
-      // Pressing a scrollbar never moves focus, like a native one.
       mousedown: preventDefault,
       pointerdown: (event) => input.pressTrack(event, el, axis),
     })

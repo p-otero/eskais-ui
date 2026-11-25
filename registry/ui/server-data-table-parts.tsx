@@ -88,7 +88,6 @@ function ServerTableNavigation({
   onLoadMore,
   labels,
 }: ServerTableNavigationProps) {
-  // On a phone, the current page alone between the ends keeps the numbers and both steps on one line.
   const narrow = useMediaQuery("(width <= 47.5rem)")
   const paginationLabels = {
     navigation: labels.pagination(label),
@@ -96,7 +95,6 @@ function ServerTableNavigation({
     next: labels.nextPage,
     page: labels.page,
   }
-  // Agents page through the table's own `setPage`; a second component with the table's name would be ambiguous.
   if (navigation === "pages") {
     if (pageCount <= 1) return null
     return (
@@ -113,7 +111,6 @@ function ServerTableNavigation({
   }
   if (navigation === "prev-next") {
     if (pageCount <= 1) return null
-    // Previous and Next only: there is no total to number the pages by. Steps at an end stay focusable.
     return (
       <Pagination
         page={page}
