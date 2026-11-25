@@ -520,6 +520,8 @@ test("live sky: denied location, a missing place, a bad coordinate or simulated 
   await failsWith("Photo sky", "calibrate", "takes a field of view from 20 to 130°, not 200", [180, 200])
   await failsWith("Photo sky", "calibrate", "takes a horizon from 0 to 1 down the photo, not 1.5", [180, 70, 1.5])
   expect(calibrate).not.toHaveBeenCalled()
+})
+
 test("retro tv: a refused switch or a disabled set fails the step", async () => {
   let on = true
   const power = { isPressed: () => on, setPressed: vi.fn((_next: boolean): boolean => false) }
