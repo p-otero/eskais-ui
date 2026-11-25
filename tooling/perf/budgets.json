@@ -132,7 +132,7 @@
     },
     "pill-dialog": {
       "renders": 20,
-      "forcedLayouts": 10.63,
+      "forcedLayouts": 10.13,
       "forcedSlack": 0.3
     },
     "ejector-button": {

@@ -84,6 +84,7 @@
   inset: 70% 8% -26%;
   border-radius: 50%;
   background: radial-gradient(closest-side, rgb(0 0 0 / 0.32), transparent);
+  scale: 1;
   transition:
     scale var(--transition-duration-panel) var(--ease-standard),
     opacity var(--transition-duration-panel) var(--ease-standard);
