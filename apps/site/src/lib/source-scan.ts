@@ -1,8 +1,7 @@
 const OPEN = "({[<"
 const CLOSE = ")}]>"
 
-// Index just past the bracket that closes the one at `start`, skipping strings, comments and `=>`.
-function matchBracket(text: string, start: number) {
+function indexAfterClosingBracket(text: string, start: number) {
   let depth = 0
   for (let index = start; index < text.length; index++) {
     const char = text[index]!
@@ -39,7 +38,6 @@ function skipString(text: string, start: number) {
   return text.length
 }
 
-// Splits at top-level occurrences of `separator` (outside brackets, strings and comments).
 function splitTopLevel(text: string, separator: string) {
   const parts: string[] = []
   let depth = 0
@@ -71,8 +69,9 @@ const squash = (text: string) => text.replaceAll(/\s+/g, " ").trim()
 
 function stripParens(text: string) {
   let result = text.trim()
-  while (result.startsWith("(") && matchBracket(result, 0) === result.length) result = result.slice(1, -1).trim()
+  while (result.startsWith("(") && indexAfterClosingBracket(result, 0) === result.length)
+    result = result.slice(1, -1).trim()
   return result
 }
 
-export { CLOSE, OPEN, matchBracket, skipString, splitTopLevel, squash, stripParens }
+export { CLOSE, OPEN, indexAfterClosingBracket, skipString, splitTopLevel, squash, stripParens }

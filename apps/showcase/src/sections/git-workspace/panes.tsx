@@ -19,7 +19,6 @@ const paneHeader =
 
 type CommitPaneProps = { commit: Commit; patch: string; now: string; onOpenFull?: () => void }
 
-/** The selected commit: subject, author, hash, parents and tags, then its diff with a collapsible file tree. */
 function CommitPane({ commit, patch, now, onOpenFull }: CommitPaneProps) {
   const hash = commit.hash ?? commit.id.slice(0, 7)
   const subject = typeof commit.message === "string" ? commit.message : "Commit"
@@ -73,7 +72,6 @@ function CommitPane({ commit, patch, now, onOpenFull }: CommitPaneProps) {
   )
 }
 
-/** The line above the history of a clean checkout. */
 function CleanStatus({ repo }: { repo: Repo }) {
   const upstream = repo.remote === null ? "no remote" : `up to date with ${repo.remote}/${repo.branch}`
   return (
@@ -88,10 +86,6 @@ type Group = "staged" | "unstaged"
 
 type WorkingTreePaneProps = { repo: Repo; worktree: Worktree; layout: "toggle" | "groups" }
 
-/**
- * The uncommitted changes, read-only: one group at a time behind a Staged/Unstaged toggle, or both as the diff's
- * groups, each a section of its file tree.
- */
 function WorkingTreePane({ repo, worktree, layout }: WorkingTreePaneProps) {
   const [group, setGroup] = useState<Group>(worktree.staged.files > 0 ? "staged" : "unstaged")
   return (

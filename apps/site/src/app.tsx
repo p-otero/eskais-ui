@@ -13,7 +13,7 @@ import { routeGuide } from "./preload"
 import { routeFromPathname, useRoute } from "./router"
 
 const Landing = lazy(() => import("./landing/landing").then((module) => ({ default: module.Landing })))
-// On a guide, the docs routes resolve once the guide has loaded too, so the page shows in one reveal: a second
+// Perf: on a guide, the docs routes resolve once the guide has loaded too, so the page shows in one reveal: a second
 // suspension inside them held the guide back about 300 ms more (React's Suspense reveal throttle).
 const DocsRoutes = lazy(() =>
   Promise.all([
@@ -42,7 +42,6 @@ function Page({ route }: { route: string }) {
 function App() {
   const route = useRoute()
   useDocumentTitle(route)
-  // Docs pages render the same Topbar through DocsLayout, which places their sidebar under it.
   const docs = route === "/docs" || route.startsWith("/docs/")
   return (
     <Appearance appearance={appearance}>

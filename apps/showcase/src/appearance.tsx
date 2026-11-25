@@ -15,7 +15,6 @@ const themes = ["default", "compact", "glass"] as const
 type Theme = (typeof themes)[number]
 const palettes = ["neutral", "blue", "violet", "green", "orange"] as const
 
-// Light by default, so browser checks don't depend on the machine's color scheme.
 const appearance = createAppearance({
   colorScheme: "light",
   palette: "neutral",
@@ -23,7 +22,6 @@ const appearance = createAppearance({
   storage: { theme: createLocalStorage("eskais-showcase-theme") },
 })
 const { theme } = appearance
-// In memory only, so the browser checks always start from the default theme.
 const themeEditor = createThemeEditorStore()
 
 function ThemePicker() {

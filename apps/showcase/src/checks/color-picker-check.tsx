@@ -11,8 +11,6 @@ import {
   ColorPickerSwatch,
 } from "@/components/ui/color-picker"
 
-// ?demo=color-picker-check: OKLCH pickers, one uncontrolled and one controlled, for tooling/color-picker-check.mjs.
-// Each writes the last committed value, so the check can tell the value apart from where the thumbs sit.
 function CheckedPicker({ name, controlled }: { name: string; controlled: boolean }) {
   const [value, setValue] = useState("oklch(0.62 0.19 259)")
   const [committed, setCommitted] = useState("")

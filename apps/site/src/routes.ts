@@ -1,7 +1,6 @@
 import { guides } from "./guides/meta"
 import { componentItems } from "./registry"
 
-// `noindex`: a page for debugging, kept out of search engines and the docs navigation.
 type Route = { path: string; title: string; description: string; noindex?: boolean }
 
 const siteName = "Eskais UI"

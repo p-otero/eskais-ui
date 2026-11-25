@@ -45,8 +45,6 @@ function Scan({ alt, agents }: { alt: string; agents: boolean }) {
   )
 }
 
-// ?demo=agent-bridge-check: controls an app lets only people use beside ones agents may use too, for
-// tooling/agent-bridge-check.mjs, which drives them through the page's WebMCP tools from outside the page.
 function AgentBridgeCheck() {
   return (
     <main className="flex flex-wrap items-start gap-section p-group">

@@ -60,7 +60,6 @@ const dialogCode = `<Collapsible>
   </CollapsiblePanel>
 </Collapsible>`
 
-/** The demos are as wide as a desktop screen; on a narrow one they scroll sideways in their frame. */
 function Wide({ children, tall = false }: { children: ReactNode; tall?: boolean }) {
   return (
     <div className="relative w-full max-w-full min-w-0 overflow-x-auto rounded-surface border">

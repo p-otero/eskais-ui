@@ -1,7 +1,5 @@
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table"
 
-// ?demo=table-check: the fixture tooling/shell-check.mjs measures. A DataTable at 40rem with a wrapped Summary
-// column beside a Title column that truncates.
 type Issue = { id: string; title: string; summary: string }
 
 const issues: Issue[] = [

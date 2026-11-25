@@ -1,5 +1,3 @@
-// Touches every syntax tone on added, removed and unchanged lines, with changed words on each side, so the contrast
-// check measures them on every diff fill.
 const oldStat = `import { Card, type CardProps } from "@/components/ui/card"
 
 // Every tone: keyword, string, number, comment, function, type, property, tag, punctuation

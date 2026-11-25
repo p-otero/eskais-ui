@@ -8,7 +8,6 @@ import type { PluginOption } from "vite"
 
 const root = fileURLToPath(new URL("../..", import.meta.url))
 
-// Registry functions React Compiler may leave uncompiled. Any other diagnostic in registry/ fails the build.
 const allowed = [
   {
     file: "registry/ui/use-last-success.ts",
@@ -17,10 +16,6 @@ const allowed = [
   },
 ]
 
-/**
- * Builds with React Compiler and checks the registry compiled: the build fails when a registry component or hook
- * hits a compiler diagnostic that isn't in `allowed`, or when nothing in the registry compiled at all.
- */
 function reactCompiler(): PluginOption[] {
   const compiled = new Set<string>()
   const problems: string[] = []

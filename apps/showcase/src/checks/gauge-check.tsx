@@ -2,8 +2,6 @@ import { Meter, MeterLabel, MeterRing } from "@/components/ui/meter"
 import { Stat, StatDelta, StatGroup, StatLabel, StatValue } from "@/components/ui/stat"
 import type { Tone } from "@/lib/tone"
 
-// ?demo=gauge-check: the fixture tooling/shell-check.mjs measures and screenshots: ring meters in each size and tone,
-// ring meters with long truncating labels in a narrow grid, and stats with a delta up, down, inverted and flat.
 const rings: { size: "sm" | "md" | "lg"; value: number; tone?: Tone; label: string }[] = [
   { size: "sm", value: 25, label: "Quota" },
   { size: "md", value: 68, tone: "success", label: "Storage" },

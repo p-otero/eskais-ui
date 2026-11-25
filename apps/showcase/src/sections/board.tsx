@@ -86,5 +86,4 @@ function BoardSection() {
 }
 
 export { BoardSection }
-// Beside the board it moves cards on, and off app.tsx, which sits at its line limit.
 export { SortableSection } from "./sortable"

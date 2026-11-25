@@ -5,7 +5,6 @@ import { Section } from "../section"
 
 const items = sampleInboxItems(1500)
 
-/** The keyboard-first inbox alone, filling the window: ?demo=inbox, for screenshots and the benchmark. */
 function InboxDemo() {
   return (
     <main className="flex h-dvh flex-col p-inset-surface">

@@ -22,15 +22,13 @@ import { Slider, SliderControl, SliderIndicator, SliderThumb, SliderTrack, Slide
 import { StatusPill } from "@/components/ui/status-pill"
 
 import { measure, useThemeMeasurements } from "./hooks/use-theme-measurements"
-import { defaultGlassStrength, type Overrides, type ThemeEditorStore } from "./theme-editor-store"
+import { themeGlassItemStrength, type Overrides, type ThemeEditorStore } from "./theme-editor-store"
 import { GlassControls } from "./theme-editor-glass"
 import { ShapeControls } from "./theme-editor-shape"
 import { themeSnippet } from "./theme-snippet"
 
 const CUSTOM = "custom"
 
-// A fixed rainbow rather than the picker's own track, which draws the hue at the current chroma: a grey brand would
-// get a flat grey bar that disappears in dark mode.
 const hueTrack = {
   background: `linear-gradient(to right, ${[0, 60, 120, 180, 240, 300, 360].map((hue) => `oklch(0.65 0.18 ${hue})`).join(", ")})`,
 }
@@ -120,11 +118,6 @@ function SeedColor({
   )
 }
 
-/**
- * Edits the theme's seeds on `<html>` and shows the CSS to keep them. The choices live in `store`, so they stay
- * while the reader moves around the site. Two columns only when its container has room
- * for both, so it fits a card in a docs column as well as a full-width showcase section.
- */
 function ThemeEditor<Theme extends string, Palette extends string>({
   appearance,
   palettes,
@@ -146,7 +139,7 @@ function ThemeEditor<Theme extends string, Palette extends string>({
   const snippet = themeSnippet(seeds, {
     density,
     radius,
-    glass: theme === "glass" ? (glass ?? defaultGlassStrength) : undefined,
+    glass: theme === "glass" ? (glass ?? themeGlassItemStrength) : undefined,
   })
   const override = (next: Overrides) => {
     store.set({ ...overrides, ...next })

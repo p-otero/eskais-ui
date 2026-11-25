@@ -4,7 +4,6 @@ declare global {
   var perfFixture: { scenario: string; start: number; mounted?: number } | undefined
 }
 
-/** Records on `perfFixture.mounted` when the scenario's first paint happened: a frame, then a task after it. */
 function usePerfMounted() {
   useLayoutEffect(() => {
     requestAnimationFrame(() => {

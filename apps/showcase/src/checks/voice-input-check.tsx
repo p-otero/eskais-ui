@@ -48,8 +48,6 @@ function LiveVoiceInput({ variant }: { variant: VoiceInputVariant }) {
 
 const shown: VoiceInputState[] = ["idle", "processing", "error", "denied"]
 
-// ?demo=voice-input-check: live voice inputs on the real microphone (Chrome's fake device in the check), and every
-// other state still, for tooling/voice-input-check.mjs and its screenshots.
 function VoiceInputCheck() {
   const [mounted, setMounted] = useState(true)
   return (

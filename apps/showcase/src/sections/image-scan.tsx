@@ -8,7 +8,8 @@ import { Label } from "@/components/ui/label"
 import { Section } from "../section"
 import { scanSteps, stillLife, stillLifeRegions } from "./image-scan-fixtures"
 
-// A stand-in for a local model: progress in tenths, then the regions, or an error when asked to fail.
+const indeterminateSweepMs = 1200
+
 function ImageScanSection() {
   const [status, setStatus] = useState<ImageScanStatus>("uploaded")
   const [progress, setProgress] = useState<number>()
@@ -30,8 +31,7 @@ function ImageScanSection() {
         advance(Math.round((done + 0.1) * 10) / 10)
       }, 400)
     }
-    // A moment of indeterminate sweep before the model reports progress.
-    timer.current = setTimeout(() => advance(0.1), 1200)
+    timer.current = setTimeout(() => advance(0.1), indeterminateSweepMs)
   }
 
   const step = scanSteps[Math.min(scanSteps.length - 1, Math.floor((progress ?? 0) * scanSteps.length))]

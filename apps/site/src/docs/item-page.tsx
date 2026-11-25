@@ -22,7 +22,6 @@ const exampleSources = import.meta.glob<string>("../examples/*.tsx", { query: "?
 
 const sourceCache = new Map<string, Promise<string>>()
 
-// Read through `use` from the preload cache: an example preloaded on hover renders without a fallback.
 function Example({ name }: { name: string }) {
   const module = loadExample(name)
   return module ? createElement(use(module).default) : null
@@ -38,7 +37,6 @@ function exampleSource(name: string) {
   return promise
 }
 
-// Examples import from the app's aliases; show them the way a consumer's project has them.
 const consumerSource = (source: string) => source.replace(/\n*$/, "\n")
 
 function ExampleSource({ name }: { name: string }) {
@@ -146,8 +144,6 @@ function ItemPage({ item }: { item: RegistryItem }) {
   )
 }
 
-// While the example loads, a box as tall as the viewport keeps everything after it out of view, so nothing the reader
-// sees moves when the example and the sections under it arrive together (no layout shift). The title above shows at once.
 function ItemBodyPending() {
   return (
     <div className="flex min-h-dvh flex-col">
@@ -159,7 +155,6 @@ function ItemBodyPending() {
 }
 
 function ItemBody({ item }: { item: RegistryItem }) {
-  // An example preloaded on intent is already here, and this doesn't suspend.
   const example = loadExample(item.name)
   if (example) use(example)
   const notes = itemNotes[item.name]

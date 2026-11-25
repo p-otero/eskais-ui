@@ -33,7 +33,7 @@ function useOpenSections(key: string, current: string | undefined, defaultOpen: 
     try {
       localStorage.setItem(key, JSON.stringify(next))
     } catch {
-      // Storage can be full or blocked; the sections still open and close for this visit.
+      // Spec: Web Storage throws when full or blocked; the sections still open and close for this visit.
     }
   }
   return { isOpen, setOpen }

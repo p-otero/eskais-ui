@@ -281,7 +281,6 @@ function MultiLineChart() {
   )
 }
 
-// Recharts clones the label content with the pie's polar viewBox.
 function DonutCenter({ viewBox, total }: { viewBox?: { cx?: number; cy?: number }; total: number }) {
   if (viewBox?.cx === undefined || viewBox.cy === undefined) return null
   return (

@@ -2,10 +2,6 @@ import DocumentWorkspaceDemo from "../../../site/src/examples/document-workspace
 
 import { Section } from "../section"
 
-/**
- * ?demo=document-workspace: the docs site's demo inside a bare app shell whose <main> the block fills, as it would
- * in an app. tooling/document-workspace-check.mjs drives it and takes its screenshots.
- */
 function DocumentWorkspacePage() {
   return (
     <div className="flex h-dvh flex-col bg-background text-foreground">

@@ -64,7 +64,6 @@ import { ToggleGroup } from "@/components/ui/toggle-group"
 
 import { A, Article, Code, DocTable, DocTitle, H2, P, Pre, Ul } from "../docs/prose"
 
-/** The icons the registry's components import, by the name to import. */
 const gallery: [name: string, icon: LucideIcon, usedBy: string][] = [
   ["ChevronDownIcon", ChevronDownIcon, "Select, Accordion, Collapsible, NavigationMenu"],
   ["ChevronUpIcon", ChevronUpIcon, "DataTable sort"],

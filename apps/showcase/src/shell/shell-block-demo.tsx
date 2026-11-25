@@ -22,9 +22,6 @@ import { PageHeader } from "@/components/ui/page-header"
 import { PageLayout } from "@/components/ui/page-layout"
 import { toast, ToastStack } from "@/components/ui/toast"
 
-// ?demo=shell-block (state routing through onNavigate) or ?demo=shell-block&router=hash (#/route hrefs, no onNavigate),
-// for tooling/shell-check.mjs.
-// &main=fill renders a DocumentWorkspace in a main that fills the height left.
 const params = new URLSearchParams(location.search)
 const hashMode = params.get("router") === "hash"
 const fillMode = params.get("main") === "fill"

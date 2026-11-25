@@ -57,7 +57,6 @@ function PaletteItems() {
   )
 }
 
-/** An inline palette of 300 commands: typing filters it, arrows move the highlight. */
 function CommandScenario() {
   return (
     <Command className="max-w-xl" items={paletteData} onAction={() => {}}>
@@ -96,7 +95,6 @@ function Paragraphs() {
   )
 }
 
-/** One trigger per overlay, each with real content, for open and close latency. */
 function OverlaysScenario() {
   const [paletteOpen, setPaletteOpen] = useState(false)
   return (

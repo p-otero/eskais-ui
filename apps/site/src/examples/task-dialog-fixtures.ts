@@ -1,5 +1,3 @@
-// Sample data for the task dialog example: a task with a branch, commits and uncommitted work, and one without a
-// branch yet.
 import type { AttemptView, TaskView, UsageSummary } from "@/lib/agent-task-types"
 import type { Commit } from "@/lib/commit-graph"
 
@@ -17,13 +15,11 @@ type TaskBranch = {
 
 type PatchTotals = { files: number; additions: number; deletions: number }
 
-/** What a task's branch changed: the diff against its base, its commits and the checkout's uncommitted work. */
 type TaskChangeSet = {
   /** The branch against its base, `git diff base...branch`. */
   all: PatchTotals & { patch: string }
   /** Newest first, as `git log base..branch` lists them. */
   commits: Commit[]
-  /** Each commit's own diff, by id. */
   patches: Record<string, string>
   /** The upstream's head; commits above it aren't pushed. Commits mark themselves with `unpushed` without one. */
   upstreamHead?: string
@@ -359,7 +355,6 @@ const withTotals = (patch: string) => ({ ...totals(patch), patch })
 const branch: TaskBranch = { name: "fix/webhook-backoff", base: "main", ahead: 3, behind: 1, upstream: null }
 
 const author = { name: "Codex" }
-// The branch's first commit sits on this commit of main.
 const forkPoint = "4c1d9e07a3b5f2e8d6c4a1b9e7f5d3c2a0b8e6f4"
 
 const branchCommits: { commit: Omit<Commit, "parents" | "stats" | "unpushed">; patches: string[] }[] = [

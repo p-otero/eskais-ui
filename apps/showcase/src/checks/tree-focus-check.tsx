@@ -5,8 +5,6 @@ import { GitDiff } from "@/components/ui/git-diff"
 import { GitTree } from "@/components/ui/git-tree"
 import { Tree } from "@/components/ui/tree"
 
-// ?demo=tree-focus-check: the fixture of tooling/tree-focus-check.mjs. Trees whose folders hold rows, so a focused
-// dialog, tree or folder above them would outline every row if a row's focus style matched any focused ancestor.
 const patch = ["src/billing/invoice.ts", "src/billing/tax/rates.ts", "docs/billing.md"]
   .map(
     (path) =>

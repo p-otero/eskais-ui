@@ -13,8 +13,6 @@ const fromRoot = (path: string) => fileURLToPath(new URL(`../../${path}`, import
 const escapeHtml = (text: string) =>
   text.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;")
 
-// Every route gets its own index.html, so the site works from any folder of a static host with no rewrites.
-// The shell is the same; only the relative asset paths, the title and the description change.
 function staticRoutes(): Plugin {
   let outDir = ""
   return {

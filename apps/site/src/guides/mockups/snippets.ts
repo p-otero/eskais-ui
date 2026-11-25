@@ -1,4 +1,3 @@
-// Code shown on the Mockups guide. The outputs are copied from real runs of the CLI.
 const quickstart = `npx shadcn@latest init -t vite -n app -b base -p nova --no-monorepo
 cd app && npx shadcn@latest registry add "@eskais=https://raw.githubusercontent.com/p-otero/eskais-ui/main/public/r/{name}.json"
 npx shadcn@latest add @eskais/theme @eskais/card @eskais/button @eskais/eskais-mockup-cli --overwrite -y

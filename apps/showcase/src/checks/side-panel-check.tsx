@@ -5,9 +5,6 @@ import { List, ListItem } from "@/components/ui/list-item"
 import { SidePanel, type SidePanelNarrow } from "@/components/ui/side-panel"
 import { StatusPill } from "@/components/ui/status-pill"
 
-// ?demo=side-panel-check: the fixture tooling/shell-check.mjs measures. A 24rem panel whose header holds a
-// StatusPill and a small Button, as the consumer reported, and one with only a pill. With &narrow=stack, overlay or
-// sheet, a list with a panel open from the start, the way a phone shows it in each mode.
 const cases = {
   both: (
     <>

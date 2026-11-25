@@ -1,7 +1,6 @@
 import { Calendar } from "@/components/ui/calendar"
 import { DatePicker } from "@/components/ui/date-picker"
 
-// ?demo=calendar-check: range calendars for tooling/calendar-check.mjs, which screenshots and measures the band.
 const ranges = [
   { id: "week", value: ["2026-11-09", "2026-11-13"] },
   { id: "weeks", value: ["2026-11-12", "2026-11-24"] },

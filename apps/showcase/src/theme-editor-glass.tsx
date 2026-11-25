@@ -5,12 +5,8 @@ import { Field, FieldDescription, FieldLabel } from "@/components/ui/field"
 import { Slider, SliderControl, SliderIndicator, SliderThumb, SliderTrack, SliderValue } from "@/components/ui/slider"
 import { Switch } from "@/components/ui/switch"
 
-import { defaultGlassStrength, type Overrides } from "./theme-editor-store"
+import { themeGlassItemStrength, type Overrides } from "./theme-editor-store"
 
-/**
- * Turns the glass theme on and off for the whole page, and sets how strong it is. Shown only when the appearance has a
- * `"glass"` theme; turning it off returns to `"default"`.
- */
 function GlassControls<Theme extends string>({
   appearance,
   strength,
@@ -40,7 +36,7 @@ function GlassControls<Theme extends string>({
       {on && (
         <Field>
           <Slider
-            value={strength ?? defaultGlassStrength}
+            value={strength ?? themeGlassItemStrength}
             onValueChange={(next) => onStrengthChange(next)}
             min={0}
             max={100}

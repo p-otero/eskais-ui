@@ -20,8 +20,6 @@ import { Textarea } from "@/components/ui/textarea"
 
 const filler = Array.from({ length: 8 }, (_, index) => `Line ${index + 1} of the notes kept with this file.`)
 
-// ?demo=dialog-mobile-check: the fixture tooling/dialog-mobile-check.mjs drives on an emulated phone. The page is
-// taller than the screen, so the check can see whether opening a dialog scrolls or unlocks the page behind it.
 function DialogMobileCheck() {
   const [rename] = useState(() => createDialogController())
   return (

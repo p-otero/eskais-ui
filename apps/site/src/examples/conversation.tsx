@@ -31,7 +31,6 @@ export default function ConversationDemo() {
   const timer = useRef<ReturnType<typeof setInterval> | undefined>(undefined)
   const now = useNow()
 
-  // Streams a reply a word at a time, so the log has something to follow.
   const streamReply = () => {
     clearInterval(timer.current)
     const id = `m${String(Date.now())}`

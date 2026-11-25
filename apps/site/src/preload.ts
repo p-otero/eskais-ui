@@ -1,9 +1,8 @@
 import type { ComponentType } from "react"
 
 type Module = { default: ComponentType }
-// React's `use` returns a promise's value at once when the promise carries `status: "fulfilled"` and `value`, so a
-// page whose code a preload already fetched renders without suspending. A lazy() component would suspend once anyway,
-// and React then holds the fallback on screen for about 300 ms before it shows the content.
+// Perf: React's `use` reads a promise carrying `status: "fulfilled"` and `value` without suspending, so a preloaded page
+// renders at once; a lazy() component would suspend once and React holds the fallback for about 300 ms.
 type Tracked = Promise<Module> & { status?: "pending" | "fulfilled" | "rejected"; value?: Module; reason?: unknown }
 
 const exampleModules = import.meta.glob<Module>("./examples/*.tsx")

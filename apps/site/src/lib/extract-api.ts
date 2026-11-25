@@ -1,7 +1,4 @@
-// A small, forgiving reader for the registry's own source style (type aliases, function components, cva
-// variants). It isn't a TypeScript parser: anything it can't read shows up as an inherited type, never an error.
-
-import { OPEN, matchBracket, skipString, splitTopLevel, squash, stripParens } from "./source-scan"
+import { OPEN, indexAfterClosingBracket, skipString, splitTopLevel, squash, stripParens } from "./source-scan"
 
 type ApiProp = {
   name: string
@@ -57,7 +54,6 @@ function readExports(source: string) {
   return { values: [...new Set(values)], types: [...new Set(types)] }
 }
 
-// The type expression after `type Name<…> =`, up to the line where the statement ends.
 function readTypeAliases(source: string) {
   const aliases = new Map<string, string>()
   for (const match of source.matchAll(/(?:^|\n)(?:export\s+)?type\s+([A-Za-z0-9_]+)\s*(<[^=]*>)?\s*=/g)) {
@@ -66,7 +62,7 @@ function readTypeAliases(source: string) {
     for (; index < source.length; index++) {
       const char = source[index]!
       if (OPEN.includes(char) && !(char === ">" && source[index - 1] === "=")) {
-        index = matchBracket(source, index) - 1
+        index = indexAfterClosingBracket(source, index) - 1
         continue
       }
       if (char === '"' || char === "'" || char === "`") {
@@ -124,7 +120,7 @@ function readMembers(body: string) {
     for (; cursor < inner.length; cursor++) {
       const char = inner[cursor]!
       if (OPEN.includes(char) && !(char === ">" && inner[cursor - 1] === "=")) {
-        cursor = matchBracket(inner, cursor) - 1
+        cursor = indexAfterClosingBracket(inner, cursor) - 1
         continue
       }
       if (char === '"' || char === "'" || char === "`") {
@@ -152,12 +148,12 @@ function readMembers(body: string) {
 function readVariants(source: string, name: string) {
   const start = source.search(new RegExp(`const\\s+${name}\\s*=\\s*cva\\(`))
   if (start === -1) return []
-  const call = source.slice(start, matchBracket(source, source.indexOf("(", start)))
+  const call = source.slice(start, indexAfterClosingBracket(source, source.indexOf("(", start)))
   const block = (key: string) => {
     const at = call.search(new RegExp(`\\b${key}\\s*:\\s*\\{`))
     if (at === -1) return ""
     const open = call.indexOf("{", at)
-    return call.slice(open, matchBracket(call, open))
+    return call.slice(open, indexAfterClosingBracket(call, open))
   }
   const defaults = new Map<string, string>()
   for (const match of block("defaultVariants").matchAll(/([A-Za-z]+)\s*:\s*("[^"]*"|true|false)/g)) {
@@ -170,7 +166,7 @@ function readVariants(source: string, name: string) {
     const open = match.index! + match[0].length - 1
     if (inner.slice(0, match.index).split("{").length - inner.slice(0, match.index).split("}").length !== 0) continue
     const options = inner
-      .slice(open + 1, matchBracket(inner, open) - 1)
+      .slice(open + 1, indexAfterClosingBracket(inner, open) - 1)
       .replaceAll(/`[^`]*`/g, "0")
       .replaceAll(/"(?:[^"\\]|\\.)*"(?!\s*:)/g, "0")
     const keys = [...options.matchAll(/(?:^|[\s,{])("[^"]+"|[A-Za-z0-9_-]+)\s*:/g)]
@@ -286,7 +282,6 @@ function readDefaults(pattern: string) {
   return defaults
 }
 
-// `ButtonVariants["size"]` reads as the variant's options when the alias is a VariantProps.
 function indexedAccess(
   prop: ApiProp,
   context: { source: string; aliases: Map<string, string>; imports: Map<string, ImportInfo> },
@@ -332,7 +327,7 @@ function readComponents(source: string, exported: string[]) {
     const name = match[1]!
     if (!exported.includes(name)) continue
     const open = match.index! + match[0].length - 1
-    const params = source.slice(open + 1, matchBracket(source, open) - 1).trim()
+    const params = source.slice(open + 1, indexAfterClosingBracket(source, open) - 1).trim()
     if (!params) {
       components.push({ name, props: [], inherits: [] })
       continue
@@ -340,7 +335,7 @@ function readComponents(source: string, exported: string[]) {
     let defaults = new Map<string, string>()
     let typeText = ""
     if (params.startsWith("{")) {
-      const end = matchBracket(params, 0)
+      const end = indexAfterClosingBracket(params, 0)
       defaults = readDefaults(params.slice(0, end))
       typeText = params.slice(end).replace(/^\s*:\s*/, "")
     } else {
@@ -362,5 +357,5 @@ function extractApi(source: string): ApiModule {
   return { exports: values, types, components: readComponents(source, values) }
 }
 
-export { extractApi, matchBracket, splitTopLevel }
+export { extractApi, indexAfterClosingBracket, splitTopLevel }
 export type { ApiComponent, ApiInherit, ApiModule, ApiProp }

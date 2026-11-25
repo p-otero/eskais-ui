@@ -4,8 +4,6 @@ import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog"
 import { Popover, PopoverClose, PopoverContent, PopoverTitle, PopoverTrigger } from "@/components/ui/popover"
 
-// ?demo=popover-check: a popover that opens on hover, and one open from the start inside a dialog, for
-// tooling/popover-check.mjs.
 function PopoverCheck() {
   const [open, setOpen] = useState(false)
   return (

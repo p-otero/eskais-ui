@@ -14,7 +14,7 @@ import { backdropClassName, contentClassName } from "@/components/ui/dialog"
 
 type ApprovalRequest = { sentence: string }
 
-// The approval is its own top-layer dialog: a modal the agent opened makes the rest of the page inert.
+// Spec: the approval is its own top-layer dialog: a modal the agent opened makes the rest of the page inert.
 const approval = createConfirm<ApprovalRequest>()
 
 const agent = createAgent({

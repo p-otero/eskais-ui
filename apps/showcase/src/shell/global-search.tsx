@@ -26,7 +26,6 @@ const index: Result[] = [
   { value: "doc-secrets", label: "Rotating secrets", kind: "Doc" },
 ]
 
-// Stands in for a request to the server: it honours the abort signal, so a stale search never lands.
 function searchWorkspace(query: string, { signal }: { signal: AbortSignal }) {
   return new Promise<Result[]>((resolve, reject) => {
     const timer = setTimeout(() => {
@@ -40,8 +39,6 @@ function searchWorkspace(query: string, { signal }: { signal: AbortSignal }) {
   })
 }
 
-// Only the triggers go in the Topbar's slots: `center` is hidden on narrow screens, and a dialog renders where it is
-// placed, so one inside that slot would open with no box. The dialog goes beside the Topbar.
 function SearchTrigger({ controller }: { controller: CommandDialogController }) {
   return (
     <CommandDialogTrigger controller={controller} shortcut="mod+k" className="w-full max-w-sm">

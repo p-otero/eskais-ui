@@ -7,8 +7,8 @@ import { agent } from "../agent"
 
 type Entry = ReturnType<typeof agent.snapshot>[number]
 
-// The bridge has no scoped snapshot, so read the page with the preview hidden from agents and without, and keep
-// what only the second one sees.
+// Workaround: UI SDK's bridge has no scoped snapshot, so read the page with the preview hidden from agents and
+// without, and keep what only the second one sees.
 function previewSnapshot(preview: HTMLElement) {
   preview.setAttribute("data-agent-hidden", "")
   const outside = new Set(agent.snapshot().map((entry) => entry.ref))

@@ -7,7 +7,6 @@ type Overrides = { brand?: string; linkBrand?: string; tint?: number; glass?: nu
 const colourKeys = ["brand", "linkBrand"] as const
 const numberKeys = ["tint", "glass"] as const
 
-// Saved state comes from an earlier version or another tab, so keep only the fields that still make sense.
 function sanitize(value: unknown): Overrides {
   if (typeof value !== "object" || value === null) return {}
   const record = value as Record<string, unknown>
@@ -24,13 +23,10 @@ function sanitize(value: unknown): Overrides {
   return overrides
 }
 
-/** The theme-glass item's own strength: 60% opaque and a 20px blur. */
-const defaultGlassStrength = 40
+const themeGlassItemStrength = 40
 
 const glassStyleId = "theme-editor-glass"
 
-// A rule on [data-theme="glass"] rather than inline on <html>: --glass-opacity also drives the fills outside glass,
-// which must stay opaque, and the theme's !important fallbacks (no backdrop-filter, reduced transparency) still win.
 function applyGlass(strength: number | undefined) {
   const existing = document.getElementById(glassStyleId)
   if (strength === undefined) {
@@ -72,7 +68,7 @@ function writeStorage(key: string | undefined, overrides: Overrides) {
     if (Object.keys(overrides).length === 0) localStorage.removeItem(key)
     else localStorage.setItem(key, JSON.stringify(overrides))
   } catch {
-    // Storage can be full, blocked or missing (a private window); the choice still holds for this page.
+    // Spec: Web Storage throws when full, blocked or missing (a private window); the choice still holds for this page.
   }
 }
 
@@ -108,5 +104,5 @@ function createThemeEditorStore({ storageKey }: { storageKey?: string } = {}) {
 
 type ThemeEditorStore = ReturnType<typeof createThemeEditorStore>
 
-export { applyOverrides, createThemeEditorStore, defaultGlassStrength, sanitize }
+export { applyOverrides, createThemeEditorStore, themeGlassItemStrength, sanitize }
 export type { Overrides, ThemeEditorStore }

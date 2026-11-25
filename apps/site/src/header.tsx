@@ -125,13 +125,11 @@ function HeaderActions({ children }: { children?: ReactNode }) {
 function SiteTopbar({ trigger }: { trigger?: ReactNode }) {
   return (
     <Topbar
-      // With no centre slot to keep centred, the actions take their own width and the brand side gives way.
       className="*:data-[slot=topbar-trailing]:flex-none"
       leading={
         <>
           {trigger}
           <Brand />
-          {/* Below lg the sidebar is the navigation, and search keeps its room. */}
           <MainNav className="max-lg:hidden" />
         </>
       }

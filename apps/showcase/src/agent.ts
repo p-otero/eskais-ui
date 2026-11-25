@@ -3,7 +3,7 @@ import { createAgent, registerTools } from "@ui-sdk/react/agent"
 
 type ApprovalRequest = { sentence: string }
 
-// The approval must be its own top-layer dialog: a modal the agent opened makes the rest of the page inert.
+// Spec: the approval must be its own top-layer dialog: a modal the agent opened makes the rest of the page inert.
 const approval = createConfirm<ApprovalRequest>()
 
 const agent = createAgent({
@@ -14,8 +14,6 @@ const agent = createAgent({
   },
 })
 
-// Publishes snapshot, query and act to the browser's agent (WebMCP) where the browser has it; tooling/agent-bridge-check.mjs
-// drives them from outside the page. A step on a data-agent-confirm control stays the person's.
 registerTools(agent, { allow: (step) => !step.confirm })
 
 export { agent, approval }

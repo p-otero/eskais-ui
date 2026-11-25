@@ -23,7 +23,7 @@ function benchFiles(count: number): GitTreeFile[] {
   })
 }
 
-// Built before the clock starts, as a server's response would be, and only on the bench pages.
+// Perf: built before the clock starts, as a server's response would be, and only on the bench pages.
 const commitCount = Number(params.get("commits") ?? 50_000)
 const branchCount = Number(params.get("branches") ?? 0)
 const branched = demo === "commit-bench" && branchCount > 0 ? branchedCommits(commitCount, branchCount, NOW) : undefined
@@ -34,14 +34,11 @@ const merges =
     : []
 const files: GitTreeFile[] = demo === "git-tree-bench" ? benchFiles(Number(params.get("files") ?? 100_000)) : []
 const findable = params.get("findable") === "true"
-// The master-detail setup: a selected row, the working tree on top and the commits above the upstream marked.
 const selecting = params.get("select") === "true"
 if (demo === "commit-bench" || demo === "git-tree-bench") globalThis.gitBench = { start: performance.now() }
 
-// The bench page is the scroller's whole height, past the components' default caps.
 const unbounded = { "--commit-history-height": "none", "--git-tree-height": "none" } as CSSProperties
 
-// Records when the first rows have painted: a frame, then a task after it.
 function markMounted(node: HTMLElement | null) {
   if (!node) return
   requestAnimationFrame(() => {
@@ -54,10 +51,6 @@ function markMounted(node: HTMLElement | null) {
   })
 }
 
-/**
- * ?demo=commit-bench&commits=50000&expanded=all (&select=true: a selection, a working-tree row, an upstream) (or &branches=200 for the branches view) and ?demo=git-tree-bench&files=100000, with &findable=true for the
- * find-in-page layers: tooling/git-bench.mjs's.
- */
 function GitBench({ kind }: { kind: "commits" | "files" }) {
   return (
     <main ref={markMounted} className="flex h-dvh flex-col p-inset-surface">

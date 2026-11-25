@@ -10,7 +10,6 @@ import { useScrollIntoView } from "../hooks/use-scroll-into-view"
 import { docPages, docSections, neighbours } from "../pages"
 import { followTo, hrefFor, linkTo } from "../router"
 
-// The site's narrow breakpoint, the theme's `narrow:` variant, so the drawer and the stacked layout switch together.
 const narrowQuery = "(width <= 47.5rem)"
 
 function DocsSidebar({ route, state }: { route: string; state: SidebarState }) {
@@ -50,8 +49,6 @@ function DocsSidebar({ route, state }: { route: string; state: SidebarState }) {
 
 const docsHome = "/docs/installation"
 
-// Every crumb but the current page links somewhere else: a component's category opens its section of the
-// components index, and a crumb that would only lead back to this page is left out.
 function crumbsFor(route: string): { label: string; route: string }[] {
   if (route === "/docs/components")
     return [
@@ -94,10 +91,6 @@ function SiteDocsLayout({ route, children }: { route: string; children: ReactNod
   )
 }
 
-/**
- * The previous and next pages. The routes render it inside the page's Suspense boundary, so it appears with the
- * page instead of under its loading spinner, where the page would push it down when it arrives (a layout shift).
- */
 function SiteDocsPager({ route }: { route: string }) {
   const { previous, next } = neighbours(route)
   return (

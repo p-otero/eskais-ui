@@ -147,7 +147,6 @@ function GitLine({
   )
 }
 
-/** The branch's diff against its base, shown while no commit is selected. A press clears the selection. */
 function AllChangesToggle({ all, pressed, onPress }: { all: PatchTotals; pressed: boolean; onPress: () => void }) {
   return (
     <Toggle

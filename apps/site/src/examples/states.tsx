@@ -47,7 +47,6 @@ export default function StatesDemo() {
           <CardTitle>Projects</CardTitle>
           <CardDescription>Your team's deployments.</CardDescription>
         </CardHeader>
-        {/* One height for every status, so switching doesn't make the card jump. */}
         <CardContent className="flex min-h-48 flex-col">
           {/* A fresh state per status: DataState keeps the last data while it refetches, so switching from Success to
               Pending would keep the list and only add the refresh spinner. */}
@@ -66,7 +65,6 @@ export default function StatesDemo() {
             }}
           >
             {(items) => (
-              // Pulled out by a row's inset, so the names line up with the card title.
               <List aria-label="Projects" className="-mx-(--item-padding-x)">
                 {items.map((project) => (
                   <ListItem
