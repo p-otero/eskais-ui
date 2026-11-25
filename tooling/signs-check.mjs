@@ -124,10 +124,43 @@ async function checkTeletext(page) {
   expect(Math.abs(box.width / box.height - 4 / 3) < 0.01, "The set should be 4:3")
 }
 
+async function checkTeletextOnTv(page) {
+  await page.goto(demoUrl(page, "teletext-tv"))
+  await page.waitForSelector('[data-slot="teletext-page"]')
+  await page.waitForTimeout(600)
+  const fit = await page.evaluate(() => {
+    const picture = getComputedStyle(document.querySelector('[data-slot="retro-tv-picture"]'))
+    const set = document.querySelector('[data-slot="teletext"]')
+    return {
+      screen: [
+        Number.parseFloat(picture.getPropertyValue("--retro-tv-screen-width")),
+        Number.parseFloat(picture.getPropertyValue("--retro-tv-screen-height")),
+      ],
+      grid: [set.offsetWidth, set.offsetHeight],
+      red: getComputedStyle(document.querySelector('[data-fastext="red"]')).color,
+      mosaic: getComputedStyle(document.querySelector('[data-slot="teletext-mosaic"]')).filter,
+    }
+  })
+  console.log(`Teletext on the TV: grid ${fit.grid.join("×")} px, screen ${fit.screen.map(Math.round).join("×")} px`)
+  expect(
+    Math.abs(fit.grid[0] - fit.screen[0]) <= 1 && Math.abs(fit.grid[1] - fit.screen[1]) <= 1,
+    "The teletext grid should fill the TV's screen",
+  )
+  expect(fit.red === "rgb(255, 42, 31)", `Phosphor recoloured teletext red to ${fit.red}`)
+  expect(fit.mosaic === "none", `Phosphor glow reached the mosaics: ${fit.mosaic}`)
+  await page.getByRole("button", { name: "Power" }).click()
+  await page.waitForTimeout(1500)
+  expect(
+    await page.locator('[data-slot="retro-tv-picture"]').evaluate((picture) => picture.inert),
+    "Switched off, the teletext should be inert",
+  )
+}
+
 await withShowcase(async (page) => {
   await checkLedMatrix(page)
   await checkNeonSign(page)
   await checkChalkboard(page)
   await checkTeletext(page)
+  await checkTeletextOnTv(page)
   console.log("signs-check: ok")
 })

@@ -166,6 +166,9 @@
       "width": "100%",
       "height": "100%"
     },
+    "[data-slot=\"teletext\"] [data-slot=\"teletext-mosaic\"]": {
+      "filter": "none"
+    },
     "[data-slot=\"teletext\"] [data-fg=\"black\"]": {
       "color": "var(--teletext-black)"
     },
@@ -261,6 +264,6 @@
       }
     }
   },
-  "docs": "`<Teletext label pages page|defaultPage onPageChange service clock searchMs subpageMs screen locale labels>`. `pages` maps 100 to 899 to `{ title, rows | subpages, fastext }`; a row is a list of spans `{ text | mosaic, fg, bg, flash, separated }` or `{ spans, doubleHeight, heading }`, cut at 40 cells. `teletextMosaic(art)` turns block art (two characters across and three lines down a cell) into mosaic rows. The page region takes focus: digits tune (Backspace takes one back), Left and Right turn subpages, and subpages hold still while it has focus or the pointer. Fastext keys are UI SDK Buttons named by their words, shown only where the page links. The header's clock follows the page's locale and renders only after hydration. `screen=\"flat\"` drops the scanlines, for a set inside a TV that draws its own. The palette is the item's `css`; agents call `goToPage(n)` and `fastext(color)`, and a missing page fails with the pages the service has.",
+  "docs": "`<Teletext label pages page|defaultPage onPageChange service clock searchMs subpageMs screen locale labels>`. `pages` maps 100 to 899 to `{ title, rows | subpages, fastext }`; a row is a list of spans `{ text | mosaic, fg, bg, flash, separated }` or `{ spans, doubleHeight, heading }`, cut at 40 cells. `teletextMosaic(art)` turns block art (two characters across and three lines down a cell) into mosaic rows. The page region takes focus: digits tune (Backspace takes one back), Left and Right turn subpages, and subpages hold still while it has focus or the pointer. Fastext keys are UI SDK Buttons named by their words, shown only where the page links. The header's clock follows the page's locale and renders only after hydration. `screen=\"flat\"` drops the scanlines, for a set inside a TV that draws its own: inside `RetroTv` it fills the screen's `--retro-tv-screen-width/height` and keeps its eight colours, its mosaics opting out of the phosphor glow. The palette is the item's `css`; agents call `goToPage(n)` and `fastext(color)`, and a missing page fails with the pages the service has.",
   "type": "registry:ui"
 }

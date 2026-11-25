@@ -325,7 +325,7 @@ const itemNotes: Record<string, ItemNotes> = {
   },
   teletext: {
     usage:
-      "Reach for it for a retro information service, alone or inside a TV: listings, news, scores, weather, each a page of data. It fills its parent at 4:3.",
+      'Reach for it for a retro information service, alone or inside a TV: listings, news, scores, weather, each a page of data. It fills its parent at 4:3; inside a RetroTv, pass screen="flat" and it fills the screen and keeps its eight colours, with the TV\'s switch-off over the page.',
     a11y: [
       "Each page is a region named by its title, with a heading; its text is real text and its mosaics are hidden from screen readers.",
       "The page takes focus: three digits tune and Backspace takes one back, and Left and Right turn subpages, which hold still while it has focus or the pointer.",

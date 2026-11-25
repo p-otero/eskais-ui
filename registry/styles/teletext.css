@@ -131,6 +131,10 @@
   height: 100%;
 }
 
+[data-slot="teletext"] [data-slot="teletext-mosaic"] {
+  filter: none;
+}
+
 [data-slot="teletext"] [data-fg="black"] {
   color: var(--teletext-black);
 }
