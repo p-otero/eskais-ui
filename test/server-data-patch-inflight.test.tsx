@@ -15,9 +15,6 @@ import {
 import { useServerQuery } from "@/components/ui/use-server-query"
 import { HttpError, type PageRequest, type PageResult, type PageSource } from "@/lib/page-source"
 
-// A consumer whose every read overwrites per-item ETags can't afford a read the patch didn't need, so every test here
-// counts the calls of its fetch.
-
 type Row = { id: string; name: string }
 type Filter = Record<string, never>
 type Pending<T> = { signal: AbortSignal; resolve: (value: T) => void; reject: (error: unknown) => void }
@@ -78,7 +75,6 @@ function neverFailed(seen: Seen[]) {
   expect(seen.some((state) => state.status === "error" || state.error !== null)).toBe(false)
 }
 
-/** Every error the cache records, to check a failure is reported once and an aborted read never. */
 function errorsOf(client: QueryClient) {
   const errors: unknown[] = []
   client.getQueryCache().subscribe((event) => {
@@ -87,7 +83,6 @@ function errorsOf(client: QueryClient) {
   return errors
 }
 
-/** A promise's outcome, read without awaiting it. */
 function track(promise: Promise<unknown>) {
   const outcome: { state: "pending" | "resolved" | "rejected"; error?: unknown } = { state: "pending" }
   promise.then(
@@ -114,7 +109,6 @@ function renderDetail(wrapper: (props: { children: ReactNode }) => ReactNode) {
   return { ...rendered, detail }
 }
 
-/** A detail with data and a reload in flight, the case where a reload that left before a write could undo it. */
 async function reloading(wrapper: (props: { children: ReactNode }) => ReactNode) {
   const rendered = renderDetail(wrapper)
   const { result, detail } = rendered

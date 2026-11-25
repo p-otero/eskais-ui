@@ -49,7 +49,6 @@ function setup(client = createDataClient({ retryDelay: 0 })) {
 
 type Seen = { status: string; error: unknown }
 
-/** Renders `hook` and records the status and error of every render, to catch a flash of error. */
 function renderTracked<R extends Seen>(hook: () => R, wrapper: (props: { children: ReactNode }) => ReactNode) {
   const seen: Seen[] = []
   const rendered = renderHook(

@@ -1,9 +1,5 @@
 import type { ModelScanPointGroup, ModelScanProps, ModelScanStage } from "@/components/ui/model-scan"
 
-// A recorded scan of the demo character, replayed by its `at` times: the photo-to-3D engine's events as it sent them
-// (scan-replay.json), with the GLBs and photos beside it. Nothing here runs a model.
-
-/** The engine's events as recorded, each with `at`, in ms from the start of the run. */
 type RecordedEvent = { at: number } & (
   | { type: "stage"; stage: string; ms?: number }
   | { type: "landmarks"; source: "face" | "body"; aspect: number; points: number[] }
@@ -23,7 +19,6 @@ type ScanRecording = {
   events: RecordedEvent[]
 }
 
-/** The events as the engine emits them live: typed arrays, and the GLB's URL instead of its file name. */
 type ScanEvent =
   | { type: "stage"; stage: string; ms?: number }
   | { type: "landmarks"; source: "face" | "body"; aspect: number; points: Float32Array }
@@ -64,7 +59,6 @@ function toLive(event: RecordedEvent, glb: (file: string) => string): ScanEvent 
   }
 }
 
-/** Emits each recorded event at its `at` time, slowed down. Resolves after the last; rejects once `signal` aborts. */
 function replayScan(recording: ScanRecording, emit: (event: ScanEvent) => void, options: ReplayOptions) {
   const { signal, slowdown = 1 } = options
   if (signal?.aborted) return Promise.reject(abortError())
@@ -85,7 +79,6 @@ function replayScan(recording: ScanRecording, emit: (event: ScanEvent) => void, 
   })
 }
 
-/** What the consumer keeps from the events: the last of each, every landmarks group, and whether it's done. */
 type ScanState = {
   started: boolean
   /** The engine's own name for what it's doing now, like `fit-face`. */
@@ -113,10 +106,6 @@ function reduceScan(state: ScanState, event: ScanEvent): ScanState {
   }
 }
 
-/**
- * The UI's stage from what has arrived, not from the engine's step names (it exports twice: before the base model and
- * after the hair): landmarks are detecting, the base model building, streamed weights refining, the character ready.
- */
 function scanStage(state: ScanState): ModelScanStage {
   if (state.character) return "ready"
   if (state.progress) return "refining"
@@ -124,11 +113,6 @@ function scanStage(state: ScanState): ModelScanStage {
   return state.started ? "detecting" : "photo"
 }
 
-/**
- * The scan's state as ModelScan's props. The engine sends weights already multiplied by the GLB's
- * `extras.targetScales`, so they go as `scaledWeights`; the character replaces the base model keeping them, and
- * smiles once it's done.
- */
 function toModelScanProps(state: ScanState): Pick<
   ModelScanProps,
   "stage" | "points" | "model" | "weights" | "scaledWeights" | "progress" | "expressions"
@@ -147,9 +131,6 @@ function toModelScanProps(state: ScanState): Pick<
   }
 }
 
-// A sample of the face mesh's 478 landmarks: every other point of its oval, the eye corners and lids, the brows, the
-// nose and the lip corners and middles. All of them would draw a solid patch at the size a face takes in a full-length
-// photo.
 const faceContours = [
   10, 297, 284, 389, 454, 361, 397, 379, 400, 152, 176, 150, 172, 132, 234, 162, 54, 67, 33, 133, 159, 145, 263, 362,
   386, 374, 70, 105, 107, 336, 334, 300, 168, 1, 61, 291, 0, 17,
@@ -158,8 +139,6 @@ const faceContours = [
 const ring = (from: number, to: number): [number, number][] =>
   Array.from({ length: to - from + 1 }, (_, i) => [from + i, i === to - from ? from : from + i + 1])
 
-// How the contour sample connects, by its index in `faceContours`: the oval, both eyes, the brows, the nose and the
-// mouth, as ModelScan's `edges` for the face group.
 const faceContourEdges: readonly (readonly [number, number])[] = [
   ...ring(0, 17),
   [18, 20],
@@ -181,7 +160,6 @@ const faceContourEdges: readonly (readonly [number, number])[] = [
   [37, 34],
 ]
 
-// The same features in the face mesh and in the body's pose landmarks: nose tip, eye corners, mouth corners.
 const sharedFeatures: readonly (readonly [face: number, body: number])[] = [
   [1, 0],
   [362, 1],
@@ -192,11 +170,6 @@ const sharedFeatures: readonly (readonly [face: number, body: number])[] = [
   [61, 10],
 ]
 
-/**
- * The engine found the face on the face photo and the body on the body photo; the demo shows the body photo, so the
- * face's contour points move onto it by the similarity (scale, turn, shift) that best lays the face mesh's nose, eye
- * and mouth corners on the body's, in pixels. Measured on this recording, they land within 3 px of the body's.
- */
 function placeFaceOnBody(
   face: { points: Float32Array; aspect: number },
   body: { points: Float32Array; aspect: number },
@@ -228,11 +201,6 @@ function placeFaceOnBody(
   return placed
 }
 
-/**
- * The landmarks as the demo draws them on the body photo: the body's as sent, the face's placed onto it by the
- * recording's own face and body landmarks, so the face lights up on the photo as soon as it arrives, joined by
- * `faceContourEdges`.
- */
 function onBodyPhoto(recording: ScanRecording) {
   const recorded = (source: "face" | "body") => {
     const event = recording.events.find((item) => item.type === "landmarks" && item.source === source)

@@ -29,5 +29,4 @@ expectTypeOf<SourceMutationState<void, string>["error"]>().toEqualTypeOf<ApiErro
 expectTypeOf<
   Parameters<NonNullable<SourceMutationOptions<string, void, string>["onError"]>>[0]
 >().toEqualTypeOf<ApiError>()
-// A type argument still wins over the registered one.
 expectTypeOf<ReturnType<typeof useServerQuery<string, TypeError>>["error"]>().toEqualTypeOf<TypeError | null>()

@@ -16,9 +16,6 @@ import {
 import { useServerQuery } from "@/components/ui/use-server-query"
 import { HttpError, type PageRequest, type PageResult, type PageSource } from "@/lib/page-source"
 
-// Every test counts the calls of its fetch: a consumer whose every read overwrites per-item ETags can't afford a read
-// the hold or the patch result added.
-
 type Row = { id: string; name: string }
 type Filter = Record<string, never>
 type Pending<T> = { signal: AbortSignal; resolve: (value: T) => void; reject: (error: unknown) => void }
@@ -75,7 +72,6 @@ function neverFailed(seen: Seen[]) {
   expect(seen.some((state) => state.status === "error" || state.error !== null)).toBe(false)
 }
 
-/** A promise's outcome, read without awaiting it. */
 function track<T>(promise: Promise<T>) {
   const outcome: { state: "pending" | "resolved" | "rejected"; value?: T; error?: unknown } = { state: "pending" }
   promise.then(
@@ -91,7 +87,6 @@ function track<T>(promise: Promise<T>) {
   return outcome
 }
 
-/** A detail with data. */
 async function loaded(wrapper: Wrapper, options = {}) {
   const rendered = renderDetail(wrapper, detailKey, options)
   const { result, detail } = rendered
@@ -101,7 +96,6 @@ async function loaded(wrapper: Wrapper, options = {}) {
   return rendered
 }
 
-/** A detail with data and a reload in flight. */
 async function reloading(wrapper: Wrapper) {
   const rendered = await loaded(wrapper)
   act(() => rendered.result.current.retry())
@@ -437,7 +431,6 @@ describe("holdSource: cancel now, write later", () => {
     expect(calls.every((call) => call.signal.aborted)).toBe(true)
     const seed = { items: [before, other], total: 2 }
     const done = await act(() => (hold as NonNullable<typeof hold>).patch({ items: rename, resource: () => undefined }))
-    // Neither has data yet, so nothing is written and both first loads run once now.
     expect(done.written).toEqual(none)
     expect(done.restarted).toHaveLength(2)
     await waitFor(() => expect(calls).toHaveLength(4))

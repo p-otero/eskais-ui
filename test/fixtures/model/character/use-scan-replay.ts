@@ -19,7 +19,6 @@ import {
 const glbs: Record<string, string> = { "character-soft-toon.glb": soft, "character-cel-outline.glb": cel }
 
 let recording: Promise<ScanRecording> | undefined
-// Fetched on the first run, not bundled: the page doesn't pay for it until someone presses start.
 const loadRecording = () =>
   (recording ??= fetch(recordingUrl).then((response) => {
     if (!response.ok) throw new Error(`The scan recording didn't load (${String(response.status)}).`)
@@ -27,8 +26,6 @@ const loadRecording = () =>
   }))
 
 let decoded: Promise<ModelScanMask> | undefined
-// The body photo's person mask, 0–255 bytes row-major, as the engine's coming `mask` event sends it: decoded from the
-// PNG, its red channel, on the first run.
 const loadMask = () =>
   (decoded ??= fetch(maskUrl)
     .then((response) => response.blob())
@@ -46,14 +43,9 @@ const loadMask = () =>
       return { source: "body" as const, width: bitmap.width, height: bitmap.height, data: bytes }
     }))
 
-/**
- * ModelScan's props from the recorded scan, replayed by its `at` times `slowdown` times slower, with start and
- * cancel. The face's landmarks are placed on the body photo the demo shows.
- */
 function useScanReplay({ slowdown = 15, mask: withMask = true }: { slowdown?: number; mask?: boolean } = {}) {
   const [state, dispatch] = useReducer(
     (current: typeof idleScan, event: ScanEvent | "reset" | "start") =>
-      // Started at the press, before the recording has loaded: Start goes and Cancel takes its place at once.
       event === "reset" ? idleScan : event === "start" ? { ...idleScan, started: true } : reduceScan(current, event),
     idleScan,
   )
@@ -71,7 +63,6 @@ function useScanReplay({ slowdown = 15, mask: withMask = true }: { slowdown?: nu
       .then((next) => {
         if (controller.signal.aborted) return
         setLoaded(next)
-        // Cancelling rejects the replay with an AbortError: not a failure, so nothing to show.
         return replayScan(next, dispatch, { glb: (file) => glbs[file] ?? file, slowdown, signal: controller.signal })
       })
       .catch((error: unknown) => {
@@ -86,7 +77,6 @@ function useScanReplay({ slowdown = 15, mask: withMask = true }: { slowdown?: nu
   const props = toModelScanProps(state)
   const points = useMemo(() => place?.(state.landmarks) ?? [], [place, state.landmarks])
   const running = props.stage === "detecting" || props.stage === "building" || props.stage === "refining"
-  // The mask comes with the body's landmarks, as the engine's would; none with `mask: false`, for the hull fallback.
   const body = state.landmarks.some((group) => group.source === "body")
   const masks = useMemo(() => (withMask && body && mask ? [mask] : undefined), [withMask, body, mask])
   return { props: { ...props, points, masks }, state, start, cancel, running }

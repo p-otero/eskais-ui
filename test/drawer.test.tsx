@@ -115,7 +115,7 @@ test("an agent can open the drawer and edit its field", async () => {
 })
 
 test("the drawer's viewport takes the visible part of the page, not UI SDK's innerHeight inset", async () => {
-  // iOS 26 Safari: toolbars shorten the visible part while innerHeight stays stale at the full height.
+  // Workaround: iOS 26 Safari: toolbars shorten the visible part while innerHeight stays stale at the full height.
   const viewport = Object.assign(new EventTarget(), {
     width: innerWidth,
     height: innerHeight - 90,
@@ -131,7 +131,6 @@ test("the drawer's viewport takes the visible part of the page, not UI SDK's inn
     const box = drawer.parentElement as HTMLElement
     expect(box.dataset.slot).toBe("drawer-viewport")
     expect(box.style.getPropertyValue("--dialog-viewport-bottom")).toBe(`${String(innerHeight - 90)}px`)
-    // Classes with `!` on the viewport outrank the inline inset UI SDK writes there, and leave with the drawer.
     expect(box.classList).toContain("[--keyboard-inset:max(0px,100%-var(--dialog-viewport-bottom,100%))]!")
     expect(box.classList).toContain(
       "top-[clamp(0px,var(--dialog-viewport-top,0px),100%-var(--dialog-viewport-height,100%))]!",

@@ -36,14 +36,13 @@ const recording = JSON.parse(readFileSync(join(character, "scan-replay.json"), "
 
 async function loadCharacter(file = "character-soft-toon.glb") {
   const bytes = readFileSync(join(character, file))
-  // Copied into this realm's ArrayBuffer: GLTFLoader checks for one with instanceof.
+  // Workaround: copied into this realm's ArrayBuffer: GLTFLoader checks for one with instanceof.
   const buffer = new ArrayBuffer(bytes.byteLength)
   new Uint8Array(buffer).set(bytes)
   const gltf = await new GLTFLoader().parseAsync(buffer, "")
   return { scene: gltf.scene, animations: gltf.animations }
 }
 
-/** A mesh with two morph targets, the second stored scaled by 0.01 as `extras.targetScales` says. */
 function scaledModel(scales: unknown = [1, 0.01]) {
   const geometry = new BufferGeometry()
   geometry.setAttribute("position", new Float32BufferAttribute([0, 0, 0, 1, 0, 0, 0, 1, 0], 3))
@@ -74,7 +73,6 @@ describe("extras.targetScales", () => {
     expect(influence(mesh, "expr.jawOpen")).toBeCloseTo(0.01, 7)
     rig.setWeights(undefined, { jawOpen: 0.5 }, true)
     expect(influence(mesh, "expr.jawOpen")).toBeCloseTo(0.005, 7)
-    // The weight as given, before its multiplier.
     expect(rig.weight("expr.jawOpen")).toBe(0.5)
   })
 
@@ -132,10 +130,8 @@ describe("the demo character", () => {
     expect(body.userData.targetScales).toEqual(recording.targetScales)
     const done = recording.events.find((event) => event.type === "done")
     if (done?.type !== "done") throw new Error("The recording has no done event.")
-    // The GLB starts on the scanned character's weights, scaled like the recording's.
     for (const [i, weight] of done.character.weights.entries())
       expect(body.morphTargetInfluences[i]).toBeCloseTo(weight, 5)
-    // The same meshes and targets; the cel style's colours are a little more saturated.
     expect(shape(createModelRig(cel).signature)).toBe(shape(rig.signature))
     const style = (scene: typeof soft.scene) =>
       ((scene.getObjectByName("body") as Mesh).material as MeshStandardMaterial).userData.eskais.style.id
@@ -159,7 +155,6 @@ describe("the demo character", () => {
   })
 })
 
-/** A handle that records what the rig hook reports. */
 function hookHandle() {
   const api = { loading: vi.fn(), loaded: vi.fn(), failed: vi.fn() }
   return { handle: { api, get: () => ({}), subscribe: () => () => {} } as unknown as ModelViewerHandle, api }
@@ -185,7 +180,6 @@ describe("onModelLoad", () => {
     await waitFor(() => expect(result.current.rig).not.toBeNull())
     expect(order).toEqual(["onModelLoad", "loaded"])
     expect(onModelLoad).toHaveBeenCalledWith(first.scene, [])
-    // The rig takes the restyled materials as the model's own: "standard" puts them back after the toon swap.
     const rig = result.current.rig
     rig?.setMaterial("toon")
     rig?.setMaterial("standard")
@@ -290,7 +284,6 @@ describe("the scan replay", () => {
       ["face", 956],
       ["body", 66],
     ])
-    // Refining shows the engine's progress.
     const refining = reduceScan(reduceScan(idleScan, { type: "model", glb: "a.glb", targetNames: [] }), {
       type: "progress",
       value: 0.5,
@@ -308,7 +301,6 @@ describe("the scan replay", () => {
     const [face, body] = groups
     if (!face || !body) throw new Error("The recording has no landmarks.")
     const placed = placeFaceOnBody(face, body)
-    // Pixels of the 540 × 960 body photo: the face mesh's nose tip is the sample's 34th point, the pose's nose its first.
     const dx = (placed[33 * 2] ?? 0) - (body.points[0] ?? 0)
     const dy = (placed[33 * 2 + 1] ?? 0) - (body.points[1] ?? 0)
     expect(Math.hypot(dx * 540, dy * 960)).toBeLessThan(4)

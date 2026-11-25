@@ -60,7 +60,6 @@ function reconnect() {
   })
 }
 
-// Lets a refetch the event should not start show up before asserting nothing ran.
 const settle = () => act(() => new Promise((resolve) => setTimeout(resolve, 20)))
 
 afterEach(() => {

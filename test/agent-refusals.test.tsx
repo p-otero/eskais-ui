@@ -492,7 +492,6 @@ test("parseActionRefusal tells a refusal from another failure in agent.act()'s s
     kind: "refused",
     text: "collapse was refused by the app.",
   })
-  // No onOpenFile: the tree throws a plain Error, which is a failure but not a refusal.
   const other = await agent.act({ steps: [{ ref: "Files", action: "open", args: ["src/a.ts"] }] })
   expect(other.ok).toBe(false)
   expect(parseActionRefusal(other.error)).toBeNull()
@@ -509,7 +508,6 @@ test("parseActionRefusal reads the error, a message the bridge prefixed, and lea
   expect(error.message).toBe("start isn't available while listening. [unavailable:start]")
   expect(error.text).toBe("start isn't available while listening.")
   expect(parseActionRefusal(error)).toEqual({ action: "start", kind: "unavailable", text: error.text })
-  // The bridge's wording for an action whose promise rejected before the step ended.
   expect(parseActionRefusal(`start on Voice (c2) failed: ${error.message}`)).toMatchObject({ action: "start" })
   expect(parseActionRefusal("start on Voice (c2) failed: [redacted]")).toBeNull()
   expect(parseActionRefusal(new Error('Card "a" can\'t be moved.'))).toBeNull()
