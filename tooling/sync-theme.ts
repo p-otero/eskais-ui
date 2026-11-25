@@ -135,5 +135,8 @@ item("palettes").css = oneSelectorPerRule(tree(read("palettes.css")))
 item("theme-compact").css = oneSelectorPerRule(tree(read("theme-compact.css")))
 item("theme-glass").css = oneSelectorPerRule(tree(read("theme-glass.css")))
 item("prism-picker").css = oneSelectorPerRule(tree(read("prism-picker.css")))
+for (const instrument of ["sun-arc", "mixer", "safe-dial", "vinyl-scrubber"]) {
+  item(instrument).css = oneSelectorPerRule(tree(read(`${instrument}.css`)))
+}
 
 writeFileSync(registryPath, `${JSON.stringify(registry, null, 2)}\n`)

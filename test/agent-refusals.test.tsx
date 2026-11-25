@@ -25,7 +25,11 @@ import { list } from "@/components/ui/list-primitive"
 import { masterDetail } from "@/components/ui/master-detail-primitive"
 import { modelScan } from "@/components/ui/model-scan-primitive"
 import { nativeSelect } from "@/components/ui/native-select-primitive"
+import { mixer } from "@/components/ui/mixer-primitive"
 import { prismPicker } from "@/components/ui/prism-picker-primitive"
+import { safeDial } from "@/components/ui/safe-dial-primitive"
+import { sunArc } from "@/components/ui/sun-arc-primitive"
+import { vinylScrubber } from "@/components/ui/vinyl-scrubber-primitive"
 import { searchField } from "@/components/ui/search-field-primitive"
 import { serverFilters } from "@/components/ui/server-filters-primitive"
 import { sidebar } from "@/components/ui/sidebar-primitive"
@@ -416,6 +420,67 @@ test("prism picker: a refused turn, a wavelength outside the spectrum, a purple 
     [470],
   )
   expect(value).toBe(520)
+})
+
+test("sun arc: a refused move, a time off the clock, a polar sunrise or a disabled arc fail the step", async () => {
+  const slider = { getValue: () => 600, setValue: vi.fn((_next: number): boolean => false) }
+  const day = { kind: "day" as const, sunrise: 519, sunset: 1083, noon: 801 }
+  mounted(mount(sunArc, { slider, day }, `<root aria-label="Meeting time"></root>`))
+  await failsWith("Meeting time", "setTime", "setTime was refused by the app.", ["17:45"])
+  await failsWith("Meeting time", "sunrise", "sunrise was refused by the app.")
+  await failsWith("Meeting time", "setTime", 'takes minutes from 0 to 1439 or "HH:MM"', ["24:10"])
+  const night = { kind: "polar-night" as const, sunrise: undefined, sunset: undefined, noon: 715 }
+  mounted(mount(sunArc, { slider, day: night }, `<root aria-label="Arctic time"></root>`))
+  await failsWith("Arctic time", "sunset", "the sun doesn't rise on this day here (polar night)")
+  mounted(mount(sunArc, { slider, day, disabled: true }, `<root aria-label="Disabled arc"></root>`))
+  await failsWith("Disabled arc", "solarNoon", "solarNoon isn't available while the picker is disabled")
+  expect(slider.setValue).toHaveBeenCalledTimes(2)
+})
+
+test("mixer: a refused change, a locked channel, room the locks don't leave or a wrong split fail the step", async () => {
+  const channels = [
+    { id: "a", label: "Alpha" },
+    { id: "b", label: "Beta" },
+    { id: "c", label: "Gamma" },
+  ]
+  const values = { a: 50, b: 30, c: 20 }
+  const commit = vi.fn((): boolean => false)
+  const commitLock = vi.fn((): boolean => false)
+  mounted(mount(mixer, { channels, values, locked: ["c"], commit, commitLock }, `<root aria-label="Split"></root>`))
+  await failsWith("Split", "setChannel", "setChannel was refused by the app.", ["a", 60])
+  await failsWith("Split", "lock", "lock was refused by the app.", ["a"])
+  await failsWith("Split", "setChannel", "can't move Gamma: it is locked", ["c", 10])
+  await failsWith("Split", "setChannel", "locked channels hold 20 of 100, so it can take at most 80", ["a", 90])
+  await failsWith("Split", "setAll", "needs values that sum to 100, not 90", [[50, 20, 20]])
+  await failsWith("Split", "setAll", "can't move Gamma: it is locked at 20", [{ a: 40, b: 30, c: 30 }])
+  await failsWith("Split", "setChannel", 'has no channel "z"', ["z", 10])
+  mounted(mount(mixer, { channels, values, locked: ["b", "c"], commit, commitLock }, `<root aria-label="Held"></root>`))
+  await failsWith("Held", "setChannel", "every other channel is locked", ["a", 40])
+  expect(commit).toHaveBeenCalledOnce()
+})
+
+test("safe dial: a refused code, a wrong count, a number off the dial or a disabled dial fail the step", async () => {
+  const code = { getValue: () => "", setValue: vi.fn((_next: string): boolean => false) }
+  mounted(mount(safeDial, { code, length: 3, numbers: 40 }, `<root aria-label="Vault"></root>`))
+  await failsWith("Vault", "enter", "enter was refused by the app.", ["12-07-39"])
+  await failsWith("Vault", "enter", "takes 3 numbers, not 2", ["12-07"])
+  await failsWith("Vault", "enter", "can't dial 45: the dial runs from 0 to 39", [[12, 45, 7]])
+  mounted(mount(safeDial, { code, disabled: true }, `<root aria-label="Locked vault"></root>`))
+  await failsWith("Locked vault", "enter", "enter isn't available while the dial is disabled", ["1234"])
+  expect(code.setValue).toHaveBeenCalledOnce()
+})
+
+test("vinyl scrubber: a refused seek or play, a time past the end or an unknown duration fail the step", async () => {
+  const seek = vi.fn((): boolean => false)
+  const setPlaying = vi.fn((): boolean => false)
+  mounted(mount(vinylScrubber, { duration: 240, seek, setPlaying }, `<root aria-label="Track"></root>`))
+  await failsWith("Track", "seek", "seek was refused by the app.", [30])
+  await failsWith("Track", "play", "play was refused by the app.")
+  await failsWith("Track", "seek", 'takes 0 to 240 seconds or "m:ss", not 900', [900])
+  mounted(mount(vinylScrubber, { duration: 0, seek, setPlaying }, `<root aria-label="Loading"></root>`))
+  await failsWith("Loading", "seek", "seek isn't available until the media's duration is known", [30])
+  expect(seek).toHaveBeenCalledOnce()
+  expect(setPlaying).toHaveBeenCalledOnce()
 })
 
 test("search field: a refused search fails the step", async () => {

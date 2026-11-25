@@ -137,6 +137,10 @@ const pages: Record<string, Page> = {
     }),
   perf: loadPerfPage,
   "prism-picker": () => import("./prism/prism-picker-demo").then((module) => module.PrismPickerDemo),
+  "sun-arc": () => import("./instruments/sun-arc-demo").then((module) => module.SunArcDemo),
+  mixer: () => import("./instruments/mixer-demo").then((module) => module.MixerDemo),
+  "safe-dial": () => import("./instruments/safe-dial-demo").then((module) => module.SafeDialDemo),
+  "vinyl-scrubber": () => import("./instruments/vinyl-scrubber-demo").then((module) => module.VinylScrubberDemo),
   ...Object.fromEntries(
     gitWorkspaceDemoNames.map((name) => [
       name,

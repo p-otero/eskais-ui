@@ -1,0 +1,267 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "sun-arc",
+  "title": "Sun Arc",
+  "description": "A time-of-day picker drawn as the sun's real path over a city: sunrise, solar noon and sunset come from a solar-position model for a latitude, longitude and day, and the sky, the light on the water and the lit windows follow the sun's altitude. UI SDK's slider in minutes since local midnight, with setTime, sunrise, sunset and solarNoon for agents.",
+  "dependencies": [
+    "@ui-sdk/core@0.1.0-beta.12",
+    "@ui-sdk/react@0.1.0-beta.12"
+  ],
+  "registryDependencies": [
+    "@eskais/utils",
+    "@eskais/theme",
+    "@eskais/action-refusal",
+    "@eskais/button",
+    "@eskais/locale"
+  ],
+  "files": [
+    {
+      "path": "registry/ui/sun-arc.tsx",
+      "content": "\"use client\"\n\nimport { createParts } from \"@ui-sdk/react/primitive\"\nimport {\n  createSliderController,\n  Slider,\n  SliderControl,\n  SliderThumb,\n  SliderTrack,\n  type SliderValueChangeDetails,\n} from \"@ui-sdk/react/slider\"\nimport { memo, useMemo, useRef, useState } from \"react\"\n\nimport { Button } from \"@/components/ui/button\"\nimport { sunArc } from \"@/components/ui/sun-arc-primitive\"\nimport { domeScale, sceneVars, skyline, stars, sunPath, timeToX } from \"@/components/ui/sun-arc-scene\"\nimport { calendarIn, minutesPerDay, solarDay, sunAltitude, type SolarDay } from \"@/components/ui/sun-arc-solar\"\nimport { useSunArcScene } from \"@/components/ui/use-sun-arc-scene\"\nimport { useLocale } from \"@/lib/locale\"\nimport { cn, cssVars } from \"@/lib/utils\"\n\nconst { Root: SunArcRoot } = createParts(sunArc, { root: \"div\" })\n\ntype SunArcLabels = {\n  /** Names the arc, a slider in minutes, for screen readers and agents. */\n  time: string\n  /** The readout's term for the sun's height above the horizon. */\n  altitude: string\n  sunrise: string\n  solarNoon: string\n  sunset: string\n}\n\nconst sunArcLabels: SunArcLabels = {\n  time: \"Time\",\n  altitude: \"Sun altitude\",\n  sunrise: \"Sunrise\",\n  solarNoon: \"Solar noon\",\n  sunset: \"Sunset\",\n}\n\ntype SunArcState = { disabled: boolean; day: SolarDay }\n\ntype SunArcProps = {\n  /** The accessible name of the picker as a whole. */\n  label: string\n  /** Degrees north of the equator, −90 to 90. */\n  latitude: number\n  /** Degrees east of Greenwich, −180 to 180. */\n  longitude: number\n  /** The day whose sun it shows; today by default. */\n  date?: Date\n  /** The IANA time zone the minutes are counted in, like `\"Europe/Madrid\"`; the runtime's own by default. */\n  timeZone?: string\n  /** Minutes since local midnight, 0 to 1439. Pass it to control the picker. */\n  value?: number\n  /** Solar noon, rounded to the step, by default. */\n  defaultValue?: number\n  /** Runs on every step of a drag or a key, with UI SDK's slider details (`reason`, `source`, `cancel()`). */\n  onValueChange?: (minutes: number, details: SliderValueChangeDetails) => void\n  /** Runs once a drag or a key press that changed the value ends, for saving. */\n  onValueCommit?: (minutes: number) => void\n  /** Minutes per arrow key; 5 by default. Page Up and Page Down move an hour. */\n  step?: number\n  /** The locale times and degrees are written in; the page's `lang`, or the runtime's default without one. */\n  locale?: string\n  disabled?: boolean\n  /** Submits the minutes under this name in a form. */\n  name?: string\n  labels?: Partial<SunArcLabels>\n  /** Classes for the root; a function gets the picker's state. */\n  className?: string | ((state: SunArcState) => string | undefined)\n  /** Called with each sky paint's duration in ms, for measuring. */\n  onPaint?: (milliseconds: number) => void\n}\n\nconst snap = (minutes: number, step: number) =>\n  Math.min(Math.floor((minutesPerDay - 1) / step) * step, Math.max(0, Math.round(minutes / step) * step))\n\nconst rulerHours = [0, 3, 6, 9, 12, 15, 18, 21, 24]\n\nconst Skyline = memo(function Skyline() {\n  return (\n    // oxlint-disable-next-line eskais/no-inline-icons -- a city skyline drawn on the bench, not an icon\n    <svg data-slot=\"sun-arc-skyline\" aria-hidden=\"true\" viewBox={skyline.viewBox} preserveAspectRatio=\"xMidYMax slice\">\n      <path data-layer=\"far\" d={skyline.far.outline} />\n      <path data-layer=\"middle\" d={skyline.middle.outline} />\n      <path data-layer=\"near\" d={skyline.near.outline} />\n    </svg>\n  )\n})\n\nconst Windows = memo(function Windows() {\n  return (\n    // oxlint-disable-next-line eskais/no-inline-icons -- the city's lit windows, not an icon\n    <svg data-slot=\"sun-arc-windows\" aria-hidden=\"true\" viewBox={skyline.viewBox} preserveAspectRatio=\"xMidYMax slice\">\n      <path d={`${skyline.middle.windows}${skyline.near.windows}`} />\n    </svg>\n  )\n})\n\nconst Stars = memo(function Stars() {\n  return (\n    // oxlint-disable-next-line eskais/no-inline-icons -- the night sky's stars, not an icon\n    <svg data-slot=\"sun-arc-stars\" aria-hidden=\"true\" viewBox=\"0 0 100 100\" preserveAspectRatio=\"none\">\n      {stars.map((star) => (\n        <ellipse\n          key={star.key}\n          cx={star.x}\n          cy={star.y}\n          rx={Number(star.r) * 0.09}\n          ry={Number(star.r) * 0.16}\n          opacity={star.o}\n        />\n      ))}\n    </svg>\n  )\n})\n\nfunction useTimeFormat(locale: string | undefined) {\n  return useMemo(() => {\n    const clock = new Intl.DateTimeFormat(locale, { hour: \"numeric\", minute: \"2-digit\", timeZone: \"UTC\" })\n    const hour = new Intl.DateTimeFormat(locale, { hour: \"numeric\", timeZone: \"UTC\" })\n    const angle = new Intl.NumberFormat(locale, { maximumFractionDigits: 0 })\n    const at = (minutes: number) => new Date(Date.UTC(2000, 0, 1, 0, Math.round(minutes)))\n    return {\n      time: (minutes: number) => clock.format(at(minutes)),\n      hour: (hours: number) => hour.format(at((hours % 24) * 60)),\n      altitude: (degrees: number) => `${angle.format(Math.round(degrees) || 0)}°`,\n    }\n  }, [locale])\n}\n\n/**\n * A time-of-day picker drawn as the sun's real path over a city for a place and a day: the sky follows the sun's\n * altitude, and sunrise and sunset come from the solar position at `latitude`, `longitude` and `date`. The arc is\n * UI SDK's slider in minutes since local midnight (arrows by `step`, Page Up and Down an hour, Home and End).\n */\nfunction SunArc({\n  label,\n  latitude,\n  longitude,\n  date,\n  timeZone,\n  value,\n  defaultValue,\n  onValueChange,\n  onValueCommit,\n  step = 5,\n  locale: localeProp,\n  disabled = false,\n  name,\n  labels: labelOverrides,\n  className,\n  onPaint,\n}: SunArcProps) {\n  const labels = { ...sunArcLabels, ...labelOverrides }\n  const [today] = useState(() => new Date())\n  const day = date ?? today\n  const calendar = calendarIn(day, timeZone)\n  const { year, month, day: dayOfMonth, utcOffset } = calendar\n  const place = useMemo(\n    () => ({ latitude, longitude, year, month, day: dayOfMonth, utcOffset }),\n    [latitude, longitude, year, month, dayOfMonth, utcOffset],\n  )\n  const solar = useMemo(() => solarDay(place), [place])\n  const scale = useMemo(() => domeScale(place), [place])\n  const path = useMemo(() => sunPath(place, scale), [place, scale])\n  const [slider] = useState(() => createSliderController<number>())\n  const [ownValue, setOwnValue] = useState(() => defaultValue ?? snap(solar.noon, step))\n  const minutes = value ?? ownValue\n  const [instant, setInstant] = useState(true)\n  const stage = useRef<HTMLDivElement>(null)\n  const locale = useLocale(localeProp)\n  const format = useTimeFormat(locale)\n  useSunArcScene(stage, { place, scale, minutes, instant, onPaint })\n  const [firstPaint] = useState(() => sceneVars(place, scale, minutes))\n\n  const altitude = sunAltitude(place, minutes)\n\n  const onChange = (next: number, details: SliderValueChangeDetails) => {\n    onValueChange?.(next, details)\n    if (details.canceled) return\n    setInstant(details.reason !== \"imperative\")\n    setOwnValue(next)\n  }\n\n  const presets = [\n    { key: \"sunrise\", text: labels.sunrise, at: solar.sunrise },\n    { key: \"noon\", text: labels.solarNoon, at: solar.noon },\n    { key: \"sunset\", text: labels.sunset, at: solar.sunset },\n  ]\n  const moveTo = (at: number) => {\n    setInstant(false)\n    slider.setValue(Math.round(at), { reason: \"imperative\" })\n  }\n  const state = { disabled, day: solar }\n\n  return (\n    <SunArcRoot\n      slider={slider}\n      disabled={disabled}\n      day={solar}\n      aria-label={label}\n      className={cn(\n        \"flex w-full flex-col overflow-hidden rounded-surface border bg-card text-card-foreground shadow-surface\",\n        typeof className === \"function\" ? className(state) : className,\n      )}\n    >\n      <div\n        ref={stage}\n        data-slot=\"sun-arc-stage\"\n        data-disabled={disabled ? \"\" : undefined}\n        data-polar={solar.kind === \"day\" ? undefined : solar.kind}\n        style={cssVars(firstPaint)}\n      >\n        <div data-slot=\"sun-arc-sky\" aria-hidden=\"true\" />\n        <Stars />\n        <div data-slot=\"sun-arc-dusk\" aria-hidden=\"true\" />\n        <div data-slot=\"sun-arc-glow\" data-light=\"pale\" aria-hidden=\"true\" />\n        <div data-slot=\"sun-arc-glow\" data-light=\"warm\" aria-hidden=\"true\" />\n        <Skyline />\n        <Windows />\n        <div data-slot=\"sun-arc-ground\" aria-hidden=\"true\">\n          <div data-slot=\"sun-arc-glint\" />\n          {rulerHours.map((hours) => (\n            <span\n              key={hours}\n              data-slot=\"sun-arc-hour\"\n              style={cssVars({ \"--sun-arc-at\": `${(timeToX(hours * 60) * 100).toFixed(3)}%` })}\n            >\n              {hours % 6 === 0 && hours > 0 && hours < 24 ? format.hour(hours) : null}\n            </span>\n          ))}\n          {[solar.sunrise, solar.sunset].map((at, index) =>\n            at === undefined ? null : (\n              <span\n                key={index === 0 ? \"sunrise\" : \"sunset\"}\n                data-slot=\"sun-arc-event\"\n                style={cssVars({ \"--sun-arc-at\": `${(timeToX(at) * 100).toFixed(3)}%` })}\n              />\n            ),\n          )}\n        </div>\n        {/* oxlint-disable-next-line eskais/no-inline-icons -- the sun's path over the day, not an icon */}\n        <svg data-slot=\"sun-arc-path\" aria-hidden=\"true\" viewBox=\"0 0 1000 1000\" preserveAspectRatio=\"none\">\n          <path d={path} vectorEffect=\"non-scaling-stroke\" />\n        </svg>\n        <Slider\n          controller={slider}\n          value={minutes}\n          onValueChange={onChange}\n          onValueCommit={onValueCommit ? (next: number) => onValueCommit(next) : undefined}\n          min={0}\n          max={minutesPerDay - 1}\n          step={step}\n          largeStep={Math.max(step, Math.round(60 / step) * step)}\n          disabled={disabled}\n          name={name}\n          format={(next: number) => format.time(next)}\n          locale={locale}\n          className=\"absolute inset-0\"\n        >\n          <SliderControl>\n            <SliderTrack>\n              <SliderThumb aria-label={labels.time} className=\"touch-target\" />\n            </SliderTrack>\n          </SliderControl>\n        </Slider>\n      </div>\n      <div className=\"flex flex-wrap items-end justify-between gap-group p-inset-surface\">\n        <dl className=\"flex flex-wrap items-end gap-group\">\n          <div className=\"flex flex-col\">\n            <dt className=\"text-meta tracking-meta text-muted-foreground uppercase\">{labels.time}</dt>\n            <dd className=\"font-mono text-display-sm tracking-tight tabular-nums\">{format.time(minutes)}</dd>\n          </div>\n          <div className=\"flex flex-col\">\n            <dt className=\"text-meta tracking-meta text-muted-foreground uppercase\">{labels.altitude}</dt>\n            <dd className=\"font-mono text-title-sm tabular-nums\">{format.altitude(altitude)}</dd>\n          </div>\n        </dl>\n        <div className=\"grid grow grid-cols-3 gap-items sm:max-w-md\">\n          {presets.map((preset) => (\n            <Button\n              key={preset.key}\n              variant=\"outline\"\n              wrap\n              className=\"flex-col items-start gap-0 py-inset-chip text-start\"\n              disabled={disabled || preset.at === undefined}\n              onClick={() => {\n                if (preset.at !== undefined) moveTo(preset.at)\n              }}\n            >\n              <span className=\"text-caption text-muted-foreground\">{preset.text}</span>\n              <span className=\"font-mono text-body tabular-nums\">\n                {preset.at === undefined ? \"–\" : format.time(preset.at)}\n              </span>\n            </Button>\n          ))}\n        </div>\n      </div>\n    </SunArcRoot>\n  )\n}\n\nexport { SunArc, sunArcLabels }\nexport type { SunArcLabels, SunArcProps, SunArcState }\n",
+      "type": "registry:ui"
+    },
+    {
+      "path": "registry/ui/sun-arc-primitive.ts",
+      "content": "import { definePrimitive } from \"@ui-sdk/core\"\nimport type { createSliderController } from \"@ui-sdk/core/slider\"\n\nimport { minutesPerDay, type SolarDay } from \"@/components/ui/sun-arc-solar\"\nimport { settled, unavailable } from \"@/lib/action-refusal\"\n\ntype SunArcSlider = Pick<ReturnType<typeof createSliderController<number>>, \"getValue\" | \"setValue\">\n\ntype SunArcOptions = {\n  slider?: SunArcSlider\n  disabled?: boolean\n  day?: SolarDay\n}\n\ntype Call = { action: string; event: Event | undefined }\n\nconst clockPattern = /^(\\d{1,2}):(\\d{2})$/\n\nfunction minutesOf(time: unknown) {\n  if (typeof time === \"number\") return Number.isFinite(time) ? time : undefined\n  if (typeof time !== \"string\") return undefined\n  const match = clockPattern.exec(time.trim())\n  if (!match) return undefined\n  const hours = Number(match[1])\n  const minutes = Number(match[2])\n  return hours < 24 && minutes < 60 ? hours * 60 + minutes : undefined\n}\n\nfunction ready(options: SunArcOptions, { action, event }: Call) {\n  if (options.disabled) return unavailable(action, \"isn't available while the picker is disabled\", { event })\n  if (!options.slider) return unavailable(action, \"isn't available: the arc isn't ready\", { event })\n  return options.slider\n}\n\nfunction toMinutes(slider: SunArcSlider, minutes: number, { action, event }: Call) {\n  if (slider.getValue() === minutes) return true\n  return settled(slider.setValue(minutes, { reason: \"imperative\", event }), action, { event })\n}\n\nconst polarReason = (day: SolarDay) =>\n  day.kind === \"polar-day\"\n    ? \"the sun doesn't set on this day here (polar day)\"\n    : \"the sun doesn't rise on this day here (polar night)\"\n\nfunction toEvent(options: SunArcOptions, which: \"sunrise\" | \"sunset\", call: Call) {\n  const slider = ready(options, call)\n  if (slider === false) return false\n  const at = options.day?.[which]\n  if (!options.day || at === undefined) {\n    return unavailable(\n      call.action,\n      `isn't available: ${options.day ? polarReason(options.day) : \"the day isn't known\"}`,\n      {\n        event: call.event,\n      },\n    )\n  }\n  return toMinutes(slider, Math.round(at), call)\n}\n\n/** A time-of-day picker's agent surface: the arc is UI SDK's slider in minutes since local midnight. */\nconst sunArc = definePrimitive({\n  name: \"sun-arc\",\n  options: { slider: \"value\", disabled: \"value\", day: \"value\" },\n  // Workaround: not `disabled`: the bridge would hide every action from a disabled part without saying why.\n  state: (options: SunArcOptions) => ({ inert: Boolean(options.disabled) }),\n  sync: (options) => ({ inert: Boolean(options.disabled) }),\n  api: (context) => ({\n    /** Moves the sun to a local time: minutes since midnight (0 to 1439) or `\"HH:MM\"` on a 24-hour clock. */\n    setTime(time: number | string, event?: Event) {\n      const call = { action: \"setTime\", event }\n      const slider = ready(context.options(), call)\n      if (slider === false) return false\n      const minutes = minutesOf(time)\n      if (minutes === undefined || minutes < 0 || minutes >= minutesPerDay) {\n        return unavailable(\n          \"setTime\",\n          `takes minutes from 0 to 1439 or \"HH:MM\" on a 24-hour clock, not ${JSON.stringify(time)}`,\n          { event },\n        )\n      }\n      return toMinutes(slider, Math.round(minutes), call)\n    },\n    /** Moves the sun to sunrise; fails in a polar day or night, which has none. */\n    sunrise(event?: Event) {\n      return toEvent(context.options(), \"sunrise\", { action: \"sunrise\", event })\n    },\n    /** Moves the sun to sunset; fails in a polar day or night, which has none. */\n    sunset(event?: Event) {\n      return toEvent(context.options(), \"sunset\", { action: \"sunset\", event })\n    },\n    /** Moves the sun to solar noon, its highest point of the day. */\n    solarNoon(event?: Event) {\n      const call = { action: \"solarNoon\", event }\n      const options = context.options()\n      const slider = ready(options, call)\n      if (slider === false) return false\n      if (!options.day) return unavailable(\"solarNoon\", \"isn't available: the day isn't known\", { event })\n      return toMinutes(slider, Math.round(options.day.noon), call)\n    },\n  }),\n  slots: (slot) => ({\n    root: slot({\n      role: \"group\",\n      attrs: (state) => ({ \"data-disabled\": state.inert ? \"\" : undefined }),\n    }),\n  }),\n  agent: { actions: [\"setTime\", \"sunrise\", \"sunset\", \"solarNoon\"] },\n})\n\nexport { minutesOf, sunArc }\nexport type { SunArcOptions, SunArcSlider }\n",
+      "type": "registry:ui"
+    },
+    {
+      "path": "registry/ui/sun-arc-scene.ts",
+      "content": "import { minutesPerDay, skyAt, solarDay, sunAltitude, type SolarPlace } from \"@/components/ui/sun-arc-solar\"\n\nconst edgeInset = 0.04\nconst horizonAt = 0.76\nconst skyTopAt = 0.08\nconst nightDepth = 0.16\nconst nightAltitudeSpan = 60\n\n/** Where a time of day sits across the stage, from 0 to 1. */\nconst timeToX = (minutes: number) => edgeInset + (minutes / minutesPerDay) * (1 - 2 * edgeInset)\n\n/** The altitude that reaches the top of the sky: the day's highest sun with some headroom, never flatter than 45°. */\nconst domeScale = (place: SolarPlace) => Math.max(45, sunAltitude(place, solarDay(place).noon) * 1.15)\n\nfunction altitudeToY(altitude: number, scale: number) {\n  if (altitude >= 0) return horizonAt - (Math.min(altitude, scale) / scale) * (horizonAt - skyTopAt)\n  return horizonAt + Math.min(1, -altitude / nightAltitudeSpan) * nightDepth\n}\n\ntype SunArcVars = Record<`--sun-arc-${string}`, string>\n\n// Perf: the sky repaints the whole stage, so its colours move in half-degree steps of altitude, about two minutes of the\n// sun: an arrow key in between only moves the sun, the glow and the glint, which sit on their own layers.\nconst skyStepDegrees = 0.5\n\n/** The CSS variables the stage paints from at one moment: sky colours, light levels and the sun's place. */\nfunction sceneVars(place: SolarPlace, scale: number, minutes: number): SunArcVars {\n  const altitude = sunAltitude(place, minutes)\n  const sky = skyAt(Math.round(altitude / skyStepDegrees) * skyStepDegrees)\n  const x = timeToX(minutes)\n  const y = altitudeToY(altitude, scale)\n  return {\n    \"--sun-arc-zenith\": sky.zenith,\n    \"--sun-arc-horizon\": sky.horizon,\n    \"--sun-arc-sun\": sky.sun,\n    \"--sun-arc-glow\": sky.glow,\n    \"--sun-arc-dusk\": sky.dusk.toFixed(2),\n    \"--sun-arc-night\": sky.night.toFixed(2),\n    \"--sun-arc-daylight\": sky.daylight.toFixed(2),\n    \"--sun-arc-fx\": x.toFixed(5),\n    \"--sun-arc-fy\": y.toFixed(5),\n  }\n}\n\nconst pathStepMinutes = 10\n\n/** The sun's path over the day in a 1000 × 1000 box stretched over the stage. */\nfunction sunPath(place: SolarPlace, scale: number) {\n  const points: string[] = []\n  for (let minutes = 0; minutes <= minutesPerDay; minutes += pathStepMinutes) {\n    const x = timeToX(minutes) * 1000\n    const y = altitudeToY(sunAltitude(place, minutes), scale) * 1000\n    points.push(`${points.length === 0 ? \"M\" : \"L\"}${x.toFixed(1)} ${y.toFixed(1)}`)\n  }\n  return points.join(\" \")\n}\n\nfunction seeded(seed: number) {\n  let state = seed\n  return () => {\n    state = (state + 0x6d2b79f5) | 0\n    let t = Math.imul(state ^ (state >>> 15), 1 | state)\n    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t\n    return ((t ^ (t >>> 14)) >>> 0) / 4_294_967_296\n  }\n}\n\nconst skylineWidth = 2400\nconst skylineHeight = 300\n\ntype SkylineLayer = { outline: string; windows: string }\n\ntype LayerShape = {\n  seed: number\n  minHeight: number\n  maxHeight: number\n  minWidth: number\n  maxWidth: number\n  lit: number\n}\n\nfunction skylineLayer({ seed, minHeight, maxHeight, minWidth, maxWidth, lit }: LayerShape): SkylineLayer {\n  const random = seeded(seed)\n  const outline: string[] = [`M0 ${String(skylineHeight)}`]\n  const windows: string[] = []\n  let x = 0\n  while (x < skylineWidth) {\n    const width = Math.round(minWidth + random() * (maxWidth - minWidth))\n    const height = Math.round(minHeight + random() ** 1.6 * (maxHeight - minHeight))\n    const top = skylineHeight - height\n    const setback = random() < 0.35 ? Math.round(width * 0.18) : 0\n    const setbackDrop = setback ? Math.round(height * 0.12) : 0\n    outline.push(`L${String(x)} ${String(top + setbackDrop)}`)\n    if (setback)\n      outline.push(`L${String(x + setback)} ${String(top + setbackDrop)}`, `L${String(x + setback)} ${String(top)}`)\n    const spire = height > maxHeight * 0.72 && random() < 0.5\n    if (spire) {\n      const middle = x + Math.round(width / 2)\n      outline.push(\n        `L${String(middle - 3)} ${String(top)}`,\n        `L${String(middle - 1)} ${String(top - 26)}`,\n        `L${String(middle + 1)} ${String(top - 26)}`,\n        `L${String(middle + 3)} ${String(top)}`,\n      )\n    }\n    if (setback)\n      outline.push(\n        `L${String(x + width - setback)} ${String(top)}`,\n        `L${String(x + width - setback)} ${String(top + setbackDrop)}`,\n      )\n    outline.push(`L${String(x + width)} ${String(top + setbackDrop)}`, `L${String(x + width)} ${String(skylineHeight)}`)\n    for (let row = top + setbackDrop + 8; row < skylineHeight - 8; row += 11) {\n      for (let column = x + 5; column < x + width - 7; column += 8) {\n        if (random() < lit) windows.push(`M${String(column)} ${String(row)}h4v6h-4z`)\n      }\n    }\n    x += width + Math.round(random() * 6)\n  }\n  outline.push(`L${String(skylineWidth)} ${String(skylineHeight)}Z`)\n  return { outline: outline.join(\"\"), windows: windows.join(\"\") }\n}\n\nconst skyline = {\n  viewBox: `0 0 ${String(skylineWidth)} ${String(skylineHeight)}`,\n  far: skylineLayer({ seed: 7, minHeight: 70, maxHeight: 230, minWidth: 40, maxWidth: 110, lit: 0 }),\n  middle: skylineLayer({ seed: 19, minHeight: 50, maxHeight: 260, minWidth: 46, maxWidth: 120, lit: 0.08 }),\n  near: skylineLayer({ seed: 31, minHeight: 30, maxHeight: 130, minWidth: 60, maxWidth: 150, lit: 0.16 }),\n}\n\nconst stars = (() => {\n  const random = seeded(3)\n  return Array.from({ length: 70 }, (_, index) => ({\n    key: index,\n    x: (random() * 100).toFixed(2),\n    y: (random() * horizonAt * 92).toFixed(2),\n    r: (0.6 + random() ** 3 * 1.4).toFixed(2),\n    o: (0.35 + random() * 0.65).toFixed(2),\n  }))\n})()\n\nexport { domeScale, horizonAt, sceneVars, skyline, stars, sunPath, timeToX }\nexport type { SunArcVars }\n",
+      "type": "registry:ui"
+    },
+    {
+      "path": "registry/ui/sun-arc-solar.ts",
+      "content": "// Spec: NOAA's general solar position equations (Spencer's series for the equation of time and the declination), with\n// Bennett's refraction near the horizon. Within a minute or two of the almanac between the polar circles.\n\n/** A place on a calendar day: degrees north and east, and the local clock's offset from UTC in minutes. */\ntype SolarPlace = {\n  latitude: number\n  longitude: number\n  year: number\n  month: number\n  day: number\n  utcOffset: number\n}\n\n/** The day's sun in local minutes since midnight; `sunrise` and `sunset` are missing in a polar day or night. */\ntype SolarDay = {\n  kind: \"day\" | \"polar-day\" | \"polar-night\"\n  sunrise: number | undefined\n  sunset: number | undefined\n  noon: number\n}\n\nconst minutesPerDay = 1440\nconst radians = Math.PI / 180\nconst degrees = 180 / Math.PI\nconst sunriseZenith = 90.833\n\nconst isLeap = (year: number) => (year % 4 === 0 && year % 100 !== 0) || year % 400 === 0\nconst dayOfYear = ({ year, month, day }: SolarPlace) =>\n  (Date.UTC(year, month - 1, day) - Date.UTC(year, 0, 0)) / 86_400_000\n\nfunction solarTerms(place: SolarPlace, utcMinutes: number) {\n  const year = (2 * Math.PI) / (isLeap(place.year) ? 366 : 365)\n  const gamma = year * (dayOfYear(place) - 1 + (utcMinutes / 60 - 12) / 24)\n  const equationOfTime =\n    229.18 *\n    (0.000075 +\n      0.001868 * Math.cos(gamma) -\n      0.032077 * Math.sin(gamma) -\n      0.014615 * Math.cos(2 * gamma) -\n      0.040849 * Math.sin(2 * gamma))\n  const declination =\n    0.006918 -\n    0.399912 * Math.cos(gamma) +\n    0.070257 * Math.sin(gamma) -\n    0.006758 * Math.cos(2 * gamma) +\n    0.000907 * Math.sin(2 * gamma) -\n    0.002697 * Math.cos(3 * gamma) +\n    0.00148 * Math.sin(3 * gamma)\n  return { equationOfTime, declination }\n}\n\nfunction refraction(altitude: number) {\n  if (altitude < -1) return 0\n  return 1.02 / Math.tan((altitude + 10.3 / (altitude + 5.11)) * radians) / 60\n}\n\n/** The sun's apparent altitude in degrees at a local minute of the day: negative below the horizon. */\nfunction sunAltitude(place: SolarPlace, minutes: number) {\n  const utc = minutes - place.utcOffset\n  const { equationOfTime, declination } = solarTerms(place, utc)\n  const trueSolarTime = utc + equationOfTime + 4 * place.longitude\n  const hourAngle = (trueSolarTime / 4 - 180) * radians\n  const latitude = place.latitude * radians\n  const cosZenith =\n    Math.sin(latitude) * Math.sin(declination) + Math.cos(latitude) * Math.cos(declination) * Math.cos(hourAngle)\n  const altitude = 90 - Math.acos(Math.max(-1, Math.min(1, cosZenith))) * degrees\n  return altitude + refraction(altitude)\n}\n\nconst local = (place: SolarPlace, utcMinutes: number) =>\n  (((utcMinutes + place.utcOffset) % minutesPerDay) + minutesPerDay) % minutesPerDay\n\nfunction solarNoonUtc(place: SolarPlace) {\n  let noon = 720 - 4 * place.longitude\n  for (let pass = 0; pass < 2; pass++) noon = 720 - 4 * place.longitude - solarTerms(place, noon).equationOfTime\n  return noon\n}\n\nfunction crossingUtc(place: SolarPlace, side: -1 | 1, from: number) {\n  let at = from\n  for (let pass = 0; pass < 3; pass++) {\n    const { equationOfTime, declination } = solarTerms(place, at)\n    const latitude = place.latitude * radians\n    const cosHourAngle =\n      (Math.cos(sunriseZenith * radians) - Math.sin(latitude) * Math.sin(declination)) /\n      (Math.cos(latitude) * Math.cos(declination))\n    if (cosHourAngle > 1) return \"polar-night\" as const\n    if (cosHourAngle < -1) return \"polar-day\" as const\n    const hourAngle = Math.acos(cosHourAngle) * degrees\n    at = 720 - 4 * (place.longitude - side * hourAngle) - equationOfTime\n  }\n  return at\n}\n\n/** Sunrise, solar noon and sunset for the place's day, in local minutes since midnight. */\nfunction solarDay(place: SolarPlace): SolarDay {\n  const noonUtc = solarNoonUtc(place)\n  const noon = local(place, noonUtc)\n  const rise = crossingUtc(place, -1, noonUtc - 360)\n  const set = crossingUtc(place, 1, noonUtc + 360)\n  if (typeof rise === \"string\" || typeof set === \"string\") {\n    const kind = rise === \"polar-day\" || set === \"polar-day\" ? \"polar-day\" : \"polar-night\"\n    return { kind, sunrise: undefined, sunset: undefined, noon }\n  }\n  return { kind: \"day\", sunrise: local(place, rise), sunset: local(place, set), noon }\n}\n\nconst offsetPattern = /GMT(?:([+-])(\\d{1,2})(?::?(\\d{2}))?)?/\n\n/** The calendar day and UTC offset of `date` in an IANA time zone, or in the runtime's own zone without one. */\nfunction calendarIn(date: Date, timeZone: string | undefined) {\n  if (!timeZone) {\n    return {\n      year: date.getFullYear(),\n      month: date.getMonth() + 1,\n      day: date.getDate(),\n      utcOffset: -date.getTimezoneOffset(),\n    }\n  }\n  const parts = new Intl.DateTimeFormat(\"en-US\", {\n    timeZone,\n    year: \"numeric\",\n    month: \"numeric\",\n    day: \"numeric\",\n    timeZoneName: \"longOffset\",\n  }).formatToParts(date)\n  const part = (type: Intl.DateTimeFormatPartTypes) => parts.find((entry) => entry.type === type)?.value ?? \"\"\n  const [, sign, hours = \"0\", minutes = \"0\"] = offsetPattern.exec(part(\"timeZoneName\")) ?? []\n  return {\n    year: Number(part(\"year\")),\n    month: Number(part(\"month\")),\n    day: Number(part(\"day\")),\n    utcOffset: (sign === \"-\" ? -1 : 1) * (Number(hours) * 60 + Number(minutes)),\n  }\n}\n\ntype Rgb = readonly [number, number, number]\n\n/** The sky at one solar altitude: gradient stops, the sun's own colour, its glow and how dark the night is (0 to 1). */\ntype Sky = { zenith: string; horizon: string; sun: string; glow: string; dusk: number; night: number; daylight: number }\n\nconst skyStops: { altitude: number; zenith: Rgb; horizon: Rgb; sun: Rgb; glow: Rgb }[] = [\n  { altitude: -18, zenith: [4, 6, 16], horizon: [10, 14, 32], sun: [70, 78, 110], glow: [40, 50, 90] },\n  { altitude: -8, zenith: [10, 16, 44], horizon: [44, 46, 96], sun: [120, 110, 150], glow: [90, 70, 130] },\n  { altitude: -2, zenith: [26, 38, 88], horizon: [214, 112, 84], sun: [255, 120, 70], glow: [255, 110, 60] },\n  { altitude: 3, zenith: [48, 86, 150], horizon: [248, 164, 96], sun: [255, 170, 90], glow: [255, 150, 70] },\n  { altitude: 12, zenith: [52, 116, 200], horizon: [176, 208, 234], sun: [255, 236, 190], glow: [255, 214, 150] },\n  { altitude: 40, zenith: [36, 104, 206], horizon: [150, 198, 240], sun: [255, 252, 236], glow: [255, 244, 214] },\n]\n\nconst mix = (from: Rgb, to: Rgb, t: number): Rgb => [\n  from[0] + (to[0] - from[0]) * t,\n  from[1] + (to[1] - from[1]) * t,\n  from[2] + (to[2] - from[2]) * t,\n]\nconst hex = (colour: Rgb) => `#${colour.map((channel) => Math.round(channel).toString(16).padStart(2, \"0\")).join(\"\")}`\nconst clamp01 = (value: number) => Math.max(0, Math.min(1, value))\n\nfunction skyAt(altitude: number): Sky {\n  const first = skyStops[0]!\n  const last = skyStops.at(-1)!\n  let below = first\n  let above = last\n  for (let index = 0; index < skyStops.length - 1; index++) {\n    const stop = skyStops[index]!\n    const next = skyStops[index + 1]!\n    if (altitude >= stop.altitude && altitude <= next.altitude) {\n      below = stop\n      above = next\n    }\n  }\n  const span = above.altitude - below.altitude\n  const t =\n    altitude <= first.altitude ? 0 : altitude >= last.altitude ? 1 : span === 0 ? 0 : (altitude - below.altitude) / span\n  const lowSun = 1 - Math.abs(altitude - 1) / 9\n  return {\n    zenith: hex(mix(below.zenith, above.zenith, t)),\n    horizon: hex(mix(below.horizon, above.horizon, t)),\n    sun: hex(mix(below.sun, above.sun, t)),\n    glow: hex(mix(below.glow, above.glow, t)),\n    dusk: clamp01(lowSun),\n    night: clamp01((-altitude - 2) / 10),\n    daylight: clamp01((altitude + 4) / 16),\n  }\n}\n\nexport { calendarIn, minutesPerDay, skyAt, solarDay, sunAltitude }\nexport type { Sky, SolarDay, SolarPlace }\n",
+      "type": "registry:ui"
+    },
+    {
+      "path": "registry/ui/use-sun-arc-scene.ts",
+      "content": "import { useEffectEvent, useLayoutEffect, useRef, type RefObject } from \"react\"\n\nimport { sceneVars } from \"@/components/ui/sun-arc-scene\"\nimport type { SolarPlace } from \"@/components/ui/sun-arc-solar\"\n\ntype SunArcSceneOptions = {\n  place: SolarPlace\n  scale: number\n  minutes: number\n  /** Jump to it, for a drag or a key: the pointer and the key already move in small steps. */\n  instant: boolean\n  /** Called with each paint's duration in ms. */\n  onPaint?: ((milliseconds: number) => void) | undefined\n}\n\nconst glideMs = 420\nconst glideAboveMinutes = 30\nconst ease = (t: number) => 1 - (1 - t) ** 3\n\n// Perf: a custom property set to the value it holds still restyles every element under the stage, so only changes go out.\nfunction paint(\n  stage: HTMLElement | null,\n  written: Map<string, string>,\n  place: SolarPlace,\n  scale: number,\n  minutes: number,\n) {\n  if (!stage) return false\n  for (const [name, value] of Object.entries(sceneVars(place, scale, minutes))) {\n    if (written.get(name) === value) continue\n    written.set(name, value)\n    stage.style.setProperty(name, value)\n  }\n  return true\n}\n\n/** Paints the sky, the light and the sun when the time or the day changes, and only then: nothing runs while idle. */\nfunction useSunArcScene(\n  stage: RefObject<HTMLElement | null>,\n  { place, scale, minutes, instant, onPaint }: SunArcSceneOptions,\n) {\n  const shown = useRef<number | null>(null)\n  const written = useRef(new Map<string, string>())\n\n  const paintAt = useEffectEvent((at: number, day: SolarPlace, dome: number) => {\n    const started = performance.now()\n    if (paint(stage.current, written.current, day, dome, at)) onPaint?.(performance.now() - started)\n  })\n\n  useLayoutEffect(() => {\n    const from = shown.current\n    const reduced = matchMedia(\"(prefers-reduced-motion: reduce)\").matches\n    if (from === null || instant || reduced || Math.abs(minutes - from) <= glideAboveMinutes) {\n      shown.current = minutes\n      paintAt(minutes, place, scale)\n      return\n    }\n    const started = performance.now()\n    let frame = 0\n    const step = (now: number) => {\n      const t = Math.min(1, (now - started) / glideMs)\n      shown.current = from + (minutes - from) * ease(t)\n      paintAt(shown.current, place, scale)\n      if (t < 1) frame = requestAnimationFrame(step)\n    }\n    frame = requestAnimationFrame(step)\n    return () => cancelAnimationFrame(frame)\n  }, [minutes, instant, place, scale])\n}\n\nexport { useSunArcScene }\n",
+      "type": "registry:ui"
+    }
+  ],
+  "css": {
+    "[data-slot=\"sun-arc\"]": {
+      "container-type": "inline-size"
+    },
+    "[data-slot=\"sun-arc-stage\"]": {
+      "--sun-arc-horizon-at": "76%",
+      "position": "relative",
+      "width": "100%",
+      "overflow": "hidden",
+      "aspect-ratio": "16 / 8",
+      "container-type": "size",
+      "user-select": "none",
+      "color": "white",
+      "background": "#05070d",
+      "isolation": "isolate"
+    },
+    "@container (width < 32rem)": {
+      "[data-slot=\"sun-arc-stage\"]": {
+        "aspect-ratio": "5 / 4"
+      }
+    },
+    "[data-slot=\"sun-arc-stage\"][data-disabled]": {
+      "filter": "saturate(0.35) brightness(0.75)"
+    },
+    "[data-slot=\"sun-arc-sky\"]": {
+      "position": "absolute",
+      "inset": "0",
+      "width": "100%",
+      "height": "100%",
+      "pointer-events": "none",
+      "background": "linear-gradient( to bottom, var(--sun-arc-zenith) 0%, color-mix(in oklab, var(--sun-arc-zenith), var(--sun-arc-horizon) 45%) 38%, var(--sun-arc-horizon) var(--sun-arc-horizon-at) )"
+    },
+    "[data-slot=\"sun-arc-stars\"]": {
+      "position": "absolute",
+      "inset": "0",
+      "width": "100%",
+      "height": "100%",
+      "pointer-events": "none",
+      "fill": "#f4f6ff",
+      "opacity": "var(--sun-arc-night)",
+      "will-change": "opacity"
+    },
+    "[data-slot=\"sun-arc-dusk\"]": {
+      "position": "absolute",
+      "inset": "auto",
+      "width": "110cqw",
+      "height": "44cqh",
+      "pointer-events": "none",
+      "top": "var(--sun-arc-horizon-at)",
+      "left": "0",
+      "translate": "calc(var(--sun-arc-fx) * 100cqw - 50%) -50%",
+      "background": "radial-gradient(ellipse closest-side, rgb(255 140 70 / 0.85), rgb(255 140 70 / 0.25) 45%, transparent)",
+      "opacity": "var(--sun-arc-dusk)",
+      "will-change": "translate, opacity"
+    },
+    "[data-slot=\"sun-arc-path\"]": {
+      "position": "absolute",
+      "inset": "0",
+      "width": "100%",
+      "height": "100%",
+      "pointer-events": "none",
+      "mask-image": "linear-gradient(to bottom, black var(--sun-arc-horizon-at), rgb(0 0 0 / 0.4) var(--sun-arc-horizon-at))"
+    },
+    "[data-slot=\"sun-arc-ground\"]": {
+      "position": "absolute",
+      "inset": "0",
+      "width": "100%",
+      "height": "auto",
+      "pointer-events": "none",
+      "top": "var(--sun-arc-horizon-at)",
+      "bottom": "0",
+      "overflow": "hidden",
+      "background": "repeating-linear-gradient(to bottom, rgb(255 255 255 / 0.05) 0 1px, transparent 1px 5px), linear-gradient( to bottom, color-mix(in oklab, var(--sun-arc-horizon) 46%, #0a0f1a), color-mix(in oklab, var(--sun-arc-zenith) 30%, #05070c) )",
+      "box-shadow": "0 -1px 0 rgb(255 255 255 / 0.12)"
+    },
+    "[data-slot=\"sun-arc-glow\"]": {
+      "--sun-arc-light": "255 244 214",
+      "position": "absolute",
+      "top": "0",
+      "left": "0",
+      "width": "70cqh",
+      "aspect-ratio": "1",
+      "translate": "calc(var(--sun-arc-fx) * 100cqw - 50%) calc(var(--sun-arc-fy) * 100cqh - 50%)",
+      "border-radius": "50%",
+      "pointer-events": "none",
+      "background": "radial-gradient( circle closest-side, rgb(var(--sun-arc-light) / 0.75) 0%, rgb(var(--sun-arc-light) / 0.28) 26%, rgb(var(--sun-arc-light) / 0.08) 60%, transparent )",
+      "opacity": "calc(var(--sun-arc-daylight) * 0.9 * (1 - var(--sun-arc-dusk)))",
+      "will-change": "translate, opacity"
+    },
+    "[data-slot=\"sun-arc-glow\"][data-light=\"warm\"]": {
+      "--sun-arc-light": "255 150 70",
+      "opacity": "calc(var(--sun-arc-dusk) * 0.85)"
+    },
+    "[data-slot=\"sun-arc-path\"] path": {
+      "fill": "none",
+      "stroke": "white",
+      "stroke-opacity": "0.45",
+      "stroke-width": "1.25",
+      "stroke-dasharray": "2 6",
+      "stroke-linecap": "round"
+    },
+    "[data-slot=\"sun-arc-skyline\"]": {
+      "position": "absolute",
+      "left": "0",
+      "bottom": "calc(100% - var(--sun-arc-horizon-at))",
+      "width": "100%",
+      "height": "27%",
+      "pointer-events": "none"
+    },
+    "[data-slot=\"sun-arc-windows\"]": {
+      "position": "absolute",
+      "left": "0",
+      "bottom": "calc(100% - var(--sun-arc-horizon-at))",
+      "width": "100%",
+      "height": "27%",
+      "pointer-events": "none",
+      "fill": "#ffd27a",
+      "opacity": "calc(var(--sun-arc-night) * 0.85 + var(--sun-arc-dusk) * 0.25)",
+      "will-change": "opacity"
+    },
+    "[data-slot=\"sun-arc-skyline\"] [data-layer=\"far\"]": {
+      "fill": "color-mix(in oklab, var(--sun-arc-horizon) 52%, #1a2030)"
+    },
+    "[data-slot=\"sun-arc-skyline\"] [data-layer=\"middle\"]": {
+      "fill": "color-mix(in oklab, var(--sun-arc-horizon) 24%, #10141d)"
+    },
+    "[data-slot=\"sun-arc-skyline\"] [data-layer=\"near\"]": {
+      "fill": "color-mix(in oklab, var(--sun-arc-horizon) 8%, #07090e)"
+    },
+    "[data-slot=\"sun-arc-glint\"]": {
+      "position": "absolute",
+      "top": "0",
+      "left": "0",
+      "width": "9cqw",
+      "height": "100%",
+      "translate": "calc(var(--sun-arc-fx) * 100cqw - 50%) 0",
+      "will-change": "translate, opacity",
+      "background": "linear-gradient(to bottom, rgb(255 196 120 / 0.8), rgb(255 196 120 / 0.2) 70%, transparent)",
+      "mask-image": "repeating-linear-gradient(to bottom, black 0 2px, transparent 2px 5px), radial-gradient(ellipse 50% 100% at 50% 0, black, transparent)",
+      "mask-composite": "intersect",
+      "opacity": "calc(var(--sun-arc-daylight) * 0.55 + var(--sun-arc-dusk) * 0.5 - var(--sun-arc-night))"
+    },
+    "[data-slot=\"sun-arc-hour\"]": {
+      "position": "absolute",
+      "top": "0",
+      "left": "var(--sun-arc-at)",
+      "translate": "-50% 0",
+      "z-index": "1",
+      "display": "flex",
+      "flex-direction": "column",
+      "align-items": "center",
+      "font-family": "var(--font-mono)",
+      "font-size": "var(--type-meta-size)",
+      "line-height": "var(--type-meta-leading)",
+      "font-variant-numeric": "tabular-nums",
+      "color": "rgb(255 255 255 / 0.62)"
+    },
+    "[data-slot=\"sun-arc-event\"]": {
+      "position": "absolute",
+      "top": "0",
+      "left": "var(--sun-arc-at)",
+      "translate": "-50% -100%",
+      "width": "0.5rem",
+      "height": "0.3125rem",
+      "background": "#ffc46b",
+      "clip-path": "polygon(50% 0, 100% 100%, 0 100%)"
+    },
+    "[data-slot=\"sun-arc-hour\"]::before": {
+      "content": "\"\"",
+      "width": "1px",
+      "height": "0.5rem",
+      "margin-bottom": "1px",
+      "background": "rgb(255 255 255 / 0.35)"
+    },
+    "[data-slot=\"sun-arc-stage\"] [data-slot=\"slider-control\"]": {
+      "position": "absolute",
+      "inset": "0"
+    },
+    "@media (pointer: coarse)": {
+      "[data-slot=\"sun-arc-stage\"] [data-slot=\"slider-track\"]": {
+        "height": "100%"
+      }
+    },
+    "[data-slot=\"sun-arc-stage\"] [data-slot=\"slider-track\"]": {
+      "position": "absolute !important",
+      "left": "4%",
+      "right": "4%",
+      "bottom": "0",
+      "height": "calc(100% - var(--sun-arc-horizon-at))"
+    },
+    "[data-slot=\"sun-arc-stage\"] [data-slot=\"slider-thumb\"]": {
+      "position": "absolute !important",
+      "inset": "auto !important",
+      "margin": "0 !important",
+      "top": "0 !important",
+      "left": "0 !important",
+      "translate": "calc(var(--sun-arc-fx) * 100cqw - 4cqw - 50%) calc(var(--sun-arc-fy) * 100cqh - 76cqh - 50%) !important",
+      "width": "1.75rem",
+      "height": "1.75rem",
+      "border-radius": "50%",
+      "background": "radial-gradient( circle at 50% 45%, #fffef6 0%, color-mix(in oklab, var(--sun-arc-sun), white 40%) 45%, var(--sun-arc-sun) 100% )",
+      "box-shadow": "0 0 0 1px color-mix(in oklab, var(--sun-arc-sun), white 30%), 0 0 18px 4px color-mix(in oklab, var(--sun-arc-glow) 70%, transparent), 0 0 46px 14px color-mix(in oklab, var(--sun-arc-glow) 30%, transparent)",
+      "opacity": "calc(1 - var(--sun-arc-night) * 0.35)",
+      "cursor": "grab",
+      "touch-action": "none",
+      "transition": "scale var(--transition-duration-micro) var(--ease-standard)",
+      "will-change": "translate"
+    },
+    "[data-slot=\"sun-arc-stage\"] [data-slot=\"slider-thumb\"][data-dragging]": {
+      "cursor": "grabbing",
+      "scale": "1.08"
+    },
+    "[data-slot=\"sun-arc-stage\"] [data-slot=\"slider-thumb\"][data-disabled]": {
+      "cursor": "default"
+    },
+    "[data-slot=\"sun-arc-stage\"] [data-slot=\"slider-thumb\"]:has(:focus-visible)": {
+      "outline": "2px solid white",
+      "outline-offset": "4px",
+      "box-shadow": "0 0 0 1px color-mix(in oklab, var(--sun-arc-sun), white 30%), 0 0 0 8px rgb(0 0 0 / 0.45), 0 0 46px 14px color-mix(in oklab, var(--sun-arc-glow) 30%, transparent)"
+    }
+  },
+  "docs": "`<SunArc label latitude longitude date timeZone value|defaultValue onValueChange onValueCommit step locale disabled name labels>`. The value is minutes since local midnight in `timeZone` (the runtime's own without one), 0 to 1439; it starts at solar noon. Times and degrees are written with `Intl` in `locale`. The arc is UI SDK's Slider: arrows move `step` minutes (5 by default), Page Up and Down an hour, Home and End the ends of the day; drag the sun or press the sky (the ground strip on touch). The Sunrise, Solar noon and Sunset buttons move the sun there; in a polar day or night, sunrise and sunset are disabled and the agent's step fails with why. The stage is a sky in every theme (the item's `css`); the card and readout follow the theme.",
+  "type": "registry:ui"
+}
