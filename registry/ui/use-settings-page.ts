@@ -93,16 +93,25 @@ function useUrlSection(url: UrlParamAdapter | undefined, jump: (id: string) => v
 
 const interactions = ["pointerdown", "keydown", "wheel", "touchstart", "scroll", "focusin"] as const
 
-function createPendingSection() {
+type PendingSection = {
+  /** Runs `arrive` once the section `id` mounts, unless the person takes over the page first. */
+  wait: (id: string, arrive: (id: string) => void) => void
+  mounted: (id: string) => void
+  cancel: () => void
+  /** Listens for the person taking over while the page is mounted; returns the cleanup. */
+  listen: () => () => void
+}
+
+function createPendingSection(): PendingSection {
   let waiting: { id: string; arrive: (id: string) => void } | null = null
   const cancel = () => {
     waiting = null
   }
   return {
-    wait(id: string, arrive: (id: string) => void) {
+    wait(id, arrive) {
       waiting = { id, arrive }
     },
-    mounted(id: string) {
+    mounted(id) {
       if (waiting?.id !== id) return
       const { arrive } = waiting
       waiting = null
@@ -117,8 +126,6 @@ function createPendingSection() {
     },
   }
 }
-
-type PendingSection = ReturnType<typeof createPendingSection>
 
 const PendingSectionContext = createContext<PendingSection | null>(null)
 

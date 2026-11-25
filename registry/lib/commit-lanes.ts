@@ -45,7 +45,13 @@ type LaneLayout = {
 
 const NONE: readonly number[] = []
 
-function createFreeLanes() {
+type FreeLanes = {
+  push: (lane: number) => void
+  /** The smallest free lane at `from` or after, else `fallback` (a new lane at the end). */
+  take: (lanes: readonly (string | null)[], from: number, fallback: number) => number
+}
+
+function createFreeLanes(): FreeLanes {
   const heap: number[] = []
   const push = (lane: number) => {
     heap.push(lane)
@@ -76,7 +82,7 @@ function createFreeLanes() {
   }
   return {
     push,
-    take(lanes: readonly (string | null)[], from: number, fallback: number) {
+    take(lanes, from, fallback) {
       while (heap.length > 0) {
         const lane = heap[0]!
         if (lane >= lanes.length || lanes[lane] !== null) {

@@ -222,6 +222,15 @@ function listen(el: HTMLElement, listeners: Listeners, options?: AddEventListene
   }
 }
 
+type ScrollViewQueries = {
+  /** Whether the view is at that edge now, read from the DOM; `undefined` without a viewport, as on the server. */
+  isAt: (edge: "start" | "end") => boolean | undefined
+  /** Focuses the viewport, focusable from script while it holds focus when it isn't a tab stop. */
+  focusViewport: () => void
+  /** Applies changed options, like `stickToEnd` or `type`. */
+  refresh: () => void
+}
+
 export {
   createStyleWriter,
   draggedPosition,
@@ -252,4 +261,5 @@ export {
   type ScrollAreaScrollOptions,
   type ScrollAreaStore,
   type ScrollAreaType,
+  type ScrollViewQueries,
 }
