@@ -1,4 +1,5 @@
-import type { SkyRenderer, SkyScene } from "@/components/ui/live-sky-backdrop"
+import type { SkyRenderer, SkyScene, StreetFacades } from "@/components/ui/live-sky-backdrop"
+import { lightFacadesInto } from "@/components/ui/live-sky-canvas-light"
 import { paintClouds } from "@/components/ui/live-sky-clouds"
 import type { GlassDrop } from "@/components/ui/live-sky-glass"
 import { cssColour } from "@/components/ui/live-sky-palette"
@@ -94,19 +95,41 @@ function createCanvasRenderer(canvas: HTMLCanvasElement, context: CanvasRenderin
   const cloudContext = clouds.getContext("2d")
   let cloudPixels: ImageData | null = null
   let scene: SkyScene | null = null
+  let street: StreetFacades | null = null
+  let stale = false
+  const facades = document.createElement("canvas")
+  const facadeContext = facades.getContext("2d")
+
+  const relight = (current: SkyScene, traced: StreetFacades) => {
+    const { gbuffer } = traced
+    if (!facadeContext) return
+    if (facades.width !== gbuffer.width) facades.width = gbuffer.width
+    if (facades.height !== gbuffer.height) facades.height = gbuffer.height
+    const pixels = facadeContext.createImageData(gbuffer.width, gbuffer.height)
+    facadeContext.putImageData(lightFacadesInto(pixels, gbuffer, current.lighting, current.camera), 0, 0)
+  }
 
   return {
     kind: "canvas",
     setScene(next) {
       scene = next
+      stale = true
       if (canvas.width !== next.sky.width) canvas.width = next.sky.width
       if (canvas.height !== next.sky.height) canvas.height = next.sky.height
       clouds.width = Math.max(2, Math.ceil(next.width / cloudDownscale))
       clouds.height = Math.max(2, Math.ceil(next.height / cloudDownscale))
       cloudPixels = cloudContext?.createImageData(clouds.width, clouds.height) ?? null
     },
+    setFacades(next) {
+      street = next
+      stale = true
+    },
     draw(seconds, drops, flash) {
       if (!scene) return
+      if (stale && street) {
+        relight(scene, street)
+        stale = false
+      }
       const { width, height, ratio, deck, atmosphere } = scene
       context.setTransform(1, 0, 0, 1, 0, 0)
       context.globalCompositeOperation = "source-over"
@@ -120,7 +143,7 @@ function createCanvasRenderer(canvas: HTMLCanvasElement, context: CanvasRenderin
         context.imageSmoothingEnabled = true
         context.drawImage(clouds, 0, 0, canvas.width, canvas.height)
       }
-      context.drawImage(scene.facades, 0, 0)
+      if (street) context.drawImage(facades, 0, 0, canvas.width, canvas.height)
       context.setTransform(ratio, 0, 0, ratio, 0, 0)
       if (atmosphere.veil > 0) {
         context.fillStyle = cssColour(atmosphere.colour, Math.min(0.85, atmosphere.veil * 0.8))

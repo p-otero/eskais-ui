@@ -111,6 +111,8 @@ type SkyConditions = {
   gloom: number
   /** Fog from 0 (clear air) to 1 (under 200 m visibility). */
   fog: number
+  /** How far one can see, in m. */
+  visibility: number
   /** The wind in m/s toward east and north. */
   wind: { east: number; north: number }
   /** How wet the façades look, from 0 to 1. */
@@ -169,6 +171,7 @@ function skyConditions(weather: SkyWeather, location: SkyLocation, at: Date): Sk
       (falling ? 0.35 : 0) + Math.min(rainRate, 12) / 16 + (thunderCodes.has(weather.weatherCode) ? 0.3 : 0),
     ),
     fog: fogOf(weather),
+    visibility: weather.visibility,
     wind: { east: Math.sin(towardRadians) * windSpeed, north: Math.cos(towardRadians) * windSpeed },
     wetness: clamp01(rainRate > 0 ? 0.45 + rainRate / 6 : 0),
     thunder: thunderCodes.has(weather.weatherCode),

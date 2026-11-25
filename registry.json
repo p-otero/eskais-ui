@@ -3969,7 +3969,7 @@
       "name": "live-sky",
       "type": "registry:ui",
       "title": "Live Sky",
-      "description": "The sky over a place right now, seen looking up between buildings: real weather from Open-Meteo (or your fetcher) drawn with WebGL, the sun and moon where they stand, clouds from the cloud cover, and rain that falls toward the viewer with depth, slants with the wind and runs down a pane of glass. Drizzle, rain and downpour, snow and fog look different; reduced motion shows stills with a slow crossfade. A place search, a geolocation button, and setLocation, geolocate and refresh for agents.",
+      "description": "The sky over a place right now, seen looking up between buildings: real weather from Open-Meteo (or your fetcher) drawn with WebGL over a ray-traced street (granite, render with blinds, balconies, A Coruña's glazed galleries) lit by the sun's direction, wet in rain and with windows lit at night; clouds from the cloud cover, and rain that falls toward the viewer with depth, slants with the wind and runs down a pane of glass. Drizzle, rain and downpour, snow and fog look different; reduced motion shows stills with a slow crossfade. A place search, a geolocation button, and setLocation, geolocate and refresh for agents.",
       "docs": "`<LiveSky label location onLocationChange fetchWeather searchPlaces onWeather refreshMs simulate glass locale labels>`. `location` is `{ latitude, longitude, name? }` or `\"geolocate\"` (the default), which offers a button that asks the browser where the person is (and locates on its own when access was already granted). The search is UI SDK's Combobox over `searchPlaces` (Open-Meteo's geocoder by default, `false` hides it), debounced. Coordinates are rounded to 2 decimals before any request and nothing is stored. The default fetchers use Open-Meteo's free API, which is for non-commercial use: for commercial use, `createOpenMeteo({ forecastUrl, geocodingUrl, apiKey })` points them at the customer hosts with your key, or pass your own `fetchWeather`. The weather is fetched while the sky is on screen and the page visible, again every `refreshMs` (10 minutes); `onWeather` gets each answer. The scene is aria-hidden: a readout shows the place, temperature and the WMO description (`labels.conditions`), and a summary sentence (`labels.summary`, \"Moderate rain, 12 °C, sun behind clouds\") describes the sky and is what agents read as its value. Agents call `setLocation(name | { latitude, longitude } | latitude, longitude)`, `geolocate` (fails with why when access is denied) and `refresh`; with `simulate={{ weather, time, location }}` nothing is fetched and the actions fail with why. WebGL draws it, at a lower resolution and frame rate on software GL; a 2D canvas where WebGL is missing; nothing runs while it's hidden. The palette is the item's `css`: `--live-sky-*` hex colours on `[data-slot=\"live-sky\"]`.",
       "dependencies": [
         "@ui-sdk/core@0.1.0-beta.12",
@@ -4044,10 +4044,6 @@
           "type": "registry:ui"
         },
         {
-          "path": "registry/ui/live-sky-facades.ts",
-          "type": "registry:ui"
-        },
-        {
           "path": "registry/ui/live-sky-clouds.ts",
           "type": "registry:ui"
         },
@@ -4057,6 +4053,42 @@
         },
         {
           "path": "registry/ui/live-sky-glass.ts",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/live-sky-canvas-light.ts",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/live-sky-facade-light.ts",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/live-sky-gbuffer.ts",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/live-sky-gl.ts",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/live-sky-lighting-shaders.ts",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/live-sky-materials.ts",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/live-sky-relight.ts",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/live-sky-street-builder.ts",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/live-sky-trace.ts",
           "type": "registry:ui"
         },
         {
