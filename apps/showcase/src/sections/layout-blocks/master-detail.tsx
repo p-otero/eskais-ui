@@ -1,6 +1,5 @@
 import MasterDetailExample from "../../../../site/src/examples/master-detail"
 
-/** The layout blocks alone: ?demo=master-detail fills the window, for tooling/shell-check.mjs and screenshots. */
 function MasterDetailDemo() {
   return (
     <main className="flex h-dvh flex-col p-inset-surface narrow:p-0">

@@ -5,7 +5,6 @@ import { PrismPicker, type PrismColor } from "@/components/ui/prism-picker"
 import { Switch } from "@/components/ui/switch"
 
 import { agent } from "../agent"
-// Only this page's chunk carries the instrument's styles; the registry item ships them as its `css`.
 import "../../../../registry/styles/prism-picker.css"
 
 declare global {
@@ -21,7 +20,6 @@ const recordPaint = (milliseconds: number) => {
   probe.paints.push(milliseconds)
 }
 
-/** `?demo=prism-picker`: the prism hue picker alone on a page, controlled, with what it reports. */
 function PrismPickerDemo() {
   const [wavelength, setWavelength] = useState(520)
   const [color, setColor] = useState<PrismColor | null>(null)

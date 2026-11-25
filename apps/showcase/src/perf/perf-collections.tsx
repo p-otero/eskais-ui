@@ -141,7 +141,6 @@ function BoardScenario({ view }: { view: "board" | "table" }) {
   return <AgentTaskBoard mode="live" tasks={boardTasks} timeZone="UTC" defaultView={view} detailPresentation="dialog" />
 }
 
-// Ten thousand lines from three services, still: scrolling by key and stepping through errors, without a stream.
 function LogViewerScenario() {
   const [store] = useState(() => {
     const created = createLogStore({ maxLines: 10_000 })

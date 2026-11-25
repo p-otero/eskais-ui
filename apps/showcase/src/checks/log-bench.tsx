@@ -43,7 +43,6 @@ function createBench() {
   return store
 }
 
-/** ?demo=log-bench&max=10000&wrap=false: the LogViewer tooling/log-bench.mjs streams into and times. */
 function LogBench() {
   const [store] = useState(createBench)
   return (

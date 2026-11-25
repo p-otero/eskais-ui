@@ -11,7 +11,6 @@ import { Section } from "../section"
 
 const sources = [{ id: "frontend" }, { id: "backend" }, { id: "db", label: "postgres" }]
 
-/** A local environment's three services streaming into one LogViewer, with pause, a 10,000-line burst and clear. */
 function LogViewerDemo({
   className,
   linesPerSecond = 40,
@@ -71,7 +70,6 @@ function LogViewerSection() {
       title="Log viewer"
       description="LogViewer streams process output: ANSI colours on theme tokens, follow tail with a jump button, a source filter, search, error navigation (F8) and copy."
     >
-      {/* Paused at first: the rest of the showcase is measured by checks that need a still page. */}
       <LogViewerDemo className="h-96 w-full" streaming={false} />
     </Section>
   )

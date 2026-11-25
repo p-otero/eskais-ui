@@ -11,14 +11,10 @@ import "./index.css"
 const root = document.getElementById("root")
 if (!root) throw new Error("Missing #root element")
 
-// ?demo=page, site, shell, inbox, list-bench, log-viewer, log-bench, shell-block, master-detail, list-row-actions, dashboard-grid, settings-page,
-// document-workspace, agent-workspace, commit-history, prism-picker and the git views (sections/git-workspace) render one demo alone; ?demo=<name>-check pages are the
-// fixtures of tooling/<name>-check.mjs (dialog-mobile-check's: dialog-mobile, dialog-matrix; shell-check's: card-header, description-list, field-placement, gauge,
-// mobile-nav, palette-reopen, side-panel, table, master-detail, settings-page); *-bench and ?demo=perf pages are the benchmarks'.
 const params = new URLSearchParams(location.search)
 const demo = params.get("demo")
 
-// Each page loads apart, so a page downloads only its own demo: the perf server sends files uncompressed on a slow 4G
+// Perf: each page loads apart, so a page downloads only its own demo: the perf server sends files uncompressed on a slow 4G
 // profile, where every byte before the first paint is LCP. The page renders once loaded, with no Suspense fallback
 // before it: React holds a boundary's content for 300 ms after its fallback shows.
 type Page = () => Promise<ComponentType>

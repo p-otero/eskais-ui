@@ -58,7 +58,6 @@ function nameOf(dialog: HTMLElement) {
   return (title ? document.getElementById(title)?.textContent : null) ?? dialog.getAttribute("aria-label") ?? "?"
 }
 
-// How much a transform shrinks or grows the element, as the text you see is scaled by it.
 function renderedScale(element: HTMLElement) {
   return element.offsetHeight > 0 ? element.getBoundingClientRect().height / element.offsetHeight : 1
 }
@@ -68,9 +67,7 @@ function measured(element: HTMLElement) {
   return `${px(rect.top)} / ${px(rect.bottom)} / ${px(rect.height)}, scroll ${String(element.scrollHeight)} / client ${String(element.clientHeight)}`
 }
 
-// The content's named parts (header, form, body, actions…) and the scrolling body: a part squeezed to 0 shows here.
 function partRows(dialog: HTMLElement): Row[] {
-  // Two levels: a FormDialog's form and a StepDialog's frame hold the body and the actions.
   const parts = [...dialog.querySelectorAll<HTMLElement>(":scope > *, :scope > * > *, [data-slot=dialog-body]")]
   return parts
     .filter((part) => (part.dataset.slot !== undefined || part instanceof HTMLFormElement) && part.checkVisibility())
@@ -95,10 +92,8 @@ function variables(style: CSSStyleDeclaration, names: string[]) {
   return names.map((name) => style.getPropertyValue(name).trim() || "unset").join(" / ")
 }
 
-// The topmost open dialog, sheet or drawer; a Drawer's content lays out inside UI SDK's viewport, measured too.
 function sheetRows(): Row[] {
   const sheet = openDialog()
-  // Keeps what it measured while open, not the frames of its exit transition.
   if (!sheet || sheet.hasAttribute("data-ending-style")) return lastSheet
   const rect = sheet.getBoundingClientRect()
   const style = getComputedStyle(sheet)
@@ -156,7 +151,7 @@ function snapshot() {
 
 const serverReport: Report = { page: [], sheet: [] }
 
-// Safari changes the viewport without always firing an event (its toolbars, a sheet's transition), so it also polls.
+// Workaround: Safari changes the viewport without always firing an event (its toolbars, a sheet's transition), so it also polls.
 function subscribe(listener: () => void) {
   const visual = window.visualViewport
   const timer = window.setInterval(listener, 250)
@@ -175,12 +170,10 @@ function subscribe(listener: () => void) {
   }
 }
 
-/** The report as it is now, for a copy taken while a dialog is open. */
 function currentReport() {
   return snapshot()
 }
 
-/** Live viewport measurements for the diagnostics page, and the last ones of its sample sheet. */
 function useViewportReport() {
   return useSyncExternalStore(subscribe, snapshot, () => serverReport)
 }

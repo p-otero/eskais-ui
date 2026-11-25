@@ -1,4 +1,3 @@
-/** The ?demo= pages of the git views, apart from their demos so the showcase's router can name them without loading them. */
 const gitWorkspaceDemoNames = [
   "git-master",
   "git-worktree",
