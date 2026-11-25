@@ -37,12 +37,14 @@ function photoLightingFor(conditions: SkyConditions, light: SkyLight, palette: S
   const night = 1 - daylight
   const visibilityHaze = Math.min(1, 450 / Math.max(60, conditions.visibility))
   return {
-    exposure: (1 - 0.22 * conditions.cover * (0.4 + conditions.gloom)) * (0.55 + 0.45 * smoothstep(-2, 12, sunDegrees)),
+    exposure:
+      (1 + 0.06 * conditions.cover - 0.1 * conditions.cover * conditions.gloom) *
+      (0.6 + 0.4 * smoothstep(-2, 12, sunDegrees)),
     overcast: Math.min(1, conditions.cover ** 2 * (0.75 + conditions.gloom * 0.4)),
     warmth: (1 - smoothstep(3, 18, sunDegrees)) * daylight * clearness,
     warmTint: [1.14, 0.94, 0.74],
     night,
-    nightTint: [0.72, 0.82, 1.15],
+    nightTint: [0.55, 0.68, 1],
     streetLight: palette["street-light"],
     wetness: conditions.wetness,
     sheen: scale(mix(light.horizon, light.zenith, 0.4), 0.8 + daylight * 0.4),

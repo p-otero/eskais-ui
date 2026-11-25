@@ -82,6 +82,7 @@ function composeScene({
   camera: given,
 }: SceneInput): SkyScene | null {
   const camera = given ?? cameraFor(width, height)
+  const framing = given ? "facing" : "overhead"
   const light = lightFor(conditions, palette)
   const sky = canvasOf(width, height, ratio)
   if (!sky.context) return null
@@ -98,8 +99,8 @@ function composeScene({
     lighting: facadeLightingFor(conditions, light, palette),
     photoLighting: photoLightingFor(conditions, light, palette),
     deck: cloudDeckFor(conditions, light),
-    falls: fallsFor(camera, conditions, light, palette, budget),
-    atmosphere: atmosphereFor(conditions, light),
+    falls: fallsFor(camera, conditions, light, palette, budget, framing),
+    atmosphere: atmosphereFor(conditions, light, framing),
   }
 }
 

@@ -99,6 +99,7 @@ function createWebGLRenderer(canvas: HTMLCanvasElement, gl: GL): SkyRenderer {
     gl.uniform1f(u("u_veil"), atmosphere.veil)
     gl.uniform3fv(u("u_veilColour"), atmosphere.colour)
     gl.uniform1f(u("u_sheets"), atmosphere.sheets)
+    gl.uniform2f(u("u_sheetScale"), atmosphere.sheetScale[0], atmosphere.sheetScale[1])
     gl.uniform2f(u("u_sheetOffset"), (seconds * 0.05 + deck.drift.x * seconds * 40) % 1, (seconds * 0.02) % 1)
     gl.uniform1f(u("u_flash"), flash * 0.22)
     gl.uniform1f(u("u_bloom"), bloomOf(current))
@@ -108,7 +109,7 @@ function createWebGLRenderer(canvas: HTMLCanvasElement, gl: GL): SkyRenderer {
   const drawFall = (current: SkyScene, layer: Fall, seconds: number) => {
     if (layer.count === 0) return
     gl.useProgram(fall.program)
-    bindTextures(gl, fall, { u_glowMap: relighter.glow() })
+    bindTextures(gl, fall, { u_glowMap: relighter.glow(), u_noise: noise })
     gl.bindBuffer(gl.ARRAY_BUFFER, particles)
     vertices.bind(fall, "a_seed", 4, 6, 0)
     vertices.bind(fall, "a_corner", 2, 6, 4)
@@ -129,6 +130,12 @@ function createWebGLRenderer(canvas: HTMLCanvasElement, gl: GL): SkyRenderer {
     gl.uniform3fv(u("u_colour"), layer.colour)
     gl.uniform1f(u("u_alpha"), layer.alpha)
     gl.uniform1f(u("u_bloom"), bloomOf(current))
+    gl.uniform1f(u("u_sheets"), layer.sheets)
+    gl.uniform1f(
+      u("u_sheetShift"),
+      (seconds * (0.05 + Math.abs(layer.velocity.x) * 0.02) * Math.sign(layer.velocity.x || 1)) % 1,
+    )
+    gl.uniform1f(u("u_farFade"), photoShown ? 1 : 0)
     vertices.draw(layer.count * 6)
   }
 

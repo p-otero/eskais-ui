@@ -104,15 +104,19 @@ function lightPhotoInto(
       const overcastTint = [0.9, 0.96, 1.06] as const
       const values = [red, green, blue]
       for (let index = 0; index < 3; index++) {
-        let value = values[index]! + (grey - values[index]!) * 0.45 * lighting.overcast
-        value = value + (0.42 + (value - 0.42) * 0.72 - value) * lighting.overcast
+        let value = values[index]! + (grey - values[index]!) * 0.35 * lighting.overcast
+        value = value + (0.45 + (value - 0.45) * 0.86 - value) * lighting.overcast
         value *= 1 + (overcastTint[index]! - 1) * lighting.overcast
         value *= 1 + (lighting.warmTint[index]! - 1) * lighting.warmth
         value *= 1 - 0.32 * lighting.wetness * (0.35 + 0.65 * below)
         value += lighting.sheen[index]! * lighting.wetness * below * (1 - grey) * 0.3
         value *= lighting.exposure
-        value += (value * lighting.nightTint[index]! * 0.09 - value) * lighting.night
-        value += lighting.streetLight[index]! * lighting.night * below * 0.16 * (0.4 + grey)
+        const blueHour = grey * lighting.exposure * lighting.nightTint[index]! * 0.5 + value * 0.1
+        value += (blueHour - value) * lighting.night
+        value += lighting.streetLight[index]! * lighting.night * below * (0.03 + 0.12 * grey)
+        const lights = smooth(0.84, 0.97, grey) * below
+        value +=
+          lighting.streetLight[index]! * lighting.night * (lights * 0.55 + below * lighting.wetness * (1 - grey) * 0.08)
         value += lighting.windowLight[index]! * glow
         out[at + index] = channel(value + (lighting.hazeColour[index]! - value) * haze)
       }
