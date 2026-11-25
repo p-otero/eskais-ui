@@ -486,7 +486,7 @@ function mergeLabels(
       merged[key] = isPlainObject(current) && isPlainObject(value) ? { ...current, ...value } : value
     }
   }
-  // Every key of `base` is copied before the overrides, each of which replaces a key with its own value or a
+  // Workaround: every key of `base` is copied before the overrides, each of which replaces a key with its own value or a
   // shallow merge of it; TypeScript can't follow the keys of an interface through `Object.entries`.
   return assumeType<AgentTaskBoardLabels>(merged)
 }

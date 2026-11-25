@@ -100,7 +100,6 @@ function requestOf<F>(state: Omit<PageControllerState<F>, "request">, cursorMode
   }
 }
 
-// A filter is data, never a function, so a function passed to `setFilter` is an updater.
 const isUpdater = <F>(next: F | ((previous: F) => F)): next is (previous: F) => F => typeof next === "function"
 
 /**
@@ -115,7 +114,7 @@ function createPageController<T, F>(
   const cursorMode = capabilities.position === "cursor"
   const labels = { ...pageStatusLabels, ...options.labels }
   const pageSizes = capPageSizes(options.pageSizes ?? [10, 25, 50, 100], capabilities)
-  // A controller without `filter` starts unfiltered; filters are records of optional fields, which `F` doesn't state.
+  // Workaround: a controller without `filter` starts unfiltered; filters are records of optional fields, which `F` doesn't state.
   const initialFilter = options.filter ?? assumeType<F>({})
   const searchKey = options.search?.key
   const debounce = options.search?.debounce ?? 250
@@ -189,7 +188,7 @@ function createPageController<T, F>(
     if (same(state.filter[searchKey], value)) return
     const filter = { ...state.filter }
     if (value === undefined) delete filter[searchKey]
-    // `search.key` names the filter's text field; TypeScript can't tie a key from options to a string value.
+    // Workaround: `search.key` names the filter's text field; TypeScript can't tie a key from options to a string value.
     else filter[searchKey] = assumeType<F[typeof searchKey]>(value)
     set({ filter, ...firstPage })
   }

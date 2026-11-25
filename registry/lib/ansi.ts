@@ -27,7 +27,7 @@ const ST_C1 = 0x9c
 const isControl = (code: number) =>
   code < 0x20 || code === 0x7f || (code >= 0x80 && code <= 0x9f) || isBidiControl(code)
 
-// Embeddings, overrides and isolates can make a line read differently from what it holds (Trojan Source), and a
+// Security: embeddings, overrides and isolates can make a line read differently from what it holds (Trojan Source), and a
 // terminal shows them as nothing anyway.
 const isBidiControl = (code: number) => (code >= 0x202a && code <= 0x202e) || (code >= 0x2066 && code <= 0x2069)
 
@@ -35,7 +35,6 @@ const byte = (value: number) => (Number.isInteger(value) && value >= 0 && value 
 
 const hex = (value: number) => value.toString(16).padStart(2, "0")
 
-/** Reads `5;n` or `2;r;g;b` after a 38 or 48, from `params` at `index`. Returns the colour and how many it used. */
 function extendedColor(params: readonly number[], index: number): [AnsiColor | undefined, number] {
   const mode = params[index]
   if (mode === 5) return [byte(params[index + 1] ?? Number.NaN), 2]
@@ -49,7 +48,7 @@ function extendedColor(params: readonly number[], index: number): [AnsiColor | u
   return [undefined, 1]
 }
 
-// The colon form keeps a colour in one parameter: 38:5:n, 38:2:r:g:b, or 38:2:<colour space>:r:g:b.
+// Spec: the colon form keeps a colour in one parameter: 38:5:n, 38:2:r:g:b, or 38:2:<colour space>:r:g:b.
 function colonColor(parts: readonly number[]): AnsiColor | undefined {
   if (parts[1] === 5) return byte(parts[2] ?? Number.NaN)
   if (parts[1] !== 2) return undefined
@@ -111,7 +110,7 @@ function applySgr(style: AnsiStyle, raw: string): AnsiStyle {
 
 const styled = (style: AnsiStyle) => Object.keys(style).length > 0
 
-// Where a string terminator ends a control string (OSC, DCS, SOS, PM, APC): BEL, ESC \ or the C1 ST. An
+// Spec: where a string terminator ends a control string (OSC, DCS, SOS, PM, APC): BEL, ESC \ or the C1 ST. An
 // unterminated one runs to the end of the line, so its payload, like an OSC 8 link target, never shows.
 function skipString(raw: string, from: number) {
   for (let index = from; index < raw.length; index++) {
@@ -175,14 +174,13 @@ function parseAnsi(raw: string, initial: AnsiStyle = {}): AnsiLine & { style: An
         index = skipString(raw, start)
         continue
       }
-      // Any other escape: intermediates, then one final byte.
+      // Spec: any other escape: intermediates, then one final byte.
       let end = index + 1
       while (end < raw.length && raw.charCodeAt(end) >= 0x20 && raw.charCodeAt(end) <= 0x2f) end++
       index = end < raw.length && raw.charCodeAt(end) >= 0x30 && raw.charCodeAt(end) <= 0x7e ? end + 1 : end
       continue
     }
     if (code === 0x0d) {
-      // A trailing CR is half of a CRLF; one inside the line returns to its start.
       if (index + 1 < raw.length) {
         run = ""
         spans = []

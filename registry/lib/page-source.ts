@@ -183,7 +183,7 @@ class HttpError extends Error {
 async function readJson<Raw>(response: Response): Promise<Raw> {
   if (!response.ok) throw new HttpError(response.status, response.statusText || undefined, response)
   const body: unknown = await response.json()
-  // The caller names the body's shape; a JSON body can't be checked against a type it only knows by name.
+  // Workaround: the caller names the body's shape; a JSON body can't be checked against a type it only knows by name.
   return assumeType<Raw>(body)
 }
 

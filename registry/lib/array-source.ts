@@ -50,7 +50,7 @@ function compareValues(a: ArraySortValue, b: ArraySortValue) {
   return lessThan(left, right) ? -1 : 1
 }
 
-// `<` on mixed primitives compares them as numbers, which TypeScript only allows on numbers, bigints or two strings.
+// Workaround: `<` on mixed primitives compares them as numbers, which TypeScript only allows on numbers, bigints or two strings.
 function lessThan(left: string | number | bigint | boolean, right: string | number | bigint | boolean) {
   if (typeof left === "bigint" && typeof right === "bigint") return left < right
   return Number(left) < Number(right)

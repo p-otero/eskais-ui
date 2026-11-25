@@ -1,15 +1,10 @@
-type MicrophoneError =
-  /** The person or a policy refused access: NotAllowedError, SecurityError. */
-  | "not-allowed"
-  /** No microphone, or none matching the constraints: NotFoundError, OverconstrainedError. */
-  | "not-found"
-  /** The device exists but couldn't be opened, like another app holding it: NotReadableError, AbortError. */
-  | "not-readable"
-  /** `getUserMedia` needs HTTPS (or localhost); the page isn't a secure context. */
-  | "insecure-context"
-  /** The browser has no `getUserMedia`. */
-  | "unsupported"
-  | "unknown"
+/**
+ * Why the microphone couldn't start. `not-allowed`: the person or a policy refused (NotAllowedError, SecurityError).
+ * `not-found`: no microphone, or none matching the constraints (NotFoundError, OverconstrainedError). `not-readable`:
+ * it exists but couldn't be opened, like another app holding it (NotReadableError, AbortError). `insecure-context`:
+ * `getUserMedia` needs HTTPS or localhost. `unsupported`: the browser has no `getUserMedia`.
+ */
+type MicrophoneError = "not-allowed" | "not-found" | "not-readable" | "insecure-context" | "unsupported" | "unknown"
 
 type MicrophoneResult =
   | { state: "listening"; stream: MediaStream }

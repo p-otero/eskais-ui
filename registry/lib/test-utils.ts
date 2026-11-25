@@ -14,7 +14,7 @@ function isAnnouncer(node: Node | null | undefined): boolean {
 }
 
 function container(within?: ParentNode): HTMLElement {
-  // Testing Library's queries type their container as an HTMLElement but search any node with children, a document
+  // Workaround: Testing Library's queries type their container as an HTMLElement but search any node with children, a document
   // or a fragment included.
   return assumeType<HTMLElement>(within ?? document.body)
 }

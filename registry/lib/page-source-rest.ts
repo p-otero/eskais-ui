@@ -54,7 +54,7 @@ function baseParams<T, F, Raw>(options: RestSourceOptions<T, F, Raw>, request: P
 function asResult<T>(raw: unknown, where: string): PageResult<T> {
   if (!isRecord(raw) || !Array.isArray(raw.items))
     throw new TypeError(`${where} expected { items, total? }; pass \`read\` to map your response.`)
-  // The envelope is checked above; its items are the server's, typed by the source's `T`.
+  // Workaround: the envelope is checked above; its items are the server's, typed by the source's `T`.
   return assumeType<PageResult<T>>(raw)
 }
 
@@ -162,7 +162,7 @@ type SpringSourceOptions<T, F, Raw> = Omit<RestSourceOptions<T, F, Raw>, "sortSt
 function springContent<T>(raw: unknown, where: string): SpringPage<T> {
   if (!isRecord(raw) || !Array.isArray(raw.content))
     throw new TypeError(`${where} expected a Spring page with \`content\`; pass \`select\` to find it.`)
-  // The envelope is checked above; its content is the server's, typed by the source's `T`.
+  // Workaround: the envelope is checked above; its content is the server's, typed by the source's `T`.
   return assumeType<SpringPage<T>>(raw)
 }
 

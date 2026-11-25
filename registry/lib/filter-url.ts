@@ -267,7 +267,7 @@ function createUrlCodec<S extends FilterSchema>(schema: S, options: UrlCodecOpti
     const pageNumber = Number(params.get(page) ?? "1")
     const sizeNumber = Number(params.get(size) ?? String(defaultSize))
     const state: PageUrlState<FilterValues<S>> = {
-      // Each value was decoded by its own field of `S` above; TypeScript can't relate a key loop to the mapped type.
+      // Workaround: each value was decoded by its own field of `S` above; TypeScript can't relate a key loop to the mapped type.
       filter: assumeType<FilterValues<S>>(filter),
       sort: decodeSort(params.get(sort)) ?? [...defaultSort],
       page: Number.isInteger(pageNumber) && pageNumber > 0 ? pageNumber : 1,
