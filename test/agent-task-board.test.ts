@@ -157,7 +157,6 @@ test("summarize counts statuses, first-pass acceptance, cost and pending decisio
   expect(summary.acceptedFirstPass).toEqual({ accepted: 1, rated: 1 })
   expect(summary.cost.quality).toBe("estimated")
   expect(summary.cost.value).toBeCloseTo(1.01)
-  // T-011 has a decision and is a review-mode proposal; T-016 has a decision.
   expect(summary.awaitingDecision).toBe(2)
   expect(summarize([task({ id: "R", status: "proposed", analysisMode: "review" })]).awaitingDecision).toBe(1)
   expect(summarize([task({ id: "N" })]).cost).toEqual({ value: null, quality: "unknown" })

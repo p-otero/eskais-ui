@@ -32,7 +32,6 @@ test("an embed renders a link-like placeholder by default, or what renderEmbed r
   const html = renderToStaticMarkup(
     <MarkdownView markdown={"![[diagram.png]]\n\nInline ![[plan|Plan]] here.\n"} renderEmbed={renderEmbed} />,
   )
-  // Alone in its paragraph, the embed is a block, so a block element never lands inside a <p>.
   expect(html).toMatch(/^<div[^>]*><div data-slot="markdown-embed" data-target="diagram.png"><figure/)
   expect(html).toContain(
     '<p>Inline <span data-slot="markdown-embed" data-target="plan"><figure data-embed="plan">Plan</figure></span> here.</p>',
@@ -63,7 +62,6 @@ test("onWikilinkClick takes a wikilink's plain click, and agents follow it by na
   fireEvent.click(link)
   expect(onWikilinkClick).toHaveBeenCalledWith("roadmap", expect.any(MouseEvent))
 
-  // No address: still followable, as a button.
   const missing = screen.getByRole("button", { name: "missing" })
   expect(missing.hasAttribute("data-unresolved")).toBe(true)
   fireEvent.click(missing)

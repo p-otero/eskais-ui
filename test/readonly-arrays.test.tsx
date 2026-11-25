@@ -18,7 +18,6 @@ import type { Token, TokenInputLabelProps, TokenInputTextProps } from "@/compone
 import type { UsageTableProps } from "@/components/ui/usage"
 import type { AttemptView, TaskView } from "@/lib/agent-task-types"
 
-// Each `true` compiles only while the prop accepts a readonly array; `bun run typecheck` is the real check.
 type Accepts<Prop, Value> = [Value] extends [Prop] ? true : false
 
 type Option = SelectOption<string>
@@ -55,7 +54,6 @@ const typeChecks = {
   boardStages: true satisfies Accepts<AgentTaskBoardProps["stages"], readonly Stage[]>,
 }
 
-// What useAsyncOptions returns feeds Select, Combobox and Command as is.
 function AsyncResults() {
   const results = useAsyncOptions(async (): Promise<Option[]> => [])
   const options: SelectProps<string>["options"] = results.items

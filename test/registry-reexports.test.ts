@@ -5,8 +5,7 @@ import { expect, test } from "vitest"
 
 const registry = join(import.meta.dirname, "..", "registry")
 
-// shadcn 4.23.0 adds the file extension to `import … from` when an alias resolves through package.json `imports`,
-// but not to `export … from`, so a re-export breaks a consumer that maps `#ui/*` to files. Import, then export.
+// Workaround: shadcn 4.23.0 adds the file extension to `import … from` through package.json `imports`, but not to\n`export … from`, so a re-export breaks a consumer that maps `#ui/*` to files.
 test("registry files never re-export from another registry file", () => {
   const offenders = readdirSync(registry, { recursive: true, withFileTypes: true })
     .filter((entry) => entry.isFile() && /\.tsx?$/.test(entry.name))

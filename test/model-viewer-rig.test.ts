@@ -16,14 +16,13 @@ const read = (name: string) => readFileSync(join(import.meta.dirname, "fixtures"
 const bytes = read("figure.glb")
 
 async function loadFigure(file = bytes) {
-  // Copied into this realm's ArrayBuffer: GLTFLoader checks for one with instanceof.
+  // Workaround: GLTFLoader checks for this realm's ArrayBuffer with instanceof.
   const buffer = new ArrayBuffer(file.byteLength)
   new Uint8Array(buffer).set(file)
   const gltf = await new GLTFLoader().parseAsync(buffer, "")
   return { scene: gltf.scene, animations: gltf.animations }
 }
 
-/** A handle over plain state, as the scene sees the viewer each frame. */
 function fakeHandle(patch: Partial<ModelViewerState> = {}): { handle: ModelViewerHandle; state: ModelViewerState } {
   const state = {
     view: "front",
@@ -113,7 +112,6 @@ describe("rig", () => {
     rig.update(1 / 60, input)
     rig.setWeights(new Float32Array([1, 1, 0, 1, 1, 0, 0]))
     const first = rig.update(1 / 60, input)
-    // The same result object every frame, and the influences the same arrays.
     expect(rig.update(1 / 60, input)).toBe(first)
     const head = rig.scene.getObjectByName("Head") as Mesh
     const influences = head.morphTargetInfluences

@@ -82,7 +82,7 @@ test("no axe violations in a frame", async () => {
   expect(await axeViolations(container)).toEqual([])
 })
 
-// UI SDK 0.1.0-beta.5 puts the resize handles inside the selection's role="slider": nested-interactive.
+// Workaround: UI SDK 0.1.0-beta.5 puts the resize handles inside the selection's role="slider": nested-interactive.
 test.fails("no axe violations with handles", async () => {
   const { container } = render(
     <main>

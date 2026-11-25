@@ -140,7 +140,7 @@ test("the remove button removes its label", async () => {
 })
 
 test("a paste splits on commas and line breaks, keeping new labels only", async () => {
-  // user-event's ClipboardEvent isn't jsdom's, which UI SDK's strict event check rejects; the paste itself is real.
+  // Workaround: user-event's ClipboardEvent isn't jsdom's, which UI SDK's strict event check rejects.
   globalThis.__UI_SDK_STRICT__ = false
   render(<Labels />)
   const { user } = await typeAtEnd("")

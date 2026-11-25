@@ -34,7 +34,6 @@ afterEach(() => {
 
 const tick = () => new Promise((resolve) => setTimeout(resolve, 0))
 
-// Restoring goes through the agent bridge one control at a time, so a seek takes a few turns of the event loop.
 const flush = () =>
   act(async () => {
     await tick()
@@ -72,8 +71,8 @@ test("actorOf maps UI SDK's sources to who made the change", () => {
   ])
 })
 
-// jsdom's events aren't trusted, so UI SDK reports Testing Library's clicks as "programmatic", the app's actor;
-// tooling/activity-check.mjs checks a person's clicks in Chrome.
+// Workaround: jsdom's events aren't trusted, so UI SDK reports Testing Library's clicks as "programmatic", the app's
+// actor; tooling/activity-check.mjs checks a person's clicks in Chrome.
 test("records an agent's changes and the page's own with who, what and when", async () => {
   const user = userEvent.setup()
   const log = startLog()
@@ -250,7 +249,6 @@ test("an agent reads the entries and calls undo, redo and seek; a long seek back
   expect(redone.ok, redone.error?.message).toBe(true)
   expect(checked("Beta features")).toBe(true)
 
-  // One step back is fine; three is more than confirmAbove, so the bridge asks a person, and this one has no allow.
   const near = await agent.act({ steps: [{ ref: "Activity", action: "seek", args: [2] }] })
   await flush()
   expect(near.ok, near.error?.message).toBe(true)
@@ -261,7 +259,6 @@ test("an agent reads the entries and calls undo, redo and seek; a long seek back
   expect(far.error?.message).toContain("Undo the last 3 changes")
   expect(checked("Notifications")).toBe(true)
 
-  // By label: the entry's description names its position.
   const byLabel = await approving.act({
     steps: [{ ref: "Activity", action: "seek", args: ["You set Notifications to true"] }],
   })

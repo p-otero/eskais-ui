@@ -25,7 +25,6 @@ const branches: CommitBranch[] = [
 const labelOf = (row: HTMLElement) => row.querySelector("[data-slot=tree-label]") as HTMLElement
 const rowNamed = (name: RegExp) => screen.getByRole("treeitem", { name })
 
-// The root carries `data-branch` for the branch it shows; a row press must not read it as a press on a pill.
 async function pressWithoutErrors(press: () => Promise<void>) {
   const errors: unknown[] = []
   const onError = (event: ErrorEvent) => {

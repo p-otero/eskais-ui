@@ -34,7 +34,6 @@ test("keys are checked against the row type", () => {
   expectTypeOf<ChartDataTableProps<Point>["keys"]>().toEqualTypeOf<readonly ("d" | "v")[] | undefined>()
 
   const readonlyRows = [{ month: "Jan", sales: 1 }] as const
-  // Type-only: the JSX is never rendered.
   const valid = <ChartDataTable aria-label="Sales" data={readonlyRows} labelKey="month" keys={["sales"]} />
   // @ts-expect-error "missing" is not a field of Point
   const unknownLabel = <ChartDataTable aria-label="Visits" data={points} labelKey="missing" />

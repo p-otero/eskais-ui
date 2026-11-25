@@ -233,12 +233,10 @@ describe("ChartDataTable", () => {
 
 const realBoundingRect = HTMLElement.prototype.getBoundingClientRect
 
-// Only the responsive container gets a size: a sized legend would take the whole plot height.
 function sizedRect(this: HTMLElement) {
   return this.classList.contains("recharts-responsive-container") ? new DOMRect(0, 0, 480, 270) : new DOMRect()
 }
 
-// Recharts measures, then lays out over a few ticks of its store.
 async function settle() {
   for (let tick = 0; tick < 5; tick++) await act(() => new Promise((resolve) => setTimeout(resolve, 20)))
 }

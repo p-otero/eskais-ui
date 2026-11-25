@@ -14,7 +14,6 @@ const agent = createAgent()
 
 const renders = new Map<string, number>()
 
-// Counts its renders per route, to see which route items a navigation re-renders.
 function iconFor(id: string) {
   return function RouteIcon({ className }: { className?: string }) {
     renders.set(id, (renders.get(id) ?? 0) + 1)
@@ -431,7 +430,6 @@ test("mobile order places bottom bar routes apart from the sidebar's order, stil
       .map((link) => link.textContent),
   ).toEqual(["Inbox", "Tasks", "Projects", "Calendar", "Reports", "Settings"])
   const bar = screen.getByRole("navigation", { name: "Bottom bar" })
-  // `true` counts as order 0, so Projects leads.
   expect(
     within(bar)
       .getAllByRole("link")
@@ -505,7 +503,6 @@ test('placements decide the bottom bar over mobile: without "mobile" a route sta
   const bar = screen.getByRole("navigation", { name: "Bottom bar" })
   expect(linkNames(bar)).toEqual(["Tasks", "Projects", "Calendar", "Reports"])
   expect(linkNames(screen.getByRole("navigation", { name: "Main" }))).not.toContain("Archive")
-  // Archive is a mobile candidate behind four earlier ones and isn't allowed in More, so it doesn't show there.
   const user = userEvent.setup()
   await user.click(within(bar).getByRole("button", { name: "More" }))
   await settle()

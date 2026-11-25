@@ -25,7 +25,6 @@ type Call = {
   reject: (error: unknown) => void
 }
 
-/** A source whose every fetch waits until the test settles it. */
 function fakeSource(options: { total?: boolean } = {}) {
   const calls: Call[] = []
   const totals: { filter: Filter; resolve: (total: number) => void }[] = []
@@ -97,7 +96,6 @@ describe("useServerPage", () => {
     rerender({ page: 3 })
     await waitFor(() => expect(calls).toHaveLength(3))
     expect(calls[1]?.signal.aborted).toBe(true)
-    // A late answer to the abandoned request never reaches the screen.
     act(() => calls[1]?.resolve({ items: rows("stale"), total: 6 }))
     act(() => calls[2]?.resolve({ items: rows("e", "f"), total: 6 }))
     await waitFor(() => expect(result.current.previous).toBe(false))
@@ -231,7 +229,6 @@ describe("invalidation and mutations", () => {
     await waitFor(() => expect(calls).toHaveLength(2))
     expect(onSuccess).toHaveBeenCalledWith("a", "a")
     expect(result.current.page.items).toEqual(rows("a"))
-    // The mutation stays pending until the refreshed rows arrive.
     expect(result.current.remove.pending).toBe(true)
     act(() => calls[1]?.resolve({ items: [], total: 0 }))
     await waitFor(() => expect(result.current.remove.status).toBe("success"))

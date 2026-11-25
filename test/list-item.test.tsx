@@ -212,7 +212,6 @@ test("an agent selects a row by id, in either kind of list", async () => {
   render(<Selectable />)
   await settle()
   components = agent.snapshot().filter((entry) => !entry.offPage && entry.component !== "more")
-  // One element: the List takes `select`, its listbox `setValue`, so each action names one of them.
   const named = components.filter((entry) => entry.label === "Triage queue")
   expect(named.map((entry) => entry.component).toSorted()).toEqual(["list", "listbox"])
   expect(named.filter((entry) => entry.actions.includes("select"))).toHaveLength(1)

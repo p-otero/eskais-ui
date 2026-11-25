@@ -36,7 +36,7 @@ afterEach(() => {
 
 const flush = () => act(() => new Promise((resolve) => setTimeout(resolve, 0)))
 
-// jsdom has no layout: give the log a scroll height taller than its box, scrolled to `top`.
+// Workaround: jsdom has no layout, so the log gets a scroll height taller than its box, scrolled to `top`.
 function layout(log: HTMLElement, { height = 1000, client = 200, top = 800 } = {}) {
   Object.defineProperty(log, "scrollHeight", { configurable: true, get: () => height })
   Object.defineProperty(log, "clientHeight", { configurable: true, get: () => client })
@@ -108,7 +108,6 @@ test("a log named by its label holds articles named by their author", async () =
   const log = screen.getByRole("log", { name: "Thread with Atlas" })
   expect(log.tabIndex).toBe(0)
   expect(screen.getByRole("article", { name: "Atlas" }).textContent).toContain("Atlas")
-  // A message with no author is named by its role, for screen readers only.
   expect(screen.getByRole("article", { name: "You" })).toBeTruthy()
   expect(await axeViolations(container)).toEqual([])
 })

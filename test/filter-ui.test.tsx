@@ -21,7 +21,6 @@ const source = taskSource({ key: ["test", "filter-ui"] })
 
 const noFilter: ServerTaskFilter = {}
 
-// The applied filter, written where the test can read it.
 function Scope({ children, filter = noFilter }: { children: ReactNode; filter?: ServerTaskFilter }) {
   const { state, controller } = usePageController(source, { filter, search: { key: "q" } })
   return (

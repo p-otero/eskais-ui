@@ -190,7 +190,7 @@ function HoverDetails() {
   )
 }
 
-// Crossing into the content and closing on leave need layout; tooling/popover-check.mjs covers them in Chrome.
+// Workaround: jsdom has no layout to cross into the content; tooling/popover-check.mjs covers it in Chrome.
 test("openOnHover opens it when the pointer rests on the trigger, without moving focus", async () => {
   const user = userEvent.setup()
   render(<HoverDetails />)

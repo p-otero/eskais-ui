@@ -3,11 +3,8 @@ import { modelViewerLabels } from "@/components/ui/model-viewer-labels"
 
 import figure from "./figure.json"
 
-// The events a photo-to-3D engine emits, as it emits them. Nothing here runs a model: it replays fixed data.
-
 type EngineStage = "detect" | "fit" | "refine" | "done"
 
-/** The bytes of a GLB, or its URL. */
 type Glb = ArrayBuffer | string
 
 type EngineEvent =
@@ -26,11 +23,8 @@ type EngineEvent =
         quality: number
       }
     }
-  // The last event of a run that fails. Cancelling through the AbortSignal isn't one: the run rejects with an
-  // AbortError instead.
   | { type: "error"; error: { code: EngineErrorCode; message: string } }
 
-/** Why the engine stopped: the codes are the engine's, the messages its own English for logs. */
 type EngineErrorCode =
   | "no-face"
   | "unreadable-image"
@@ -50,7 +44,6 @@ const engineMessages: Record<EngineErrorCode, string> = {
   internal: "An internal engine error occurred.",
 }
 
-/** The fixture's morph targets, in the order the engine's weights follow. */
 const figureTargetNames = [
   "body.pc00",
   "face.head_size.incr",
@@ -61,31 +54,19 @@ const figureTargetNames = [
   "expr.eyeBlinkRight",
 ]
 
-// Where the fit settles: a broader build and a slightly larger head.
 const fitted = [0.55, 0.45, 0, 0, 0, 0, 0]
 
 type FakeEngineOptions = {
-  /** The base GLB the engine sends with `model`. */
   model: Glb
-  /** The final character's GLB, sent with `done`. */
   character: Glb
-  /** Ends the run with this error during the fit (`true`: no face). */
   fail?: boolean | EngineErrorCode
-  /** Scales every wait, so tests and checks can run it fast. */
   speed?: number
-  /** Stops the run: it emits nothing more and rejects with an AbortError. */
   signal?: AbortSignal
-  /** The photo's landmarks to send: the 3:4 portrait's, or the 9:16 one's. */
   photo?: "portrait" | "tall"
 }
 
 const abortError = () => new DOMException("The run was cancelled.", "AbortError")
 
-/**
- * Replays a run: the face, then the body landmarks over about a second, the base model, weights streamed over about
- * three seconds, then the final character. Resolves after the last event (`done`, or `error`); rejects with an
- * AbortError once `signal` aborts.
- */
 function runFakeEngine(emit: (event: EngineEvent) => void, options: FakeEngineOptions) {
   const { signal } = options
   if (signal?.aborted) return Promise.reject(abortError())
@@ -155,7 +136,6 @@ function runFakeEngine(emit: (event: EngineEvent) => void, options: FakeEngineOp
   return finished
 }
 
-/** What the consumer keeps from the events: the last of each, and every landmarks group. */
 type EngineState = {
   stage: EngineStage | "idle" | "error"
   landmarks: readonly Extract<EngineEvent, { type: "landmarks" }>[]
@@ -193,10 +173,6 @@ const uiStage: Record<EngineState["stage"], ModelScanStage> = {
   error: "error",
 }
 
-/**
- * What a person reads for each error code: the consumer's words, not the engine's log messages. Without WebGL2 it is
- * ModelViewer's own line for a browser without WebGL, and a new run can't help, so the demos offer no Retry then.
- */
 const scanErrors: Record<EngineErrorCode, string> = {
   "no-face": "No face found. Try a photo that faces the camera.",
   "unreadable-image": "This photo can't be read. Try a JPEG or PNG.",
@@ -207,14 +183,8 @@ const scanErrors: Record<EngineErrorCode, string> = {
   internal: "Something went wrong making the 3D model. Try again.",
 }
 
-/** Errors a new run can't fix. */
 const finalErrors: readonly EngineErrorCode[] = ["webgl2-unavailable"]
 
-/**
- * The engine's state as ModelScan's props. The UI's stage is the consumer's: here the engine's map onto it one to
- * one. The final character replaces the base model (ModelViewer crossfades, keeping the weights), and a smile plays
- * once it's done. `messages` overrides the words per error code.
- */
 function toModelScanProps(
   state: EngineState,
   messages: Partial<Record<EngineErrorCode, string>> = {},
@@ -231,7 +201,6 @@ function toModelScanProps(
   }
 }
 
-/** Where the fixture's face is, in its own units, for a close-up `framing`. */
 const figureFace = {
   center: figure.faceBounds.center as [number, number, number],
   radius: figure.faceBounds.radius,

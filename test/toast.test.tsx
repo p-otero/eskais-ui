@@ -138,7 +138,7 @@ async function showTimedToast(duration: number) {
   return { region: screen.getByRole("region", { name: "Notifications" }), item: screen.getByRole("listitem") }
 }
 
-// A browser sends pointerenter and pointerleave to the region and to the toast; user-event only to the toast.
+// Workaround: user-event sends pointerenter and pointerleave only to the toast; a browser sends them to the region too.
 const pointer = { pointerType: "mouse" }
 function pointerIn(region: HTMLElement, init = pointer) {
   fireEvent.pointerEnter(region, init)

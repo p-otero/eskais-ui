@@ -28,7 +28,7 @@ const corpus: [string, string][] = [
 ]
 
 beforeAll(() => {
-  // jsdom has no layout; CodeMirror measures text through ranges.
+  // Workaround: jsdom has no layout, and CodeMirror measures text through ranges.
   Range.prototype.getClientRects = () => [] as unknown as DOMRectList
   Range.prototype.getBoundingClientRect = () => new DOMRect()
 })
@@ -52,7 +52,6 @@ function check(markdown: string) {
   if (!view) throw new Error("no editor")
   const transactions: boolean[] = []
   const unchanged = view.state.doc
-  // Visit every line with the caret and a selection, so each line is rendered both raw and as a preview.
   for (let number = 1; number <= view.state.doc.lines; number++) {
     const line = view.state.doc.line(number)
     view.dispatch({ selection: EditorSelection.cursor(line.from) })

@@ -12,7 +12,6 @@ import { axeViolations } from "./axe"
 const agent = createAgent()
 const settle = () => act(() => new Promise((resolve) => setTimeout(resolve, 0)))
 
-// The field is a framework part; mount's markup holds the text and the edit button.
 const markup = `<root aria-label="Name"><display>Apollo</display><trigger aria-label="Rename"></trigger></root>`
 
 test("primitive: Enter or F2 on the text and a press of the edit button start editing", async () => {

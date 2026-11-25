@@ -86,7 +86,7 @@ describe("GitTree", () => {
   })
 
   test("20,000 files render only a window (tooling/git-bench.mjs times 100,000 in Chrome)", () => {
-    // jsdom has no layout: give rendered rows a height so the virtualizer measures something.
+    // Workaround: jsdom has no layout, so rendered rows get a height for the virtualizer to measure.
     vi.spyOn(HTMLElement.prototype, "offsetHeight", "get").mockImplementation(function (this: HTMLElement) {
       return this.dataset.index === undefined ? 0 : 28
     })

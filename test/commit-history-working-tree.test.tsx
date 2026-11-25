@@ -75,7 +75,6 @@ test("it shares roving focus and selection with the commits", async () => {
   expect(document.activeElement).toBe(working)
   await user.click(labelOf(working))
   expect(onSelect).toHaveBeenLastCalledWith(WORKING_TREE)
-  // A second press on it opens nothing: it has no details.
   await user.click(labelOf(working))
   expect(working.hasAttribute("data-details-open")).toBe(false)
 })

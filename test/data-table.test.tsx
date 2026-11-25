@@ -222,7 +222,6 @@ test("toggleRows builds on the selection an earlier call chose before the table 
     controller.toggleRows(["d2"], true)
   })
   expect(onSelectionChange).toHaveBeenLastCalledWith(["d1", "d2"], expect.anything())
-  // Without `checked`, a single row flips.
   act(() => {
     controller.toggleRows(["d1"])
   })

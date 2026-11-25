@@ -25,10 +25,8 @@ const notes: Note[] = [
   })),
 ]
 
-/** Matches the query against titles and bodies, as a server's full-text search would. */
 function bodySearch(
   match: (note: Note, q: string) => boolean = (note, q) => `${note.title} ${note.body}`.toLowerCase().includes(q),
-  // A query that never settles on its own: only an abort ends it, so a test of the abort doesn't race the timer.
   stalls: (q: string) => boolean = () => false,
 ) {
   const requests: { request: PageRequest<{ q?: string }>; signal: AbortSignal }[] = []
@@ -93,7 +91,6 @@ test("source: searches the server as you type, keeping results whose title lacks
   fireEvent.change(input, { target: { value: "bu" } })
   fireEvent.change(input, { target: { value: "budget" } })
   await waitFor(() => expect(optionNames(dialog).slice(0, 2)).toEqual(["Launch plan", "Budget"]))
-  // Only the last query reached the server once typing paused.
   const searches = requests.filter((entry) => entry.request.filter.q !== undefined)
   expect(searches.map((entry) => entry.request.filter.q)).toEqual(["budget"])
   expect(optionNames(dialog).slice(0, 2)).toEqual(["Launch plan", "Budget"])
@@ -206,7 +203,7 @@ test("items without filter still filter in the browser, by label and keywords", 
   expect(dialog.querySelector("[data-slot=command-status]")).toBeNull()
 })
 
-// UI SDK 0.1.0-beta.5 offers agents setValue, setQuery and setPages on a Command, not running one (command.test.tsx).
+// Workaround: UI SDK 0.1.0-beta.5 offers agents setValue, setQuery and setPages on a Command, not running one.
 test("agents open quick open, search the server through setQuery and highlight a result", async () => {
   const { source, requests } = bodySearch()
   render(<Workspace quickOpen={<DocumentQuickOpen source={source} getItem={toItem} onOpen={vi.fn()} debounce={0} />} />)

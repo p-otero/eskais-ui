@@ -38,7 +38,7 @@ function TaskRow({ onAction = noop }: { onAction?: (value: string) => void }) {
   )
 }
 
-// Browsers turn Shift+F10 and the context-menu key into a contextmenu event on the focused element; jsdom doesn't.
+// Workaround: jsdom doesn't turn Shift+F10 or the context-menu key into a contextmenu event, as browsers do.
 function pressContextMenuKey(target: Element) {
   return fireEvent.contextMenu(target, { button: 0, clientX: 0, clientY: 0, detail: 0 })
 }

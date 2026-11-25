@@ -64,7 +64,6 @@ test("a pulse pings three times and runs again when the status changes; pulse=al
   )
   const ping = () => pill("Syncing").querySelector<HTMLElement>("[data-slot=status-ping]")!
   const first = ping()
-  // A ping that never stops keeps a transform animation running, and the page promotes what follows it to layers.
   expect(first.style.animationIterationCount).toBe("3")
   expect(pill("Syncing").getAttribute("data-pulse")).toBe("")
   const always = pill("Live").querySelector<HTMLElement>("[data-slot=status-ping]")!

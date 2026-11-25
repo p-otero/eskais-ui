@@ -11,7 +11,7 @@ declare global {
 globalThis.__UI_SDK_STRICT__ = true
 globalThis.IS_REACT_ACT_ENVIRONMENT = true
 
-// jsdom gaps that UI SDK needs filled (see the ui-sdk skill, testing.md#jsdom).
+// Workaround: jsdom gaps UI SDK needs filled (the ui-sdk skill's testing.md#jsdom).
 HTMLElement.prototype.showPopover = function showPopover() {}
 HTMLElement.prototype.hidePopover = function hidePopover() {}
 Element.prototype.getAnimations = () => []
@@ -20,8 +20,7 @@ Element.prototype.checkVisibility = () => true
 Element.prototype.getClientRects = () => [] as unknown as DOMRectList
 document.elementFromPoint = () => null
 document.elementsFromPoint = () => []
-// jsdom has no canvas: its getContext logs "not implemented" and returns null. Return null quietly, so callers that
-// feature-detect a 2D context (the theme editor's colour conversion) take their fallback without the noise.
+// Workaround: jsdom's canvas getContext logs "not implemented"; return null quietly so feature detection falls back.
 HTMLCanvasElement.prototype.getContext = (() => null) as typeof HTMLCanvasElement.prototype.getContext
 globalThis.ResizeObserver ??= class {
   observe() {}

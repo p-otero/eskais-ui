@@ -38,7 +38,6 @@ test("frontmatter shows as written, not as a rule and a heading, and round-trips
   expect(rendered[5]?.dataset.mdHeading).toBe("1")
   expect(rendered[5]?.textContent).toBe("Atlas")
 
-  // The caret rests anywhere in it: the list item's "- " isn't a hidden prefix there.
   const item = view.state.doc.line(4)
   caret(view, item.from)
   expect(view.state.selection.main.head).toBe(item.from)
@@ -119,7 +118,6 @@ test("the caret starts on the line after the frontmatter, or at the start with i
   const { unmount } = render(<MarkdownEditor label="Note" defaultValue={note} />)
   await settle()
   const after = note.indexOf("# Atlas")
-  // The heading's "# " is a hidden prefix, so the caret lands on its text.
   expect(editorView().state.selection.main.head).toBe(after + 2)
   unmount()
 
@@ -146,7 +144,6 @@ test('frontmatter="readonly" drops edits inside the block and keeps every byte',
   type(view, end, end + 1, "", "delete.backward")
   expect(view.state.sliceDoc()).toBe(note)
 
-  // A change that spans the fence keeps the part outside it.
   type(view, end - 3, end + 4, "", "delete.selection")
   expect(view.state.sliceDoc()).toBe(`${note.slice(0, end + 1)}tlas${note.slice(end + 8)}`)
   type(view, end + 1, end + 1, "# A")

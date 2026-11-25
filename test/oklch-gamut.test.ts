@@ -52,7 +52,6 @@ test("maxChroma is the gamut's edge: inside at it, outside just past it, in sRGB
         expect(edge).toBeGreaterThan(0)
         expect(isOklchInGamut(l, edge, h, gamut)).toBe(true)
         expect(isInGamut(oklch(l, edge * 0.999, h), gamut)).toBe(true)
-        // Near black a channel sits within UI SDK's rounding of 0 for a while past the edge.
         const past = edge < areaChromaMax && l >= 0.1 && isInGamut(oklch(l, edge + 0.002, h), gamut)
         expect(past, `${gamut} oklch(${String(l)} ${String(edge)} ${String(h)})`).toBe(false)
       }
@@ -103,7 +102,6 @@ test("paintArea fills every pixel opaquely: white at the top, black at the botto
   expect(Array.from(pixels.slice(0, 3))).toEqual([255, 255, 255])
   const bottom = ((height - 1) * width + width - 1) * 4
   expect(Array.from(pixels.slice(bottom, bottom + 3))).toEqual([0, 0, 0])
-  // Mid row: the last two pixels are both past sRGB's edge for this hue, so they hold the same colour.
   const row = Math.round(height / 2) * width * 4
   const last = row + (width - 1) * 4
   expect(Array.from(pixels.slice(last - 4, last - 1))).toEqual(Array.from(pixels.slice(last, last + 3)))

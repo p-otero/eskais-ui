@@ -14,8 +14,6 @@ import { expect, test } from "vitest"
 
 import registry from "../registry.json"
 
-// The docs shipped in each item's JSON (`description`, `docs`) and the skill name components and hooks in code
-// spans. A name no registry file exports any more, or one marked @deprecated, tells consumers to use what is gone.
 const root = join(import.meta.dirname, "..")
 const sources = registry.items.flatMap((item) =>
   (item.files ?? []).map((file) => readFileSync(join(root, file.path), "utf8")),
@@ -39,16 +37,13 @@ for (const source of sources) {
     deprecated.add(name)
 }
 
-// Names from the libraries the docs build on, checked against those packages rather than listed.
 const external = new Set(
   [lucide, react, reactHookForm, reactQuery, agent, alertDialog, asyncOptions, field, triggerMenu].flatMap((module) =>
     Object.keys(module),
   ),
 )
-// Names a code sample defines itself, and a library named in prose.
 const sampleNames = new Set(["AppTopbar", "GlobalSearch", "UserMenu", "ArkType"])
 
-// Components (two capitalised words or more) and hooks or factories; single words are often copy ("Search").
 const identifier = /(?<![\w.$-])(?:[A-Z][a-z0-9]+[A-Z]\w*|use[A-Z]\w*|create[A-Z]\w*)\b/g
 
 function namesIn(text: string) {

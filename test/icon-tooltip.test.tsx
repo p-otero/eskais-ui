@@ -56,7 +56,6 @@ test("an icon button shows its name in a tooltip that labels it, so the name is 
   expect(copy.getAttribute("aria-labelledby")).toBe(tip?.id)
   expect(copy.hasAttribute("aria-describedby")).toBe(false)
   expect(tip?.hasAttribute("data-closed")).toBe(true)
-  // The keys sit in the tooltip, hidden from screen readers, instead of inside the square button.
   expect(tip?.querySelector("[data-slot=tooltip-shortcut]")?.textContent).toMatch(/\+C\W*$/)
   expect(tip?.getAttribute("aria-label")).toBe("Copy")
   expect(copy.querySelector("[data-slot=shortcut-hint]")).toBeNull()

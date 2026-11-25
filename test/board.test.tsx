@@ -224,7 +224,6 @@ test("an agent can find every column and toggle, and collapse and expand a colum
   const columns = components.filter((entry) => entry.component === "collapsible")
   expect(columns.map((entry) => entry.label)).toEqual(["Backlog", "Done"])
   expect(columns.every((entry) => entry.actions.includes("setOpen"))).toBe(true)
-  // The toggle's closed tooltip isn't listed: its trigger belongs to the column, which agents press by the toggle's name.
   expect(components.filter((entry) => entry.component === "tooltip")).toEqual([])
   expect(columns.every((entry) => entry.actions.includes("press"))).toBe(true)
 

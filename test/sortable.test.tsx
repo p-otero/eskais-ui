@@ -21,7 +21,6 @@ const order = (name = "Fruits") =>
 
 type FruitsProps = {
   onValueChange?: (value: string[], details: ChangeDetails<SortableReason>) => void
-  /** Leaves the order alone, as a parent that refuses the change. */
   frozen?: boolean
   handle?: boolean
   disabledKeys?: string[]

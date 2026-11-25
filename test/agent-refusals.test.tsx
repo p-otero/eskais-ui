@@ -36,7 +36,6 @@ import { sampleTasks } from "./fixtures/agent-tasks"
 
 const agent = createAgent()
 
-// What an app does to keep an agent away from a change while a person can still make it.
 const refuseAgent = (_value: unknown, details: { source: string; cancel: () => void }) => {
   if (details.source === "agent") details.cancel()
 }
@@ -230,8 +229,6 @@ test("commit history: a refused selection, expansion or branch fails the step", 
   expect(view.state).toMatchObject({ selected: null, expanded: [], details: [] })
 })
 
-// The bridge waits for a component whose action is still running, and leaves a disabled one out, so a confirm button
-// refuses only calls from app code.
 test("confirm button: confirm from code while its confirmation runs throws", () => {
   const onConfirm = vi.fn(() => new Promise<void>(() => {}))
   const view = mounted(mount(confirmButton, { onConfirm }, `<root aria-label="Delete"></root>`))

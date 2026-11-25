@@ -12,10 +12,6 @@ import {
 
 type Glb = ArrayBuffer | string
 
-/**
- * ModelScan's props from the fake engine's events, with start, cancel, a switch to fail the next run (`true` or an
- * error code), and whether a run is going and a retry can help.
- */
 function useFakeModelScan(
   { model, character }: { model: Glb; character: Glb },
   {
@@ -37,7 +33,6 @@ function useFakeModelScan(
     dispatch("reset")
     const controller = new AbortController()
     run.current = controller
-    // Cancelling rejects the run with an AbortError: not a failure, so nothing to show.
     runFakeEngine(dispatch, { model, character, fail, speed, photo, signal: controller.signal }).catch(
       (error: unknown) => {
         if (!(error instanceof DOMException && error.name === "AbortError")) throw error

@@ -6,7 +6,6 @@ async function axeViolations(root: Element) {
   return result.violations.map((violation) => `${violation.id}: ${violation.nodes.map((node) => node.html).join(", ")}`)
 }
 
-// Some UI SDK state, like agent registration, lands a tick after mounting.
 function settle(ms = 0) {
   return act(() => new Promise((resolve) => setTimeout(resolve, ms)))
 }

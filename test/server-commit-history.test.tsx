@@ -9,7 +9,6 @@ import type { Commit } from "@/lib/commit-graph"
 
 const NOW = Date.parse("2026-11-18T12:00:00Z")
 
-// A mainline of 30 commits where m5 merges a branch whose commits sit on both sides of the first page break.
 const commits: Commit[] = []
 for (let index = 0; index < 30; index += 1) {
   const next = `m${String(index + 1)}`

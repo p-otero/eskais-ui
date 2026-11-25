@@ -15,8 +15,6 @@ function destination(file: { path: string; target?: string }) {
   return file.target ?? file.path
 }
 
-// `shadcn add` writes a file that two items ship once per install, so copies drift apart unnoticed until one
-// install overwrites the other. A file shared by several items belongs to one item the others depend on.
 test("every file is shipped by one item", () => {
   const owners = new Map<string, string[]>()
   for (const item of items) {

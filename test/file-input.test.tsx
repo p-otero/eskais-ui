@@ -97,7 +97,7 @@ test("an agent finds the file input by its label", async () => {
   for (const entry of components) expect(entry.label, `${entry.component} ${entry.ref} has no name`).toBeTruthy()
   const entry = components.find((component) => component.label === "Contracts Browse")
   expect(entry).toBeTruthy()
-  // UI SDK 0.1.0-beta.10 drops the actions that would need a File from an agent; clearing stays.
+  // Workaround: UI SDK 0.1.0-beta.10 drops the actions that would need a File from an agent; clearing stays.
   expect(entry?.actions).toEqual(expect.arrayContaining(["clear"]))
   const result = await act(() => agent.act({ steps: [{ ref: "Contracts Browse", action: "clear" }] }))
   expect(result.ok, result.error?.message).toBe(true)

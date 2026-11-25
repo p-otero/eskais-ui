@@ -1,8 +1,5 @@
 import { vi } from "vitest"
 
-// A microphone in jsdom: a MediaStream of one audio track, an AudioContext whose analyser reads a sine at `amplitude`,
-// and animation frames that only run when a test steps them.
-
 class FakeTrack extends EventTarget {
   kind = "audio"
   readyState: "live" | "ended" = "live"
@@ -92,7 +89,6 @@ function installFakeAudio() {
   vi.stubGlobal("cancelAnimationFrame", (id: number) => frames.delete(id))
 }
 
-/** Runs `count` animation frames, `ms` apart. */
 function stepFrames(count = 1, ms = 16) {
   for (let frame = 0; frame < count; frame += 1) {
     clock += ms

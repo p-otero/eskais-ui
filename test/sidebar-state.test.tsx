@@ -54,7 +54,6 @@ test("the trigger hides the sidebar, and the state survives a remount", async ()
   const sidebar = screen.getByRole("navigation", { name: "Documentation" })
   expect(sidebar.hasAttribute("data-collapsed")).toBe(true)
   expect(sidebar.getAttribute("data-collapse")).toBe("hide")
-  // Hidden, not a rail: the items get no tooltips.
   expect(screen.getByRole("link", { name: "Installation" }).hasAttribute("aria-describedby")).toBe(false)
   expect(localStorage.getItem("test-docs-sidebar")).toBe("collapsed")
   unmount()
