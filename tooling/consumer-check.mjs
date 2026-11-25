@@ -686,6 +686,7 @@ const schema = z.object({ name: z.string().min(1) })
 function App() {
   return (
     <main className="flex flex-col gap-items p-inset-surface">
+      <h1 className="text-title">Imports</h1>
       <Badge tone="violet">Design</Badge>
       <Alert tone="info"><AlertTitle>Queued</AlertTitle></Alert>
       <Form schema={schema} defaultValues={{ name: "" }} messages={formMessagesEs} onSubmit={() => {}} label="Name">
@@ -767,6 +768,7 @@ ${probes}
 function App() {
   return (
     <main className="flex flex-col gap-items p-inset-surface">
+      <h1 className="text-title">Consumer</h1>
       <Button size="icon" aria-label="Close"><XIcon /></Button>
       <Dialog><DialogTrigger>Open</DialogTrigger><DialogContent><DialogTitle>Hi</DialogTitle></DialogContent></Dialog>
       <Probes />
@@ -893,6 +895,7 @@ ${probes}
 function App() {
   return (
     <main className="flex flex-col gap-items p-inset-surface">
+      <h1 className="text-title">Consumer</h1>
       <Card><CardHeader><CardTitle>Atlas</CardTitle></CardHeader><CardContent><Button>Open</Button></CardContent></Card>
       <Probes />
     </main>
