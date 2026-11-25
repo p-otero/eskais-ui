@@ -66,12 +66,16 @@ function reasonOf(options: unknown): { reason: LogViewerChangeReason; event?: Ev
   return { reason, event: event instanceof Event ? event : undefined }
 }
 
-// The agent bridge passes arguments unchecked: one source, a list of them, or nothing for all.
 function sourceList(sources: unknown): string[] | undefined {
   if (sources === undefined || sources === null || sources === "") return undefined
   if (typeof sources === "string") return [sources]
   if (Array.isArray(sources) && sources.every((source) => typeof source === "string")) return sources as string[]
   throw new TypeError(`filter takes a source or a list of sources, not ${JSON.stringify(sources)}.`)
+}
+
+function focusLogAround(el: HTMLElement) {
+  const log = el.closest('[data-slot="log-viewer"]')?.querySelector<HTMLElement>('[role="log"]')
+  log?.focus({ preventScroll: true })
 }
 
 const sameList = (a: readonly string[], b: readonly string[]) =>
@@ -344,7 +348,6 @@ const logViewer = definePrimitive({
           shown === undefined || shown.length === 0 ? [] : known.filter((source) => !shown.includes(source))
         return setHiddenSources(hidden, options)
       },
-      /** Leaves these sources out. */
       setHiddenSources,
       /** Shows only the lines that contain this text, in any case; an empty one shows every line. */
       search(needle?: unknown, options?: ChangeOptions<LogViewerChangeReason>) {
@@ -401,8 +404,7 @@ const logViewer = definePrimitive({
         "data-copied": state.copied ? "" : undefined,
       }),
     }),
-    // The log scrolls, so it takes focus for keyboard scrolling. Its rows come and go as it scrolls, which a live
-    // region would read out: arrivals are announced through the status part instead, throttled.
+    // Spec: a log is a live region that would read rows coming and going on scroll; the status part announces instead.
     log: slot({
       role: "log",
       attrs: () => ({ tabindex: "0", "aria-live": "off" }),
@@ -417,11 +419,7 @@ const logViewer = definePrimitive({
       press: ({ api, el }) => {
         const hadFocus = el !== undefined && el.ownerDocument.activeElement === el
         api.jumpToEnd()
-        // The button leaves once following resumes, so focus moves to the log rather than falling to the page.
-        if (hadFocus) {
-          const log = el.closest('[data-slot="log-viewer"]')?.querySelector<HTMLElement>('[role="log"]')
-          log?.focus({ preventScroll: true })
-        }
+        if (hadFocus) focusLogAround(el)
       },
     }),
     status: slot({

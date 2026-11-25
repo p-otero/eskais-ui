@@ -63,20 +63,20 @@ function formatTime(time: number, locale: string | undefined) {
   return format.format(time)
 }
 
-// A line mounts again each time it scrolls back into view: format its time once per locale.
-const times = new WeakMap<LogLine, { locale: string | undefined; text: string; iso: string }>()
+// Perf: a line remounts each time it scrolls back into view, so its time is formatted once per locale.
+const formattedTimes = new WeakMap<LogLine, { locale: string | undefined; text: string; iso: string }>()
 
 function timeOf(line: LogLine, time: number, locale: string | undefined) {
-  const known = times.get(line)
+  const known = formattedTimes.get(line)
   if (known && known.locale === locale) return known
   const formatted = { locale, text: formatTime(time, locale), iso: new Date(time).toISOString() }
-  times.set(line, formatted)
+  formattedTimes.set(line, formatted)
   return formatted
 }
 
 type SpanLook = { className?: string; style?: CSSProperties }
 
-// A line's runs share their style objects, and a store carries them across lines: compute each look once.
+// Perf: runs share style objects across lines, so each look is computed once.
 const looks = new WeakMap<AnsiStyle, SpanLook>()
 
 function spanStyle(style: AnsiStyle): SpanLook {
@@ -87,19 +87,21 @@ function spanStyle(style: AnsiStyle): SpanLook {
   return look
 }
 
+function solidInverseColors(fg: string | undefined, bg: string | undefined): CSSProperties {
+  return { backgroundColor: fg ?? "var(--foreground)", color: bg ? "var(--foreground)" : "var(--muted)" }
+}
+
+function tintedBackgroundColors(fg: string | undefined, bg: string | undefined): CSSProperties {
+  const css: CSSProperties = {}
+  if (fg) css.color = fg
+  if (bg) css.backgroundColor = `color-mix(in oklab, ${bg} 22%, transparent)`
+  return css
+}
+
 function lookOf(style: AnsiStyle): SpanLook {
   const fg = style.fg === undefined ? undefined : ansiCssColor(style.fg)
   const bg = style.bg === undefined ? undefined : ansiCssColor(style.bg)
-  const css: CSSProperties = {}
-  // Inverse paints the text's colour as a solid fill under the surface colour, which keeps it readable; a
-  // background colour alone is a tint, so the text keeps its own colour and contrast.
-  if (style.inverse) {
-    css.backgroundColor = fg ?? "var(--foreground)"
-    css.color = bg ? "var(--foreground)" : "var(--muted)"
-  } else {
-    if (fg) css.color = fg
-    if (bg) css.backgroundColor = `color-mix(in oklab, ${bg} 22%, transparent)`
-  }
+  const css = style.inverse ? solidInverseColors(fg, bg) : tintedBackgroundColors(fg, bg)
   const className = cn(
     style.bold && "font-semibold",
     style.dim && !fg && "text-muted-foreground",
@@ -110,12 +112,11 @@ function lookOf(style: AnsiStyle): SpanLook {
   return { className: className || undefined, style: Object.keys(css).length > 0 ? css : undefined }
 }
 
-// Where the search matches a line, as [from, to) offsets into its text.
-function matchesIn(text: string, query: string) {
+function matchRanges(text: string, query: string) {
   const needle = query.trim().toLowerCase()
   if (needle === "") return []
   const haystack = text.toLowerCase()
-  const ranges: [number, number][] = []
+  const ranges: [from: number, toExclusive: number][] = []
   for (let at = haystack.indexOf(needle); at !== -1; at = haystack.indexOf(needle, at + needle.length)) {
     ranges.push([at, at + needle.length])
   }
@@ -126,7 +127,7 @@ const markClassName = "rounded-xs bg-warning-soft text-warning-soft-foreground"
 
 function LineText({ line, query }: { line: LogLine; query: string }) {
   const spans: readonly AnsiSpan[] = line.spans ?? [{ text: line.text }]
-  const ranges = matchesIn(line.text, query)
+  const ranges = matchRanges(line.text, query)
   if (ranges.length === 0 && !line.spans) return line.text
   const pieces: ReactNode[] = []
   let offset = 0
@@ -178,8 +179,7 @@ type LogRowProps = {
   measure: LogViewerApi["measure"] | undefined
 }
 
-// A row takes no position of its own: rows sit in flow inside their run, so lines leaving the buffer above move the
-// run, not every row, and a row renders again only when what it shows changes.
+// Perf: rows sit in flow inside their run, so lines leaving above move the run, not every row.
 const LogRow = memo(function LogRow({
   line,
   position,
@@ -237,8 +237,7 @@ const LogRow = memo(function LogRow({
 
 const noItems: VirtualItem[] = []
 
-/** The rendered rows as runs of consecutive positions: the rows in view, and apart from them a kept one. */
-function runsOf(items: readonly VirtualItem[]) {
+function consecutiveRuns(items: readonly VirtualItem[]) {
   const runs: VirtualItem[][] = []
   for (const item of items) {
     const run = runs.at(-1)
@@ -259,14 +258,14 @@ type LogRowsProps = {
   currentError: number | null
 }
 
-// Renders the rows in view, through the virtualizer's own subscription: scrolling renders this list, not the viewer.
+// Perf: subscribes to the virtualizer itself, so scrolling renders this list, not the viewer.
 const LogRows = memo(function LogRows({ api, sources, wrap, timestamps, locale, query, currentError }: LogRowsProps) {
   const items = useSyncExternalStore(api.virtual.subscribe, api.virtual.items, () => noItems)
   const measure = wrap ? api.measure : undefined
   const bindRows = useCallback((el: HTMLDivElement | null) => api.bindRows(el), [api])
   return (
     <div ref={bindRows} data-slot="log-viewer-rows" className="relative min-w-full">
-      {runsOf(items).map((run, runIndex) => (
+      {consecutiveRuns(items).map((run, runIndex) => (
         <div
           // oxlint-disable-next-line react/no-array-index-key -- a run is the rows in view, or a kept row apart: its place is its identity
           key={runIndex}

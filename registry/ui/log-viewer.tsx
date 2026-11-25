@@ -17,7 +17,6 @@ import { cn, cssVars } from "@/lib/utils"
 
 const textOrUndefined = (value: unknown) => (typeof value === "string" ? value : undefined)
 
-/** The configured sources back from the JSON the styles' memo is keyed on, so a new array of the same ones is skipped. */
 function parseSources(json: string): LogSource[] {
   const parsed: unknown = JSON.parse(json)
   if (!Array.isArray(parsed)) return []
@@ -106,8 +105,7 @@ function LogViewer({
     announcements: { newErrors: labels.newErrors, newLines: labels.newLines },
   })
   const { api } = handle
-  // The source names and colours keep their identity between state changes, so the toolbar and the rows skip the
-  // render a new line's count causes.
+  // Perf: sources keep their identity and styles key on their JSON, so a new line doesn't re-render toolbar and rows.
   const known = useSyncExternalStore(api.subscribe, api.sources, api.sources)
   const configuredKey = JSON.stringify(configured)
   const styles = useMemo(() => sourceStyles(known, parseSources(configuredKey)), [known, configuredKey])
@@ -159,8 +157,7 @@ function LogViewer({
               className="flex min-h-0 flex-1 flex-col font-mono text-caption leading-relaxed"
             >
               <ScrollAreaViewport
-                // Strict containment makes the viewport its own layout root: rows coming and going every frame lay out
-                // only what is inside it, not the page.
+                // Perf: contain-strict, so rows coming and going every frame lay out only inside the viewport.
                 className="min-h-0 flex-1 overscroll-contain contain-strict"
                 render={(viewport) => (
                   <Parts.Log {...viewport} aria-label={label ?? labels.log} data-slot="log-viewer-log" />

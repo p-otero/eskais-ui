@@ -6,8 +6,10 @@ type LogFilter = { hidden: ReadonlySet<string>; query: string }
 /** What a sync changed: lines that now show at the end, and shown lines that left the buffer from the start. */
 type LogIndexChange = { added: number; removed: number; rebuilt: boolean }
 
-/** Ascending ids read from `start`, so dropping the oldest moves a number instead of copying the array. */
-function createIdList() {
+const compactAfterDropped = 1024
+
+// Perf: ids are read from `start`, so dropping the oldest moves a number instead of copying the array.
+function createSortedIdList() {
   let ids: number[] = []
   let start = 0
   const lowerBound = (id: number) => {
@@ -26,17 +28,15 @@ function createIdList() {
     },
     at: (index: number) => (index < 0 || start + index >= ids.length ? undefined : ids[start + index]),
     push: (id: number) => void ids.push(id),
-    /** Drops the ids below `id`; returns how many. */
     dropBelow(id: number) {
       const from = start
       while (start < ids.length && ids[start]! < id) start++
-      if (start > 1024 && start * 2 > ids.length) {
+      if (start > compactAfterDropped && start * 2 > ids.length) {
         ids = ids.slice(start)
         start = 0
       }
       return start - from
     },
-    /** The position of `id`, or of the first id above it. */
     lowerBound: (id: number) => lowerBound(id) - start,
     indexOf(id: number) {
       const index = lowerBound(id)
@@ -54,8 +54,8 @@ function createIdList() {
  * reads only the new lines, and only a filter change reads the whole buffer again.
  */
 function createLogIndex(isError: (line: LogLine) => boolean) {
-  const shown = createIdList()
-  const errors = createIdList()
+  const shown = createSortedIdList()
+  const errors = createSortedIdList()
   const sources: string[] = []
   const known = new Set<string>()
   let synced = 0
@@ -99,7 +99,6 @@ function createLogIndex(isError: (line: LogLine) => boolean) {
     get errorCount() {
       return errors.length
     },
-    /** Every source seen, in the order they first wrote. */
     sources: () => sources,
     idAt: (index: number) => shown.at(index),
     indexOf: (id: number) => shown.indexOf(id),
@@ -109,7 +108,6 @@ function createLogIndex(isError: (line: LogLine) => boolean) {
       needle = next.query.trim().toLowerCase()
       return rebuild(store)
     },
-    /** Reads what arrived and left since the last sync. */
     sync(store: LogStore): LogIndexChange {
       const snapshot = store.getSnapshot()
       if (snapshot.generation !== generation) return rebuild(store)

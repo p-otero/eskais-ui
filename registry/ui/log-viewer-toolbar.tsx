@@ -120,7 +120,6 @@ const LogViewerToolbar = memo(function LogViewerToolbar({
           variant="ghost"
           size="icon"
           aria-label={copied ? labels.copied : labels.copy}
-          // The viewer's own copy action serves agents; the button would repeat it.
           data-agent-hidden=""
           onClick={(event) => void api.copy(event.nativeEvent)}
         >
