@@ -7,6 +7,10 @@
 @import "../../../registry/styles/theme-glass.css";
 @import "../../../registry/styles/palettes.css";
 @import "../../../registry/styles/prism-picker.css";
+@import "../../../registry/styles/sun-arc.css";
+@import "../../../registry/styles/mixer.css";
+@import "../../../registry/styles/safe-dial.css";
+@import "../../../registry/styles/vinyl-scrubber.css";
 
 @source "../../../registry";
 @source "../../showcase/src/theme-editor.tsx";

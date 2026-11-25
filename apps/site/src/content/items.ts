@@ -215,6 +215,55 @@ const itemNotes: Record<string, ItemNotes> = {
       "Agents find it by its label and call setWavelength (380 to 700) or setHue (OKLCH degrees); a magenta or purple hue fails the step with why, since no single wavelength shows it.",
     related: ["color-picker", "slider"],
   },
+  "sun-arc": {
+    usage:
+      "Reach for it where the time of day matters for the light, like scheduling a shoot, a walk or a delivery window: the sun's path is the real one for the place and day. For a plain time, use the TimeInput from DateTimePicker.",
+    a11y: [
+      "The arc is a slider in minutes: arrows step by the step (5 minutes), Page Up and Page Down an hour, Home and End the ends of the day, and it reads as the time in the page's locale.",
+      "On touch only the sun and the ground strip take a drag, so the page still scrolls over the sky. The sun keeps a 44px hit area.",
+      "Under reduced motion the sun jumps to a preset instead of gliding.",
+      "The stage is a sky in every theme, so the focus ring on it is white; the readout and buttons follow the theme.",
+    ],
+    agent:
+      'Agents find it by its label and call setTime (minutes or "HH:MM"), sunrise, sunset or solarNoon; sunrise and sunset fail the step with why in a polar day or night.',
+    related: ["date-time-picker", "slider", "prism-picker"],
+  },
+  mixer: {
+    usage:
+      "Reach for it to split a whole between a few parts, like a budget, model weights or traffic: one fader up takes from the others in proportion, and a lock keeps a part fixed.",
+    a11y: [
+      "Each fader is a vertical slider named by its channel: arrows step, Page Up and Page Down ten steps, Home and End the ends.",
+      "A locked channel's fader is read-only and stays focusable; each lock is a toggle named for its channel, with a tooltip.",
+      "The LED meters and the scale are decoration; the value is in each slider.",
+    ],
+    agent:
+      "Agents find it by its label and call setChannel(id, value), setAll(values) or lock(id); a value the locked channels leave no room for, values that don't sum to the total, or moving a locked channel fail the step with why.",
+    related: ["slider", "toggle"],
+  },
+  "safe-dial": {
+    usage:
+      "Reach for it where entering a code is part of the experience, like a game, an escape room or a playful unlock. For a code people receive, use OTPInput.",
+    a11y: [
+      "The dial is a slider over its numbers: arrows turn it and wrap round, Enter enters the number, Backspace removes the last one, and digits type straight into the code.",
+      "The code is UI SDK's OTP input, a single field screen readers hear whole; paste and autofill work there.",
+      "With mask, the slots show dots; the input still holds the digits.",
+    ],
+    agent:
+      'Agents find it by its label and call enter("27-04-61-33"), with digits, numbers split by dashes or an array; a wrong count or a number off the dial fails the step with why.',
+    related: ["otp-input", "slider"],
+  },
+  "vinyl-scrubber": {
+    usage:
+      "Reach for it as the timeline of a music or DJ-flavoured player. Pass media for an audio or video element, or value and duration to drive it yourself.",
+    a11y: [
+      "The waveform strip is a slider in seconds: arrows step by the step (5 s), Page Up and Page Down 30 s, Home and End the ends, and it reads as the time of the duration.",
+      "Play is a toggle that stays pressed while it plays, with a tooltip.",
+      "Under reduced motion the record doesn't spin between time updates.",
+    ],
+    agent:
+      'Agents find it by its label and call seek (seconds or "m:ss"), play and pause; a seek past the end, or before the duration is known, fails the step with why.',
+    related: ["slider", "toggle"],
+  },
   "image-cropper": {
     usage:
       'Reach for it to crop an upload before saving: a cover image with a box, an avatar with mode="frame" and shape="circle".',

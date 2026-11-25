@@ -38,6 +38,10 @@ const categories = [
       "date-time-picker",
       "color-picker",
       "prism-picker",
+      "sun-arc",
+      "mixer",
+      "safe-dial",
+      "vinyl-scrubber",
     ],
   },
   {

@@ -1,0 +1,279 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "mixer",
+  "title": "Mixer",
+  "description": "A mixing desk that splits a total between channels: moving one fader moves the unlocked others in proportion, so the channels always sum to the total, and a locked channel stays put. Each fader is UI SDK's vertical slider with an LED meter, each lock a UI SDK toggle, with setChannel, setAll and lock for agents.",
+  "dependencies": [
+    "@ui-sdk/core@0.1.0-beta.12",
+    "@ui-sdk/react@0.1.0-beta.12",
+    "lucide-react"
+  ],
+  "registryDependencies": [
+    "@eskais/utils",
+    "@eskais/theme",
+    "@eskais/action-refusal",
+    "@eskais/tooltip",
+    "@eskais/locale"
+  ],
+  "files": [
+    {
+      "path": "registry/ui/mixer.tsx",
+      "content": "\"use client\"\n\nimport { createParts } from \"@ui-sdk/react/primitive\"\nimport { Slider, SliderControl, SliderThumb, SliderTrack, type SliderValueChangeDetails } from \"@ui-sdk/react/slider\"\nimport { Toggle, ToggleIcon } from \"@ui-sdk/react/toggle\"\nimport { LockIcon, LockOpenIcon } from \"lucide-react\"\nimport { memo, useCallback, useMemo, useRef, useState } from \"react\"\n\nimport { evenly, rebalance, type MixerValues } from \"@/components/ui/mixer-balance\"\nimport { mixer } from \"@/components/ui/mixer-primitive\"\nimport { ControlTooltip } from \"@/components/ui/tooltip\"\nimport { useLocale } from \"@/lib/locale\"\nimport { cn, cssVars } from \"@/lib/utils\"\n\nconst { Root: MixerRoot } = createParts(mixer, { root: \"div\" })\n\n/** A channel strip: `id` keys its value, `label` names its fader and is printed on its strip. */\ntype MixerChannel = { id: string; label: string }\n\ntype MixerLabels = {\n  /** Names a channel's lock button; it gets the channel's label. */\n  lock: (channel: string) => string\n  /** The readout's term for the sum of every channel. */\n  total: string\n}\n\nconst mixerLabels: MixerLabels = {\n  lock: (channel) => `Lock ${channel}`,\n  total: \"Total\",\n}\n\n/** Why the values or the locks changed, and `cancel()` to keep them as they were. */\ntype MixerChangeDetails = {\n  reason: string\n  /** The channel moved by hand or by `setChannel`; undefined for `setAll`. */\n  channel: string | undefined\n  event: Event | undefined\n  cancel: () => void\n  readonly canceled: boolean\n}\n\ntype MixerState = { disabled: boolean; values: MixerValues; locked: readonly string[] }\n\ntype MixerProps = {\n  /** The accessible name of the mixer as a whole. */\n  label: string\n  channels: readonly MixerChannel[]\n  /** Each channel's share by id. Pass it to control the mixer; the values should sum to `total`. */\n  value?: MixerValues\n  /** The total split evenly by default. */\n  defaultValue?: MixerValues\n  /** Runs on every step of a drag, a key or an agent's call, with every channel's new value. */\n  onValueChange?: (values: MixerValues, details: MixerChangeDetails) => void\n  /** Runs once a drag, a key press or an agent's call that changed the values ends, for saving. */\n  onValueCommit?: (values: MixerValues) => void\n  /** The ids of the channels rebalancing leaves put. Pass it to control the locks. */\n  locked?: readonly string[]\n  defaultLocked?: readonly string[]\n  onLockedChange?: (locked: string[], details: MixerChangeDetails) => void\n  /** What the channels always sum to; 100 by default. */\n  total?: number\n  /** The smallest change of a channel; 1 by default. Page Up and Page Down move ten steps. */\n  step?: number\n  /** How values read on the strips and for screen readers: `Intl.NumberFormat` options, or a function. */\n  format?: Intl.NumberFormatOptions | ((value: number) => string)\n  /** The locale values are written in; the page's `lang`, or the runtime's default without one. */\n  locale?: string\n  disabled?: boolean\n  labels?: Partial<MixerLabels>\n  /** Classes for the root; a function gets the mixer's state. */\n  className?: string | ((state: MixerState) => string | undefined)\n}\n\nfunction details(reason: string, channel: string | undefined, event: Event | undefined): MixerChangeDetails {\n  let canceled = false\n  return {\n    reason,\n    channel,\n    event,\n    cancel: () => {\n      canceled = true\n    },\n    get canceled() {\n      return canceled\n    },\n  }\n}\n\nconst noLocks: readonly string[] = []\nconst ledCount = 14\nconst leds = Array.from({ length: ledCount }, (_, index) => index)\nconst ledTone = (index: number) => (index >= ledCount - 2 ? \"peak\" : index >= ledCount - 5 ? \"hot\" : \"signal\")\nconst scaleMarks = [0, 0.25, 0.5, 0.75, 1]\n\ntype LockCommit = (id: string, lock: boolean, event: Event | undefined, reason?: string) => boolean\n\nconst ChannelHead = memo(function ChannelHead({\n  id,\n  number,\n  name,\n  pressed,\n  disabled,\n  onLock,\n}: {\n  id: string\n  number: number\n  name: string\n  pressed: boolean\n  disabled: boolean\n  onLock: LockCommit\n}) {\n  return (\n    <div data-slot=\"mixer-channel-head\">\n      <span data-slot=\"mixer-channel-number\" aria-hidden=\"true\">\n        {number}\n      </span>\n      <ControlTooltip label={name}>\n        <Toggle\n          aria-label={name}\n          pressed={pressed}\n          disabled={disabled}\n          onPressedChange={(next, change) => {\n            if (!onLock(id, next, change.event, change.reason)) change.cancel()\n          }}\n          className=\"touch-target\"\n        >\n          <ToggleIcon>{pressed ? <LockIcon /> : <LockOpenIcon />}</ToggleIcon>\n        </Toggle>\n      </ControlTooltip>\n    </div>\n  )\n})\n\nconst Scale = memo(function Scale({ total, format }: { total: number; format: (value: number) => string }) {\n  return (\n    <div data-slot=\"mixer-scale\" aria-hidden=\"true\">\n      {scaleMarks.map((mark) => (\n        <span key={mark} style={cssVars({ \"--mixer-mark\": String(mark) })}>\n          {format(mark * total)}\n        </span>\n      ))}\n    </div>\n  )\n})\n\nfunction useFormat(format: MixerProps[\"format\"], locale: string | undefined) {\n  return useMemo(() => {\n    if (typeof format === \"function\") return format\n    const number = new Intl.NumberFormat(locale, format ?? { maximumFractionDigits: 2 })\n    return (value: number) => number.format(value)\n  }, [format, locale])\n}\n\n/**\n * A mixing desk for splitting a total between channels: moving one fader moves the unlocked others in proportion, so\n * the channels always sum to `total`, and a locked channel stays put. Each fader is UI SDK's vertical slider, named by\n * its channel, with a level meter beside it; each lock is a toggle.\n */\nfunction Mixer({\n  label,\n  channels,\n  value,\n  defaultValue,\n  onValueChange,\n  onValueCommit,\n  locked: lockedProp,\n  defaultLocked = noLocks,\n  onLockedChange,\n  total = 100,\n  step = 1,\n  format,\n  locale: localeProp,\n  disabled = false,\n  labels: labelOverrides,\n  className,\n}: MixerProps) {\n  const labels = { ...mixerLabels, ...labelOverrides }\n  const ids = channels.map((channel) => channel.id)\n  const [ownValues, setOwnValues] = useState(() => defaultValue ?? evenly(ids, total, step))\n  const [ownLocked, setOwnLocked] = useState<readonly string[]>(defaultLocked)\n  const values = value ?? ownValues\n  const locked = lockedProp ?? ownLocked\n  const latest = useRef(values)\n  const anchor = useRef<MixerValues | null>(null)\n  const locale = useLocale(localeProp)\n  const formatValue = useFormat(format, locale)\n  const balance = { ids, values, locked: new Set(locked), total, step }\n\n  const apply = (next: MixerValues, change: MixerChangeDetails) => {\n    onValueChange?.(next, change)\n    if (change.canceled) return false\n    latest.current = next\n    setOwnValues(next)\n    return true\n  }\n\n  const commit = (next: MixerValues, { channel, event }: { channel: string | undefined; event: Event | undefined }) => {\n    const done = apply(next, details(\"imperative\", channel, event))\n    if (done) onValueCommit?.(next)\n    return done\n  }\n\n  const commitLock = useCallback<LockCommit>(\n    (id, lock, event, reason = \"imperative\") => {\n      const next = lock ? [...locked.filter((other) => other !== id), id] : locked.filter((other) => other !== id)\n      const change = details(reason, id, event)\n      onLockedChange?.(next, change)\n      if (change.canceled) return false\n      setOwnLocked(next)\n      return true\n    },\n    [locked, onLockedChange],\n  )\n\n  const onFader = (id: string) => (next: number, change: SliderValueChangeDetails) => {\n    if (anchor.current === null) anchor.current = values\n    const moved = apply(rebalance(balance, id, next, anchor.current), details(change.reason, id, change.event))\n    if (!moved) change.cancel()\n  }\n\n  const onFaderCommit = () => {\n    anchor.current = null\n    onValueCommit?.(latest.current)\n  }\n\n  const state = { disabled, values, locked }\n  const sum = ids.reduce((all, id) => all + (values[id] ?? 0), 0)\n\n  return (\n    <MixerRoot\n      channels={channels}\n      values={values}\n      locked={locked}\n      total={total}\n      step={step}\n      disabled={disabled}\n      commit={commit}\n      commitLock={commitLock}\n      aria-label={label}\n      className={cn(\n        \"flex w-full flex-col overflow-hidden rounded-surface border bg-card text-card-foreground shadow-surface\",\n        typeof className === \"function\" ? className(state) : className,\n      )}\n    >\n      <div data-slot=\"mixer-desk\" data-disabled={disabled ? \"\" : undefined}>\n        <div data-slot=\"mixer-strips\">\n          {channels.map((channel, index) => {\n            const level = values[channel.id] ?? 0\n            const isLocked = locked.includes(channel.id)\n            const lit = Math.round((level / total) * ledCount)\n            return (\n              <div\n                key={channel.id}\n                data-slot=\"mixer-channel\"\n                data-locked={isLocked ? \"\" : undefined}\n                style={cssVars({ \"--mixer-level\": (level / total).toFixed(4) })}\n              >\n                <ChannelHead\n                  id={channel.id}\n                  number={index + 1}\n                  name={labels.lock(channel.label)}\n                  pressed={isLocked}\n                  disabled={disabled}\n                  onLock={commitLock}\n                />\n                <div data-slot=\"mixer-fader\">\n                  <Scale total={total} format={formatValue} />\n                  <Slider\n                    value={level}\n                    onValueChange={onFader(channel.id)}\n                    onValueCommit={onFaderCommit}\n                    orientation=\"vertical\"\n                    min={0}\n                    max={total}\n                    step={step}\n                    largeStep={step * 10}\n                    disabled={disabled}\n                    readOnly={isLocked}\n                    format={formatValue}\n                    locale={locale}\n                    className=\"h-full\"\n                  >\n                    <SliderControl className=\"h-full\">\n                      <SliderTrack>\n                        <SliderThumb aria-label={channel.label} className=\"touch-target\" />\n                      </SliderTrack>\n                    </SliderControl>\n                  </Slider>\n                  <div data-slot=\"mixer-meter\" aria-hidden=\"true\">\n                    {leds.map((led) => (\n                      <span key={led} data-tone={ledTone(led)} data-lit={led < lit ? \"\" : undefined} />\n                    ))}\n                  </div>\n                </div>\n                <output data-slot=\"mixer-value\" aria-hidden=\"true\">\n                  {formatValue(level)}\n                </output>\n                <span data-slot=\"mixer-label\" title={channel.label}>\n                  {channel.label}\n                </span>\n              </div>\n            )\n          })}\n        </div>\n      </div>\n      <dl className=\"flex items-baseline justify-between gap-group px-inset-surface py-inset-item\">\n        <dt className=\"text-meta tracking-meta text-muted-foreground uppercase\">{labels.total}</dt>\n        <dd className=\"font-mono text-title-sm tabular-nums\">{formatValue(Math.round(sum * 1e6) / 1e6)}</dd>\n      </dl>\n    </MixerRoot>\n  )\n}\n\nexport { Mixer, mixerLabels }\nexport type { MixerChangeDetails, MixerChannel, MixerLabels, MixerProps, MixerState, MixerValues }\n",
+      "type": "registry:ui"
+    },
+    {
+      "path": "registry/ui/mixer-primitive.ts",
+      "content": "import { definePrimitive } from \"@ui-sdk/core\"\n\nimport { blocked, rebalance, sumOf, unitsOf, type Balance, type MixerValues } from \"@/components/ui/mixer-balance\"\nimport { settled, unavailable } from \"@/lib/action-refusal\"\n\ntype MixerChannelInfo = { id: string; label: string }\n\n/** What a change asks of the app: it returns `false` when the app cancelled it. */\ntype MixerCommit = (values: MixerValues, change: { channel: string | undefined; event: Event | undefined }) => boolean\ntype MixerLockCommit = (id: string, locked: boolean, event: Event | undefined) => boolean\n\ntype MixerOptions = {\n  channels?: readonly MixerChannelInfo[]\n  values?: MixerValues\n  locked?: readonly string[]\n  total?: number\n  step?: number\n  disabled?: boolean\n  commit?: MixerCommit\n  commitLock?: MixerLockCommit\n}\n\ntype Ready = {\n  balance: Balance\n  channels: readonly MixerChannelInfo[]\n  commit: MixerCommit\n  commitLock: MixerLockCommit\n}\n\nfunction ready(options: MixerOptions, action: string, event: Event | undefined): Ready | false {\n  if (options.disabled) return unavailable(action, \"isn't available while the mixer is disabled\", { event })\n  const { channels, values, commit, commitLock } = options\n  if (!channels || !values || !commit || !commitLock)\n    return unavailable(action, \"isn't available: the mixer isn't ready\", { event })\n  const balance = {\n    ids: channels.map((channel) => channel.id),\n    values,\n    locked: new Set(options.locked),\n    total: options.total ?? 100,\n    step: options.step ?? 1,\n  }\n  return { balance, channels, commit, commitLock }\n}\n\nconst nameOf = (channels: readonly MixerChannelInfo[], id: string) =>\n  channels.find((channel) => channel.id === id)?.label ?? id\n\nconst known = (channels: readonly MixerChannelInfo[]) =>\n  channels.map((channel) => JSON.stringify(channel.id)).join(\", \")\n\nfunction valuesFrom(input: unknown, channels: readonly MixerChannelInfo[]): MixerValues | undefined {\n  if (Array.isArray(input)) {\n    if (input.length !== channels.length || !input.every((value) => typeof value === \"number\")) return undefined\n    return Object.fromEntries(channels.map((channel, index) => [channel.id, Number(input[index])]))\n  }\n  if (typeof input !== \"object\" || input === null) return undefined\n  const entries = Object.entries(input)\n  if (!entries.every(([, value]) => typeof value === \"number\")) return undefined\n  return Object.fromEntries(entries.map(([id, value]) => [id, Number(value)]))\n}\n\n/** A mixer's agent surface: channel shares that always sum to the total, where locked channels stay put. */\nconst mixer = definePrimitive({\n  name: \"mixer\",\n  options: {\n    channels: \"value\",\n    values: \"value\",\n    locked: \"value\",\n    total: \"value\",\n    step: \"value\",\n    disabled: \"value\",\n    commit: \"value\",\n    commitLock: \"value\",\n  },\n  // Workaround: not `disabled`: the bridge would hide every action from a disabled part without saying why.\n  state: (options: MixerOptions) => ({ inert: Boolean(options.disabled) }),\n  sync: (options) => ({ inert: Boolean(options.disabled) }),\n  api: (context) => ({\n    /** Sets one channel by id and rebalances the unlocked others in proportion, so the total holds. */\n    setChannel(id: string, value: number, event?: Event) {\n      const mixerReady = ready(context.options(), \"setChannel\", event)\n      if (mixerReady === false) return false\n      const { balance, channels, commit } = mixerReady\n      const name = nameOf(channels, id)\n      const why = blocked(balance, id, value)\n      if (why?.kind === \"unknown\")\n        return unavailable(\"setChannel\", `has no channel ${JSON.stringify(id)}; the channels are ${known(channels)}`, {\n          event,\n        })\n      if (why?.kind === \"range\")\n        return unavailable(\"setChannel\", `takes 0 to ${String(balance.total)}, not ${String(value)}`, { event })\n      if (why?.kind === \"locked\") return unavailable(\"setChannel\", `can't move ${name}: it is locked`, { event })\n      if (why?.kind === \"alone\") {\n        return unavailable(\n          \"setChannel\",\n          `can't move ${name}: every other channel is locked, so nothing can make up the difference`,\n          { event },\n        )\n      }\n      if (why?.kind === \"over\") {\n        return unavailable(\n          \"setChannel\",\n          `can't set ${name} to ${String(value)}: locked channels hold ${String(why.held)} of ${String(balance.total)}, so it can take at most ${String(why.most)}`,\n          { event },\n        )\n      }\n      if (unitsOf(value, balance.step) === unitsOf(balance.values[id] ?? 0, balance.step)) return true\n      return settled(commit(rebalance(balance, id, value), { channel: id, event }), \"setChannel\", { event })\n    },\n    /** Sets every channel at once, by id or in order; they must sum to the total and keep locked channels as they are. */\n    setAll(values: MixerValues | number[], event?: Event) {\n      const mixerReady = ready(context.options(), \"setAll\", event)\n      if (mixerReady === false) return false\n      const { balance, channels, commit } = mixerReady\n      const next = valuesFrom(values, channels)\n      if (!next) {\n        return unavailable(\n          \"setAll\",\n          `takes one number per channel, in order or by id (${known(channels)}), not ${JSON.stringify(values)}`,\n          { event },\n        )\n      }\n      const missing = balance.ids.filter((id) => !(id in next))\n      if (missing.length > 0)\n        return unavailable(\"setAll\", `is missing ${missing.map((id) => nameOf(channels, id)).join(\", \")}`, { event })\n      const stranger = Object.keys(next).find((id) => !balance.ids.includes(id))\n      if (stranger !== undefined)\n        return unavailable(\n          \"setAll\",\n          `has no channel ${JSON.stringify(stranger)}; the channels are ${known(channels)}`,\n          { event },\n        )\n      const outside = balance.ids.find((id) => (next[id] ?? 0) < 0 || (next[id] ?? 0) > balance.total)\n      if (outside !== undefined)\n        return unavailable(\n          \"setAll\",\n          `takes 0 to ${String(balance.total)} per channel, not ${String(next[outside])} for ${nameOf(channels, outside)}`,\n          { event },\n        )\n      const sum = sumOf(balance.ids, next)\n      if (unitsOf(sum, balance.step) !== unitsOf(balance.total, balance.step))\n        return unavailable(\"setAll\", `needs values that sum to ${String(balance.total)}, not ${String(sum)}`, { event })\n      const moved = balance.ids.find(\n        (id) =>\n          balance.locked.has(id) &&\n          unitsOf(next[id] ?? 0, balance.step) !== unitsOf(balance.values[id] ?? 0, balance.step),\n      )\n      if (moved !== undefined) {\n        return unavailable(\n          \"setAll\",\n          `can't move ${nameOf(channels, moved)}: it is locked at ${String(balance.values[moved])}`,\n          { event },\n        )\n      }\n      const snapped = Object.fromEntries(\n        balance.ids.map((id) => [id, unitsOf(next[id] ?? 0, balance.step) * balance.step]),\n      )\n      if (balance.ids.every((id) => snapped[id] === balance.values[id])) return true\n      return settled(commit(snapped, { channel: undefined, event }), \"setAll\", { event })\n    },\n    /** Locks a channel so rebalancing leaves it put, or unlocks it with `false`. */\n    lock(id: string, locked = true, event?: Event) {\n      const mixerReady = ready(context.options(), \"lock\", event)\n      if (mixerReady === false) return false\n      const { balance, channels, commitLock } = mixerReady\n      if (!balance.ids.includes(id))\n        return unavailable(\"lock\", `has no channel ${JSON.stringify(id)}; the channels are ${known(channels)}`, {\n          event,\n        })\n      if (balance.locked.has(id) === locked) return true\n      return settled(commitLock(id, locked, event), \"lock\", { event })\n    },\n  }),\n  slots: (slot) => ({\n    root: slot({\n      role: \"group\",\n      attrs: (state) => ({ \"data-disabled\": state.inert ? \"\" : undefined }),\n    }),\n  }),\n  agent: { actions: [\"setChannel\", \"setAll\", \"lock\"] },\n})\n\nexport { mixer }\nexport type { MixerChannelInfo, MixerCommit, MixerLockCommit, MixerOptions }\n",
+      "type": "registry:ui"
+    },
+    {
+      "path": "registry/ui/mixer-balance.ts",
+      "content": "/** Each channel's share, by channel id. */\ntype MixerValues = Record<string, number>\n\ntype Balance = {\n  ids: readonly string[]\n  values: MixerValues\n  locked: ReadonlySet<string>\n  total: number\n  step: number\n}\n\n/** Why a channel can't take a value, or `undefined` when it can. */\ntype Blocked =\n  | { kind: \"unknown\" }\n  | { kind: \"locked\" }\n  | { kind: \"range\" }\n  | { kind: \"alone\"; held: number }\n  | { kind: \"over\"; held: number; most: number }\n\nconst unitsOf = (value: number, step: number) => Math.round(value / step)\n\nconst lockedOthers = ({ ids, values, locked }: Balance, id: string) =>\n  ids.filter((other) => other !== id && locked.has(other)).reduce((sum, other) => sum + (values[other] ?? 0), 0)\n\n/** The most a channel can take: the total less what the other locked channels hold. */\nconst ceilingOf = (balance: Balance, id: string) => balance.total - lockedOthers(balance, id)\n\nfunction blocked(balance: Balance, id: string, value: number): Blocked | undefined {\n  if (!balance.ids.includes(id)) return { kind: \"unknown\" }\n  if (!Number.isFinite(value) || value < 0 || value > balance.total) return { kind: \"range\" }\n  const current = balance.values[id] ?? 0\n  if (unitsOf(value, balance.step) === unitsOf(current, balance.step)) return undefined\n  if (balance.locked.has(id)) return { kind: \"locked\" }\n  const held = lockedOthers(balance, id)\n  const free = balance.ids.filter((other) => other !== id && !balance.locked.has(other))\n  if (free.length === 0) return { kind: \"alone\", held }\n  if (value > balance.total - held) return { kind: \"over\", held, most: balance.total - held }\n  return undefined\n}\n\nfunction shareUnits(weights: readonly number[], units: number) {\n  const sum = weights.reduce((total, weight) => total + weight, 0)\n  const exact = weights.map((weight) => (sum > 0 ? (weight / sum) * units : units / weights.length))\n  const shares = exact.map(Math.floor)\n  let left = units - shares.reduce((total, share) => total + share, 0)\n  const byRemainder = exact.map((value, index) => ({ index, remainder: value - Math.floor(value) }))\n  byRemainder.sort((a, b) => b.remainder - a.remainder || a.index - b.index)\n  for (const { index } of byRemainder) {\n    if (left <= 0) break\n    shares[index] = (shares[index] ?? 0) + 1\n    left--\n  }\n  return shares\n}\n\n/**\n * Sets one channel and moves every unlocked other in proportion to its share, so the values still sum to the total.\n * The value is snapped to the step and clamped to what the locked channels leave; with no free channel to give or\n * take, nothing moves. `weights` are the shares to keep in proportion, the values when a drag began by default, so a\n * channel pushed to the top and back gives every other its share back.\n */\nfunction rebalance(balance: Balance, id: string, value: number, weights: MixerValues = balance.values): MixerValues {\n  const { ids, values, locked, step } = balance\n  const free = ids.filter((other) => other !== id && !locked.has(other))\n  if (locked.has(id) || free.length === 0) return values\n  const ceilingUnits = unitsOf(ceilingOf(balance, id), step)\n  const ownUnits = Math.max(0, Math.min(ceilingUnits, unitsOf(value, step)))\n  const shares = shareUnits(\n    free.map((other) => weights[other] ?? 0),\n    ceilingUnits - ownUnits,\n  )\n  const next: MixerValues = { ...values, [id]: ownUnits * step }\n  free.forEach((other, index) => {\n    next[other] = (shares[index] ?? 0) * step\n  })\n  for (const other of ids) next[other] = Math.round((next[other] ?? 0) * 1e6) / 1e6\n  return next\n}\n\n/** Splits the total evenly, in steps, the first channels taking any remainder. */\nfunction evenly(ids: readonly string[], total: number, step: number): MixerValues {\n  const shares = shareUnits(\n    ids.map(() => 1),\n    unitsOf(total, step),\n  )\n  return Object.fromEntries(ids.map((id, index) => [id, (shares[index] ?? 0) * step]))\n}\n\nconst sumOf = (ids: readonly string[], values: MixerValues) => ids.reduce((sum, id) => sum + (values[id] ?? 0), 0)\n\nexport { blocked, ceilingOf, evenly, rebalance, sumOf, unitsOf }\nexport type { Balance, Blocked, MixerValues }\n",
+      "type": "registry:ui"
+    }
+  ],
+  "css": {
+    "[data-slot=\"mixer-desk\"]": {
+      "--mixer-fader-height": "11rem",
+      "--mixer-cap-height": "1.5rem",
+      "--mixer-ink": "#e9e7e1",
+      "--mixer-print": "rgb(233 231 225 / 0.62)",
+      "position": "relative",
+      "padding": "1.25rem 1rem 1rem",
+      "color": "var(--mixer-ink)",
+      "user-select": "none",
+      "background-color": "#2a2c31",
+      "background-image": "radial-gradient(circle at 0.75rem 0.75rem, #8d9199 0 2px, #3a3d43 2.5px 4px, transparent 4.5px), radial-gradient(circle at calc(100% - 0.75rem) 0.75rem, #8d9199 0 2px, #3a3d43 2.5px 4px, transparent 4.5px), radial-gradient(circle at 0.75rem calc(100% - 0.75rem), #8d9199 0 2px, #3a3d43 2.5px 4px, transparent 4.5px), radial-gradient( circle at calc(100% - 0.75rem) calc(100% - 0.75rem), #8d9199 0 2px, #3a3d43 2.5px 4px, transparent 4.5px ), linear-gradient(180deg, rgb(255 255 255 / 0.07), transparent 22%, transparent 78%, rgb(0 0 0 / 0.25)), repeating-linear-gradient( 90deg, rgb(255 255 255 / 0.028) 0 1px, transparent 1px 2px, rgb(0 0 0 / 0.035) 2px 3px, transparent 3px 5px ), linear-gradient(180deg, #3a3d44, #24262b)",
+      "box-shadow": "inset 0 1px 0 rgb(255 255 255 / 0.12), inset 0 -1px 0 rgb(0 0 0 / 0.5)"
+    },
+    "[data-density=\"compact\"] [data-slot=\"mixer-desk\"]": {
+      "--mixer-fader-height": "9rem"
+    },
+    "[data-slot=\"mixer-desk\"]:where([data-density=\"compact\"] *)": {
+      "--mixer-fader-height": "9rem"
+    },
+    "[data-slot=\"mixer-desk\"][data-disabled]": {
+      "filter": "saturate(0.4) brightness(0.8)"
+    },
+    "[data-slot=\"mixer-strips\"]": {
+      "display": "flex",
+      "justify-content": "center"
+    },
+    "[data-slot=\"mixer-channel\"]": {
+      "display": "flex",
+      "flex": "1 1 0",
+      "flex-direction": "column",
+      "align-items": "center",
+      "gap": "0.625rem",
+      "min-width": "3.75rem",
+      "max-width": "7.5rem",
+      "padding": "0 0.25rem",
+      "border-inline-start": "1px solid rgb(0 0 0 / 0.45)",
+      "box-shadow": "inset 1px 0 0 rgb(255 255 255 / 0.05)"
+    },
+    "[data-slot=\"mixer-channel\"]:first-child": {
+      "border-inline-start": "0",
+      "box-shadow": "none"
+    },
+    "[data-slot=\"mixer-channel-head\"]": {
+      "display": "flex",
+      "align-items": "center",
+      "justify-content": "center",
+      "gap": "0.5rem"
+    },
+    "[data-slot=\"mixer-channel-number\"]": {
+      "display": "grid",
+      "place-items": "center",
+      "width": "1.25rem",
+      "height": "1.25rem",
+      "border": "1px solid var(--mixer-print)",
+      "border-radius": "50%",
+      "font-family": "var(--font-mono)",
+      "font-size": "var(--type-meta-size)",
+      "line-height": "1",
+      "color": "var(--mixer-print)"
+    },
+    "[data-slot=\"mixer-channel-head\"] [data-slot=\"toggle\"]": {
+      "display": "grid",
+      "place-items": "center",
+      "width": "1.75rem",
+      "height": "1.75rem",
+      "border": "1px solid #111216",
+      "border-radius": "0.375rem",
+      "color": "#a2a6ae",
+      "background": "linear-gradient(180deg, #4a4e56, #2f3238)",
+      "box-shadow": "inset 0 1px 0 rgb(255 255 255 / 0.18), 0 2px 3px rgb(0 0 0 / 0.5)",
+      "cursor": "pointer",
+      "transition": "color var(--transition-duration-micro) var(--ease-standard), box-shadow var(--transition-duration-micro) var(--ease-standard)"
+    },
+    "[data-slot=\"mixer-channel-head\"] [data-slot=\"toggle\"] svg": {
+      "width": "0.875rem",
+      "height": "0.875rem"
+    },
+    "[data-slot=\"mixer-channel-head\"] [data-slot=\"toggle\"][data-pressed]": {
+      "color": "#2a1700",
+      "background": "linear-gradient(180deg, #ffcf6e, #f2a23a)",
+      "box-shadow": "inset 0 1px 0 rgb(255 255 255 / 0.5), inset 0 -1px 2px rgb(120 60 0 / 0.5), 0 0 12px rgb(255 176 64 / 0.55), 0 1px 2px rgb(0 0 0 / 0.5)"
+    },
+    "[data-slot=\"mixer-channel-head\"] [data-slot=\"toggle\"]:focus-visible": {
+      "outline": "2px solid white",
+      "outline-offset": "2px"
+    },
+    "[data-slot=\"mixer-channel-head\"] [data-slot=\"toggle\"][data-disabled]": {
+      "cursor": "default"
+    },
+    "[data-slot=\"mixer-fader\"]": {
+      "display": "grid",
+      "grid-template-columns": "1fr auto 1fr",
+      "align-items": "stretch",
+      "gap": "0.375rem",
+      "width": "100%",
+      "height": "var(--mixer-fader-height)"
+    },
+    "[data-slot=\"mixer-scale\"]": {
+      "position": "relative",
+      "justify-self": "end",
+      "width": "1.75rem",
+      "margin-block": "calc(var(--mixer-cap-height) / 2)"
+    },
+    "[data-slot=\"mixer-scale\"] span": {
+      "position": "absolute",
+      "right": "0",
+      "bottom": "calc(var(--mixer-mark) * 100%)",
+      "translate": "0 50%",
+      "display": "flex",
+      "align-items": "center",
+      "gap": "2px",
+      "font-family": "var(--font-mono)",
+      "font-size": "0.5625rem",
+      "line-height": "1",
+      "font-variant-numeric": "tabular-nums",
+      "color": "var(--mixer-print)"
+    },
+    "[data-slot=\"mixer-scale\"] span::after": {
+      "content": "\"\"",
+      "width": "0.375rem",
+      "height": "1px",
+      "background": "var(--mixer-print)"
+    },
+    "[data-slot=\"mixer-fader\"] [data-slot=\"slider-control\"]": {
+      "position": "relative",
+      "width": "2.5rem",
+      "touch-action": "none"
+    },
+    "[data-slot=\"mixer-fader\"] [data-slot=\"slider-track\"]": {
+      "position": "absolute !important",
+      "inset": "calc(var(--mixer-cap-height) / 2) auto",
+      "left": "50%",
+      "width": "0.375rem",
+      "translate": "-50% 0",
+      "border-radius": "999px",
+      "background": "#050506",
+      "box-shadow": "inset 0 1px 2px rgb(0 0 0 / 0.9), 0 0 0 1px rgb(255 255 255 / 0.06), 0 1px 0 rgb(255 255 255 / 0.08)"
+    },
+    "[data-slot=\"mixer-fader\"] [data-slot=\"slider-thumb\"]": {
+      "width": "2.5rem",
+      "height": "var(--mixer-cap-height)",
+      "border-radius": "0.25rem",
+      "background": "linear-gradient( 180deg, transparent calc(50% - 1px), #f4f4f2 calc(50% - 1px) calc(50% + 1px), transparent calc(50% + 1px) ), repeating-linear-gradient(180deg, rgb(255 255 255 / 0.12) 0 1px, rgb(0 0 0 / 0.22) 1px 2px, transparent 2px 4px), linear-gradient(180deg, #5c6068 0%, #2c2f35 46%, #1b1d21 54%, #34373d 100%)",
+      "box-shadow": "inset 0 1px 0 rgb(255 255 255 / 0.28), inset 0 -1px 0 rgb(0 0 0 / 0.6), 0 1px 0 rgb(0 0 0 / 0.6), 0 5px 8px -2px rgb(0 0 0 / 0.65), 0 10px 14px -6px rgb(0 0 0 / 0.5)",
+      "cursor": "grab",
+      "transition": "box-shadow var(--transition-duration-micro) var(--ease-standard)"
+    },
+    "[data-slot=\"mixer-fader\"] [data-slot=\"slider-thumb\"][data-dragging]": {
+      "cursor": "grabbing",
+      "box-shadow": "inset 0 1px 0 rgb(255 255 255 / 0.28), inset 0 -1px 0 rgb(0 0 0 / 0.6), 0 1px 0 rgb(0 0 0 / 0.6), 0 8px 12px -2px rgb(0 0 0 / 0.7), 0 14px 20px -6px rgb(0 0 0 / 0.5)"
+    },
+    "[data-slot=\"mixer-channel\"][data-locked] [data-slot=\"slider-thumb\"]": {
+      "cursor": "not-allowed",
+      "background": "linear-gradient( 180deg, transparent calc(50% - 1px), #ffbe55 calc(50% - 1px) calc(50% + 1px), transparent calc(50% + 1px) ), repeating-linear-gradient(180deg, rgb(255 255 255 / 0.12) 0 1px, rgb(0 0 0 / 0.22) 1px 2px, transparent 2px 4px), linear-gradient(180deg, #5c6068 0%, #2c2f35 46%, #1b1d21 54%, #34373d 100%)"
+    },
+    "[data-slot=\"mixer-fader\"] [data-slot=\"slider-thumb\"]:has(:focus-visible)": {
+      "outline": "2px solid white",
+      "outline-offset": "3px"
+    },
+    "[data-slot=\"mixer-meter\"]": {
+      "display": "flex",
+      "flex-direction": "column-reverse",
+      "justify-self": "start",
+      "gap": "2px",
+      "width": "0.4375rem",
+      "padding": "2px",
+      "margin-block": "calc(var(--mixer-cap-height) / 2)",
+      "border-radius": "2px",
+      "background": "#0b0c0e",
+      "box-shadow": "inset 0 1px 2px rgb(0 0 0 / 0.8)"
+    },
+    "[data-slot=\"mixer-meter\"] span": {
+      "flex": "1",
+      "border-radius": "1px",
+      "--mixer-led": "#58e07a",
+      "background": "color-mix(in oklab, var(--mixer-led) 14%, #15171b)",
+      "transition": "background-color var(--transition-duration-micro) var(--ease-standard), box-shadow var(--transition-duration-micro) var(--ease-standard)"
+    },
+    "[data-slot=\"mixer-meter\"] span[data-tone=\"hot\"]": {
+      "--mixer-led": "#ffb547"
+    },
+    "[data-slot=\"mixer-meter\"] span[data-tone=\"peak\"]": {
+      "--mixer-led": "#ff5b4f"
+    },
+    "[data-slot=\"mixer-meter\"] span[data-lit]": {
+      "background": "var(--mixer-led)",
+      "box-shadow": "0 0 5px color-mix(in oklab, var(--mixer-led) 70%, transparent)"
+    },
+    "[data-slot=\"mixer-value\"]": {
+      "min-width": "3rem",
+      "padding": "0.125rem 0.375rem",
+      "border-radius": "0.25rem",
+      "font-family": "var(--font-mono)",
+      "font-size": "var(--type-body-sm-size)",
+      "line-height": "var(--type-body-sm-leading)",
+      "font-variant-numeric": "tabular-nums",
+      "text-align": "center",
+      "color": "#ffc46b",
+      "text-shadow": "0 0 6px rgb(255 170 60 / 0.55)",
+      "background": "#0c0b09",
+      "box-shadow": "inset 0 1px 3px rgb(0 0 0 / 0.9), 0 1px 0 rgb(255 255 255 / 0.08)"
+    },
+    "[data-slot=\"mixer-label\"]": {
+      "max-width": "100%",
+      "padding": "0.125rem 0.375rem",
+      "overflow": "hidden",
+      "border-radius": "1px",
+      "font-size": "var(--type-caption-size)",
+      "line-height": "var(--type-caption-leading)",
+      "font-weight": "600",
+      "white-space": "nowrap",
+      "text-overflow": "ellipsis",
+      "color": "#1c1b18",
+      "background": "linear-gradient(180deg, #f3eedf, #e2dccb)",
+      "box-shadow": "0 1px 1px rgb(0 0 0 / 0.5), inset 0 0 0 1px rgb(0 0 0 / 0.05)",
+      "rotate": "-1deg"
+    },
+    "[data-slot=\"mixer-channel\"]:nth-child(even) [data-slot=\"mixer-label\"]": {
+      "rotate": "0.8deg"
+    },
+    "[data-slot=\"mixer\"]": {
+      "container-type": "inline-size"
+    },
+    "@container (width < 34rem)": {
+      "[data-slot=\"mixer-desk\"]": {
+        "padding-inline": "0.5rem"
+      },
+      "[data-slot=\"mixer-fader\"]": {
+        "gap": "0.25rem"
+      },
+      "[data-slot=\"mixer-scale\"]": {
+        "width": "0.375rem"
+      },
+      "[data-slot=\"mixer-scale\"] span": {
+        "font-size": "0"
+      },
+      "[data-slot=\"mixer-channel-number\"]": {
+        "display": "none"
+      }
+    }
+  },
+  "docs": "`<Mixer label channels value|defaultValue onValueChange onValueCommit locked|defaultLocked onLockedChange total step format locale disabled labels>`. `channels` is `{ id, label }[]`; the value is each channel's share by id and sums to `total` (100 by default), split evenly at first. Every fader is a slider named by its channel: arrows move `step`, Page Up and Down ten steps. A drag keeps the others' shares from when it began, so a fader pushed to the top and back gives them back. Locked channels are read-only; an agent's `setChannel` past what they leave, `setAll` that doesn't sum to the total or moves a locked channel, and any move with every other channel locked fail the step with why. The desk is dark metal in every theme (the item's `css`).",
+  "type": "registry:ui"
+}

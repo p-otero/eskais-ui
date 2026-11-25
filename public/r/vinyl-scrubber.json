@@ -1,0 +1,335 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "vinyl-scrubber",
+  "title": "Vinyl Scrubber",
+  "description": "A media timeline drawn as a turntable: the record turns with the position at 33⅓ rpm and a drag on it scratches back and forth, the tonearm follows the track, and the waveform strip under it is UI SDK's slider in seconds. It controls an HTMLMediaElement or works controlled, with seek, play and pause for agents.",
+  "dependencies": [
+    "@ui-sdk/core@0.1.0-beta.12",
+    "@ui-sdk/react@0.1.0-beta.12",
+    "lucide-react"
+  ],
+  "registryDependencies": [
+    "@eskais/utils",
+    "@eskais/theme",
+    "@eskais/action-refusal",
+    "@eskais/tooltip"
+  ],
+  "files": [
+    {
+      "path": "registry/ui/vinyl-scrubber.tsx",
+      "content": "\"use client\"\n\nimport { createParts } from \"@ui-sdk/react/primitive\"\nimport {\n  createSliderController,\n  Slider,\n  SliderControl,\n  SliderThumb,\n  SliderTrack,\n  type SliderValueChangeDetails,\n} from \"@ui-sdk/react/slider\"\nimport { Toggle, ToggleIcon } from \"@ui-sdk/react/toggle\"\nimport { PauseIcon, PlayIcon } from \"lucide-react\"\nimport { memo, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent, type RefObject } from \"react\"\n\nimport { ControlTooltip } from \"@/components/ui/tooltip\"\nimport { useVinylClock } from \"@/components/ui/use-vinyl-clock\"\nimport { useVinylMedia } from \"@/components/ui/use-vinyl-media\"\nimport { secondsPerTurn, useVinylScene } from \"@/components/ui/use-vinyl-scene\"\nimport { vinylScrubber } from \"@/components/ui/vinyl-scrubber-primitive\"\nimport { cn } from \"@/lib/utils\"\n\nconst { Root: VinylScrubberRoot } = createParts(vinylScrubber, { root: \"div\" })\n\ntype VinylScrubberLabels = {\n  /** Names the timeline, a slider in seconds, for screen readers and agents. */\n  position: string\n  /** Names the play button, which stays pressed while it plays. */\n  play: string\n}\n\nconst vinylScrubberLabels: VinylScrubberLabels = { position: \"Position\", play: \"Play\" }\n\n/** Why the position or playback changed (`drag`, `step-key`, `scratch`, `imperative`…), and `cancel()` to keep it. */\ntype VinylChangeDetails = {\n  reason: string\n  event: Event | undefined\n  cancel: () => void\n  readonly canceled: boolean\n}\n\ntype VinylScrubberState = { disabled: boolean; playing: boolean; time: number; duration: number }\n\ntype VinylScrubberProps = {\n  /** The accessible name of the player as a whole. */\n  label: string\n  /** The audio or video it controls: it follows its time and playback, and seeks, plays and pauses it. */\n  media?: RefObject<HTMLMediaElement | null>\n  /** The position in seconds. Pass it to control the scrubber. */\n  value?: number\n  defaultValue?: number\n  /** The length in seconds; read from `media` without it. */\n  duration?: number\n  /** Runs on every step of a drag, a scratch, a key or an agent's seek. */\n  onValueChange?: (seconds: number, details: VinylChangeDetails) => void\n  /** Whether it plays. Pass it to control playback. */\n  playing?: boolean\n  defaultPlaying?: boolean\n  onPlayingChange?: (playing: boolean, details: VinylChangeDetails) => void\n  /** Loudness along the track, each from 0 to 1, drawn as the waveform; a plain groove without them. */\n  peaks?: readonly number[]\n  /** Seconds per arrow key; 5 by default. Page Up and Page Down move 30. */\n  step?: number\n  /** Printed on the record's label. */\n  title?: string\n  disabled?: boolean\n  labels?: Partial<VinylScrubberLabels>\n  /** Classes for the root; a function gets the player's state. */\n  className?: string | ((state: VinylScrubberState) => string | undefined)\n  /** Called with each paint's duration in ms, for measuring. */\n  onPaint?: (milliseconds: number) => void\n}\n\nfunction details(reason: string, event: Event | undefined): VinylChangeDetails {\n  let canceled = false\n  return {\n    reason,\n    event,\n    cancel: () => {\n      canceled = true\n    },\n    get canceled() {\n      return canceled\n    },\n  }\n}\n\nfunction clock(seconds: number) {\n  const whole = Math.max(0, Math.floor(seconds))\n  const hours = Math.floor(whole / 3600)\n  const minutes = Math.floor((whole % 3600) / 60)\n  const rest = String(whole % 60).padStart(2, \"0\")\n  return hours > 0 ? `${String(hours)}:${String(minutes).padStart(2, \"0\")}:${rest}` : `${String(minutes)}:${rest}`\n}\n\nconst maxBars = 180\n\nfunction waveformPath(peaks: readonly number[]) {\n  const bars = Math.min(maxBars, peaks.length)\n  const bucket = peaks.length / bars\n  const parts: string[] = []\n  for (let bar = 0; bar < bars; bar++) {\n    let loudest = 0\n    for (\n      let index = Math.floor(bar * bucket);\n      index < Math.max(Math.floor((bar + 1) * bucket), Math.floor(bar * bucket) + 1);\n      index++\n    ) {\n      loudest = Math.max(loudest, Math.abs(peaks[index] ?? 0))\n    }\n    const height = Math.max(2, Math.min(1, loudest) * 92)\n    parts.push(`M${(bar + 0.18).toFixed(2)} ${(50 - height / 2).toFixed(2)}h0.64v${height.toFixed(2)}h-0.64z`)\n  }\n  return { bars, d: parts.join(\"\") }\n}\n\nconst Waveform = memo(function Waveform({ peaks }: { peaks: readonly number[] | undefined }) {\n  const wave = useMemo(() => (peaks && peaks.length > 0 ? waveformPath(peaks) : null), [peaks])\n  if (!wave) return <div data-slot=\"vinyl-groove\" aria-hidden=\"true\" />\n  return (\n    <div data-slot=\"vinyl-waveform\" aria-hidden=\"true\">\n      {/* oxlint-disable-next-line eskais/no-inline-icons -- the track's waveform, drawn from its peaks, not an icon */}\n      <svg viewBox={`0 0 ${String(wave.bars)} 100`} preserveAspectRatio=\"none\">\n        <path d={wave.d} />\n      </svg>\n      {/* oxlint-disable-next-line eskais/no-inline-icons -- the played part of the same waveform, not an icon */}\n      <svg data-played=\"\" viewBox={`0 0 ${String(wave.bars)} 100`} preserveAspectRatio=\"none\">\n        <path d={wave.d} />\n      </svg>\n    </div>\n  )\n})\n\nconst Record = memo(function Record({ title }: { title: string | undefined }) {\n  return (\n    <div data-slot=\"vinyl-record\" aria-hidden=\"true\">\n      <div data-slot=\"vinyl-label\">{title ? <span>{title}</span> : null}</div>\n    </div>\n  )\n})\n\ntype Scratch = { pointer: number; from: number; time: number; resume: boolean }\n\nfunction seekMedia(element: HTMLMediaElement | null | undefined, seconds: number) {\n  if (element) element.currentTime = seconds\n}\n\nfunction playMedia(element: HTMLMediaElement | null | undefined, playing: boolean, onRefused: () => void) {\n  if (!element) return\n  if (playing) element.play().catch(onRefused)\n  else element.pause()\n}\n\nfunction angleOn(event: ReactPointerEvent<HTMLElement>) {\n  const rect = event.currentTarget.getBoundingClientRect()\n  const x = event.clientX - (rect.left + rect.width / 2)\n  const y = event.clientY - (rect.top + rect.height / 2)\n  return { angle: (Math.atan2(y, x) * 180) / Math.PI, distance: Math.hypot(x, y), radius: rect.width / 2 }\n}\n\n/**\n * A media timeline drawn as a turntable: the record turns with the position and a drag on it scratches back and\n * forth, the tonearm follows the track, and a waveform strip under it is UI SDK's slider in seconds (arrows by\n * `step`, Page Up and Down 30 s, Home and End). It controls an `HTMLMediaElement` through `media`, or works controlled.\n */\nfunction VinylScrubber({\n  label,\n  media,\n  value,\n  defaultValue = 0,\n  duration: durationProp,\n  onValueChange,\n  playing: playingProp,\n  defaultPlaying = false,\n  onPlayingChange,\n  peaks,\n  step = 5,\n  title,\n  disabled = false,\n  labels: labelOverrides,\n  className,\n  onPaint,\n}: VinylScrubberProps) {\n  const labels = { ...vinylScrubberLabels, ...labelOverrides }\n  const reading = useVinylMedia(media)\n  const [ownTime, setOwnTime] = useState(defaultValue)\n  const [ownPlaying, setOwnPlaying] = useState(defaultPlaying)\n  const [slider] = useState(() => createSliderController<number>())\n  const duration = durationProp ?? reading?.duration ?? 0\n  const time = Math.min(duration || Infinity, value ?? (reading ? reading.time : ownTime))\n  const playing = playingProp ?? (reading ? reading.playing : ownPlaying)\n  const deck = useRef<HTMLDivElement>(null)\n  const scratch = useRef<Scratch | null>(null)\n  const [scratching, setScratching] = useState(false)\n  useVinylScene(deck, { time, duration, playing: playing && !scratching, onPaint })\n\n  const seek = (seconds: number, reason: string, event: Event | undefined) => {\n    const next = Math.max(0, Math.min(duration, seconds))\n    const change = details(reason, event)\n    onValueChange?.(next, change)\n    if (change.canceled) return false\n    seekMedia(media?.current, next)\n    setOwnTime(next)\n    return true\n  }\n\n  const setPlaying = (next: boolean, reason: string, event: Event | undefined) => {\n    const change = details(reason, event)\n    onPlayingChange?.(next, change)\n    if (change.canceled) return false\n    playMedia(media?.current, next, () => setOwnPlaying(false))\n    setOwnPlaying(next)\n    return true\n  }\n\n  useVinylClock(playing && !media && value === undefined && !scratching && duration > 0, (seconds) => {\n    const next = Math.min(duration, ownTime + seconds)\n    seek(next, \"playback\", undefined)\n    if (next >= duration) setPlaying(false, \"playback\", undefined)\n  })\n\n  const onSlider = (next: number, change: SliderValueChangeDetails) => {\n    if (!seek(next, change.reason, change.event)) change.cancel()\n  }\n\n  const onPointerDown = (event: ReactPointerEvent<HTMLElement>) => {\n    if (disabled || event.button !== 0 || duration <= 0) return\n    const { angle, distance, radius } = angleOn(event)\n    if (distance > radius) return\n    event.preventDefault()\n    event.currentTarget.setPointerCapture(event.pointerId)\n    const resume = playing\n    if (resume) playMedia(media?.current, false, () => {})\n    scratch.current = { pointer: event.pointerId, from: angle, time, resume }\n    setScratching(true)\n    slider.focus()\n  }\n\n  const onPointerMove = (event: ReactPointerEvent<HTMLElement>) => {\n    const active = scratch.current\n    if (active?.pointer !== event.pointerId) return\n    const { angle } = angleOn(event)\n    const delta = ((((angle - active.from + 180) % 360) + 360) % 360) - 180\n    active.from = angle\n    active.time = Math.max(0, Math.min(duration, active.time + (delta / 360) * secondsPerTurn))\n    seek(active.time, \"scratch\", event.nativeEvent)\n  }\n\n  const endScratch = (event: ReactPointerEvent<HTMLElement>) => {\n    const ended = scratch.current\n    if (ended?.pointer !== event.pointerId) return\n    scratch.current = null\n    setScratching(false)\n    if (ended.resume) playMedia(media?.current, true, () => setOwnPlaying(false))\n  }\n\n  const state = { disabled, playing, time, duration }\n\n  return (\n    <VinylScrubberRoot\n      duration={duration}\n      playing={playing}\n      disabled={disabled}\n      seek={(seconds, event) => seek(seconds, \"imperative\", event)}\n      setPlaying={(next, event) => setPlaying(next, \"imperative\", event)}\n      aria-label={label}\n      className={cn(\n        \"flex w-full flex-col overflow-hidden rounded-surface border bg-card text-card-foreground shadow-surface\",\n        typeof className === \"function\" ? className(state) : className,\n      )}\n    >\n      <div\n        ref={deck}\n        data-slot=\"vinyl-deck\"\n        data-playing={playing && !scratching ? \"\" : undefined}\n        data-scratching={scratching ? \"\" : undefined}\n        data-disabled={disabled ? \"\" : undefined}\n      >\n        <div\n          data-slot=\"vinyl-turntable\"\n          onPointerDown={onPointerDown}\n          onPointerMove={onPointerMove}\n          onPointerUp={endScratch}\n          onPointerCancel={endScratch}\n        >\n          <div data-slot=\"vinyl-platter\" aria-hidden=\"true\" />\n          <Record title={title} />\n          <div data-slot=\"vinyl-sheen\" aria-hidden=\"true\" />\n          <div data-slot=\"vinyl-arm\" aria-hidden=\"true\">\n            <div data-slot=\"vinyl-arm-base\" />\n            <div data-slot=\"vinyl-arm-tube\" />\n            <div data-slot=\"vinyl-arm-head\" />\n            <div data-slot=\"vinyl-arm-weight\" />\n          </div>\n        </div>\n        <div data-slot=\"vinyl-panel\">\n          <div data-slot=\"vinyl-time\">\n            <output aria-hidden=\"true\">{clock(time)}</output>\n            <span aria-hidden=\"true\">{`/ ${clock(duration)}`}</span>\n          </div>\n          <Slider\n            controller={slider}\n            value={time}\n            onValueChange={onSlider}\n            min={0}\n            max={Math.max(duration, step)}\n            step={step}\n            largeStep={Math.max(step, Math.round(30 / step) * step)}\n            disabled={disabled || duration <= 0}\n            format={(seconds: number) => `${clock(seconds)} / ${clock(duration)}`}\n          >\n            <SliderControl data-peaks={peaks && peaks.length > 0 ? \"\" : undefined}>\n              <Waveform peaks={peaks} />\n              <SliderTrack>\n                <SliderThumb aria-label={labels.position} className=\"touch-target\" />\n              </SliderTrack>\n            </SliderControl>\n          </Slider>\n          <ControlTooltip label={labels.play}>\n            <Toggle\n              aria-label={labels.play}\n              pressed={playing}\n              disabled={disabled || duration <= 0}\n              onPressedChange={(next, change) => {\n                if (!setPlaying(next, change.reason, change.event)) change.cancel()\n              }}\n            >\n              <ToggleIcon>{playing ? <PauseIcon /> : <PlayIcon />}</ToggleIcon>\n            </Toggle>\n          </ControlTooltip>\n        </div>\n      </div>\n    </VinylScrubberRoot>\n  )\n}\n\nexport { VinylScrubber, vinylScrubberLabels }\nexport type { VinylChangeDetails, VinylScrubberLabels, VinylScrubberProps, VinylScrubberState }\n",
+      "type": "registry:ui"
+    },
+    {
+      "path": "registry/ui/vinyl-scrubber-primitive.ts",
+      "content": "import { definePrimitive } from \"@ui-sdk/core\"\n\nimport { settled, unavailable } from \"@/lib/action-refusal\"\n\n/** Moves the playhead or starts and stops playback; returns `false` when the app cancelled it. */\ntype VinylSeek = (seconds: number, event: Event | undefined) => boolean\ntype VinylPlay = (playing: boolean, event: Event | undefined) => boolean\n\ntype VinylScrubberOptions = {\n  duration?: number\n  playing?: boolean\n  disabled?: boolean\n  seek?: VinylSeek\n  setPlaying?: VinylPlay\n}\n\nconst clockPattern = /^(?:(\\d+):)?(\\d{1,2}):(\\d{2}(?:\\.\\d+)?)$/\n\n/** Seconds from a number or a `\"m:ss\"` / `\"h:mm:ss\"` string. */\nfunction secondsOf(time: unknown) {\n  if (typeof time === \"number\") return Number.isFinite(time) ? time : undefined\n  if (typeof time !== \"string\") return undefined\n  const match = clockPattern.exec(time.trim())\n  if (!match) return undefined\n  return Number(match[1] ?? 0) * 3600 + Number(match[2]) * 60 + Number(match[3])\n}\n\nfunction ready(options: VinylScrubberOptions, action: string, event: Event | undefined, needsDuration = true) {\n  if (options.disabled) return unavailable(action, \"isn't available while the player is disabled\", { event })\n  const { duration, seek, setPlaying } = options\n  if (!seek || !setPlaying) return unavailable(action, \"isn't available: the player isn't ready\", { event })\n  if (needsDuration && (!duration || !Number.isFinite(duration))) {\n    return unavailable(action, \"isn't available until the media's duration is known\", { event })\n  }\n  return { duration: duration ?? 0, seek, setPlaying }\n}\n\n/** A media timeline's agent surface: the record is UI SDK's slider in seconds, with playback beside it. */\nconst vinylScrubber = definePrimitive({\n  name: \"vinyl-scrubber\",\n  options: { duration: \"value\", playing: \"value\", disabled: \"value\", seek: \"value\", setPlaying: \"value\" },\n  // Workaround: not `disabled`: the bridge would hide every action from a disabled part without saying why.\n  state: (options: VinylScrubberOptions) => ({ inert: Boolean(options.disabled), playing: Boolean(options.playing) }),\n  sync: (options) => ({ inert: Boolean(options.disabled), playing: Boolean(options.playing) }),\n  api: (context) => ({\n    /** Moves the playhead to a time: seconds, or `\"m:ss\"`, from 0 to the duration. */\n    seek(time: number | string, event?: Event) {\n      const player = ready(context.options(), \"seek\", event)\n      if (player === false) return false\n      const seconds = secondsOf(time)\n      if (seconds === undefined || seconds < 0 || seconds > player.duration) {\n        return unavailable(\n          \"seek\",\n          `takes 0 to ${String(Math.floor(player.duration))} seconds or \"m:ss\", not ${JSON.stringify(time)}`,\n          { event },\n        )\n      }\n      return settled(player.seek(seconds, event), \"seek\", { event })\n    },\n    /** Starts playback; `true` when it already plays. */\n    play(event?: Event) {\n      const player = ready(context.options(), \"play\", event)\n      if (player === false) return false\n      if (context.options().playing) return true\n      return settled(player.setPlaying(true, event), \"play\", { event })\n    },\n    /** Pauses playback; `true` when it is already paused. */\n    pause(event?: Event) {\n      const player = ready(context.options(), \"pause\", event, false)\n      if (player === false) return false\n      if (!context.options().playing) return true\n      return settled(player.setPlaying(false, event), \"pause\", { event })\n    },\n  }),\n  slots: (slot) => ({\n    root: slot({\n      role: \"group\",\n      attrs: (state) => ({\n        \"data-disabled\": state.inert ? \"\" : undefined,\n        \"data-playing\": state.playing ? \"\" : undefined,\n      }),\n    }),\n  }),\n  agent: { actions: [\"seek\", \"play\", \"pause\"] },\n})\n\nexport { secondsOf, vinylScrubber }\nexport type { VinylPlay, VinylScrubberOptions, VinylSeek }\n",
+      "type": "registry:ui"
+    },
+    {
+      "path": "registry/ui/use-vinyl-media.ts",
+      "content": "import { useCallback, useSyncExternalStore, type RefObject } from \"react\"\n\n/** What the scrubber reads from a media element: its time and duration in seconds, and whether it plays. */\ntype MediaReading = { time: number; duration: number; playing: boolean }\n\nconst mediaEvents = [\"timeupdate\", \"durationchange\", \"loadedmetadata\", \"play\", \"pause\", \"ended\", \"seeked\", \"emptied\"]\nconst noMedia = \"0|0|0\"\n\nfunction readingOf(snapshot: string): MediaReading {\n  const [time = \"0\", duration = \"0\", playing = \"0\"] = snapshot.split(\"|\")\n  return { time: Number(time), duration: Number(duration) || 0, playing: playing === \"1\" }\n}\n\n/** Follows an `HTMLMediaElement`'s time, duration and playback through its events; nothing when there is none. */\nfunction useVinylMedia(media: RefObject<HTMLMediaElement | null> | undefined): MediaReading | undefined {\n  const subscribe = useCallback(\n    (notify: () => void) => {\n      const element = media?.current\n      if (!element) return () => {}\n      for (const name of mediaEvents) element.addEventListener(name, notify)\n      return () => {\n        for (const name of mediaEvents) element.removeEventListener(name, notify)\n      }\n    },\n    [media],\n  )\n  const snapshot = useSyncExternalStore(\n    subscribe,\n    () => {\n      const element = media?.current\n      if (!element) return noMedia\n      const duration = Number.isFinite(element.duration) ? element.duration : 0\n      return `${String(element.currentTime)}|${String(duration)}|${element.paused || element.ended ? \"0\" : \"1\"}`\n    },\n    () => noMedia,\n  )\n  return media ? readingOf(snapshot) : undefined\n}\n\nexport { useVinylMedia }\nexport type { MediaReading }\n",
+      "type": "registry:ui"
+    },
+    {
+      "path": "registry/ui/use-vinyl-scene.ts",
+      "content": "import { useEffectEvent, useLayoutEffect, useRef, type RefObject } from \"react\"\n\ntype VinylSceneOptions = {\n  time: number\n  duration: number\n  playing: boolean\n  /** Called with each paint's duration in ms. */\n  onPaint?: ((milliseconds: number) => void) | undefined\n}\n\n/** One turn of a record at 33⅓ rpm, in seconds. */\nconst secondsPerTurn = 1.8\nconst armRestDegrees = 19\nconst armSweepDegrees = 21\nconst maxLeadSeconds = 0.4\n\nfunction paint(deck: HTMLElement | null, time: number, duration: number) {\n  if (!deck) return false\n  const progress = duration > 0 ? Math.max(0, Math.min(1, time / duration)) : 0\n  deck.style.setProperty(\"--vinyl-turn\", `${((time / secondsPerTurn) * 360).toFixed(2)}deg`)\n  deck.style.setProperty(\"--vinyl-arm\", `${(armRestDegrees + progress * armSweepDegrees).toFixed(3)}deg`)\n  deck.style.setProperty(\"--vinyl-progress\", progress.toFixed(5))\n  return true\n}\n\n/**\n * Turns the record, swings the tonearm and fills the waveform. While it plays it paints every frame, carrying the time\n * on from the last reading; paused, it paints once per change. Reduced motion paints only when the time changes.\n */\nfunction useVinylScene(deck: RefObject<HTMLElement | null>, { time, duration, playing, onPaint }: VinylSceneOptions) {\n  const readAt = useRef({ time, at: 0 })\n\n  const paintAt = useEffectEvent((at: number, length: number) => {\n    const started = performance.now()\n    if (paint(deck.current, at, length)) onPaint?.(performance.now() - started)\n  })\n\n  useLayoutEffect(() => {\n    readAt.current = { time, at: performance.now() }\n    paintAt(time, duration)\n  }, [time, duration])\n\n  useLayoutEffect(() => {\n    if (!playing || matchMedia(\"(prefers-reduced-motion: reduce)\").matches) return\n    let frame = 0\n    const step = (now: number) => {\n      const reading = readAt.current\n      const lead = Math.min(maxLeadSeconds, (now - reading.at) / 1000)\n      paintAt(Math.min(duration || Infinity, reading.time + lead), duration)\n      frame = requestAnimationFrame(step)\n    }\n    frame = requestAnimationFrame(step)\n    return () => cancelAnimationFrame(frame)\n  }, [playing, duration])\n}\n\nexport { secondsPerTurn, useVinylScene }\n",
+      "type": "registry:ui"
+    },
+    {
+      "path": "registry/ui/use-vinyl-clock.ts",
+      "content": "import { useEffect, useEffectEvent } from \"react\"\n\nconst tickMs = 250\n\n/** Advances a scrubber that has no media and no `value` of its own while it plays, a quarter second at a time. */\nfunction useVinylClock(ticking: boolean, advance: (seconds: number) => void) {\n  const onTick = useEffectEvent(advance)\n  useEffect(() => {\n    if (!ticking) return\n    let last = performance.now()\n    const timer = setInterval(() => {\n      const now = performance.now()\n      onTick((now - last) / 1000)\n      last = now\n    }, tickMs)\n    return () => clearInterval(timer)\n  }, [ticking])\n}\n\nexport { useVinylClock }\n",
+      "type": "registry:ui"
+    }
+  ],
+  "css": {
+    "[data-slot=\"vinyl-scrubber\"]": {
+      "container-type": "inline-size"
+    },
+    "[data-slot=\"vinyl-deck\"]": {
+      "--vinyl-amber": "#ffb547",
+      "--vinyl-ink": "#e9e6df",
+      "--vinyl-dim": "rgb(233 230 223 / 0.6)",
+      "display": "grid",
+      "grid-template-columns": "minmax(12rem, 18rem) 1fr",
+      "align-items": "center",
+      "gap": "1.25rem",
+      "padding": "1rem",
+      "color": "var(--vinyl-ink)",
+      "user-select": "none",
+      "background": "radial-gradient(120% 90% at 30% 0%, #23262d, #121318)"
+    },
+    "@container (width < 34rem)": {
+      "[data-slot=\"vinyl-deck\"]": {
+        "grid-template-columns": "1fr"
+      },
+      "[data-slot=\"vinyl-turntable\"]": {
+        "justify-self": "center",
+        "width": "min(100%, 20rem)"
+      }
+    },
+    "[data-slot=\"vinyl-deck\"][data-disabled]": {
+      "filter": "saturate(0.3) brightness(0.75)"
+    },
+    "[data-slot=\"vinyl-turntable\"]": {
+      "position": "relative",
+      "aspect-ratio": "1.08",
+      "container-type": "size",
+      "border-radius": "0.75rem",
+      "touch-action": "none",
+      "cursor": "grab",
+      "background": "repeating-linear-gradient(90deg, rgb(255 255 255 / 0.025) 0 1px, transparent 1px 3px), linear-gradient(180deg, #3b3e45, #26282e)",
+      "box-shadow": "inset 0 1px 0 rgb(255 255 255 / 0.14), inset 0 -2px 0 rgb(0 0 0 / 0.4), 0 10px 24px rgb(0 0 0 / 0.55)"
+    },
+    "[data-slot=\"vinyl-deck\"][data-scratching] [data-slot=\"vinyl-turntable\"]": {
+      "cursor": "grabbing"
+    },
+    "[data-slot=\"vinyl-deck\"][data-disabled] [data-slot=\"vinyl-turntable\"]": {
+      "touch-action": "auto",
+      "cursor": "default"
+    },
+    "[data-slot=\"vinyl-platter\"]": {
+      "position": "absolute",
+      "top": "50%",
+      "left": "44%",
+      "aspect-ratio": "1",
+      "translate": "-50% -50%",
+      "border-radius": "50%",
+      "height": "92cqh",
+      "background": "radial-gradient(circle, transparent 93%, rgb(0 0 0 / 0.35) 93.5%, transparent 95%), repeating-conic-gradient(from 0deg, #d9dce0 0 1.4deg, #6e737a 1.4deg 3deg), conic-gradient(from 30deg, #9ea3aa, #e7e9ec, #8f949b, #c7cbd0, #9ea3aa)",
+      "mask-image": "radial-gradient(circle, black 0 88%, transparent 88% 91.5%, black 91.5% 97.5%, transparent 97.5%)",
+      "box-shadow": "0 4px 10px rgb(0 0 0 / 0.5)"
+    },
+    "[data-slot=\"vinyl-record\"]": {
+      "position": "absolute",
+      "top": "50%",
+      "left": "44%",
+      "aspect-ratio": "1",
+      "translate": "-50% -50%",
+      "border-radius": "50%",
+      "height": "82cqh",
+      "rotate": "var(--vinyl-turn, 0deg)",
+      "will-change": "rotate",
+      "background": "radial-gradient(circle, transparent 36%, rgb(255 255 255 / 0.05) 36.5%, transparent 37.5%), radial-gradient(circle, transparent 61%, rgb(255 255 255 / 0.06) 61.4%, transparent 62.4%), radial-gradient(circle, transparent 79%, rgb(255 255 255 / 0.05) 79.4%, transparent 80.4%), repeating-radial-gradient(circle, #101012 0 1px, #19191c 1px 2px, #0b0b0d 2px 3px), #0b0b0d",
+      "box-shadow": "0 0 0 1px #050506, 0 3px 8px rgb(0 0 0 / 0.6)"
+    },
+    "[data-slot=\"vinyl-sheen\"]": {
+      "position": "absolute",
+      "top": "50%",
+      "left": "44%",
+      "aspect-ratio": "1",
+      "translate": "-50% -50%",
+      "border-radius": "50%",
+      "height": "82cqh",
+      "pointer-events": "none",
+      "background": "conic-gradient( from 0deg, transparent 0deg, rgb(255 255 255 / 0.1) 30deg, transparent 60deg, transparent 180deg, rgb(255 255 255 / 0.08) 210deg, transparent 240deg )",
+      "mask-image": "radial-gradient(circle, transparent 0 34%, black 36% 99%, transparent 100%)"
+    },
+    "[data-slot=\"vinyl-label\"]": {
+      "position": "absolute",
+      "inset": "33%",
+      "display": "grid",
+      "place-items": "center",
+      "overflow": "hidden",
+      "border-radius": "50%",
+      "background": "radial-gradient(circle, #d7d9dc 0 4%, #2b1209 4.5% 6%, transparent 6.5%), radial-gradient(circle at 35% 30%, #ff7b62, #d8432c 60%, #a92a17)",
+      "box-shadow": "inset 0 0 0 1px rgb(0 0 0 / 0.25)"
+    },
+    "[data-slot=\"vinyl-label\"] span": {
+      "max-width": "84%",
+      "margin-top": "42%",
+      "overflow": "hidden",
+      "font-size": "max(7px, 4cqh)",
+      "line-height": "1.1",
+      "font-weight": "700",
+      "letter-spacing": "0.06em",
+      "text-align": "center",
+      "text-overflow": "ellipsis",
+      "text-transform": "uppercase",
+      "white-space": "nowrap",
+      "color": "#2a0d05"
+    },
+    "[data-slot=\"vinyl-arm\"]": {
+      "position": "absolute",
+      "top": "20cqh",
+      "left": "88cqw",
+      "width": "0",
+      "height": "0",
+      "rotate": "var(--vinyl-arm, 19deg)",
+      "will-change": "rotate",
+      "pointer-events": "none"
+    },
+    "[data-slot=\"vinyl-arm-base\"]": {
+      "position": "absolute",
+      "width": "16cqh",
+      "aspect-ratio": "1",
+      "translate": "-50% -50%",
+      "border-radius": "50%",
+      "background": "radial-gradient(circle at 40% 35%, #d5d8dc, #7b8188 55%, #3e4248)",
+      "box-shadow": "0 0 0 3cqh rgb(30 32 36 / 0.9), 0 0 0 calc(3cqh + 1px) rgb(255 255 255 / 0.08), 0 6px 10px rgb(0 0 0 / 0.6)"
+    },
+    "[data-slot=\"vinyl-arm-tube\"]": {
+      "position": "absolute",
+      "left": "-0.8cqh",
+      "top": "-12cqh",
+      "width": "1.6cqh",
+      "height": "76cqh",
+      "border-radius": "1cqh",
+      "background": "linear-gradient(90deg, #8b9097, #f2f3f5 45%, #9a9fa6)",
+      "box-shadow": "0.8cqh 1.4cqh 1.2cqh rgb(0 0 0 / 0.45)"
+    },
+    "[data-slot=\"vinyl-arm-head\"]": {
+      "position": "absolute",
+      "left": "-2.6cqh",
+      "top": "58cqh",
+      "width": "5.2cqh",
+      "height": "9cqh",
+      "border-radius": "0.8cqh 0.8cqh 0.4cqh 0.4cqh",
+      "rotate": "18deg",
+      "background": "linear-gradient(180deg, #2d3035, #17181b)",
+      "box-shadow": "inset 0 1px 0 rgb(255 255 255 / 0.2), 0.8cqh 1.4cqh 1.2cqh rgb(0 0 0 / 0.5)"
+    },
+    "[data-slot=\"vinyl-arm-head\"]::after": {
+      "content": "\"\"",
+      "position": "absolute",
+      "left": "50%",
+      "bottom": "-1.4cqh",
+      "width": "1.4cqh",
+      "height": "2cqh",
+      "translate": "-50% 0",
+      "border-radius": "0 0 0.4cqh 0.4cqh",
+      "background": "var(--vinyl-amber)"
+    },
+    "[data-slot=\"vinyl-arm-weight\"]": {
+      "position": "absolute",
+      "left": "-3.4cqh",
+      "top": "-17cqh",
+      "width": "6.8cqh",
+      "height": "8cqh",
+      "border-radius": "1cqh",
+      "background": "linear-gradient(90deg, #4b4f56, #a9aeb5 45%, #4b4f56)",
+      "box-shadow": "0 1.4cqh 1.2cqh rgb(0 0 0 / 0.5)"
+    },
+    "[data-slot=\"vinyl-panel\"]": {
+      "display": "grid",
+      "grid-template-columns": "1fr auto",
+      "align-items": "center",
+      "gap": "0.75rem"
+    },
+    "[data-slot=\"vinyl-time\"]": {
+      "grid-column": "1 / -1",
+      "display": "flex",
+      "align-items": "baseline",
+      "gap": "0.5rem",
+      "font-family": "var(--font-mono)",
+      "font-variant-numeric": "tabular-nums"
+    },
+    "[data-slot=\"vinyl-time\"] output": {
+      "font-size": "var(--type-display-sm-size)",
+      "line-height": "var(--type-display-sm-leading)",
+      "font-weight": "600"
+    },
+    "[data-slot=\"vinyl-time\"] span": {
+      "font-size": "var(--type-body-sm-size)",
+      "color": "var(--vinyl-dim)"
+    },
+    "[data-slot=\"vinyl-panel\"] [data-slot=\"slider\"]": {
+      "min-width": "0"
+    },
+    "[data-slot=\"vinyl-panel\"] [data-slot=\"slider-control\"]": {
+      "position": "relative",
+      "height": "3.5rem",
+      "border-radius": "0.375rem",
+      "touch-action": "none",
+      "cursor": "pointer",
+      "background": "#0c0d10",
+      "box-shadow": "inset 0 1px 3px rgb(0 0 0 / 0.9), 0 1px 0 rgb(255 255 255 / 0.06)"
+    },
+    "[data-slot=\"vinyl-waveform\"]": {
+      "position": "absolute",
+      "inset": "0.375rem 0.5rem",
+      "pointer-events": "none"
+    },
+    "[data-slot=\"vinyl-groove\"]": {
+      "position": "absolute",
+      "inset": "0.375rem 0.5rem",
+      "pointer-events": "none",
+      "top": "50%",
+      "bottom": "auto",
+      "height": "3px",
+      "translate": "0 -50%",
+      "border-radius": "2px",
+      "background": "linear-gradient( 90deg, var(--vinyl-amber) calc(var(--vinyl-progress, 0) * 100%), #3a3f48 calc(var(--vinyl-progress, 0) * 100%) )"
+    },
+    "[data-slot=\"vinyl-waveform\"] svg": {
+      "position": "absolute",
+      "inset": "0",
+      "width": "100%",
+      "height": "100%",
+      "fill": "#3a3f48"
+    },
+    "[data-slot=\"vinyl-waveform\"] svg[data-played]": {
+      "fill": "var(--vinyl-amber)",
+      "clip-path": "inset(0 calc((1 - var(--vinyl-progress, 0)) * 100%) 0 0)"
+    },
+    "[data-slot=\"vinyl-panel\"] [data-slot=\"slider-track\"]": {
+      "position": "absolute !important",
+      "inset": "0 0.5rem"
+    },
+    "[data-slot=\"vinyl-panel\"] [data-slot=\"slider-thumb\"]": {
+      "position": "absolute !important",
+      "inset": "0 auto !important",
+      "left": "calc(var(--vinyl-progress, 0) * 100%) !important",
+      "translate": "-50% 0 !important",
+      "margin": "0 !important",
+      "width": "0.75rem",
+      "height": "100%",
+      "cursor": "grab"
+    },
+    "[data-slot=\"vinyl-panel\"] [data-slot=\"slider-thumb\"]::after": {
+      "content": "\"\"",
+      "position": "absolute",
+      "inset": "-0.25rem auto",
+      "left": "50%",
+      "width": "2px",
+      "translate": "-50% 0",
+      "border-radius": "1px",
+      "background": "white",
+      "box-shadow": "0 0 6px rgb(255 255 255 / 0.6)"
+    },
+    "[data-slot=\"vinyl-panel\"] [data-slot=\"slider-thumb\"]:has(:focus-visible)": {
+      "outline": "2px solid white",
+      "outline-offset": "2px",
+      "border-radius": "2px"
+    },
+    "[data-slot=\"vinyl-panel\"] [data-slot=\"toggle\"]": {
+      "display": "grid",
+      "place-items": "center",
+      "width": "3rem",
+      "height": "3rem",
+      "border-radius": "50%",
+      "color": "#1a1205",
+      "cursor": "pointer",
+      "background": "radial-gradient(circle at 40% 30%, #ffd48a, var(--vinyl-amber) 60%, #d98a1c)",
+      "box-shadow": "inset 0 1px 0 rgb(255 255 255 / 0.5), inset 0 -2px 3px rgb(120 60 0 / 0.4), 0 4px 10px rgb(0 0 0 / 0.5)",
+      "transition": "scale var(--transition-duration-micro) var(--ease-standard)"
+    },
+    "[data-slot=\"vinyl-panel\"] [data-slot=\"toggle\"]:active": {
+      "scale": "0.96"
+    },
+    "[data-slot=\"vinyl-panel\"] [data-slot=\"toggle\"] svg": {
+      "width": "1.25rem",
+      "height": "1.25rem",
+      "fill": "currentColor"
+    },
+    "[data-slot=\"vinyl-panel\"] [data-slot=\"toggle\"]:focus-visible": {
+      "outline": "2px solid white",
+      "outline-offset": "3px"
+    },
+    "[data-slot=\"vinyl-panel\"] [data-slot=\"toggle\"][data-disabled]": {
+      "cursor": "default",
+      "opacity": "0.5"
+    }
+  },
+  "docs": "`<VinylScrubber label media|(value duration onValueChange playing onPlayingChange) defaultValue defaultPlaying peaks step title disabled labels>`. With `media` (a ref to an `<audio>` or `<video>`) it follows the element's time, duration and playback and seeks, plays and pauses it; otherwise pass `value` and `duration`, or let it keep its own clock. One turn of the record is 1.8 s, as at 33⅓ rpm, so a scratch moves a little and the waveform takes the long jumps: arrows move `step` seconds (5), Page Up and Down 30, Home and End the ends. `peaks` (0 to 1) draw the waveform, the played part lit; without them it's a plain groove. The play button is a UI SDK toggle, pressed while it plays. Agents call `seek(seconds or \"m:ss\")`, `play` and `pause`; a seek past the end or before the duration is known fails with why. While it plays it paints each frame; paused, only on change, and under reduced motion only when the time changes.",
+  "type": "registry:ui"
+}

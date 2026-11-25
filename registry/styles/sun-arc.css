@@ -1,0 +1,274 @@
+[data-slot="sun-arc"] {
+  container-type: inline-size;
+}
+
+[data-slot="sun-arc-stage"] {
+  --sun-arc-horizon-at: 76%;
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+  aspect-ratio: 16 / 8;
+  container-type: size;
+  user-select: none;
+  color: white;
+  background: #05070d;
+  isolation: isolate;
+}
+
+@container (width < 32rem) {
+  [data-slot="sun-arc-stage"] {
+    aspect-ratio: 5 / 4;
+  }
+}
+
+[data-slot="sun-arc-stage"][data-disabled] {
+  filter: saturate(0.35) brightness(0.75);
+}
+
+[data-slot="sun-arc-sky"],
+[data-slot="sun-arc-stars"],
+[data-slot="sun-arc-dusk"],
+[data-slot="sun-arc-path"],
+[data-slot="sun-arc-ground"] {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+[data-slot="sun-arc-sky"] {
+  background: linear-gradient(
+    to bottom,
+    var(--sun-arc-zenith) 0%,
+    color-mix(in oklab, var(--sun-arc-zenith), var(--sun-arc-horizon) 45%) 38%,
+    var(--sun-arc-horizon) var(--sun-arc-horizon-at)
+  );
+}
+
+[data-slot="sun-arc-stars"] {
+  fill: #f4f6ff;
+  opacity: var(--sun-arc-night);
+  will-change: opacity;
+}
+
+/* Perf: the light around the sun keeps fixed colours, a warm one low and a pale one high, and fades between them, so a
+   step of the sun only moves and fades layers; a colour from the sky's variables would re-raster each of them. */
+[data-slot="sun-arc-dusk"] {
+  inset: auto;
+  top: var(--sun-arc-horizon-at);
+  left: 0;
+  width: 110cqw;
+  height: 44cqh;
+  translate: calc(var(--sun-arc-fx) * 100cqw - 50%) -50%;
+  background: radial-gradient(ellipse closest-side, rgb(255 140 70 / 0.85), rgb(255 140 70 / 0.25) 45%, transparent);
+  opacity: var(--sun-arc-dusk);
+  will-change: translate, opacity;
+}
+
+[data-slot="sun-arc-glow"] {
+  --sun-arc-light: 255 244 214;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 70cqh;
+  aspect-ratio: 1;
+  translate: calc(var(--sun-arc-fx) * 100cqw - 50%) calc(var(--sun-arc-fy) * 100cqh - 50%);
+  border-radius: 50%;
+  pointer-events: none;
+  background: radial-gradient(
+    circle closest-side,
+    rgb(var(--sun-arc-light) / 0.75) 0%,
+    rgb(var(--sun-arc-light) / 0.28) 26%,
+    rgb(var(--sun-arc-light) / 0.08) 60%,
+    transparent
+  );
+  opacity: calc(var(--sun-arc-daylight) * 0.9 * (1 - var(--sun-arc-dusk)));
+  will-change: translate, opacity;
+}
+
+[data-slot="sun-arc-glow"][data-light="warm"] {
+  --sun-arc-light: 255 150 70;
+  opacity: calc(var(--sun-arc-dusk) * 0.85);
+}
+
+[data-slot="sun-arc-path"] path {
+  fill: none;
+  stroke: white;
+  stroke-opacity: 0.45;
+  stroke-width: 1.25;
+  stroke-dasharray: 2 6;
+  stroke-linecap: round;
+}
+
+[data-slot="sun-arc-path"] {
+  mask-image: linear-gradient(to bottom, black var(--sun-arc-horizon-at), rgb(0 0 0 / 0.4) var(--sun-arc-horizon-at));
+}
+
+[data-slot="sun-arc-skyline"],
+[data-slot="sun-arc-windows"] {
+  position: absolute;
+  left: 0;
+  bottom: calc(100% - var(--sun-arc-horizon-at));
+  width: 100%;
+  height: 27%;
+  pointer-events: none;
+}
+
+[data-slot="sun-arc-skyline"] [data-layer="far"] {
+  fill: color-mix(in oklab, var(--sun-arc-horizon) 52%, #1a2030);
+}
+
+[data-slot="sun-arc-skyline"] [data-layer="middle"] {
+  fill: color-mix(in oklab, var(--sun-arc-horizon) 24%, #10141d);
+}
+
+[data-slot="sun-arc-skyline"] [data-layer="near"] {
+  fill: color-mix(in oklab, var(--sun-arc-horizon) 8%, #07090e);
+}
+
+[data-slot="sun-arc-windows"] {
+  fill: #ffd27a;
+  opacity: calc(var(--sun-arc-night) * 0.85 + var(--sun-arc-dusk) * 0.25);
+  will-change: opacity;
+}
+
+[data-slot="sun-arc-ground"] {
+  top: var(--sun-arc-horizon-at);
+  height: auto;
+  bottom: 0;
+  overflow: hidden;
+  background:
+    repeating-linear-gradient(to bottom, rgb(255 255 255 / 0.05) 0 1px, transparent 1px 5px),
+    linear-gradient(
+      to bottom,
+      color-mix(in oklab, var(--sun-arc-horizon) 46%, #0a0f1a),
+      color-mix(in oklab, var(--sun-arc-zenith) 30%, #05070c)
+    );
+  box-shadow: 0 -1px 0 rgb(255 255 255 / 0.12);
+}
+
+[data-slot="sun-arc-glint"] {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 9cqw;
+  height: 100%;
+  translate: calc(var(--sun-arc-fx) * 100cqw - 50%) 0;
+  will-change: translate;
+  background: linear-gradient(to bottom, rgb(255 196 120 / 0.8), rgb(255 196 120 / 0.2) 70%, transparent);
+  mask-image:
+    repeating-linear-gradient(to bottom, black 0 2px, transparent 2px 5px),
+    radial-gradient(ellipse 50% 100% at 50% 0, black, transparent);
+  mask-composite: intersect;
+  opacity: calc(var(--sun-arc-daylight) * 0.55 + var(--sun-arc-dusk) * 0.5 - var(--sun-arc-night));
+  will-change: translate, opacity;
+}
+
+[data-slot="sun-arc-hour"],
+[data-slot="sun-arc-event"] {
+  position: absolute;
+  top: 0;
+  left: var(--sun-arc-at);
+  translate: -50% 0;
+}
+
+[data-slot="sun-arc-hour"] {
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  font-family: var(--font-mono);
+  font-size: var(--type-meta-size);
+  line-height: var(--type-meta-leading);
+  font-variant-numeric: tabular-nums;
+  color: rgb(255 255 255 / 0.62);
+}
+
+[data-slot="sun-arc-hour"]::before {
+  content: "";
+  width: 1px;
+  height: 0.5rem;
+  margin-bottom: 1px;
+  background: rgb(255 255 255 / 0.35);
+}
+
+[data-slot="sun-arc-event"] {
+  width: 0.5rem;
+  height: 0.3125rem;
+  background: #ffc46b;
+  clip-path: polygon(50% 0, 100% 100%, 0 100%);
+  translate: -50% -100%;
+}
+
+/* Workaround: UI SDK places a thumb along its track with inline styles; on the arc the sun sits at the time's altitude. */
+[data-slot="sun-arc-stage"] [data-slot="slider-control"] {
+  position: absolute;
+  inset: 0;
+}
+
+@media (pointer: coarse) {
+  [data-slot="sun-arc-stage"] [data-slot="slider-control"] {
+    top: var(--sun-arc-horizon-at);
+  }
+}
+
+[data-slot="sun-arc-stage"] [data-slot="slider-track"] {
+  position: absolute !important;
+  left: 4%;
+  right: 4%;
+  bottom: 0;
+  height: calc(100% - var(--sun-arc-horizon-at));
+}
+
+@media (pointer: coarse) {
+  [data-slot="sun-arc-stage"] [data-slot="slider-track"] {
+    height: 100%;
+  }
+}
+
+[data-slot="sun-arc-stage"] [data-slot="slider-thumb"] {
+  position: absolute !important;
+  inset: auto !important;
+  margin: 0 !important;
+  top: 0 !important;
+  left: 0 !important;
+  translate: calc(var(--sun-arc-fx) * 100cqw - 4cqw - 50%) calc(var(--sun-arc-fy) * 100cqh - 76cqh - 50%) !important;
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle at 50% 45%,
+    #fffef6 0%,
+    color-mix(in oklab, var(--sun-arc-sun), white 40%) 45%,
+    var(--sun-arc-sun) 100%
+  );
+  box-shadow:
+    0 0 0 1px color-mix(in oklab, var(--sun-arc-sun), white 30%),
+    0 0 18px 4px color-mix(in oklab, var(--sun-arc-glow) 70%, transparent),
+    0 0 46px 14px color-mix(in oklab, var(--sun-arc-glow) 30%, transparent);
+  opacity: calc(1 - var(--sun-arc-night) * 0.35);
+  cursor: grab;
+  touch-action: none;
+  transition: scale var(--transition-duration-micro) var(--ease-standard);
+  will-change: translate;
+}
+
+[data-slot="sun-arc-stage"] [data-slot="slider-thumb"][data-dragging] {
+  cursor: grabbing;
+  scale: 1.08;
+}
+
+[data-slot="sun-arc-stage"] [data-slot="slider-thumb"][data-disabled] {
+  cursor: default;
+}
+
+/* Spec: the bench is a sky in every theme, so the focus ring is white with a dark halo rather than the theme's ring. */
+[data-slot="sun-arc-stage"] [data-slot="slider-thumb"]:has(:focus-visible) {
+  outline: 2px solid white;
+  outline-offset: 4px;
+  box-shadow:
+    0 0 0 1px color-mix(in oklab, var(--sun-arc-sun), white 30%),
+    0 0 0 8px rgb(0 0 0 / 0.45),
+    0 0 46px 14px color-mix(in oklab, var(--sun-arc-glow) 30%, transparent);
+}
