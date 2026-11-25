@@ -17,7 +17,6 @@ function browserWindow(): UrlStateWindow | undefined {
   return typeof window === "undefined" ? undefined : window
 }
 
-/** A shared set of listeners, so a write through one adapter tells every subscriber, not only the browser's. */
 function createListeners() {
   const listeners = new Set<() => void>()
   return {
@@ -77,7 +76,7 @@ function hashUrlState(target: UrlStateWindow | undefined = browserWindow()): Url
       const { route } = splitHash(target.location.hash)
       const hash = `#${withQuery(route, params)}`
       const url = target.location.pathname + target.location.search + hash
-      // Setting `location.hash` would add an entry even for a replace; the history API doesn't fire `hashchange`.
+      // Spec: setting `location.hash` would add an entry even for a replace; the history API doesn't fire `hashchange`.
       if (replace) target.history.replaceState(target.history.state, "", url)
       else target.history.pushState(target.history.state, "", url)
       listeners.notify()

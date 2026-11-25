@@ -2,8 +2,6 @@ import { getConfig, queryAllByRole, queryAllByText } from "@testing-library/dom"
 import type { ByRoleOptions, Matcher, SelectorMatcherOptions } from "@testing-library/dom"
 import { assumeType } from "@/lib/narrow"
 
-// UI SDK announces through two visually hidden live regions it appends to <body> (role="status" and role="alert") and
-// keeps for the page's life, with the last announced text left in them.
 const announcerSelector = "[data-ui-sdk-announcer]"
 
 /** Pass as `ignore` to a Testing Library text query so it skips UI SDK's live regions: `getByText("Saved", { ignore: ignoreAnnouncer })`. */

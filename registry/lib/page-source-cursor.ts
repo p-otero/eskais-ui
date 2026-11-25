@@ -51,7 +51,6 @@ function keysetResult<T>(
 ): PageResult<T> {
   const extra = items.length > size
   const forward = position.direction === "forward"
-  // The extra row sits beyond the page: after it going forward, before it going backward.
   const page = extra ? (forward ? items.slice(0, size) : items.slice(items.length - size)) : items
   const first = page[0]
   const last = page.at(-1)
@@ -154,7 +153,7 @@ function relaySource<T, F = unknown, Raw = RelayConnection<T>>(
 
 type LinkRelations = Record<string, string>
 
-// RFC 8288: `<uri>; rel="next last"; title="x", <uri>; rel=prev`. A URI may hold commas and semicolons; parameter
+// Spec: RFC 8288: `<uri>; rel="next last"; title="x", <uri>; rel=prev`. A URI may hold commas and semicolons; parameter
 // values may be quoted, with backslash escapes. Relation names are case-insensitive and one link may carry several.
 function parseLinkHeader(header: string | null | undefined): LinkRelations {
   const links: LinkRelations = {}

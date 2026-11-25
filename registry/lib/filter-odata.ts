@@ -19,7 +19,7 @@ const functions = { contains: "contains", startsWith: "startswith", endsWith: "e
 
 const dateLiteral = /^\d{4}-\d{2}-\d{2}(?:T\d{2}:\d{2}(?::\d{2}(?:\.\d{1,12})?)?(?:Z|[+-]\d{2}:\d{2}))?$/
 
-// Navigation paths use `/` in OData.
+// Spec: navigation paths use `/` in OData.
 function path(field: string) {
   return field.replaceAll(".", "/")
 }

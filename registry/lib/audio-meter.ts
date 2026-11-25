@@ -39,7 +39,7 @@ type AudioMeter = {
 
 type AudioContextClass = new () => AudioContext
 
-// One AudioContext for every meter on the page: browsers cap how many can run, and each one holds an audio thread.
+// Spec: browsers cap how many AudioContexts can run, and each one holds an audio thread.
 let shared: AudioContext | undefined
 let holders = 0
 let primeTimer: ReturnType<typeof setTimeout> | undefined
@@ -51,7 +51,7 @@ function audioContextClass() {
   return scope.AudioContext ?? scope.webkitAudioContext
 }
 
-// Autoplay rules start a context created outside a user gesture suspended; the next press or key resumes it.
+// Spec: autoplay rules start a context created outside a user gesture suspended.
 function resumeOnGesture(context: AudioContext) {
   if (stopGestureResume || typeof document === "undefined") return
   const events = ["pointerdown", "keydown", "touchend"] as const
@@ -147,7 +147,7 @@ function createAudioMeter(stream: MediaStream, options: AudioMeterOptions = {}):
   const tick = (now: number) => {
     frame = requestAnimationFrame(tick)
     if (!analyser) return
-    // `track.stop()` fires no "ended" on the track, and only Chromium fires "inactive" on the stream.
+    // Workaround: `track.stop()` fires no "ended" on the track, and only Chromium fires "inactive" on the stream.
     if (!tracks.some(live)) {
       onTrackEnded()
       return

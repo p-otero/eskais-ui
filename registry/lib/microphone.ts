@@ -1,4 +1,3 @@
-/** Why the microphone couldn't start. */
 type MicrophoneError =
   /** The person or a policy refused access: NotAllowedError, SecurityError. */
   | "not-allowed"

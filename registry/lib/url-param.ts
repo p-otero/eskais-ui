@@ -77,7 +77,6 @@ function createUrlParam(
     write(value) {
       if (typeof location === "undefined" || adapter.read() === value) return
       const url = urlWith(value)
-      // history keeps the router's own state object, so routers that store keys there still recognise the entry.
       const state: unknown = history.state
       if (mode === "push") history.pushState(state, "", url)
       else history.replaceState(state, "", url)
