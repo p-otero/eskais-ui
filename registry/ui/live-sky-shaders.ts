@@ -43,10 +43,10 @@ void main() {
   vec3 colour = texture2D(u_sky, uv).rgb;
   vec3 ray = normalize(u_forward * u_focal + u_right * (pixel.x - u_size.x * 0.5) + u_up * (u_size.y * 0.5 - pixel.y));
   if (ray.y > 0.02) {
-    float reach = u_base / ray.y / u_tile;
+    float reach = u_base / max(ray.y, 0.03) / u_tile;
     vec2 at = ray.xz * reach + u_offset;
     float n = fbm(at);
-    float density = smoothstep(u_threshold, u_threshold + u_softness, n);
+    float density = smoothstep(u_threshold, u_threshold + u_softness, n) * smoothstep(0.04, 0.14, ray.y);
     float thick = smoothstep(u_threshold, u_threshold + 0.3, n);
     float towardSun = texture2D(u_noise, at + u_sunStep).r - texture2D(u_noise, at).r;
     float sunSide = clamp(0.5 - towardSun * 6.0, 0.0, 1.0);
@@ -200,7 +200,7 @@ void main() {
   vec2 seen = clamp(mix(v_centre, vec2(0.5), 0.45) - v_local * 0.3, 0.0, 1.0);
   vec4 facade = texture2D(u_facades, seen);
   vec3 colour = mix(texture2D(u_sky, seen).rgb, facade.rgb, facade.a) * 1.12 + 0.03;
-  colour += texture2D(u_glowMap, seen).rgb * (1.2 + u_bloom * 3.0);
+  colour += texture2D(u_glowMap, seen).rgb * (1.2 + u_bloom * 3.0) + u_highlight * 0.05;
   float shade = smoothstep(0.62, 1.0, d) * (0.25 + 0.4 * max(0.0, v_local.y));
   colour = mix(colour, colour * 0.45, shade);
   colour += smoothstep(0.75, 0.95, d) * max(0.0, -v_local.y) * u_highlight * 0.25;

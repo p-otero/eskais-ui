@@ -83,6 +83,8 @@ function noiseTexture(gl: GL) {
   }
   const created = texture(gl, { repeat: true })
   upload(gl, created, tile.size, tile.size, pixels)
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR)
+  gl.generateMipmap(gl.TEXTURE_2D)
   return created
 }
 

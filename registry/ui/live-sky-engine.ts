@@ -2,6 +2,7 @@ import { composeScene, type SkyScene } from "@/components/ui/live-sky-backdrop"
 import type { SkyConditions } from "@/components/ui/live-sky-conditions"
 import { createGlass } from "@/components/ui/live-sky-glass"
 import { readPalette } from "@/components/ui/live-sky-palette"
+import { photoCamera, type LiveSkyPhotoView, type PhotoLayers } from "@/components/ui/live-sky-photo"
 import { planRenderer } from "@/components/ui/live-sky-renderer"
 import { createStreetBuilder } from "@/components/ui/live-sky-street-builder"
 import type { SkyLocation } from "@/components/ui/live-sky-weather"
@@ -11,9 +12,14 @@ type EngineInput = {
   conditions: SkyConditions
   location: SkyLocation
   glass: boolean
+  /** A photo to show the sky in instead of the street, once its layers are loaded; `id` names one photo. */
+  photo?: ShownPhoto | undefined
   /** Called with each frame's drawing time in ms, for measuring. */
   onFrame?: ((milliseconds: number) => void) | undefined
 }
+
+/** A loaded photo and the view it is drawn with. */
+type ShownPhoto = { id: string; layers: PhotoLayers; view: LiveSkyPhotoView }
 
 /** What the engine is doing, for tests and checks: drawing every frame, holding a still, or idle while hidden. */
 type EngineMode = "running" | "still" | "paused" | "unsupported"
@@ -41,8 +47,8 @@ function makeCanvas(slot: string) {
   return canvas
 }
 
-const sceneKey = ({ conditions, location, glass }: EngineInput) =>
-  JSON.stringify([conditions, location.latitude, location.longitude, glass])
+const sceneKey = ({ conditions, location, glass, photo }: EngineInput) =>
+  JSON.stringify([conditions, location.latitude, location.longitude, glass, photo?.id, photo?.view])
 
 function flashAt(sinceFlash: number) {
   if (sinceFlash < 0 || sinceFlash > 0.45) return 0
@@ -78,9 +84,11 @@ function createSkyEngine(stage: HTMLElement): SkyEngine {
     stage.dataset.staticPaints = String(staticPaints)
   }
   const streets = createStreetBuilder((facades) => {
-    chosen?.plan.renderer.setFacades(facades)
+    if (input?.photo) return
+    chosen?.plan.renderer.setBackground({ kind: "street", ...facades })
     countStaticPaint()
   })
+  let shownPhotoKey = ""
   let traceFrame = 0
 
   const visible = () => inView && document.visibilityState !== "hidden" && size.width > 1 && size.height > 1
@@ -89,17 +97,40 @@ function createSkyEngine(stage: HTMLElement): SkyEngine {
   const compose = () => {
     if (!chosen || !input || !visible()) return false
     const ratio = Math.min(chosen.plan.maxRatio, devicePixelRatio || 1)
+    const photo = input.photo
+    const camera = photo ? photoCamera(size.width, size.height, photo.view) : undefined
     scene = composeScene({
       ...size,
       ratio,
       conditions: input.conditions,
       palette: paletteOf(),
       budget: chosen.plan.budget,
+      camera,
     })
     if (!scene) return false
     chosen.plan.renderer.setScene(scene)
     countStaticPaint()
-    streets.request({ ...size, ratio: Math.min(ratio, maxTraceRatio), location: input.location, palette: paletteOf() })
+    const traceRatio = Math.min(ratio, maxTraceRatio)
+    if (photo) {
+      const width = Math.round(size.width * traceRatio)
+      const height = Math.round(size.height * traceRatio)
+      const key = JSON.stringify([photo.id, photo.view.horizon, width, height])
+      if (key !== shownPhotoKey) {
+        shownPhotoKey = key
+        chosen.plan.renderer.setBackground({
+          kind: "photo",
+          layers: photo.layers,
+          horizon: photo.view.horizon,
+          width,
+          height,
+        })
+        countStaticPaint()
+      }
+    } else {
+      if (shownPhotoKey !== "") streets.forget()
+      shownPhotoKey = ""
+      streets.request({ ...size, ratio: traceRatio, location: input.location, palette: paletteOf() })
+    }
     glass.setRain(
       input.glass ? input.conditions : { ...input.conditions, rainKind: "none" },
       size.width,
@@ -231,4 +262,4 @@ function createSkyEngine(stage: HTMLElement): SkyEngine {
 }
 
 export { createSkyEngine }
-export type { EngineInput, EngineMode, SkyEngine }
+export type { EngineInput, EngineMode, ShownPhoto, SkyEngine }

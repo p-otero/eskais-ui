@@ -3,6 +3,9 @@ import { useState } from "react"
 import { Field, FieldLabel } from "@/components/ui/field"
 import { Label } from "@/components/ui/label"
 import { LiveSky, type LiveSkySimulation } from "@/components/ui/live-sky"
+import type { LiveSkyPhoto } from "@/components/ui/live-sky-photo"
+import { LiveSkyPhotoUpload } from "@/components/ui/live-sky-photo-controls"
+import { SegmentedControl, SegmentedControlIndicator, SegmentedControlItem } from "@/components/ui/segmented-control"
 import { Select } from "@/components/ui/select"
 import { Slider, SliderControl, SliderIndicator, SliderThumb, SliderTrack, SliderValue } from "@/components/ui/slider"
 import { Switch } from "@/components/ui/switch"
@@ -26,7 +29,35 @@ const recordFrame = (milliseconds: number) => {
 const coruna = { latitude: 43.37, longitude: -8.4, name: "A Coruña" }
 const centralEuropeanOffsetHours = 1
 
-const at = (hour: number) => Date.UTC(2026, 10, 25, 0, 0) + (hour - centralEuropeanOffsetHours) * 3_600_000
+const at = (hour: number, utcOffsetHours = centralEuropeanOffsetHours) =>
+  Date.UTC(2026, 10, 25, 0, 0) + (hour - utcOffsetHours) * 3_600_000
+
+const cebu = { latitude: 10.33, longitude: 123.9, name: "Cebu City" }
+const manilaOffsetHours = 8
+const cebuPhoto: LiveSkyPhoto = { src: "/sky/cebu-skyline.jpg", heading: 200 }
+
+type Background = "street" | "photo"
+type Scene = { location: typeof coruna; utcOffsetHours: number }
+
+const numberParam = (name: string) => {
+  const value = new URLSearchParams(location.search).get(name)
+  return value === null ? undefined : Number(value)
+}
+
+function photoFromUrl(): { photo: LiveSkyPhoto; scene: Scene } | null {
+  const src = new URLSearchParams(location.search).get("photo")
+  const latitude = numberParam("lat")
+  const longitude = numberParam("lon")
+  if (!src || latitude === undefined || longitude === undefined) return null
+  const photo: LiveSkyPhoto = {
+    src,
+    heading: numberParam("heading"),
+    fov: numberParam("fov"),
+    horizon: numberParam("horizon"),
+  }
+  const name = new URLSearchParams(location.search).get("name") ?? "Photo"
+  return { photo, scene: { location: { latitude, longitude, name }, utcOffsetHours: numberParam("utc") ?? 0 } }
+}
 
 type Preset = { label: string; rain: number; hour: number; weather: LiveSkySimulation["weather"] }
 
@@ -99,6 +130,8 @@ const rainCodeAt = (rate: number, base: number) => {
 const params = new URLSearchParams(location.search)
 const initialPreset = presetNames.find((name) => name === params.get("preset")) ?? "rain"
 const showLive = params.get("live") !== "0"
+const urlPhoto = photoFromUrl()
+const initialBackground: Background = params.get("background") === "photo" || urlPhoto ? "photo" : "street"
 
 const hourText = (hour: number) =>
   `${String(Math.floor(hour)).padStart(2, "0")}:${String(Math.round((hour % 1) * 60)).padStart(2, "0")}`
@@ -108,12 +141,19 @@ function LiveSkyDemo() {
   const [rain, setRain] = useState<number>(presets[initialPreset].rain)
   const [hour, setHour] = useState<number>(presets[initialPreset].hour)
   const [glass, setGlass] = useState(true)
+  const [background, setBackground] = useState<Background>(initialBackground)
+  const [photo, setPhoto] = useState<LiveSkyPhoto>(urlPhoto?.photo ?? cebuPhoto)
+  const [photoScene, setPhotoScene] = useState<Scene>(
+    urlPhoto?.scene ?? { location: cebu, utcOffsetHours: manilaOffsetHours },
+  )
+  const scene: Scene =
+    background === "photo" ? photoScene : { location: coruna, utcOffsetHours: centralEuropeanOffsetHours }
   const chosen = presets[preset]
   const rate = rainRateAt(rain)
   const raining = chosen.rain > 0 || rain > 0
   const simulate: LiveSkySimulation = {
-    location: coruna,
-    time: at(hour),
+    location: scene.location,
+    time: at(hour, scene.utcOffsetHours),
     weather: {
       ...chosen.weather,
       ...(raining
@@ -142,10 +182,30 @@ function LiveSkyDemo() {
             <h1 id="scrubber-title" className="text-display-sm tracking-tight">
               Live sky
             </h1>
-            <Label>
-              <Switch checked={glass} onCheckedChange={setGlass} />
-              Glass
-            </Label>
+            <div className="flex flex-wrap items-center gap-group">
+              <SegmentedControl<Background>
+                aria-label="Background"
+                value={background}
+                onValueChange={(next) => next && setBackground(next)}
+              >
+                <SegmentedControlIndicator />
+                <SegmentedControlItem value="street">Street</SegmentedControlItem>
+                <SegmentedControlItem value="photo">Photo</SegmentedControlItem>
+              </SegmentedControl>
+              {background === "photo" ? (
+                <LiveSkyPhotoUpload
+                  label="Use a photo"
+                  onPhoto={(next, place) => {
+                    setPhoto(next)
+                    if (place) setPhotoScene({ location: { ...place, name: "Your photo" }, utcOffsetHours: 0 })
+                  }}
+                />
+              ) : null}
+              <Label>
+                <Switch checked={glass} onCheckedChange={setGlass} />
+                Glass
+              </Label>
+            </div>
           </header>
           <div className="flex flex-wrap items-end gap-group">
             <Field className="w-56">
@@ -195,7 +255,19 @@ function LiveSkyDemo() {
               </Slider>
             </Field>
           </div>
-          <LiveSky label="Simulated sky" simulate={simulate} glass={glass} onFrame={recordFrame} />
+          <LiveSky
+            label="Simulated sky"
+            simulate={simulate}
+            glass={glass}
+            onFrame={recordFrame}
+            photo={background === "photo" ? photo : undefined}
+            onPhotoChange={setPhoto}
+          />
+          {background === "photo" && !urlPhoto ? (
+            <p className="text-caption text-muted-foreground">
+              Read on this device, never uploaded. Photo: Cebu City skyline by DisRaptor18, CC0, Wikimedia Commons.
+            </p>
+          ) : null}
         </section>
         {showLive ? (
           <section className="flex flex-col gap-group" aria-labelledby="live-title">

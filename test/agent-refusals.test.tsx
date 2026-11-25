@@ -508,6 +508,12 @@ test("live sky: denied location, a missing place, a bad coordinate or simulated 
   mounted(mount(liveSky, { handlers, simulated: true, hasLocation: true }, `<root aria-label="Demo sky"></root>`))
   await failsWith("Demo sky", "refresh", "refresh isn't available while the sky shows simulated weather")
   expect(handlers.refresh).not.toHaveBeenCalled()
+  await failsWith("Demo sky", "calibrate", "calibrate isn't available without a photo", [200])
+  const calibrate = vi.fn(() => true)
+  mounted(mount(liveSky, { handlers: { ...handlers, calibrate } }, `<root aria-label="Photo sky"></root>`))
+  await failsWith("Photo sky", "calibrate", "takes a field of view from 20 to 130°, not 200", [180, 200])
+  await failsWith("Photo sky", "calibrate", "takes a horizon from 0 to 1 down the photo, not 1.5", [180, 70, 1.5])
+  expect(calibrate).not.toHaveBeenCalled()
 })
 
 test("search field: a refused search fails the step", async () => {

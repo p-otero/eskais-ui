@@ -20,6 +20,8 @@ type LiveSkyLabels = {
   locationFailed: string
   /** The place name for a geolocated sky. */
   here: string
+  /** The place name for a sky placed by its photo's EXIF position. */
+  photoPlace: string
   refresh: string
   loading: string
   failed: string
@@ -49,6 +51,7 @@ const liveSkyLabels: LiveSkyLabels = {
   locationDenied: "Location access is blocked in this browser.",
   locationFailed: "Your location couldn't be found.",
   here: "Your location",
+  photoPlace: "Where the photo was taken",
   refresh: "Refresh the weather",
   loading: "Loading the weather…",
   failed: "The weather couldn't be loaded.",
