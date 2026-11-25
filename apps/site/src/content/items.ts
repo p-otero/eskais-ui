@@ -333,7 +333,44 @@ const itemNotes: Record<string, ItemNotes> = {
     ],
     agent:
       "Agents find it by its label and call goToPage or fastext, or press a Fastext key by its word; a page the service doesn't have fails the step with the pages it has.",
-    related: ["led-matrix", "neon-sign"],
+    related: ["led-matrix", "neon-sign", "retro-tv"],
+  },
+  "retro-tv": {
+    usage:
+      "Reach for it where a dashboard has room for character: a status wall, an office screen, a landing page. Put stat cards, charts or text inside; the screen turns the theme's colours into phosphor. TvPowerOff plays the switch-off over the whole page, for logging out.",
+    a11y: [
+      "The power button is a toggle named Power (labels.power), pressed while the set is on, with a white focus ring on the wood.",
+      "Phosphor text keeps 4.5:1 on the screen under the scanlines, in green, amber and white.",
+      "While the set is off its screen is inert, so screen readers and agents skip what isn't shown.",
+      "Under reduced motion the picture fades instead of collapsing, and the glare stops flickering.",
+    ],
+    agent:
+      "Agents find the set by its label and call powerOn or powerOff, or press the Power toggle; an app that cancels the change in onPowerChange fails the step with why.",
+    related: ["stat", "chart", "confirm-dialog"],
+  },
+  "pill-dialog": {
+    usage:
+      "Use it like ConfirmDialog where a decision deserves a moment: a migration, a release, a point of no return. The blue pill leaves everything as it is; the red pill goes ahead.",
+    a11y: [
+      "An alert dialog: opening focuses the blue pill, Escape cancels, focus is trapped and returns to the trigger.",
+      "Each pill is a button with its text under the capsule; both lift on keyboard focus as on hover.",
+      "While onConfirm runs the red pill is busy and the dialog stays open; a failure is announced.",
+    ],
+    agent:
+      "Agents press the pills by their text. The red pill carries data-agent-confirm, so its press waits for your allow callback.",
+    related: ["confirm-dialog", "confirm-button", "ejector-button"],
+  },
+  "ejector-button": {
+    usage:
+      "For one destructive action that should take two deliberate gestures, like deleting an environment: open the cover, then press the button. For a plain two-step button use ConfirmButton; for a decision that needs explaining, ConfirmDialog.",
+    a11y: [
+      "The cover is a toggle named Safety cover (labels.cover), pressed while open; the red button is named by label and leaves the tab order while covered.",
+      "Escape closes the cover, as does the timeout, counted only while nothing runs; focus on the button returns to the cover.",
+      "The red button keeps a hit area over 44px, and under reduced motion the cover fades instead of swinging open.",
+    ],
+    agent:
+      "Agents call arm and disarm on the group and eject on the button. eject waits for your allow callback, and fails with why while the cover is closed.",
+    related: ["confirm-button", "confirm-dialog", "pill-dialog"],
   },
   "image-cropper": {
     usage:

@@ -1,0 +1,186 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "pill-dialog",
+  "title": "Pill Dialog",
+  "description": "A confirm dialog whose answers are glossy 3D capsules, a blue pill that cancels and a red pill that confirms: they lift on hover and focus, and the chosen one grows while the other fades as the dialog closes. UI SDK's AlertDialog underneath, with an async confirm, and data-agent-confirm on the red pill.",
+  "dependencies": [
+    "@ui-sdk/core@0.1.0-beta.12",
+    "@ui-sdk/react@0.1.0-beta.12"
+  ],
+  "registryDependencies": [
+    "@eskais/utils",
+    "@eskais/theme",
+    "@eskais/button",
+    "@eskais/dialog",
+    "@eskais/spinner"
+  ],
+  "files": [
+    {
+      "path": "registry/ui/pill-dialog.tsx",
+      "content": "\"use client\"\n\nimport {\n  AlertDialog,\n  AlertDialogBackdrop,\n  AlertDialogClose,\n  AlertDialogContent,\n  AlertDialogDescription,\n  AlertDialogTitle,\n  AlertDialogTrigger,\n} from \"@ui-sdk/react/alert-dialog\"\nimport type { VariantProps } from \"class-variance-authority\"\nimport { useState, type ComponentProps, type ReactNode } from \"react\"\n\nimport { buttonVariants, withPendingSpinner } from \"@/components/ui/button\"\nimport { backdropClassName, contentClassName, useFocusReturn } from \"@/components/ui/dialog\"\nimport { Spinner } from \"@/components/ui/spinner\"\nimport { cn } from \"@/lib/utils\"\n\ntype AlertDialogRootProps = ComponentProps<typeof AlertDialog>\ntype PillDialogAction = NonNullable<ComponentProps<typeof AlertDialogClose>[\"action\"]>\n\ntype PillDialogLabels = {\n  /** The blue pill, which closes without confirming. \"Cancel\" by default; pass it in the page's language. */\n  cancel?: ReactNode\n}\n\n/** Which pill closed the dialog, while it animates out: the chosen one grows and the other fades. */\ntype PillChoice = \"cancel\" | \"confirm\"\n\ntype PillDialogProps = {\n  title: ReactNode\n  description?: ReactNode\n  /** The red pill's text. */\n  confirmLabel: ReactNode\n  /** Sentence an agent must show a person before confirming, e.g. \"Migrates the production database\". */\n  agentConfirm: string\n  labels?: PillDialogLabels\n  /** Runs before the dialog closes. A returned Promise keeps it open and pending; a rejection keeps it open. */\n  onConfirm: PillDialogAction\n  /** Content of the button that opens the dialog. Omit it when opening through `open` or `controller`. */\n  trigger?: ReactNode\n  triggerVariant?: VariantProps<typeof buttonVariants>[\"variant\"]\n  /** The trigger can't open the dialog; nor can an agent or a controller. */\n  triggerDisabled?: boolean\n  /** Work the trigger stands for is running elsewhere: a spinner, `aria-busy`, and the dialog doesn't open. */\n  triggerPending?: boolean\n  renderError?: (error: unknown) => ReactNode\n  className?: string\n} & Pick<\n  AlertDialogRootProps,\n  \"open\" | \"defaultOpen\" | \"onOpenChange\" | \"onOpenChangeComplete\" | \"controller\" | \"pendingAnnouncement\"\n>\n\nfunction defaultRenderError(error: unknown) {\n  return error instanceof Error ? error.message : String(error)\n}\n\nfunction Capsule() {\n  return (\n    <span data-slot=\"pill-dialog-capsule\" aria-hidden=\"true\">\n      <span data-slot=\"pill-dialog-shell\" />\n    </span>\n  )\n}\n\n/**\n * A confirm dialog whose answers are two glossy capsules: a blue pill that cancels and a red pill that confirms. Built\n * on UI SDK's AlertDialog, so Escape, the focus trap and focus return behave as in any alert dialog; the chosen pill\n * grows while the other fades as it closes. The red pill carries `data-agent-confirm`.\n */\nfunction PillDialog({\n  title,\n  description,\n  confirmLabel,\n  agentConfirm,\n  labels,\n  onConfirm,\n  trigger,\n  triggerVariant = \"outline\",\n  triggerDisabled = false,\n  triggerPending,\n  renderError = defaultRenderError,\n  className,\n  ...root\n}: PillDialogProps) {\n  const [choice, setChoice] = useState<PillChoice | undefined>()\n  const blocked = trigger !== undefined && (triggerDisabled || triggerPending === true)\n  const { attach, finalFocus: returnFocus, wrap } = useFocusReturn(undefined)\n  const cancel = labels?.cancel ?? \"Cancel\"\n  return (\n    <AlertDialog\n      {...root}\n      onOpenChange={(open, details) => {\n        if (open && blocked) {\n          details.cancel()\n          return\n        }\n        root.onOpenChange?.(open, details)\n        if (details.canceled) return\n        if (open) setChoice(undefined)\n        else if (details.returnValue === \"confirm\" || details.returnValue === \"cancel\") setChoice(details.returnValue)\n      }}\n    >\n      {trigger === undefined ? null : (\n        <AlertDialogTrigger\n          disabled={triggerDisabled || triggerPending === true}\n          focusableWhenDisabled={triggerPending === true}\n          data-pending={triggerPending ? \"\" : undefined}\n          aria-busy={triggerPending || undefined}\n          className={buttonVariants({ variant: triggerVariant })}\n        >\n          {triggerPending === undefined ? trigger : withPendingSpinner(trigger, false, triggerVariant, triggerPending)}\n        </AlertDialogTrigger>\n      )}\n      <AlertDialogBackdrop className={backdropClassName} />\n      <AlertDialogContent\n        ref={attach}\n        data-pill-dialog=\"\"\n        data-chosen={choice}\n        finalFocus={returnFocus}\n        className={cn(contentClassName, \"max-w-md text-center\", className)}\n      >\n        {wrap(\n          <>\n            <div className=\"flex flex-col gap-inline\">\n              <AlertDialogTitle className=\"text-title\">{title}</AlertDialogTitle>\n              {description === undefined ? null : (\n                <AlertDialogDescription className=\"text-body-sm text-muted-foreground\">\n                  {description}\n                </AlertDialogDescription>\n              )}\n            </div>\n            <AlertDialogClose\n              value=\"confirm\"\n              action={onConfirm}\n              data-agent-confirm={agentConfirm}\n              render={(props, state) => (\n                <div className=\"flex flex-col gap-items\">\n                  <p role=\"alert\" className=\"text-body-sm text-destructive empty:hidden\">\n                    {state.error === undefined || state.error === null ? null : renderError(state.error)}\n                  </p>\n                  <div data-slot=\"pill-dialog-pills\">\n                    <AlertDialogClose\n                      value=\"cancel\"\n                      render={(cancelProps) => (\n                        <button {...cancelProps} data-slot=\"pill-dialog-pill\" data-pill=\"cancel\">\n                          <Capsule />\n                          <span data-slot=\"pill-dialog-label\">{cancel}</span>\n                        </button>\n                      )}\n                    />\n                    <button {...props} data-slot=\"pill-dialog-pill\" data-pill=\"confirm\">\n                      <Capsule />\n                      <span data-slot=\"pill-dialog-label\">\n                        <Spinner data-show=\"pending\" />\n                        {confirmLabel}\n                      </span>\n                    </button>\n                  </div>\n                </div>\n              )}\n            />\n          </>,\n        )}\n      </AlertDialogContent>\n    </AlertDialog>\n  )\n}\n\nexport { PillDialog }\nexport type { PillChoice, PillDialogLabels, PillDialogProps }\n",
+      "type": "registry:ui"
+    }
+  ],
+  "css": {
+    "[data-pill-dialog]": {
+      "--pill-cancel": "#1f66da",
+      "--pill-cancel-light": "#7cbcff",
+      "--pill-cancel-dark": "#072056",
+      "--pill-cancel-glow": "rgb(80 150 255 / 0.55)",
+      "--pill-confirm": "#d9261b",
+      "--pill-confirm-light": "#ff7a66",
+      "--pill-confirm-dark": "#5e0703",
+      "--pill-confirm-glow": "rgb(255 80 60 / 0.55)"
+    },
+    "[data-pill-dialog][data-chosen][data-ending-style]": {
+      "transition-delay": "320ms"
+    },
+    "[data-slot=\"pill-dialog-pills\"]": {
+      "display": "flex",
+      "justify-content": "center",
+      "gap": "var(--gap-section)",
+      "padding-top": "var(--gap-items)"
+    },
+    "[data-slot=\"pill-dialog-pill\"]": {
+      "--pill": "var(--pill-cancel)",
+      "--pill-light": "var(--pill-cancel-light)",
+      "--pill-dark": "var(--pill-cancel-dark)",
+      "--pill-glow": "var(--pill-cancel-glow)",
+      "display": "flex",
+      "min-width": "7.5rem",
+      "flex-direction": "column",
+      "align-items": "center",
+      "gap": "var(--gap-group)",
+      "padding": "var(--gap-group) var(--item-padding-x) var(--item-padding-y)",
+      "border": "0",
+      "border-radius": "var(--surface-radius)",
+      "background": "transparent",
+      "color": "var(--popover-foreground)",
+      "font": "inherit",
+      "cursor": "pointer",
+      "transition": "opacity var(--transition-duration-panel) var(--ease-standard), scale var(--transition-duration-panel) var(--ease-standard)"
+    },
+    "[data-slot=\"pill-dialog-pill\"][data-pill=\"confirm\"]": {
+      "--pill": "var(--pill-confirm)",
+      "--pill-light": "var(--pill-confirm-light)",
+      "--pill-dark": "var(--pill-confirm-dark)",
+      "--pill-glow": "var(--pill-confirm-glow)"
+    },
+    "[data-slot=\"pill-dialog-pill\"]:focus-visible": {
+      "outline": "2px solid var(--ring)",
+      "outline-offset": "2px"
+    },
+    "[data-slot=\"pill-dialog-pill\"][data-pending]": {
+      "cursor": "progress"
+    },
+    "[data-slot=\"pill-dialog-label\"]": {
+      "display": "inline-flex",
+      "align-items": "center",
+      "gap": "var(--gap-inline)",
+      "font-size": "var(--type-body-sm-size)",
+      "line-height": "var(--type-body-sm-leading)",
+      "font-weight": "500"
+    },
+    "[data-slot=\"pill-dialog-pill\"]:not([data-pending]) [data-show=\"pending\"]": {
+      "display": "none"
+    },
+    "[data-slot=\"pill-dialog-capsule\"]": {
+      "position": "relative",
+      "display": "block",
+      "width": "5.75rem",
+      "height": "2.25rem"
+    },
+    "[data-slot=\"pill-dialog-capsule\"]::before": {
+      "content": "\"\"",
+      "position": "absolute",
+      "inset": "70% 8% -26%",
+      "border-radius": "50%",
+      "background": "radial-gradient(closest-side, rgb(0 0 0 / 0.32), transparent)",
+      "transition": "scale var(--transition-duration-panel) var(--ease-standard), opacity var(--transition-duration-panel) var(--ease-standard)"
+    },
+    "[data-slot=\"pill-dialog-shell\"]": {
+      "position": "absolute",
+      "inset": "0",
+      "border-radius": "999px",
+      "rotate": "-16deg",
+      "background": "radial-gradient(ellipse 22% 26% at 20% 26%, rgb(255 255 255 / 0.95), transparent 70%), linear-gradient( 180deg, rgb(255 255 255 / 0.5), rgb(255 255 255 / 0.12) 24%, transparent 46%, rgb(0 0 0 / 0.18) 78%, rgb(0 0 0 / 0.42) ), radial-gradient(ellipse 70% 60% at 50% 70%, var(--pill-light), transparent 75%), linear-gradient( 90deg, var(--pill-dark), var(--pill) 18%, var(--pill) 49.4%, color-mix(in oklab, var(--pill), black 30%) 49.6% 50.4%, color-mix(in oklab, var(--pill), white 10%) 50.6%, var(--pill) 82%, var(--pill-dark) )",
+      "box-shadow": "inset 0 1px 1px rgb(255 255 255 / 0.55), inset 0 -3px 5px color-mix(in oklab, var(--pill-light), transparent 40%), inset 0 -1px 1px rgb(0 0 0 / 0.35), 0 6px 14px -4px var(--pill-glow)",
+      "transition": "translate var(--transition-duration-panel) var(--ease-standard), rotate var(--transition-duration-panel) var(--ease-standard), scale 300ms var(--ease-standard), box-shadow var(--transition-duration-panel) var(--ease-standard)"
+    },
+    "[data-slot=\"pill-dialog-shell\"]::before": {
+      "content": "\"\"",
+      "position": "absolute",
+      "top": "10%",
+      "left": "12%",
+      "right": "14%",
+      "height": "28%",
+      "border-radius": "999px",
+      "background": "linear-gradient(180deg, rgb(255 255 255 / 0.85), rgb(255 255 255 / 0))"
+    },
+    "[data-pill]:hover [data-slot=\"pill-dialog-shell\"]": {
+      "translate": "0 -0.5rem",
+      "rotate": "-10deg",
+      "scale": "1.05",
+      "box-shadow": "inset 0 1px 1px rgb(255 255 255 / 0.55), inset 0 -3px 5px color-mix(in oklab, var(--pill-light), transparent 40%), inset 0 -1px 1px rgb(0 0 0 / 0.35), 0 14px 22px -6px var(--pill-glow)"
+    },
+    "[data-pill]:focus-visible [data-slot=\"pill-dialog-shell\"]": {
+      "translate": "0 -0.5rem",
+      "rotate": "-10deg",
+      "scale": "1.05",
+      "box-shadow": "inset 0 1px 1px rgb(255 255 255 / 0.55), inset 0 -3px 5px color-mix(in oklab, var(--pill-light), transparent 40%), inset 0 -1px 1px rgb(0 0 0 / 0.35), 0 14px 22px -6px var(--pill-glow)"
+    },
+    "[data-pill]:hover [data-slot=\"pill-dialog-capsule\"]::before": {
+      "scale": "0.82",
+      "opacity": "0.55"
+    },
+    "[data-pill]:focus-visible [data-slot=\"pill-dialog-capsule\"]::before": {
+      "scale": "0.82",
+      "opacity": "0.55"
+    },
+    "[data-pill]:active [data-slot=\"pill-dialog-shell\"]": {
+      "translate": "0 -0.25rem",
+      "scale": "0.98"
+    },
+    "[data-pill-dialog][data-chosen=\"cancel\"] [data-pill=\"cancel\"]": {
+      "scale": "1.12"
+    },
+    "[data-pill-dialog][data-chosen=\"confirm\"] [data-pill=\"confirm\"]": {
+      "scale": "1.12"
+    },
+    "[data-pill-dialog][data-chosen] [data-slot=\"pill-dialog-shell\"]": {
+      "translate": "0 -0.5rem",
+      "rotate": "0deg",
+      "scale": "1.25"
+    },
+    "[data-pill-dialog][data-chosen=\"cancel\"] [data-pill=\"confirm\"]": {
+      "opacity": "0",
+      "scale": "0.8"
+    },
+    "[data-pill-dialog][data-chosen=\"confirm\"] [data-pill=\"cancel\"]": {
+      "opacity": "0",
+      "scale": "0.8"
+    },
+    "@media (prefers-reduced-motion: reduce)": {
+      "[data-pill]:hover [data-slot=\"pill-dialog-shell\"]": {
+        "translate": "none",
+        "rotate": "-16deg",
+        "scale": "none"
+      },
+      "[data-pill]:focus-visible [data-slot=\"pill-dialog-shell\"]": {
+        "translate": "none",
+        "rotate": "-16deg",
+        "scale": "none"
+      },
+      "[data-pill-dialog][data-chosen] [data-slot=\"pill-dialog-shell\"]": {
+        "translate": "none",
+        "rotate": "-16deg",
+        "scale": "none"
+      },
+      "[data-pill-dialog][data-chosen] [data-pill]": {
+        "scale": "none"
+      }
+    }
+  },
+  "docs": "`<PillDialog trigger title description confirmLabel agentConfirm onConfirm labels>`, the API of `ConfirmDialog`: a returned Promise keeps it open and pending (a spinner in the red pill's label), a rejection shows its message (`renderError`), `triggerDisabled` and `triggerPending` stop the trigger, and `open`, `onOpenChange`, `controller` and `pendingAnnouncement` pass to the AlertDialog. `labels={{ cancel }}` names the blue pill, \"Cancel\" by default. Escape, the focus trap and focus return behave as in any alert dialog, and opening focuses the blue pill. `agentConfirm` is required: it becomes the red pill's `data-agent-confirm`, so an agent's press waits for a person through `allow`. The pills' colours are the item's `css`; the dialog follows the theme.",
+  "type": "registry:ui"
+}

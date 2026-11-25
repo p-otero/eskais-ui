@@ -13,6 +13,7 @@ const prism = () => import("./perf-prism")
 const instruments = () => import("./perf-instruments")
 const sky = () => import("./perf-live-sky")
 const signs = () => import("./perf-signs")
+const retro = () => import("./perf-retro")
 
 const scenarios: Record<string, () => Promise<Render>> = {
   "list-1k": () =>
@@ -69,6 +70,12 @@ const scenarios: Record<string, () => Promise<Render>> = {
     sky().then(({ LiveSkyScenario }) => () => <LiveSkyScenario />),
   teletext: () =>
     signs().then(({ TeletextScenario }) => () => <TeletextScenario />),
+  "retro-tv": () =>
+    retro().then(({ RetroTvScenario }) => () => <RetroTvScenario />),
+  "pill-dialog": () =>
+    retro().then(({ PillDialogScenario }) => () => <PillDialogScenario />),
+  "ejector-button": () =>
+    retro().then(({ EjectorButtonScenario }) => () => <EjectorButtonScenario />),
   "server-list": () =>
     server().then(({ ServerListScenario }) => () => <ServerListScenario />),
 }

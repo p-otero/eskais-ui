@@ -125,6 +125,19 @@
     "teletext": {
       "renders": 61,
       "forcedLayouts": 0
+    },
+    "retro-tv": {
+      "renders": 14,
+      "forcedLayouts": 0
+    },
+    "pill-dialog": {
+      "renders": 20,
+      "forcedLayouts": 10.63,
+      "forcedSlack": 0.3
+    },
+    "ejector-button": {
+      "renders": 15,
+      "forcedLayouts": 0
     }
   },
   "layers": {
@@ -212,6 +225,7 @@
     "document-workspace": 140.3,
     "drawer": 74.1,
     "dropdown-menu": 64.8,
+    "ejector-button": 53.1,
     "empty": 12.1,
     "field": 25.9,
     "file-input": 66.6,
@@ -267,6 +281,7 @@
     "page-source": 6.5,
     "pagination": 54.4,
     "password-input": 57.2,
+    "pill-dialog": 49,
     "popover": 54.9,
     "prism-picker": 40.5,
     "progress": 22.1,
@@ -277,6 +292,7 @@
     "relative-time": 12.4,
     "repository-select": 69.8,
     "resizable": 33.2,
+    "retro-tv": 52.4,
     "row-navigation": 13.2,
     "safe-dial": 37.4,
     "scroll-area": 29.9,
