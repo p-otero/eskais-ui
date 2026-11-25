@@ -1,7 +1,3 @@
-// Calls the showcase's WebMCP tools (registerTools) from outside ?demo=agent-bridge-check: over the DevTools protocol in
-// Chrome with --enable-features=WebMCP, then through a stand-in document.modelContext. A refused start or cancel fails
-// with why and changes nothing; accepted ones and a person's press go through. Without WebMCP the first pass skips.
-// Usage: node tooling/agent-bridge-check.mjs [--require-webmcp] (after `bun run build:showcase`)
 import { parseActionRefusal } from "../registry/lib/action-refusal.ts"
 import { withShowcase } from "./showcase-browser.mjs"
 
@@ -13,7 +9,6 @@ function check(label, ok, detail = "") {
   if (!ok) failures.push(label)
 }
 
-// The page's WebMCP tools, listed and called through the DevTools protocol, as a browser agent would.
 async function protocolTools(page) {
   const cdp = await page.context().newCDPSession(page)
   const tools = new Map()
@@ -42,7 +37,6 @@ async function protocolTools(page) {
   }
 }
 
-// The same tools called from inside the page: Chrome's own document.modelContext, or the stand-in below.
 function pageTools(page) {
   return {
     names: () => page.evaluate(async () => (await document.modelContext.getTools()).map((tool) => tool.name)),
@@ -58,7 +52,6 @@ function pageTools(page) {
   }
 }
 
-// What registerTools needs from document.modelContext, for a browser without WebMCP: it lives in the test.
 function standInModelContext() {
   if (document.modelContext) return
   const tools = new Map()

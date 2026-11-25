@@ -56,7 +56,7 @@ async function serve(dir, { base = "/", spa = true } = {}) {
 
 const probe = resolve(import.meta.dirname, "probe.js")
 
-// Without a GPU, as on CI's Linux runner, Chrome composites in software, so a paint or filter only a GPU makes cheap
+// Perf: without a GPU, as on CI's Linux runner, Chrome composites in software, so a paint or filter only a GPU makes cheap
 // shows up there first. PERF_SOFTWARE=1 (--disable-gpu, closest to CI) or =swiftshader (GL emulated) reproduces it.
 const softwareModes = {
   1: ["--disable-gpu"],

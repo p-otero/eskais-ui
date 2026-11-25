@@ -1,7 +1,3 @@
-// The performance budgets CI holds: React renders and forced layouts per key press, the board's composited
-// layers, key to next paint where a scenario sets a ceiling, and each registry item's gzip size, checked against
-// tooling/perf/budgets.json. Counts are exact, so any runner can check them. Usage: bun run perf:ci
-// [--dir=<built showcase>] [--update]; see tooling/perf/README.md.
 import { spawnSync } from "node:child_process"
 import { readFile, writeFile, mkdir } from "node:fs/promises"
 import { resolve } from "node:path"
@@ -34,7 +30,6 @@ if (!dirArg) {
 
 const budgets = JSON.parse(await readFile(budgetFile, "utf8"))
 const measured = { keys: {}, layers: {}, vitals: {}, bundles: {} }
-// Cold loads per fixture: CLS and LCP are their medians.
 const vitalsRuns = 3
 const server = await serve(build)
 const browser = await launch()
@@ -53,14 +48,12 @@ try {
     try {
       await page.goto(`${server.origin}?demo=perf&scenario=${scenario}`)
       await page.waitForFunction(() => globalThis.perfFixture?.mounted !== undefined, undefined, { timeout: 60_000 })
-      // Long enough for a pulse that runs a few times when a status starts to finish.
       await page.waitForTimeout(budgets.layersSettleMs ?? 4000)
       measured.layers[scenario] = (await countLayers(page, cdp)).count
     } finally {
       await context.close()
     }
   }
-  // Load-time vitals on the slow 4G profile, where LCP is mostly the transfer, so it varies less between machines.
   for (const id of Object.keys(budgets.vitals ?? {})) {
     const target = showcaseTargets.find((entry) => entry.id === id)
     if (!target) throw new Error(`budgets.json names an unknown vitals target: ${id}`)
@@ -86,7 +79,7 @@ for (const row of await measureBundles({ uiSdkShare: false })) {
 
 const failures = []
 const rows = []
-// A forced layout is an average over 20 presses: one stray layout moves it by 0.05, so it gets that much slack twice.
+// Perf: a forced layout is an average over 20 presses: one stray layout moves it by 0.05, so it gets that much slack twice.
 // A virtualized list measures the rows a scroll brings in when its scroll event lands, which varies by a frame from
 // run to run: such a scenario declares its own `forcedSlack`. A large render count gets 5% for the same reason; a
 // small one, like the two rows of a roving move, stays exact.
@@ -94,16 +87,17 @@ const slack = {
   "forced layouts per press": (_budget, name) => budgets.keys[name]?.forcedSlack ?? 0.1,
   "renders per press": (budget) => (budget > 20 ? Math.floor(budget * 0.05) : 0),
 }
+const floatingPointRoundingSlack = 1e-9
+
 const check = (kind, name, value, budget) => {
-  // The epsilon keeps a value exactly at the limit from failing on floating-point rounding (4.85 + 0.1 < 4.95).
-  const ok = budget === undefined ? null : value <= budget + (slack[kind]?.(budget, name) ?? 0) + 1e-9
+  const ok =
+    budget === undefined ? null : value <= budget + (slack[kind]?.(budget, name) ?? 0) + floatingPointRoundingSlack
   rows.push({ kind, name, value, budget: budget ?? "none", ok: ok === null ? "new" : ok ? "ok" : "OVER" })
   if (ok === false) failures.push(`${kind} ${name}: ${String(value)} over the budget of ${String(budget)}`)
 }
 for (const [label, counts] of Object.entries(measured.keys)) {
   check("renders per press", label, counts.rendersMax, budgets.keys[label].renders)
   check("forced layouts per press", label, counts.forcedLayoutsPerPress, budgets.keys[label].forcedLayouts)
-  // Only where a scenario declares one: times vary between machines, so the ceiling sits well above a fast run.
   if (budgets.keys[label].paintP95 !== undefined)
     check("key to next paint ms, p95", label, counts.paintP95, budgets.keys[label].paintP95)
 }
@@ -114,7 +108,6 @@ for (const [id, { cls, lcp }] of Object.entries(measured.vitals)) {
   check("LCP ms, slow 4G", id, lcp, budgets.vitals[id].lcp)
 }
 for (const [item, kb] of Object.entries(measured.bundles)) check("gzip KB", item, kb, budgets.bundles[item])
-// Lazily imported chunks (a three.js scene) are budgeted apart: they load only where the item renders them.
 for (const [item, kb] of Object.entries(budgets.lazyBundles ?? {}))
   check("lazy gzip KB", item, measured.lazyBundles[item] ?? 0, kb)
 for (const item of Object.keys(budgets.bundles)) {
@@ -127,7 +120,6 @@ await mkdir(resolve(here, "results"), { recursive: true })
 await writeFile(resolve(here, "results", "ci.json"), JSON.stringify(measured, null, 2))
 
 if (update) {
-  // Counts become the budget as measured; sizes get 5% headroom, so a small fix doesn't fail the next change.
   for (const [label, counts] of Object.entries(measured.keys)) {
     const { forcedSlack, paintP95 } = budgets.keys[label] ?? {}
     budgets.keys[label] = {
@@ -138,7 +130,6 @@ if (update) {
     }
   }
   for (const [scenario, count] of Object.entries(measured.layers)) budgets.layers[scenario] = count
-  // CLS stays at its ceiling; LCP gets 15% over today's, rounded up to 100 ms.
   for (const [id, { lcp }] of Object.entries(measured.vitals)) {
     budgets.vitals[id] = { cls: 0.01, lcp: Math.ceil((lcp * 1.15) / 100) * 100 }
   }

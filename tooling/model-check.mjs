@@ -1,7 +1,3 @@
-// ModelViewer and ModelScan in Chrome (SwiftShader) with the demo character: lazy three.js, no idle draws, clips,
-// scaled expressions with one React commit, the scan's stages, camera, landmark meshes, the person from the mask or the
-// landmarks, the cloud, every stage's controls (tooltips, 44px on a phone, 4.5:1 over any photo), focus, errors.
-// Usage: node tooling/model-check.mjs [--screenshots=<dir>] [--gpu: not SwiftShader] (after `bun run build:showcase`)
 /* oxlint-disable no-await-in-loop -- each width, mode and stage is measured in turn on one page */
 import { mkdirSync } from "node:fs"
 import { join, resolve } from "node:path"
@@ -20,8 +16,6 @@ function check(label, ok, detail = "") {
 
 const threeChunk = /model-viewer-(scene|rig)|model-scan-(intro|cloud)|\.glb$/
 
-// Counts WebGL draws, and the ones that draw points (the particles), on every context the page makes, and React
-// commits through the DevTools hook (React DOM's and react-three-fiber's renderer both report there, in production).
 const countDraws = () => {
   globalThis.reactCommits = 0
   let renderers = 0
@@ -64,7 +58,7 @@ async function drawsDuring(page, ms) {
   return { all: after.all - before.all, points: after.points - before.points }
 }
 
-// CI renders in software, where easing the character's weights takes several times longer than on a GPU: wait for
+// Perf: CI renders in software, where easing the character's weights takes several times longer than on a GPU: wait for
 // the canvas to go still (or the time to run out) before measuring that it stays still.
 async function untilStill(page, timeout = 8000) {
   const deadline = Date.now() + timeout
@@ -106,7 +100,6 @@ async function overflow(page) {
 }
 
 async function runScan(page, { capture } = {}) {
-  // Every stage the root passes through, recorded in the page: a short one can start and end between two polls.
   await scanRoot(page).evaluate((root) => {
     globalThis.scanStages = []
     new MutationObserver(() => globalThis.scanStages.push(root.getAttribute("data-stage"))).observe(root, {
@@ -130,8 +123,6 @@ async function runScan(page, { capture } = {}) {
   return recorded.filter((stage, index) => stage !== recorded[index - 1])
 }
 
-// The viewer's rig (apps/showcase/src/checks/use-model-probe.ts): a target's weight as given, the influence its mesh
-// draws with and the multiplier from extras.targetScales; the clip that runs and how far in.
 const probe = (page, target) =>
   page.evaluate((name) => {
     const rig = globalThis.modelProbes?.viewer
@@ -148,8 +139,6 @@ const probe = (page, target) =>
     }
   }, target)
 
-// Where each drawn point sits against where its fraction of the photo lands on the photo's drawn box, worked out from
-// the image's own object-fit, and how many points and lines each group draws.
 async function pointPlacement(page) {
   return page.evaluate(() => {
     const img = document.querySelector("[data-testid=scan] [data-slot=model-scan-photo] img")
@@ -183,10 +172,6 @@ async function pointPlacement(page) {
   })
 }
 
-// The scan's controls: each one's name, its hit area (the larger of its box and its touch-target ::before), and the
-// text contrast inside the floating bars, each bar's translucent fill laid over white and over black, the two
-// extremes a photo can put behind it. Colour transitions finish first: after a `.dark` toggle a segment's text still
-// fades from the light colour over an indicator already dark (1.21:1).
 const auditControls = (page) =>
   page.evaluate(async () => {
     const colours = new Set(["color", "background-color", "all"])
@@ -241,7 +226,6 @@ const auditControls = (page) =>
       const node = walker.currentNode
       const element = node.parentElement
       if (!node.textContent.trim() || !element?.getClientRects().length) continue
-      // A checked segment's fill is its group's indicator, a sibling under it, not an ancestor.
       const checked = element.closest('[role="radio"][aria-checked="true"]')
       let fill = checked?.closest('[role="radiogroup"]')?.querySelector('[data-slot$="indicator"]') ?? element
       while (fill && fill !== root && rgba(getComputedStyle(fill).backgroundColor)[3] === 0) fill = fill.parentElement
@@ -261,7 +245,6 @@ const auditControls = (page) =>
     return { controls, texts }
   })
 
-// Runs a scan until both landmark groups have arrived, and stops it there.
 async function detectBoth(page) {
   await page.getByRole("button", { name: "Make 3D" }).click()
   await page.waitForFunction(
@@ -269,7 +252,6 @@ async function detectBoth(page) {
     undefined,
     { timeout: 20_000 },
   )
-  // Every line and point has drawn in: the stagger is at most 0.7 s, plus the draw.
   await page.waitForTimeout(1200)
 }
 
@@ -281,8 +263,6 @@ const scanData = (page) =>
     .evaluate((canvas) => ({ ...canvas.dataset }))
 const toolbar = (page) => page.getByTestId("scan").getByRole("toolbar", { name: "3D model controls" })
 
-// Waits for the scan's toolbar (stage ready and the transition done), and on a timeout says where the run stopped: the
-// stage, the transition, the hand-off, the viewer, the canvas's own notes, what the replay sent and the page's errors.
 async function untilReady(page, label, errors = [], timeout = 60_000) {
   try {
     await toolbar(page).waitFor({ timeout })
@@ -310,7 +290,6 @@ await withShowcase(
   async (page) => {
     await page.addInitScript(countDraws)
 
-    // Pages that render no viewer never ask for the three.js chunk or the model.
     for (const demo of ["image-scan-check", "page"]) {
       const requests = trackRequests(page)
       await page.goto(`${new URL(page.url()).origin}/?demo=${demo}`)
@@ -320,7 +299,6 @@ await withShowcase(
       check(`?demo=${demo} loads no three.js chunk`, loaded.length === 0, loaded.join(", "))
     }
 
-    // The showcase renders a viewer far below the fold: its chunk waits until the section nears the viewport.
     {
       await page.setViewportSize({ width: 1440, height: 900 })
       const requests = trackRequests(page)
@@ -334,7 +312,6 @@ await withShowcase(
       )
       await page.getByRole("heading", { name: "Model viewer" }).scrollIntoViewIfNeeded()
       await page.waitForFunction(
-        // The scan above it holds its own viewer back until a scan starts.
         () => [...document.querySelectorAll("[data-slot=model-viewer]")].some((v) => v.dataset.status === "ready"),
         undefined,
         { timeout: 20_000 },
@@ -352,10 +329,7 @@ await withShowcase(
     const playing = await drawsDuring(page, 600)
     check("a playing clip keeps drawing", playing.all > 10, JSON.stringify(playing))
 
-    // Scrolled away, nothing draws; back in view, the clip goes on.
     await page.getByTestId("spacer").evaluate((element) => element.scrollIntoView({ block: "end" }))
-    // The viewer hears it's off screen from an IntersectionObserver, a frame or more after the scroll, and frames in
-    // flight still land: wait for the canvas to go still (8 s at most, so a canvas that keeps drawing still fails).
     await untilStill(page)
     const away = await drawsDuring(page, 1000)
     check("off screen, the canvas draws nothing", away.all === 0, JSON.stringify(away))
@@ -363,7 +337,6 @@ await withShowcase(
     await page.waitForTimeout(300)
     check("back in view, it draws again", (await drawsDuring(page, 500)).all > 5)
 
-    // A hidden tab stops it too, whatever the browser does with its frames.
     await page.evaluate(() => {
       Object.defineProperty(document, "visibilityState", { configurable: true, get: () => "hidden" })
       document.dispatchEvent(new Event("visibilitychange"))
@@ -376,7 +349,6 @@ await withShowcase(
       document.dispatchEvent(new Event("visibilitychange"))
     })
 
-    // Both clips play: idle by default, then wave once chosen; each moves on frame after frame.
     {
       const first = await probe(page, "expr.jawOpen")
       await page.waitForTimeout(400)
@@ -392,7 +364,6 @@ await withShowcase(
       if (shots) await page.getByTestId("viewer").screenshot({ path: join(shots, "model-viewer-wave.png") })
     }
 
-    // Paused, the viewer goes idle; morphing draws until the weights arrive, with one React commit for the click.
     await page.getByRole("button", { name: "Play animation" }).click()
     await page.waitForTimeout(600)
     const idle = await drawsDuring(page, 1000)
@@ -404,7 +375,6 @@ await withShowcase(
     const morphDraws = (await draws(page)).all - drawsBefore.all
     const commits = (await page.evaluate(() => globalThis.reactCommits)) - commitsBefore
     check("morphing draws frame after frame", morphDraws > 10, String(morphDraws))
-    // The click's commit in React DOM, and the scene's in react-three-fiber, which gets the new weights.
     check(
       "morphing commits React once, not per frame",
       commits <= 3,
@@ -413,7 +383,6 @@ await withShowcase(
     await untilStill(page)
     const settled = await drawsDuring(page, 800)
     check("once the weights arrive, drawing stops", settled.all === 0, JSON.stringify(settled))
-    // The GLB stores its targets scaled to fill their bytes: an expression at 1 reaches the mesh times its scale.
     {
       const jaw = await probe(page, "expr.jawOpen")
       check(
@@ -429,8 +398,6 @@ await withShowcase(
       check("unmorphed, the expression goes back to 0", back?.influence === 0, JSON.stringify(back))
     }
 
-    // A new model fades in over the old one: frames while it does, a few commits (the click, the load, the end),
-    // none per frame, and stillness after.
     {
       const requests = trackRequests(page)
       const swapCommitsBefore = await page.evaluate(() => globalThis.reactCommits)
@@ -455,7 +422,6 @@ await withShowcase(
       check("once swapped, drawing stops", after.all === 0, JSON.stringify(after))
     }
 
-    // Keys on the stage turn the camera, which comes to rest where they put it.
     await page.getByTestId("viewer").locator("[data-slot=model-viewer-stage]").focus()
     await page.keyboard.press("ArrowRight")
     await page.waitForFunction(
@@ -465,7 +431,6 @@ await withShowcase(
     )
     check("an arrow turns the camera 15°", true)
 
-    // Make 3D goes while a run goes, focus moves to Cancel, and comes back to Make 3D after cancelling.
     {
       await open(page, { width: 1440, query: "&slowdown=40" })
       await page.getByRole("button", { name: "Make 3D" }).focus()
@@ -480,8 +445,6 @@ await withShowcase(
       check("cancelling moves focus back to Make 3D", (await focused()) === "Make 3D", await focused())
     }
 
-    // Points are fractions of the original photo: on the 9:16 photo they land on its drawn box, contained in a stage of
-    // its own ratio or cropped into a square one, joined by the face's contours and the body's skeleton.
     for (const query of ["", "&fit=cover&stage=1"]) {
       await open(page, { width: 1440, query: `${query}&slowdown=40` })
       await detectBoth(page)
@@ -505,8 +468,6 @@ await withShowcase(
           .screenshot({ path: join(shots, `model-scan-tall-${placement.cover ? "cover-" : ""}detecting.png`) })
     }
 
-    // The person: from the engine's mask, or a hull around the body's landmarks without one; the background dims
-    // around them either way.
     for (const [query, from] of [
       ["", "mask"],
       ["&mask=off", "landmarks"],
@@ -528,7 +489,6 @@ await withShowcase(
       if (shots) await page.getByTestId("scan").screenshot({ path: join(shots, `model-scan-person-${from}.png`) })
     }
 
-    // An engine error shows the consumer's words for its code over the stage, read at once; without WebGL2, no Retry.
     for (const code of ["no-face", "webgl2-unavailable"]) {
       await open(page, { width: 1440, query: `&fail=${code}` })
       const seen = await runScan(page)
@@ -543,8 +503,6 @@ await withShowcase(
       )
     }
 
-    // The scan: the person's pixels fly as a cloud from the mask, the camera ends at three-quarter, and one toolbar
-    // takes over.
     await open(page, { width: 1440, query: "&slowdown=10" })
     const points = { before: (await draws(page)).points }
     const stages = await runScan(page)
@@ -574,7 +532,6 @@ await withShowcase(
           (await scan.getByRole("group", { name: "3D view controls" }).count()) === 0,
       )
       check("ready: the style picker shows", await scan.getByRole("radiogroup", { name: "Style" }).isVisible())
-      // Every icon-only control shows its name in a tooltip.
       for (const name of ["Wave", "Download 3D model", "Start over"]) {
         await toolbar(page).getByRole("button", { name }).hover()
         const tip = await page
@@ -596,10 +553,8 @@ await withShowcase(
         "ready: another style loads its model",
         requests.urls.some((url) => /character-cel-outline.*\.glb$/.test(url)),
       )
-      // The floor reads the theme again when it changes: with the clip paused and the canvas still, it draws again.
       await toolbar(page).getByRole("button", { name: "Wave" }).click()
       await untilStill(page)
-      // One frame follows the change, maybe before another round trip: count from before it.
       const still = await draws(page)
       await page.evaluate(() => document.documentElement.classList.add("dark"))
       await page.waitForTimeout(600)
@@ -611,9 +566,6 @@ await withShowcase(
       check("Start over goes back to the photo", await scan.getByRole("button", { name: "Make 3D" }).isVisible())
     }
 
-    // A photo texture that loads after the scene has gone still still starts the transition: the canvas draws on
-    // demand, so the texture's arrival has to ask for a frame. The 2D <img> is the photo's first request, three.js's
-    // TextureLoader its second.
     {
       let photos = 0
       const hold = async (route) => {
@@ -633,7 +585,6 @@ await withShowcase(
       check("a photo texture that loads after the scene is still starts the transition", late === true, String(late))
     }
 
-    // Without a mask, the landmarks' hull picks the cloud's pixels.
     await open(page, { width: 1440, query: "&slowdown=10&mask=off" })
     await runScan(page)
     await scanRoot(page).and(page.locator("[data-intro=done]")).waitFor({ timeout: 30_000 })
@@ -646,7 +597,6 @@ await withShowcase(
       )
     }
 
-    // Reduced motion: a crossfade, no cloud and no camera flight, and the progress shows while building.
     await open(page, { width: 1440, query: "&slowdown=10", reducedMotion: "reduce" })
     const reducedBefore = (await draws(page)).points
     let barWhileBuilding = false
@@ -665,7 +615,6 @@ await withShowcase(
       (await toolbar(page).getByRole("button", { name: "Wave" }).getAttribute("aria-pressed")) === "false",
     )
 
-    // Controls below the stage: the same controls, under it rather than over it.
     {
       await open(page, { width: 1440, query: "&controls=below" })
       const stage = await page.getByTestId("scan").locator("[data-slot=model-viewer-stage]").boundingBox()
@@ -679,8 +628,6 @@ await withShowcase(
       if (shots) await page.getByTestId("scan").screenshot({ path: join(shots, "model-scan-below-photo.png") })
     }
 
-    // On a phone: every control reaches 44px, and every text in the floating controls reads at 4.5:1 over the
-    // brightest and the darkest photo, in each stage and both modes.
     {
       const phone = await page
         .context()
@@ -741,7 +688,6 @@ await withShowcase(
         const result = await overflow(page)
         check(`${label}: nothing overflows`, !result.page && result.parts.length === 0, result.parts.join(", "))
         if (!shots) continue
-        // Both styles: the soft toon GLB, then the cel one with its outline.
         const viewerShot = (style) =>
           page
             .getByTestId("viewer")
@@ -755,7 +701,6 @@ await withShowcase(
           .screenshot({ path: join(shots, `model-scan-${String(width)}-${mode}-photo.png`) })
         await runScan(page, {
           capture: async (stage) => {
-            // Both landmark groups, drawn in.
             if (stage === "detecting")
               await page.waitForFunction(
                 () =>
@@ -786,7 +731,6 @@ await withShowcase(
       }
     }
 
-    // A frame sequence of the hand-over: the last 2D frame, then the 3D one, then the flight.
     if (shots) {
       await open(page, { width: 1440 })
       await runScan(page, {

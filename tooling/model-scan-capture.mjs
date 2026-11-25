@@ -1,7 +1,3 @@
-// By hand, on the GPU (CI's software renderer makes frame times meaningless): every ModelScan stage per theme and width,
-// a transition strip, and the transition's frame times per CPU slowdown, from the hand-off to 3D to the end.
-// Usage: node tooling/model-scan-capture.mjs <out dir> [--themes=light,dark] [--sizes=desktop,mobile] [--cpu=1,4,6]
-//   [--query=&mask=off] [--timing-only] (after `bun run build:showcase`)
 /* oxlint-disable no-await-in-loop -- each theme, width and CPU rate is captured in turn */
 import { mkdirSync, writeFileSync } from "node:fs"
 import { join, resolve } from "node:path"
@@ -53,7 +49,6 @@ async function start(page) {
   else await button.click()
 }
 
-// Frame times with requestAnimationFrame, from the frame after the clock starts until it stops.
 const startFrames = (page) =>
   page.evaluate(() => {
     const times = []

@@ -1,7 +1,3 @@
-// Opens every kind of dialog, short and tall, on emulated phones, tablets, foldables and a narrow desktop window, under
-// each viewport model (toolbars, stale innerHeight, scrolled visual viewport, keyboard, heading focus, pinch-zoom), and
-// prints the matrix. The full one takes about 12 minutes: run it by hand. Usage: node tooling/dialog-mobile-check.mjs
-// [--quick] [--engine=webkit|webkit26] [--screenshots=<dir>] [--color-scheme=dark] [--device=<s>] [--case=<s>] [--report=<file>]
 import { existsSync, mkdirSync, writeFileSync } from "node:fs"
 import { createRequire } from "node:module"
 import { join, resolve } from "node:path"
@@ -15,8 +11,8 @@ const arg = (name) => process.argv.find((value) => value.startsWith(`--${name}=`
 const engine = arg("engine") ?? "chromium"
 const webkit26Prefix = resolve(import.meta.dirname, ".webkit26")
 
-// `webkit26`: WebKit 26.0, Safari 26's engine, which lays out a fixed `height: fit-content` box unlike the WebKit
-// Playwright ships. Playwright drives only its own build, so install Playwright 1.56 once (git ignores the folder):
+// Workaround: WebKit 26.0 (Safari 26) lays out a fixed `height: fit-content` box unlike the WebKit Playwright ships,
+// and Playwright drives only its own build, so install Playwright 1.56 once (git ignores the folder):
 // npm i --prefix tooling/.webkit26 playwright-core@1.56.1 && npx --prefix tooling/.webkit26 playwright-core install webkit
 function webkitEngine() {
   if (engine !== "webkit26") return webkit
@@ -27,13 +23,10 @@ function webkitEngine() {
   return createRequire(join(webkit26Prefix, "package.json"))("playwright-core").webkit
 }
 const colorScheme = arg("color-scheme") ?? "light"
-// CI's `--quick` (about 3 minutes) keeps every dialog, short and tall, on the devices and models marked `quick`:
-// a small and a large iPhone, Android, a narrow desktop window, and the models that caught real bugs.
 const quick = process.argv.includes("--quick")
 const shots = arg("screenshots") ? resolve(arg("screenshots")) : undefined
 if (shots) mkdirSync(shots, { recursive: true })
 
-// matrix[device][case][model] = true while every check in that cell passes.
 const matrix = new Map()
 
 function check(cell, label, ok, detail = "") {
@@ -47,7 +40,6 @@ function check(cell, label, ok, detail = "") {
   row.get(item).set(model, (row.get(item).get(model) ?? true) && ok)
 }
 
-// `touch: false`: a desktop window, opened with the mouse, whose visual viewport never moves.
 const devices = [
   { name: "iPhone SE", viewport: { width: 375, height: 667 }, quick: true },
   { name: "iPhone", viewport: { width: 393, height: 852 } },
@@ -61,15 +53,12 @@ const devices = [
   { name: "Foldable folded", viewport: { width: 344, height: 882 } },
   { name: "Foldable open", viewport: { width: 673, height: 841 } },
   { name: "Desktop narrow", viewport: { width: 700, height: 800 }, touch: false, quick: true },
-  // An iPhone 17 Pro in Safari 26 (iOS 26), as measured on one: 402 × 660 under the expanded floating toolbar, 768
-  // with it collapsed. Under `--engine=webkit26` it shows a dialog cut off as that phone did.
   { name: "iPhone Safari 26", viewport: { width: 402, height: 660 } },
   { name: "iPhone Safari 26 collapsed", viewport: { width: 402, height: 768 } },
 ].filter((device, _, all) => {
   if (quick && !device.quick) return false
   const wanted = arg("device")?.toLowerCase()
   if (!wanted) return true
-  // A whole name picks that device alone ("iPhone"); otherwise any name that contains it ("ipad").
   const exact = all.some((other) => other.name.toLowerCase() === wanted)
   return exact ? device.name.toLowerCase() === wanted : device.name.toLowerCase().includes(wanted)
 })
@@ -79,10 +68,6 @@ const narrow = (device) => device.viewport.width <= 760
 const button = (name) => (page) => page.getByRole("button", { name, exact: true }).first()
 const matrixPath = (content) => `?demo=dialog-matrix-check&content=${content}`
 
-// `field`: a text field to type in with the keyboard up. `scrolls`: its content is longer than a phone's screen, and
-// scrolls inside a part that leaves the header and actions in view (`whole`: the content scrolls as one, a Drawer's).
-// `dismissible: false`: an alert dialog, which a backdrop tap leaves open. `stage`: a part that must take at least
-// half the screen's height, as a lightbox's image does. `narrowOnly`: it is a sheet only at `narrow:`.
 const matrixCases = ["short", "tall"].flatMap((content) => {
   const tall = content === "tall"
   const base = { path: matrixPath(content), content, scrolls: tall }
@@ -94,7 +79,6 @@ const matrixCases = ["short", "tall"].flatMap((content) => {
     { ...base, name: "FormDialog", trigger: button("Open form dialog"), field: "Task title" },
     { ...base, name: "StepDialog", trigger: button("Open step dialog"), field: "Step project name" },
     { ...base, name: "CommandDialog", trigger: button("Open command palette"), field: "Run a command" },
-    // A list to read, closed with Escape or a backdrop tap: it has no actions to keep in view.
     { ...base, name: "ShortcutsDialog", trigger: button("Open shortcuts"), actions: false },
     ...(tall
       ? []
@@ -136,7 +120,6 @@ function topDialog(page) {
   return page.locator("[role=dialog]:visible, [role=alertdialog]:visible").last()
 }
 
-// Geometry of the topmost dialog. It runs in the page, so its helpers live inside it.
 function measure() {
   const dialog = [...document.querySelectorAll("[role=dialog], [role=alertdialog]")].findLast((d) =>
     d.checkVisibility(),
@@ -196,14 +179,12 @@ function measure() {
   }
 }
 
-// Where the dialog sits against the visible part of the page: its edges, its title, and every control that isn't
-// inside a scroller (the header's and the actions'), which must all be in view.
 function measureInViewport() {
   const dialog = [...document.querySelectorAll("[role=dialog], [role=alertdialog]")].findLast((d) =>
     d.checkVisibility(),
   )
-  // A reported visible part can't end below the layout viewport at scale 1: what does is a stale report, and the
-  // part you can see is then the same height, cut to the layout viewport.
+  // Workaround: iOS Safari can report a visible part that ends below the layout viewport at scale 1; that report is
+  // stale, and the part you can see is the same height, cut to the layout viewport.
   const layout = document.documentElement.clientHeight
   const top = Math.max(0, Math.min(visualViewport.offsetTop, layout - visualViewport.height))
   const bottom = Math.min(layout, top + visualViewport.height)
@@ -244,7 +225,7 @@ function measureInViewport() {
   }
 }
 
-// iOS Safari's viewport, as fractions of the screen so no model depends on one toolbar's height: `visible` is how
+// Workaround: iOS Safari's viewport, as fractions of the screen so no model depends on one toolbar's height: `visible` is how
 // much of the layout viewport you can see, `offsetTop` how far the visible part is scrolled down it, and
 // `innerHeight` what the page reads (iOS 26 can leave it stale; Android Chrome moves it with its toolbar).
 // `quick`: kept by `--quick`.
@@ -253,7 +234,7 @@ const toolbarModels = [
   { name: "toolbars expanded", visible: 0.88, offsetTop: 0 },
   { name: "innerHeight stale", visible: 0.88, offsetTop: 0, innerHeight: 0.88, quick: true },
   { name: "visual viewport scrolled", visible: 0.84, offsetTop: 0.05, quick: true },
-  // iOS Safari can keep the keyboard's offsetTop after it closes, with the full height: a box past the layout one.
+  // Workaround: iOS Safari can keep the keyboard's offsetTop after it closes, with the full height: a box past the layout one.
   { name: "offsetTop left by a closed keyboard", visible: 1, offsetTop: 0.4, quick: true },
 ].filter((model) => !quick || model.quick)
 
@@ -322,7 +303,6 @@ async function checkModels(page, device, item, focus = "") {
       const label = `${caseName(item)} ${device.name}: ${model.name}${focus}`
       const result = await page.evaluate(measureInViewport)
       checkPlacement(cell, label, result, item)
-      // A field can't tell the toolbars from a short keyboard; with none focused it is never a keyboard.
       if (!result.field) check(cell, `${label}: isn't taken for a keyboard`, !result.keyboard)
     }),
   )
@@ -336,7 +316,6 @@ async function checkKeyboard(page, device, item) {
     .or(dialog.getByRole("combobox", { name: item.field }))
     .first()
   await press(page, device, input)
-  // The keyboard covers the bottom; iOS can also scroll the visible part down the layout viewport.
   const keyboards = [
     { name: "keyboard up", visible: 0.55, offsetTop: 0 },
     { name: "keyboard up, visible part scrolled", visible: 0.5, offsetTop: 0.12, quick: true },
@@ -384,8 +363,6 @@ async function checkKeyboard(page, device, item) {
   await checkModels(page, device, item, ", field focused")
 }
 
-// Pinch-zoomed, the visual viewport is a window into the page, not the page's frame: the dialog stays where it was,
-// on the box measured before the zoom.
 async function checkPinchZoom(page, device, item, before) {
   if (device.touch === false || quick) return
   const { height, width } = device.viewport
@@ -423,7 +400,6 @@ function caseName(item) {
   return item.content === "app" ? item.name : `${item.name} (${item.content})`
 }
 
-// Runs the steps one after another: each drives the same page.
 function inTurn(items, step) {
   return items.reduce((previous, item) => previous.then(() => step(item)), Promise.resolve())
 }
@@ -435,7 +411,7 @@ function waitsFor(locator, options) {
     .catch(() => false)
 }
 
-// The dialog has stopped moving: its enter transition, a drawer's snap, or a move after a viewport change. Polls the
+// Workaround: the dialog has stopped moving: its enter transition, a drawer's snap, or a move after a viewport change. Polls the
 // rect rather than the animations, which a busy WebKit can start late.
 function settled(page) {
   return page
@@ -445,7 +421,6 @@ function settled(page) {
           d.checkVisibility(),
         )
         if (!dialog || document.querySelector("[data-starting-style]")) return false
-        // Where a transition ends is what's measured, not how long a busy browser takes to get there.
         for (const animation of document.getAnimations()) {
           if (
             animation instanceof CSSTransition &&
@@ -522,7 +497,6 @@ function checkGeometry(cell, label, item, device, geometry, scrolled) {
     geometry.scrollY === scrolled,
     `${scrolled} -> ${geometry.scrollY}`,
   )
-  // The hit area grows on a coarse pointer only, as the `touch-target` class does.
   if (device.touch === false) return
   check(
     cell,
@@ -594,7 +568,6 @@ async function checkCase(page, device, item) {
   checkGeometry(cell, label, item, device, geometry, scrolled)
   await checkStage(cell, label, page, item, device)
   if (item.insetBody) {
-    // A flush content drops the body's own inset; a body that pads itself keeps its sides off the dialog's edge.
     const inset = await page.evaluate(() => {
       const body = document.querySelector('[role="dialog"] [data-slot="dialog-body"]')
       return body ? Number.parseFloat(getComputedStyle(body).paddingLeft) : 0
@@ -628,7 +601,6 @@ async function checkDevice(browser, origin, device) {
     const errors = []
     page.on("pageerror", (error) => errors.push(error.message))
     await page.goto(`${origin}/${path}`)
-    // The showcase keeps its own appearance over the emulated scheme, so dark mode is set the way `Appearance` does.
     if (colorScheme === "dark") await page.evaluate(() => document.documentElement.classList.add("dark"))
     await page.evaluate(() => document.fonts.ready)
     await inTurn(items, (item) => checkCase(page, device, item))
@@ -638,7 +610,7 @@ async function checkDevice(browser, origin, device) {
   await context.close()
 }
 
-// Chromium runs a few devices at once, each in its own context. Headless WebKit stops running frames for the
+// Workaround: Chromium runs a few devices at once, each in its own context. Headless WebKit stops running frames for the
 // contexts in the background, which stalls a drawer's slide, so it takes them one at a time.
 async function run(origin, browser) {
   const queue = [...devices]

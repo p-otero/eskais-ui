@@ -58,7 +58,7 @@
     checkDCE() {},
   }
 
-  // Renders are read in `beforePaint`, as the frame starts: a virtualized list publishes rows that left the view with
+  // Perf: renders are read in `beforePaint`, as the frame starts: a virtualized list publishes rows that left the view with
   // requestAnimationFrame then setTimeout, and whether that timer or this message runs first is the scheduler's choice.
   // When the timer won, a press counted rows meant for after its paint (list-10k read 60 instead of 10 on one CI run).
   function afterPaint(callback, beforePaint) {
