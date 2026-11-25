@@ -115,6 +115,7 @@ type DetailHeaderProps = {
   titleId: string
   headingLevel: 2 | 3 | 4
   labels: MasterDetailLabels
+  /** Back on a stacked layout; Close and Collapse beside the list. */
   stacked: boolean
   onClose?: () => void
   onCollapse?: () => void
@@ -188,8 +189,10 @@ type IdleDetailProps = {
   title?: ReactNode
   titleId: string
   labels: MasterDetailLabels
+  /** Stacked, it collapses to a bar; beside the list, to the rail. */
   stacked: boolean
   collapsed: boolean
+  /** Shows the collapse button. */
   onToggle?: () => void
   children: ReactNode
 }

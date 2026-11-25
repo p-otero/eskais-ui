@@ -15,8 +15,6 @@ type NativeSelectOptions = {
   onValueChange?: (value: string | null, details: ChangeDetails<NativeSelectChangeReason>) => void
 }
 
-// UI SDK ships no part for a native <select>, and agents see only UI SDK parts, so this one reports its value and
-// choices to them and takes `setValue` like a Select does.
 const nativeSelect = definePrimitive({
   name: "native-select",
   options: { items: "value", value: "value", defaultValue: "value", onValueChange: "callback" },
@@ -29,7 +27,7 @@ const nativeSelect = definePrimitive({
   api: (context) => {
     const change = createChange(context)
     return {
-      // The agent bridge passes arguments unchecked; an unknown value is refused with the real ones by `closed`.
+      // Security: the agent bridge passes arguments unchecked; an unknown value is refused with the real ones by `closed`.
       setValue(value: unknown, event?: Event) {
         const next = value === "" || value === null || value === undefined ? null : String(value)
         const call = { reason: event ? "input-change" : "imperative", event } as const
@@ -44,7 +42,6 @@ const nativeSelect = definePrimitive({
           const select = event.target
           if (!isElementOf(select, "HTMLSelectElement")) return
           api.setValue(select.value, event)
-          // A refused or still-controlled change leaves the element showing the old value until state says otherwise.
           queueMicrotask(() => {
             if (!isElementOf(el, "HTMLSelectElement")) return
             const value = store.get().value ?? ""

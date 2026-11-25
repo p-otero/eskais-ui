@@ -31,7 +31,7 @@ function SegmentedControl<T extends string = string>({
 }: SegmentedControlProps<T>) {
   const [ownController] = useState(() => createSegmentedControlController<T>())
   const active = controller ?? ownController
-  // UI SDK types an item's `value` as a string, so the items below check through a controller of strings; each of
+  // Workaround: UI SDK types an item's `value` as a string, so the items below check through a controller of strings; each of
   // them passes its own value, one of this control's `T`.
   const pressController = activateOnPress ? assumeType<SegmentedControlController>(active) : null
   return (

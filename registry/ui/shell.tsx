@@ -148,10 +148,8 @@ type ShellProps<Route extends ShellRoute = ShellRoute> = Omit<ComponentProps<"di
   children?: ReactNode
 }
 
-// The theme's `narrow:` breakpoint, so the drawer, the bottom bar and the stacked layout switch together.
 const narrowQuery = "(width <= 47.5rem)"
 
-// Derived below the root, where a consumer's `--shell-height` is set.
 const columns = cssVars({
   "--shell-column-height": "calc(var(--shell-height) - var(--topbar-height))",
   "--shell-scroll-margin": "calc(var(--topbar-height) + var(--gap-group))",
@@ -208,7 +206,7 @@ function Shell<Route extends ShellRoute>({
   const sidebar = sidebarState ?? ownSidebar
   const [search] = useState(() => createCommandDialogController())
   const { sections, paletteSections, mobile, currentId } = useShellRoutes(routes, groups, currentHref)
-  // Stable while the routes and onNavigate are, so a navigation re-renders only the items whose current changed.
+  // Perf: stable while the routes and onNavigate are, so a navigation re-renders only the items whose current changed.
   const navigate = useCallback(
     (id: string) => {
       const route = routes.find((candidate) => candidate.id === id)
@@ -312,7 +310,6 @@ function Shell<Route extends ShellRoute>({
             tabIndex={-1}
             data-slot="shell-main"
             data-main={mainLayout}
-            // Anchors, focus and scrollIntoView stop below the topbar and above the bottom bar.
             className={cn(
               "flex min-w-0 flex-1 flex-col self-stretch focus:outline-none **:scroll-mt-(--shell-scroll-margin)",
               hasMobileNav && "narrow:**:scroll-mb-(--mobile-nav-offset)",
@@ -325,8 +322,6 @@ function Shell<Route extends ShellRoute>({
           </Main>
         </div>
         {hasMobileNav && (
-          // Sticky in the flow rather than fixed: it keeps its own height at the end of the shell, so the page always
-          // ends above it, and it stays inside a pane or an iframe.
           <MobileNav
             label={labels.mobileNav}
             items={mobileNav.items}

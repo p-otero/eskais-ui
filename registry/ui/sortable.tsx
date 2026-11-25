@@ -125,7 +125,7 @@ function SortableHandle({ className, label, labels, children, ...props }: Sortab
         "touch-target inline-flex size-control-sm shrink-0 cursor-grab touch-none items-center justify-center rounded-control text-muted-foreground outline-none select-none hover:bg-accent hover:text-accent-foreground focus-visible:ring-2 focus-visible:ring-ring aria-disabled:cursor-not-allowed aria-disabled:opacity-50 data-moving:bg-accent data-moving:text-accent-foreground [&_svg]:size-4",
         className,
       )}
-      // UI SDK fills `value` from the enclosing item (the slot's `from: "entry"`), but its part type still requires it.
+      // Workaround: UI SDK fills `value` from the enclosing item (the slot's `from: "entry"`), but its part type still requires it.
       {...assumeType<ComponentProps<typeof Parts.Handle>>(props)}
     >
       {children ?? <GripVerticalIcon />}

@@ -94,17 +94,19 @@ function markdownSlashCommands(labels: Partial<SlashLabels> = {}): SlashCommand[
 
 const runNow = (run: () => void) => run()
 
-// The visible entries' type also allows groups, separators and plain strings, which these triggers never return.
+// Workaround: the visible entries' type also allows groups, separators and plain strings, which these triggers never return.
 const isDataItem = (entry: TriggerMenuData<unknown>[number]): entry is TriggerMenuDataItem<unknown> =>
   typeof entry === "object" && "value" in entry
 
 type MarkdownEditorMenusProps = {
   adapter: TextEditorAdapter | undefined
+  /** Opens the wikilink suggestions for the editor's handle. */
   controller?: TriggerMenuController
   view: EditorView | undefined
   slashCommands: SlashCommand[]
   suggestWikilinks?: SuggestWikilinks
   onOpenChange: (open: boolean) => void
+  /** Runs a slash command's `run`, so the editor knows what it calls from there. */
   runCommand?: (run: () => void) => void
   emptyLabel: ReactNode
 }

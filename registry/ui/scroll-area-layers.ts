@@ -53,7 +53,7 @@ function windowScroller(view: Window) {
       createTextNode: (text: string) => view.document.createTextNode(text),
     },
   }
-  // A stand-in with only the members UI SDK's virtualizer reads from its scrolling element, which it types as an
+  // Workaround: a stand-in with only the members UI SDK's virtualizer reads from its scrolling element, which it types as an
   // HTMLElement.
   return assumeType<HTMLElement>(scroller)
 }

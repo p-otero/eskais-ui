@@ -213,7 +213,7 @@ function focusViewport(el: HTMLElement) {
 type Listeners = { [Type in keyof HTMLElementEventMap]?: (event: HTMLElementEventMap[Type]) => void }
 
 function listen(el: HTMLElement, listeners: Listeners, options?: AddEventListenerOptions) {
-  // Each listener takes the event of its own key; TypeScript can't correlate a key with its value through
+  // Workaround: each listener takes the event of its own key; TypeScript can't correlate a key with its value through
   // `Object.entries`.
   const entries = assumeType<[string, EventListener][]>(Object.entries(listeners))
   for (const [type, listener] of entries) el.addEventListener(type, listener, options)
