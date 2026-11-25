@@ -293,12 +293,6 @@ const keyScenarios = [
     keys: [..."ab".repeat(4)].map((key) => (key === "a" ? "Enter" : "Escape")),
   },
   {
-    id: "ejector-button",
-    label: "EjectorButton, cover open and shut (Space)",
-    focus: '[data-slot="ejector-button-cover"]',
-    keys: repeat("Space", 8),
-  },
-  {
     id: "log-viewer",
     label: "LogViewer, 10,000 lines (↑, PageUp, F8)",
     focus: '[data-slot="log-viewer-log"]',

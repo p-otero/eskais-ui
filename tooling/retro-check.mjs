@@ -3,10 +3,6 @@ import { withShowcase } from "./showcase-browser.mjs"
 
 const failures = []
 const minimumTextContrast = 4.5
-const minimumHitPx = 44
-const maxNeighbourLuminanceJump = 60
-const minimumRedShare = 0.9
-const maxBootOffCentreShare = 0.03
 
 function check(label, ok, detail = "") {
   console.log(`${ok ? "ok  " : "FAIL"} ${label}${detail ? `: ${detail}` : ""}`)
@@ -214,132 +210,10 @@ async function pillDialog(page) {
   check("Escape closes the pill dialog", true)
 }
 
-async function hitArea(page, locator) {
-  const box = await locator.boundingBox()
-  const name = await locator.getAttribute("aria-label")
-  const hits = await page.evaluate(
-    ({ x, y, half, label }) => {
-      const at = (dx, dy) => document.elementFromPoint(x + dx, y + dy)?.closest(`[aria-label="${label}"]`) !== null
-      return [at(0, 0), at(0, -half), at(0, half), at(-half, 0), at(half, 0)]
-    },
-    { x: box.x + box.width / 2, y: box.y + box.height / 2, half: minimumHitPx / 2 - 1, label: name },
-  )
-  return hits.every(Boolean)
-}
-
-async function bootCentred(page, state) {
-  const [stage, boot, width] = await page.evaluate(() => [
-    document.querySelector('[data-slot="ejector-button-stage"]').getBoundingClientRect().toJSON(),
-    document.querySelector('[data-slot="ejector-button-boot"]').getBoundingClientRect().toJSON(),
-    innerWidth,
-  ])
-  const inside =
-    boot.left >= stage.left && boot.right <= stage.right && boot.top >= stage.top && boot.bottom <= stage.bottom
-  const offCentre = Math.abs(boot.left + boot.width / 2 - (stage.left + stage.width / 2)) / stage.width
-  check(
-    `The boot sits inside the stage, centred within ${String(maxBootOffCentreShare * 100)}% (${state}, ${String(width)}px)`,
-    inside && offCentre <= maxBootOffCentreShare,
-    `boot ${boot.left.toFixed(0)}–${boot.right.toFixed(0)} × ${boot.top.toFixed(0)}–${boot.bottom.toFixed(0)}, stage ${stage.left.toFixed(0)}–${stage.right.toFixed(0)} × ${stage.top.toFixed(0)}–${stage.bottom.toFixed(0)}, ${(offCentre * 100).toFixed(1)}% off centre`,
-  )
-}
-
-async function ejectorButton(page) {
-  await demo(page, "ejector-button")
-  const cover = page.getByRole("button", { name: "Safety cover" })
-  const release = page.locator('[data-slot="ejector-release"]')
-  await cover.waitFor()
-  await bootCentred(page, "closed")
-  check("The closed cover takes a press over the red button", await hitArea(page, cover))
-  await cover.click()
-  await page.waitForTimeout(600)
-  await bootCentred(page, "open")
-  const transform = await cover.evaluate((element) => getComputedStyle(element).transform)
-  check(
-    "The cover swings open",
-    (await cover.getAttribute("aria-pressed")) === "true" && transform.startsWith("matrix3d"),
-  )
-  check(`The armed red button keeps a ${String(minimumHitPx)}px hit area`, await hitArea(page, release))
-  await release.click()
-  check("The red button is busy while onEject runs", (await release.getAttribute("aria-busy")) === "true")
-  await page.waitForTimeout(1500)
-  check("The cover closes once the eject finishes", (await cover.getAttribute("aria-pressed")) === "false")
-  await cover.click()
-  await page.keyboard.press("Escape")
-  check("Escape closes the cover", (await cover.getAttribute("aria-pressed")) === "false")
-}
-
-async function pixelsOf(page, clip) {
-  const png = await page.screenshot({ clip, animations: "disabled" })
-  return page.evaluate(async (base64) => {
-    const bitmap = await createImageBitmap(await (await fetch(`data:image/png;base64,${base64}`)).blob())
-    const context = new OffscreenCanvas(bitmap.width, bitmap.height).getContext("2d")
-    context.drawImage(bitmap, 0, 0)
-    return {
-      width: bitmap.width,
-      height: bitmap.height,
-      data: [...context.getImageData(0, 0, bitmap.width, bitmap.height).data],
-    }
-  }, png.toString("base64"))
-}
-
-const level = ([r, g, b]) => 0.2126 * r + 0.7152 * g + 0.0722 * b
-
-function scanLine(pixels, along) {
-  const { width, height, data } = pixels
-  const length = along === "row" ? width : height
-  const samples = []
-  for (let step = Math.floor(length * 0.2); step < Math.ceil(length * 0.8); step++) {
-    const x = along === "row" ? step : Math.floor(width / 2)
-    const y = along === "row" ? Math.floor(height / 2) : step
-    const index = (y * width + x) * 4
-    samples.push([data[index], data[index + 1], data[index + 2]])
-  }
-  let jump = 0
-  for (let index = 1; index < samples.length; index++) {
-    jump = Math.max(jump, Math.abs(level(samples[index]) - level(samples[index - 1])))
-  }
-  const red = samples.filter(([r, g, b]) => r > g + 40 && r > b + 40).length / samples.length
-  return { jump, red }
-}
-
-async function ejectorOpenPixels(page, compositor) {
-  await demo(page, "ejector-button")
-  const cover = page.getByRole("button", { name: "Safety cover" })
-  await cover.click()
-  await page.waitForTimeout(900)
-  const box = await page.locator('[data-slot="ejector-release"]').boundingBox()
-  const pixels = await pixelsOf(page, box)
-  for (const along of ["row", "column"]) {
-    const { jump, red } = scanLine(pixels, along)
-    check(
-      `The open ejector's red button is whole across its centre ${along} (${compositor})`,
-      jump <= maxNeighbourLuminanceJump && red >= minimumRedShare,
-      `largest step ${jump.toFixed(0)}, red ${(red * 100).toFixed(0)}%`,
-    )
-  }
-}
-
 await withShowcase(async (page) => {
   await retroTv(page)
   await pillDialog(page)
-  await ejectorButton(page)
 })
-
-await withShowcase(
-  async (page) => {
-    await ejectorButton(page)
-  },
-  { viewport: { width: 390, height: 844 }, deviceScaleFactor: 3, hasTouch: true, isMobile: true },
-)
-
-const compositors = {
-  gpu: [],
-  "software, --disable-gpu": ["--disable-gpu"],
-  swiftshader: ["--disable-gpu", "--use-angle=swiftshader", "--enable-unsafe-swiftshader"],
-}
-for (const [compositor, args] of Object.entries(compositors)) {
-  await withShowcase((page) => ejectorOpenPixels(page, compositor), {}, { args })
-}
 
 if (failures.length > 0) {
   console.error(`retro-check: ${String(failures.length)} failed`)

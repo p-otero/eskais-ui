@@ -134,10 +134,6 @@
       "renders": 20,
       "forcedLayouts": 10.13,
       "forcedSlack": 0.3
-    },
-    "ejector-button": {
-      "renders": 15,
-      "forcedLayouts": 0
     }
   },
   "layers": {
@@ -225,7 +221,6 @@
     "document-workspace": 140.3,
     "drawer": 74.1,
     "dropdown-menu": 64.8,
-    "ejector-button": 53.1,
     "empty": 12.1,
     "field": 25.9,
     "file-input": 66.6,

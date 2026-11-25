@@ -52,7 +52,6 @@ const categories = [
       "confirm-dialog",
       "confirm-button",
       "pill-dialog",
-      "ejector-button",
       "drawer",
       "popover",
       "tooltip",
