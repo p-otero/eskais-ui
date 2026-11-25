@@ -19,9 +19,9 @@ const Parts = createParts(boardTransfer, {
   instructions: "div",
 })
 
-/** The lists to render, the draft's while a card moves; null when the board doesn't move cards. */
 const BoardListsContext = createContext<TransferLists | null>(null)
 
+/** The lists to render: the draft's while a card moves; null when the board doesn't move cards. */
 function useBoardLists() {
   return use(BoardListsContext)
 }
@@ -33,17 +33,14 @@ type BoardTransferProps = BoardTransferOptions & {
   children: ReactNode
 }
 
+const rootClassNameCarryingFlipMotionTokens =
+  "group/board-transfer min-w-0 transition-none duration-panel ease-standard"
+
 function BoardTransfer({ children, className, labels, ...props }: BoardTransferProps) {
   const root = useRef<HTMLDivElement>(null)
   const text = { ...transferLabels, ...labels }
   return (
-    <Parts.Root
-      ref={root}
-      labels={labels}
-      // The root transitions nothing itself; it carries the motion tokens `useFlip` reads.
-      className={cn("group/board-transfer min-w-0 transition-none duration-panel ease-standard", className)}
-      {...props}
-    >
+    <Parts.Root ref={root} labels={labels} className={cn(rootClassNameCarryingFlipMotionTokens, className)} {...props}>
       {(state: { lists: TransferLists }) => (
         <>
           <FlipLists root={root} lists={state.lists} />

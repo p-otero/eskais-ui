@@ -100,10 +100,7 @@ const overlaySpinnerVariants = cva("absolute inset-0 m-auto", {
   defaultVariants: { variant: "default" },
 })
 
-// A leading icon is swapped for the spinner, so the width holds; text stays a direct child under a centered one (Chrome
-// drops text in a wrapper from a busy button's name). Triggers that take `buttonVariants` and `data-pending` use it
-// too. The spinner renders only while `busy`, so a thousand idle buttons carry no SVG; a caller that can't tell
-// leaves it true and lets `data-pending` show it.
+/** Renders the spinner only while `busy`; a caller that can't tell leaves it true and lets `data-pending` show it. */
 function withSpinner(children: ReactNode, iconOnly: boolean, variant: ButtonVariants["variant"], busy = true) {
   const items = Children.toArray(children)
   const leadingIcon = isValidElement(items[0]) && (items.length > 1 || iconOnly)
@@ -111,6 +108,7 @@ function withSpinner(children: ReactNode, iconOnly: boolean, variant: ButtonVari
   if (busy && leadingIcon) spinner = <Spinner data-show="pending" />
   else if (busy)
     spinner = <Spinner data-show="pending" data-overlay="" className={overlaySpinnerVariants({ variant })} />
+  // Workaround: Chrome drops text in a wrapper from a busy button's name, so the text stays a direct child.
   return (
     <>
       {spinner}

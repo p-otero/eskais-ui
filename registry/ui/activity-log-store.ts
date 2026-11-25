@@ -2,9 +2,6 @@ import type { createAgent } from "@ui-sdk/react/agent"
 import { createHistory, describeEntry, type HistoryEntry } from "@ui-sdk/react/history"
 import { observe } from "@ui-sdk/react/observe"
 
-// UI SDK marks its history helpers experimental, so nothing of theirs leaks into this module's types: an app depends
-// on ActivityLog and ActivityEntry only, and a change upstream stays inside this file.
-
 type Agent = ReturnType<typeof createAgent>
 
 /** Who made a change: an agent, a person (keyboard, pointer, touch), or the app's own code. */
@@ -31,7 +28,6 @@ type ActivityEntry = {
   redacted: boolean
 }
 
-/** A change the app records itself, like a task the agent moved, with how to take it back and do it again. */
 type ActivityRecord = {
   label: string
   description: string
@@ -54,7 +50,6 @@ type ActivityLogOptions = {
   keys?: string[]
   /** Writes each control change's sentence, in the page's language; UI SDK's English one by default. */
   describe?: (change: { actor: ActivityActor; label: string; value: unknown; previous: unknown }) => string
-  /** The clock, for tests. */
   now?: () => number
 }
 
@@ -74,7 +69,6 @@ type ActivityLog = {
   undoActor: (actor: ActivityActor) => Promise<ActivityNotRestored[]>
   /** Forgets every entry and keeps the page as it is. */
   clear: () => void
-  /** Stops recording. */
   destroy: () => void
 }
 
@@ -82,8 +76,7 @@ type Item =
   | { kind: "control"; id: string; at: number }
   | { kind: "record"; id: string; at: number; change: ActivityRecord; reverted: boolean }
 
-// Restoring runs one step at a time, in order: each step starts from the page the previous one left.
-function inOrder<T>(list: readonly T[], run: (item: T) => Promise<ActivityNotRestored[]>) {
+function runSequentially<T>(list: readonly T[], run: (item: T) => Promise<ActivityNotRestored[]>) {
   return list.reduce<Promise<ActivityNotRestored[]>>(
     async (done, item) => [...(await done), ...(await run(item))],
     Promise.resolve([]),
@@ -92,7 +85,6 @@ function inOrder<T>(list: readonly T[], run: (item: T) => Promise<ActivityNotRes
 
 const personSources = ["keyboard", "mouse", "touch", "pen", "virtual"]
 
-/** The actor behind a UI SDK source, like a change callback's `details.source`. */
 function actorOf(source: string | undefined): ActivityActor {
   if (source === "agent") return "agent"
   if (source === "programmatic" || source === undefined) return "app"
@@ -106,15 +98,13 @@ function sourcesOf(actor: ActivityActor) {
 }
 
 /**
- * Records changes to the page's UI SDK controls, from people and agents, and the app's own `record`s, and steps
- * back and forward through them. Create it once, in the browser, before the controls you want recorded render,
- * with the app's agent bridge: restoring goes through it, so its permissions and change callbacks still apply.
+ * Create it once, in the browser, before the controls you want recorded render. Restoring goes through `agent`, so
+ * its permissions and change callbacks still apply.
  */
 function createActivityLog(agent: Agent, options: ActivityLogOptions = {}): ActivityLog {
   const now = options.now ?? Date.now
   const rows = new Map<string, string | undefined>()
-  // Registered before the history, so a change's row is known when the history reports it.
-  const stopObserving = observe(
+  const stopObservingRowsBeforeHistory = observe(
     (change) => {
       rows.set(change.ref, change.row)
     },
@@ -176,8 +166,7 @@ function createActivityLog(agent: Agent, options: ActivityLogOptions = {}): Acti
     for (const listener of listeners) listener()
   }
 
-  // A new change after stepping back drops the steps that were ahead, like undo in an editor.
-  const append = (item: Item) => {
+  const appendDroppingStepsAhead = (item: Item) => {
     items = [...items.slice(0, position), item]
     position = items.length
   }
@@ -186,11 +175,11 @@ function createActivityLog(agent: Agent, options: ActivityLogOptions = {}): Acti
     const entries = history.entries()
     const ids = new Set(entries.map((entry) => entry.id))
     const known = new Set(items.map((item) => item.id))
-    // The history forgets entries on clear() and drops the ones ahead of its position when a new change comes.
-    const keep = (item: Item) => item.kind === "record" || ids.has(item.id)
-    position = items.slice(0, position).filter(keep).length
-    items = items.filter(keep)
-    for (const entry of entries) if (!known.has(entry.id)) append({ kind: "control", id: entry.id, at: now() })
+    const stillInHistory = (item: Item) => item.kind === "record" || ids.has(item.id)
+    position = items.slice(0, position).filter(stillInHistory).length
+    items = items.filter(stillInHistory)
+    for (const entry of entries)
+      if (!known.has(entry.id)) appendDroppingStepsAhead({ kind: "control", id: entry.id, at: now() })
     emit()
   })
 
@@ -227,15 +216,13 @@ function createActivityLog(agent: Agent, options: ActivityLogOptions = {}): Acti
     return next
   }
 
-  // Walks from the position to the target one item at a time. Control changes between records go back together in
-  // one history seek; each record runs its own undo or redo, skipping those undoActor already took back.
   const seekTo = async (requested: number) => {
     const target = Math.max(0, Math.min(items.length, Math.round(requested)))
     const backward = target < position
     const order = backward
       ? items.slice(target, position).map((_, offset) => position - 1 - offset)
       : items.slice(position, target).map((_, offset) => position + offset)
-    const failed = await inOrder(order, async (index) => {
+    const failed = await runSequentially(order, async (index) => {
       const item = items[index]
       if (item?.kind !== "record" || item.reverted) return []
       const controls = notRestored(await history.seek(historyCount(backward ? index + 1 : index)))
@@ -257,7 +244,7 @@ function createActivityLog(agent: Agent, options: ActivityLogOptions = {}): Acti
     record(change) {
       counter += 1
       const id = `r${String(counter)}`
-      append({ kind: "record", id, at: now(), change, reverted: false })
+      appendDroppingStepsAhead({ kind: "record", id, at: now(), change, reverted: false })
       emit()
       return id
     },
@@ -268,14 +255,14 @@ function createActivityLog(agent: Agent, options: ActivityLogOptions = {}): Acti
     seek: (target) => inTurn(() => seekTo(target)),
     undoActor: (actor) =>
       inTurn(async () => {
-        const controls = await inOrder(sourcesOf(actor), async (source) =>
+        const controls = await runSequentially(sourcesOf(actor), async (source) =>
           notRestored(await history.undoSource(source)),
         )
         const records = items
           .slice(0, position)
           .filter((item): item is Extract<Item, { kind: "record" }> => item.kind === "record")
           .filter((item) => !item.reverted && (item.change.actor ?? "person") === actor)
-        const undone = await inOrder(records.toReversed(), async (item) => {
+        const undone = await runSequentially(records.toReversed(), async (item) => {
           const missed = await runRecord(item, "undo")
           if (missed.length === 0) item.reverted = true
           return missed
@@ -291,7 +278,7 @@ function createActivityLog(agent: Agent, options: ActivityLogOptions = {}): Acti
     destroy() {
       stopHistory()
       history.destroy()
-      stopObserving()
+      stopObservingRowsBeforeHistory()
       listeners.clear()
     },
   }
