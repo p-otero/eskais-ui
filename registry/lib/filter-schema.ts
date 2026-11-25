@@ -131,7 +131,7 @@ const addsDays = (value: object): value is AddsDays => "add" in value && typeof 
 function remoteOption<Option, const Multiple extends boolean = false>(
   field: Omit<RemoteOptionField<Option>, "kind" | "multiple"> & { multiple?: Multiple },
 ): RemoteOptionField<Option> & { kind: "remoteOption"; multiple: Multiple } {
-  // `Multiple` defaults to false when `multiple` is left out, a link TypeScript can't draw from the property.
+  // Workaround: `Multiple` defaults to false when `multiple` is left out, a link TypeScript can't draw from the property.
   return { ...field, kind: "remoteOption", multiple: assumeType<Multiple>(field.multiple ?? false) }
 }
 

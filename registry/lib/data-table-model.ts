@@ -29,7 +29,7 @@ function compareSortValues(a: SortValue, b: SortValue): number {
   return lessThan(left, right) ? -1 : 1
 }
 
-// `<` on mixed values compares them as numbers, which TypeScript only allows on numbers, bigints or two strings.
+// Workaround: `<` on mixed values compares them as numbers, which TypeScript only allows on numbers, bigints or two strings.
 function lessThan(left: Exclude<SortValue, Date>, right: Exclude<SortValue, Date>) {
   if (typeof left === "bigint" && typeof right === "bigint") return left < right
   if (typeof left === "string" && typeof right === "string") return left < right

@@ -39,11 +39,16 @@ function setAttribute(html: HTMLElement, name: string, value: string) {
   else html.setAttribute(name, value)
 }
 
+/**
+ * Keeps the colour scheme, theme, palette, density and radius on `<html>`. `apply()` writes the current choice: call
+ * it before the first render to avoid a flash. `connect()` applies now and on every change, the browser's scheme
+ * included, until the function it returns runs.
+ */
 function createAppearance<
   Theme extends string = (typeof defaultThemes)[number],
   Palette extends string = (typeof defaultPalettes)[number],
 >(options: AppearanceOptions<Theme, Palette> = {}) {
-  // Without `themes` or `palettes`, the type parameters keep their defaults, the names of these lists; TypeScript
+  // Workaround: without `themes` or `palettes`, the type parameters keep their defaults, the names of these lists; TypeScript
   // can't tie a generic's default to the argument being left out.
   const themes = options.themes ?? assumeType<readonly Theme[]>(defaultThemes)
   const palettes = options.palettes ?? assumeType<readonly Palette[]>(defaultPalettes)
@@ -82,7 +87,6 @@ function createAppearance<
     storage: options.storage?.radius,
   })
 
-  /** Writes the current choice to `<html>`. Call it before the first render to avoid a flash. */
   function apply() {
     if (typeof document === "undefined") return
     const html = document.documentElement
@@ -96,7 +100,6 @@ function createAppearance<
     setAttribute(html, "data-radius", radius.get().value)
   }
 
-  /** Applies now and on every change, the browser's scheme included, until the returned function runs. */
   function connect() {
     apply()
     const stops = [colorScheme, theme, palette, density, radius].map((preference) => preference.subscribe(apply))
