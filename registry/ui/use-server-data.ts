@@ -73,7 +73,6 @@ type ServerPageOptions = ReadOptions & {
   navigation?: NavigationMode
 }
 
-/** `networkMode` for a query or mutation's options, left out when unset so the client's default applies. */
 function networkModeOf(networkMode: NetworkMode | undefined) {
   return networkMode === undefined ? {} : { networkMode }
 }
@@ -113,7 +112,6 @@ type ServerTotalState<TError = DefaultServerError> = {
   error: TError | null
 }
 
-// Tells a mutation's `settle` and `settleItems` which kind of query each one under the key is, mounted or not.
 const pageMeta = { serverData: "page" }
 const infiniteMeta = { serverData: "infinite" }
 const totalMeta = { serverData: "total" }
@@ -194,7 +192,6 @@ type ServerInfiniteState<T, TError = DefaultServerError> = {
   pages: PageResult<T>[]
   status: ServerStatus
   fetching: boolean
-  /** The next page is loading. */
   loadingMore: boolean
   hasMore: boolean
   loadMore: () => Promise<void>
@@ -284,7 +281,6 @@ function useInvalidateSource(
   const client = useDataClient()
   const { key } = source
   const throwOnError = options.throwOnError === true
-  // The function is often an onClick handler, so `call` may be an event: only a boolean `throwOnError` counts.
   return useCallback(
     (call?: InvalidateOptions) =>
       refreshKey(client, key, typeof call?.throwOnError === "boolean" ? call.throwOnError : throwOnError),
@@ -415,7 +411,7 @@ function useSourceMutation<T, Variables = void, Result = unknown, Data = Result,
           await settleQueries(client, key, (query) => {
             const data = query.state.data
             const kind = queryKind(query, key)
-            // TanStack's cache types data as unknown; a resource under the source's key holds the mutation's `Data`.
+            // Workaround: TanStack's cache types data as unknown; a resource under the source's key holds the mutation's `Data`.
             if (kind === "resource")
               return settle?.(result, variables, assumeType<Data | undefined>(data), query.queryKey)
             return settleItems && mapItems<T>(kind, data, (items) => settleItems(items, result, variables))

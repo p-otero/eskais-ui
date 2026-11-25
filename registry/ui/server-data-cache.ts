@@ -10,11 +10,8 @@ import {
 import { assumeType } from "@/lib/narrow"
 import type { PageResult } from "@/lib/page-source"
 
-/**
- * Cancels every read in flight under the key silently, first loads included, for the caller to fetch again: one that
- * left before a write may answer with the data from before it, and `cancelRefetch` joins a first load. The query stays
- * pending or fetching without an error, and the aborted request's late answer or rejection is dropped.
- */
+// Workaround: TanStack's `cancelRefetch` joins a first load, and a read that left before a write may answer with
+// the data from before it, so every read in flight is cancelled silently and fetched again by the caller.
 function restartInFlight(
   client: QueryClient,
   filters: { queryKey: readonly unknown[]; predicate?: (query: Query) => boolean },
@@ -24,19 +21,12 @@ function restartInFlight(
   return inFlight
 }
 
-/**
- * Invalidates the key, and refetches its shown queries and every read that was in flight, restarted. `done` resolves
- * once the shown ones have reloaded; with `throwOnError`, rejects with the first failure. `restarted` holds the reads
- * that were in flight, `refetched` the queries that weren't reading and now are.
- */
 function reloadKey(client: QueryClient, key: readonly unknown[], throwOnError = false) {
   return notifyManager.batch(() => {
     const cache = client.getQueryCache()
     const idle = new Set(cache.findAll({ queryKey: key, fetchStatus: "idle" }))
     const restarted = restartInFlight(client, { queryKey: key })
     const done = client.invalidateQueries({ queryKey: key }, { throwOnError })
-    // An in-flight read the invalidation doesn't refetch (nothing observes it, as a prefetch) starts here; for one it
-    // did, `fetch` joins the read it just started.
     for (const query of restarted) query.fetch().catch(() => undefined)
     const refetched = [...idle].filter((query) => query.state.fetchStatus === "fetching")
     return { restarted, refetched, done }
@@ -66,12 +56,12 @@ function queryKind(query: Query, key: readonly unknown[]): "page" | "infinite" |
 function mapItems<T>(kind: unknown, data: unknown, update: (items: T[]) => T[]): unknown {
   if (data === undefined) return undefined
   if (kind === "page") {
-    // TanStack's cache types data as unknown; the hooks store a `PageResult<T>` under a "page" query.
+    // Workaround: TanStack's cache types data as unknown; the hooks store a `PageResult<T>` under a "page" query.
     const page = assumeType<PageResult<T>>(data)
     return { ...page, items: update(page.items) }
   }
   if (kind === "infinite") {
-    // TanStack's cache types data as unknown; the hooks store pages of `PageResult<T>` under an "infinite" query.
+    // Workaround: TanStack's cache types data as unknown; the hooks store pages of `PageResult<T>` under an "infinite" query.
     const infinite = assumeType<InfiniteData<PageResult<T>>>(data)
     return {
       ...infinite,
@@ -161,10 +151,6 @@ type PatchResult = {
   refetched: readonly QueryKey[]
 }
 
-/**
- * Settles once the query's latest read has: a restart (its read cancelled silently and started again) keeps it
- * fetching, so this follows it. Rejects when that read failed, or resolves; resolves too when the query is removed.
- */
 function latestRead(client: QueryClient, query: Query): Promise<void> {
   const cache = client.getQueryCache()
   const errors = query.state.errorUpdateCount
@@ -276,11 +262,11 @@ function runPatch<T, Data>(
       const kind = queryKind(query, key)
       const next =
         kind === "resource"
-          ? // TanStack's cache types data as unknown; a resource under the source's key holds the patch's `Data`.
+          ? // Workaround: TanStack's cache types data as unknown; a resource under the source's key holds the patch's `Data`.
             patch.resource?.(assumeType<Data | undefined>(current), query.queryKey)
           : patch.items && mapItems<T>(kind, current, patch.items)
       const fetching = query.state.fetchStatus === "fetching"
-      // A cancel with `revert` puts the state from before the read back at once (TanStack 5.107 reverts in the
+      // Workaround: a cancel with `revert` puts the state from before the read back at once (TanStack 5.107 reverts in the
       // retryer's `onCancel`), so the write below lands on a query that isn't fetching and nothing reverts it later.
       if (fetching && next !== undefined && cancel) {
         void query.cancel({ revert: true })
@@ -291,7 +277,7 @@ function runPatch<T, Data>(
         written.add(query)
       }
     }
-    // `refetch` restarts every read in flight under the key just after, so restarting here too would send a request
+    // Perf: `refetch` restarts every read in flight under the key just after, so restarting here too would send a request
     // that is aborted at once.
     if (!refetch) {
       for (const query of stale) {

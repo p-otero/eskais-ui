@@ -101,7 +101,7 @@ function ServerList<T, S extends FilterSchema = Record<never, never>>({
 }: ServerListProps<T, S>) {
   const labels = { ...serverListLabels, ...labelOverrides }
   const locale = useLocale(localeProp)
-  // Without `filters` the schema is empty, which TypeScript can't confirm is an `S` for a generic `S`.
+  // Workaround: without `filters` the schema is empty, which TypeScript can't confirm is an `S` for a generic `S`.
   const schema = filters ?? assumeType<S>({})
   const searchKey = searchFieldOf(schema)
   const own = usePageController<T, FilterValues<S>>(source, {

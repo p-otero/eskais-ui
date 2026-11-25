@@ -50,7 +50,6 @@ type ServerQueryState<T, TError = DefaultServerError> = {
 
 const resourceMeta = { serverData: "resource" }
 
-/** Writes each seed unless its query got data after `requestedAt`, which is fresher than the answer seeding it. */
 function writeSeeds(client: QueryClient, seeds: readonly ResourceSeed[], requestedAt: number) {
   for (const { key, data } of seeds) {
     if (data === undefined) continue
@@ -89,7 +88,7 @@ function useServerQuery<T, TError = DefaultServerError, TSelected = T>(
       ...(options.staleTime === undefined ? {} : { staleTime: options.staleTime }),
       ...(select === undefined ? {} : { select }),
       placeholderData: (previous) =>
-        // TanStack types placeholder data as `NonFunctionGuard<T>`, which a generic `T` can't be narrowed to; a
+        // Workaround: TanStack types placeholder data as `NonFunctionGuard<T>`, which a generic `T` can't be narrowed to; a
         // placeholder is data, never a function.
         (keepPrevious ? previous : undefined) ?? assumeType<typeof previous>(placeholder),
     },
@@ -146,7 +145,6 @@ const definedKeys = [
 
 type DefinedOptions = Pick<ServerQueryOptions<unknown>, (typeof definedKeys)[number]>
 
-/** The resource's own options under the call's: an option set in either, the call's when both set it. */
 function definedOptions(resource: DefinedOptions, options: DefinedOptions): DefinedOptions {
   const merged: Record<string, unknown> = {}
   for (const name of definedKeys) {

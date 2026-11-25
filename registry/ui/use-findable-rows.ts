@@ -98,7 +98,6 @@ function useFindableRows({ count, estimate, getKey, text, findable }: FindableRo
   const items = useSyncExternalStore(virtual.subscribe, virtual.items, virtual.items)
   const size = useSyncExternalStore(virtual.subscribe, virtual.size, virtual.size)
 
-  /** Keeps a row rendered wherever the list scrolls, like the one with focus. */
   const pin = useCallback((index: number | undefined) => rows.pin(index), [rows])
   const scrollToIndex = useCallback(
     (index: number) => {
@@ -111,7 +110,6 @@ function useFindableRows({ count, estimate, getKey, text, findable }: FindableRo
     enabled,
     items,
     size,
-    /** The scroller, the nearest element that scrolls the rows: pass it as its `ref`. */
     setScroller,
     measure: virtual.measure,
     findableText: virtual.findableText,
