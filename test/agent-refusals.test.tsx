@@ -8,6 +8,7 @@ import { agentTaskMoves } from "@/components/ui/agent-task-moves-primitive"
 import { agentTaskProposals } from "@/components/ui/agent-task-proposals-primitive"
 import { attachments } from "@/components/ui/attachments-primitive"
 import { boardTransfer } from "@/components/ui/board-transfer-primitive"
+import { chalkboard } from "@/components/ui/chalkboard-primitive"
 import { codeBlock } from "@/components/ui/code-block-primitive"
 import { commitHistory, type CommitLookup } from "@/components/ui/commit-history-primitive"
 import { confirmButton } from "@/components/ui/confirm-button-primitive"
@@ -17,6 +18,7 @@ import { descriptionValue } from "@/components/ui/description-list-primitive"
 import { formRoot } from "@/components/ui/form-primitive"
 import { gitTree, type GitTreeLookup } from "@/components/ui/git-tree-primitive"
 import { inlineEdit } from "@/components/ui/inline-edit-primitive"
+import { ledMatrix } from "@/components/ui/led-matrix-primitive"
 import { lightbox } from "@/components/ui/lightbox-primitive"
 import { logViewer } from "@/components/ui/log-viewer-primitive"
 import { createLogStore } from "@/components/ui/log-viewer-store"
@@ -27,6 +29,7 @@ import { masterDetail } from "@/components/ui/master-detail-primitive"
 import { modelScan } from "@/components/ui/model-scan-primitive"
 import { nativeSelect } from "@/components/ui/native-select-primitive"
 import { mixer } from "@/components/ui/mixer-primitive"
+import { neonSign } from "@/components/ui/neon-sign-primitive"
 import { prismPicker } from "@/components/ui/prism-picker-primitive"
 import { safeDial } from "@/components/ui/safe-dial-primitive"
 import { sunArc } from "@/components/ui/sun-arc-primitive"
@@ -35,6 +38,7 @@ import { searchField } from "@/components/ui/search-field-primitive"
 import { serverFilters } from "@/components/ui/server-filters-primitive"
 import { sidebar } from "@/components/ui/sidebar-primitive"
 import { sortable } from "@/components/ui/sortable-primitive"
+import { teletext } from "@/components/ui/teletext-primitive"
 import { ActionRefusedError, parseActionRefusal } from "@/lib/action-refusal"
 
 import { sampleTasks } from "./fixtures/agent-tasks"
@@ -610,4 +614,57 @@ test("parseActionRefusal reads the error, a message the bridge prefixed, and lea
   expect(parseActionRefusal("start on Voice (c2) failed: [redacted]")).toBeNull()
   expect(parseActionRefusal(new Error('Card "a" can\'t be moved.'))).toBeNull()
   expect(parseActionRefusal(undefined)).toBeNull()
+})
+
+test("led matrix: refused messages or pause, and messages with no text, fail the step and the sign keeps going", async () => {
+  const view = mounted(
+    mount(
+      ledMatrix,
+      { defaultMessages: ["Open"], onMessagesChange: refuseAgent, onPausedChange: refuseAgent },
+      `<root aria-label="Shop sign"></root>`,
+    ),
+  )
+  await failsWith("Shop sign", "setMessages", "setMessages was refused by the app.", [["Closed"]])
+  await failsWith("Shop sign", "pause", "pause was refused by the app.")
+  await failsWith("Shop sign", "setMessages", "setMessages takes a list of messages with text", [["  "]])
+  expect(view.state.messages).toEqual(["Open"])
+  expect(view.state.paused).toBe(false)
+})
+
+test("neon sign: a refused switch fails the step and the tubes stay as they were", async () => {
+  const view = mounted(mount(neonSign, { onOnChange: refuseAgent }, `<root aria-label="Studio"></root>`))
+  await failsWith("Studio", "turnOff", "turnOff was refused by the app.")
+  expect(view.state.on).toBe(true)
+})
+
+test("chalkboard: a refused write, or content that isn't text or blocks, fails the step and the board keeps its words", async () => {
+  const view = mounted(
+    mount(chalkboard, { defaultContent: "# Soup", onContentChange: refuseAgent }, `<root aria-label="Menu"></root>`),
+  )
+  await failsWith("Menu", "write", "write was refused by the app.", ["# Stew"])
+  await failsWith("Menu", "write", "write takes text, a line each", [[{ type: "poster" }]])
+  expect(view.state.content).toBe("# Soup")
+})
+
+test("teletext: a missing page, a page out of range, a colour key with no link or a refused tune fail the step", async () => {
+  const pages = {
+    100: {
+      title: "Index",
+      rows: [],
+      fastext: { red: { page: 101, label: "News" }, green: { page: 300, label: "Sport" } },
+    },
+    101: { title: "News", rows: [] },
+  }
+  const view = mounted(mount(teletext, { pages }, `<root aria-label="Teletext"></root>`))
+  await failsWith("Teletext", "goToPage", "goToPage can't find page 555: this service has 100, 101", [555])
+  await failsWith("Teletext", "goToPage", "goToPage takes a page from 100 to 899, not 42", [42])
+  await failsWith("Teletext", "fastext", "fastext has no blue link on page 100", ["blue"])
+  await failsWith("Teletext", "fastext", "fastext can't find page 300", ["green"])
+  await failsWith("Teletext", "fastext", "fastext takes red, green, yellow or blue, not purple", ["purple"])
+  expect(view.state.page).toBe(100)
+  const refused = mounted(
+    mount(teletext, { pages, onPageChange: refuseAgent }, `<root aria-label="Refusing set"></root>`),
+  )
+  await failsWith("Refusing set", "goToPage", "goToPage was refused by the app.", [101])
+  expect(refused.state.page).toBe(100)
 })

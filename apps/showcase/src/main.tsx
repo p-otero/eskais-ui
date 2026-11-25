@@ -142,6 +142,10 @@ const pages: Record<string, Page> = {
   "safe-dial": () => import("./instruments/safe-dial-demo").then((module) => module.SafeDialDemo),
   "vinyl-scrubber": () => import("./instruments/vinyl-scrubber-demo").then((module) => module.VinylScrubberDemo),
   "live-sky": () => import("./sky/live-sky-demo").then((module) => module.LiveSkyDemo),
+  "led-matrix": () => import("./signs/led-matrix-demo").then((module) => module.LedMatrixDemo),
+  "neon-sign": () => import("./signs/neon-sign-demo").then((module) => module.NeonSignDemo),
+  chalkboard: () => import("./signs/chalkboard-demo").then((module) => module.ChalkboardDemo),
+  teletext: () => import("./signs/teletext-demo").then((module) => module.TeletextDemo),
   ...Object.fromEntries(
     gitWorkspaceDemoNames.map((name) => [
       name,

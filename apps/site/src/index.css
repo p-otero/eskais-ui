@@ -12,6 +12,10 @@
 @import "../../../registry/styles/safe-dial.css";
 @import "../../../registry/styles/vinyl-scrubber.css";
 @import "../../../registry/styles/live-sky.css";
+@import "../../../registry/styles/led-matrix.css";
+@import "../../../registry/styles/neon-sign.css";
+@import "../../../registry/styles/chalkboard.css";
+@import "../../../registry/styles/teletext.css";
 
 @source "../../../registry";
 @source "../../showcase/src/theme-editor.tsx";

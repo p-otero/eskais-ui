@@ -288,6 +288,52 @@ const itemNotes: Record<string, ItemNotes> = {
     agent:
       "Agents read the summary as the sky's value and call setLocation (a place name, or a latitude and longitude), geolocate, refresh and, with a photo, calibrate; denied location access, simulated weather or a missing place fails the step with why.",
     related: ["model-viewer", "combobox"],
+  "led-matrix": {
+    usage:
+      "Reach for it where a notice should feel like a sign in the street: the next turn, a pharmacy on duty, departures. For a status a person must act on, use an Alert or a toast.",
+    a11y: [
+      "The sign is a marquee named by its label, holding the current message as text; it stays quiet unless live is polite, which reads each new message once.",
+      "Motion that starts by itself has a pause toggle, named Pause and overridable, with a 44px touch target.",
+      "Under reduced motion a scrolling sign shows its messages a page at a time, split at words.",
+    ],
+    agent:
+      "Agents find it by its label and call setMessages (a list, or one string), pause and resume; messages with no text fail the step with why.",
+    related: ["neon-sign", "teletext"],
+  },
+  "neon-sign": {
+    usage:
+      "Reach for it for a status read across a room or a page at a glance: on air, open, recording. Keep the words short; a tube sign holds a word or two and a small second line.",
+    a11y: [
+      "It is a status named by its label: its words are its text, followed by off while dark, so screen readers hear a change politely.",
+      "The tubes are hidden from screen readers so the words aren't read letter by letter.",
+      "The strike flickers fewer than three times a second; reduced motion fades the sign on and stops the buzz.",
+    ],
+    agent: "Agents find it by its label and call turnOn and turnOff; an app that cancels the change fails the step.",
+    related: ["led-matrix", "status-pill"],
+  },
+  chalkboard: {
+    usage:
+      "Reach for it for a menu, a list of specials or notices that should feel hand-written. Prices sit on dot leaders; plain text with one line each is enough to fill it.",
+    a11y: [
+      "The board is a region named by its label; headings, lists and menu lines are real elements and text, selectable and read in order.",
+      "Dot leaders, the ledge, the chalk and the eraser are hidden from screen readers; a price reads right after its dish.",
+      "While a change wipes the board, the old words leave the reading order at once. Reduced motion shows new words without the writing or the wipe.",
+    ],
+    agent:
+      "Agents find it by its label and call write with text (# heading, - item, Coffee ... 2.50) or blocks; anything else fails the step with what it takes.",
+    related: ["markdown-view"],
+  },
+  teletext: {
+    usage:
+      "Reach for it for a retro information service, alone or inside a TV: listings, news, scores, weather, each a page of data. It fills its parent at 4:3.",
+    a11y: [
+      "Each page is a region named by its title, with a heading; its text is real text and its mosaics are hidden from screen readers.",
+      "The page takes focus: three digits tune and Backspace takes one back, and Left and Right turn subpages, which hold still while it has focus or the pointer.",
+      "Fastext keys are buttons named by their words, with 44px touch targets. Flash and the search counter stop under reduced motion.",
+    ],
+    agent:
+      "Agents find it by its label and call goToPage or fastext, or press a Fastext key by its word; a page the service doesn't have fails the step with the pages it has.",
+    related: ["led-matrix", "neon-sign"],
   },
   "image-cropper": {
     usage:

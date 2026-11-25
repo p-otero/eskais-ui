@@ -184,6 +184,10 @@ const categories = [
     items: ["model-viewer", "model-scan", "live-sky"],
   },
   {
+    name: "Signs",
+    items: ["led-matrix", "neon-sign", "chalkboard", "teletext"],
+  },
+  {
     name: "Editor",
     items: ["code-block", "log-viewer", "ansi", "markdown-editor", "markdown-view", "markdown-editor-languages"],
   },

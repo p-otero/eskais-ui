@@ -3966,6 +3966,948 @@
       }
     },
     {
+      "name": "led-matrix",
+      "type": "registry:ui",
+      "title": "LED Matrix",
+      "description": "A bus or pharmacy dot-matrix sign: round LEDs behind smoked glass in an aluminium housing, in amber, red, green or white. Messages scroll right to left a dot at a time, or hold a page at a time, in turn, drawn from its own 5×7 bitmap font for Latin-1 and €. A canvas paints only when a dot changes, only on screen and in a visible tab; reduced motion pages instead of scrolling. A marquee live region with the message, a pause toggle, and setMessages, pause and resume for agents.",
+      "docs": "`<LedMatrix label messages|defaultMessages onMessagesChange paused|defaultPaused onPausedChange color mode speed holdMs columns rows live controls labels>`. `mode=\"scroll\"` (the default) runs each message across at `speed` dots per second, then the next; `mode=\"hold\"` shows each for `holdMs`, split at words into pages that fit `columns`, and so does a scrolling sign under reduced motion. `rows` is the height in dots (9 by default); 14 or more doubles the glyphs. The font covers printable ASCII, Latin-1 (á, ñ, ç, ß, ¿) and €; an accented letter it lacks shows its base letter, anything else `?`. The root is a `marquee` named by `label` with the current message as text, `aria-live` off unless `live=\"polite\"`. The pause toggle (`labels.pause`) is there because motion that starts by itself needs a way to stop; `controls={false}` hides it when the page pauses the sign some other way. The housing and board are the item's `css`, the same in every theme.",
+      "dependencies": [
+        "@ui-sdk/core@0.1.0-beta.12",
+        "@ui-sdk/react@0.1.0-beta.12",
+        "lucide-react"
+      ],
+      "registryDependencies": [
+        "@eskais/utils",
+        "@eskais/theme",
+        "@eskais/action-refusal",
+        "@eskais/narrow",
+        "@eskais/toggle"
+      ],
+      "files": [
+        {
+          "path": "registry/ui/led-matrix.tsx",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/led-matrix-primitive.ts",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/led-matrix-engine.ts",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/led-matrix-font.ts",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/led-matrix-glyphs.ts",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/use-led-matrix-scene.ts",
+          "type": "registry:ui"
+        }
+      ],
+      "css": {
+        "[data-slot=\"led-matrix\"]": {
+          "--led-housing": "#19191b",
+          "--led-housing-edge": "#3a3a3e",
+          "--led-screw": "#6b6b70",
+          "padding": "0.75rem",
+          "border-radius": "0.875rem",
+          "color": "#f4f4f5",
+          "background-color": "var(--led-housing)",
+          "background-image": "radial-gradient(circle at 0.55rem 0.55rem, var(--led-screw) 0 0.13rem, #0008 0.16rem, transparent 0.2rem), radial-gradient( circle at calc(100% - 0.55rem) 0.55rem, var(--led-screw) 0 0.13rem, #0008 0.16rem, transparent 0.2rem ), radial-gradient( circle at 0.55rem calc(100% - 0.55rem), var(--led-screw) 0 0.13rem, #0008 0.16rem, transparent 0.2rem ), radial-gradient( circle at calc(100% - 0.55rem) calc(100% - 0.55rem), var(--led-screw) 0 0.13rem, #0008 0.16rem, transparent 0.2rem ), linear-gradient(180deg, #2c2c30 0%, #18181a 45%, #101012 100%)",
+          "box-shadow": "inset 0 1px 0 var(--led-housing-edge), inset 0 -1px 0 #000, 0 1px 1px #0006, 0 10px 24px -10px #000a"
+        },
+        "[data-slot=\"led-matrix-board\"]": {
+          "position": "relative",
+          "flex": "1 1 0",
+          "min-width": "0",
+          "aspect-ratio": "var(--led-columns) / var(--led-rows)",
+          "overflow": "hidden",
+          "border-radius": "0.25rem",
+          "background-color": "#070605",
+          "background-image": "radial-gradient(circle, #1c150c 0 32%, transparent 36%)",
+          "background-size": "calc(100% / var(--led-columns)) calc(100% / var(--led-rows))",
+          "box-shadow": "inset 0 2px 6px #000, 0 0 0 1px #000, 0 1px 0 1px #ffffff14"
+        },
+        "[data-slot=\"led-matrix\"][data-color=\"red\"] [data-slot=\"led-matrix-board\"]": {
+          "background-image": "radial-gradient(circle, #200c0a 0 32%, transparent 36%)"
+        },
+        "[data-slot=\"led-matrix\"][data-color=\"green\"] [data-slot=\"led-matrix-board\"]": {
+          "background-image": "radial-gradient(circle, #0b1d10 0 32%, transparent 36%)"
+        },
+        "[data-slot=\"led-matrix\"][data-color=\"white\"] [data-slot=\"led-matrix-board\"]": {
+          "background-image": "radial-gradient(circle, #18191e 0 32%, transparent 36%)"
+        },
+        "[data-slot=\"led-matrix-board\"]::after": {
+          "position": "absolute",
+          "inset": "0",
+          "pointer-events": "none",
+          "content": "\"\"",
+          "background": "linear-gradient(172deg, #ffffff1c 0%, #ffffff08 28%, transparent 29%), linear-gradient(0deg, #0000004d, transparent 35%)"
+        },
+        "[data-slot=\"led-matrix-dots\"]": {
+          "position": "absolute",
+          "inset": "0",
+          "display": "block",
+          "width": "100%",
+          "height": "100%"
+        },
+        "[data-led-matrix-pause]": {
+          "align-self": "flex-end",
+          "width": "1.75rem",
+          "height": "1.75rem",
+          "border-radius": "9999px",
+          "color": "#d4d4d8",
+          "background": "linear-gradient(180deg, #34343a, #1c1c20)",
+          "box-shadow": "inset 0 1px 0 #ffffff26, 0 1px 2px #000c"
+        },
+        "[data-led-matrix-pause]:hover": {
+          "color": "#ffffff",
+          "background": "linear-gradient(180deg, #3e3e45, #232328)"
+        },
+        "[data-led-matrix-pause][data-pressed]": {
+          "color": "#ffffff",
+          "background": "linear-gradient(180deg, #1c1c20, #2a2a30)",
+          "box-shadow": "inset 0 1px 3px #000, 0 1px 0 #ffffff14"
+        },
+        "[data-led-matrix-pause]:focus-visible": {
+          "outline": "2px solid #ffffff",
+          "outline-offset": "2px"
+        }
+      }
+    },
+    {
+      "name": "neon-sign",
+      "type": "registry:ui",
+      "title": "Neon Sign",
+      "description": "A neon tube sign on a brick or dark wall, for a status read at a glance: on air, open, recording. Each letter is a tube of tinted glass that strikes with a flicker when the sign turns on, then glows steady, casting its colour on the wall, with a rare buzz on one letter; reduced motion fades it on and never buzzes. A status named by its label, with turnOn and turnOff for agents. Tilt Neon from npm (OFL-1.1).",
+      "docs": "`<NeonSign label text sub color subColor wall on|defaultOn onOnChange buzz labels>`. `color` and `subColor` are tube colours: `pink` (the default), `red`, `orange`, `green`, `blue`, `cyan`, `violet` or `white`; `wall` is `brick` (the default) or `dark`. The root is a `status` named by `label` whose text is the sign's words, followed by `labels.off` while dark, so a change is announced politely. Turning it on plays the strike (`data-striking` until it ends); `buzz` dims one random letter for 300 ms every few seconds while lit, on a timer that stops off screen, in a hidden tab and under reduced motion. Everything moves in CSS opacity; nothing runs between flickers. The wall, the acrylic backboard and the tubes are the item's `css`, which also imports `@fontsource-variable/tilt-neon`.",
+      "dependencies": [
+        "@ui-sdk/core@0.1.0-beta.12",
+        "@ui-sdk/react@0.1.0-beta.12",
+        "@fontsource-variable/tilt-neon@5.3.0"
+      ],
+      "registryDependencies": [
+        "@eskais/utils",
+        "@eskais/theme",
+        "@eskais/action-refusal"
+      ],
+      "files": [
+        {
+          "path": "registry/ui/neon-sign.tsx",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/neon-sign-primitive.ts",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/use-neon-buzz.ts",
+          "type": "registry:ui"
+        }
+      ],
+      "css": {
+        "@import \"@fontsource-variable/tilt-neon\"": {},
+        "[data-slot=\"neon-sign\"]": {
+          "--neon-wall": "#2f2925",
+          "container-type": "inline-size",
+          "position": "relative",
+          "isolation": "isolate",
+          "overflow": "hidden",
+          "padding": "clamp(1.75rem, 8cqw, 4.5rem) 1rem",
+          "border-radius": "0.75rem",
+          "font-family": "\"Tilt Neon Variable\", \"Tilt Neon\", ui-rounded, \"Arial Rounded MT Bold\", system-ui, sans-serif",
+          "background-color": "var(--neon-wall)",
+          "background-image": "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='100'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='3' seed='4' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 -1.1 .62'/%3E%3C/filter%3E%3Cfilter id='s'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.035 .12' numOctaves='2' seed='9' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 .9 0 0 0 0 .8 0 0 0 -.9 .32'/%3E%3C/filter%3E%3Crect width='300' height='100' fill='%232f2925'/%3E%3Crect x='1.5' y='1.5' width='72' height='22' rx='1.5' fill='%237e3a2a'/%3E%3Crect x='76.5' y='1.5' width='72' height='22' rx='1.5' fill='%23843c29'/%3E%3Crect x='151.5' y='1.5' width='72' height='22' rx='1.5' fill='%2368301f'/%3E%3Crect x='226.5' y='1.5' width='72' height='22' rx='1.5' fill='%237b3626'/%3E%3Crect x='-36' y='26.5' width='72' height='22' rx='1.5' fill='%236c2d1f'/%3E%3Crect x='39' y='26.5' width='72' height='22' rx='1.5' fill='%235a2619'/%3E%3Crect x='114' y='26.5' width='72' height='22' rx='1.5' fill='%236c2d1f'/%3E%3Crect x='189' y='26.5' width='72' height='22' rx='1.5' fill='%237e3a2a'/%3E%3Crect x='264' y='26.5' width='72' height='22' rx='1.5' fill='%236c2d1f'/%3E%3Crect x='1.5' y='51.5' width='72' height='22' rx='1.5' fill='%23743524'/%3E%3Crect x='76.5' y='51.5' width='72' height='22' rx='1.5' fill='%237b3626'/%3E%3Crect x='151.5' y='51.5' width='72' height='22' rx='1.5' fill='%235a2619'/%3E%3Crect x='226.5' y='51.5' width='72' height='22' rx='1.5' fill='%23713221'/%3E%3Crect x='-36' y='76.5' width='72' height='22' rx='1.5' fill='%237b3626'/%3E%3Crect x='39' y='76.5' width='72' height='22' rx='1.5' fill='%236c2d1f'/%3E%3Crect x='114' y='76.5' width='72' height='22' rx='1.5' fill='%2368301f'/%3E%3Crect x='189' y='76.5' width='72' height='22' rx='1.5' fill='%2368301f'/%3E%3Crect x='264' y='76.5' width='72' height='22' rx='1.5' fill='%237b3626'/%3E%3Crect width='300' height='100' filter='url(%23s)'/%3E%3Crect width='300' height='100' filter='url(%23g)'/%3E%3C/svg%3E\")",
+          "background-size": "300px 100px",
+          "background-position": "center",
+          "box-shadow": "inset 0 0 0 1px #0006"
+        },
+        "[data-slot=\"neon-sign\"][data-wall=\"dark\"]": {
+          "--neon-wall": "#121316",
+          "background-image": "radial-gradient(ellipse 120% 90% at 50% 0%, #ffffff0a, transparent 60%), url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.75' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 .09 0'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)'/%3E%3C/svg%3E\")",
+          "background-size": "100% 100%, 180px 180px"
+        },
+        "[data-slot=\"neon-sign\"]::after": {
+          "position": "absolute",
+          "inset": "0",
+          "z-index": "-2",
+          "pointer-events": "none",
+          "content": "\"\"",
+          "background": "radial-gradient(ellipse 75% 85% at 50% 50%, transparent 20%, #000000b3 100%), linear-gradient(#0000004d, #0000004d)"
+        },
+        "[data-slot=\"neon-sign\"]::before": {
+          "position": "absolute",
+          "inset": "-10%",
+          "z-index": "-1",
+          "pointer-events": "none",
+          "content": "\"\"",
+          "background": "radial-gradient( ellipse 50% 42% at 50% 50%, color-mix(in srgb, var(--neon) 42%, transparent), color-mix(in srgb, var(--neon) 12%, transparent) 55%, transparent 75% )",
+          "mix-blend-mode": "screen",
+          "opacity": "1",
+          "transition": "opacity 180ms ease-out"
+        },
+        "[data-slot=\"neon-sign\"][data-state=\"off\"]::before": {
+          "opacity": "0"
+        },
+        "[data-slot=\"neon-sign\"][data-striking]::before": {
+          "animation": "neon-sign-strike-wash 1.8s linear both"
+        },
+        "[data-slot=\"neon-sign\"][data-color=\"pink\"]": {
+          "--neon": "#ff3ea5",
+          "--neon-core": "#ffe9f5"
+        },
+        "[data-slot=\"neon-sign-tube\"][data-color=\"pink\"]": {
+          "--neon": "#ff3ea5",
+          "--neon-core": "#ffe9f5"
+        },
+        "[data-slot=\"neon-sign\"][data-color=\"red\"]": {
+          "--neon": "#ff2b2b",
+          "--neon-core": "#ffe2de"
+        },
+        "[data-slot=\"neon-sign-tube\"][data-color=\"red\"]": {
+          "--neon": "#ff2b2b",
+          "--neon-core": "#ffe2de"
+        },
+        "[data-slot=\"neon-sign\"][data-color=\"orange\"]": {
+          "--neon": "#ff7b1c",
+          "--neon-core": "#fff0df"
+        },
+        "[data-slot=\"neon-sign-tube\"][data-color=\"orange\"]": {
+          "--neon": "#ff7b1c",
+          "--neon-core": "#fff0df"
+        },
+        "[data-slot=\"neon-sign\"][data-color=\"green\"]": {
+          "--neon": "#2bff66",
+          "--neon-core": "#e6ffec"
+        },
+        "[data-slot=\"neon-sign-tube\"][data-color=\"green\"]": {
+          "--neon": "#2bff66",
+          "--neon-core": "#e6ffec"
+        },
+        "[data-slot=\"neon-sign\"][data-color=\"blue\"]": {
+          "--neon": "#2f86ff",
+          "--neon-core": "#e4efff"
+        },
+        "[data-slot=\"neon-sign-tube\"][data-color=\"blue\"]": {
+          "--neon": "#2f86ff",
+          "--neon-core": "#e4efff"
+        },
+        "[data-slot=\"neon-sign\"][data-color=\"cyan\"]": {
+          "--neon": "#2fe0ff",
+          "--neon-core": "#e4fbff"
+        },
+        "[data-slot=\"neon-sign-tube\"][data-color=\"cyan\"]": {
+          "--neon": "#2fe0ff",
+          "--neon-core": "#e4fbff"
+        },
+        "[data-slot=\"neon-sign\"][data-color=\"violet\"]": {
+          "--neon": "#a855ff",
+          "--neon-core": "#f2e6ff"
+        },
+        "[data-slot=\"neon-sign-tube\"][data-color=\"violet\"]": {
+          "--neon": "#a855ff",
+          "--neon-core": "#f2e6ff"
+        },
+        "[data-slot=\"neon-sign\"][data-color=\"white\"]": {
+          "--neon": "#ffd9a8",
+          "--neon-core": "#fffaf2"
+        },
+        "[data-slot=\"neon-sign-tube\"][data-color=\"white\"]": {
+          "--neon": "#ffd9a8",
+          "--neon-core": "#fffaf2"
+        },
+        "[data-slot=\"neon-sign-board\"]": {
+          "position": "relative",
+          "display": "flex",
+          "flex-direction": "column",
+          "align-items": "center",
+          "gap": "0.35em",
+          "padding": "0.6em 1.1em 0.75em",
+          "border-radius": "0.5em",
+          "font-size": "clamp(1rem, 4cqw, 2.25rem)",
+          "background-image": "radial-gradient(circle at 0.45em 0.45em, #d8d8d8 0 0.09em, #555 0.12em, transparent 0.15em), radial-gradient(circle at calc(100% - 0.45em) 0.45em, #d8d8d8 0 0.09em, #555 0.12em, transparent 0.15em), radial-gradient(circle at 0.45em calc(100% - 0.45em), #d8d8d8 0 0.09em, #555 0.12em, transparent 0.15em), radial-gradient( circle at calc(100% - 0.45em) calc(100% - 0.45em), #d8d8d8 0 0.09em, #555 0.12em, transparent 0.15em ), linear-gradient(155deg, #ffffff17, #ffffff05 38%, #ffffff02 62%, #ffffff0d)",
+          "box-shadow": "inset 0 0 0 1px #ffffff1f, inset 0 1px 0 #ffffff2e, 0 0.6em 1.4em -0.6em #000000d9"
+        },
+        "[data-slot=\"neon-sign-tube\"]": {
+          "display": "grid",
+          "line-height": "1",
+          "white-space": "pre"
+        },
+        "[data-slot=\"neon-sign-tube\"][data-line=\"main\"]": {
+          "font-size": "3.2em",
+          "font-weight": "400",
+          "letter-spacing": "0.02em"
+        },
+        "[data-slot=\"neon-sign-tube\"][data-line=\"sub\"]": {
+          "font-size": "0.85em",
+          "font-weight": "500",
+          "letter-spacing": "0.34em",
+          "text-transform": "uppercase"
+        },
+        "[data-slot=\"neon-sign-glass\"]": {
+          "grid-area": "1 / 1",
+          "color": "color-mix(in oklab, var(--neon) 28%, #bdb8b0)",
+          "opacity": "0.6",
+          "text-shadow": "0.04em 0.09em 0.05em #000000c4"
+        },
+        "[data-slot=\"neon-sign-light\"]": {
+          "grid-area": "1 / 1",
+          "color": "var(--neon-core)",
+          "text-shadow": "0 0 0.015em #ffffff, 0 0 0.04em var(--neon-core), 0 0 0.07em var(--neon), 0 0 0.14em var(--neon), 0 0 0.26em var(--neon), 0 0 0.5em var(--neon), 0 0 1em color-mix(in srgb, var(--neon) 70%, transparent)",
+          "transition": "opacity 180ms ease-out"
+        },
+        "[data-slot=\"neon-sign\"][data-state=\"on\"] [data-slot=\"neon-sign-glass\"]": {
+          "opacity": "0.35"
+        },
+        "[data-slot=\"neon-sign\"][data-state=\"off\"] [data-slot=\"neon-sign-light\"]": {
+          "opacity": "0"
+        },
+        "[data-slot=\"neon-sign\"][data-striking] [data-letter=\"lit\"]": {
+          "animation": "neon-sign-strike 1.15s linear var(--neon-strike, 0ms) both"
+        },
+        "[data-letter=\"lit\"][data-buzz]": {
+          "animation": "neon-sign-buzz 300ms linear both"
+        },
+        "@keyframes neon-sign-strike": {
+          "0%": {
+            "opacity": "0"
+          },
+          "6%": {
+            "opacity": "0.8"
+          },
+          "10%": {
+            "opacity": "0.08"
+          },
+          "20%": {
+            "opacity": "0.12"
+          },
+          "23%": {
+            "opacity": "1"
+          },
+          "27%": {
+            "opacity": "0.25"
+          },
+          "42%": {
+            "opacity": "0.3"
+          },
+          "45%": {
+            "opacity": "0.95"
+          },
+          "50%": {
+            "opacity": "0.65"
+          },
+          "62%": {
+            "opacity": "1"
+          },
+          "100%": {
+            "opacity": "1"
+          }
+        },
+        "@keyframes neon-sign-strike-wash": {
+          "0%": {
+            "opacity": "0"
+          },
+          "8%": {
+            "opacity": "0"
+          },
+          "14%": {
+            "opacity": "0.5"
+          },
+          "22%": {
+            "opacity": "0.1"
+          },
+          "30%": {
+            "opacity": "0.8"
+          },
+          "36%": {
+            "opacity": "0.3"
+          },
+          "48%": {
+            "opacity": "0.9"
+          },
+          "60%": {
+            "opacity": "1"
+          },
+          "100%": {
+            "opacity": "1"
+          }
+        },
+        "@keyframes neon-sign-buzz": {
+          "0%": {
+            "opacity": "1"
+          },
+          "100%": {
+            "opacity": "1"
+          },
+          "20%": {
+            "opacity": "0.35"
+          },
+          "35%": {
+            "opacity": "0.9"
+          },
+          "55%": {
+            "opacity": "0.55"
+          },
+          "75%": {
+            "opacity": "1"
+          }
+        },
+        "@media (prefers-reduced-motion: reduce)": {
+          "[data-slot=\"neon-sign\"][data-striking] [data-letter=\"lit\"]": {
+            "animation": "neon-sign-fade 400ms ease-out both"
+          },
+          "[data-slot=\"neon-sign\"][data-striking]::before": {
+            "animation": "neon-sign-fade 400ms ease-out both"
+          },
+          "[data-letter=\"lit\"][data-buzz]": {
+            "animation": "none"
+          }
+        },
+        "@keyframes neon-sign-fade": {
+          "from": {
+            "opacity": "0"
+          }
+        }
+      }
+    },
+    {
+      "name": "chalkboard",
+      "type": "registry:ui",
+      "title": "Chalkboard",
+      "description": "A bar or café chalkboard in a mitred wooden frame, with a ledge, chalk and an eraser: headings, notices, lists and menus with prices on dot leaders, hand-written in grainy chalk on slate or green board. The words stay real, selectable text. It can write itself in line by line with a clip reveal, and new content makes the eraser wipe the old words and leave a smudge first. A region named by its label, with write for agents. Caveat from npm (OFL-1.1).",
+      "docs": "`<Chalkboard label content|defaultContent onContentChange reveal writingSpeed surface tray>`. Content is blocks (`{ type: \"heading\" | \"text\", text }`, `{ type: \"list\", items }`, `{ type: \"menu\", items: [{ name, price, note }] }`, each with an optional chalk `color`: `white`, `yellow`, `pink`, `blue`, `green`) or plain text, a line each: `# Today` a heading, `- Soup` a list item, `Coffee ... 2.50` or `Coffee | 2.50` a menu line, anything else text. `reveal` writes each line left to right (right to left in RTL) at `writingSpeed` characters per second, after the one before; reduced motion shows it at once and fades a change. An agent's `write(content)` takes the same text or blocks and fails with why for anything else. The frame, slate, chalk texture and smudge are the item's `css`, which also imports `@fontsource-variable/caveat`.",
+      "dependencies": [
+        "@ui-sdk/core@0.1.0-beta.12",
+        "@ui-sdk/react@0.1.0-beta.12",
+        "@fontsource-variable/caveat@5.3.0"
+      ],
+      "registryDependencies": [
+        "@eskais/utils",
+        "@eskais/theme",
+        "@eskais/action-refusal",
+        "@eskais/narrow"
+      ],
+      "files": [
+        {
+          "path": "registry/ui/chalkboard.tsx",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/chalkboard-primitive.ts",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/chalkboard-content.ts",
+          "type": "registry:ui"
+        }
+      ],
+      "css": {
+        "@import \"@fontsource-variable/caveat\"": {},
+        "[data-slot=\"chalkboard\"]": {
+          "--chalkboard-wood": "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='480' height='96'%3E%3Cfilter id='w'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.004 .2' numOctaves='4' seed='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='.55 0 0 0 .14 .34 0 0 0 .07 .18 0 0 0 .03 0 0 0 0 1'/%3E%3C/filter%3E%3Crect width='480' height='96' filter='url(%23w)'/%3E%3C/svg%3E\")",
+          "--chalkboard-grain": "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='c'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' seed='11' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 -3.4 0 0 0 2.35'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23c)'/%3E%3C/svg%3E\")",
+          "--chalkboard-dust": "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='d'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.7' numOctaves='3' seed='5' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 1 0 0 0 -.45'/%3E%3C/filter%3E%3Crect width='220' height='220' filter='url(%23d)'/%3E%3C/svg%3E\")",
+          "--chalkboard-slate": "#1f2321",
+          "--chalkboard-frame": "clamp(0.6rem, 2.4cqw, 1.25rem)",
+          "container-type": "inline-size",
+          "padding": "var(--chalkboard-frame)",
+          "border-radius": "0.375rem",
+          "background-color": "#6b4325",
+          "background-image": "linear-gradient(45deg, transparent calc(50% - 0.5px), #00000047 50%, transparent calc(50% + 0.5px)), linear-gradient(-45deg, transparent calc(50% - 0.5px), #00000047 50%, transparent calc(50% + 0.5px)), linear-gradient(-45deg, transparent calc(50% - 0.5px), #00000047 50%, transparent calc(50% + 0.5px)), linear-gradient(45deg, transparent calc(50% - 0.5px), #00000047 50%, transparent calc(50% + 0.5px)), var(--chalkboard-wood)",
+          "background-repeat": "no-repeat, no-repeat, no-repeat, no-repeat, repeat",
+          "background-position": "0 0, 100% 0, 0 100%, 100% 100%, 0 0",
+          "background-size": "var(--chalkboard-frame) var(--chalkboard-frame), var(--chalkboard-frame) var(--chalkboard-frame), var(--chalkboard-frame) var(--chalkboard-frame), var(--chalkboard-frame) var(--chalkboard-frame), 480px 96px",
+          "box-shadow": "inset 0 1px 0 #ffffff2e, inset 1px 0 0 #ffffff14, inset 0 -2px 0 #00000059, inset -1px 0 0 #00000040, 0 1px 2px #0000004d, 0 14px 30px -14px #000000b3"
+        },
+        "[data-slot=\"chalkboard-slate\"]": {
+          "position": "relative",
+          "display": "grid",
+          "min-height": "12rem",
+          "overflow": "hidden",
+          "border-radius": "0.125rem",
+          "color": "#f2f0e8",
+          "background-color": "var(--chalkboard-slate)",
+          "background-image": "radial-gradient(ellipse 40% 14% at 30% 30%, #ffffff0d, transparent 70%), radial-gradient(ellipse 35% 10% at 70% 62%, #ffffff0b, transparent 70%), radial-gradient(ellipse 50% 18% at 45% 85%, #ffffff09, transparent 70%), radial-gradient(ellipse 120% 100% at 50% 40%, transparent 55%, #00000066 100%), var(--chalkboard-dust)",
+          "background-size": "100% 100%, 100% 100%, 100% 100%, 100% 100%, 220px 220px",
+          "box-shadow": "inset 0 3px 8px #000000b3, inset 0 0 0 1px #000000a6, 0 1px 0 #ffffff1f"
+        },
+        "[data-slot=\"chalkboard\"][data-surface=\"green\"]": {
+          "--chalkboard-slate": "#1e3b30"
+        },
+        "[data-slot=\"chalkboard-writing\"]": {
+          "grid-area": "1 / 1",
+          "display": "flex",
+          "flex-direction": "column",
+          "gap": "0.35em",
+          "padding": "1em 1.4em 1.3em",
+          "font-family": "\"Caveat Variable\", \"Caveat\", \"Segoe Print\", \"Bradley Hand\", \"Chalkboard SE\", cursive",
+          "font-size": "clamp(1.15rem, 4.4cqw, 2rem)",
+          "font-weight": "500",
+          "line-height": "1.15",
+          "text-shadow": "0 0 1px #ffffff73, 0 0 0.4em #ffffff1f",
+          "mask-image": "var(--chalkboard-grain)",
+          "mask-size": "160px 160px"
+        },
+        "[data-slot=\"chalkboard-erasing\"]": {
+          "grid-area": "1 / 1",
+          "display": "flex",
+          "flex-direction": "column",
+          "gap": "0.35em",
+          "padding": "1em 1.4em 1.3em",
+          "font-family": "\"Caveat Variable\", \"Caveat\", \"Segoe Print\", \"Bradley Hand\", \"Chalkboard SE\", cursive",
+          "font-size": "clamp(1.15rem, 4.4cqw, 2rem)",
+          "font-weight": "500",
+          "line-height": "1.15",
+          "text-shadow": "0 0 1px #ffffff73, 0 0 0.4em #ffffff1f",
+          "mask-image": "var(--chalkboard-grain), linear-gradient(90deg, transparent 40%, #000 60%)",
+          "mask-size": "160px 160px, 250% 100%",
+          "mask-position": "0 0, 100% 0",
+          "mask-repeat": "repeat, no-repeat",
+          "mask-composite": "intersect",
+          "animation": "chalkboard-erase var(--chalk-erase, 700ms) ease-in both"
+        },
+        "[data-slot=\"chalkboard-writing\"] [data-line]": {
+          "rotate": "var(--chalk-tilt, 0deg)"
+        },
+        "[data-slot=\"chalkboard-heading\"]": {
+          "margin": "0 0 0.15em",
+          "font-size": "1.75em",
+          "font-weight": "700",
+          "line-height": "1",
+          "text-align": "center"
+        },
+        "[data-slot=\"chalkboard-text\"]": {
+          "margin": "0"
+        },
+        "[data-slot=\"chalkboard-list\"]": {
+          "display": "flex",
+          "flex-direction": "column",
+          "gap": "0.2em",
+          "margin": "0",
+          "padding": "0",
+          "list-style": "none"
+        },
+        "[data-slot=\"chalkboard-menu\"]": {
+          "display": "flex",
+          "flex-direction": "column",
+          "gap": "0.2em",
+          "margin": "0",
+          "padding": "0",
+          "list-style": "none"
+        },
+        "[data-slot=\"chalkboard-list\"] > li::before": {
+          "margin-inline-end": "0.4em",
+          "content": "\"–\""
+        },
+        "[data-slot=\"chalkboard-menu-item\"]": {
+          "display": "grid",
+          "grid-template-columns": "auto minmax(1.5em, 1fr) auto",
+          "align-items": "baseline",
+          "column-gap": "0.35em"
+        },
+        "[data-slot=\"chalkboard-dish\"]": {
+          "min-width": "0"
+        },
+        "[data-slot=\"chalkboard-note\"]": {
+          "grid-column": "1 / -1",
+          "margin-top": "-0.2em",
+          "font-size": "0.7em",
+          "opacity": "0.8"
+        },
+        "[data-slot=\"chalkboard-leader\"]": {
+          "align-self": "end",
+          "height": "0.5em",
+          "margin-bottom": "0.28em",
+          "background-image": "radial-gradient(circle, currentColor 0 0.07em, transparent 0.1em)",
+          "background-repeat": "repeat-x",
+          "background-position": "0 100%",
+          "background-size": "0.42em 0.3em",
+          "opacity": "0.7"
+        },
+        "[data-slot=\"chalkboard-price\"]": {
+          "font-weight": "600",
+          "white-space": "nowrap"
+        },
+        "[data-slot=\"chalkboard-slate\"] [data-chalk=\"yellow\"]": {
+          "color": "#f6e38e"
+        },
+        "[data-slot=\"chalkboard-slate\"] [data-chalk=\"pink\"]": {
+          "color": "#f5b3c9"
+        },
+        "[data-slot=\"chalkboard-slate\"] [data-chalk=\"blue\"]": {
+          "color": "#a9d3f4"
+        },
+        "[data-slot=\"chalkboard-slate\"] [data-chalk=\"green\"]": {
+          "color": "#bfe7ae"
+        },
+        "[data-slot=\"chalkboard-writing\"][data-reveal] [data-line]": {
+          "animation": "chalkboard-write var(--chalk-for, 600ms) linear var(--chalk-at, 0ms) both"
+        },
+        "[data-slot=\"chalkboard-writing\"][data-reveal]:dir(rtl) [data-line]": {
+          "animation-name": "chalkboard-write-rtl"
+        },
+        "[data-slot=\"chalkboard-writing\"][data-wiped]:not([data-reveal])": {
+          "animation": "chalkboard-appear 400ms ease-out var(--chalk-erase, 700ms) both"
+        },
+        "[data-slot=\"chalkboard-smudge\"]": {
+          "grid-area": "1 / 1",
+          "pointer-events": "none",
+          "background": "radial-gradient(ellipse 45% 9% at 32% 28%, #ffffff2e, transparent 75%), radial-gradient(ellipse 52% 11% at 58% 46%, #ffffff26, transparent 75%), radial-gradient(ellipse 40% 8% at 40% 64%, #ffffff24, transparent 75%), radial-gradient(ellipse 48% 10% at 62% 80%, #ffffff1c, transparent 75%)",
+          "animation": "chalkboard-smudge 2.2s ease-out both"
+        },
+        "[data-slot=\"chalkboard-tray\"]": {
+          "position": "relative",
+          "height": "0.7rem",
+          "margin": "0.45rem -0.4rem calc(0.15rem - var(--chalkboard-frame))",
+          "border-radius": "0.2rem 0.2rem 0.3rem 0.3rem",
+          "background-color": "#6b4325",
+          "background-image": "linear-gradient(#ffffff26, transparent 35%, #00000040), var(--chalkboard-wood)",
+          "background-size": "100% 100%, 480px 96px",
+          "box-shadow": "0 3px 5px -1px #00000080, inset 0 1px 0 #ffffff33"
+        },
+        "[data-slot=\"chalkboard-chalk\"]": {
+          "position": "absolute",
+          "bottom": "0.45rem",
+          "left": "12%",
+          "width": "2.2rem",
+          "height": "0.38rem",
+          "border-radius": "0.2rem",
+          "background": "linear-gradient(#ffffff, #e9e6dc 55%, #c9c5b8)",
+          "box-shadow": "0 1px 1px #0006",
+          "rotate": "-2deg"
+        },
+        "[data-slot=\"chalkboard-chalk\"][data-chalk=\"yellow\"]": {
+          "left": "calc(12% + 2.8rem)",
+          "width": "1.4rem",
+          "background": "linear-gradient(#fff6c4, #f2dc79 55%, #cdb65a)",
+          "rotate": "3deg"
+        },
+        "[data-slot=\"chalkboard-eraser\"]": {
+          "position": "absolute",
+          "right": "10%",
+          "bottom": "0.4rem",
+          "width": "3.4rem",
+          "height": "1rem",
+          "border-radius": "0.2rem",
+          "background": "linear-gradient(#ffffff1f, transparent 30%), linear-gradient(#8a5a33 0 55%, #3a3a3e 55%)",
+          "box-shadow": "inset 0 -0.18rem 0 #d9d6cc, 0 2px 3px #00000080"
+        },
+        "@keyframes chalkboard-write": {
+          "from": {
+            "clip-path": "inset(-0.4em 100% -0.4em -0.4em)"
+          },
+          "to": {
+            "clip-path": "inset(-0.4em -0.4em -0.4em -0.4em)"
+          }
+        },
+        "@keyframes chalkboard-write-rtl": {
+          "from": {
+            "clip-path": "inset(-0.4em -0.4em -0.4em 100%)"
+          },
+          "to": {
+            "clip-path": "inset(-0.4em -0.4em -0.4em -0.4em)"
+          }
+        },
+        "@keyframes chalkboard-erase": {
+          "to": {
+            "mask-position": "0 0, 0% 0"
+          }
+        },
+        "@keyframes chalkboard-appear": {
+          "from": {
+            "opacity": "0"
+          }
+        },
+        "@keyframes chalkboard-smudge": {
+          "0%": {
+            "opacity": "0"
+          },
+          "25%": {
+            "opacity": "1"
+          },
+          "100%": {
+            "opacity": "0"
+          }
+        },
+        "@media (prefers-reduced-motion: reduce)": {
+          "[data-slot=\"chalkboard-writing\"][data-reveal] [data-line]": {
+            "animation": "none"
+          },
+          "[data-slot=\"chalkboard-erasing\"]": {
+            "animation": "none",
+            "visibility": "hidden"
+          },
+          "[data-slot=\"chalkboard-writing\"][data-wiped]": {
+            "animation": "chalkboard-appear 300ms ease-out both"
+          }
+        }
+      }
+    },
+    {
+      "name": "teletext",
+      "type": "registry:ui",
+      "title": "Teletext",
+      "description": "Teletext pages on a 40×25 grid in the eight broadcast colours: double-height rows, 2×3 mosaic block graphics, flash, a header with the page number, service and clock, and the four coloured Fastext keys. Type three digits to tune, and the counter searches the broadcast before the page shows; subpages rotate. It fills its parent at 4:3 and scales the grid to it, so it fits a TV's screen. Pages are data; each is a region with a heading and real text, with goToPage and fastext for agents.",
+      "docs": "`<Teletext label pages page|defaultPage onPageChange service clock searchMs subpageMs screen locale labels>`. `pages` maps 100 to 899 to `{ title, rows | subpages, fastext }`; a row is a list of spans `{ text | mosaic, fg, bg, flash, separated }` or `{ spans, doubleHeight, heading }`, cut at 40 cells. `teletextMosaic(art)` turns block art (two characters across and three lines down a cell) into mosaic rows. The page region takes focus: digits tune (Backspace takes one back), Left and Right turn subpages, and subpages hold still while it has focus or the pointer. Fastext keys are UI SDK Buttons named by their words, shown only where the page links. The header's clock follows the page's locale and renders only after hydration. `screen=\"flat\"` drops the scanlines, for a set inside a TV that draws its own. The palette is the item's `css`; agents call `goToPage(n)` and `fastext(color)`, and a missing page fails with the pages the service has.",
+      "dependencies": [
+        "@ui-sdk/core@0.1.0-beta.12",
+        "@ui-sdk/react@0.1.0-beta.12"
+      ],
+      "registryDependencies": [
+        "@eskais/utils",
+        "@eskais/theme",
+        "@eskais/action-refusal",
+        "@eskais/narrow",
+        "@eskais/locale"
+      ],
+      "files": [
+        {
+          "path": "registry/ui/teletext.tsx",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/teletext-primitive.ts",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/teletext-page.ts",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/use-teletext-clock.ts",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/use-teletext-search.ts",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/use-teletext-subpages.ts",
+          "type": "registry:ui"
+        }
+      ],
+      "css": {
+        "[data-slot=\"teletext\"]": {
+          "--teletext-black": "#000000",
+          "--teletext-red": "#ff2a1f",
+          "--teletext-green": "#1fff3a",
+          "--teletext-yellow": "#fff22a",
+          "--teletext-blue": "#2a3cff",
+          "--teletext-magenta": "#ff36f0",
+          "--teletext-cyan": "#22f6ff",
+          "--teletext-white": "#ffffff",
+          "position": "relative",
+          "box-sizing": "border-box",
+          "width": "100%",
+          "max-height": "100%",
+          "aspect-ratio": "4 / 3",
+          "padding": "3.5% 4.5%",
+          "container-type": "size",
+          "overflow": "hidden",
+          "color": "var(--teletext-white)",
+          "background-color": "var(--teletext-black)",
+          "font-family": "\"Geist Mono Variable\", ui-monospace, \"Cascadia Mono\", Menlo, Consolas, monospace"
+        },
+        "[data-slot=\"teletext\"][data-screen=\"crt\"]::after": {
+          "position": "absolute",
+          "inset": "0",
+          "pointer-events": "none",
+          "content": "\"\"",
+          "background": "radial-gradient(ellipse 85% 80% at 50% 50%, transparent 60%, #00000080 100%), repeating-linear-gradient(180deg, transparent 0 2px, #00000038 2px 3px)"
+        },
+        "[data-slot=\"teletext-screen\"]": {
+          "--teletext-stretch": "1.4",
+          "--teletext-cell-w": "calc(100cqw / 40 / var(--teletext-stretch))",
+          "--teletext-cell-h": "calc(100cqh / 25)",
+          "display": "grid",
+          "grid-template-rows": "var(--teletext-cell-h) calc(var(--teletext-cell-h) * 23) var(--teletext-cell-h)",
+          "width": "100%",
+          "height": "100%",
+          "font-size": "calc(var(--teletext-cell-h) * 0.95)",
+          "font-weight": "700",
+          "line-height": "var(--teletext-cell-h)",
+          "white-space": "pre"
+        },
+        "[data-slot=\"teletext-screen\"] > *": {
+          "letter-spacing": "calc(var(--teletext-cell-w) - 1ch)",
+          "text-shadow": "0 0 0.14em color-mix(in srgb, currentColor 50%, transparent)"
+        },
+        "[data-slot=\"teletext-header\"]": {
+          "width": "calc(100% / var(--teletext-stretch))",
+          "transform": "scaleX(var(--teletext-stretch))",
+          "transform-origin": "left",
+          "display": "flex",
+          "gap": "calc(var(--teletext-cell-w) * 1)",
+          "overflow": "hidden"
+        },
+        "[data-slot=\"teletext-cells\"]": {
+          "width": "calc(100% / var(--teletext-stretch))",
+          "transform": "scaleX(var(--teletext-stretch))",
+          "transform-origin": "left",
+          "display": "flex",
+          "height": "var(--teletext-cell-h)"
+        },
+        "[data-slot=\"teletext-fastext\"]": {
+          "width": "calc(100% / var(--teletext-stretch))",
+          "transform": "scaleX(var(--teletext-stretch))",
+          "transform-origin": "left",
+          "display": "grid",
+          "grid-template-columns": "repeat(4, calc(var(--teletext-cell-w) * 10))"
+        },
+        "[data-slot=\"teletext-number\"][data-searching]": {
+          "color": "var(--teletext-green)"
+        },
+        "[data-slot=\"teletext-service\"]": {
+          "flex": "1 1 auto",
+          "min-width": "0",
+          "overflow": "hidden",
+          "color": "var(--teletext-yellow)"
+        },
+        "[data-slot=\"teletext-subpage\"]": {
+          "color": "var(--teletext-cyan)"
+        },
+        "[data-slot=\"teletext-time\"]": {
+          "color": "var(--teletext-yellow)"
+        },
+        "[data-slot=\"teletext-page\"]": {
+          "display": "grid",
+          "grid-template-rows": "repeat(23, var(--teletext-cell-h))",
+          "align-content": "start",
+          "min-height": "0",
+          "outline": "none"
+        },
+        "[data-slot=\"teletext-page\"]:focus-visible": {
+          "box-shadow": "0 0 0 2px var(--teletext-white)"
+        },
+        "[data-slot=\"teletext-row\"]": {
+          "grid-row": "var(--teletext-line) / span 1",
+          "display": "block",
+          "height": "var(--teletext-cell-h)",
+          "margin": "0",
+          "font": "inherit"
+        },
+        "[data-slot=\"teletext-row\"][data-double]": {
+          "grid-row": "var(--teletext-line) / span 2",
+          "height": "calc(var(--teletext-cell-h) * 2)"
+        },
+        "[data-slot=\"teletext-row\"][data-double] [data-slot=\"teletext-cells\"]": {
+          "transform": "scale(var(--teletext-stretch), 2)",
+          "transform-origin": "top left"
+        },
+        "[data-slot=\"teletext-span\"]": {
+          "display": "inline-block",
+          "flex": "none",
+          "width": "calc(var(--teletext-cells) * var(--teletext-cell-w))",
+          "height": "var(--teletext-cell-h)",
+          "overflow": "visible"
+        },
+        "[data-slot=\"teletext-mosaic\"]": {
+          "display": "block",
+          "width": "100%",
+          "height": "100%"
+        },
+        "[data-slot=\"teletext\"] [data-fg=\"black\"]": {
+          "color": "var(--teletext-black)"
+        },
+        "[data-slot=\"teletext\"] [data-fg=\"red\"]": {
+          "color": "var(--teletext-red)"
+        },
+        "[data-slot=\"teletext\"] [data-fg=\"green\"]": {
+          "color": "var(--teletext-green)"
+        },
+        "[data-slot=\"teletext\"] [data-fg=\"yellow\"]": {
+          "color": "var(--teletext-yellow)"
+        },
+        "[data-slot=\"teletext\"] [data-fg=\"blue\"]": {
+          "color": "var(--teletext-blue)"
+        },
+        "[data-slot=\"teletext\"] [data-fg=\"magenta\"]": {
+          "color": "var(--teletext-magenta)"
+        },
+        "[data-slot=\"teletext\"] [data-fg=\"cyan\"]": {
+          "color": "var(--teletext-cyan)"
+        },
+        "[data-slot=\"teletext\"] [data-fg=\"white\"]": {
+          "color": "var(--teletext-white)"
+        },
+        "[data-slot=\"teletext\"] [data-bg=\"red\"]": {
+          "background-color": "var(--teletext-red)"
+        },
+        "[data-slot=\"teletext\"] [data-bg=\"green\"]": {
+          "background-color": "var(--teletext-green)"
+        },
+        "[data-slot=\"teletext\"] [data-bg=\"yellow\"]": {
+          "background-color": "var(--teletext-yellow)"
+        },
+        "[data-slot=\"teletext\"] [data-bg=\"blue\"]": {
+          "background-color": "var(--teletext-blue)"
+        },
+        "[data-slot=\"teletext\"] [data-bg=\"magenta\"]": {
+          "background-color": "var(--teletext-magenta)"
+        },
+        "[data-slot=\"teletext\"] [data-bg=\"cyan\"]": {
+          "background-color": "var(--teletext-cyan)"
+        },
+        "[data-slot=\"teletext\"] [data-bg=\"white\"]": {
+          "background-color": "var(--teletext-white)"
+        },
+        "[data-slot=\"teletext\"] [data-flash]": {
+          "animation": "teletext-flash 1s step-end infinite"
+        },
+        "[data-slot=\"teletext-fastext\"] > button": {
+          "min-width": "0",
+          "height": "var(--teletext-cell-h)",
+          "margin": "0",
+          "padding": "0",
+          "overflow": "hidden",
+          "border": "0",
+          "color": "inherit",
+          "font": "inherit",
+          "letter-spacing": "inherit",
+          "text-align": "start",
+          "text-shadow": "inherit",
+          "white-space": "pre",
+          "cursor": "pointer",
+          "background": "none"
+        },
+        "[data-slot=\"teletext-fastext\"] > button:hover": {
+          "text-decoration": "underline",
+          "text-underline-offset": "0.15em"
+        },
+        "[data-slot=\"teletext-fastext\"] > button:focus-visible": {
+          "outline": "2px solid var(--teletext-white)",
+          "outline-offset": "-2px"
+        },
+        "[data-slot=\"teletext-fastext\"] > [data-fastext=\"red\"]": {
+          "color": "var(--teletext-red)"
+        },
+        "[data-slot=\"teletext-fastext\"] > [data-fastext=\"green\"]": {
+          "color": "var(--teletext-green)"
+        },
+        "[data-slot=\"teletext-fastext\"] > [data-fastext=\"yellow\"]": {
+          "color": "var(--teletext-yellow)"
+        },
+        "[data-slot=\"teletext-fastext\"] > [data-fastext=\"blue\"]": {
+          "color": "var(--teletext-cyan)"
+        },
+        "@keyframes teletext-flash": {
+          "75%": {
+            "opacity": "0"
+          }
+        },
+        "@media (prefers-reduced-motion: reduce)": {
+          "[data-slot=\"teletext\"] [data-flash]": {
+            "animation": "none"
+          }
+        }
+      }
+    },
+    {
       "name": "live-sky",
       "type": "registry:ui",
       "title": "Live Sky",
