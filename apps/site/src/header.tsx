@@ -117,6 +117,9 @@ function HeaderActions({ children }: { children?: ReactNode }) {
   )
 }
 
+/**
+ * Docs pages pass their sidebar's `trigger`, which opens the navigation below lg; without one, a Docs link stands in.
+ */
 function SiteTopbar({ trigger }: { trigger?: ReactNode }) {
   return (
     <Topbar

@@ -7,6 +7,7 @@ import { Switch } from "@/components/ui/switch"
 
 import { themeGlassItemStrength, type Overrides } from "./theme-editor-store"
 
+/** Shown only when the appearance has a `"glass"` theme; turning it off returns to `"default"`. */
 function GlassControls<Theme extends string>({
   appearance,
   strength,

@@ -91,6 +91,7 @@ function SiteDocsLayout({ route, children }: { route: string; children: ReactNod
   )
 }
 
+/** Render it inside the page's Suspense boundary, so it appears with the page instead of under its spinner. */
 function SiteDocsPager({ route }: { route: string }) {
   const { previous, next } = neighbours(route)
   return (

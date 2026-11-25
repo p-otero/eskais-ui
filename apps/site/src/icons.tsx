@@ -31,6 +31,7 @@ const GithubIcon = (props: IconProps) => (
 const symbolViewBox = /viewBox="([^"]+)"/.exec(symbol)?.[1]
 const symbolPath = / d="([^"]+)"/.exec(symbol)?.[1]
 
+/** Brand rules: monochrome, between 16 and 64px, never animated. Named "Eskais" unless `aria-hidden`. */
 function Logo({ "aria-hidden": hidden, ...props }: Omit<IconProps, "children">) {
   const name = hidden ? { "aria-hidden": hidden } : { role: "img", "aria-label": "Eskais" }
   return (

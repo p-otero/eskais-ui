@@ -1137,6 +1137,7 @@ export const rateLimitTree: (string | GitTreeFile)[] = (() => {
 
 export const rateLimitChangedPaths = rateLimitFiles.map((file) => file.path)
 
+/** `null` for a file the commit didn't change. */
 export function rateLimitPatchOf(path: string): string | null {
   const file = rateLimitFiles.find((entry) => entry.path === path)
   return file === undefined ? null : renderPatch([file])

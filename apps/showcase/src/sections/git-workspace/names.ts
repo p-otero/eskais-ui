@@ -1,3 +1,4 @@
+/** Apart from the demos, so the showcase's router can name them without loading them. */
 const gitWorkspaceDemoNames = [
   "git-master",
   "git-worktree",
