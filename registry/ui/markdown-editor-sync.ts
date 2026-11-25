@@ -17,7 +17,6 @@ type SyncProps = {
 
 const noop = () => {}
 
-/** Keeps the editor and the `value` prop in step: debounced `onChange`, dirty state and outside updates. */
 function createSync(props: RefObject<SyncProps>) {
   let view: EditorView | undefined
   let rebuildState: (markdown: string) => void = noop

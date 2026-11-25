@@ -50,8 +50,8 @@ type EditorHooks = {
 const supports = new WeakMap<CodeLanguages, LanguageSupport>()
 const NO_LANGUAGES: CodeLanguages = []
 
-// `markdown()` always builds an HTML language for inline tags, which pulls lang-html, lang-css and
-// lang-javascript into the bundle; HTML here is shown as muted text, so the language is built directly.
+// Perf: `markdown()` always builds an HTML language for inline tags, which pulls lang-html, lang-css and
+// lang-javascript into the bundle; HTML here shows as muted text, so the language is built directly.
 function markdownSupport(languages: CodeLanguages) {
   let support = supports.get(languages)
   if (support) return support
@@ -78,12 +78,6 @@ const placeholderSlot = new Compartment()
 const nonceSlot = new Compartment()
 const frontmatterSlot = new Compartment()
 
-/**
- * Drops the part of an edit that falls in the frontmatter or on the line break after its closing fence, so the
- * block keeps every byte. Text from `value` still replaces it. Typing at the very start would break the opening
- * fence, so such a transaction is dropped whole; an insertion after a closing fence that ends the document goes
- * through, and `bodyAfterFence` starts it on a new line.
- */
 const protectFrontmatter = EditorState.changeFilter.of((transaction) => {
   if (!transaction.docChanged || transaction.annotation(fromValue)) return true
   const { startState } = transaction
@@ -99,7 +93,6 @@ const protectFrontmatter = EditorState.changeFilter.of((transaction) => {
 
 const startsWithLineBreak = (text: Text) => text.lines > 1 && text.line(1).length === 0
 
-/** Puts a line break before text inserted right after a closing fence that ends the document. */
 const bodyAfterFence = EditorState.transactionFilter.of((transaction) => {
   if (!transaction.docChanged || transaction.annotation(fromValue)) return transaction
   const { startState } = transaction

@@ -65,7 +65,6 @@ const documentStateOf = (options: MarkdownDocumentOptions) => ({
   agentConfirm: options.agentConfirm,
 })
 
-// A separate component so its confirm mark covers only the whole-document replacement, not the editor's other actions.
 const markdownDocument = definePrimitive({
   name: "markdown-document",
   options: { editor: "value", readOnly: "boolean", agentConfirm: "string" },

@@ -17,10 +17,6 @@ function selectedLines(state: EditorState) {
   return [...lines.values()]
 }
 
-/**
- * Maps the selection through a change to line markers. An end that sat at or before a line's text moves to after
- * its new marker, so typing lands in the text: plain mapping keeps it before an insertion at that spot.
- */
 function selectionAfterMarkers(state: EditorState, changes: ChangeSet) {
   const map = (pos: number) => {
     const start = lineStructure(state, state.doc.lineAt(pos)).contentStart
@@ -105,7 +101,6 @@ function listItems(state: EditorState) {
   return items
 }
 
-/** Shifts every line of an item, its children included, by `delta` spaces, after any quote marks. */
 function shiftItem(state: EditorState, item: SyntaxNode, delta: number, changes: ChangeSpec[]) {
   const first = state.doc.lineAt(item.from)
   let quoted = false

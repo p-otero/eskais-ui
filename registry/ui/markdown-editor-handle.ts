@@ -89,7 +89,7 @@ type MarkdownEditorHandle = {
   getScrollLine: () => number
 }
 
-/** String offsets and editor positions differ only in a CRLF document, where a line break is one position. */
+// Spec: CodeMirror counts a CRLF line break as one position, so string offsets and editor positions differ there.
 function lineBreakSize(state: EditorState) {
   return state.lineBreak.length - 1
 }
@@ -133,7 +133,6 @@ function createEditorHandle(view: EditorView, menus: HandleMenus): MarkdownEdito
       const { state } = view
       const { anchor, head, from, to } = committedSelection(state)
       const active = activeProvisional(state)
-      // The selection a dismissal restores covers at most the text the trigger replaced.
       const text = active ? active.original.slice(from - active.from, to - active.from) : state.sliceDoc(from, to)
       return {
         anchor: toOffset(state, anchor),

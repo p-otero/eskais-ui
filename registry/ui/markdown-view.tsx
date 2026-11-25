@@ -66,7 +66,7 @@ const prose = [
 
 type BlockProps = { block: MarkdownBlock; references: string; options: RenderOptions }
 
-// Unchanged blocks keep their elements: the text, the link references and the options are all a block reads.
+// Perf: unchanged blocks keep their elements; the text, the link references and the options are all a block reads.
 const Block = memo(
   ({ block }: BlockProps) => block.render(),
   (previous, next) =>

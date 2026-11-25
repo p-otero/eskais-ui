@@ -35,7 +35,6 @@ import { isOneOf } from "@/lib/narrow"
 
 type ToolbarFormat = Exclude<MarkdownFormat, "heading">
 
-// The keys mirror the editor's keymap (markdown-editor-state.ts), so the tooltip shows what the button is bound to.
 const ITEMS: { format: ToolbarFormat; glyph: ReactNode; group: number; shortcut?: string }[] = [
   { group: 0, format: "bold", glyph: <BoldIcon />, shortcut: "mod+b" },
   { group: 0, format: "italic", glyph: <ItalicIcon />, shortcut: "mod+i" },
@@ -65,7 +64,6 @@ const levelLabel = (labels: MarkdownEditorLabels, level: (typeof LEVELS)[number]
 const buttonClassName =
   "touch-target inline-flex size-control-sm shrink-0 items-center justify-center rounded-control text-muted-foreground outline-none hover:bg-accent hover:text-accent-foreground focus-visible:ring-2 focus-visible:ring-ring data-disabled:opacity-50 data-open:bg-accent data-open:text-accent-foreground [&_svg]:size-4"
 
-/** How many items fit beside the heading menu, leaving room for the "more" button when some don't. */
 function fitCount(toolbar: HTMLElement) {
   const style = getComputedStyle(toolbar)
   const gap = Number.parseFloat(style.columnGap) || 0
@@ -155,7 +153,6 @@ function MarkdownEditorToolbar({
         <ControlTooltip key={format} label={labels[format]} shortcut={shortcut}>
           <ToolbarButton
             aria-label={labels[format]}
-            // Keeps focus and the selection in the editor; the toolbar still takes focus from the keyboard.
             onMouseDown={keepSelection}
             onClick={() => onFormat(format)}
             className={buttonClassName}

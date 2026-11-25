@@ -51,8 +51,8 @@ function listDepth(node: SyntaxNode | null) {
   return depth
 }
 
-// Block marks sit in these nodes; inline content never holds one, so the walk skips it.
-const HOLDERS = /^(Document|Blockquote|BulletList|OrderedList|ListItem|Task|Paragraph|FencedCode|ATXHeading\d)$/
+const BLOCK_MARK_HOLDERS =
+  /^(Document|Blockquote|BulletList|OrderedList|ListItem|Task|Paragraph|FencedCode|ATXHeading\d)$/
 
 /** Every block mark that starts between `from` and `to`, by position, in one walk of the tree. */
 function blockMarks(state: EditorState, from: number, to: number) {
@@ -65,7 +65,7 @@ function blockMarks(state: EditorState, from: number, to: number) {
         if (ref.from >= from) marks.set(ref.from, ref.node)
         return false
       }
-      return HOLDERS.test(ref.name) ? undefined : false
+      return BLOCK_MARK_HOLDERS.test(ref.name) ? undefined : false
     },
   })
   return marks

@@ -82,7 +82,7 @@ class Preview implements PluginValue {
   update(update: ViewUpdate) {
     const refresh = update.transactions.some((tr) => tr.effects.some((effect) => effect.is(refreshReveal)))
     const configChanged = update.startState.facet(previewConfig) !== update.state.facet(previewConfig)
-    // While an IME composes, the decorations around the caret must stay put or the composition breaks.
+    // Spec: an IME composition breaks when the decorations around the caret change.
     if (update.view.composing && !refresh) {
       this.reveal = this.reveal.map((span) => ({
         from: update.changes.mapPos(span.from, -1),
@@ -141,8 +141,7 @@ class Preview implements PluginValue {
     }
   }
 
-  // Columns line up by giving every cell its column's widest text, measured from the text itself so the min-width
-  // never feeds back; it's set through the CSSOM because a style attribute is blocked under a strict CSP.
+  // Security: a strict CSP blocks style attributes, so the column widths go through the CSSOM.
   private readColumns() {
     this.measuring = false
     const cells = [...this.view.contentDOM.querySelectorAll<HTMLElement>("[data-md-table-id]")]

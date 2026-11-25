@@ -13,7 +13,6 @@ const CLOSE_BRACKET = 93
 const PIPE = 124
 const NEWLINE = 10
 
-/** `[[target|label]]` from `start + open`, as a node named `name` whose marks are `mark`; -1 when it isn't one. */
 function parseTarget(cx: InlineContext, start: number, open: number, name: string, mark: string) {
   let pipe = -1
   for (let pos = start + open; pos < cx.end; pos++) {

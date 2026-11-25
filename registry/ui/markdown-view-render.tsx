@@ -11,7 +11,7 @@ import { markdownParser, type WikilinkResolver } from "@/components/ui/markdown-
 type FrontmatterDisplay = "hide" | "properties" | "raw"
 
 type ImageSize = { width: number; height?: number }
-/** `alt|300x200` or `alt|300`, as Obsidian writes an image's size in its alt text. */
+// Spec: Obsidian writes an image's size in its alt text: `alt|300x200` or `alt|300`.
 function sizeInAlt(text: string): { alt: string; size?: ImageSize } {
   const [, alt = "", width, height] = /^(.*?)\|(\d+)(?:x(\d+))?$/.exec(text) ?? []
   if (width === undefined) return { alt: text }
@@ -146,8 +146,8 @@ function renderInline(cx: Context, node: SyntaxNode): ReactNode {
         new Set(["LinkMark", "URL", "LinkTitle", "LinkLabel"]),
       )
       if (node.name === "Image") {
-        // With a width and height the box is reserved before the image loads (CSS keeps `height: auto`), so text
-        // below it doesn't move when it arrives.
+        // Perf: a width and height reserve the box before the image loads (CSS keeps `height: auto`), so nothing
+        // below it shifts.
         const written = sizeInAlt(cx.src.slice(parts.labelFrom, parts.labelTo))
         const size = written.size ?? (parts.href ? cx.imageSize?.(parts.href, written.alt) : undefined)
         return (
@@ -380,7 +380,7 @@ type MarkdownBlock = { key: string; text: string; anchors: string; render: () =>
  */
 type Parsed = { src: string; tree: Tree }
 
-/** Reuses the previous parse for everything outside the one edited range, as an editor's parse does. */
+// Perf: reuses the previous parse for everything outside the one edited range.
 function parse(src: string, previous?: Parsed) {
   if (!previous) return markdownParser.parse(src)
   const old = previous.src
@@ -411,7 +411,6 @@ function markdownBlocks(src: string, options: RenderOptions, previous?: Parsed) 
     seen.set(digest, count + 1)
     return { key: `${digest}.${String(count)}`, text, anchors, render }
   }
-  // Blocks and headings are both in document order, so one pass hands each block its headings.
   let next = 0
   const anchorsIn = (node: SyntaxNode) => {
     const slugs: string[] = []
@@ -419,7 +418,7 @@ function markdownBlocks(src: string, options: RenderOptions, previous?: Parsed) 
     for (; next < headings.length && headings[next]!.from < node.to; next++) slugs.push(headings[next]!.slug)
     return slugs.join(" ")
   }
-  // Leading YAML parses as a rule and a setext heading; those nodes are left out and it renders as one block.
+  // Spec: CommonMark parses leading YAML as a rule and a setext heading; frontmatter renders as one block.
   const frontmatter = parseFrontmatter(src)
   const nodes = children(tree.topNode).filter((node) => !frontmatter || node.to > frontmatter.to)
   const list: MarkdownBlock[] = nodes.map((node) =>

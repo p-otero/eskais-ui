@@ -56,10 +56,8 @@ import { cn } from "@/lib/utils"
 const { Root: EditorRoot } = createParts(markdownEditor, { root: "div" })
 const { Root: DocumentRoot } = createParts(markdownDocument, { root: "div" })
 
-/**
- * Opens the wikilink suggestions behind a provisional `[[`. The trigger menu closes once more after a slash
- * command's `run` returns, so a request made from `run` opens after that, in a microtask.
- */
+// Workaround: the trigger menu closes once more after a slash command's `run` returns, so a request made from
+// `run` opens in a microtask.
 function createWikilinkOpener(controller: TriggerMenuController) {
   let running = false
   let queued: EditorView | null = null
@@ -135,8 +133,8 @@ type MarkdownEditorProps = {
   ref?: Ref<MarkdownEditorHandle | null>
 }
 
-// React Compiler treats every prop read beside `props.ref` as a ref, and can't memoize from a rest object, so the
-// body takes the ref as `handle`.
+// Workaround: React Compiler 1.0 treats every prop read beside `props.ref` as a ref and can't memoize from a
+// rest object.
 function MarkdownEditor({ ref, ...props }: MarkdownEditorProps) {
   return <MarkdownEditorBody {...props} handle={ref} />
 }

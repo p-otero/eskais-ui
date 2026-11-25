@@ -104,7 +104,6 @@ function createAdapterBridge() {
         const active = activeProvisional(view.state)
         let { start, end } = range
         if (active && start === active.from && end <= active.to) {
-          // A choice: the note goes back to what it was, then takes the item as one undo step from there.
           revertProvisional(view)
           end = start + active.original.length
         }
