@@ -3,9 +3,9 @@ import { definePrimitive } from "@ui-sdk/core"
 import { unavailable } from "@/lib/action-refusal"
 
 type FormRootOptions = {
-  /** Whether the form has an accessible name, so an agent can find it. */
+  /** Without an accessible name, agents don't see the form. */
   named?: boolean
-  /** Whether submitting needs a person (a destructive submit): agents then press the submit button instead. */
+  /** A destructive submit needs a person: agents then press the submit button instead. */
   confirm?: boolean
   onResetRequest?: () => void
 }

@@ -79,7 +79,6 @@ function setFormError(form: UseFormReturn<FieldValues>, name: string, error: For
   form.setError(name === "root" ? "root.server" : name, toFieldError(error))
 }
 
-// Field errors land on fields that are rendered or hold a value; the rest join the root error.
 function applyFormError(form: UseFormReturn<FieldValues>, fields: Map<string, unknown>, error: unknown) {
   const parsed = toFormErrors(error)
   if (!parsed) {
@@ -95,7 +94,7 @@ function applyFormError(form: UseFormReturn<FieldValues>, fields: Map<string, un
   else if (unmapped.length) setFormError(form, "root", unmapped.join("\n"))
 }
 
-// The try/finally lives outside the component: React Compiler 1.0 can't compile a component that holds one.
+// Workaround: React Compiler 1.0 can't compile a component that holds a try/finally.
 async function settle<T>(task: () => T | Promise<T>, cleanup: () => void): Promise<T> {
   try {
     return await task()

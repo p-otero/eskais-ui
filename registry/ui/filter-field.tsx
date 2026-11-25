@@ -39,8 +39,7 @@ type FilterFieldProps = {
 }
 
 const legendClassName = "text-body-sm font-medium"
-// A part of a grouped field (From, Value) reads quieter than the group's legend, so the hierarchy shows.
-const subLabelClassName = "font-normal text-muted-foreground"
+const quieterThanLegendClassName = "font-normal text-muted-foreground"
 
 function TextControl({ field, value, onValueChange, onSubmit, className }: FilterFieldProps) {
   return (
@@ -158,7 +157,7 @@ function NumberBox({
 }) {
   return (
     <Field className="min-w-0 flex-1">
-      <FieldLabel className={subLabelClassName}>{label}</FieldLabel>
+      <FieldLabel className={quieterThanLegendClassName}>{label}</FieldLabel>
       <NumberInput
         locale={locale}
         value={value ?? null}
@@ -193,27 +192,26 @@ function NumberControl({
   const current = isNumberFilter(value) ? value : undefined
   const operators = field.kind === "number" ? (field.operators ?? defaultOperators) : defaultOperators
   const [op, setOp] = useState<NumberOp | "between">(current?.op ?? operators[0] ?? "eq")
-  // A range applies once both ends are set; until then the end typed first waits here.
-  const [bounds, setBounds] = useState<{ min?: number; max?: number }>(() =>
+  const [rangeEndsTyped, setRangeEndsTyped] = useState<{ min?: number; max?: number }>(() =>
     current?.op === "between" ? { min: current.min, max: current.max } : {},
   )
   if (field.kind !== "number") return null
   const single = current && current.op !== "between" ? current.value : undefined
-  const range = current?.op === "between" ? current : bounds
+  const range = current?.op === "between" ? current : rangeEndsTyped
   const setSingle = (next: number | undefined) =>
     onValueChange(next === undefined ? undefined : { op: op === "between" ? "eq" : op, value: next })
   const setRange = (min: number | undefined, max: number | undefined) => {
-    setBounds({ min, max })
+    setRangeEndsTyped({ min, max })
     onValueChange(min === undefined || max === undefined ? undefined : { op: "between", min, max })
   }
+  const comparisonBesideValue = op !== "between"
   return (
     <FieldSet className={cn("@container gap-items", className)}>
       <FieldLegend className={legendClassName}>{field.label}</FieldLegend>
-      {/* The comparison and the value share a row once the container has room; a range's two ends get their own. */}
-      <div className={cn("flex flex-col gap-items", op !== "between" && "@xs:flex-row")}>
+      <div className={cn("flex flex-col gap-items", comparisonBesideValue && "@xs:flex-row")}>
         {operators.length > 1 && (
           <Field className="min-w-0 flex-1">
-            <FieldLabel className={subLabelClassName}>{labels.comparison}</FieldLabel>
+            <FieldLabel className={quieterThanLegendClassName}>{labels.comparison}</FieldLabel>
             <Select
               options={operators.map((operator) => ({ value: operator, label: labels.operators[operator] }))}
               value={op}
@@ -299,7 +297,7 @@ function DateControl({
       <FieldLegend className={legendClassName}>{field.label}</FieldLegend>
       <div className="grid gap-items @sm:grid-cols-2">
         <Field className="min-w-0">
-          <FieldLabel className={subLabelClassName}>{labels.from}</FieldLabel>
+          <FieldLabel className={quieterThanLegendClassName}>{labels.from}</FieldLabel>
           <DatePicker
             locale={locale}
             clearable
@@ -309,7 +307,7 @@ function DateControl({
           />
         </Field>
         <Field className="min-w-0">
-          <FieldLabel className={subLabelClassName}>{labels.to}</FieldLabel>
+          <FieldLabel className={quieterThanLegendClassName}>{labels.to}</FieldLabel>
           <DatePicker
             locale={locale}
             clearable
@@ -372,10 +370,6 @@ function RemoteControl({
   )
 }
 
-/**
- * The control for one schema field, named by its label: an input, a select, checkboxes, a comparison and number,
- * date pickers, or a ServerCombobox for remote options. `FilterChips` and `FilterPanel` use it.
- */
 function FilterField({ locale: localeProp, ...rest }: FilterFieldProps) {
   const props = { ...rest, locale: useLocale(localeProp) }
   const labels = { ...filterFieldLabels, ...props.labels }
@@ -403,7 +397,7 @@ function FilterField({ locale: localeProp, ...rest }: FilterFieldProps) {
   return control
 }
 
-/** Whether a change to this field is a pick (applies at once) rather than typing (applies on Enter or close). */
+/** `false` for typed fields (text, number), which apply on Enter or close. */
 function appliesAtOnce(field: FilterFieldDefinition) {
   return field.kind !== "text" && field.kind !== "number"
 }

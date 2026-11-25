@@ -55,7 +55,6 @@ type FormValuesOf<Schema extends StandardSchemaV1> =
 
 type TypedForm<Schema extends StandardSchemaV1> = {
   Form: (props: FormProps<Schema>) => ReactNode
-  /** `name` must be a path into the schema's input. */
   FormField: (props: FormFieldProps<FormValuesOf<Schema>>) => ReactNode
   useFormInstance: () => UseFormReturn<FormValuesOf<Schema>>
   useFormWatch: <Name extends FieldPath<FormValuesOf<Schema>>>(name: Name) => FieldPathValue<FormValuesOf<Schema>, Name>
@@ -65,10 +64,7 @@ type TypedForm<Schema extends StandardSchemaV1> = {
   ) => UseFieldArrayReturn<FormValuesOf<Schema>, Name, KeyName>
 }
 
-/**
- * The form parts typed by one schema, so a misspelt `name` fails to compile:
- * `const { Form, FormField } = createForm<typeof schema>()`. They are the same components, only typed.
- */
+/** A misspelt `name` fails to compile. The same components at runtime, only typed. */
 function createForm<Schema extends StandardSchemaV1>(): TypedForm<Schema> {
   return {
     Form,

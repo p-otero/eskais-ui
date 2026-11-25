@@ -117,7 +117,6 @@ type FormDialogProps<Schema extends StandardSchemaV1> = Omit<
     reviewStep?: ReviewStep<StandardSchemaV1.InferOutput<Schema>, StandardSchemaV1.InferInput<Schema> & FieldValues>
     rootErrorTitle?: ReactNode
     className?: string
-    /** The fields. */
     children?: ReactNode
   }
 
@@ -190,7 +189,7 @@ function FormDialog<Schema extends StandardSchemaV1>({
         wrote = true
       },
     })
-    // No try/finally: React Compiler 1.0 can't compile it.
+    // Workaround: React Compiler 1.0 can't compile try/finally.
     const prepared: ReviewPrepareResult<Output> | void = await Promise.resolve(
       reviewStep.prepare(values, { form: instance }),
     ).finally(stop)
@@ -223,7 +222,7 @@ function FormDialog<Schema extends StandardSchemaV1>({
       return
     }
     const submitted = review ? review.values : values
-    // Conditionals stay out of the try statement: React Compiler 1.0 can't compile them inside one.
+    // Workaround: React Compiler 1.0 can't compile a conditional inside try.
     try {
       await onSubmit(submitted, helpers)
     } catch (error) {

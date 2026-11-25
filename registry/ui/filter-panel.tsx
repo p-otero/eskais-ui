@@ -94,10 +94,7 @@ function FilterPanelForm({ schema, keys, values, labels, valueLabels, locale, on
   )
 }
 
-/**
- * Every filter in one form, applied together: a side panel beside the results on wide screens, a bottom sheet on
- * narrow ones (760px and below). Apply sends the draft; Reset clears the fields it shows.
- */
+/** A bottom sheet at 760px and below. Apply sends the draft; Reset clears only the fields it shows. */
 function FilterPanel<S extends FilterSchema>({
   open,
   onOpenChange,
@@ -125,11 +122,11 @@ function FilterPanel<S extends FilterSchema>({
     controller.setFilter(assumeType<FilterValues<S>>(next))
     if (narrow) onOpenChange(false)
   }
-  // A new form whenever the applied filters change elsewhere (chips, the URL), so the draft starts from them.
+  const appliedValuesKey = JSON.stringify(keys.map((key) => values[key]))
   const form = (
     <FilterPanelForm
       locale={locale}
-      key={JSON.stringify(keys.map((key) => values[key]))}
+      key={appliedValuesKey}
       schema={schema}
       keys={keys}
       values={values}
@@ -164,7 +161,6 @@ type FilterPanelTriggerProps = {
   className?: string
 }
 
-/** The button that shows and hides a `FilterPanel`, with the number of filters that apply. */
 function FilterPanelTrigger({ open, onOpenChange, count = 0, ref, children, className }: FilterPanelTriggerProps) {
   return (
     <Button
@@ -187,7 +183,7 @@ function FilterPanelTrigger({ open, onOpenChange, count = 0, ref, children, clas
   )
 }
 
-/** How many of the panel's fields apply now, for `FilterPanelTrigger count`. */
+/** Leaves out the search field, as `FilterPanelTrigger count` expects. */
 function countActiveFilters<S extends FilterSchema>(schema: S, values: FilterValues<S>) {
   const searchKey = searchFieldOf(schema)
   return activeFilterKeys(schema, values).filter((key) => key !== searchKey).length

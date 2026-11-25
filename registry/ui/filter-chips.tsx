@@ -56,15 +56,16 @@ const symbols = { eq: "=", neq: "≠", lt: "<", lte: "≤", gt: ">", gte: "≥" 
 
 const dateOnly = /^(\d{4})-(\d{2})-(\d{2})$/
 
-// A date-only value is a calendar day, so it is shown in UTC: the day it names, whatever the viewer's time zone.
+function calendarDayInAnyTimeZone(day: RegExpExecArray, locale: string | undefined) {
+  const time = Date.UTC(Number(day[1]), Number(day[2]) - 1, Number(day[3]))
+  return new Intl.DateTimeFormat(locale, { dateStyle: "medium", timeZone: "UTC" }).format(time)
+}
+
 function dateText(value: DateInput | undefined, locale: string | undefined) {
   if (value === undefined) return ""
   if (typeof value === "string") {
     const day = dateOnly.exec(value)
-    if (day) {
-      const time = Date.UTC(Number(day[1]), Number(day[2]) - 1, Number(day[3]))
-      return new Intl.DateTimeFormat(locale, { dateStyle: "medium", timeZone: "UTC" }).format(time)
-    }
+    if (day) return calendarDayInAnyTimeZone(day, locale)
     const time = Date.parse(value)
     if (Number.isNaN(time)) return value
     return new Intl.DateTimeFormat(locale, { dateStyle: "medium", timeStyle: "short" }).format(time)
@@ -77,10 +78,7 @@ function dateText(value: DateInput | undefined, locale: string | undefined) {
     : value.toString()
 }
 
-/**
- * A short text for a field's value, for a chip: "Open, Blocked", "≥ 10", "Jan 1, 2026 – Jan 31, 2026". Numbers and
- * dates are written in `locale`.
- */
+/** "Open, Blocked", "≥ 10", "Jan 1, 2026 – Jan 31, 2026", with numbers and dates in `locale`. */
 function summarizeFilter(
   field: FilterFieldDefinition,
   value: unknown,
@@ -137,10 +135,7 @@ type FilterChipsProps<S extends FilterSchema> = {
   className?: string
 }
 
-/**
- * Filters as chips in a FilterBar: one chip per active filter, opening an editor for its field, a button that
- * removes it, "Add filter" for the others, and reset. Picks apply at once; typed values on Enter or on close.
- */
+/** Picks apply at once; typed values on Enter or when the chip's editor closes. */
 function FilterChips<S extends FilterSchema>({
   fields,
   valueLabels: knownLabels,
@@ -178,8 +173,8 @@ function FilterChips<S extends FilterSchema>({
     if (editing?.key !== key) return
     apply(key, editing.draft)
     setEditing(null)
-    // A chip added from the menu and left empty goes away; focus returns to "Add filter" instead of the page.
-    if (!isActiveValue(editing.draft)) requestAnimationFrame(() => addButton.current?.focus())
+    const chipGoesAway = !isActiveValue(editing.draft)
+    if (chipGoesAway) requestAnimationFrame(() => addButton.current?.focus())
   }
 
   return (

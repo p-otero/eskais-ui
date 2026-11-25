@@ -126,7 +126,6 @@ type FileInputFilesProps = Omit<ComponentProps<typeof FileInputListPrimitive>, "
   locale?: string
 }
 
-/** The chosen files as attachment chips (name, type and size) with a remove button each. */
 function FileInputFiles({ labels: ownLabels, locale: localeProp, ...props }: FileInputFilesProps) {
   const labels = { ...fileInputLabels, ...ownLabels }
   const locale = useLocale(localeProp)
@@ -165,10 +164,7 @@ type FileInputRejectionsProps = ComponentProps<"ul"> & {
   locale?: string
 }
 
-/**
- * Why files were left out, in the destructive tone. Not a live region: the file input already announces rejected
- * files, so this is what a sighted person reads.
- */
+/** Not a live region: the file input already announces rejected files. */
 function FileInputRejections({
   rejections,
   limits = noLimits,
@@ -210,10 +206,7 @@ type FileUploadProps = Omit<ComponentProps<typeof FileInputPrimitive>, "children
   locale?: string
 }
 
-/**
- * A drop zone with a browse button, the chosen files as removable chips and why any were left out. Drops, pastes
- * inside the zone and the picker go through the same `accept`, `maxSize`, `minSize`, `maxFiles` and `validate`.
- */
+/** Drops, pastes inside the zone and the picker all go through `accept`, `maxSize`, `minSize`, `maxFiles` and `validate`. */
 function FileUpload({
   title,
   description,

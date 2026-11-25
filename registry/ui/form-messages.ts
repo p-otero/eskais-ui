@@ -111,7 +111,6 @@ function createFormMessages(
   }
 }
 
-// A message with no spaces and at least one dot reads as a translation key the schema author chose.
 const translationKey = /^[A-Za-z_$][\w$-]*(\.[\w$-]+)+$/
 
 const builtInCodes = new Set<string>([
@@ -128,7 +127,6 @@ const builtInCodes = new Set<string>([
   "invalid",
 ])
 
-// Reserved so a coded message can't be read from prose: no schema author writes it at the start of a sentence.
 const codedPrefix = "@@form:"
 
 /**

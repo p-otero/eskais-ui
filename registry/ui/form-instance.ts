@@ -22,23 +22,18 @@ function useTypedForm<Values extends FieldValues>(part: string): UseFormReturn<V
   return assumeType<UseFormReturn<Values>>(useFormContext(part).form)
 }
 
-/**
- * The react-hook-form instance of the surrounding `Form`, typed by its input values: `trigger`, `setValue`,
- * `getValues`, `control`, `formState`. Its `watch` re-renders the Form, not the caller: read a live value with
- * `useFormWatch(name)` instead.
- */
+/** Its `watch` re-renders the Form, not the caller: read a live value with `useFormWatch(name)` instead. */
 function useFormInstance<Values extends FieldValues = FieldValues>(): UseFormReturn<Values> {
   return useTypedForm<Values>("useFormInstance")
 }
 
-/** react-hook-form's `useFieldArray` options without `name` and `control`; `keyName` names the rows' key property. */
 type UseFormFieldArrayOptions<
   Values extends FieldValues,
   Name extends ArrayPath<Values>,
   KeyName extends string = "id",
 > = Omit<UseFieldArrayProps<Values, Name, KeyName>, "name" | "control">
 
-/** A field's live value, re-rendering only the caller: react-hook-form's `useWatch` bound to the surrounding `Form`. */
+/** Re-renders only the caller. */
 function useFormWatch<Values extends FieldValues = FieldValues, Name extends FieldPath<Values> = FieldPath<Values>>(
   name: Name,
 ): FieldPathValue<Values, Name> {
@@ -47,9 +42,8 @@ function useFormWatch<Values extends FieldValues = FieldValues, Name extends Fie
 }
 
 /**
- * react-hook-form's `useFieldArray` bound to the surrounding `Form`. Key rows by `field.id`, never by index. When the
- * items carry their own `id`, pass `keyName: "fieldKey"` (any free name) and key rows by `field.fieldKey`:
- * react-hook-form writes its row key over the property `keyName` names.
+ * Key rows by `field.id`, never by index. Items with their own `id` need `keyName: "fieldKey"` (any free name), keyed
+ * by `field.fieldKey`: react-hook-form writes its row key over the property `keyName` names.
  */
 function useFormFieldArray<
   Values extends FieldValues = FieldValues,
