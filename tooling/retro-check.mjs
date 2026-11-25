@@ -6,6 +6,7 @@ const minimumTextContrast = 4.5
 const minimumHitPx = 44
 const maxNeighbourLuminanceJump = 60
 const minimumRedShare = 0.9
+const maxBootOffCentreShare = 0.03
 
 function check(label, ok, detail = "") {
   console.log(`${ok ? "ok  " : "FAIL"} ${label}${detail ? `: ${detail}` : ""}`)
@@ -226,14 +227,32 @@ async function hitArea(page, locator) {
   return hits.every(Boolean)
 }
 
+async function bootCentred(page, state) {
+  const [stage, boot, width] = await page.evaluate(() => [
+    document.querySelector('[data-slot="ejector-button-stage"]').getBoundingClientRect().toJSON(),
+    document.querySelector('[data-slot="ejector-button-boot"]').getBoundingClientRect().toJSON(),
+    innerWidth,
+  ])
+  const inside =
+    boot.left >= stage.left && boot.right <= stage.right && boot.top >= stage.top && boot.bottom <= stage.bottom
+  const offCentre = Math.abs(boot.left + boot.width / 2 - (stage.left + stage.width / 2)) / stage.width
+  check(
+    `The boot sits inside the stage, centred within ${String(maxBootOffCentreShare * 100)}% (${state}, ${String(width)}px)`,
+    inside && offCentre <= maxBootOffCentreShare,
+    `boot ${boot.left.toFixed(0)}–${boot.right.toFixed(0)} × ${boot.top.toFixed(0)}–${boot.bottom.toFixed(0)}, stage ${stage.left.toFixed(0)}–${stage.right.toFixed(0)} × ${stage.top.toFixed(0)}–${stage.bottom.toFixed(0)}, ${(offCentre * 100).toFixed(1)}% off centre`,
+  )
+}
+
 async function ejectorButton(page) {
   await demo(page, "ejector-button")
   const cover = page.getByRole("button", { name: "Safety cover" })
   const release = page.locator('[data-slot="ejector-release"]')
   await cover.waitFor()
+  await bootCentred(page, "closed")
   check("The closed cover takes a press over the red button", await hitArea(page, cover))
   await cover.click()
   await page.waitForTimeout(600)
+  await bootCentred(page, "open")
   const transform = await cover.evaluate((element) => getComputedStyle(element).transform)
   check(
     "The cover swings open",
