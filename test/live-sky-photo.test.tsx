@@ -6,7 +6,7 @@ import { createAgent } from "@ui-sdk/react/agent"
 import { afterEach, expect, test, vi } from "vitest"
 
 import { LiveSky, type LiveSkySimulation } from "@/components/ui/live-sky"
-import { projectDirection, skyDirection } from "@/components/ui/live-sky-camera"
+import { cameraFor, projectDirection, skyDirection } from "@/components/ui/live-sky-camera"
 import { lightPhotoInto } from "@/components/ui/live-sky-canvas-light"
 import { skyConditions } from "@/components/ui/live-sky-conditions"
 import { lightFor } from "@/components/ui/live-sky-light"
@@ -14,6 +14,7 @@ import { readPalette } from "@/components/ui/live-sky-palette"
 import { photoCamera } from "@/components/ui/live-sky-photo"
 import { LiveSkyPhotoUpload } from "@/components/ui/live-sky-photo-controls"
 import { photoLightingFor } from "@/components/ui/live-sky-photo-light"
+import { fallsFor } from "@/components/ui/live-sky-precipitation"
 import type { SkyWeather } from "@/components/ui/live-sky-weather"
 import { captureDate } from "@/components/ui/use-live-sky-photo"
 import { projectSky } from "@/lib/sky-photo-projection"
@@ -171,4 +172,24 @@ test("the upload reads the file locally and offers its EXIF position, rounded", 
   })
   expect(createObjectURL).toHaveBeenCalledWith(file)
   expect(onPhoto).toHaveBeenCalledWith({ src: "blob:local-photo" }, { latitude: 10.33, longitude: 123.9 })
+})
+
+test("over a photo rain falls past the view, slanted only by the wind across it; overhead it still comes down, capped", () => {
+  const conditions = skyConditions(
+    weather({ weatherCode: 65, precipitation: 12, rain: 12, cloudCover: 100, windSpeed: 36, windDirection: 225 }),
+    coruna,
+    new Date(Date.UTC(2026, 10, 25, 12)),
+  )
+  const light = lightFor(conditions, palette)
+  const facing = photoCamera(800, 600, { heading: 225, fov: 100, horizon: 0.46 })
+  const [curtain] = fallsFor(facing, conditions, light, palette, 1, "facing")
+  expect(curtain?.velocity.z).toBe(0)
+  expect(Math.abs(curtain!.velocity.y)).toBeGreaterThan(Math.abs(curtain!.velocity.x))
+  const across = photoCamera(800, 600, { heading: 135, fov: 100, horizon: 0.46 })
+  const [slanted] = fallsFor(across, conditions, light, palette, 1, "facing")
+  expect(Math.abs(slanted!.velocity.x)).toBeGreaterThan(4)
+  const [overhead] = fallsFor(cameraFor(800, 500), conditions, light, palette, 1, "overhead")
+  const onScreen = Math.hypot(overhead!.velocity.x, overhead!.velocity.y)
+  expect(Math.abs(overhead!.velocity.z)).toBeLessThanOrEqual(onScreen * 2.2 + 1e-9)
+  expect(curtain!.depth).toBeGreaterThan(overhead!.depth)
 })

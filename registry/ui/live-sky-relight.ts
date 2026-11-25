@@ -122,8 +122,11 @@ function createRelighter(gl: GL, screen: WebGLBuffer | null, noise: WebGLTexture
     vertices.draw(3)
 
     fullScreen(photoGlow, glows[0])
-    bindTextures(gl, photoGlow, { u_windows: windows })
+    bindTextures(gl, photoGlow, { u_windows: windows, u_skyMask: skyMask, u_photo: photo })
     gl.uniform2f(photoGlow.uniform("u_size"), glows[0].width, glows[0].height)
+    gl.uniform3fv(photoGlow.uniform("u_streetLight"), values.streetLight)
+    gl.uniform1f(photoGlow.uniform("u_night"), values.night)
+    gl.uniform1f(photoGlow.uniform("u_horizon"), shown.horizon)
     gl.uniform3fv(photoGlow.uniform("u_windowLight"), values.windowLight)
     gl.uniform1f(photoGlow.uniform("u_windowsOn"), values.windowsOn)
     vertices.draw(3)

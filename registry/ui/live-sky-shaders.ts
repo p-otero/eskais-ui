@@ -28,6 +28,7 @@ uniform float u_veil;
 uniform vec3 u_veilColour;
 uniform float u_sheets;
 uniform vec2 u_sheetOffset;
+uniform vec2 u_sheetScale;
 uniform float u_flash;
 uniform sampler2D u_glowMap;
 uniform float u_bloom;
@@ -58,7 +59,7 @@ void main() {
   }
   vec4 facade = texture2D(u_facades, uv);
   colour = mix(colour, facade.rgb, facade.a);
-  float sheet = texture2D(u_noise, uv * vec2(0.7, 0.35) + u_sheetOffset).r;
+  float sheet = texture2D(u_noise, uv * u_sheetScale + u_sheetOffset).r;
   float veil = u_veil * mix(1.0, 0.35 + sheet * 1.3, u_sheets) * (1.0 - facade.a * 0.85);
   colour = mix(colour, u_veilColour, clamp(veil, 0.0, 0.9));
   colour += texture2D(u_glowMap, uv).rgb * u_bloom;
@@ -81,6 +82,7 @@ uniform vec2 u_tan;
 uniform vec2 u_size;
 uniform float u_focal;
 uniform float u_snow;
+uniform float u_farFade;
 varying vec2 v_corner;
 varying float v_alpha;
 varying float v_snow;
@@ -127,7 +129,7 @@ void main() {
   gl_Position = vec4(corner / (u_size * 0.5), 0.0, 1.0);
   float lifetime = smoothstep(0.0, 0.12, phase) * smoothstep(1.0, 0.88, phase);
   float depthFade = smoothstep(u_depth, u_depth * 0.6, head.z);
-  v_alpha = lifetime * depthFade * coverage;
+  v_alpha = lifetime * depthFade * coverage * mix(1.0, 1.0 - 0.72 * head.z / u_depth, u_farFade);
   v_corner = a_corner;
 }
 `
@@ -137,8 +139,11 @@ precision mediump float;
 uniform vec3 u_colour;
 uniform float u_alpha;
 uniform sampler2D u_glowMap;
+uniform sampler2D u_noise;
 uniform vec2 u_screen;
 uniform float u_bloom;
+uniform float u_sheets;
+uniform float u_sheetShift;
 varying vec2 v_corner;
 varying float v_alpha;
 varying float v_snow;
@@ -148,6 +153,8 @@ void main() {
   float flake = smoothstep(1.0, 0.2, length(vec2(v_corner.x * 2.0 - 1.0, v_corner.y)));
   float a = mix(streak, flake, v_snow) * v_alpha * u_alpha;
   vec2 at = vec2(gl_FragCoord.x / u_screen.x, 1.0 - gl_FragCoord.y / u_screen.y);
+  float sheet = texture2D(u_noise, vec2(at.x * 0.9 + u_sheetShift, 0.37 + at.y * 0.05)).r;
+  a *= mix(1.0, 0.2 + sheet * 1.7, u_sheets);
   vec3 lit = u_colour + texture2D(u_glowMap, at).rgb * (0.6 + u_bloom * 3.0);
   gl_FragColor = vec4(lit * a, a);
 }

@@ -21,10 +21,24 @@ type Fall = {
   sway: number
   alpha: number
   colour: Rgb
+  /** How strongly gusts sweep the rain across the view in sheets, from 0 to 1. */
+  sheets: number
 }
 
+/**
+ * How the camera meets the rain: looking up from the street, drops come down toward it; looking out over a place, as
+ * a photo does, they fall past the view and only the wind across it slants them.
+ */
+type Framing = "overhead" | "facing"
+
 /** The air between the viewer and the sky: a veil of rain or fog, and sheets of rain the wind drags across it. */
-type Atmosphere = { veil: number; sheets: number; colour: Rgb }
+type Atmosphere = {
+  veil: number
+  sheets: number
+  /** How the sheets' noise is stretched across and down the view: tall bands when looking out, broad drifts overhead. */
+  sheetScale: readonly [number, number]
+  colour: Rgb
+}
 
 const maxParticles = 6000
 
@@ -60,9 +74,18 @@ const rainLooks = {
 
 const windFollow = { rain: 0.85, snow: 1 }
 
-function toCameraVelocity(camera: SkyCamera, world: Vec3): Vec3 {
+const towardViewerCap = 2.2
+const curtainDepthScale = 2.2
+const curtainCountScale = 1.3
+const sheetsByRain = { none: 0, drizzle: 0, rain: 0.35, downpour: 1 }
+
+function toCameraVelocity(camera: SkyCamera, world: Vec3, framing: Framing): Vec3 {
   const dot = (axis: Vec3) => world.x * axis.x + world.y * axis.y + world.z * axis.z
-  return { x: dot(camera.right), y: dot(camera.up), z: dot(camera.forward) }
+  const across = { x: dot(camera.right), y: dot(camera.up) }
+  if (framing === "facing") return { ...across, z: 0 }
+  const cap = towardViewerCap * Math.hypot(across.x, across.y)
+  const toward = dot(camera.forward)
+  return { ...across, z: Math.max(-cap, Math.min(cap, toward)) }
 }
 
 function litColour(light: SkyLight, palette: SkyPalette, base: Rgb, conditions: SkyConditions): Rgb {
@@ -78,37 +101,47 @@ function fallsFor(
   light: SkyLight,
   palette: SkyPalette,
   budget: number,
+  framing: Framing = "overhead",
 ): Fall[] {
   const falls: Fall[] = []
+  const curtain = framing === "facing"
+  const deeper = (depth: number) => (curtain ? depth * curtainDepthScale : depth)
+  const more = (count: number) => (curtain ? count * curtainCountScale : count)
   const wind = conditions.wind
   if (conditions.rainKind !== "none") {
     const look = rainLooks[conditions.rainKind]
     const follow = windFollow.rain
     falls.push({
       kind: "rain",
-      count: Math.round(Math.min(maxParticles, look.count(conditions.rainRate)) * budget),
-      velocity: toCameraVelocity(camera, { x: wind.east * follow, y: -look.fall, z: wind.north * follow }),
+      count: Math.round(Math.min(maxParticles, more(look.count(conditions.rainRate))) * budget),
+      velocity: toCameraVelocity(camera, { x: wind.east * follow, y: -look.fall, z: wind.north * follow }, framing),
       diameter: look.diameter,
       exposure: look.exposure,
       period: look.period,
-      depth: look.depth,
+      depth: deeper(look.depth),
       sway: 0,
       alpha: look.alpha,
       colour: litColour(light, palette, palette.rain, conditions),
+      sheets: sheetsByRain[conditions.rainKind],
     })
   }
   if (conditions.snowRate > 0) {
     falls.push({
       kind: "snow",
       count: Math.round(Math.min(maxParticles, 900 + conditions.snowRate * 1300) * budget),
-      velocity: toCameraVelocity(camera, { x: wind.east * windFollow.snow * 0.6, y: -1.1, z: wind.north * 0.6 }),
+      velocity: toCameraVelocity(
+        camera,
+        { x: wind.east * windFollow.snow * 0.6, y: -1.1, z: wind.north * 0.6 },
+        framing,
+      ),
       diameter: 0.006,
       exposure: 1 / 120,
       period: 6,
-      depth: 24,
+      depth: deeper(24),
       sway: 0.35,
       alpha: 0.92,
       colour: litColour(light, palette, palette.snow, conditions),
+      sheets: 0,
     })
   }
   return falls
@@ -116,13 +149,14 @@ function fallsFor(
 
 const veilByRain = { none: 0, drizzle: 0.16, rain: 0.1, downpour: 0.26 }
 
-function atmosphereFor(conditions: SkyConditions, light: SkyLight): Atmosphere {
+function atmosphereFor(conditions: SkyConditions, light: SkyLight, framing: Framing = "overhead"): Atmosphere {
   return {
     veil: Math.min(0.75, veilByRain[conditions.rainKind] + conditions.fog * 0.55 + conditions.snowRate * 0.04),
-    sheets: conditions.rainKind === "downpour" ? 1 : conditions.rainKind === "rain" ? 0.35 : 0,
+    sheets: sheetsByRain[conditions.rainKind],
+    sheetScale: framing === "facing" ? [0.9, 0.06] : [0.7, 0.35],
     colour: light.haze,
   }
 }
 
 export { atmosphereFor, fallsFor, maxParticles }
-export type { Atmosphere, Fall }
+export type { Atmosphere, Fall, Framing }

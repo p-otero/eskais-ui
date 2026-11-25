@@ -92,7 +92,11 @@ function lightFor(conditions: SkyConditions, palette: SkyPalette): SkyLight {
   const veil = Math.min(0.92, conditions.cover ** 3 * 0.85 + conditions.gloom * 0.25 + conditions.fog * 0.75)
   const daylight = smoothstep(-14, 14, sunDegrees)
   const ambient = Math.max(0.02, daylight * (1 - 0.3 * conditions.cover * (0.3 + conditions.gloom)))
-  const nightCloud = mix(scale(palette["cloud-dark"], 0.18), palette["city-glow"], 0.7)
+  const nightCloud = mix(
+    scale(palette["cloud-dark"], 0.18),
+    mix(palette["city-glow"], scale(palette["night-horizon"], 2.2), 0.5),
+    0.7,
+  )
   const sunTint = mix(palette["cloud-light"], frame.glow, Math.min(1, frame.glowStrength * 0.75))
   const cloudLit = mix(nightCloud, mix(sunTint, palette["cloud-dark"], conditions.gloom * 0.6), daylight)
   const cloudShade = mix(
