@@ -8,6 +8,12 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { skyConditions } from "@/components/ui/live-sky-conditions"
 import { liveSkyLabels, type LiveSkyLabels } from "@/components/ui/live-sky-labels"
+import type { LiveSkyPhoto, LiveSkyPhotoView } from "@/components/ui/live-sky-photo"
+import {
+  LiveSkyCalibration,
+  liveSkyPhotoLabels,
+  type LiveSkyPhotoLabels,
+} from "@/components/ui/live-sky-photo-controls"
 import { liveSky } from "@/components/ui/live-sky-primitive"
 import { LiveSkySearch } from "@/components/ui/live-sky-search"
 import {
@@ -20,10 +26,12 @@ import {
   type WeatherFetcher,
 } from "@/components/ui/live-sky-weather"
 import { Spinner } from "@/components/ui/spinner"
+import { Toggle } from "@/components/ui/toggle"
 import { useLiveSkyGeolocation } from "@/components/ui/use-live-sky-geolocation"
+import { useLiveSkyPhoto } from "@/components/ui/use-live-sky-photo"
 import { useLiveSkyScene, useSkyTime } from "@/components/ui/use-live-sky-scene"
 import { useLiveSkyWeather } from "@/components/ui/use-live-sky-weather"
-import { cn } from "@/lib/utils"
+import { cn, cssVars } from "@/lib/utils"
 
 const { Root: LiveSkyRoot } = createParts(liveSky, { root: "div" })
 
@@ -55,14 +63,23 @@ type LiveSkyProps = {
   refreshMs?: number
   /** Shows this weather, time and place instead of fetching. */
   simulate?: LiveSkySimulation
+  /**
+   * A photo of the place to show the live sky in instead of the drawn street: its sky is replaced by the weather now,
+   * with the sun and moon where they stand through its lens, and the rest is relit; rain and the glass fall over it.
+   * Without a `location`, the photo's EXIF position is used, rounded.
+   */
+  photo?: LiveSkyPhoto
+  /** Runs with the photo and its resolved view each time it is calibrated, for the app to keep; nothing is stored here. */
+  onPhotoChange?: (photo: LiveSkyPhoto & LiveSkyPhotoView) => void
   /** Drops landing and running down a pane of glass in front of the sky. On by default. */
   glass?: boolean
   /** Formats the temperature, rain and wind; the page's language by default. */
   locale?: string
-  labels?: Partial<Omit<LiveSkyLabels, "conditions" | "sun">> & {
-    conditions?: Partial<LiveSkyLabels["conditions"]>
-    sun?: Partial<LiveSkyLabels["sun"]>
-  }
+  labels?: Partial<Omit<LiveSkyLabels, "conditions" | "sun">> &
+    Partial<LiveSkyPhotoLabels> & {
+      conditions?: Partial<LiveSkyLabels["conditions"]>
+      sun?: Partial<LiveSkyLabels["sun"]>
+    }
   /** Classes for the root; a function gets the sky's state. */
   className?: string | ((state: LiveSkyState) => string | undefined)
   /** Called with each frame's drawing time in ms, for measuring. */
@@ -121,14 +138,17 @@ function LiveSky({
   onWeather,
   refreshMs = defaultRefreshMs,
   simulate,
+  photo,
+  onPhotoChange,
   glass = true,
   locale,
   labels: overrides,
   className,
   onFrame,
 }: LiveSkyProps) {
-  const labels: LiveSkyLabels = {
+  const labels: LiveSkyLabels & LiveSkyPhotoLabels = {
     ...liveSkyLabels,
+    ...liveSkyPhotoLabels,
     ...overrides,
     conditions: { ...liveSkyLabels.conditions, ...overrides?.conditions },
     sun: { ...liveSkyLabels.sun, ...overrides?.sun },
@@ -141,8 +161,13 @@ function LiveSky({
   const givenKey = given ? `${String(given.latitude)},${String(given.longitude)},${given.name ?? ""}` : "geolocate"
   const [chosen, setChosen] = useState<{ from: string; location: SkyLocation } | null>(null)
   const picked = chosen?.from === givenKey ? chosen.location : given
-  const place = simulate?.location ?? picked
+  const photoScene = useLiveSkyPhoto({ photo, onPhotoChange, location: simulate?.location ?? picked })
+  const photoPlace = photoScene.place ? { ...photoScene.place, name: labels.photoPlace } : null
+  const place = simulate?.location ?? picked ?? photoPlace
   const shownPlace = place ? roundedLocation(place) : placeFromClock()
+  const [calibrating, setCalibrating] = useState<{ src: string; open: boolean } | null>(null)
+  const photoReady = photo !== undefined && photoScene.status === "ready"
+  const calibrationOpen = photoReady && (calibrating?.src === photo.src ? calibrating.open : !photoScene.headingKnown)
 
   const { snapshot, refresh } = useLiveSkyWeather(
     stage,
@@ -152,7 +177,7 @@ function LiveSky({
   const now = useSkyTime(simulatedTime)
   const weather = simulate ? { ...fairWeather, time: now, ...simulate.weather } : snapshot.weather
   const conditions = skyConditions(weather ?? fairWeather, shownPlace, new Date(now))
-  useLiveSkyScene(stage, { conditions, location: shownPlace, glass, onFrame })
+  useLiveSkyScene(stage, { conditions, location: shownPlace, glass, onFrame, photo: photoScene.shown })
 
   const geolocation = useLiveSkyGeolocation({
     autoLocate: location === "geolocate" && !picked && !simulate,
@@ -190,6 +215,12 @@ function LiveSky({
     })
   }
 
+  const calibrate = (view: { heading: number; fov?: number | undefined; horizon?: number | undefined }) =>
+    photoScene.setView({
+      heading: view.heading,
+      ...(view.fov === undefined ? {} : { fov: view.fov }),
+      ...(view.horizon === undefined ? {} : { horizon: view.horizon }),
+    })
   const status: LiveSkyState["status"] = simulate ? "simulated" : snapshot.status
   const format = formatters(locale)
   const placeName = place ? (place.name ?? coordinates(place, locale)) : null
@@ -218,20 +249,63 @@ function LiveSky({
       simulated={Boolean(simulate)}
       hasLocation={place !== null}
       geolocation={geolocation.access}
-      handlers={{ setLocation: choose, searchPlace: searchPlaces ? searchFor : undefined, geolocate: locate, refresh }}
+      handlers={{
+        setLocation: choose,
+        searchPlace: searchPlaces ? searchFor : undefined,
+        geolocate: locate,
+        refresh,
+        calibrate: photo ? calibrate : undefined,
+      }}
       data-status={status}
       className={cn(
         "flex w-full flex-col overflow-hidden rounded-surface border bg-card text-card-foreground shadow-surface",
         typeof className === "function" ? className({ status }) : className,
       )}
     >
-      <div ref={stage} data-slot="live-sky-scene" data-rain={conditions.rainKind} aria-hidden="true" />
+      <div
+        ref={stage}
+        data-slot="live-sky-scene"
+        data-rain={conditions.rainKind}
+        data-photo={photo ? "" : undefined}
+        data-marking={photoScene.marking ? "" : undefined}
+        aria-hidden="true"
+        style={photo ? cssVars({ "--live-sky-aspect": String(photoScene.aspect) }) : undefined}
+        onPointerDown={photoScene.onPointerDown}
+      />
+      {calibrationOpen ? (
+        <div className="px-inset-surface pt-inset-surface">
+          <LiveSkyCalibration
+            view={photoScene.view}
+            marking={photoScene.marking}
+            labels={labels}
+            onView={photoScene.setView}
+            onMarking={photoScene.setMarking}
+            format={(value) => new Intl.NumberFormat(locale).format(value)}
+          />
+        </div>
+      ) : null}
       <div data-slot="live-sky-panel" className="flex flex-wrap items-start justify-between gap-group p-inset-surface">
         <div className="flex min-w-48 grow basis-0 flex-col gap-inline">
           <div className="flex flex-wrap items-center gap-inline">
             <span className="text-title-sm tracking-tight">{placeName ?? labels.noPlace}</span>
             {simulate ? <Badge variant="outline">{labels.simulated}</Badge> : null}
+            {photo && photoReady ? (
+              <Toggle
+                variant="outline"
+                size="sm"
+                pressed={calibrationOpen}
+                onPressedChange={(open) => setCalibrating({ src: photo.src, open })}
+              >
+                {labels.calibrate}
+              </Toggle>
+            ) : null}
           </div>
+          {photoScene.status === "reading" || photoScene.status === "failed" ? (
+            <span className="flex items-center gap-inline text-caption text-muted-foreground">
+              {photoScene.status === "reading" ? <Spinner size="sm" /> : null}
+              {photoScene.status === "reading" ? labels.readingPhoto : labels.photoFailed}
+            </span>
+          ) : null}
           {ready ? (
             <div className="flex flex-wrap items-baseline gap-x-items">
               <span className="text-display-sm tabular-nums">{temperature}</span>

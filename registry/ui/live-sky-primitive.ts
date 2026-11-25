@@ -13,6 +13,10 @@ type LiveSkyHandlers = {
   searchPlace?: ((name: string) => Promise<SkyLocation>) | undefined
   geolocate: () => Promise<SkyLocation>
   refresh: () => Promise<unknown>
+  /** Points the photo's view; absent without a photo. */
+  calibrate?:
+    | ((view: { heading: number; fov?: number | undefined; horizon?: number | undefined }) => boolean)
+    | undefined
 }
 
 type LiveSkyOptions = {
@@ -100,6 +104,26 @@ const liveSky = definePrimitive({
       }
       return handlers.geolocate()
     },
+    /**
+     * Points the photo's view: `heading` in degrees from north (0 to 360), and optionally the horizontal field of view
+     * (20 to 130°) and the horizon (0 to 1 down the photo). Only with a photo.
+     */
+    calibrate(heading: number, fov?: number, horizon?: number, event?: Event) {
+      const call = { action: "calibrate", event }
+      const handlers = context.options().handlers
+      if (!handlers) return unavailable("calibrate", "isn't available: the sky isn't ready", { event })
+      if (!handlers.calibrate) return unavailable("calibrate", "isn't available without a photo", call)
+      if (!Number.isFinite(heading) || heading < 0 || heading > 360) {
+        return unavailable("calibrate", `takes a heading from 0 to 360°, not ${String(heading)}`, call)
+      }
+      if (fov !== undefined && (!Number.isFinite(fov) || fov < 20 || fov > 130)) {
+        return unavailable("calibrate", `takes a field of view from 20 to 130°, not ${String(fov)}`, call)
+      }
+      if (horizon !== undefined && (!Number.isFinite(horizon) || horizon < 0 || horizon > 1)) {
+        return unavailable("calibrate", `takes a horizon from 0 to 1 down the photo, not ${String(horizon)}`, call)
+      }
+      return handlers.calibrate({ heading: heading % 360, fov, horizon })
+    },
     /** Fetches the weather again now, instead of waiting for the next refresh. */
     refresh(event?: Event) {
       const call = { action: "refresh", event }
@@ -113,7 +137,7 @@ const liveSky = definePrimitive({
   slots: (slot) => ({
     root: slot({ role: "group" }),
   }),
-  agent: { actions: ["setLocation", "geolocate", "refresh"] },
+  agent: { actions: ["setLocation", "geolocate", "refresh", "calibrate"] },
 })
 
 export { liveSky }

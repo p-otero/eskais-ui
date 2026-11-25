@@ -1,5 +1,5 @@
-import type { SkyRenderer, SkyScene, StreetFacades } from "@/components/ui/live-sky-backdrop"
-import { lightFacadesInto } from "@/components/ui/live-sky-canvas-light"
+import type { SkyBackground, SkyRenderer, SkyScene } from "@/components/ui/live-sky-backdrop"
+import { lightFacadesInto, lightPhotoInto } from "@/components/ui/live-sky-canvas-light"
 import { paintClouds } from "@/components/ui/live-sky-clouds"
 import type { GlassDrop } from "@/components/ui/live-sky-glass"
 import { cssColour } from "@/components/ui/live-sky-palette"
@@ -87,6 +87,15 @@ function drawDrop(context: CanvasRenderingContext2D, scene: SkyScene, drop: Glas
   context.fill()
 }
 
+function pixelsOf(source: CanvasImageSource, width: number, height: number) {
+  const scratch = document.createElement("canvas")
+  scratch.width = width
+  scratch.height = height
+  const scratchContext = scratch.getContext("2d")
+  scratchContext?.drawImage(source, 0, 0, width, height)
+  return scratchContext?.getImageData(0, 0, width, height) ?? null
+}
+
 /** Draws the scene on a 2D canvas where WebGL is missing: coarser clouds, fewer streaks, shaded drops without refraction. */
 function createCanvasRenderer(canvas: HTMLCanvasElement, context: CanvasRenderingContext2D): SkyRenderer {
   const random = seededRandom(0xc1a55)
@@ -95,18 +104,30 @@ function createCanvasRenderer(canvas: HTMLCanvasElement, context: CanvasRenderin
   const cloudContext = clouds.getContext("2d")
   let cloudPixels: ImageData | null = null
   let scene: SkyScene | null = null
-  let street: StreetFacades | null = null
+  let street: SkyBackground | null = null
   let stale = false
   const facades = document.createElement("canvas")
   const facadeContext = facades.getContext("2d")
 
-  const relight = (current: SkyScene, traced: StreetFacades) => {
-    const { gbuffer } = traced
+  const relight = (current: SkyScene, shown: SkyBackground) => {
     if (!facadeContext) return
-    if (facades.width !== gbuffer.width) facades.width = gbuffer.width
-    if (facades.height !== gbuffer.height) facades.height = gbuffer.height
-    const pixels = facadeContext.createImageData(gbuffer.width, gbuffer.height)
-    facadeContext.putImageData(lightFacadesInto(pixels, gbuffer, current.lighting, current.camera), 0, 0)
+    const size = shown.kind === "street" ? shown.gbuffer : shown
+    if (facades.width !== size.width) facades.width = size.width
+    if (facades.height !== size.height) facades.height = size.height
+    const pixels = facadeContext.createImageData(size.width, size.height)
+    if (shown.kind === "street") {
+      facadeContext.putImageData(lightFacadesInto(pixels, shown.gbuffer, current.lighting, current.camera), 0, 0)
+      return
+    }
+    const photo = pixelsOf(shown.layers.image, size.width, size.height)
+    const sky = pixelsOf(shown.layers.sky, size.width, size.height)
+    const windows = shown.layers.windows ? pixelsOf(shown.layers.windows, size.width, size.height) : null
+    if (!photo || !sky) return
+    facadeContext.putImageData(
+      lightPhotoInto(pixels, { photo, sky, windows }, current.photoLighting, shown.horizon),
+      0,
+      0,
+    )
   }
 
   return {
@@ -120,7 +141,7 @@ function createCanvasRenderer(canvas: HTMLCanvasElement, context: CanvasRenderin
       clouds.height = Math.max(2, Math.ceil(next.height / cloudDownscale))
       cloudPixels = cloudContext?.createImageData(clouds.width, clouds.height) ?? null
     },
-    setFacades(next) {
+    setBackground(next) {
       street = next
       stale = true
     },

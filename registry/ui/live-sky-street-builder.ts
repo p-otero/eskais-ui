@@ -40,6 +40,11 @@ function createStreetBuilder(onReady: (facades: StreetFacades) => void) {
       build = buildGBuffer(street, camera, palette, Math.round(width * ratio), Math.round(height * ratio))
     },
     pending: () => build !== null,
+    /** Forgets the street shown, so the next request traces it again, after a photo stood in for it. */
+    forget() {
+      key = ""
+      build = null
+    },
     /** Traces for up to `budgetMs`; true once the full street is ready. */
     work(budgetMs: number) {
       if (!build || !finish) return true

@@ -2,6 +2,7 @@ import type { SkyCamera } from "@/components/ui/live-sky-camera"
 import type { FacadeLighting } from "@/components/ui/live-sky-facade-light"
 import type { GBuffer } from "@/components/ui/live-sky-gbuffer"
 import { finishes } from "@/components/ui/live-sky-materials"
+import type { PhotoLighting } from "@/components/ui/live-sky-photo-light"
 
 const normalsByCode = [
   [0, 0, 0],
@@ -70,4 +71,54 @@ function lightFacadesInto(target: ImageData, gbuffer: GBuffer, lighting: FacadeL
   return target
 }
 
-export { lightFacadesInto }
+const smooth = (from: number, to: number, value: number) => {
+  const t = Math.min(1, Math.max(0, (value - from) / (to - from)))
+  return t * t * (3 - 2 * t)
+}
+
+/** The canvas fallback's photo relighting, the WebGL pass's model per pixel: the photo, its sky mask, its windows. */
+function lightPhotoInto(
+  target: ImageData,
+  layers: { photo: ImageData; sky: ImageData; windows: ImageData | null },
+  lighting: PhotoLighting,
+  horizon: number,
+) {
+  const { width, height } = target
+  const out = target.data
+  const photo = layers.photo.data
+  for (let y = 0; y < height; y++) {
+    const down = y / height
+    const below = smooth(horizon - 0.02, Math.min(1, horizon + 0.35), down)
+    const far = 1 - smooth(horizon - 0.1, 1, down) * 0.75
+    const haze = Math.min(0.92, lighting.haze * far)
+    for (let x = 0; x < width; x++) {
+      const at = (y * width + x) * 4
+      const foreground = 1 - layers.sky.data[at + 3]! / 255
+      out[at + 3] = channel(foreground)
+      if (foreground < 0.004) continue
+      const red = photo[at]! / 255
+      const green = photo[at + 1]! / 255
+      const blue = photo[at + 2]! / 255
+      const grey = 0.2126 * red + 0.7152 * green + 0.0722 * blue
+      const glow = layers.windows ? (layers.windows.data[at + 3]! / 255) * lighting.windowsOn : 0
+      const overcastTint = [0.9, 0.96, 1.06] as const
+      const values = [red, green, blue]
+      for (let index = 0; index < 3; index++) {
+        let value = values[index]! + (grey - values[index]!) * 0.45 * lighting.overcast
+        value = value + (0.42 + (value - 0.42) * 0.72 - value) * lighting.overcast
+        value *= 1 + (overcastTint[index]! - 1) * lighting.overcast
+        value *= 1 + (lighting.warmTint[index]! - 1) * lighting.warmth
+        value *= 1 - 0.32 * lighting.wetness * (0.35 + 0.65 * below)
+        value += lighting.sheen[index]! * lighting.wetness * below * (1 - grey) * 0.3
+        value *= lighting.exposure
+        value += (value * lighting.nightTint[index]! * 0.09 - value) * lighting.night
+        value += lighting.streetLight[index]! * lighting.night * below * 0.16 * (0.4 + grey)
+        value += lighting.windowLight[index]! * glow
+        out[at + index] = channel(value + (lighting.hazeColour[index]! - value) * haze)
+      }
+    }
+  }
+  return target
+}
+
+export { lightFacadesInto, lightPhotoInto }

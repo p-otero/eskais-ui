@@ -53,13 +53,13 @@ type CloudSample = { colour: Rgb; cover: number }
 /** The cloud seen in a direction at an offset, mirrored by the WebGL shader. */
 function cloudAt(deck: CloudDeck, direction: Vec3, offset: { x: number; y: number }): CloudSample | null {
   if (direction.y <= 0.02) return null
-  const reach = deck.base / direction.y / deck.tile
+  const reach = deck.base / Math.max(direction.y, 0.03) / deck.tile
   const u = direction.x * reach + offset.x
   const v = direction.z * reach + offset.y
   const tile = noiseTile()
   const n =
     sampleTile(tile.billow, u, v) * 0.68 + sampleTile(tile.detail, u * 3.07 + offset.y, v * 3.07 + offset.x) * 0.32
-  const density = smoothstep(deck.threshold, deck.threshold + deck.softness, n)
+  const density = smoothstep(deck.threshold, deck.threshold + deck.softness, n) * smoothstep(0.04, 0.14, direction.y)
   if (density <= 0) return null
   const thick = smoothstep(deck.threshold, deck.threshold + 0.32, n)
   const towardSun = Math.max(0, direction.x * deck.sun.x + direction.y * deck.sun.y + direction.z * deck.sun.z)

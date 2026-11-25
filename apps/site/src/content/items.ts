@@ -283,9 +283,10 @@ const itemNotes: Record<string, ItemNotes> = {
       "The place search is UI SDK's combobox: it waits for typing to pause, announces the number of places found and lists each with its region and country.",
       "Location is asked for only when the person presses Use my location; when they've blocked it, the button is off and says why.",
       "Under reduced motion the rain holds still: a new still every few seconds, crossfaded slowly, and no lightning.",
+      "With a photo, the photo is decoration too; Calibrate opens named sliders for its Heading, Field of view and Horizon, and Mark the sun is a toggle.",
     ],
     agent:
-      "Agents read the summary as the sky's value and call setLocation (a place name, or a latitude and longitude), geolocate and refresh; denied location access, simulated weather or a missing place fails the step with why.",
+      "Agents read the summary as the sky's value and call setLocation (a place name, or a latitude and longitude), geolocate, refresh and, with a photo, calibrate; denied location access, simulated weather or a missing place fails the step with why.",
     related: ["model-viewer", "combobox"],
   },
   "image-cropper": {

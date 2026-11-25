@@ -119,14 +119,42 @@ await withShowcase(
       "A simulated sky should refuse refresh with why",
     )
 
+    await page.goto(page.url().replace(/\/(\?.*)?$/, "/?demo=live-sky&live=0&background=photo&preset=downpour"))
+    await page.waitForFunction(
+      () => Number(document.querySelector('[data-slot="live-sky-scene"][data-photo]')?.dataset.staticPaints) >= 2,
+      undefined,
+      { timeout: 30_000 },
+    )
+    await page.waitForTimeout(500)
+    const overPhoto = await framesOver(page, 1500)
+    console.log(`Downpour over the photo on software GL: ${String(overPhoto.length)} frames in 1.5 s`)
+    expect(overPhoto.length >= 20, "The sky over a photo should draw at least 20 frames in 1.5 s on software GL")
+    const calibrated = await page.evaluate(() =>
+      window.skyProbe.agent.act({ steps: [{ ref: "Simulated sky", action: "calibrate", args: [210, 72, 0.5] }] }),
+    )
+    expect(calibrated.ok, "An agent should calibrate the photo")
+    await page.getByRole("button", { name: "Calibrate" }).click()
+    await page.getByRole("slider", { name: "Heading" }).waitFor()
+    expect(
+      (await page.getByRole("slider", { name: "Heading" }).inputValue()) === "210",
+      "The calibration's Heading slider should show the agent's heading",
+    )
+
     await page.setViewportSize({ width: 390, height: 844 })
     await page.waitForTimeout(300)
     const overflow = await page.evaluate(
       () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
     )
     expect(overflow <= 0, `The page overflows by ${String(overflow)}px at 390px`)
+    const photoRatio = await scene(page).evaluate((element) => element.clientHeight / element.clientWidth)
+    expect(
+      Math.abs(photoRatio - 0.75) < 0.02,
+      `At phone width the photo should keep its 4:3 shape, not ${String(photoRatio)}`,
+    )
+    await page.goto(page.url().replace(/\/(\?.*)?$/, "/?demo=live-sky&live=0&preset=rain"))
+    await scene(page).and(page.locator("[data-mode]")).waitFor()
     const ratio = await scene(page).evaluate((element) => element.clientHeight / element.clientWidth)
-    expect(ratio > 1.1, "At phone width the scene should stand taller than wide")
+    expect(ratio > 1.1, "At phone width the street should stand taller than wide")
     console.log("live-sky-check: ok")
   },
   {},

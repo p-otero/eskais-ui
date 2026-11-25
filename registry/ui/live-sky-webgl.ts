@@ -23,7 +23,6 @@ const dropCorners: [number, number][] = [
   [-1, 1],
 ]
 const sunStepTiles = 0.035
-const bloomOf = (current: SkyScene) => current.lighting.bloom
 
 function particleBuffer(gl: GL) {
   const data = new Float32Array(maxParticles * 6 * 6)
@@ -69,6 +68,8 @@ function createWebGLRenderer(canvas: HTMLCanvasElement, gl: GL): SkyRenderer {
   const vertices = attributes(gl)
   let scene: SkyScene | null = null
   let stale = false
+  let photoShown = false
+  const bloomOf = (current: SkyScene) => (photoShown ? current.photoLighting.bloom : current.lighting.bloom)
 
   const drawBackdrop = (current: SkyScene, seconds: number, flash: number) => {
     const { deck, atmosphere, camera } = current
@@ -168,8 +169,9 @@ function createWebGLRenderer(canvas: HTMLCanvasElement, gl: GL): SkyRenderer {
       gl.bindTexture(gl.TEXTURE_2D, sky)
       gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, next.sky)
     },
-    setFacades(facades) {
-      relighter.setFacades(facades)
+    setBackground(background) {
+      relighter.setBackground(background)
+      photoShown = background.kind === "photo"
       stale = true
     },
     draw(seconds, list, flash) {
