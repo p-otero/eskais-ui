@@ -168,6 +168,16 @@ async function sunArcPhoto(page, client) {
   await page.getByRole("button", { name: /Sunset/ }).click()
   await page.waitForTimeout(500)
   expect((await paints(page)) === 1, `Reduced motion should jump in one paint, not ${String(await paints(page))}`)
+
+  expect((await page.locator('[data-slot="sun-arc-clouds"]').count()) === 0, "Clouds should be off by default")
+  await page.getByRole("switch", { name: "Keep clouds" }).click()
+  await page.locator('[data-slot="sun-arc-clouds"]').waitFor({ timeout: 15_000 })
+  const windows = await page.locator('[data-slot="sun-arc-photo"] [data-light="windows"]').count()
+  console.log(`sun-arc photo: clouds kept, window glow ${windows > 0 ? "on" : "found no windows"}`)
+  await page.waitForTimeout(400)
+  await clearPaints(page)
+  const cloudsIdle = await styleWorkWhileIdle(page, client)
+  expect((await paints(page)) === 0 && cloudsIdle === 0, "The photo with its clouds works while idle")
   console.log("sun-arc photo: ok")
 }
 

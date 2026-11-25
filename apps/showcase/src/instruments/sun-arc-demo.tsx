@@ -29,6 +29,7 @@ function SunArcDemo() {
   const [photo, setPhoto] = useState<SunArcPhoto>(cebuPhoto)
   const [place, setPlace] = useState(cebu)
   const [disabled, setDisabled] = useState(false)
+  const [keepClouds, setKeepClouds] = useState(params.get("clouds") === "1")
   const scene = mode === "photo" ? place : coruna
   return (
     <main className="flex min-h-dvh justify-center bg-background p-inset-surface text-foreground">
@@ -55,11 +56,15 @@ function SunArcDemo() {
           onValueChange={setMinutes}
           disabled={disabled}
           onPaint={recordPaint}
-          photo={mode === "photo" ? photo : undefined}
+          photo={mode === "photo" ? { ...photo, keepClouds } : undefined}
           onPhotoChange={setPhoto}
         />
         {mode === "photo" ? (
           <div className="flex flex-wrap items-center gap-items">
+            <Label>
+              <Switch checked={keepClouds} onCheckedChange={setKeepClouds} />
+              Keep clouds
+            </Label>
             <SunArcPhotoUpload
               label="Use your own photo"
               onPhoto={(next, location) => {

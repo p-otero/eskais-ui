@@ -400,3 +400,47 @@
 [data-sun-out="behind"] [data-slot="slider-thumb"]::after {
   display: none;
 }
+
+[data-slot="sun-arc-clouds"],
+[data-slot="sun-arc-clouds"] > div {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+/* Perf: the photo's clouds are rebuilt from fixed-colour layers that only fade with the sun, so a step composites. */
+[data-slot="sun-arc-clouds"] > div {
+  mask-image: var(--sun-arc-layer-mask);
+  mask-size: 100% 100%;
+  mask-repeat: no-repeat;
+  will-change: opacity;
+}
+
+[data-cloud="shade"] {
+  background: #39414f;
+  opacity: calc(0.75 + var(--sun-arc-night) * 0.2);
+}
+
+[data-cloud="day"] {
+  background: #f4f6fa;
+  opacity: calc(var(--sun-arc-daylight) * (1 - var(--sun-arc-dusk)));
+}
+
+[data-cloud="golden"] {
+  background: #ffb16a;
+  opacity: calc(var(--sun-arc-dusk) * (1 - var(--sun-arc-night)));
+}
+
+[data-cloud="moon"] {
+  background: #4d5874;
+  opacity: calc(var(--sun-arc-night) * 0.55);
+}
+
+[data-slot="sun-arc-photo"] [data-light="windows"] {
+  background: #ffc46a;
+  mask-image: var(--sun-arc-layer-mask);
+  mask-size: 100% 100%;
+  mask-repeat: no-repeat;
+  filter: blur(0.4px);
+  opacity: calc(var(--sun-arc-night) * 0.85 + var(--sun-arc-dusk) * 0.25 * (1 - var(--sun-arc-daylight)));
+}

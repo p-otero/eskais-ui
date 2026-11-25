@@ -3969,8 +3969,8 @@
       "name": "sky-photo",
       "type": "registry:lib",
       "title": "Sky Photo",
-      "description": "Reads a photo of the sky locally: its EXIF (orientation, capture time and offset, GPS, compass heading, focal length and 35 mm equivalent) with a small parser of its own, its sky found by a classical skyline finder (colour, brightness and texture, a skyline per column by dynamic programming, holes and masts, a feathered mask) with no model to download, and a rectilinear projection from a sun azimuth and altitude to the photo and back, with calibration from one marked point.",
-      "docs": "`analyzeSkyPhoto(src | blob, { skyMask?, signal? })` from `@/lib/sky-photo` resolves with `{ width, height, aspect, exif, mask, sky, foregroundUrl, analysisMs, dispose() }`: `sky` is a canvas opaque where it is sky, `foregroundUrl` an object URL of a PNG for `mask-image`, freed by `dispose`. The finder runs at 512 px on the long side in stages, yielding to the page between them (60 to 90 ms in all on a laptop); `findSky(pixels)` runs it in one go, for a worker or a test. A cross-origin URL needs CORS. `readSkyPhotoExif(bytes)` and `readSkyPhotoExifFrom(blob)` (`@/lib/sky-photo-exif`) never throw; `findSky` lives in `@/lib/sky-photo-mask`. From `@/lib/sky-photo-projection`, `projectSky(view, azimuth, altitude)` maps a sky direction to `{ x, y, behind }` from 0 to 1 over the photo for `view = { heading, fov, horizon, aspect }`, `unprojectSky` maps back, `calibrateSkyView({ fov, aspect }, sun, point)` finds the heading and horizon that put the sun on a marked point, and `fovFromFocalLength35mm(focal, aspect)` reads the field of view from EXIF.",
+      "description": "Reads a photo of the sky locally: its EXIF (orientation, capture time and offset, GPS, compass heading, focal length and 35 mm equivalent) with a small parser of its own, its sky found by a classical skyline finder (colour, brightness and texture, a skyline per column by dynamic programming, holes and masts, a feathered mask) with no model to download, the photo's own clouds and window panes to light at night, and a rectilinear projection from a sun azimuth and altitude to the photo and back, with calibration from one marked point.",
+      "docs": "`analyzeSkyPhoto(src | blob, { skyMask?, signal? })` from `@/lib/sky-photo` resolves with `{ width, height, aspect, exif, mask, sky, foregroundUrl, analysisMs, dispose() }`: `sky` is a canvas opaque where it is sky, `foregroundUrl` an object URL of a PNG for `mask-image`, freed by `dispose`. The finder runs at 512 px on the long side in stages, yielding to the page between them (60 to 90 ms in all on a laptop); `findSky(pixels)` runs it in one go, for a worker or a test. A cross-origin URL needs CORS. `readSkyPhotoExif(bytes)` and `readSkyPhotoExifFrom(blob)` (`@/lib/sky-photo-exif`) never throw; `findSky` lives in `@/lib/sky-photo-mask`. From `@/lib/sky-photo-projection`, `projectSky(view, azimuth, altitude)` maps a sky direction to `{ x, y, behind }` from 0 to 1 over the photo for `view = { heading, fov, horizon, aspect }`, `unprojectSky` maps back, `calibrateSkyView({ fov, aspect }, sun, point)` finds the heading and horizon that put the sun on a marked point, and `fovFromFocalLength35mm(focal, aspect)` reads the field of view from EXIF. `findClouds(pixels, mask)` and `findWindows(pixels, mask, { share?, seed? })` (`@/lib/sky-photo-features`) give alpha maps of the photo's clouds (how covered, how lit) and of a seeded share of its window panes; `analyzeSkyPhoto` returns them as object URLs with `clouds: true` and `windows: true`. The finder works at 1024 px; thin crisp structures (a lattice tower, a crane) stay foreground and specks of cloud texture don't.",
       "files": [
         {
           "path": "registry/lib/sky-photo.ts",
@@ -3987,6 +3987,10 @@
         {
           "path": "registry/lib/sky-photo-projection.ts",
           "type": "registry:lib"
+        },
+        {
+          "path": "registry/lib/sky-photo-features.ts",
+          "type": "registry:lib"
         }
       ]
     },
@@ -3995,7 +3999,7 @@
       "type": "registry:ui",
       "title": "Sun Arc",
       "description": "A time-of-day picker drawn as the sun's real path over a city: sunrise, solar noon and sunset come from a solar-position model for a latitude, longitude and day, and the sky, the light on the water and the lit windows follow the sun's altitude. With a `photo` of the place, its own sky is replaced by the one for the chosen time, the sun stands at its true azimuth and altitude through the photo's lens, and the foreground is relit. UI SDK's slider in minutes since local midnight, with setTime, sunrise, sunset and solarNoon for agents, and calibrate for a photo.",
-      "docs": "`<SunArc label latitude longitude date timeZone value|defaultValue onValueChange onValueCommit step locale disabled name labels>`. The value is minutes since local midnight in `timeZone` (the runtime's own without one), 0 to 1439; it starts at solar noon. Times and degrees are written with `Intl` in `locale`. The arc is UI SDK's Slider: arrows move `step` minutes (5 by default), Page Up and Down an hour, Home and End the ends of the day; drag the sun or press the sky (the ground strip on touch). The Sunrise, Solar noon and Sunset buttons move the sun there; in a polar day or night, sunrise and sunset are disabled and the agent's step fails with why. The stage is a sky in every theme (the item's `css`); the card and readout follow the theme. `photo={{ src, heading?, fov?, horizon?, skyMask?, capturedAt? }}` draws the sky into a photo of the place: the sky is found locally (`sky-photo`, no model download) or taken from `skyMask`; the heading comes from the EXIF compass, the field of view from the 35 mm focal length (69° without it) and the horizon from the skyline's lowest band. Without a heading the Calibrate panel opens: Mark the sun (press where the sun stands in the photo at its capture time, from the EXIF or `capturedAt`), and Heading, Field of view and Horizon sliders. Each calibration comes out in `onPhotoChange` for the app to keep; nothing is stored. Outside the view the sun waits at the edge it left by, with an arrow; below the horizon it waits on the horizon. `SunArcPhotoUpload label onPhoto` picks a local photo through an object URL (never uploaded) and gives its EXIF place. The demo photo is the Cebu City skyline by DisRaptor18, CC0 (Wikimedia Commons, File:Cebu_city_skyline_2025.jpg).",
+      "docs": "`<SunArc label latitude longitude date timeZone value|defaultValue onValueChange onValueCommit step locale disabled name labels>`. The value is minutes since local midnight in `timeZone` (the runtime's own without one), 0 to 1439; it starts at solar noon. Times and degrees are written with `Intl` in `locale`. The arc is UI SDK's Slider: arrows move `step` minutes (5 by default), Page Up and Down an hour, Home and End the ends of the day; drag the sun or press the sky (the ground strip on touch). The Sunrise, Solar noon and Sunset buttons move the sun there; in a polar day or night, sunrise and sunset are disabled and the agent's step fails with why. The stage is a sky in every theme (the item's `css`); the card and readout follow the theme. `photo={{ src, heading?, fov?, horizon?, skyMask?, capturedAt?, keepClouds?, windowGlow? }}` draws the sky into a photo of the place (`keepClouds` keeps the photo's own clouds, lit white, golden or dark with the sun, off by default; `windowGlow` lights a seeded share of the windows at dusk and night, on by default): the sky is found locally (`sky-photo`, no model download) or taken from `skyMask`; the heading comes from the EXIF compass, the field of view from the 35 mm focal length (69° without it) and the horizon from the skyline's lowest band. Without a heading the Calibrate panel opens: Mark the sun (press where the sun stands in the photo at its capture time, from the EXIF or `capturedAt`), and Heading, Field of view and Horizon sliders. Each calibration comes out in `onPhotoChange` for the app to keep; nothing is stored. Outside the view the sun waits at the edge it left by, with an arrow; below the horizon it waits on the horizon. `SunArcPhotoUpload label onPhoto` picks a local photo through an object URL (never uploaded) and gives its EXIF place. The demo photo is the Cebu City skyline by DisRaptor18, CC0 (Wikimedia Commons, File:Cebu_city_skyline_2025.jpg).",
       "dependencies": [
         "@ui-sdk/core@0.1.0-beta.12",
         "@ui-sdk/react@0.1.0-beta.12",
@@ -4373,6 +4377,44 @@
         },
         "[data-sun-out=\"behind\"] [data-slot=\"slider-thumb\"]::after": {
           "display": "none"
+        },
+        "[data-slot=\"sun-arc-clouds\"]": {
+          "position": "absolute",
+          "inset": "0",
+          "pointer-events": "none"
+        },
+        "[data-slot=\"sun-arc-clouds\"] > div": {
+          "position": "absolute",
+          "inset": "0",
+          "pointer-events": "none",
+          "mask-image": "var(--sun-arc-layer-mask)",
+          "mask-size": "100% 100%",
+          "mask-repeat": "no-repeat",
+          "will-change": "opacity"
+        },
+        "[data-cloud=\"shade\"]": {
+          "background": "#39414f",
+          "opacity": "calc(0.75 + var(--sun-arc-night) * 0.2)"
+        },
+        "[data-cloud=\"day\"]": {
+          "background": "#f4f6fa",
+          "opacity": "calc(var(--sun-arc-daylight) * (1 - var(--sun-arc-dusk)))"
+        },
+        "[data-cloud=\"golden\"]": {
+          "background": "#ffb16a",
+          "opacity": "calc(var(--sun-arc-dusk) * (1 - var(--sun-arc-night)))"
+        },
+        "[data-cloud=\"moon\"]": {
+          "background": "#4d5874",
+          "opacity": "calc(var(--sun-arc-night) * 0.55)"
+        },
+        "[data-slot=\"sun-arc-photo\"] [data-light=\"windows\"]": {
+          "background": "#ffc46a",
+          "mask-image": "var(--sun-arc-layer-mask)",
+          "mask-size": "100% 100%",
+          "mask-repeat": "no-repeat",
+          "filter": "blur(0.4px)",
+          "opacity": "calc(var(--sun-arc-night) * 0.85 + var(--sun-arc-dusk) * 0.25 * (1 - var(--sun-arc-daylight)))"
         }
       }
     },

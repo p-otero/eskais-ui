@@ -1,4 +1,5 @@
 import { readSkyPhotoExif, type SkyPhotoExif } from "@/lib/sky-photo-exif"
+import { findClouds, findWindows } from "@/lib/sky-photo-features"
 import { findSkySteps, skyMaskSize, type SkyMask } from "@/lib/sky-photo-mask"
 
 /** A photo ready to have its sky replaced: its upright size, its sky and where its horizon most likely is. */
@@ -13,14 +14,23 @@ type SkyPhotoAnalysis = {
   sky: HTMLCanvasElement
   /** An object URL of a PNG that is opaque where the photo is not sky, for `mask-image`. Freed by `dispose`. */
   foregroundUrl: string
+  /** With `clouds`, object URLs of the photo's clouds for `mask-image`: how much cloud covers each pixel, and how lit. */
+  clouds: { shadeUrl: string; lightUrl: string } | undefined
+  /** With `windows`, an object URL of the window panes to light at night, for `mask-image`. */
+  windowsUrl: string | undefined
   /** How long the sky finder took, in ms. */
   analysisMs: number
+  /** Frees every object URL above. */
   dispose: () => void
 }
 
 type SkyPhotoOptions = {
   /** An image to use as the sky mask instead of finding it: white is sky, black is the foreground. */
   skyMask?: string | Blob | undefined
+  /** Also finds the photo's own clouds (`findClouds`). */
+  clouds?: boolean | undefined
+  /** Also finds windows to light at night (`findWindows`), lighting a seeded share of them. */
+  windows?: boolean | undefined
   signal?: AbortSignal | undefined
 }
 
@@ -82,16 +92,20 @@ function maskFromImage(image: ImageData): SkyMask {
 // doesn't show against the new sky.
 const foregroundAlpha = (sky: number) => Math.max(0, Math.min(255, Math.round((255 - sky) * 1.6 - 115)))
 
-function alphaCanvas(mask: SkyMask, invert: boolean) {
-  const canvas = canvasOf(mask.width, mask.height)
+function alphaCanvas(width: number, height: number, alpha: Uint8ClampedArray, map: (value: number) => number) {
+  const canvas = canvasOf(width, height)
   const context = canvas.getContext("2d")
   if (!context) throw new Error("The photo couldn't be read: no 2D canvas")
-  const image = context.createImageData(mask.width, mask.height)
-  for (let index = 0; index < mask.alpha.length; index++) {
-    image.data[index * 4 + 3] = invert ? foregroundAlpha(mask.alpha[index]!) : mask.alpha[index]!
-  }
+  const image = context.createImageData(width, height)
+  for (let index = 0; index < alpha.length; index++) image.data[index * 4 + 3] = map(alpha[index]!)
   context.putImageData(image, 0, 0)
   return canvas
+}
+
+const same = (value: number) => value
+
+async function alphaUrl(width: number, height: number, alpha: Uint8ClampedArray) {
+  return URL.createObjectURL(await pngOf(alphaCanvas(width, height, alpha, same)))
 }
 
 const pngOf = (canvas: HTMLCanvasElement) =>
@@ -108,7 +122,7 @@ const pngOf = (canvas: HTMLCanvasElement) =>
  */
 async function analyzeSkyPhoto(
   source: string | Blob,
-  { skyMask, signal }: SkyPhotoOptions = {},
+  { skyMask, clouds: wantClouds = false, windows: wantWindows = false, signal }: SkyPhotoOptions = {},
 ): Promise<SkyPhotoAnalysis> {
   const blob = await blobOf(source, signal)
   const exif = readSkyPhotoExif(await blob.slice(0, 131_072).arrayBuffer())
@@ -117,9 +131,10 @@ async function analyzeSkyPhoto(
   const scale = Math.min(1, skyMaskSize / Math.max(width, height))
   const small = { width: Math.max(1, Math.round(width * scale)), height: Math.max(1, Math.round(height * scale)) }
   const started = performance.now()
+  const pixels = drawScaled(bitmap, small.width, small.height)
   let mask: SkyMask
   if (skyMask === undefined) {
-    mask = await findSkyYielding(drawScaled(bitmap, small.width, small.height), signal)
+    mask = await findSkyYielding(pixels, signal)
   } else {
     const maskBitmap = await createImageBitmap(await blobOf(skyMask, signal))
     mask = maskFromImage(drawScaled(maskBitmap, small.width, small.height))
@@ -128,8 +143,26 @@ async function analyzeSkyPhoto(
   const analysisMs = performance.now() - started
   bitmap.close()
   signal?.throwIfAborted()
-  const sky = alphaCanvas(mask, false)
-  const foregroundUrl = URL.createObjectURL(await pngOf(alphaCanvas(mask, true)))
+  const sky = alphaCanvas(mask.width, mask.height, mask.alpha, same)
+  const foregroundUrl = URL.createObjectURL(
+    await pngOf(alphaCanvas(mask.width, mask.height, mask.alpha, foregroundAlpha)),
+  )
+  let clouds: SkyPhotoAnalysis["clouds"]
+  if (wantClouds) {
+    await nextTask()
+    const found = findClouds(pixels, mask)
+    clouds = {
+      shadeUrl: await alphaUrl(found.width, found.height, found.shade),
+      lightUrl: await alphaUrl(found.width, found.height, found.light),
+    }
+  }
+  let windowsUrl: string | undefined
+  if (wantWindows) {
+    await nextTask()
+    const found = findWindows(pixels, mask)
+    if (found.lit > 0) windowsUrl = await alphaUrl(found.width, found.height, found.glow)
+  }
+  const urls = [foregroundUrl, clouds?.shadeUrl, clouds?.lightUrl, windowsUrl]
   return {
     width,
     height,
@@ -138,8 +171,12 @@ async function analyzeSkyPhoto(
     mask,
     sky,
     foregroundUrl,
+    clouds,
+    windowsUrl,
     analysisMs,
-    dispose: () => URL.revokeObjectURL(foregroundUrl),
+    dispose: () => {
+      for (const url of urls) if (url) URL.revokeObjectURL(url)
+    },
   }
 }
 
