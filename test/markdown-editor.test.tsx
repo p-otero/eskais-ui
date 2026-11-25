@@ -42,7 +42,6 @@ test("CodeMirror scrolls inside the editor's ScrollArea, whose scrollbars agents
   const scrollbars = viewport.parentElement!.querySelectorAll("[data-slot=scroll-area-scrollbar]")
   expect([...scrollbars].map((bar) => bar.getAttribute("data-orientation"))).toEqual(["vertical", "horizontal"])
   for (const bar of scrollbars) expect(bar.hasAttribute("data-agent-hidden")).toBe(true)
-  // The text box is focusable, so the viewport adds no tab stop of its own.
   expect(viewport.hasAttribute("tabindex")).toBe(false)
 })
 

@@ -84,7 +84,7 @@ test("shows translated errors and focuses the first invalid field", async () => 
   expect(onSubmit).not.toHaveBeenCalled()
 
   await user.type(name, "ab")
-  // UI SDK announces the error too, 100 ms later, in a live region on <body>: on a loaded machine that text is there
+  // Workaround: UI SDK announces the error too, 100 ms later, in a live region on <body>: on a loaded machine that text is there
   // by the time the query runs, so it would match twice.
   expect(await screen.findByText("Escribe al menos 3 caracteres.", { ignore: ignoreAnnouncer })).toBeTruthy()
   const email = screen.getByRole("textbox", { name: "Owner email" })

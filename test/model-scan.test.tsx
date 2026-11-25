@@ -98,7 +98,6 @@ describe("primitive", () => {
             `${action} at ${stage}`,
           ).toBe(runs || `${action} isn't available ${during[stage]}. [unavailable:${action}]`)
           expect(view.api.offers(action)).toBe(runs)
-          // A press the stage doesn't offer returns false instead of throwing.
           expect(runs || view.api[action](new MouseEvent("click"))).toBe(runs)
         }
       } finally {
@@ -210,7 +209,6 @@ test("detecting: points light up, a determinate bar, Cancel, and the scene start
     ["face", 2],
     ["body", 1],
   ])
-  // The photo's box is 750 by 1000 units at 3:4.
   expect(groups[1]?.firstElementChild?.getAttribute("cx")).toBe("300")
   expect(document.querySelector('[data-slot="model-scan-points"]')?.getAttribute("aria-hidden")).toBe("true")
   const bar = screen.getByRole("progressbar", { name: "Finding points on the photo" })
@@ -297,7 +295,6 @@ function StartableScan() {
       onStart={() => setStage("detecting")}
       onCancel={() => setStage("photo")}
       onRetry={() => setStage("detecting")}
-      // Before Make 3D in the controls: focus still goes to Make 3D, the stage's main control.
       styles={[{ value: "soft", label: "Soft" }]}
       onStyleChange={() => {}}
     />
@@ -346,7 +343,6 @@ test("building and refining hand the model and the weights to the viewer; ready 
   expect(screen.queryByRole("group", { name: "3D view controls" })).toBeNull()
   rerender(<Scan stage="ready" model="figure.glb" weights={{ Smile: 1 }} modelAlt="A 3D figure" />)
   await tick()
-  // One bar: ModelScan's toolbar, with the viewer's drag and keys but not its own controls.
   expect(await screen.findByRole("toolbar", { name: "3D model controls" })).toBeTruthy()
   await waitFor(() => expect(screen.queryByRole("progressbar")).toBeNull())
   expect(screen.queryByRole("group", { name: "3D view controls" })).toBeNull()

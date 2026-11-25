@@ -206,7 +206,6 @@ test("agents run each action by its label with the row's id; destructive ones ne
   for (const entry of snapshot) expect(entry.label, `${entry.component} ${entry.ref} has no name`).toBeTruthy()
   const labels = snapshot.map((entry) => entry.label)
   for (const label of ["Copy URL", "Stop", "Start"]) expect(labels).toContain(label)
-  // The rows' own buttons stay out of the snapshot: one entry per action, not one per row.
   expect(labels.filter((label) => label === "Copy URL")).toHaveLength(1)
 
   const copy = await agent.act({ steps: [{ ref: "Copy URL", action: "run", args: ["api"] }] })

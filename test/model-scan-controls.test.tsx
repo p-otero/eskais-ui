@@ -40,7 +40,6 @@ function Scan(props: Partial<ModelScanProps>) {
   )
 }
 
-// A standing figure's 33 pose landmarks on a 3:4 photo: shoulders, hips, limbs and a head.
 function standing() {
   const points = new Float32Array(66).fill(0.5)
   const set = (i: number, x: number, y: number) => points.set([x, y], i * 2)
@@ -157,7 +156,6 @@ describe("controls", () => {
     expect(onDownload).toHaveBeenCalledWith(expect.objectContaining({ reason: "trigger-press" }))
     await user.click(within(toolbar).getByRole("button", { name: "Start over" }))
     expect(onStartOver).toHaveBeenCalledTimes(1)
-    // The views turn the viewer: the chosen one is checked.
     await user.click(within(toolbar).getByRole("radio", { name: "Side" }))
     expect(within(toolbar).getByRole("radio", { name: "Side" }).getAttribute("aria-checked")).toBe("true")
     expect(await axeViolations(document.body)).toEqual([])

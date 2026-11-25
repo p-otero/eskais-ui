@@ -151,10 +151,8 @@ test("on narrow screens it is a bottom sheet unless sheet={false}", () => {
 test("while the on-screen keyboard is up, the content and the sheet fit above it", () => {
   render(<SizedDialog />)
   const sheet = screen.getByRole("dialog", { name: "Sized" })
-  // The visible part is cut to the containing block: a stale `offsetTop` with the full height can't push it below.
   expect(sheet.className).toContain("narrow:bottom-[max(0px,100%-var(--dialog-viewport-bottom,100%))]")
   expect(sheet.className).toContain("data-dialog-keyboard:bottom-[max(0px,100%-var(--dialog-viewport-bottom,100%))]")
-  // Centered, its top is the middle of the visible part, cut the same way.
   expect(sheet.className).toContain(
     "top-[calc((clamp(0px,var(--dialog-viewport-top,0px),100%-var(--dialog-viewport-height,100%))+min(100%,var(--dialog-viewport-bottom,100%)))/2)]",
   )
@@ -167,7 +165,7 @@ test("while the on-screen keyboard is up, the content and the sheet fit above it
 test("the content is placed from one edge with an auto height, never an intrinsic height between two", () => {
   render(<SizedDialog />)
   const sheet = screen.getByRole("dialog", { name: "Sized" })
-  // Safari 26 sizes a fixed box with an intrinsic height from its column flex children's `flex-basis: 0%`, which cut
+  // Workaround: Safari 26 sizes a fixed box with an intrinsic height from its column flex children's `flex-basis: 0%`, which cut
   // a FormDialog and a StepDialog down to their header (`node tooling/dialog-mobile-check.mjs --engine=webkit26`).
   expect(sheet.className).not.toMatch(/(^|\s|:)(h|size)-(fit|max|min)(\s|$)|inset-0|(^|\s)m-auto/)
   expect(sheet.className).toContain("inset-x-0")
@@ -176,7 +174,7 @@ test("the content is placed from one edge with an auto height, never an intrinsi
 })
 
 test("stays in the visible part of the page, and takes it for the keyboard only while a field is focused", async () => {
-  // iOS Safari's toolbars shorten the visual viewport with no keyboard, and its innerHeight can be stale.
+  // Workaround: iOS Safari's toolbars shorten the visual viewport with no keyboard, and its innerHeight can be stale.
   const viewport = Object.assign(new EventTarget(), {
     width: innerWidth,
     height: innerHeight - 90,
@@ -211,7 +209,6 @@ test("stays in the visible part of the page, and takes it for the keyboard only 
     act(() => screen.getByRole("textbox", { name: "Note" }).focus())
     expect(dialog.hasAttribute("data-dialog-keyboard")).toBe(true)
 
-    // Pinch-zoomed, it stays on the box it had instead of chasing the zoom.
     viewport.scale = 2
     viewport.height = (innerHeight - 90) / 2
     viewport.offsetTop = 200
@@ -227,7 +224,6 @@ test("stays in the visible part of the page, and takes it for the keyboard only 
 const frame = () => act(() => new Promise((done) => requestAnimationFrame(() => done(undefined))))
 
 test("a field focused when the keyboard comes up is scrolled back into view", async () => {
-  // A visual viewport as phones report it: the keyboard shortens it, the layout viewport (innerHeight) stays.
   const viewport = Object.assign(new EventTarget(), { width: innerWidth, height: innerHeight, offsetTop: 0, scale: 1 })
   vi.stubGlobal("visualViewport", viewport)
   const scrolled = vi.spyOn(HTMLElement.prototype, "scrollIntoView").mockImplementation(() => {})

@@ -28,8 +28,6 @@ function customers() {
     .map((row) => within(row).getAllByRole("cell")[0]?.textContent)
 }
 
-// A manual table holds sort and page in the app, which fetches the matching rows. UI SDK's dev check fails a controlled
-// value that a change request leaves as it was, so the app here updates both and leaves the rows alone.
 function ManualInvoices({
   onSortChange,
   onPageChange,

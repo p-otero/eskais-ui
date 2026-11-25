@@ -112,7 +112,6 @@ describe("server data types", () => {
       restarted: readonly QueryKey[]
       refetched: readonly QueryKey[]
     }>()
-    // A caller written for the void promise still compiles: it ignores or awaits the result.
     const ignored: () => Promise<unknown> = () => patchSource(client, tasks, {})
     void ignored()
     // @ts-expect-error inFlight takes "restart" or "cancel"
@@ -149,7 +148,6 @@ describe("server data types", () => {
   })
 
   test("a registered defaultError types every hook's error", () => {
-    // TypeScript 7 runs natively, so compiling the fixture alone takes a fraction of a second.
     const tsc = join(import.meta.dirname, "..", "node_modules", "typescript", "bin", "tsc")
     const project = join(import.meta.dirname, "fixtures", "register-error", "tsconfig.json")
     const run = spawnSync(process.execPath, [tsc, "-p", project], { encoding: "utf8" })

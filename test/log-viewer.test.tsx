@@ -14,7 +14,7 @@ import { axeViolations } from "./axe"
 const agent = createAgent()
 const ESC = "\u001b"
 
-// jsdom has no layout: the log is 200px tall and as high as its rows box says, so the virtualizer has a view.
+// Workaround: jsdom has no layout: the log is 200px tall and as high as its rows box says, so the virtualizer has a view.
 const descriptors = {
   clientHeight: Object.getOwnPropertyDescriptor(HTMLElement.prototype, "clientHeight"),
   scrollHeight: Object.getOwnPropertyDescriptor(Element.prototype, "scrollHeight"),

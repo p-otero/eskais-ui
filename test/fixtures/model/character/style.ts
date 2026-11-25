@@ -67,7 +67,6 @@ function toonMaterial(source: Material, style: CharacterStyle, gradientMap: Data
   })
   material.name = `${source.name}-${style.id}`
   const { strength, power } = style.rim
-  // A rim light at grazing angles, which the toon ramp alone doesn't give.
   material.onBeforeCompile = (shader) => {
     shader.uniforms.rimStrength = { value: strength }
     shader.uniforms.rimPower = { value: power }
@@ -92,7 +91,6 @@ function outlineMaterial(style: CharacterStyle) {
   const width = style.outline.width
   material.onBeforeCompile = (shader) => {
     shader.uniforms.outlineWidth = { value: width }
-    // Pushed out before morphing and skinning, so the hull follows both.
     shader.vertexShader = shader.vertexShader
       .replace("void main() {", "uniform float outlineWidth;\nvoid main() {")
       .replace("#include <begin_vertex>", "#include <begin_vertex>\ntransformed += normalize(normal) * outlineWidth;")
@@ -101,10 +99,6 @@ function outlineMaterial(style: CharacterStyle) {
   return material
 }
 
-/**
- * Restyles a loaded character in place from its materials' `extras.eskais.style`: toon materials on its ramp, and an
- * inverted-hull outline when the style has one (never on the eyes). Returns what frees everything it made.
- */
 function styleCharacter(root: Object3D) {
   const created: { dispose(): void }[] = []
   const ramps = new Map<string, DataTexture>()
@@ -128,7 +122,6 @@ function styleCharacter(root: Object3D) {
     mesh.material = material
     if (style.outline.width <= 0 || extras.role === "eyes") continue
     const outline = mesh.clone(false) as Mesh
-    // One influences array for both, so the outline follows the live morph weights.
     outline.morphTargetInfluences = mesh.morphTargetInfluences
     outline.material = outlineMaterial(style)
     created.push(outline.material)

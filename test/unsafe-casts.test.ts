@@ -23,13 +23,10 @@ const files = sources(join(root, "registry"))
 const where = (path: string, index: number) => `${path}:${String(index + 1)}`
 const withoutComment = (line: string) => (/^\s*(\/\*|\*)/.test(line) ? "" : line.replace(/\/\/.*$/, ""))
 
-// `bun run lint` runs the type-aware config on registry/**, so CI fails on a new `as` that narrows a type.
 test("the type-aware lint forbids unsafe type assertions in registry code", () => {
   expect(typeAware.rules["typescript/no-unsafe-type-assertion"]).toBe("error")
 })
 
-// The rule doesn't look through `any`, so a cast laundered through it would pass the lint unnoticed: lib/narrow's
-// helpers are the one place that does it.
 test("no registry file disables no-unsafe-type-assertion or uses any, except lib/narrow", () => {
   const found = files.flatMap(({ path, lines }) =>
     lines.flatMap((line, index) =>
@@ -41,7 +38,6 @@ test("no registry file disables no-unsafe-type-assertion or uses any, except lib
   expect(found).toEqual([])
 })
 
-// Each `assumeType` call is a cast TypeScript can't check. Lowering the count is welcome; raising it needs a reason.
 const assumeTypeBudget = 57
 
 test("every assumeType call says why, and the count stays within its budget", () => {
