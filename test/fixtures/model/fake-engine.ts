@@ -67,6 +67,7 @@ type FakeEngineOptions = {
 
 const abortError = () => new DOMException("The run was cancelled.", "AbortError")
 
+/** Resolves after the last event (`done` or `error`); rejects with an AbortError once `signal` aborts. */
 function runFakeEngine(emit: (event: EngineEvent) => void, options: FakeEngineOptions) {
   const { signal } = options
   if (signal?.aborted) return Promise.reject(abortError())

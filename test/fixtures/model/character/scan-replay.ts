@@ -59,6 +59,7 @@ function toLive(event: RecordedEvent, glb: (file: string) => string): ScanEvent 
   }
 }
 
+/** Emits each recorded event at its `at` time, slowed down. Resolves after the last; rejects once `signal` aborts. */
 function replayScan(recording: ScanRecording, emit: (event: ScanEvent) => void, options: ReplayOptions) {
   const { signal, slowdown = 1 } = options
   if (signal?.aborted) return Promise.reject(abortError())

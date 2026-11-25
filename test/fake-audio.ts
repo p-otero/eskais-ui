@@ -89,6 +89,7 @@ function installFakeAudio() {
   vi.stubGlobal("cancelAnimationFrame", (id: number) => frames.delete(id))
 }
 
+/** Runs `count` animation frames, `ms` apart. */
 function stepFrames(count = 1, ms = 16) {
   for (let frame = 0; frame < count; frame += 1) {
     clock += ms
