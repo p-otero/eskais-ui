@@ -1,4 +1,4 @@
-import type { Pixels, SkyMask } from "@/lib/sky-photo-mask"
+import { finished, rowsPerStep, type Pixels, type SkyMask, type Steps } from "@/lib/sky-photo-mask"
 
 /**
  * A photo's own clouds as two alpha maps over the sky, at the mask's size: `shade` is how much cloud covers each
@@ -27,13 +27,11 @@ function channels(data: Uint8ClampedArray, at: number) {
   }
 }
 
-/**
- * Finds the clouds in the photo's sky: the less saturated a sky pixel is than the clearest blue in the photo, the more
- * cloud it is. Its brightness says how lit that cloud is.
- */
-function findClouds({ data, width, height }: Pixels, mask: SkyMask): SkyClouds {
+function* findCloudsSteps({ data, width, height }: Pixels, mask: SkyMask): Steps<SkyClouds> {
+  const everyRows = width * rowsPerStep
   let clearest = 0.15
   for (let index = 0; index < width * height; index++) {
+    if (index % everyRows === 0) yield
     if (mask.alpha[index]! < 250) continue
     const { saturation, red, blue } = channels(data, index * 4)
     if (blue > red) clearest = Math.max(clearest, saturation)
@@ -41,6 +39,7 @@ function findClouds({ data, width, height }: Pixels, mask: SkyMask): SkyClouds {
   const shade = new Uint8ClampedArray(width * height)
   const light = new Uint8ClampedArray(width * height)
   for (let index = 0; index < shade.length; index++) {
+    if (index % everyRows === 0) yield
     const sky = mask.alpha[index]! / 255
     if (sky === 0) continue
     const { saturation, light: brightness } = channels(data, index * 4)
@@ -50,6 +49,12 @@ function findClouds({ data, width, height }: Pixels, mask: SkyMask): SkyClouds {
   }
   return { width, height, shade, light }
 }
+
+/**
+ * Finds the clouds in the photo's sky: the less saturated a sky pixel is than the clearest blue in the photo, the more
+ * cloud it is. Its brightness says how lit that cloud is.
+ */
+const findClouds = (pixels: Pixels, mask: SkyMask) => finished(findCloudsSteps(pixels, mask))
 
 function seeded(seed: number) {
   let state = seed | 0
@@ -61,9 +66,10 @@ function seeded(seed: number) {
   }
 }
 
-function localMean(values: Float32Array, width: number, height: number, radius: number) {
+function* localMean(values: Float32Array, width: number, height: number, radius: number): Steps<Float32Array> {
   const sums = new Float64Array((width + 1) * (height + 1))
   for (let y = 0; y < height; y++) {
+    if (y % rowsPerStep === 0) yield
     let row = 0
     for (let x = 0; x < width; x++) {
       row += values[y * width + x]!
@@ -72,6 +78,7 @@ function localMean(values: Float32Array, width: number, height: number, radius: 
   }
   const mean = new Float32Array(values.length)
   for (let y = 0; y < height; y++) {
+    if (y % rowsPerStep === 0) yield
     const top = Math.max(0, y - radius)
     const bottom = Math.min(height, y + radius + 1)
     for (let x = 0; x < width; x++) {
@@ -90,26 +97,33 @@ function localMean(values: Float32Array, width: number, height: number, radius: 
 
 type Blob = { left: number; top: number; right: number; bottom: number; area: number }
 
+const blobsPerStep = 64
+
 const isVegetation = (red: number, green: number, blue: number) =>
   (green > red * 1.04 && green > blue * 1.04) || (red > blue * 1.35 && red - blue > 0.12 && green > blue * 1.15)
 
-/**
- * Finds window-like panes on the buildings: small, nearly rectangular patches darker than a light, plain wall around
- * them, not foliage, each in a grid with a neighbour in its row and one in its column. A seeded share is drawn as glow.
- */
-function findWindows({ data, width, height }: Pixels, mask: SkyMask, { share = 0.28, seed = 7 } = {}): SkyWindows {
+type WindowOptions = { share?: number; seed?: number }
+
+function* findWindowsSteps(
+  { data, width, height }: Pixels,
+  mask: SkyMask,
+  { share = 0.28, seed = 7 }: WindowOptions = {},
+): Steps<SkyWindows> {
+  const everyRows = width * rowsPerStep
   const light = new Float32Array(width * height)
   const wall = new Uint8Array(width * height)
   const plaster = new Uint8Array(width * height)
   for (let index = 0; index < light.length; index++) {
+    if (index % everyRows === 0) yield
     const { red, green, blue, saturation, light: brightness } = channels(data, index * 4)
     light[index] = brightness
     wall[index] = mask.alpha[index]! < 40 && !isVegetation(red, green, blue) ? 1 : 0
     plaster[index] = wall[index] && saturation < 0.28 && brightness > 0.42 ? 1 : 0
   }
-  const mean = localMean(light, width, height, Math.max(3, Math.round(width / 170)))
+  const mean = yield* localMean(light, width, height, Math.max(3, Math.round(width / 170)))
   const candidate = new Uint8Array(width * height)
   for (let index = 0; index < light.length; index++) {
+    if (index % everyRows === 0) yield
     if (wall[index] && light[index]! < mean[index]! - 0.07 && light[index]! < 0.7) candidate[index] = 1
   }
   const onWall = (blob: Blob) => {
@@ -130,6 +144,7 @@ function findWindows({ data, width, height }: Pixels, mask: SkyMask, { share = 0
   const stack: number[] = []
   const maxArea = Math.max(24, Math.round((width * height) / 9000))
   for (let start = 0; start < candidate.length; start++) {
+    if (start % everyRows === 0) yield
     if (!candidate[start] || seen[start]) continue
     seen[start] = 1
     stack.push(start)
@@ -163,9 +178,11 @@ function findWindows({ data, width, height }: Pixels, mask: SkyMask, { share = 0
     other !== blob && Math.abs(other.top - blob.top) <= 1 && Math.abs(other.left - blob.left) <= reachOf(blob)
   const inColumn = (blob: Blob, other: Blob) =>
     other !== blob && Math.abs(other.left - blob.left) <= 1 && Math.abs(other.top - blob.top) <= reachOf(blob)
-  const windows = blobs.filter(
-    (blob) => blobs.some((other) => inRow(blob, other)) && blobs.some((other) => inColumn(blob, other)),
-  )
+  const windows: Blob[] = []
+  for (const [index, blob] of blobs.entries()) {
+    if (index % blobsPerStep === 0) yield
+    if (blobs.some((other) => inRow(blob, other)) && blobs.some((other) => inColumn(blob, other))) windows.push(blob)
+  }
   const random = seeded(seed)
   const glow = new Uint8ClampedArray(width * height)
   let lit = 0
@@ -180,5 +197,12 @@ function findWindows({ data, width, height }: Pixels, mask: SkyMask, { share = 0
   return { width, height, glow, found: windows.length, lit }
 }
 
-export { findClouds, findWindows }
+/**
+ * Finds window-like panes on the buildings: small, nearly rectangular patches darker than a light, plain wall around
+ * them, not foliage, each in a grid with a neighbour in its row and one in its column. A seeded share is drawn as glow.
+ */
+const findWindows = (pixels: Pixels, mask: SkyMask, options?: WindowOptions) =>
+  finished(findWindowsSteps(pixels, mask, options))
+
+export { findClouds, findCloudsSteps, findWindows, findWindowsSteps }
 export type { SkyClouds, SkyWindows }
