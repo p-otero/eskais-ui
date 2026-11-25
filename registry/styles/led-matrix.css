@@ -1,0 +1,111 @@
+[data-slot="led-matrix"] {
+  --led-housing: #19191b;
+  --led-housing-edge: #3a3a3e;
+  --led-screw: #6b6b70;
+  padding: 0.75rem;
+  border-radius: 0.875rem;
+  color: #f4f4f5;
+  background-color: var(--led-housing);
+  background-image:
+    radial-gradient(circle at 0.55rem 0.55rem, var(--led-screw) 0 0.13rem, #0008 0.16rem, transparent 0.2rem),
+    radial-gradient(
+      circle at calc(100% - 0.55rem) 0.55rem,
+      var(--led-screw) 0 0.13rem,
+      #0008 0.16rem,
+      transparent 0.2rem
+    ),
+    radial-gradient(
+      circle at 0.55rem calc(100% - 0.55rem),
+      var(--led-screw) 0 0.13rem,
+      #0008 0.16rem,
+      transparent 0.2rem
+    ),
+    radial-gradient(
+      circle at calc(100% - 0.55rem) calc(100% - 0.55rem),
+      var(--led-screw) 0 0.13rem,
+      #0008 0.16rem,
+      transparent 0.2rem
+    ),
+    linear-gradient(180deg, #2c2c30 0%, #18181a 45%, #101012 100%);
+  box-shadow:
+    inset 0 1px 0 var(--led-housing-edge),
+    inset 0 -1px 0 #000,
+    0 1px 1px #0006,
+    0 10px 24px -10px #000a;
+}
+
+[data-slot="led-matrix-board"] {
+  position: relative;
+  flex: 1 1 0;
+  min-width: 0;
+  aspect-ratio: var(--led-columns) / var(--led-rows);
+  overflow: hidden;
+  border-radius: 0.25rem;
+  background-color: #070605;
+  background-image: radial-gradient(circle, #1c150c 0 32%, transparent 36%);
+  background-size: calc(100% / var(--led-columns)) calc(100% / var(--led-rows));
+  box-shadow:
+    inset 0 2px 6px #000,
+    0 0 0 1px #000,
+    0 1px 0 1px #ffffff14;
+}
+
+[data-slot="led-matrix"][data-color="red"] [data-slot="led-matrix-board"] {
+  background-image: radial-gradient(circle, #200c0a 0 32%, transparent 36%);
+}
+
+[data-slot="led-matrix"][data-color="green"] [data-slot="led-matrix-board"] {
+  background-image: radial-gradient(circle, #0b1d10 0 32%, transparent 36%);
+}
+
+[data-slot="led-matrix"][data-color="white"] [data-slot="led-matrix-board"] {
+  background-image: radial-gradient(circle, #18191e 0 32%, transparent 36%);
+}
+
+[data-slot="led-matrix-board"]::after {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  content: "";
+  background:
+    linear-gradient(172deg, #ffffff1c 0%, #ffffff08 28%, transparent 29%),
+    linear-gradient(0deg, #0000004d, transparent 35%);
+}
+
+[data-slot="led-matrix-dots"] {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+[data-led-matrix-pause] {
+  align-self: flex-end;
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: 9999px;
+  color: #d4d4d8;
+  background: linear-gradient(180deg, #34343a, #1c1c20);
+  box-shadow:
+    inset 0 1px 0 #ffffff26,
+    0 1px 2px #000c;
+}
+
+[data-led-matrix-pause]:hover {
+  color: #ffffff;
+  background: linear-gradient(180deg, #3e3e45, #232328);
+}
+
+[data-led-matrix-pause][data-pressed] {
+  color: #ffffff;
+  background: linear-gradient(180deg, #1c1c20, #2a2a30);
+  box-shadow:
+    inset 0 1px 3px #000,
+    0 1px 0 #ffffff14;
+}
+
+[data-led-matrix-pause]:focus-visible {
+  outline: 2px solid #ffffff;
+  outline-offset: 2px;
+}
