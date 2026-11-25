@@ -118,7 +118,6 @@ function FilterPanel<S extends FilterSchema>({
       if (draft[key] === undefined) delete next[key]
       else next[key] = draft[key]
     }
-    // Each value is the draft of its own field's editor; TypeScript can't relate a key loop to the mapped type.
     controller.setFilter(assumeType<FilterValues<S>>(next))
     if (narrow) onOpenChange(false)
   }

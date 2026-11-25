@@ -104,7 +104,7 @@ function useFormContext(part: string) {
 
 type IssueError = FieldError & { params?: Record<string, unknown> }
 
-/** What `errorText` reads from an error: a field's, or the form's root error, whose `type` may be a number. */
+/** A field's error, or the form's root error. */
 type ErrorLike = { type?: string | number; message?: string; params?: Record<string, unknown> }
 
 function errorAt(errors: Record<string, unknown>, path: string) {
@@ -132,8 +132,6 @@ function issueResolver(schema: StandardSchemaV1): Resolver<FieldValues> {
       },
     },
   }
-  // standardSchemaResolver takes its generics from the schema's declared types, which an untyped Standard Schema
-  // doesn't carry: the form's values are whatever this schema validates.
   const resolve = standardSchemaResolver(assumeType<StandardSchemaV1<FieldValues, FieldValues>>(watched))
   return async (values, context, options) => {
     const result = await resolve(values, context, options)

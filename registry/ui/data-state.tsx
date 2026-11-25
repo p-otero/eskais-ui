@@ -98,7 +98,6 @@ function DataState<T, E = unknown>(props: DataStateProps<T, E>) {
   let content: ReactNode
   if (status === "error") {
     content = props.renderError ? (
-      // An error status comes with its error; the props don't tie `error` to `status`, and renderError keeps its type.
       props.renderError(assumeType<E>(error), props.onRetry)
     ) : props.onRetry ? (
       <ErrorState
