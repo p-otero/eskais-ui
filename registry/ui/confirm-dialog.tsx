@@ -111,8 +111,6 @@ function ConfirmDialog({
     <AlertDialog
       {...root}
       onOpenChange={(open, details) => {
-        // Agents open the dialog with setOpen, not through the trigger, so a blocked trigger refuses every open; a
-        // controlled `open` still wins.
         if (open && blocked) {
           details.cancel()
           return

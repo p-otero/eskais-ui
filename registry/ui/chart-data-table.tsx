@@ -77,7 +77,6 @@ function ChartDataTable<TRow extends ChartRow>({
   )
 
   if (!visuallyHidden) return <div data-slot="chart-data-table">{table}</div>
-  // The inner box sizes to the table, so the scroll area never overflows and never adds a tab stop nobody can see.
   return (
     <div data-slot="chart-data-table" data-visually-hidden="" className="sr-only">
       <div className="w-max">{table}</div>
