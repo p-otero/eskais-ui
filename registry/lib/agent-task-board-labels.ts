@@ -25,7 +25,6 @@ interface ProposalLabels {
 interface TaskMoveMessage {
   type: "grab" | "move" | "drop" | "cancel"
   label: string
-  /** The column's name. */
   list: string
   position: number
   total: number

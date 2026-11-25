@@ -58,7 +58,6 @@ function asResult<T>(raw: unknown, where: string): PageResult<T> {
   return assumeType<PageResult<T>>(raw)
 }
 
-// Without a total, a full page is taken to mean there may be more; a short one is the last.
 function withPaging<T>(result: PageResult<T>, page: number, size: number): PageResult<T> {
   const total = result.total ?? result.totalEstimate
   return {

@@ -88,7 +88,7 @@ function createAppearance<
     const html = document.documentElement
     const scheme = colorScheme.get()
     html.classList.toggle("dark", scheme.resolved === "dark")
-    // The theme's no-JS dark fallback reads this, so an explicit light choice beats a dark system before any render.
+    // Spec: the theme's no-JS dark fallback reads this, so an explicit light choice beats a dark system.
     html.setAttribute("data-color-scheme", scheme.value)
     setAttribute(html, "data-theme", theme.get().value)
     setAttribute(html, "data-palette", palette.get().value)

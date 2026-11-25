@@ -23,7 +23,7 @@ function browserWindow(): RouterWindow | undefined {
   return typeof window === "undefined" ? undefined : window
 }
 
-// One set for every browser router, so a write through one tells the others: the history API fires no event.
+// Spec: the history API fires no event, so a write through one browser router tells the others through this set.
 const browserListeners = new Set<() => void>()
 
 function notifyBrowser() {
@@ -57,7 +57,6 @@ function splitRoute(route: string) {
 }
 
 function go(target: RouterWindow, url: string, { replace }: UrlNavigateOptions) {
-  // Keeps the router's own state object, so routers that store keys there still recognise the entry.
   const state: unknown = target.history.state
   if (replace) target.history.replaceState(state, "", url)
   else target.history.pushState(state, "", url)

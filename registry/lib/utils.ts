@@ -2,8 +2,6 @@ import { clsx, type ClassValue } from "clsx"
 import type { CSSProperties } from "react"
 import { extendTailwindMerge } from "tailwind-merge"
 
-// The theme's tokens, so a consumer's `gap-4` or `text-lg` replaces `gap-items` or `text-title` instead of both
-// landing in the class list. Unknown `text-*` values would otherwise count as colours and drop `text-muted-foreground`.
 const twMerge = extendTailwindMerge({
   extend: {
     theme: {

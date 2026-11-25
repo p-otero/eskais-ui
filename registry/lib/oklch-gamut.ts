@@ -1,6 +1,5 @@
-// OKLCH against a screen's gamut, for painting a colour area where every pixel is a colour the picker can hold.
-// Matrices from Björn Ottosson's OKLab and CSS Color 4 (linear sRGB to and from linear Display P3); the mapping is
-// CSS Color 4's, which UI SDK's toGamut follows, written over plain numbers so a whole area paints in a few ms.
+// Spec: matrices from Björn Ottosson's OKLab and CSS Color 4 (linear sRGB to and from linear Display P3); the
+// mapping is CSS Color 4's, which UI SDK's toGamut follows, over plain numbers so a whole area paints in a few ms.
 
 type AreaGamut = "srgb" | "p3"
 type Oklch = { l: number; c: number; h: number }
@@ -141,8 +140,8 @@ const encode = (linear: number) => {
   return Math.round(255 * (value <= 0.003_130_8 ? 12.92 * value : 1.055 * value ** (1 / 2.4) - 0.055))
 }
 
-// Past the edge the mapped colour changes slowly along a row, so it is worked out every few columns and blended
-// in between: a mapping is a dozen conversions, and an area holds tens of thousands of pixels.
+// Perf: a mapping is a dozen conversions and an area holds tens of thousands of pixels; past the edge the mapped
+// colour changes slowly along a row, so it is worked out every few columns and blended in between.
 const mappedStride = 4
 
 /**

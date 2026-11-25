@@ -148,7 +148,6 @@ const dateOnly = /^\d{4}-\d{2}-\d{2}$/
 
 function comparable(left: unknown, right: FilterScalar, isDate: boolean): [unknown, unknown] {
   if (!isDate && !(right instanceof Date) && !isTemporalLike(right)) return [left, right]
-  // A date-only bound compares by calendar day, so `lte 2026-02-01` keeps the whole of that day.
   if (typeof right === "string" && dateOnly.test(right)) {
     const day = left instanceof Date ? left.toISOString() : typeof left === "string" ? left : ""
     return [day.slice(0, 10), right]

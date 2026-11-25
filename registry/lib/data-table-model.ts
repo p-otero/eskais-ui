@@ -36,7 +36,6 @@ function lessThan(left: Exclude<SortValue, Date>, right: Exclude<SortValue, Date
   return Number(left) < Number(right)
 }
 
-// Missing values sort last in both directions, so a descending sort doesn't open on a page of blanks.
 function sortRows<Row>(
   rows: readonly Row[],
   sort: DataTableSort | null | undefined,

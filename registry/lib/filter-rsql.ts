@@ -16,7 +16,7 @@ type RsqlOptions = SerializeOptions & {
 
 const comparison = { eq: "==", neq: "!=", lt: "=lt=", lte: "=le=", gt: "=gt=", gte: "=ge=", in: "=in=", nin: "=out=" }
 
-// Quoted arguments may hold any character; only the quote and the backslash need escaping.
+// Security: quoted arguments may hold any character; only the quote and the backslash need escaping.
 function quote(text: string) {
   return `"${text.replaceAll("\\", "\\\\").replaceAll('"', '\\"')}"`
 }

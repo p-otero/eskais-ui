@@ -121,7 +121,6 @@ function arraySource<T, F = Record<string, unknown>>(
         for (const { read, sign } of readers) {
           const left = read(a.item)
           const right = read(b.item)
-          // Missing values stay last in both directions.
           const missing = left === null || left === undefined || right === null || right === undefined
           const order = missing ? compareValues(left, right) : sign * compareValues(left, right)
           if (order !== 0) return order

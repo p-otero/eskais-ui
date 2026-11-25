@@ -122,7 +122,7 @@ function decodeNumber(text: string): NumberFilter | undefined {
   return value === undefined ? undefined : { op: "eq", value }
 }
 
-// Anything that doesn't fit the field is dropped: a URL is input from anyone.
+// Security: a URL is input from anyone, so anything that doesn't fit the field is dropped.
 function decodeField(field: FilterField, text: string): unknown {
   switch (field.kind) {
     case "text":

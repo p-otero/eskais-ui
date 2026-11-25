@@ -35,7 +35,7 @@ const prismaOps = {
   endsWith: "endsWith",
 }
 
-// Postgres LIKE escapes with a backslash by default, so the text matches itself and nothing more.
+// Security: Postgres LIKE escapes with a backslash by default, so the text matches itself and nothing more.
 function likeText(text: string) {
   return text.replaceAll(/[\\%_]/g, (match) => `\\${match}`)
 }

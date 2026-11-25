@@ -159,7 +159,6 @@ function createPageController<T, F>(
     const next = url.codec.merge(current, state)
     if (next.toString() === current.toString()) return
     const history = url.history ?? "replace"
-    // Only a move to another page of the same results pushes under "push-page"; a new filter resets it in place.
     const paged =
       (previous.page !== state.page || previous.cursor !== state.cursor) &&
       same([previous.filter, previous.sort, previous.size], [state.filter, state.sort, state.size])
