@@ -58,7 +58,6 @@ const labels: InboxItem["label"][] = [
   { text: "Ops", tone: "warning" },
 ]
 
-// A small deterministic generator, so demos and screenshots look the same on every load.
 function random(seed: number) {
   let state = seed
   return () => {
