@@ -2,7 +2,6 @@ import { announce, createChange, definePrimitive, type ChangeDetails } from "@ui
 
 import { unavailable } from "@/lib/action-refusal"
 
-/** Why the button armed or disarmed. */
 type ConfirmButtonArmedChangeReason =
   | "trigger-press"
   | "timeout"
@@ -62,8 +61,7 @@ const confirmButton = definePrimitive({
     const change = createChange(context)
     let disarmTimer: ReturnType<typeof setTimeout> | undefined
     let holdTimer: ReturnType<typeof setTimeout> | undefined
-    // A hold confirms while the pointer or key is still down; the click its release fires must not arm again.
-    let swallowPress = false
+    let swallowReleaseClickAfterHold = false
 
     const stopHold = () => {
       clearTimeout(holdTimer)
@@ -95,7 +93,7 @@ const confirmButton = definePrimitive({
         if (!context.store.get().armed) return false
         return change("armed", false, { reason, event })
       },
-      /** Runs `onConfirm` at once, armed or not. Agents call it, and it waits for the person through `allow`. */
+      /** Runs `onConfirm` at once, armed or not; for an agent it waits for the person through `allow`. */
       confirm(event?: Event, reason: ConfirmButtonConfirmReason = "imperative") {
         if (blocked()) {
           const why = context.store.get().disabled ? "disabled" : "its confirmation runs"
@@ -113,30 +111,29 @@ const confirmButton = definePrimitive({
       },
       /** The first press arms, the second confirms. */
       press(event?: Event) {
-        if (swallowPress) {
-          swallowPress = false
+        if (swallowReleaseClickAfterHold) {
+          swallowReleaseClickAfterHold = false
           return false
         }
         return context.store.get().armed ? api.confirm(event, "trigger-press") : api.arm(event)
       },
       startHold(event?: Event) {
-        swallowPress = false
+        swallowReleaseClickAfterHold = false
         const { hold } = context.options()
         if (!hold || blocked() || holdTimer !== undefined) return false
         context.store.set({ holding: true })
         holdTimer = setTimeout(() => {
           holdTimer = undefined
-          swallowPress = true
+          swallowReleaseClickAfterHold = true
           api.confirm(event, "hold")
         }, hold)
         return true
       },
       endHold() {
         stopHold()
-        // The click a release fires runs in the same task; anything later is a press of its own.
-        if (swallowPress)
+        if (swallowReleaseClickAfterHold)
           setTimeout(() => {
-            swallowPress = false
+            swallowReleaseClickAfterHold = false
           }, 0)
       },
     }
@@ -161,7 +158,6 @@ const confirmButton = definePrimitive({
         keydown: (event, { api, store }) => {
           const keyboard = event as KeyboardEvent
           if (keyboard.key === "Escape" && store.get().armed) {
-            // Only while armed, so Escape still closes a dialog around an idle button.
             keyboard.preventDefault()
             keyboard.stopPropagation()
             api.disarm("escape-key", keyboard)

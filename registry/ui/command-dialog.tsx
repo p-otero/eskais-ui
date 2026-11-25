@@ -16,7 +16,6 @@ import {
 import { Kbd } from "@/components/ui/kbd"
 import { cnState } from "@/lib/utils"
 
-/** What `createCommandDialogController()` returns, to pass between the Topbar's triggers and the dialog. */
 type CommandDialogController = DialogController
 
 type CommandDialogProps = ComponentProps<typeof Dialog> & {
@@ -30,13 +29,10 @@ type CommandDialogProps = ComponentProps<typeof Dialog> & {
 
 const CloseOnEscapeContext = createContext<((event: Event | undefined) => void) | undefined>(undefined)
 
-/**
- * A Dialog for a command palette. A Command in its CommandDialogContent starts each open with an empty search on the
- * first page, and one Escape closes it (`escapeKey`).
- */
+/** A Command in its CommandDialogContent starts each open with an empty search on the first page. */
 function CommandDialog({ controller, escapeKey = "close", dismissible, ...props }: CommandDialogProps) {
-  // Closing through a controller is how a Command's Escape reaches the dialog: UI SDK's Command claims the key
-  // (preventDefault) whenever the search holds text, even when the query change is canceled.
+  // Workaround: UI SDK's Command calls preventDefault on Escape whenever the search holds text, even when the query
+  // change is canceled, so the dialog closes on Escape through a controller.
   const [ownController] = useState(() => createCommandDialogController())
   const dialog = controller ?? ownController
   const closes = escapeKey === "close" && dismissible !== false
@@ -56,7 +52,7 @@ function CommandDialog({ controller, escapeKey = "close", dismissible, ...props 
   )
 }
 
-// `shortcut="mod+k"` is opt-in: the trigger registers it only while mounted, so nothing listens by default.
+/** `shortcut="mod+k"` is opt-in, and listens only while the trigger is mounted. */
 function CommandDialogTrigger({ className, ...props }: ComponentProps<typeof DialogTrigger>) {
   return <DialogTrigger className={cnState("justify-between gap-group text-muted-foreground", className)} {...props} />
 }
@@ -66,10 +62,10 @@ type CommandDialogOpenButtonProps = ComponentProps<typeof Button> & {
   controller: { open: () => unknown }
 }
 
-// A second CommandDialogTrigger on the same controller makes UI SDK 0.1.0-beta.10 drop the dialog's agent label
-// (docs/research/08-command-dialog-second-trigger.md). This one opens through the controller and stays hidden from
-// agents, who use the main trigger.
-/** Another way for people to open a CommandDialog, like a Topbar's `centerCompact` icon. Name it with `aria-label`. */
+// Workaround: a second CommandDialogTrigger on the same controller makes UI SDK 0.1.0-beta.10 drop the dialog's agent
+// label (docs/research/08-command-dialog-second-trigger.md), so this button opens through the controller, hidden from
+// agents.
+/** For people only, like a Topbar's `centerCompact` icon. Name it with `aria-label`. */
 function CommandDialogOpenButton({ controller, ...props }: CommandDialogOpenButtonProps) {
   return <Button aria-haspopup="dialog" data-agent-hidden="" onClick={() => controller.open()} {...props} />
 }

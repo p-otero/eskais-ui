@@ -39,13 +39,11 @@ type ConfirmButtonProps = Omit<ComponentProps<typeof ConfirmButtonRoot>, "childr
   labels?: Partial<ConfirmButtonLabels>
 }
 
-// The idle and armed contents share one grid cell, so the button keeps the wider one's width and doesn't jump.
-const stackClassName =
+const idleAndArmedInOneCell =
   "grid items-center justify-items-center *:col-start-1 *:row-start-1 *:inline-flex *:items-center *:gap-inline"
 
 /**
- * A button that asks twice: the first press arms it (`data-armed`, its text becomes `labels.armed`), the second runs
- * `onConfirm`. It disarms after `timeout`, on Escape or when focus leaves, each with its reason in `onArmedChange`.
+ * The first press arms it (`data-armed`, its text becomes `labels.armed`), the second runs `onConfirm`. It disarms after `timeout`, on Escape or when focus leaves, each with its reason in `onArmedChange`.
  * With `hold`, holding it that long confirms too. Agents call `confirm`, which waits for a person through `allow`.
  */
 function ConfirmButton({
@@ -86,7 +84,7 @@ function ConfirmButton({
               className="pointer-events-none absolute inset-0 origin-left scale-x-0 bg-current opacity-20 group-data-holding/confirm:scale-x-100 group-data-holding/confirm:transition-transform group-data-holding/confirm:duration-(--confirm-hold-duration) group-data-holding/confirm:ease-linear rtl:origin-right"
             />
           ) : null}
-          <span className={stackClassName}>
+          <span className={idleAndArmedInOneCell}>
             <span aria-hidden={state.armed || undefined} className={state.armed ? "invisible" : undefined}>
               {state.pending ? <Spinner size="sm" /> : null}
               {children}

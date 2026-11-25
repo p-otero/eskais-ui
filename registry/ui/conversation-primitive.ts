@@ -7,7 +7,6 @@ type ConversationOptions = {
   initial?: boolean
   /** How close to the end, in pixels, still counts as at the bottom. */
   threshold?: number
-  /** Whether there are older messages to load above. */
   hasOlder?: boolean
   /** Loads older messages; add them above in one update, and resolve once they are in state. */
   onLoadOlder?: () => unknown
@@ -26,7 +25,7 @@ function textOf(element: Element | null) {
   return element?.textContent?.replace(/\s+/g, " ").trim() ?? ""
 }
 
-/** A message as agents read it: its author, then its text, cut to 200 characters. */
+/** Its author, then its text cut to 200 characters. */
 function describeMessage(element: Element, index: number): ConversationMessageItem {
   const author = textOf(element.querySelector('[data-slot="conversation-message-author"]'))
   const content = textOf(element.querySelector('[data-slot="conversation-message-content"]')).slice(0, 200)
@@ -34,8 +33,7 @@ function describeMessage(element: Element, index: number): ConversationMessageIt
   return { value, label: author ? `${author}: ${content}` : content }
 }
 
-// Counts the messages that arrive after the one that was newest, so older messages loaded above never count.
-function countArrivals(log: HTMLElement, onArrive: (count: number) => void) {
+function countArrivalsAfterNewest(log: HTMLElement, onArrive: (count: number) => void) {
   const newestOf = () => {
     const all = log.querySelectorAll(MESSAGE)
     return { all, newest: all.item(all.length - 1) as Element | null }
@@ -78,10 +76,10 @@ const conversation = definePrimitive({
       }),
     )
     return {
-      /** Follows the log's end and counts arrivals while the reader is scrolled up. */
+      /** Counts arrivals while the reader is scrolled up. */
       connect(log: HTMLElement) {
         const disconnect = stick.connect(log)
-        const stopCounting = countArrivals(log, (count) => {
+        const stopCounting = countArrivalsAfterNewest(log, (count) => {
           if (!stick.get().following) store.set({ newBelow: store.get().newBelow + count })
         })
         return () => {
@@ -89,7 +87,7 @@ const conversation = definePrimitive({
           disconnect()
         }
       },
-      /** Scrolls to the newest message and follows again; smooth unless the reader prefers reduced motion. */
+      /** Follows the end again; smooth unless the reader prefers reduced motion. */
       jumpToLatest() {
         stick.scrollToBottom({ behavior: prefersReducedMotion() ? "auto" : "smooth" })
         store.set({ newBelow: 0 })
@@ -120,7 +118,7 @@ const conversation = definePrimitive({
           },
         )
       },
-      /** The messages on the page, oldest first, as `{ value, label }`. */
+      /** Oldest first. */
       messages(): ConversationMessageItem[] {
         const log = context.element("log")
         return log ? [...log.querySelectorAll(MESSAGE)].map(describeMessage) : []
@@ -146,7 +144,6 @@ const conversation = definePrimitive({
     }),
     log: slot({
       role: "log",
-      // The log scrolls, so it takes focus for keyboard scrolling.
       attrs: () => ({ tabindex: "0" }),
       bind: (el, { api }) => api.connect(el),
     }),
@@ -159,7 +156,6 @@ const conversation = definePrimitive({
       press: ({ api, el }) => {
         const hadFocus = el !== undefined && el.ownerDocument.activeElement === el
         api.jumpToLatest()
-        // The button leaves once following resumes, so focus moves to the log rather than falling to the page.
         if (hadFocus) {
           const log = el.closest('[data-slot="conversation"]')?.querySelector<HTMLElement>(LOG)
           log?.focus({ preventScroll: true })

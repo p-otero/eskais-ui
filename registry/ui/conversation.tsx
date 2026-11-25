@@ -17,7 +17,7 @@ type ConversationApi = ReturnType<typeof usePrimitive<typeof conversation>>["api
 
 const ConversationContext = createContext<ConversationApi | null>(null)
 
-/** The nearest `Conversation`'s api (`jumpToLatest`, `release`, `loadOlder`), or null outside one. */
+/** Null outside a `Conversation`. */
 function useConversation() {
   return use(ConversationContext)
 }
@@ -48,7 +48,7 @@ type ConversationRootState = {
 
 type ConversationRootProps = PartProps<"div", ConversationRootState> & ConversationOptions
 
-/** The primitive's root, which shares its api with `ConversationComposer` and `useConversation`. */
+/** Shares its api with `ConversationComposer` and `useConversation`. */
 function ConversationRoot({ initial, threshold, hasOlder, onLoadOlder, className, ...props }: ConversationRootProps) {
   const handle = usePrimitive(conversation, { initial, threshold, hasOlder, onLoadOlder })
   const root = usePart(
@@ -139,8 +139,8 @@ type ConversationProps = Omit<ConversationRootProps, "children"> & {
 }
 
 /**
- * A chat or agent thread: a `role="log"` that follows new messages while the reader is at the end, stops when they
- * scroll up, and offers a "new below" pill that jumps back. A message that grows as it streams keeps the end in view.
+ * Follows new messages while the reader is at the end, stops when they scroll up, and offers a "new below" pill that
+ * jumps back. A message that grows as it streams keeps the end in view.
  */
 function Conversation({ label, labels: labelsProp, composer, empty, children, ...props }: ConversationProps) {
   const labels = { ...conversationLabels, ...labelsProp }
@@ -163,7 +163,6 @@ function Conversation({ label, labels: labelsProp, composer, empty, children, ..
 
 type ConversationMessageLabels = Record<ConversationRole, string>
 
-// Read only by screen readers, as a message's name when it shows no author.
 const conversationMessageLabels: ConversationMessageLabels = {
   user: "You",
   assistant: "Assistant",
@@ -197,7 +196,7 @@ type ConversationMessageProps = Omit<ComponentProps<"article">, "role"> & {
 const bubbleClassName =
   "group-data-[from=user]/message:rounded-surface group-data-[from=user]/message:bg-primary group-data-[from=user]/message:px-inset-item group-data-[from=user]/message:py-inset-item group-data-[from=user]/message:text-primary-foreground group-data-[from=tool]/message:rounded-control group-data-[from=tool]/message:border group-data-[from=tool]/message:bg-muted group-data-[from=tool]/message:px-inset-item group-data-[from=tool]/message:py-inset-item group-data-[from=tool]/message:font-mono group-data-[from=tool]/message:text-body-sm"
 
-/** One message: an `article` named by its author and time. */
+/** Named by its author and time. */
 function ConversationMessage({
   from,
   author,

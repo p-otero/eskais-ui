@@ -35,7 +35,7 @@ type ConversationComposerProps = {
   className?: string
 }
 
-/** A message field and a Send button under a `Conversation`: sending jumps the log to the newest message. */
+/** Under a `Conversation`, sending jumps the log to the newest message. */
 function ConversationComposer({
   onSend,
   labels: labelsProp,

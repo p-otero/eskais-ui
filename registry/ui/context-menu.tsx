@@ -54,7 +54,7 @@ const contextMenuTriggerVariants = cva(
   },
 )
 
-// tabIndex 0 by default: Shift+F10 and the context-menu key only reach an area that can take focus.
+// Spec: Shift+F10 and the context-menu key reach only an area that can take focus, so tabIndex is 0 by default.
 function ContextMenuTrigger({
   className,
   variant,

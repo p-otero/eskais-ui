@@ -30,7 +30,6 @@ function CarouselStateProvider({ state, children }: { state: CarouselState; chil
   return <CarouselStateContext value={value}>{children}</CarouselStateContext>
 }
 
-/** A region of slides that scroll a page at a time; the parts inside read its page through `useCarouselState`. */
 function Carousel({ className, children, ...props }: ComponentProps<typeof CarouselPrimitive>) {
   return (
     <CarouselPrimitive className={cnState("relative flex flex-col gap-group", className)} {...props}>
@@ -43,10 +42,7 @@ function Carousel({ className, children, ...props }: ComponentProps<typeof Carou
   )
 }
 
-/**
- * The carousel's state, read from UI SDK inside a `Carousel`: `page` (from 1), `pageCount` (null until the slides are
- * measured, as on the server), `playing` and `orientation`.
- */
+/** Only inside a `Carousel`. `page` counts from 1; `pageCount` is null until the slides are measured, as on the server. */
 function useCarouselState() {
   const state = useContext(CarouselStateContext)
   if (!state) throw new Error("useCarouselState must be inside a Carousel.")
@@ -54,7 +50,7 @@ function useCarouselState() {
 }
 
 type CarouselLabels = {
-  /** The position, shown and announced: "2 of 3". */
+  /** Shown and announced, like "2 of 3". */
   status: (page: number, pageCount: number) => string
 }
 
@@ -64,10 +60,7 @@ type CarouselStatusProps = Omit<ComponentProps<"p">, "children"> & {
   labels?: Partial<CarouselLabels>
 }
 
-/**
- * The current page and the page count, like "1 of 3". Screen readers hear it politely when the page changes, never
- * on load or while the carousel rotates; the slides already say their own position.
- */
+/** Announced politely when the page changes, never on load or while the carousel rotates. */
 function CarouselStatus({ className, labels, ...props }: CarouselStatusProps) {
   const { page, pageCount, playing } = useCarouselState()
   const status = labels?.status ?? defaultCarouselLabels.status
