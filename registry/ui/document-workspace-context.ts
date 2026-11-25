@@ -100,14 +100,13 @@ type DocumentWorkspaceContextValue = {
 
 const DocumentWorkspaceContext = createContext<DocumentWorkspaceContextValue | null>(null)
 
-/** The enclosing `DocumentWorkspace`: its mode, headings, editor and focus helpers. */
 function useDocumentWorkspace() {
   const context = use(DocumentWorkspaceContext)
   if (!context) throw new Error("useDocumentWorkspace needs a DocumentWorkspace around it.")
   return context
 }
 
-/** The rendered headings of a read view in `root`, leaving out any inside an embed. */
+/** Leaves out any heading inside an embed. */
 function readHeadings(root: HTMLElement | null) {
   if (!root) return []
   return [...root.querySelectorAll<HTMLElement>("h1, h2, h3, h4, h5, h6")].filter(

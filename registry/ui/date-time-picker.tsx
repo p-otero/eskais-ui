@@ -57,9 +57,7 @@ function zoneName(timeZone: string, locale?: string) {
   return part?.value ?? timeZone
 }
 
-// Segments are inputs, whose `size` left room for twice their digits, so "09" sat apart from its ":". Each takes
-// its text's width (field-sizing, or ch where a browser has none), at least 24px so it stays a target (WCAG 2.5.8),
-// and separators keep their spaces and sit a pixel into each neighbour: "09:38", with no two segments overlapping.
+// Spec: at least 24px wide, so each segment stays a target (WCAG 2.5.8).
 const segmentWidths =
   // oxlint-disable-next-line shadcn/no-arbitrary-values -- widths in ch: two digits, a year and a day period
   "[&_input[data-type]]:w-[2ch] [&_input[data-type=year]]:w-[4ch] [&_input[data-type=dayPeriod]]:w-[3ch] supports-[field-sizing:content]:[&_input[data-type]]:w-auto supports-[field-sizing:content]:[&_input[data-type]]:field-sizing-content [&_input[data-type]]:min-w-6 [&_input[data-type]]:self-stretch [&_input[data-type]]:text-center [&_input[data-type]]:relative [&_input[data-type]]:z-10 [&_[data-type=literal]]:-mx-px [&_[data-type=literal]]:pointer-events-none [&_[data-type=literal]]:whitespace-pre"
@@ -131,7 +129,6 @@ function DateTimePicker({
         disabled={disabled}
         className="w-auto min-w-0 flex-1 basis-40"
       />
-      {/* Its own Field, so the time doesn't take the date's id and label from the Field around the picker. */}
       <FieldPrimitive invalid={invalid} disabled={disabled} className="flex items-center gap-inline">
         <FieldLabelPrimitive className="sr-only">{text.time}</FieldLabelPrimitive>
         <TimeInput

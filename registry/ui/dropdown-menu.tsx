@@ -51,9 +51,7 @@ function DropdownMenuTrigger({
   )
 }
 
-// UI SDK shows a markup item's `shortcut` and leaves the key to the app. Pressing it while the menu is open
-// presses the item; capturing it first keeps typeahead from taking the letter.
-function pressItemShortcut(event: KeyboardEvent<HTMLElement>) {
+function pressItemShortcutBeforeTypeahead(event: KeyboardEvent<HTMLElement>) {
   if (event.defaultPrevented || event.nativeEvent.isComposing) return
   const items = event.currentTarget.querySelectorAll<HTMLElement>("[data-shortcut]")
   for (const item of items) {
@@ -73,7 +71,7 @@ function DropdownMenuContent({ className, onKeyDownCapture, ...props }: Componen
       className={cnState(menuContentClassName, className)}
       onKeyDownCapture={(event) => {
         onKeyDownCapture?.(event)
-        pressItemShortcut(event)
+        pressItemShortcutBeforeTypeahead(event)
       }}
       {...props}
     />
@@ -90,7 +88,7 @@ function DropdownMenuSubContent({
       className={cnState(menuContentClassName, className)}
       onKeyDownCapture={(event) => {
         onKeyDownCapture?.(event)
-        pressItemShortcut(event)
+        pressItemShortcutBeforeTypeahead(event)
       }}
       {...props}
     />

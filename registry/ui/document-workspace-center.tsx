@@ -30,7 +30,6 @@ type WorkspaceHeaderProps = {
   quickOpenShortcut: string | false
 }
 
-/** The explorer toggle, the tabs, the mode switch, quick open and the aside toggle. */
 function WorkspaceHeader({
   state,
   tabs,
@@ -58,7 +57,6 @@ function WorkspaceHeader({
           <PanelLeftIcon className="rtl:-scale-x-100" />
         </Button>
       )}
-      {/* A narrow column gives the tabs a row of their own instead of squeezing them beside the controls. */}
       <div
         data-slot="document-workspace-tabs"
         className="min-w-0 flex-1 @max-xl/center:order-last @max-xl/center:basis-full"
@@ -121,7 +119,6 @@ type WorkspaceCenterProps = Omit<WorkspaceHeaderProps, "tabs"> & {
   children: ReactNode
 }
 
-/** The header, the breadcrumb bar, the document region and the status bar, in a column. */
 function WorkspaceCenter({
   state,
   tabs,

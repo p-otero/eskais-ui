@@ -12,8 +12,6 @@ type DescriptionValueOptions = {
 
 const COPIED_FOR = 2000
 
-// The CodeBlock copy pattern: the value's group is named by its term and gives agents `copy`; the button people press
-// is hidden from them, so one value never shows up twice.
 const descriptionValue = definePrimitive({
   name: "description-value",
   options: { text: "string", onCopy: "callback" },
@@ -30,7 +28,7 @@ const descriptionValue = definePrimitive({
       context.store.set({ copied: false })
     })
     return {
-      /** Writes the value to the clipboard. Where the page has no clipboard access or nothing to copy, a press gets false. */
+      /** Where the page has no clipboard access or nothing to copy, a press gets `false`. */
       copy(event?: Event) {
         const value = context.options().text ?? ""
         const clipboard = typeof navigator === "undefined" ? undefined : navigator.clipboard

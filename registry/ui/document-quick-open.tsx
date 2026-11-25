@@ -103,8 +103,7 @@ type QuickOpenListProps = {
 
 type QuickOpenCommand = CommandDataItem & { description?: string; snippet?: string }
 
-/** Every place each word of the query appears in `text`, matched as the command filter matches (case, accents). */
-function queryRanges(text: string, query: string) {
+function rangesOfEachQueryWord(text: string, query: string) {
   const ranges: MatchRange[] = []
   for (const word of new Set(query.trim().split(/\s+/u).filter(Boolean))) {
     let from = 0
@@ -126,7 +125,7 @@ function queryRanges(text: string, query: string) {
 }
 
 function QuickOpenSnippet({ text, query }: { text: string; query: string }) {
-  const segments = useMemo(() => matchSegments(text, queryRanges(text, query)), [text, query])
+  const segments = useMemo(() => matchSegments(text, rangesOfEachQueryWord(text, query)), [text, query])
   return (
     <span data-slot="quick-open-snippet" className="line-clamp-2 text-caption text-muted-foreground">
       <span className="sr-only">, </span>
@@ -144,13 +143,13 @@ function QuickOpenSnippet({ text, query }: { text: string; query: string }) {
   )
 }
 
-// A row with a snippet is the label's line and up to two of `text-caption`, measured once it renders.
 const snippetRows =
   "[&_[data-slot=command-item]:has(>[data-slot=quick-open-snippet])]:h-auto [&_[data-slot=command-item]:has(>[data-slot=quick-open-snippet])]:flex-col [&_[data-slot=command-item]:has(>[data-slot=quick-open-snippet])]:items-stretch [&_[data-slot=command-item]:has(>[data-slot=quick-open-snippet])]:gap-0 [&_[data-slot=command-item]:has(>[data-slot=quick-open-snippet])]:py-inset-item"
-const snippetRowSize = (item: QuickOpenCommand) => (item.snippet ? 52 : undefined)
+const LABEL_LINE_AND_TWO_CAPTION_LINES_PX = 52
+const estimateSnippetRowSize = (item: QuickOpenCommand) =>
+  item.snippet ? LABEL_LINE_AND_TWO_CAPTION_LINES_PX : undefined
 
-// Items with a group are listed under it, groups in the order their first item comes.
-function quickOpenData(items: readonly DocumentQuickOpenItem[]): CommandData {
+function groupInOrderOfFirstItem(items: readonly DocumentQuickOpenItem[]): CommandData {
   const groups = new Map<string, QuickOpenCommand[]>()
   for (const { group = "", keywords, ...item } of items) {
     const command: QuickOpenCommand = { ...item, ...(keywords && { keywords: [...keywords] }) }
@@ -161,13 +160,13 @@ function quickOpenData(items: readonly DocumentQuickOpenItem[]): CommandData {
   )
 }
 
-// The items go to Command as data and render through CommandRows: past 50, only the rows in view mount, so a vault
-// of notes opens on the next frame, while typing, the arrows and agents still reach every one.
+// Perf: items go to Command as data through CommandRows, so past 50 only the rows in view mount and a vault of notes
+// opens on the next frame, while typing, the arrows and agents still reach every one.
 function QuickOpenList({ items, labels, onOpen, status, onQueryChange, filter, onLoadMore }: QuickOpenListProps) {
   const workspace = useDocumentWorkspace()
-  const data = useMemo(() => quickOpenData(items), [items])
-  // CommandList's state has no query; the snippets mark what was typed.
-  const [query, setQuery] = useState("")
+  const data = useMemo(() => groupInOrderOfFirstItem(items), [items])
+  const [typedQueryForSnippets, setTypedQueryForSnippets] = useState("")
+  const reportsSearchState = status !== undefined
   const empty = (text: string) => (typeof labels.empty === "function" ? labels.empty(text) : labels.empty)
   return (
     <Command
@@ -176,7 +175,7 @@ function QuickOpenList({ items, labels, onOpen, status, onQueryChange, filter, o
       filter={filter}
       onLoadMore={onLoadMore}
       onQueryChange={(next) => {
-        setQuery(next)
+        setTypedQueryForSnippets(next)
         onQueryChange?.(next)
       }}
       onAction={(value) => {
@@ -185,8 +184,7 @@ function QuickOpenList({ items, labels, onOpen, status, onQueryChange, filter, o
       }}
     >
       <CommandInput aria-label={labels.title} placeholder={labels.placeholder} />
-      {/* Only a search that reports its state gets a status region; a local filter keeps the list's announcement. */}
-      {status !== undefined && (
+      {reportsSearchState && (
         <CommandStatus className="sr-only">
           {(state) =>
             state.status === "error" ? labels.error : state.loading ? labels.loading : labels.count(state.count)
@@ -200,7 +198,7 @@ function QuickOpenList({ items, labels, onOpen, status, onQueryChange, filter, o
       </CommandEmpty>
       <CommandList className={snippetRows}>
         {(state) => (
-          <CommandRows<QuickOpenCommand> items={state.items} estimateItemSize={snippetRowSize}>
+          <CommandRows<QuickOpenCommand> items={state.items} estimateItemSize={estimateSnippetRowSize}>
             {(item) => {
               const title = (
                 <>
@@ -217,7 +215,7 @@ function QuickOpenList({ items, labels, onOpen, status, onQueryChange, filter, o
               return (
                 <>
                   <span className="flex min-w-0 items-center gap-inline">{title}</span>
-                  <QuickOpenSnippet text={item.snippet} query={query} />
+                  <QuickOpenSnippet text={item.snippet} query={typedQueryForSnippets} />
                 </>
               )
             }}
@@ -230,7 +228,6 @@ function QuickOpenList({ items, labels, onOpen, status, onQueryChange, filter, o
 
 type SourceListProps<T> = Omit<DocumentQuickOpenSourceProps<T>, "labels"> & { labels: DocumentQuickOpenLabels }
 
-/** Mounted while the dialog is open, so a closed quick open never searches. */
 function SourceList<T>({ source, getItem, pageSize = 20, debounce = 200, labels, onOpen }: SourceListProps<T>) {
   const cursors = useRef(new Map<number, string | null>())
   const results = useAsyncOptions<DocumentQuickOpenItem>(

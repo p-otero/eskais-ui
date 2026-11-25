@@ -18,7 +18,6 @@ type DashboardLabels = {
   loading: string
   /** Screen-reader text while a card refreshes data it still shows. */
   refreshing: string
-  /** The retry button of a card that failed. */
   retry: string
   /** A failed card's title; without it the error's own message is the title. */
   errorTitle?: ReactNode
@@ -47,11 +46,7 @@ type DashboardGridProps = ComponentProps<"div"> & {
   headingLevel?: 2 | 3 | 4
 }
 
-/**
- * A dashboard: a row of stats, then cards on a grid sized by its container. Rows are at least
- * `--dashboard-row-height` (20rem) tall and cards in a row share its height, so they line up and keep their size from
- * loading to loaded; a card whose content is taller grows its row instead of clipping it.
- */
+/** Rows are at least `--dashboard-row-height` (20rem); cards in a row share its height, and a taller card grows it. */
 function DashboardGrid({
   stats,
   columns = 3,
@@ -92,7 +87,6 @@ function DashboardGrid({
 }
 
 type DashboardStatsProps = ComponentProps<typeof StatGroup> & {
-  /** Names the row of figures. */
   "aria-label": string
   /** Marks the row busy while its figures load; `DashboardStat loading` draws each placeholder. */
   loading?: boolean
@@ -122,7 +116,15 @@ type DashboardStatProps = Omit<ComponentProps<typeof Stat>, "children"> &
     children?: ReactNode
   }
 
-/** A figure for `DashboardStats`: label, value (or a placeholder of its height while loading) and hint. */
+function DeltaPlaceholderOfSameHeight({ delta }: { delta: ReactNode }) {
+  return (
+    <div aria-hidden="true" className="relative w-fit">
+      <div className="invisible flex">{delta}</div>
+      <Skeleton className="absolute inset-0 size-full" />
+    </div>
+  )
+}
+
 function DashboardStat({
   label,
   value,
@@ -146,15 +148,7 @@ function DashboardStat({
           {children}
         </StatValue>
       )}
-      {loading && delta !== undefined ? (
-        // The delta keeps its height under the placeholder, so the figure doesn't grow once it loads.
-        <div aria-hidden="true" className="relative w-fit">
-          <div className="invisible flex">{delta}</div>
-          <Skeleton className="absolute inset-0 size-full" />
-        </div>
-      ) : (
-        delta
-      )}
+      {loading && delta !== undefined ? <DeltaPlaceholderOfSameHeight delta={delta} /> : delta}
       {hint !== undefined && <StatHint>{hint}</StatHint>}
     </Stat>
   )
@@ -260,7 +254,7 @@ function DashboardCardBody<T>(props: DashboardCardProps<T> & { labels: Dashboard
   )
 }
 
-/** A card on a `DashboardGrid`, named by its title; with `status` it loads, fails and empties in place. */
+/** Named by its title; with `status` it loads, fails and empties in place. */
 function DashboardCard<T>(props: DashboardCardProps<T>) {
   const {
     title,
@@ -329,7 +323,7 @@ type DashboardChartProps = Omit<ComponentProps<"figure">, "children" | "aria-lab
   "aria-label"?: string
 }
 
-/** A chart that fills its `DashboardCard`, named by the card's title. */
+/** Named by the card's title unless it has its own `aria-label`. */
 function DashboardChart({ "aria-label": label, className, ...props }: DashboardChartProps) {
   const card = use(DashboardCardContext)
   const name = label === undefined ? { "aria-labelledby": card?.titleId ?? "" } : { "aria-label": label }
@@ -346,7 +340,6 @@ type DashboardMeterProps = Omit<MeterProps, "variant" | "children"> & {
   children?: ReactNode
 }
 
-/** A ring meter centred in its `DashboardCard`: the reading in the ring, the label and a hint below. */
 function DashboardMeter({ label, size = "lg", hint, children, ...props }: DashboardMeterProps) {
   return (
     <div data-slot="dashboard-meter" className="flex min-h-0 flex-1 flex-col items-center justify-center gap-inline">
