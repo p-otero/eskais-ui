@@ -384,8 +384,6 @@ function CommitHistory({
                   expanded={state.expanded as string[]}
                   onExpandedChange={(next, change) =>
                     handle.api.setExpanded(next, {
-                      // Tree also reports "find-in-page", which CommitHistoryChangeReason doesn't name yet; it is
-                      // passed through unchanged, as before.
                       reason: assumeType<CommitHistoryChangeReason>(change.reason),
                       event: change.event,
                     })

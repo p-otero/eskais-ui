@@ -10,7 +10,6 @@ import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, Tabl
 /** Any row object; an `interface` works too, since rows don't need an index signature. */
 type ChartRow = object
 
-// A row typed as an interface has no index signature, so its cells are read by name, as unknown values.
 const cell = (row: ChartRow, key: string): unknown => Reflect.get(row, key)
 
 type ChartDataTableProps<TRow extends ChartRow> = ChartName &
