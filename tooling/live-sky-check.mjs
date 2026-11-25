@@ -36,6 +36,46 @@ const framesOver = async (page, ms) => {
   return page.evaluate(() => [...window.skyProbe.frames])
 }
 
+const cebuBronzeFacade = { left: 0.17, right: 0.24, top: 0.55, bottom: 0.75 }
+
+const darkestAndBrightestFifth = (page) =>
+  page.evaluate(
+    (box) =>
+      new Promise((done) => {
+        const canvas = document.querySelector('[data-slot="live-sky-scene"] [data-slot="live-sky-canvas"]')
+        const frames = window.skyProbe.frames
+        const push = frames.push.bind(frames)
+        frames.push = (pushed) => {
+          frames.push = push
+          const copy = document.createElement("canvas")
+          copy.width = canvas.width
+          copy.height = canvas.height
+          const context = copy.getContext("2d")
+          context.drawImage(canvas, 0, 0)
+          const { data } = context.getImageData(
+            Math.round(box.left * canvas.width),
+            Math.round(box.top * canvas.height),
+            Math.round((box.right - box.left) * canvas.width),
+            Math.round((box.bottom - box.top) * canvas.height),
+          )
+          const light = []
+          for (let at = 0; at < data.length; at += 4)
+            light.push(0.2126 * data[at] + 0.7152 * data[at + 1] + 0.0722 * data[at + 2])
+          light.sort((a, b) => a - b)
+          const fifth = Math.floor(light.length / 5)
+          let dark = 0
+          let bright = 0
+          for (let index = 0; index < fifth; index++) {
+            dark += light[index]
+            bright += light[light.length - 1 - index]
+          }
+          done({ dark: dark / fifth, bright: bright / fifth })
+          return push(pushed)
+        }
+      }),
+    cebuBronzeFacade,
+  )
+
 const scene = (page) => page.locator('[data-slot="live-sky-scene"]').first()
 
 await withShowcase(
@@ -138,6 +178,26 @@ await withShowcase(
     expect(
       (await page.getByRole("slider", { name: "Heading" }).inputValue()) === "210",
       "The calibration's Heading slider should show the agent's heading",
+    )
+
+    await page.goto(page.url().replace(/\/(\?.*)?$/, "/?demo=live-sky&live=0&background=photo&preset=rain"))
+    await page.waitForFunction(
+      () => Number(document.querySelector('[data-slot="live-sky-scene"][data-photo]')?.dataset.staticPaints) >= 2,
+      undefined,
+      { timeout: 30_000 },
+    )
+    await page.getByRole("switch", { name: "Glass" }).click()
+    await page.waitForTimeout(800)
+    const wet = await darkestAndBrightestFifth(page)
+    await page.getByRole("slider", { name: "Rain" }).focus()
+    await page.keyboard.press("Home")
+    await page.waitForTimeout(800)
+    const dry = await darkestAndBrightestFifth(page)
+    const darkLift = wet.dark / dry.dark - wet.bright / dry.bright
+    console.log(`Rain on the Cebu tower's bronze façade: its dark gaps lift ${darkLift.toFixed(3)} against its fins`)
+    expect(
+      darkLift < 0.2,
+      "Rain should darken a façade above the ground evenly, not lift its dark gaps with the wet ground's sheen",
     )
 
     await page.setViewportSize({ width: 390, height: 844 })
