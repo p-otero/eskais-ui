@@ -7,7 +7,6 @@ function glassTokens(strength: number) {
   return { opacity: `${String(100 - strength)}%`, blur: `${String(strength / 2)}px` }
 }
 
-// A chosen density or radius step is an attribute, not a seed; with no step, --radius is the seed of the shape.
 function themeSnippet(seeds: Seeds, attributes: Attributes = { density: "default", radius: "default" }) {
   const steps = [
     attributes.glass === undefined ? "" : 'data-theme="glass"',
@@ -33,7 +32,6 @@ function themeSnippet(seeds: Seeds, attributes: Attributes = { density: "default
   return lines.join("\n")
 }
 
-// Resolves each CSS color through a canvas pixel, which turns any syntax (relative colors included) into sRGB.
 function toRgb(color: string, probe: HTMLElement, context: CanvasRenderingContext2D) {
   probe.style.color = color
   context.clearRect(0, 0, 1, 1)

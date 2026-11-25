@@ -15,7 +15,6 @@ const layout = params.get("layout") === "split" ? "split" : "unified"
 const findable = params.get("findable") !== "false"
 const tree = params.get("tree") !== "false"
 
-// Code-shaped lines, so the highlighter does real work.
 function source(count: number, seed: number) {
   const out: string[] = []
   for (let index = 0; index < count; index++) {
@@ -84,7 +83,6 @@ function markMounted(node: HTMLElement | null) {
   check()
 }
 
-/** ?demo=diff-bench&kind=text&lines=20000 or kind=patch&files=500: the diffs tooling/diff-bench.mjs times. */
 function DiffBench() {
   return (
     <main ref={markMounted} className="flex h-dvh flex-col p-inset-surface">

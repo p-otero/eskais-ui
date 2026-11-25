@@ -10,7 +10,6 @@ declare global {
 
 const FRUITS = ["Apple", "Banana", "Cherry", "Damson"]
 
-// Counts its renders, so tooling/sortable-check.mjs can tell a pointer move from a re-render.
 function Counted({ name }: { name: string }) {
   // oxlint-disable-next-line react/immutability -- the render count is what the check measures
   globalThis.sortableRenders = (globalThis.sortableRenders ?? 0) + 1
@@ -35,7 +34,6 @@ function Fruits() {
   )
 }
 
-// ?demo=sortable-check: the fixtures of tooling/sortable-check.mjs.
 function SortableCheck() {
   return (
     <main className="flex flex-col gap-section p-section">

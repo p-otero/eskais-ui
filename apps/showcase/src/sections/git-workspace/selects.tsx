@@ -12,7 +12,6 @@ import {
 
 import { WORKSPACE, type BranchRef, type Repo } from "../git-workspace-fixtures"
 
-/** The workspace's checkouts as RepositorySelect takes them. */
 function repositoriesOf(repos: readonly Repo[]): Repository[] {
   return repos.map((repo) => ({
     value: repo.id,
@@ -28,7 +27,6 @@ function repositoriesOf(repos: readonly Repo[]): Repository[] {
 
 type RepositoryFieldProps = Omit<RepositorySelectProps, "repositories"> & { repos: readonly Repo[] }
 
-/** The repository picker in a toolbar, with its label above. */
 function RepositoryField({ repos, ...props }: RepositoryFieldProps) {
   return (
     <Field className="max-w-72 min-w-52">
@@ -45,7 +43,6 @@ type BranchFieldProps = {
   base: string
 }
 
-/** The branch whose history shows, with how far each one is from the base and whether it was pushed. */
 function BranchField({ branches, value, onChange, base }: BranchFieldProps) {
   const items = branches.map((branch) => ({ value: branch.name, label: branch.name }))
   return (

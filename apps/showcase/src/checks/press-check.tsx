@@ -1,7 +1,6 @@
 import { SegmentedControl, SegmentedControlIndicator, SegmentedControlItem } from "@/components/ui/segmented-control"
 import { Tabs, TabsList, TabsPanel, TabsTab } from "@/components/ui/tabs"
 
-// ?demo=press-check: tabs and segmented controls with and without activateOnPress, for tooling/press-check.mjs.
 function PressCheck() {
   return (
     <main className="flex flex-col gap-section p-section">

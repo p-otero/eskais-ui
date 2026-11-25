@@ -29,7 +29,6 @@ const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
 
 type Checkout = { branches: readonly BranchRef[]; history: (branch: string) => Commit[]; worktree?: Worktree }
 
-/** What each repository of the demo workspace holds: the api is clean, the app has uncommitted changes. */
 function checkoutOf(id: string, dirty: boolean): Checkout {
   if (id === "app")
     return { branches: appBranches, history: () => appCommits, worktree: dirty ? appWorktree : undefined }
@@ -38,17 +37,10 @@ function checkoutOf(id: string, dirty: boolean): Checkout {
 
 type GitMasterDemoProps = {
   initialRepo?: string
-  /** The app checkout's uncommitted changes as one group at a time (a toggle) or both groups in one diff. */
   worktreeLayout?: "toggle" | "groups"
-  /** A wide screen: the history takes a third. */
   wide?: boolean
 }
 
-/**
- * The Git tab as master-detail: the history at 40% (at least 34rem) with the repository picker before its branch
- * switcher, and the selected commit beside it. HEAD is selected at first, or the working tree when the checkout
- * has uncommitted changes; commits the upstream doesn't have are marked.
- */
 function GitMasterDemo({ initialRepo = "api", worktreeLayout = "toggle", wide = false }: GitMasterDemoProps) {
   const [repoId, setRepoId] = useState(initialRepo)
   const repo = repos.find((entry) => entry.id === repoId) ?? repos[0]!

@@ -50,7 +50,6 @@ function Timeline({ alias }: { alias?: string }) {
 const renderEmbed = (target: string, alias: string | undefined) =>
   target === "timeline" ? <Timeline alias={alias} /> : <span className="text-muted-foreground">{alias ?? target}</span>
 
-/** The toolbar slot: a host menu that drives the editor through its handle, and gives focus back to the document. */
 function InsertMenu({ editor }: { editor: RefObject<MarkdownEditorHandle | null> }) {
   const workspace = useDocumentWorkspace()
   return (
@@ -126,7 +125,6 @@ export default function DocumentWorkspaceDemo({ className = "h-144 w-full" }: { 
     [notes],
   )
 
-  // Link to a note calls the handle from `run`: the suggestions open once the slash menu has closed.
   const slashCommands: SlashCommand[] = [
     ...markdownSlashCommands(),
     {

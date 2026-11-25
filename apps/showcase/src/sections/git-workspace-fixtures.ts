@@ -5,14 +5,12 @@ type GitTreeFile = { path: string; status?: "added" | "modified" | "deleted" | "
 
 export const NOW = "2026-11-18T21:40:00Z"
 
-/** A git repository found under the project workspace folder. */
 export type Repo = {
   id: string
   name: string
   /** Relative to the workspace folder. */
   path: string
   branch: string
-  /** Files with uncommitted changes in the working tree. */
   dirty: number
   /** Commits on the current branch not on its upstream; `null` without an upstream. */
   ahead: number | null
@@ -171,7 +169,6 @@ export const HOUR = 3_600_000
 
 type Generated = { commits: Commit[]; mainline: Commit[] }
 
-/** `git log --topo-order main` for the api repository: newest first, merged branches right after their merge. */
 export type HistoryPool = { subjects: readonly string[]; topics: readonly string[]; tags: readonly [number, string][] }
 
 const apiPool: HistoryPool = {
@@ -277,7 +274,6 @@ export function generateHistory(size: number, seed: number, start: number, pool:
 
 const history = generateHistory(320, 7, Date.parse(NOW) - 6 * HOUR)
 
-/** The commit the commit view opens: the squash of the rate-limit work, a 20-file change. */
 export const RATE_LIMIT_COMMIT: Commit = {
   id: "9be07d2c41f05a8e3d6b2a7c90e14f5b8d3c6a21",
   parents: ["4f1a9c3e2b7d6a5f8e0c1b2a3d4e5f6a7b8c9d0e"],
@@ -359,21 +355,17 @@ const ownBranches = new Map<string, OwnBranch>(
   }),
 )
 
-/** `git log <branch>`: the branch's own commits on top of the main history it forked from. */
 export function commitsFor(branch: string): Commit[] {
   const own = ownBranches.get(branch)
   return own === undefined ? mainCommits : [...own.commits, ...own.base]
 }
 
-/** The branch's own commits, newest first: what it adds over its base. */
 export function ownCommitsOf(branch: string): Commit[] {
   return ownBranches.get(branch)?.commits ?? []
 }
 
-/** `git log --all --topo-order`: every branch's own commits ahead of the shared history. */
 export const allCommits: Commit[] = [...[...ownBranches.values()].flatMap((branch) => branch.commits), ...mainCommits]
 
-/** The branches with their heads, for CommitHistory's branches view. */
 export const branchHeadsList = apiBranches.map((branch) => {
   const own = ownBranches.get(branch.name)
   const head = own?.commits[0] ?? mainCommits[0]
@@ -387,7 +379,6 @@ export const branchHeadsList = apiBranches.map((branch) => {
   }
 })
 
-/** The next page of `git log --skip`, for Load more. */
 export function olderCommits(after: Commit[], count: number): Commit[] {
   const last = after.at(-1)
   const random = lcg(after.length)
@@ -1131,7 +1122,6 @@ export const apiPaths = [
   "vitest.config.ts",
 ]
 
-/** Every file at the commit, the changed ones with their status; deleted files stay listed to show the removal. */
 export const rateLimitTree: (string | GitTreeFile)[] = (() => {
   const changed = new Map<string, GitTreeFile>(
     rateLimitFiles.map((file) => [
@@ -1147,7 +1137,6 @@ export const rateLimitTree: (string | GitTreeFile)[] = (() => {
 
 export const rateLimitChangedPaths = rateLimitFiles.map((file) => file.path)
 
-/** One file's part of the commit's patch, or `null` for a file the commit didn't change. */
 export function rateLimitPatchOf(path: string): string | null {
   const file = rateLimitFiles.find((entry) => entry.path === path)
   return file === undefined ? null : renderPatch([file])

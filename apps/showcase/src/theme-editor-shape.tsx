@@ -9,7 +9,6 @@ const densityOptions: { value: Density; label: string }[] = [
   { value: "compact", label: "Compact" },
 ]
 
-// Without data-radius the shape derives from --radius, which is the lg step.
 const radiusOptions: { value: Exclude<Radius, "default">; label: string }[] = [
   { value: "none", label: "None" },
   { value: "sm", label: "Small" },
@@ -18,7 +17,6 @@ const radiusOptions: { value: Exclude<Radius, "default">; label: string }[] = [
   { value: "full", label: "Full" },
 ]
 
-/** Density and corner radius, two attributes on `<html>` that the appearance keeps between visits. */
 function ShapeControls({ appearance }: { appearance: Pick<AppearanceState, "density" | "radius"> }) {
   const density = usePreference(appearance.density).value
   const radius = usePreference(appearance.radius).value

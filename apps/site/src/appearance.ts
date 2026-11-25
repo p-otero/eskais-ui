@@ -23,7 +23,6 @@ const appearance = createAppearance<Theme, Palette>({
   },
 })
 
-// The Theming page's editor writes here; main.tsx applies it before the first render, so every page shows it.
 const themeEditor = createThemeEditorStore({ storageKey: "eskais-site-theme-editor" })
 
 export { appearance, palettes, themeEditor, themes }

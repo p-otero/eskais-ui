@@ -11,7 +11,6 @@ import {
 import { docSections } from "./pages"
 import { hrefFor, navigate } from "./router"
 
-/** The palette's search and pages, loaded apart from the header so the first page's code doesn't carry them. */
 function SearchResults({ onFollow }: { onFollow: () => void }) {
   return (
     <Command>

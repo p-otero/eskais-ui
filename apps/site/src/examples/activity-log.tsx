@@ -6,7 +6,6 @@ import { Switch } from "@/components/ui/switch"
 
 import { agent } from "../agent"
 
-// Created when the example loads, before its switches render, and limited to them.
 const log = createActivityLog(agent, { within: () => document.getElementById("activity-log-demo-settings") })
 
 const settings = ["Email me when a deploy fails", "Weekly usage digest", "Share anonymous metrics"]

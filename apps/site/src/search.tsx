@@ -11,8 +11,8 @@ import {
 } from "@/components/ui/command-dialog"
 import { Spinner } from "@/components/ui/spinner"
 
-// Loaded after the page, while the browser is idle, so the first page's code doesn't wait for the palette and ⌘K
-// still finds it ready.
+// Perf: loaded after the page while the browser is idle, so the first page's code doesn't wait for the palette and
+// ⌘K still finds it ready.
 const loadResults = () => import("./search-results")
 const SearchResults = lazy(() => loadResults().then((module) => ({ default: module.SearchResults })))
 if (typeof window !== "undefined") {
@@ -21,8 +21,6 @@ if (typeof window !== "undefined") {
   })
 }
 
-// The labelled trigger keeps ⌘K and the name agents open the dialog by while it is hidden on narrow screens, where
-// an icon button opens the same dialog through the controller.
 function SiteSearch() {
   const [search] = useState(() => createCommandDialogController())
   return (

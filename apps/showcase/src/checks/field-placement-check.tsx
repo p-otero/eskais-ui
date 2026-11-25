@@ -5,9 +5,6 @@ import { Form, FormField } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import { Select } from "@/components/ui/select"
 
-// ?demo=field-placement-check: the fixture tooling/shell-check.mjs measures. Under a Form's floating placement, a
-// Field in the floating layout floats its label on its control; a Field the page lays out as its own box (padding, a
-// border, its own text between the parts) keeps the label on top, where it can't cover the control's value.
 const teams = [
   { value: "web", label: "Web platform" },
   { value: "data", label: "Data" },

@@ -26,7 +26,6 @@ const shellRoutes: ShellRoute[] = Array.from({ length: 60 }, (_, index) => ({
   mobile: index < 4,
 }))
 
-/** A shell with 60 routes in 6 groups, routed through state like a client router. */
 function ShellScenario() {
   const [current, setCurrent] = useState("/route-0")
   const onNavigate = useCallback((href: string) => setCurrent(href), [])
@@ -55,7 +54,6 @@ const devices = Array.from({ length: 500 }, (_, index) => ({
 }))
 const deviceItems = devices.map((device) => ({ id: device.id, label: device.name }))
 
-/** MasterDetail over 500 rows; the detail follows focus, as in a mail client. */
 function MasterDetailScenario() {
   return (
     <MasterDetail
@@ -103,7 +101,6 @@ const readNote = Array.from(
     `## Section ${String(index + 1)}\n\nA paragraph with **bold** text, \`code\` and a [link](#s${String(index)}).\n\n- one\n- two\n- three\n`,
 ).join("\n")
 
-/** A long note read with MarkdownView: 300 sections of a heading, a paragraph and a list, 900 blocks in all. */
 function MarkdownViewScenario() {
   return (
     <div className="min-h-0 flex-1 overflow-y-auto">
@@ -112,7 +109,6 @@ function MarkdownViewScenario() {
   )
 }
 
-/** A notes workspace: 300 notes in the explorer, a 150-heading note in the editor, its outline beside it. */
 function DocumentWorkspaceScenario() {
   const [markdown, setMarkdown] = useState(longNote)
   const [current, setCurrent] = useState("note-0")

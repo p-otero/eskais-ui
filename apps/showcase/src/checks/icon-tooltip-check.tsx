@@ -16,8 +16,6 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { ShortcutScope } from "@/components/ui/shortcuts"
 import { Toggle } from "@/components/ui/toggle"
 
-// Fixture for tooling/icon-tooltip-check.mjs: a toolbar of icon buttons, one that opts out, a link, a menu
-// trigger and a dialog's close button.
 export function IconTooltipCheck() {
   return (
     <ShortcutScope name="icon-tooltip-check" active>

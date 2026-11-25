@@ -6,7 +6,6 @@ import { FileUpload } from "@/components/ui/file-input"
 import { cropImage, ImageCropper, type ImageCrop } from "@/components/ui/image-cropper"
 import { ImageScan, type ImageScanRegion, type ImageScanStatus } from "@/components/ui/image-scan"
 
-// A generated still life, 800 × 600: a plant, a mug and two books on a table.
 const sample = `data:image/svg+xml,${encodeURIComponent(
   `<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600"><rect width="800" height="600" fill="#e7e2d8"/><rect y="430" width="800" height="170" fill="#b58a62"/><ellipse cx="210" cy="230" rx="90" ry="70" fill="#4f8a4b"/><ellipse cx="170" cy="280" rx="60" ry="45" fill="#3f7a3c"/><ellipse cx="260" cy="285" rx="55" ry="40" fill="#5f9c58"/><path d="M150 330h120l-15 100h-90z" fill="#c4683f"/><rect x="360" y="335" width="90" height="95" rx="10" fill="#3d6ea6"/><path d="M450 355a28 28 0 0 1 0 56" fill="none" stroke="#3d6ea6" stroke-width="12"/><rect x="520" y="390" width="180" height="40" rx="4" fill="#7b4c8c"/><rect x="535" y="352" width="150" height="38" rx="4" fill="#d6a443"/></svg>`,
 )}`
@@ -84,7 +83,6 @@ export default function ImageScanDemo() {
     setStatus("uploaded")
   }
 
-  // Stands in for a local model: progress in steps, then the result.
   const scan = () => {
     setStatus("scanning")
     setProgress(0)

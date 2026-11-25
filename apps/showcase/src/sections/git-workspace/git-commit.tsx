@@ -25,10 +25,6 @@ const authorName = (commit: Commit) =>
 
 const changed = new Set(rateLimitChangedPaths)
 
-/**
- * The commit view, a route that takes the history's place: every file at the commit in a GitTree on the left, the
- * whole diff on the right. A file picked in the tree scrolls the diff to it, and the tree follows the diff's scroll.
- */
 function GitCommitDemo() {
   const [controller] = useState(createDiffViewController)
   const [current, setCurrent] = useState<string | null>(null)

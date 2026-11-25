@@ -17,7 +17,6 @@ const views: { id: View; label: string }[] = [
   { id: "git", label: "Git" },
 ]
 
-/** The page around the git views in the reference frames: a project select, then Tasks, Activity and Git tabs. */
 function GitWorkspaceFrame({ children }: { children: ReactNode }) {
   const [project, setProject] = useState<string | null>("ACM")
   const placeholder = <p className="py-section text-center text-sm text-muted-foreground">Not part of this demo.</p>

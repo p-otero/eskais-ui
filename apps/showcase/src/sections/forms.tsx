@@ -152,7 +152,6 @@ function Controls() {
   )
 }
 
-// The voice input's section renders here: app.tsx is at its line limit.
 function FormsSection() {
   return (
     <>

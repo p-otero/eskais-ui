@@ -2,8 +2,6 @@ import { ImageScan } from "@/components/ui/image-scan"
 
 import { scanSteps, stillLife, stillLifeRegions, targetRegions, targets } from "../sections/image-scan-fixtures"
 
-// ?demo=image-scan-check: every state of ImageScan, and the target image in its own ratio, in a square frame it is
-// letterboxed in (contain) and one it fills (cover), for tooling/image-scan-check.mjs.
 function ImageScanCheck() {
   return (
     <main className="flex flex-wrap items-start gap-section p-group">

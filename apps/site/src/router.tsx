@@ -2,7 +2,6 @@ import { useSyncExternalStore } from "react"
 
 import { preloadRoute } from "./preload"
 
-// The built entry lives in <site>/assets/, so its parent folder is the site root wherever it's hosted.
 const basePath = import.meta.env.DEV ? "/" : new URL("../", import.meta.url).pathname
 
 function routeFromPathname(pathname: string) {

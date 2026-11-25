@@ -16,7 +16,6 @@ const rows = Array.from({ length: count }, (_, index) => ({
 
 globalThis.listBench = { start: performance.now() }
 
-// Records when the first rows have painted: a frame, then a task after it.
 function markMounted(node: HTMLElement | null) {
   if (!node) return
   requestAnimationFrame(() => {
@@ -29,7 +28,6 @@ function markMounted(node: HTMLElement | null) {
   })
 }
 
-/** ?demo=list-bench&rows=2000&virtualize=false: the list tooling/list-bench.mjs times. */
 function ListBench() {
   return (
     <main ref={markMounted} className="flex h-dvh flex-col p-inset-surface">

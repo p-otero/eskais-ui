@@ -30,10 +30,6 @@ function Devices(props: Omit<Partial<MasterDetailProps>, "label"> & { label: str
   )
 }
 
-/**
- * ?demo=master-detail-check, for tooling/layout-blocks-check.mjs: an idle detail kept under the list in a narrow
- * container, and a content-sized block in a scrolling page.
- */
 function MasterDetailCheck() {
   return (
     <main className="flex flex-col gap-section p-inset-surface">

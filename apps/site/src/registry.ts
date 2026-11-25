@@ -16,7 +16,6 @@ type RegistryItem = {
 
 const items: RegistryItem[] = registry.items
 
-// Covered by the guides instead of a page of their own.
 const guideItems = [
   "utils",
   "lint-rules",
@@ -43,12 +42,11 @@ const guideItems = [
 
 const componentItems = items.filter((item) => !guideItems.includes(item.name))
 
-// The site deploys only from a release, so its version is a published tag. `refs/tags/` keeps a branch with the
-// same name from shadowing the tag on raw.githubusercontent.com.
+// Spec: raw.githubusercontent.com serves a branch over a tag of the same name, so the site, deployed only from a
+// release, pins its version through `refs/tags/`.
 const releaseTag = `v${packageJson.version}`
 const registryUrl = `https://raw.githubusercontent.com/p-otero/eskais-ui/refs/tags/${releaseTag}/public/r/{name}.json`
 
-// The exact UI SDK beta every item pins; consumers keep the same one, since later betas can break.
 const uiSdkVersion =
   items
     .flatMap((item) => item.dependencies ?? [])

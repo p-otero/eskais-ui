@@ -16,10 +16,8 @@ const columns: DataTableColumn<ServerTask>[] = [
 
 const labels = { errorTitle: "Couldn't load tasks", retry: "Try again", emptyTitle: "No tasks match" }
 
-// `?delay=<ms>` simulates a server, so a load can be measured from its loading state to its data.
 const fixtureDelay = Number(new URLSearchParams(globalThis.location?.search).get("delay") ?? 0)
 
-/** A ServerDataTable of 312 tasks served 100 per page with no latency, rows selectable. */
 function ServerDataTableScenario() {
   const [source] = useState(() => taskSource({ key: ["perf", "table"], delay: fixtureDelay }))
   return (
@@ -36,7 +34,6 @@ function ServerDataTableScenario() {
   )
 }
 
-/** A ServerList of the same tasks, 312 rows loaded at once, so it virtualizes. */
 function ServerListScenario() {
   const [source] = useState(() => taskSource({ key: ["perf", "list"], delay: fixtureDelay }))
   return (

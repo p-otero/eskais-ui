@@ -7,7 +7,6 @@ import { hashRouter } from "@/lib/url-router"
 
 const url = createUrlParam("section", { router: hashRouter() })
 
-// The danger zone renders only once its "data" arrives, like a section behind a request.
 const loaded = new Promise((resolve) => {
   setTimeout(resolve, 600)
 })
@@ -38,7 +37,6 @@ function LateDangerZone() {
   )
 }
 
-/** ?demo=settings-page-check: hashRouter section links, and a section that mounts after the page. */
 function SettingsPageCheck() {
   return (
     <main className="mx-auto flex w-full max-w-5xl flex-col gap-group p-inset-surface">

@@ -2,7 +2,6 @@ import type { Commit } from "@/lib/commit-graph"
 
 const minutesAgo = (now: number, minutes: number) => now - minutes * 60_000
 
-/** The commit trail of the reference frames: a release, an expandable merge, a fix with details, another merge. */
 function trailCommits(now: number): Commit[] {
   return [
     {
@@ -94,10 +93,6 @@ function pendingCommit(now: number, parent: string): Commit {
   }
 }
 
-/**
- * `count` commits in `git log --topo-order` shape: a mainline where every tenth commit merges a branch of eight,
- * every fiftieth of those branches merges a short branch of its own, and every 500th merge is an octopus.
- */
 function generatedCommits(count: number, now = Date.now()): Commit[] {
   const commits: Commit[] = []
   const subjects = ["Fix rounding in `proration.ts`", "Add tests for `queue.ts`", "Refactor the invoice exporter"]

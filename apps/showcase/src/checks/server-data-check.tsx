@@ -34,7 +34,6 @@ const uis: ServerDataTableFilterUi[] = ["search", "chips", "panel"]
 
 const labels = { errorTitle: "Couldn't load tasks", retry: "Try again", emptyTitle: "No tasks match" }
 
-// ?ui=list: the same tasks as a ServerList that loads more.
 function ServerListCheck({ source }: { source: ReturnType<typeof taskSource> }) {
   return (
     <ServerList<ServerTask, typeof serverTaskFilters>
@@ -49,8 +48,6 @@ function ServerListCheck({ source }: { source: ReturnType<typeof taskSource> }) 
   )
 }
 
-// ?demo=server-data-check&ui=search|chips|panel: a ServerDataTable over 312 tasks with 500 ms of latency and its
-// state in the hash, for tooling/server-data-check.mjs and the screenshots it takes.
 function ServerDataCheck() {
   const params = new URLSearchParams(location.search)
   const list = params.get("ui") === "list"

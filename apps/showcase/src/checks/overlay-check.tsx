@@ -18,8 +18,6 @@ import { Input } from "@/components/ui/input"
 
 import { useThirdPartyModal } from "../hooks/use-third-party-modal"
 
-// ?demo=overlay-check: the fixture tooling/overlay-check.mjs drives in Chrome. A counter sits under the
-// center of the screen, where the dialogs open, to catch a press the closing overlay swallows.
 function Counter() {
   const [count, setCount] = useState(0)
   return (
@@ -78,7 +76,6 @@ function AutoFocused() {
   )
 }
 
-// Stands in for a modal from another library: it moves focus in a frame after mounting and closes when focus leaves.
 function ThirdPartyModal({ onClose }: { onClose: (reason: string) => void }) {
   const ref = useThirdPartyModal(onClose)
   return (
@@ -95,7 +92,6 @@ function ThirdPartyModal({ onClose }: { onClose: (reason: string) => void }) {
   )
 }
 
-// Closing hands off to another modal while the first one still plays its exit transition.
 function HandOff({ by }: { by: "trigger" | "controller" }) {
   const [first] = useState(() => createDialogController())
   const [second] = useState(() => createDialogController())

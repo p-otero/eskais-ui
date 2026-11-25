@@ -16,8 +16,6 @@ import { sampleStages, sampleTasks } from "../../../../test/fixtures/agent-tasks
 import { agent } from "../agent"
 import { Section } from "../section"
 
-// Created when the showcase loads, before the workspace's controls render, and limited to the board's column: the
-// message field's drafts aren't changes worth undoing.
 const log = createActivityLog(agent, { within: () => document.getElementById("agent-workspace-board") })
 
 type Message = { id: string; from: "user" | "agent" | "system"; text: string; at: number; streaming?: boolean }
@@ -76,7 +74,6 @@ function AgentWorkspace() {
   const setStatus = (id: string, status: TaskStatus) =>
     setTasks((list) => list.map((task) => (task.id === id ? { ...task, status } : task)))
 
-  // A change to the app's own data, recorded with how to take it back.
   const move = (id: string, status: TaskStatus) => {
     const previous = tasks.find((task) => task.id === id)?.status
     if (!previous) return

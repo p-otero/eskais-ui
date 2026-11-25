@@ -97,7 +97,6 @@ Ines leads the launch; Kofi the [[launch-plan|plan]]'s migration guide.
 
 const titleOf = (notes: Note[], slug: string) => notes.find((note) => note.slug === slug.split("#")[0])?.title
 
-/** A note's first line of text after its frontmatter and headings, for quick open's snippet. */
 function snippetOf(markdown: string) {
   const body = markdown.slice((parseFrontmatter(markdown)?.to ?? -1) + 1)
   return body

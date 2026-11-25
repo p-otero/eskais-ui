@@ -3,7 +3,6 @@ import type { Commit } from "@/lib/commit-graph"
 
 const minutesAgo = (now: number, minutes: number) => now - minutes * 60_000
 
-/** The commit trail of the reference frames: a release, an expandable merge, a fix with details, another merge. */
 function trailCommits(now: number): Commit[] {
   return [
     {
@@ -95,10 +94,6 @@ function pendingCommit(now: number, parent: string): Commit {
   }
 }
 
-/**
- * `count` commits in `git log --topo-order` shape: a mainline where every tenth commit merges a branch of eight,
- * every fiftieth of those branches merges a short branch of its own, and every 500th merge is an octopus.
- */
 function generatedCommits(count: number, now = Date.now()): Commit[] {
   const commits: Commit[] = []
   const subjects = ["Fix rounding in `proration.ts`", "Add tests for `queue.ts`", "Refactor the invoice exporter"]
@@ -145,10 +140,6 @@ function generatedCommits(count: number, now = Date.now()): Commit[] {
 const branchCommit = (now: number, id: string, parent: string, message: string, minutes: number, author: string) =>
   ({ id, parents: [parent], message, date: minutesAgo(now, minutes), author }) satisfies Commit
 
-/**
- * Main from the frames plus active branches at different points, as `git log --all --topo-order` lists them:
- * each branch's own commits come before the main commit they forked from.
- */
 function branchHistory(now: number): { commits: Commit[]; branches: CommitBranch[] } {
   const main = trailCommits(now)
   const at = (id: string) => main.findIndex((commit) => commit.id === id)
@@ -187,10 +178,6 @@ function branchHistory(now: number): { commits: Commit[]; branches: CommitBranch
   return { commits, branches }
 }
 
-/**
- * `count` commits on a mainline with `branchCount` branches of 5 to 11 commits forking along it, half of them
- * listed at the top (concurrent with every other) and half just above where they fork, as `--all --topo-order`.
- */
 function branchedCommits(count: number, branchCount: number, now = Date.now()) {
   const spacing = Math.max(1, Math.floor((count * 0.9) / branchCount))
   const plans = Array.from({ length: branchCount }, (_, index) => ({

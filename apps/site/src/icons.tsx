@@ -4,7 +4,6 @@ import symbol from "./brand/eskais-symbol.svg?raw"
 
 type IconProps = ComponentProps<"svg">
 
-// GitHub's mark: lucide ships no brand logos.
 function BrandMark({ children, ...props }: IconProps) {
   return (
     // oxlint-disable-next-line eskais/no-inline-icons -- a brand logo, which lucide doesn't ship

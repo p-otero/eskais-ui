@@ -10,7 +10,6 @@ const pages = [
   { href: "#tokens", label: "Spacing and tokens" },
 ]
 
-// The demo scrolls inside its own box, so the sticky columns measure against that box instead of the viewport.
 const pane = { "--docs-height": "30rem" } as CSSProperties
 
 export default function DocsLayoutDemo() {

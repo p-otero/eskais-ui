@@ -33,7 +33,6 @@ const device = [
 
 export default function SettingsPageDemo() {
   const [signOutAfter, setSignOutAfter] = useState<string | null>("8h")
-  // The confirmation only queues the work; the trigger stays pending until it finishes.
   const [forgetting, setForgetting] = useState(false)
   return (
     <SettingsPage className="w-full" style={{ "--settings-top": "var(--docs-top, 0px)" } as CSSProperties}>

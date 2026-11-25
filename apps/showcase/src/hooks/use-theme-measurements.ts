@@ -2,7 +2,7 @@ import { useEffect, useState } from "react"
 
 import { contrastRatio, type Seeds } from "../theme-snippet"
 
-// The build minifies oklch(0.5 0.2 262) to oklch(50% .2 262); write it back the way the theme does.
+// Workaround: the build minifies oklch(0.5 0.2 262) to oklch(50% .2 262); write it back the way the theme does.
 const plainOklch = (color: string) =>
   color
     .replace(/oklch\(\s*([\d.]+)%/, (_, lightness: string) => `oklch(${Number(lightness) / 100}`)
@@ -31,15 +31,11 @@ function measure() {
 
 type Measured = ReturnType<typeof measure>
 
-// A frame later, so <Appearance> has written the new class and attributes to <html> before they're read.
-const remeasure = (set: (measured: Measured) => void) => requestAnimationFrame(() => set(measure()))
+const remeasureAfterAppearanceWrites = (set: (measured: Measured) => void) =>
+  requestAnimationFrame(() => set(measure()))
 
 type Subscribable = { subscribe: (listener: () => void) => () => void }
 
-/**
- * The theme's seeds and contrast ratios as rendered, read again whenever the color scheme, theme, palette, density,
- * radius or the editor's store changes. The editor's choices stay on <html> after it unmounts.
- */
 type Sources = {
   colorScheme: Subscribable
   theme: Subscribable
@@ -51,10 +47,10 @@ type Sources = {
 function useThemeMeasurements(appearance: Sources, store: Subscribable) {
   const [measured, setMeasured] = useState(measure)
   useEffect(() => {
-    const frame = remeasure(setMeasured)
+    const frame = remeasureAfterAppearanceWrites(setMeasured)
     const { colorScheme, theme, palette, density, radius } = appearance
     const stops = [colorScheme, theme, palette, density, radius, store].map((source) =>
-      source.subscribe(() => remeasure(setMeasured)),
+      source.subscribe(() => remeasureAfterAppearanceWrites(setMeasured)),
     )
     return () => {
       cancelAnimationFrame(frame)

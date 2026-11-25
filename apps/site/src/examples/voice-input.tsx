@@ -4,7 +4,6 @@ import { Toggle } from "@/components/ui/toggle"
 import { VoiceInput, type VoiceInputState } from "@/components/ui/voice-input"
 import { requestMicrophone, stopStream } from "@/lib/microphone"
 
-// A stand-in for a voice: a buzz whose loudness rises and falls like syllables, so the demo moves without a microphone.
 function speechLikeStream() {
   const context = new AudioContext()
   const voice = new OscillatorNode(context, { type: "sawtooth", frequency: 140 })
@@ -82,7 +81,6 @@ export default function VoiceInputDemo() {
   const [running] = useState(() => new Set<Source>())
   const message = useVoiceDemo(useMicrophone, running)
   const note = useVoiceDemo(useMicrophone, running)
-  // Leaving the page stops whatever is still playing or recording.
   const stopAll = useCallback(() => () => running.forEach((source) => source.stop()), [running])
 
   return (

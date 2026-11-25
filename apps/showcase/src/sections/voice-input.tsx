@@ -6,7 +6,6 @@ import { Toggle } from "@/components/ui/toggle"
 
 import { Section } from "../section"
 
-// A buzz whose loudness rises and falls like syllables, so the section moves without a microphone.
 function speechLikeStream() {
   const context = new AudioContext()
   const voice = new OscillatorNode(context, { type: "sawtooth", frequency: 140 })

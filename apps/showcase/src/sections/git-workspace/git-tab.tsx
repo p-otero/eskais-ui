@@ -23,10 +23,6 @@ const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
 
 type HistoryView = "trail" | "branches"
 
-/**
- * The Git tab with one history: Repository and Branch selects side by side, then the trail, with One branch and
- * All branches. A commit opens the commit view, a route that takes the history's place.
- */
 function GitTabDemo({ repositoryMenuOpen }: { repositoryMenuOpen?: boolean }) {
   const [repoId, setRepoId] = useState("api")
   const [branch, setBranch] = useState("main")

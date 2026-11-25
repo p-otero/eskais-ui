@@ -2,8 +2,6 @@ import { Button } from "@/components/ui/button"
 import { Card, CardAction, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Section } from "@/components/ui/section"
 
-// ?demo=card-header-check: the fixture tooling/shell-check.mjs measures. Each width holds a Card and a Section with
-// a short and a wide action, to see where the action wraps below the title.
 const widths = ["15rem", "19rem", "22rem", "26rem"] as const
 
 const actions = {

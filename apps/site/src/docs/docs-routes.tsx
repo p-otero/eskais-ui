@@ -12,7 +12,6 @@ import { ItemPage } from "./item-page"
 
 const guideSlugs = new Set(guides.map((guide) => guide.slug))
 
-// Read through `use` from the preload cache: a guide preloaded on hover renders without a fallback.
 function Guide({ slug }: { slug: string }) {
   const module = loadGuide(slug)
   return module ? createElement(use(module).default) : <NotFound inline />

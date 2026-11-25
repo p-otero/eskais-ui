@@ -10,7 +10,6 @@ import { Section } from "../section"
 
 const boardTasks = [...taskDialogTasks, ...sampleTasks]
 
-// &lines=<n>: the task's changes as one added file of n lines, to see a long diff in the dialog body.
 function longChanges(task: string, lines: number) {
   const changes = taskChanges[task]
   if (!changes || !(lines > 0)) return
@@ -23,8 +22,6 @@ function longChanges(task: string, lines: number) {
 const selectedRow = (task: string, row: string | null) =>
   row === null ? null : (taskChanges[task]?.commits.find((commit) => commit.id.startsWith(row))?.id ?? row)
 
-// ?demo=task-dialog&task=T-121&changes=1&acceptance=1: the dialog open over a board, for screenshots.
-// &selected=<a commit hash or working-tree> opens the changes on that row instead of all changes.
 function TaskDialogPage({ params }: { params: URLSearchParams }) {
   const [open, setOpen] = useState<string>(params.get("task") ?? "T-121")
   useState(() => longChanges(params.get("task") ?? "T-121", Number(params.get("lines"))))

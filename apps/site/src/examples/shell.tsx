@@ -40,7 +40,6 @@ const groups: ShellRouteGroup[] = [
   { id: "legacy", label: "Retiring", tone: "muted" },
 ]
 
-// A page load keeps the demo's route and mode in the query, so plain links (and middle clicks) land back here.
 const query = new URLSearchParams(location.search)
 const loadedPath = query.get("shell") ?? "/inbox"
 const loadedMode: Mode = query.get("router") === "links" ? "links" : query.get("router") === "hash" ? "hash" : "state"
@@ -55,7 +54,6 @@ function subscribeToHash(notify: () => void) {
   return () => removeEventListener("hashchange", notify)
 }
 
-// The demo scrolls inside its own box, so the shell measures its sticky columns against that box.
 const pane = { "--shell-height": "36rem" } as CSSProperties
 
 export default function ShellDemo() {
@@ -88,7 +86,6 @@ export default function ShellDemo() {
           currentHref={hrefFor(mode, current.path)}
           onNavigate={mode === "state" ? onNavigate : undefined}
           mainId="shell-demo-main"
-          // The docs site already opens its own search with ⌘K.
           searchShortcut={false}
           brand={<span className="text-title-sm narrow:sr-only">Acme</span>}
           searchFooter={

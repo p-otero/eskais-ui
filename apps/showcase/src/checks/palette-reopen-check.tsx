@@ -9,8 +9,6 @@ import {
   createCommandDialogController,
 } from "@/components/ui/command-dialog"
 
-// ?demo=palette-reopen-check: a palette whose content stays mounted while closed, as some Electron windows leave it,
-// for tooling/shell-check.mjs to open, run a command and reopen with Ctrl+K.
 function PaletteReopenCheck() {
   const [controller] = useState(() => createCommandDialogController())
   const [ran, setRan] = useState("")

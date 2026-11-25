@@ -12,7 +12,6 @@ import { branchHistory, pendingCommit, trailCommits } from "./git-fixtures"
 const NOW = Date.now()
 const trail = trailCommits(NOW)
 
-/** The reference frames: a commit in progress at the top, one line per commit, a merge that opens. */
 function CommitTrailDemo() {
   const [commits, setCommits] = useState<Commit[]>(() => [pendingCommit(NOW, trail[0]?.id ?? ""), ...trail])
   const [branch, setBranch] = useState("main")
@@ -66,7 +65,6 @@ const changedFiles: (string | GitTreeFile)[] = [
 
 const branchDemo = branchHistory(NOW)
 
-/** Main and its active branches at a glance: a lane and a pill per branch, an overview strip above. */
 function CommitBranchesDemo() {
   const [focused, setFocused] = useState<string | null>(null)
   return (
@@ -97,7 +95,6 @@ function GitSection() {
       >
         <CommitTrailDemo />
         <CommitBranchesDemo />
-        {/* The second reference frame, for the contrast check: a merge open, details open, the other rows dimmed. */}
         <CommitHistory
           aria-label="Commits on main, one open"
           className="w-full max-w-xl"
