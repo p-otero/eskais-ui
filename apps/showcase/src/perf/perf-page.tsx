@@ -11,6 +11,7 @@ const overlays = () => import("./perf-overlays")
 const server = () => import("./perf-server")
 const prism = () => import("./perf-prism")
 const instruments = () => import("./perf-instruments")
+const sky = () => import("./perf-live-sky")
 
 const scenarios: Record<string, () => Promise<Render>> = {
   "list-1k": () =>
@@ -63,6 +64,8 @@ const scenarios: Record<string, () => Promise<Render>> = {
     instruments().then(({ SafeDialScenario }) => () => <SafeDialScenario />),
   "vinyl-scrubber": () =>
     instruments().then(({ VinylScrubberScenario }) => () => <VinylScrubberScenario />),
+  "live-sky": () =>
+    sky().then(({ LiveSkyScenario }) => () => <LiveSkyScenario />),
   "server-list": () =>
     server().then(({ ServerListScenario }) => () => <ServerListScenario />),
 }

@@ -141,6 +141,7 @@ const pages: Record<string, Page> = {
   mixer: () => import("./instruments/mixer-demo").then((module) => module.MixerDemo),
   "safe-dial": () => import("./instruments/safe-dial-demo").then((module) => module.SafeDialDemo),
   "vinyl-scrubber": () => import("./instruments/vinyl-scrubber-demo").then((module) => module.VinylScrubberDemo),
+  "live-sky": () => import("./sky/live-sky-demo").then((module) => module.LiveSkyDemo),
   ...Object.fromEntries(
     gitWorkspaceDemoNames.map((name) => [
       name,
