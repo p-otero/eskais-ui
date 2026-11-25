@@ -177,7 +177,14 @@ function LiveSky({
   const now = useSkyTime(simulatedTime)
   const weather = simulate ? { ...fairWeather, time: now, ...simulate.weather } : snapshot.weather
   const conditions = skyConditions(weather ?? fairWeather, shownPlace, new Date(now))
-  useLiveSkyScene(stage, { conditions, location: shownPlace, glass, onFrame, photo: photoScene.shown })
+  useLiveSkyScene(stage, {
+    conditions,
+    location: shownPlace,
+    glass,
+    onFrame,
+    photo: photoScene.shown,
+    awaitingPhoto: photoScene.status === "reading",
+  })
 
   const geolocation = useLiveSkyGeolocation({
     autoLocate: location === "geolocate" && !picked && !simulate,

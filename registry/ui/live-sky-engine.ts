@@ -1,6 +1,7 @@
-import { composeScene, sceneMotion, type SkyScene } from "@/components/ui/live-sky-backdrop"
+import { composeScene, sceneMotion, type SkyBackground, type SkyScene } from "@/components/ui/live-sky-backdrop"
 import { steppedRain, type SkyConditions } from "@/components/ui/live-sky-conditions"
 import { createGlass } from "@/components/ui/live-sky-glass"
+import { createIdleWork, type IdleJob } from "@/components/ui/live-sky-idle"
 import { readPalette } from "@/components/ui/live-sky-palette"
 import { photoCamera, type LiveSkyPhotoView, type PhotoLayers } from "@/components/ui/live-sky-photo"
 import { planRenderer } from "@/components/ui/live-sky-renderer"
@@ -14,6 +15,8 @@ type EngineInput = {
   glass: boolean
   /** A photo to show the sky in instead of the street, once its layers are loaded; `id` names one photo. */
   photo?: ShownPhoto | undefined
+  /** True while a photo is being read: the street keeps its quick preview instead of being traced in full. */
+  awaitingPhoto?: boolean | undefined
   /** Called with each frame's drawing time in ms, for measuring. */
   onFrame?: ((milliseconds: number) => void) | undefined
 }
@@ -37,7 +40,7 @@ const stillSettleSeconds = 6
 const stillStepSeconds = 1 / 30
 const maxStepSeconds = 0.1
 const flashGapSeconds = { min: 7, spread: 12 }
-const traceSliceMs = 6
+const traceSliceMs = 2
 const settleMs = 250
 const maxTraceRatio = 1.5
 
@@ -48,8 +51,8 @@ function makeCanvas(slot: string) {
   return canvas
 }
 
-const sceneKey = ({ conditions, location, glass, photo }: EngineInput) =>
-  JSON.stringify([conditions, location.latitude, location.longitude, glass, photo?.id, photo?.view])
+const sceneKey = ({ conditions, location, glass, photo, awaitingPhoto }: EngineInput) =>
+  JSON.stringify([conditions, location.latitude, location.longitude, glass, photo?.id, photo?.view, awaitingPhoto])
 
 const staticKey = ({ conditions, location, photo }: EngineInput) =>
   JSON.stringify([steppedRain(conditions), location.latitude, location.longitude, photo?.id, photo?.view])
@@ -77,7 +80,9 @@ function createSkyEngine(stage: HTMLElement): SkyEngine {
   let nextFlash = Number.POSITIVE_INFINITY
   let shownKey = ""
   let composedKey = ""
-  let pendingTimer = 0
+  let recompose = false
+  let unshown: SkyBackground | null = null
+  const idle = createIdleWork(settleMs)
   let palette: ReturnType<typeof readPalette> | null = null
   const paletteOf = () => (palette ??= readPalette(stage))
   let mode: EngineMode = chosen ? "paused" : "unsupported"
@@ -89,23 +94,19 @@ function createSkyEngine(stage: HTMLElement): SkyEngine {
     staticPaints += 1
     stage.dataset.staticPaints = String(staticPaints)
   }
-  const streets = createStreetBuilder((facades) => {
-    if (input?.photo) return
-    chosen?.plan.renderer.setBackground({ kind: "street", ...facades })
-    countStaticPaint()
-  })
+  const streets = createStreetBuilder()
   let shownPhotoKey = ""
   let traceFrame = 0
 
   const visible = () => inView && document.visibilityState !== "hidden" && size.width > 1 && size.height > 1
   const reduced = () => motion?.matches ?? false
 
-  const compose = () => {
-    if (!chosen || !input || !visible()) return false
+  const composeNext = () => {
+    if (!chosen || !input) return null
     const ratio = Math.min(chosen.plan.maxRatio, devicePixelRatio || 1)
     const photo = input.photo
     const camera = photo ? photoCamera(size.width, size.height, photo.view) : undefined
-    scene = composeScene({
+    const next = composeScene({
       ...size,
       ratio,
       conditions: steppedRain(input.conditions),
@@ -114,10 +115,8 @@ function createSkyEngine(stage: HTMLElement): SkyEngine {
       budget: chosen.plan.budget,
       camera,
     })
-    if (!scene) return false
+    if (!next) return null
     composedKey = staticKey(input)
-    chosen.plan.renderer.setScene(scene)
-    countStaticPaint()
     const traceRatio = Math.min(ratio, maxTraceRatio)
     if (photo) {
       const width = Math.round(size.width * traceRatio)
@@ -125,22 +124,39 @@ function createSkyEngine(stage: HTMLElement): SkyEngine {
       const key = JSON.stringify([photo.id, photo.view.horizon, width, height])
       if (key !== shownPhotoKey) {
         shownPhotoKey = key
-        chosen.plan.renderer.setBackground({
-          kind: "photo",
-          layers: photo.layers,
-          horizon: photo.view.horizon,
-          width,
-          height,
-        })
-        countStaticPaint()
+        unshown = { kind: "photo", layers: photo.layers, horizon: photo.view.horizon, width, height }
       }
     } else {
       if (shownPhotoKey !== "") streets.forget()
       shownPhotoKey = ""
-      streets.request({ ...size, ratio: traceRatio, location: input.location, palette: paletteOf() })
+      const preview = streets.request({ ...size, ratio: traceRatio, location: input.location, palette: paletteOf() })
+      if (preview) unshown = { kind: "street", ...preview }
     }
     rainOnGlass()
-    return true
+    return next
+  }
+
+  function* repaint(): IdleJob {
+    if (!chosen || !visible()) return
+    const next = recompose ? composeNext() : null
+    if (recompose && !next) return
+    const shown = next ?? scene
+    if (!shown) return
+    if (next) yield
+    const background = unshown
+    yield* chosen.plan.renderer.show(shown, background)
+    if (next) {
+      scene = next
+      recompose = false
+      countStaticPaint()
+      if (input) chosen.plan.renderer.setMotion(sceneMotion(next, input.conditions, chosen.plan.budget))
+    }
+    if (background) {
+      if (unshown === background) unshown = null
+      stage.dataset.background = background.kind
+      countStaticPaint()
+    }
+    if (mode === "still") showStill()
   }
 
   function rainOnGlass() {
@@ -163,10 +179,9 @@ function createSkyEngine(stage: HTMLElement): SkyEngine {
 
   const composeWhenSettled = () => {
     moveOnly()
-    clearTimeout(pendingTimer)
-    pendingTimer = window.setTimeout(() => {
-      if (compose() && mode === "still") showStill()
-    }, settleMs)
+    recompose = true
+    if (input) composedKey = staticKey(input)
+    idle.run(repaint(), settleMs)
   }
 
   const drawAt = (seconds: number) => {
@@ -180,7 +195,10 @@ function createSkyEngine(stage: HTMLElement): SkyEngine {
 
   const tick = (now: number) => {
     frame = requestAnimationFrame(tick)
-    if (!chosen || now - lastFrameAt < chosen.plan.frameMs) return
+    if (!chosen) return
+    const { frameMs } = chosen.plan
+    if (now - lastFrameAt < frameMs) return
+    if (frameMs > 0 && idle.sinceInput() < frameMs && now - lastFrameAt < frameMs * 2) return
     const step = Math.min(maxStepSeconds, (now - (lastFrameAt || now)) / 1000)
     lastFrameAt = now
     glass.step(step)
@@ -202,16 +220,20 @@ function createSkyEngine(stage: HTMLElement): SkyEngine {
 
   const trace = () => {
     traceFrame = 0
-    if (!visible() || !streets.pending()) return
-    if (streets.work(traceSliceMs)) {
-      if (mode === "still") showStill()
-      return
-    }
+    if (input?.photo) streets.forget()
+    if (!visible() || !streets.pending() || input?.awaitingPhoto) return
     traceFrame = requestAnimationFrame(trace)
+    if (!idle.quiet()) return
+    const street = streets.work(traceSliceMs, idle.inputWaiting)
+    if (!street) return
+    cancelAnimationFrame(traceFrame)
+    traceFrame = 0
+    unshown = { kind: "street", ...street }
+    idle.run(repaint())
   }
 
   const stop = () => {
-    clearTimeout(pendingTimer)
+    idle.stop()
     cancelAnimationFrame(frame)
     cancelAnimationFrame(traceFrame)
     clearInterval(stillTimer)
@@ -223,7 +245,9 @@ function createSkyEngine(stage: HTMLElement): SkyEngine {
   const refresh = () => {
     stop()
     if (!chosen) return
-    if (!compose()) {
+    recompose = true
+    idle.finish(repaint())
+    if (recompose) {
       mode = "paused"
       stage.dataset.mode = mode
       return
@@ -277,11 +301,13 @@ function createSkyEngine(stage: HTMLElement): SkyEngine {
       if (!showing) refresh()
       else if (staticKey(next) === composedKey) moveOnly()
       else composeWhenSettled()
+      if (showing && traceFrame === 0) traceFrame = requestAnimationFrame(trace)
     },
     mode: () => mode,
     renderer: () => stage.dataset.renderer ?? "none",
     dispose() {
       stop()
+      idle.dispose()
       resize.disconnect()
       intersection?.disconnect()
       document.removeEventListener("visibilitychange", refresh)

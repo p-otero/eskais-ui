@@ -1,4 +1,4 @@
-// Perf: a classical skyline finder, no model to download. It runs on a copy of the photo at most 512 pixels on its long
+// Perf: a classical skyline finder, no model to download. It runs on a copy of the photo at most 1024 pixels on its long
 // side: a per-pixel sky likelihood from colour, brightness and texture, then one skyline per column by dynamic
 // programming, in O(width × height).
 
@@ -20,6 +20,18 @@ const skyMaskSize = 1024
 
 const clamp01 = (value: number) => (value < 0 ? 0 : value > 1 ? 1 : value)
 
+type Steps<T> = Generator<void, T, void>
+
+const rowsPerStep = 8
+const columnsPerStep = 16
+
+function finished<T>(steps: Steps<T>): T {
+  for (;;) {
+    const step = steps.next()
+    if (step.done) return step.value
+  }
+}
+
 function luminance({ data, width, height }: Pixels) {
   const result = new Float32Array(width * height)
   for (let index = 0; index < result.length; index++) {
@@ -29,11 +41,12 @@ function luminance({ data, width, height }: Pixels) {
   return result
 }
 
-function boxBlur(source: Float32Array, width: number, height: number, radius: number) {
+function* boxBlur(source: Float32Array, width: number, height: number, radius: number): Steps<Float32Array> {
   const across = new Float32Array(source.length)
   const result = new Float32Array(source.length)
   const span = radius * 2 + 1
   for (let y = 0; y < height; y++) {
+    if (y % rowsPerStep === 0) yield
     let sum = 0
     for (let x = -radius; x <= radius; x++) sum += source[y * width + Math.min(width - 1, Math.max(0, x))]!
     for (let x = 0; x < width; x++) {
@@ -42,6 +55,7 @@ function boxBlur(source: Float32Array, width: number, height: number, radius: nu
     }
   }
   for (let x = 0; x < width; x++) {
+    if (x % columnsPerStep === 0) yield
     let sum = 0
     for (let y = -radius; y <= radius; y++) sum += across[Math.min(height - 1, Math.max(0, y)) * width + x]!
     for (let y = 0; y < height; y++) {
@@ -75,10 +89,11 @@ function straightEdges(vertical: Float32Array, width: number, height: number) {
   return result
 }
 
-function gradients(light: Float32Array, width: number, height: number) {
+function* gradients(light: Float32Array, width: number, height: number) {
   const magnitude = new Float32Array(light.length)
   const vertical = new Float32Array(light.length)
   for (let y = 1; y < height - 1; y++) {
+    if (y % rowsPerStep === 0) yield
     for (let x = 1; x < width - 1; x++) {
       const at = y * width + x
       const gx =
@@ -159,21 +174,19 @@ function coloursAbove({ data, width }: Pixels, skyline: Int32Array): Rgb[] {
   return colours
 }
 
-/**
- * How likely each pixel is sky, from 0 to 1: close to known sky colours (the top rows by default), bright or blue,
- * smooth, and higher up.
- */
-function skyLikelihood(pixels: Pixels, known?: Rgb[]) {
+function* skyLikelihoodSteps(pixels: Pixels, known?: Rgb[]) {
   const { data, width, height } = pixels
   const light = luminance(pixels)
-  const { magnitude, vertical } = gradients(light, width, height)
-  const texture = boxBlur(magnitude, width, height, 2)
-  const crisp = boxBlur(magnitude, width, height, 1)
+  yield
+  const { magnitude, vertical } = yield* gradients(light, width, height)
+  const texture = yield* boxBlur(magnitude, width, height, 2)
+  const crisp = yield* boxBlur(magnitude, width, height, 1)
   const colours = known && known.length > 0 ? known : skyColours(pixels)
   const likelihood = new Float32Array(width * height)
   const colour = new Float32Array(width * height)
   const structure = new Float32Array(width * height)
   for (let index = 0; index < likelihood.length; index++) {
+    if (index % (width * rowsPerStep) === 0) yield
     const at = index * 4
     const red = data[at]! / 255
     const green = data[at + 1]! / 255
@@ -200,16 +213,22 @@ function skyLikelihood(pixels: Pixels, known?: Rgb[]) {
   return { likelihood, colour, structure, vertical, light }
 }
 
+/**
+ * How likely each pixel is sky, from 0 to 1: close to known sky colours (the top rows by default), bright or blue,
+ * smooth, and higher up.
+ */
+const skyLikelihood = (pixels: Pixels, known?: Rgb[]) => finished(skyLikelihoodSteps(pixels, known))
+
 const smoothnessPerRow = 0.6
 const jumpRows = 0.12
 
-function skylineByDynamicProgramming(
+function* skylineByDynamicProgramming(
   likelihood: Float32Array,
   edges: Float32Array,
   straight: Float32Array,
   width: number,
   height: number,
-) {
+): Steps<Int32Array> {
   const straightPull = height * 0.04
   const cost = new Float32Array(height + 1)
   const previous = new Float32Array(height + 1)
@@ -232,6 +251,7 @@ function skylineByDynamicProgramming(
   columnCost(0)
   previous.set(cost)
   for (let x = 1; x < width; x++) {
+    if (x % columnsPerStep === 0) yield
     columnCost(x)
     const best = new Float32Array(previous)
     const argument = new Int32Array(height + 1).map((_, row) => row)
@@ -333,23 +353,22 @@ function turnFloatingSpecksIntoSky(
   }
 }
 
-/** The finder's stages, one per step, so a caller can yield to the page between them; the last returns the mask. */
-function* findSkySteps(pixels: Pixels): Generator<void, SkyMask> {
+/** The finder a few rows or columns per step, so a caller can yield to the page between them; it returns the mask. */
+function* findSkySteps(pixels: Pixels): Steps<SkyMask> {
   const { width, height } = pixels
-  const first = skyLikelihood(pixels)
-  yield
-  const edges = boxBlur(first.vertical, width, height, 1)
+  const first = yield* skyLikelihoodSteps(pixels)
+  const edges = yield* boxBlur(first.vertical, width, height, 1)
   const straight = straightEdges(first.vertical, width, height)
-  const roughSkyline = skylineByDynamicProgramming(first.likelihood, edges, straight, width, height)
   yield
-  const { likelihood, colour, structure } = skyLikelihood(pixels, coloursAbove(pixels, roughSkyline))
-  yield
-  const skylineRows = skylineByDynamicProgramming(likelihood, edges, straight, width, height)
+  const roughSkyline = yield* skylineByDynamicProgramming(first.likelihood, edges, straight, width, height)
+  const { likelihood, colour, structure } = yield* skyLikelihoodSteps(pixels, coloursAbove(pixels, roughSkyline))
+  const skylineRows = yield* skylineByDynamicProgramming(likelihood, edges, straight, width, height)
   yield
   const lowestBand = [...skylineRows].toSorted((a, b) => a - b)[Math.floor(width * 0.85)] ?? height
   const { withoutSpikes, withoutNotches } = skylineWithoutThinSpikesAndNotches(skylineRows, width)
   const hard = new Float32Array(width * height)
   for (let x = 0; x < width; x++) {
+    if (x % columnsPerStep === 0) yield
     const decidedByPixelFrom = Math.min(skylineRows[x]!, withoutNotches[x]!)
     const decidedByPixelTo = Math.max(skylineRows[x]!, withoutSpikes[x]!)
     for (let y = 0; y < height; y++) {
@@ -367,7 +386,8 @@ function* findSkySteps(pixels: Pixels): Generator<void, SkyMask> {
     width,
     Math.round(width * height * 0.0004),
   )
-  const soft = boxBlur(hard, width, height, featherRadius)
+  yield
+  const soft = yield* boxBlur(hard, width, height, featherRadius)
   const alpha = new Uint8ClampedArray(width * height)
   for (let index = 0; index < alpha.length; index++) alpha[index] = Math.round(soft[index]! * 255)
   const skyline = Float32Array.from(skylineRows, (row) => row / height)
@@ -382,11 +402,7 @@ function* findSkySteps(pixels: Pixels): Generator<void, SkyMask> {
  * below it (a lattice tower, branches) and objects standing above it (a mast) kept apart; then feathered.
  */
 function findSky(pixels: Pixels): SkyMask {
-  const steps = findSkySteps(pixels)
-  for (;;) {
-    const step = steps.next()
-    if (step.done) return step.value
-  }
+  return finished(findSkySteps(pixels))
 }
 
 export { findSky, findSkySteps, skyLikelihood, skyMaskSize }

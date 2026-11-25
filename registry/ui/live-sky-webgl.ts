@@ -48,7 +48,7 @@ function particleBuffer(gl: GL) {
 
 /**
  * Draws the scene with WebGL: the lit street and the clouds in one full-screen pass, rain or snow as particles, drops
- * as lenses. The street is lit into a texture only when the weather or the street changes.
+ * as lenses. The street is lit into a texture only when the weather or the street changes, a step at a time.
  */
 function createWebGLRenderer(canvas: HTMLCanvasElement, gl: GL): SkyRenderer {
   const backdrop = link(gl, backdropVertex, backdropFragment)
@@ -63,18 +63,22 @@ function createWebGLRenderer(canvas: HTMLCanvasElement, gl: GL): SkyRenderer {
   gl.bindBuffer(gl.ARRAY_BUFFER, drops)
   gl.bufferData(gl.ARRAY_BUFFER, dropData.byteLength, gl.DYNAMIC_DRAW)
   const noise = noiseTexture(gl)
-  const sky = texture(gl)
+  let skies = [texture(gl), texture(gl)] as const
   const relighter = createRelighter(gl, screen, noise)
   const vertices = attributes(gl)
   let scene: SkyScene | null = null
-  let stale = false
   let photoShown = false
   const bloomOf = (current: SkyScene) => (photoShown ? current.photoLighting.bloom : current.lighting.bloom)
 
   const drawBackdrop = (current: SkyScene, seconds: number, flash: number) => {
     const { deck, atmosphere, camera } = current
     gl.useProgram(backdrop.program)
-    bindTextures(gl, backdrop, { u_sky: sky, u_facades: relighter.lit(), u_noise: noise, u_glowMap: relighter.glow() })
+    bindTextures(gl, backdrop, {
+      u_sky: skies[0],
+      u_facades: relighter.lit(),
+      u_noise: noise,
+      u_glowMap: relighter.glow(),
+    })
     gl.bindBuffer(gl.ARRAY_BUFFER, screen)
     vertices.bind(backdrop, "a_corner", 2, 2, 0)
     const u = backdrop.uniform
@@ -153,7 +157,7 @@ function createWebGLRenderer(canvas: HTMLCanvasElement, gl: GL): SkyRenderer {
       })
     }
     gl.useProgram(drop.program)
-    bindTextures(gl, drop, { u_sky: sky, u_facades: relighter.lit(), u_glowMap: relighter.glow() })
+    bindTextures(gl, drop, { u_sky: skies[0], u_facades: relighter.lit(), u_glowMap: relighter.glow() })
     gl.bindBuffer(gl.ARRAY_BUFFER, drops)
     gl.bufferSubData(gl.ARRAY_BUFFER, 0, dropData.subarray(0, count * 6 * floatsPerDropVertex))
     vertices.bind(drop, "a_centre", 2, floatsPerDropVertex, 0)
@@ -168,29 +172,22 @@ function createWebGLRenderer(canvas: HTMLCanvasElement, gl: GL): SkyRenderer {
 
   return {
     kind: "webgl",
-    setScene(next) {
+    *show(next, background) {
+      gl.bindTexture(gl.TEXTURE_2D, skies[1])
+      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, next.sky)
+      yield
+      yield* relighter.relight(next, background)
+      skies = [skies[1], skies[0]]
       scene = next
-      stale = true
+      if (background) photoShown = background.kind === "photo"
       if (canvas.width !== next.sky.width) canvas.width = next.sky.width
       if (canvas.height !== next.sky.height) canvas.height = next.sky.height
-      gl.bindTexture(gl.TEXTURE_2D, sky)
-      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, next.sky)
     },
     setMotion(motion) {
       if (scene) scene = { ...scene, ...motion }
     },
-    setBackground(background) {
-      relighter.setBackground(background)
-      photoShown = background.kind === "photo"
-      stale = true
-    },
     draw(seconds, list, flash) {
       if (!scene) return
-      if (stale) {
-        gl.disable(gl.BLEND)
-        relighter.relight(scene)
-        stale = false
-      }
       gl.viewport(0, 0, canvas.width, canvas.height)
       gl.disable(gl.BLEND)
       drawBackdrop(scene, seconds, flash)

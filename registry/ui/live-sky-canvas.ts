@@ -105,15 +105,15 @@ function createCanvasRenderer(canvas: HTMLCanvasElement, context: CanvasRenderin
   let cloudPixels: ImageData | null = null
   let scene: SkyScene | null = null
   let street: SkyBackground | null = null
-  let stale = false
-  const facades = document.createElement("canvas")
-  const facadeContext = facades.getContext("2d")
+  let facades = document.createElement("canvas")
+  let back = document.createElement("canvas")
 
   const relight = (current: SkyScene, shown: SkyBackground) => {
+    const facadeContext = back.getContext("2d")
     if (!facadeContext) return
     const size = shown.kind === "street" ? shown.gbuffer : shown
-    if (facades.width !== size.width) facades.width = size.width
-    if (facades.height !== size.height) facades.height = size.height
+    if (back.width !== size.width) back.width = size.width
+    if (back.height !== size.height) back.height = size.height
     const pixels = facadeContext.createImageData(size.width, size.height)
     if (shown.kind === "street") {
       facadeContext.putImageData(lightFacadesInto(pixels, shown.gbuffer, current.lighting, current.camera), 0, 0)
@@ -132,9 +132,13 @@ function createCanvasRenderer(canvas: HTMLCanvasElement, context: CanvasRenderin
 
   return {
     kind: "canvas",
-    setScene(next) {
+    *show(next, background) {
+      const shown = background ?? street
+      if (shown) relight(next, shown)
+      yield
+      if (shown) [facades, back] = [back, facades]
       scene = next
-      stale = true
+      street = shown
       if (canvas.width !== next.sky.width) canvas.width = next.sky.width
       if (canvas.height !== next.sky.height) canvas.height = next.sky.height
       clouds.width = Math.max(2, Math.ceil(next.width / cloudDownscale))
@@ -144,16 +148,8 @@ function createCanvasRenderer(canvas: HTMLCanvasElement, context: CanvasRenderin
     setMotion(motion) {
       if (scene) scene = { ...scene, ...motion }
     },
-    setBackground(next) {
-      street = next
-      stale = true
-    },
     draw(seconds, drops, flash) {
       if (!scene) return
-      if (stale && street) {
-        relight(scene, street)
-        stale = false
-      }
       const { width, height, ratio, deck, atmosphere } = scene
       context.setTransform(1, 0, 0, 1, 0, 0)
       context.globalCompositeOperation = "source-over"

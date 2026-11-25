@@ -5,7 +5,7 @@ import { createSkyEngine, type EngineInput, type SkyEngine } from "@/components/
 /** Runs the sky's renderer in the stage element and hands it each new weather state; it draws nothing while hidden. */
 function useLiveSkyScene(
   stage: RefObject<HTMLElement | null>,
-  { conditions, location, glass, onFrame, photo }: EngineInput,
+  { conditions, location, glass, onFrame, photo, awaitingPhoto }: EngineInput,
 ) {
   const engine = useRef<SkyEngine | null>(null)
   const reportFrame = useEffectEvent((milliseconds: number) => onFrame?.(milliseconds))
@@ -22,8 +22,8 @@ function useLiveSkyScene(
   }, [stage])
 
   useEffect(() => {
-    engine.current?.update({ conditions, location, glass, onFrame: reportFrame, photo })
-  }, [conditions, location, glass, photo])
+    engine.current?.update({ conditions, location, glass, onFrame: reportFrame, photo, awaitingPhoto })
+  }, [conditions, location, glass, photo, awaitingPhoto])
 }
 
 const skyTickMs = 2 * 60_000
