@@ -162,6 +162,7 @@ function FilterChips<S extends FilterSchema>({
   const available = offered.filter((key) => !shown.includes(key))
 
   const apply = (key: string, value: unknown) =>
+    // Workaround: the controller's filter type is invariant, so it can't widen to a record of what each field's editor produced.
     assumeType<PageController<Record<string, unknown>>>(controller).setFilterValue(key, value)
 
   const close = (key: string) => {

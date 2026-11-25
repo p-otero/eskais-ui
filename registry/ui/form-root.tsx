@@ -143,6 +143,7 @@ function Form<Schema extends StandardSchemaV1>({
     if (element.current) focusTarget(element.current, rootElement.current)?.focus()
   })
 
+  // Workaround: react-hook-form's instance is invariant in its values, and the context takes UseFormReturn<FieldValues>.
   const untyped = assumeType<UseFormReturn<FieldValues>>(form)
   const setError: FormSubmitHelpers<Values>["setError"] = (name, error) => setFormError(untyped, name, error)
 

@@ -71,6 +71,7 @@ const agentTaskBoardLabelsEs: AgentTaskBoardLabels = {
 
 function resolveLabels(labels?: AgentTaskBoardLabelsInput): AgentTaskBoardLabels {
   if (!labels) return agentTaskBoardLabels
+  // Workaround: TypeScript won't take the label interfaces as the loose `Record` mergeLabels copies through.
   return mergeLabels(baseLabels, assumeType<BaseLabelsInput>(labels)) as AgentTaskBoardLabels
 }
 

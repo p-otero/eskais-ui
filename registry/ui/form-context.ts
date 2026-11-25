@@ -132,6 +132,7 @@ function issueResolver(schema: StandardSchemaV1): Resolver<FieldValues> {
       },
     },
   }
+  // Workaround: standardSchemaResolver takes its generics from declared types an untyped Standard Schema doesn't carry.
   const resolve = standardSchemaResolver(assumeType<StandardSchemaV1<FieldValues, FieldValues>>(watched))
   return async (values, context, options) => {
     const result = await resolve(values, context, options)

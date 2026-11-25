@@ -147,6 +147,7 @@ function assignRef(ref: Ref<HTMLElement> | undefined, element: HTMLElement | nul
 }
 
 function focusWhereItIs() {
+  // Workaround: UI SDK types the final focus as an HTMLElement, though it only focuses it (the body or an SVG can hold focus).
   return focusedElement() ?? assumeType<HTMLElement | null>(document.activeElement)
 }
 

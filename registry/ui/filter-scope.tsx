@@ -38,6 +38,7 @@ function FilterScope<S extends FilterSchema>({
   const scope = useMemo(
     () => ({
       schema,
+      // Workaround: React context isn't generic and the filter type is invariant; `useFilterScope` gives it back as the reader's `S`.
       controller: assumeType<AnyController>(controller),
       searchPlaceholder,
     }),
@@ -51,6 +52,7 @@ function FilterScope<S extends FilterSchema>({
       const value = parseFilterInput(field, input)
       if (key === searchFieldOf(schema))
         controller.setSearch(typeof value === "string" ? value : "", { immediate: true })
+      // Workaround: TypeScript can't relate `parseFilterInput`'s value to the field through the key.
       else controller.setFilterValue(key, assumeType<FilterValues<S>[typeof key]>(value))
     },
     clear: () => controller.resetFilters(),
@@ -71,6 +73,7 @@ function FilterScope<S extends FilterSchema>({
 /** A passed `schema` or `controller` wins over the nearest `FilterScope`'s; throws when neither has one. */
 function useFilterScope<S extends FilterSchema>(props: { schema?: S; controller?: PageController<FilterValues<S>> }) {
   const scope = use(FilterScopeContext)
+  // Workaround: React context isn't generic; the scope stored these for any schema and the reader takes them as its `S`.
   const schema = props.schema ?? assumeType<S | undefined>(scope?.schema)
   const controller = props.controller ?? assumeType<PageController<FilterValues<S>> | undefined>(scope?.controller)
   if (!schema || !controller)

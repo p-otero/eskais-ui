@@ -17,6 +17,7 @@ import { useFormContext } from "@/components/ui/form-context"
 import { assumeType } from "@/lib/narrow"
 
 function useTypedForm<Values extends FieldValues>(part: string): UseFormReturn<Values> {
+  // Workaround: react-hook-form's instance is invariant in its values, so the caller's Values can't relate to the Form's.
   return assumeType<UseFormReturn<Values>>(useFormContext(part).form)
 }
 
