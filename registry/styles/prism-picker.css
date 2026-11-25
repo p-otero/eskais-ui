@@ -1,6 +1,3 @@
-/* The prism picker's stage is an optical bench, dark in every theme: additive light only reads on black. Its
-   geometry lives here, from the stage's own size (a size container), so the canvas, the scale and the knob agree.
-   The card around it, the readout and the radius follow the theme. */
 [data-slot="prism-picker"] {
   container-type: inline-size;
 }
@@ -65,7 +62,6 @@
   translate: -50% -50%;
 }
 
-/* Where the dial takes a touch: the ring and 24px either side of it, round so the page scrolls past it. */
 [data-slot="prism-grip"] {
   width: calc(var(--prism-ring) * 2 + 48px);
   aspect-ratio: 1;
@@ -96,7 +92,7 @@
   color: rgb(255 255 255 / 0.5);
 }
 
-/* UI SDK places a thumb along a straight track with inline styles; on the dial it sits at the shown angle. */
+/* Workaround: UI SDK places a thumb along a straight track with inline styles; on the dial it sits at the shown angle. */
 [data-slot="prism-stage"] [data-slot="slider-thumb"] {
   position: absolute !important;
   inset: auto !important;
@@ -121,14 +117,13 @@
   scale: 1.1;
 }
 
-/* The bench is always black, so the focus ring is white rather than the theme's ring. */
+/* Spec: the bench is always black, so the focus ring is white rather than the theme's ring. */
 [data-slot="prism-stage"] [data-slot="slider-thumb"]:has(:focus-visible) {
   outline: 2px solid white;
   outline-offset: 3px;
 }
 
-/* The readout's swatch takes a grid cell beside the hex and the name: a row of a list holds only terms and
-   descriptions. */
+/* Spec: a row of a description list holds only terms and descriptions, so the swatch takes a grid cell. */
 [data-slot="prism-colour"] {
   display: grid;
   grid-template-columns: auto 1fr;
