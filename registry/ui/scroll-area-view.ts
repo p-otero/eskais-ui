@@ -403,7 +403,6 @@ function createScrollView(store: ScrollAreaStore) {
     bindScrollbar,
     bindThumb: input.bindThumb,
     scrollToEdge,
-    /** Whether the view is at an edge now, read from the DOM; undefined without a viewport, like on the server. */
     isAt(edge: "start" | "end") {
       if (!viewport?.isConnected) return undefined
       measure()
@@ -414,9 +413,7 @@ function createScrollView(store: ScrollAreaStore) {
       const edges = edgesOf(metrics[axis])
       return edge === "start" ? edges.atStart : edges.atEnd
     },
-    /** Focuses the viewport, programmatically focusable while it holds focus when it isn't a tab stop. */
     focusViewport: () => viewport && focusViewport(viewport),
-    /** Applies changed options, like `stickToEnd` or `type`. */
     refresh() {
       if (viewport?.isConnected) update(true)
       refreshVisibility()

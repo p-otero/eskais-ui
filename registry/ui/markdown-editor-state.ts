@@ -60,7 +60,7 @@ function markdownSupport(languages: CodeLanguages) {
     if (!found) return null
     return found.support ? found.support.language.parser : ParseContext.getSkippingParser(found.load())
   }
-  // @codemirror/lang-markdown types its language's parser as Lezer's base `Parser`; it is the commonmark
+  // Workaround: @codemirror/lang-markdown types its language's parser as Lezer's base `Parser`; it is the commonmark
   // `MarkdownParser` configured with CodeMirror's fold and indent props, which a fresh one would lack.
   const parser = assumeType<MarkdownParser>(commonmarkLanguage.parser).configure([
     ...markdownExtensions,

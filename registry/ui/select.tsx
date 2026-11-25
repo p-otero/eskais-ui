@@ -116,7 +116,7 @@ type SelectValueChangeDetails = Parameters<NonNullable<SelectPrimitiveProps<stri
 
 type WithoutItems<Props> = Props extends unknown ? Omit<Props, "items"> : never
 
-// UI SDK's `SelectProps<T, false>` still admits `multiple: true`; this is its single-value variant only.
+// Workaround: UI SDK's `SelectProps<T, false>` still admits `multiple: true`; this is its single-value variant only.
 type SingleSelectProps<T> = SelectPrimitiveProps<T, false> & { multiple?: false }
 
 type SelectOption<T = string> = { value: T; label: string; disabled?: boolean; description?: ReactNode }
@@ -145,7 +145,7 @@ type DataAttributes = { [attribute: `data-${string}`]: string | number | boolean
 const noneValue = "\u0000eskais-select-none"
 
 function noneOf<T>(): T {
-  // A sentinel the list holds in T's place for the "none" choice; it is never reported, since onValueChange maps it to
+  // Workaround: a sentinel the list holds in T's place for the "none" choice; it is never reported, since onValueChange maps it to
   // null, so a T that isn't a string never meets it.
   return assumeType<T>(noneValue)
 }
@@ -212,10 +212,10 @@ function OptionList<T>({ options, clearable }: { options: SelectOptions<T>; clea
 /** UI SDK's Select, plus `options` and `clearable`. With children it renders them, as the parts API always has. */
 function Select<T = string, Multiple extends boolean | undefined = false>(props: SelectProps<T, Multiple>) {
   const { options, clearable, "aria-label": ariaLabel, size, triggerProps, children, ...root } = props
-  // `Omit` over UI SDK's props, which distribute over a generic `Multiple`, can't be put back together by TypeScript;
+  // Workaround: `Omit` over UI SDK's props, which distribute over a generic `Multiple`, can't be put back together by TypeScript;
   // `root` is those props less ours, with `items` readonly, which UI SDK only reads.
   const primitive = assumeType<SelectPrimitiveProps<T, Multiple>>(root)
-  // The single-value view of the same props, read only when `multiple` isn't true.
+  // Workaround: the single-value view of the same props, read only when `multiple` isn't true.
   const one = assumeType<SingleSelectProps<T>>(root)
   const single = primitive.multiple !== true
   const [own, setOwn] = useState<SingleSelectProps<T>["value"] | T>(() => one.defaultValue ?? null)

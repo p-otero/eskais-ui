@@ -12,7 +12,7 @@ type SkipLinkProps = Omit<ComponentProps<"a">, "children" | "target"> & {
   target?: string | RefObject<HTMLElement | null>
 }
 
-// A document or a shadow root; a detached link is its own root, which has no ids to search.
+// Spec: a document or a shadow root; a detached link is its own root, which has no ids to search.
 function findsById(root: Node): root is Document | ShadowRoot {
   return "getElementById" in root
 }

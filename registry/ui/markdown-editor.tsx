@@ -230,7 +230,7 @@ function MarkdownEditorBody(props: Omit<MarkdownEditorProps, "ref"> & { handle: 
         aria-label={labels.document}
         className="flex min-h-0 flex-1 flex-col"
       >
-        {/* CodeMirror grows with its text and scrolls in the viewport: it finds a scrolling ancestor for the lines it
+        {/* Spec: CodeMirror grows with its text and scrolls in the viewport: it finds a scrolling ancestor for the lines it
             renders, the caret it keeps in view and a selection dragged past the edge. */}
         <ScrollArea className="flex min-h-0 flex-1 flex-col">
           <ScrollAreaViewport

@@ -37,9 +37,7 @@ const markdownEditorTheme = EditorView.theme({
     fontSize: "inherit",
   },
   "&.cm-focused": { outline: "none" },
-  // The editor's ScrollArea scrolls it; a scroller of its own would show the platform's scrollbar.
   ".cm-scroller": { fontFamily: "inherit", lineHeight: "1.6", overflow: "visible", flexGrow: "1" },
-  // Stretched to the scroller, so a press below a short note places the caret instead of landing on the scroller.
   ".cm-content": {
     caretColor: "var(--foreground)",
     padding: "var(--gap-group) var(--control-padding)",

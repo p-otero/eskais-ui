@@ -29,7 +29,7 @@ type TabsProps<T extends string = string> = ComponentProps<typeof TabsPrimitive<
 function Tabs<T extends string = string>({ className, activateOnPress = false, controller, ...props }: TabsProps<T>) {
   const [ownController] = useState(() => createTabsController<T>())
   const active = controller ?? ownController
-  // UI SDK types a tab's `value` as a string, so the tabs below select through a controller of strings; each of them
+  // Workaround: UI SDK types a tab's `value` as a string, so the tabs below select through a controller of strings; each of them
   // passes its own value, one of this Tabs' `T`.
   const pressController = activateOnPress ? assumeType<TabsController>(active) : null
   return (
