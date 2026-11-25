@@ -16,7 +16,7 @@ type SkyMask = {
 type Pixels = { data: Uint8ClampedArray; width: number; height: number }
 
 /** The longest side the finder works at; a larger photo is scaled down to it first. */
-const skyMaskSize = 512
+const skyMaskSize = 1024
 
 const clamp01 = (value: number) => (value < 0 ? 0 : value > 1 ? 1 : value)
 
@@ -49,6 +49,29 @@ function boxBlur(source: Float32Array, width: number, height: number, radius: nu
       sum += across[Math.min(height - 1, y + radius + 1) * width + x]! - across[Math.max(0, y - radius) * width + x]!
     }
   }
+  return result
+}
+
+function blurAcross(source: Float32Array, width: number, height: number, radius: number) {
+  const result = new Float32Array(source.length)
+  const span = radius * 2 + 1
+  for (let y = 0; y < height; y++) {
+    let sum = 0
+    for (let x = -radius; x <= radius; x++) sum += source[y * width + Math.min(width - 1, Math.max(0, x))]!
+    for (let x = 0; x < width; x++) {
+      result[y * width + x] = sum / span
+      sum += source[y * width + Math.min(width - 1, x + radius + 1)]! - source[y * width + Math.max(0, x - radius)]!
+    }
+  }
+  return result
+}
+
+// Spec: a roofline or the top of a blank wall is a crisp edge that runs straight for many pixels; a cloud's edge is soft
+// and wavy. Averaged along the row, only the straight ones stay strong, and the skyline is pulled onto them.
+function straightEdges(vertical: Float32Array, width: number, height: number) {
+  const along = blurAcross(vertical, width, height, Math.max(4, Math.round(width / 80)))
+  const result = new Float32Array(along.length)
+  for (let index = 0; index < along.length; index++) result[index] = clamp01((along[index]! - 0.1) * 4)
   return result
 }
 
@@ -145,9 +168,11 @@ function skyLikelihood(pixels: Pixels, known?: Rgb[]) {
   const light = luminance(pixels)
   const { magnitude, vertical } = gradients(light, width, height)
   const texture = boxBlur(magnitude, width, height, 2)
+  const crisp = boxBlur(magnitude, width, height, 1)
   const colours = known && known.length > 0 ? known : skyColours(pixels)
   const likelihood = new Float32Array(width * height)
   const colour = new Float32Array(width * height)
+  const structure = new Float32Array(width * height)
   for (let index = 0; index < likelihood.length; index++) {
     const at = index * 4
     const red = data[at]! / 255
@@ -159,21 +184,33 @@ function skyLikelihood(pixels: Pixels, known?: Rgb[]) {
     const max = Math.max(red, green, blue)
     const saturation = max === 0 ? 0 : (max - Math.min(red, green, blue)) / max
     const blueSky = clamp01((blue - red) * 3 + 0.2) * clamp01(blue * 1.4 - 0.2)
-    const cloud = clamp01((light[index]! - 0.3) * 2.2) * clamp01(1 - saturation * 3.5) * clamp01((blue - red) * 6 + 0.7)
-    const smooth = clamp01(1 - texture[index]! * 4)
+    const greyCloud =
+      clamp01((light[index]! - 0.3) * 2.2) * clamp01(1 - saturation * 3.5) * clamp01((blue - red) * 6 + 0.3)
+    const whiteCloud = clamp01((light[index]! - 0.72) * 4) * clamp01(1 - saturation * 4)
+    const cloud = Math.max(greyCloud, whiteCloud)
+    const hardEdge = clamp01((crisp[index]! - 0.18) * 5)
+    const smooth = clamp01(1 - texture[index]! * 4) * (1 - hardEdge)
+    structure[index] = clamp01((crisp[index]! - strongEdge) * 6)
     colour[index] = Math.min(similar, blueSky)
     const upper = clamp01(1 - (2 * Math.floor(index / width)) / height)
     likelihood[index] = clamp01(
       Math.sqrt(Math.max(similar, blueSky, cloud) * (0.3 + 0.7 * smooth)) + 0.2 * upper * smooth,
     )
   }
-  return { likelihood, colour, vertical, light }
+  return { likelihood, colour, structure, vertical, light }
 }
 
 const smoothnessPerRow = 0.6
 const jumpRows = 0.12
 
-function skylineByDynamicProgramming(likelihood: Float32Array, edges: Float32Array, width: number, height: number) {
+function skylineByDynamicProgramming(
+  likelihood: Float32Array,
+  edges: Float32Array,
+  straight: Float32Array,
+  width: number,
+  height: number,
+) {
+  const straightPull = height * 0.04
   const cost = new Float32Array(height + 1)
   const previous = new Float32Array(height + 1)
   const current = new Float32Array(height + 1)
@@ -188,7 +225,7 @@ function skylineByDynamicProgramming(likelihood: Float32Array, edges: Float32Arr
       const value = likelihood[(row - 1) * width + x]!
       sky += 1 - value
       ground -= value
-      const edge = row < height ? edges[row * width + x]! : 0
+      const edge = row < height ? edges[row * width + x]! + straightPull * straight[row * width + x]! : 0
       cost[row] = sky + ground - edge
     }
   }
@@ -233,8 +270,68 @@ function skylineByDynamicProgramming(likelihood: Float32Array, edges: Float32Arr
 // Spec: sky seen through a gap below the skyline must match the sky's own colours and be blue, and sit above the
 // skyline's lowest band, so a blue car or a sign in the street never turns into sky.
 const holeColour = 0.8
-const foregroundLikelihood = 0.22
+const foregroundLikelihood = 0.4
 const featherRadius = 1
+
+function slidingExtreme(values: Int32Array, radius: number, pick: (a: number, b: number) => number) {
+  const result = new Int32Array(values.length)
+  for (let x = 0; x < values.length; x++) {
+    let value = values[x]!
+    for (let offset = -radius; offset <= radius; offset++) {
+      const at = x + offset
+      if (at >= 0 && at < values.length) value = pick(value, values[at]!)
+    }
+    result[x] = value
+  }
+  return result
+}
+
+function skylineWithoutThinSpikesAndNotches(skyline: Int32Array, width: number) {
+  const radius = Math.max(3, Math.round(width * 0.012))
+  const withoutSpikes = slidingExtreme(slidingExtreme(skyline, radius, Math.max), radius, Math.min)
+  const withoutNotches = slidingExtreme(slidingExtreme(skyline, radius, Math.min), radius, Math.max)
+  return { withoutSpikes, withoutNotches }
+}
+
+// Spec: a cloud's edges are soft; a lattice, a crane, a mast or a cornice has strong, crisp ones. A pixel on such an edge
+// that isn't unmistakably sky-coloured stays foreground wherever the skyline runs, so thin things against the sky stay.
+const strongEdge = 0.4
+const bandLikelihood = 0.65
+const bandColour = 0.5
+
+function turnFloatingSpecksIntoSky(
+  hard: Float32Array,
+  grounded: (x: number, y: number) => boolean,
+  width: number,
+  area: number,
+) {
+  const height = hard.length / width
+  const seen = new Uint8Array(hard.length)
+  const stack: number[] = []
+  const patch: number[] = []
+  for (let start = 0; start < hard.length; start++) {
+    if (seen[start] || hard[start] !== 0) continue
+    seen[start] = 1
+    stack.push(start)
+    patch.length = 0
+    let touchesGround = false
+    while (stack.length > 0) {
+      const at = stack.pop()!
+      patch.push(at)
+      const x = at % width
+      const y = (at - x) / width
+      if (!touchesGround && grounded(x, y)) touchesGround = true
+      if (touchesGround && patch.length > area) continue
+      for (const next of [at - 1, at + 1, at - width, at + width]) {
+        if (next < 0 || next >= hard.length || seen[next] || hard[next] !== 0) continue
+        if ((next === at - 1 && x === 0) || (next === at + 1 && x === width - 1)) continue
+        seen[next] = 1
+        stack.push(next)
+      }
+    }
+    if (!touchesGround && patch.length < area && height > 0) for (const at of patch) hard[at] = 1
+  }
+}
 
 /** The finder's stages, one per step, so a caller can yield to the page between them; the last returns the mask. */
 function* findSkySteps(pixels: Pixels): Generator<void, SkyMask> {
@@ -242,22 +339,34 @@ function* findSkySteps(pixels: Pixels): Generator<void, SkyMask> {
   const first = skyLikelihood(pixels)
   yield
   const edges = boxBlur(first.vertical, width, height, 1)
-  const roughSkyline = skylineByDynamicProgramming(first.likelihood, edges, width, height)
+  const straight = straightEdges(first.vertical, width, height)
+  const roughSkyline = skylineByDynamicProgramming(first.likelihood, edges, straight, width, height)
   yield
-  const { likelihood, colour } = skyLikelihood(pixels, coloursAbove(pixels, roughSkyline))
+  const { likelihood, colour, structure } = skyLikelihood(pixels, coloursAbove(pixels, roughSkyline))
   yield
-  const skylineRows = skylineByDynamicProgramming(likelihood, edges, width, height)
+  const skylineRows = skylineByDynamicProgramming(likelihood, edges, straight, width, height)
   yield
   const lowestBand = [...skylineRows].toSorted((a, b) => a - b)[Math.floor(width * 0.85)] ?? height
+  const { withoutSpikes, withoutNotches } = skylineWithoutThinSpikesAndNotches(skylineRows, width)
   const hard = new Float32Array(width * height)
   for (let x = 0; x < width; x++) {
-    const line = skylineRows[x]!
+    const decidedByPixelFrom = Math.min(skylineRows[x]!, withoutNotches[x]!)
+    const decidedByPixelTo = Math.max(skylineRows[x]!, withoutSpikes[x]!)
     for (let y = 0; y < height; y++) {
       const at = y * width + x
-      const hole = y < lowestBand && colour[at]! > holeColour
-      hard[at] = y < line ? (likelihood[at]! > foregroundLikelihood ? 1 : 0) : hole ? 1 : 0
+      const plainSky = structure[at]! < 0.5 || colour[at]! > holeColour
+      if (y < decidedByPixelFrom) hard[at] = likelihood[at]! > foregroundLikelihood && plainSky ? 1 : 0
+      else if (y < decidedByPixelTo) {
+        hard[at] = (likelihood[at]! > bandLikelihood || colour[at]! > bandColour) && structure[at]! < 0.5 ? 1 : 0
+      } else hard[at] = y < lowestBand && colour[at]! > holeColour ? 1 : 0
     }
   }
+  turnFloatingSpecksIntoSky(
+    hard,
+    (x, y) => y >= Math.max(skylineRows[x]!, withoutSpikes[x]!),
+    width,
+    Math.round(width * height * 0.0004),
+  )
   const soft = boxBlur(hard, width, height, featherRadius)
   const alpha = new Uint8ClampedArray(width * height)
   for (let index = 0; index < alpha.length; index++) alpha[index] = Math.round(soft[index]! * 255)

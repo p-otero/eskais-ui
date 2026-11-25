@@ -4,6 +4,7 @@ import { resolve } from "node:path"
 import { describe, expect, test } from "vitest"
 
 import { readSkyPhotoExif } from "@/lib/sky-photo-exif"
+import { findClouds, findWindows } from "@/lib/sky-photo-features"
 import { findSky, type Pixels } from "@/lib/sky-photo-mask"
 import { calibrateSkyView, fovFromFocalLength35mm, projectSky, unprojectSky } from "@/lib/sky-photo-projection"
 
@@ -257,5 +258,97 @@ describe("sky finder", () => {
   test("the default horizon is the skyline's lowest band", () => {
     expect(mask.horizon * pixels.height).toBeGreaterThanOrEqual(98)
     expect(mask.horizon * pixels.height).toBeLessThanOrEqual(112)
+  })
+})
+
+type Paint = (x: number, y: number) => [number, number, number]
+
+function painted(width: number, height: number, paint: Paint): Pixels {
+  const data = new Uint8ClampedArray(width * height * 4)
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      const [red, green, blue] = paint(x, y)
+      data.set([red, green, blue, 255], (y * width + x) * 4)
+    }
+  }
+  return { data, width, height }
+}
+
+const cloudyRoof = 120
+const cloudy = (x: number, y: number): [number, number, number] => {
+  const puff = 40 * Math.sin(x / 9) * Math.cos(y / 7)
+  return [175 + puff, 190 + puff, 210 + puff * 0.8]
+}
+
+const lattice = (x: number, y: number) =>
+  x >= 140 && x < 146 && y >= 40 && y < cloudyRoof && (x === 140 || x === 145 || y % 6 < 2)
+
+describe("thin structures against cloud", () => {
+  const pixels = painted(300, 180, (x, y) => {
+    if (y >= cloudyRoof) return [90, 92, 96]
+    if (lattice(x, y)) return [215, 215, 210]
+    return cloudy(x, y)
+  })
+  const mask = findSky(pixels)
+  const alphaAt = (x: number, y: number) => mask.alpha[y * pixels.width + x]!
+
+  test("a light lattice tower over grey cloud stays foreground, and the cloud beside it stays sky", () => {
+    expect(alphaAt(140, 60)).toBeLessThan(128)
+    expect(alphaAt(145, 90)).toBeLessThan(128)
+    expect(alphaAt(120, 60)).toBeGreaterThan(200)
+    expect(alphaAt(170, 90)).toBeGreaterThan(200)
+  })
+
+  test("no foreground speck floats in the sky", () => {
+    let specks = 0
+    for (let y = 0; y < 30; y++) for (let x = 0; x < pixels.width; x++) if (alphaAt(x, y) < 128) specks++
+    expect(specks).toBe(0)
+  })
+})
+
+describe("clouds", () => {
+  const pixels = painted(200, 120, (x, y) => {
+    if (y >= 90) return [80, 80, 80]
+    const inCloud = (x - 60) ** 2 / 900 + (y - 40) ** 2 / 225 < 1
+    return inCloud ? [235, 237, 240] : [70, 120, 210]
+  })
+  const mask = findSky(pixels)
+  const clouds = findClouds(pixels, mask)
+  const at = (x: number, y: number) => y * pixels.width + x
+
+  test("a white cloud is covered and lit, clear blue sky and the ground carry none", () => {
+    expect(clouds.shade[at(60, 40)]).toBeGreaterThan(200)
+    expect(clouds.light[at(60, 40)]).toBeGreaterThan(200)
+    expect(clouds.shade[at(160, 30)]).toBeLessThan(20)
+    expect(clouds.shade[at(100, 110)]).toBe(0)
+  })
+})
+
+const facade = (x: number, y: number) => x >= 20 && x < 140 && y >= 40
+const pane = (x: number, y: number) => facade(x, y) && x % 10 >= 4 && x % 10 < 8 && y % 12 >= 4 && y % 12 < 9
+
+describe("windows", () => {
+  const pixels = painted(240, 200, (x, y) => {
+    if (y < 40) return [90, 140, 215]
+    if (pane(x, y)) return [70, 78, 90]
+    if (facade(x, y)) return [205, 200, 190]
+    return x % 7 < 3 && y % 5 < 2 ? [40, 90, 40] : [60, 120, 50]
+  })
+  const mask = findSky(pixels)
+
+  test("finds the grid of panes on the wall, none in the foliage, and lights the same seeded share each time", () => {
+    const first = findWindows(pixels, mask)
+    const again = findWindows(pixels, mask)
+    expect(first.found).toBeGreaterThan(50)
+    expect(first.lit).toBeGreaterThan(first.found * 0.15)
+    expect(first.lit).toBeLessThan(first.found * 0.45)
+    expect(again.glow).toEqual(first.glow)
+    let inFoliage = 0
+    for (let y = 40; y < 200; y++) for (let x = 150; x < 240; x++) if (first.glow[y * 240 + x]! > 0) inFoliage++
+    expect(inFoliage).toBe(0)
+  })
+
+  test("another seed lights another share", () => {
+    expect(findWindows(pixels, mask, { seed: 99 }).glow).not.toEqual(findWindows(pixels, mask).glow)
   })
 })
