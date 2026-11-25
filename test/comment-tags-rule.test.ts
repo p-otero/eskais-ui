@@ -202,6 +202,21 @@ export const delay = 200`),
   ).toEqual([])
 })
 
+test("ignores a shebang and judges the comment under it on its own", () => {
+  expect(
+    flaggedLines(`#!/usr/bin/env node
+// Spec: a tagged comment under the shebang.
+const a = 1
+`),
+  ).toEqual([])
+  expect(
+    flaggedLines(`#!/usr/bin/env node
+// Runs the check.
+const a = 1
+`),
+  ).toEqual([2])
+})
+
 test("the repo's config runs it everywhere but tests and the docs examples", () => {
   const config = JSON.parse(readFileSync(".oxlintrc.json", "utf8")) as {
     rules: Record<string, unknown>
@@ -211,5 +226,5 @@ test("the repo's config runs it everywhere but tests and the docs examples", () 
   const exempt = config.overrides
     .filter((override) => override.rules["eskais/comment-tags"] !== undefined)
     .flatMap((override) => override.files)
-  expect(exempt).toEqual(["test/**", "apps/site/src/examples/**"])
+  expect(exempt).toEqual(["test/**", "packages/*/test/**", "apps/site/src/examples/**"])
 })

@@ -158,8 +158,10 @@ function exportsMap(exported: unknown): unknown {
   return keyed ? exported : { ".": exported }
 }
 
-// A stylesheet the project's stylesheet imports from a package its own folder doesn't install, as in a workspace
-// where only an app depends on tailwindcss: found in the workspace, through the package's style export.
+/**
+ * A stylesheet the project's stylesheet imports from a package its own folder doesn't install, as in a workspace
+ * where only an app depends on tailwindcss: found in the workspace, through the package's style export.
+ */
 export function workspaceStylesheet(project: MockupProject, id: string, base: string): string | undefined {
   const name = bareName(id)
   if (name === null || installedAbove(base, name)) return undefined
@@ -184,7 +186,7 @@ export function workspaceStylesheet(project: MockupProject, id: string, base: st
   return undefined
 }
 
-// A plugin or config module (`@plugin "@tailwindcss/typography"`) from the workspace, likewise.
+/** A plugin or config module (`@plugin "@tailwindcss/typography"`) from the workspace, likewise. */
 export function workspaceModule(project: MockupProject, id: string, base: string): string | undefined {
   const name = bareName(id)
   if (name === null || installedAbove(base, name)) return undefined
@@ -275,8 +277,6 @@ function cachedImports(cacheDirs: string[]) {
   }
 }
 
-// A package the project's folder doesn't install but another workspace package does (react in a pnpm or Bun
-// isolated workspace whose components package declares it only as a peer).
 function workspacePackages(project: MockupProject): MockupBuildPlugin {
   return {
     name: "mockup-workspace-packages",
@@ -434,13 +434,11 @@ export function mockupSourceFiles(mockup: string): string[] {
   return found.toSorted()
 }
 
-// The theme segment of a page's name: a theme such as compact, or else the colour scheme.
+/** The theme segment of a page's name: a theme such as compact, or else the colour scheme. */
 export function pageTheme(settings: Pick<BuildSettings, "theme" | "scheme">): string {
   return settings.theme ?? settings.scheme
 }
 
-// The files written for the mockup (screen, fixtures, parts, gaps) and the shared wrapper, not the
-// installed components or the registry cache they import.
 function ownFiles(mockup: string): string[] {
   const wrapper = join(dirname(mockup), "wrapper.tsx")
   return [...mockupSourceFiles(mockup), ...(existsSync(wrapper) ? [wrapper] : [])]

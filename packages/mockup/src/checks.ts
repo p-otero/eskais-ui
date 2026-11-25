@@ -134,8 +134,10 @@ export function sdkImportProblems(file: string, source: string, publicSpecifiers
   return problems
 }
 
-// Only the mockup's own files: an installed block may size itself to the viewport (Shell sets
-// --shell-height: 100dvh), and the bundle and stylesheet carry every installed component.
+/**
+ * Only the mockup's own files: an installed block may size itself to the viewport (Shell sets
+ * --shell-height: 100dvh), and the bundle and stylesheet carry every installed component.
+ */
 export function viewportProblems(file: string, source: string): Problem[] {
   return matches(source, VIEWPORT_HEIGHT_UNITS, (match) => ({
     rule: "viewport-unit",

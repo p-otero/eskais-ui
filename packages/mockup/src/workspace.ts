@@ -26,7 +26,7 @@ export function packageRootOf(path: string): string | null {
   }
 }
 
-// The `packages:` list of a pnpm-workspace.yaml, without a YAML parser: one `- glob` per line.
+/** The `packages:` list of a pnpm-workspace.yaml, without a YAML parser: one `- glob` per line. */
 export function pnpmWorkspaceGlobs(text: string): string[] {
   const globs: string[] = []
   let inPackages = false
@@ -67,8 +67,10 @@ function workspaceGlobs(dir: string): string[] | null {
 
 export type Workspace = { root: string; packages: string[] }
 
-// The nearest folder above `start` that declares workspaces (npm, Yarn and Bun's package.json `workspaces`,
-// or pnpm-workspace.yaml), with the folder of every package it lists.
+/**
+ * The nearest folder above `start` that declares workspaces (npm, Yarn and Bun's package.json `workspaces`,
+ * or pnpm-workspace.yaml), with the folder of every package it lists.
+ */
 export function findWorkspace(start: string): Workspace | null {
   let current = resolve(start)
   for (;;) {
@@ -143,9 +145,11 @@ function compareVersions(left: string, right: string): number {
 
 export type StoreEntry = { dir: string; from: string; version: string }
 
-// A package that only another workspace package depends on, in pnpm's store (node_modules/.pnpm) or Bun's
-// isolated one (node_modules/.bun): `<store>/<name with + for />@<version>[_peers|+hash]/node_modules/<name>`.
-// `from` is a folder that resolves the package and its own dependencies, the newest version first.
+/**
+ * A package that only another workspace package depends on, in pnpm's store (node_modules/.pnpm) or Bun's
+ * isolated one (node_modules/.bun): `<store>/<name with + for />@<version>[_peers|+hash]/node_modules/<name>`.
+ * `from` is a folder that resolves the package and its own dependencies, the newest version first.
+ */
 export function storePackages(root: string, name: string): StoreEntry[] {
   const encoded = name.replace("/", "+")
   const found: StoreEntry[] = []

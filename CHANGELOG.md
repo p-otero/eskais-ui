@@ -2,6 +2,12 @@
 
 Versions follow [semver](https://semver.org). Before 1.0, a minor version can break compatibility. Release with `bun pm version <patch|minor|major>`, which bumps `package.json`, rebuilds `public/r` (the mockup CLI reports the version) and tags `vX.Y.Z`.
 
+## Unreleased
+
+### Changed
+
+- Clean code: code says what it does, and a comment stays only for what code can't express, opening with `Workaround:` (an upstream or browser bug, with its version or issue), `Spec:` (a platform, WCAG, ARIA or format rule), `Perf:` (a measured reason) or `Security:`. JSDoc stays on exported API, type members and the members of a primitive's `api` or an exported factory's result, where it states a contract the type can't. The new `eskais/comment-tags` rule (`tooling/oxlint-plugin-eskais`) enforces it everywhere except tests and the docs examples; lint suppressions and `@ts-expect-error` need a reason after `--`. Every file in the registry, apps, tooling and the mockup CLI was swept: narrating comments became names (unit names on timing constants, named booleans, extracted helpers) or were removed. No behaviour, public API, `data-slot`, ARIA value or copy changed. The registry's comment lines went from about 5,200 to 4,100, most of what remains being contract JSDoc on exported props.
+
 ## 0.2.11 (2026-11-21)
 
 ### Fixed

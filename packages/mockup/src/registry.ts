@@ -217,8 +217,10 @@ export type ShippedFile = {
   dir: string
 }
 
-// `shadcn add` overwrites a file that two items ship, so the cache accepts it when every
-// copy is byte-identical. Line endings are not normalised: shadcn writes a CRLF copy as is.
+/**
+ * `shadcn add` overwrites a file that two items ship, so the cache accepts it when every
+ * copy is byte-identical. Line endings are not normalised: shadcn writes a CRLF copy as is.
+ */
 export function shippedFiles(items: Iterable<{ item: RegistryItem; dir: string }>): Map<string, ShippedFile> {
   const shipped = new Map<string, ShippedFile>()
   for (const { item, dir } of items) {
@@ -252,8 +254,6 @@ function writeFiles(load: RegistryLoad): Map<string, string> {
   return files
 }
 
-// A fetched item imports `@/…`, as the registry ships it: a sibling in the cache becomes a relative path, and an
-// installed file the project's own specifier when `@/` isn't one of its aliases (a project on `#components/*`).
 function rewriteCachedImports(
   project: MockupProject,
   files: Map<string, string>,

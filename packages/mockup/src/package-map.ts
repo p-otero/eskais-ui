@@ -1,11 +1,13 @@
-// Node's package `imports` and `exports` maps: exact keys, one-star patterns (longest prefix wins),
+// Spec: Node's package `imports` and `exports` maps: exact keys, one-star patterns (longest prefix wins),
 // condition objects in key order and fallback arrays, as in the PACKAGE_TARGET_RESOLVE algorithm.
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === "object" && value !== null && !Array.isArray(value)
 
-// The source of an app's own files, as TypeScript's bundler resolution and Bun read them. "types" is left out
-// so a map that sends types to a dist folder still leads to the sources.
+/**
+ * The source of an app's own files, as TypeScript's bundler resolution and Bun read them. "types" is left out
+ * so a map that sends types to a dist folder still leads to the sources.
+ */
 export const SOURCE_CONDITIONS = ["browser", "import", "module", "bun", "development", "default", "node", "require"]
 
 export const STYLE_CONDITIONS = ["style", "default"]
@@ -49,20 +51,20 @@ export function matchMap(map: unknown, specifier: string, conditions: readonly s
 
 const PROBE = "__eskais_mockup_probe__"
 
-// The folder an alias such as "#components/ui" stands for: the folder its files resolve into.
+/** The folder an alias such as "#components/ui" stands for: the folder its files resolve into. */
 export function mappedDirectory(map: unknown, specifier: string, conditions: readonly string[]): string | null {
   const probed = matchMap(map, `${specifier}/${PROBE}`, conditions)
   if (probed?.includes(PROBE)) return probed.slice(0, probed.indexOf(PROBE)).replace(/\/$/, "")
   return matchMap(map, specifier, conditions)
 }
 
-// The prefixes an import has to start with to go through the map: "#components/" for "#components/*".
+/** The prefixes an import has to start with to go through the map: "#components/" for "#components/*". */
 export function mapPrefixes(map: unknown): string[] {
   if (!isRecord(map)) return []
   return Object.keys(map).map((key) => (key.includes("*") ? key.slice(0, key.indexOf("*")) : key))
 }
 
-// The alias folders a map declares: "#components/*" → "#components", for a project without components.json.
+/** The alias folders a map declares: "#components/*" → "#components", for a project without components.json. */
 export function mapAliases(map: unknown, conditions: readonly string[]): { specifier: string; target: string }[] {
   if (!isRecord(map)) return []
   const found: { specifier: string; target: string }[] = []

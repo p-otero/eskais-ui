@@ -1,7 +1,4 @@
-// Eskais UI's own oxlint rules for consumers, loaded through `jsPlugins` by eskais-ui.oxlintrc.json.
-
 const CONTROLS = new Set(["Button", "Toggle"])
-// A control already inside one of these gets its tooltip from there.
 const TOOLTIP_WRAPPERS = new Set(["ControlTooltip", "TooltipTrigger"])
 
 function elementName(name) {
@@ -16,7 +13,6 @@ function isIconElement(node) {
   return name === "Icon" || name.endsWith("Icon")
 }
 
-// An icon, or a choice between icons like `{copied ? <CheckIcon /> : <CopyIcon />}`.
 function isIconExpression(node) {
   if (isIconElement(node)) return true
   if (node.type === "ConditionalExpression")
@@ -50,14 +46,14 @@ function attribute(opening, name) {
 function isIconSize(attr) {
   if (!attr?.value) return false
   if (attr.value.type === "Literal") return attr.value.value === "icon"
-  // `size={size}` can't be read here, so it gets the benefit of the doubt.
-  return attr.value.type === "JSXExpressionContainer" && attr.value.expression.type !== "Literal"
+  const sizeOnlyKnownAtRuntime =
+    attr.value.type === "JSXExpressionContainer" && attr.value.expression.type !== "Literal"
+  return sizeOnlyKnownAtRuntime
 }
 
 function insideTooltip(node) {
   let parent = node.parent
   if (parent?.type === "JSXElement") return TOOLTIP_WRAPPERS.has(elementName(parent.openingElement.name))
-  // `<TooltipTrigger render={<Button … />}>`
   while (parent && parent.type !== "JSXAttribute") {
     if (parent.type === "JSXElement" || parent.type === "Program") return false
     parent = parent.parent
@@ -101,8 +97,6 @@ const iconButtonNeedsLabel = {
 
 const OVERFLOW = /(?:^|[\s"'`:!])(overflow-(?:[xy]-)?(?:auto|scroll))(?=$|[\s"'`!])/
 
-// Every string and template literal counts, not only a className attribute: class lists also live in consts, cva()
-// variants and arrays outside the JSX that uses them.
 const scrollArea = {
   meta: {
     type: "suggestion",

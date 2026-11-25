@@ -196,7 +196,7 @@ export default {
 
         const { sourceCode } = context
         const text = sourceCode.text
-        const comments = sourceCode.getAllComments()
+        const comments = sourceCode.getAllComments().filter((comment) => !text.startsWith("#!", start(comment)))
         let headVerdict = "allowed"
         comments.forEach((comment, index) => {
           if (continuesPrevious(text, comments[index - 1], comment)) {
