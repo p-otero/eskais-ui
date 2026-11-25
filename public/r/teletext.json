@@ -1,0 +1,266 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "teletext",
+  "title": "Teletext",
+  "description": "Teletext pages on a 40×25 grid in the eight broadcast colours: double-height rows, 2×3 mosaic block graphics, flash, a header with the page number, service and clock, and the four coloured Fastext keys. Type three digits to tune, and the counter searches the broadcast before the page shows; subpages rotate. It fills its parent at 4:3 and scales the grid to it, so it fits a TV's screen. Pages are data; each is a region with a heading and real text, with goToPage and fastext for agents.",
+  "dependencies": [
+    "@ui-sdk/core@0.1.0-beta.12",
+    "@ui-sdk/react@0.1.0-beta.12"
+  ],
+  "registryDependencies": [
+    "@eskais/utils",
+    "@eskais/theme",
+    "@eskais/action-refusal",
+    "@eskais/narrow",
+    "@eskais/locale"
+  ],
+  "files": [
+    {
+      "path": "registry/ui/teletext.tsx",
+      "content": "\"use client\"\n\nimport { Button } from \"@ui-sdk/react/button\"\nimport { usePart, usePrimitive } from \"@ui-sdk/react/primitive\"\nimport { memo, type ReactNode, useRef, useState, useSyncExternalStore } from \"react\"\n\nimport {\n  cellsOf,\n  fastextColors,\n  fittedSpans,\n  normalRow,\n  pageRows,\n  rowsOf,\n  subpageCount,\n  type TeletextPage,\n  type TeletextRow,\n  type TeletextSpan,\n} from \"@/components/ui/teletext-page\"\nimport { teletext, type TeletextOptions } from \"@/components/ui/teletext-primitive\"\nimport { useTeletextClock } from \"@/components/ui/use-teletext-clock\"\nimport { useTeletextSearch } from \"@/components/ui/use-teletext-search\"\nimport { useTeletextSubpages } from \"@/components/ui/use-teletext-subpages\"\nimport { useLocale } from \"@/lib/locale\"\nimport { cn, cssVars } from \"@/lib/utils\"\n\ntype TeletextLabels = {\n  /** Describes the page region to screen readers: how to tune with the number keys. */\n  hint: string\n}\n\nconst teletextLabels: TeletextLabels = {\n  hint: \"Type three digits to go to a page; Left and Right turn subpages.\",\n}\n\ntype TeletextState = { page: number; searching: boolean }\n\ntype TeletextProps = Omit<TeletextOptions, \"pages\"> & {\n  /** The set's accessible name: \"Teletext\". */\n  label: string\n  /** The service's pages by number, 100 to 899. */\n  pages: Readonly<Record<number, TeletextPage>>\n  /** The service's name on the header row, up to about ten characters. */\n  service?: string\n  /** Shows the date and a running clock on the header row, in the page's locale. Default true. */\n  clock?: boolean\n  /** How long the counter runs through the broadcast before a new page shows, in ms. 0 shows it at once. Default 900. */\n  searchMs?: number\n  /** How long each subpage stays before the next, in ms. Default 12000. */\n  subpageMs?: number\n  /** `crt` (the default) adds scanlines and a darker rim, as a tube set had; `flat` leaves them to a screen it sits in. */\n  screen?: \"crt\" | \"flat\"\n  /** The locale for the header's date and clock; the page's `lang` by default. */\n  locale?: string\n  labels?: Partial<TeletextLabels>\n  /** Classes for the set; a function gets the page shown and whether it's searching. */\n  className?: string | ((state: TeletextState) => string | undefined)\n}\n\nfunction sextantRects(\n  cells: readonly number[],\n  separated: boolean,\n): { key: string; x: number; y: number; width: number }[] {\n  const rects: { key: string; x: number; y: number; width: number }[] = []\n  for (let y = 0; y < 3; y++) {\n    let run = -1\n    for (let x = 0; x <= cells.length * 2; x++) {\n      const cell = cells[Math.floor(x / 2)] ?? 0\n      const lit = x < cells.length * 2 && Boolean(cell & (1 << (y * 2 + (x % 2))))\n      if (lit && separated) rects.push({ key: `${String(y)}-${String(x)}`, x, y, width: 1 })\n      else if (lit && run === -1) run = x\n      else if (!lit && run !== -1) {\n        rects.push({ key: `${String(y)}-${String(run)}`, x: run, y, width: x - run })\n        run = -1\n      }\n    }\n  }\n  return rects\n}\n\nfunction Mosaic({ cells, separated }: { cells: readonly number[]; separated: boolean }) {\n  const gap = separated ? 0.14 : 0\n  return (\n    // oxlint-disable-next-line eskais/no-inline-icons -- teletext block graphics drawn from the page's data, not an icon\n    <svg\n      data-slot=\"teletext-mosaic\"\n      aria-hidden=\"true\"\n      viewBox={`0 0 ${String(cells.length * 2)} 3`}\n      preserveAspectRatio=\"none\"\n      shapeRendering=\"crispEdges\"\n    >\n      {sextantRects(cells, separated).map((rect) => (\n        <rect\n          key={rect.key}\n          x={rect.x + gap}\n          y={rect.y + gap}\n          width={rect.width - gap * 2}\n          height={1 - gap * 2}\n          fill=\"currentColor\"\n        />\n      ))}\n    </svg>\n  )\n}\n\nfunction Span({ span }: { span: TeletextSpan }) {\n  return (\n    <span\n      data-slot=\"teletext-span\"\n      data-fg={span.fg ?? \"white\"}\n      data-bg={span.bg ?? \"black\"}\n      data-flash={span.flash ? \"\" : undefined}\n      style={cssVars({ \"--teletext-cells\": cellsOf(span) })}\n    >\n      {span.mosaic ? <Mosaic cells={span.mosaic} separated={span.separated ?? false} /> : span.text}\n    </span>\n  )\n}\n\nfunction Row({ row, line }: { row: TeletextRow; line: number }) {\n  const { spans, doubleHeight, heading } = normalRow(row)\n  const fitted = fittedSpans(spans)\n  const starts = fitted.map((_, index) => fitted.slice(0, index).reduce((sum, span) => sum + cellsOf(span), 0))\n  const cells = (\n    <span data-slot=\"teletext-cells\">\n      {fitted.map((span, index) => (\n        <Span key={starts[index]} span={span} />\n      ))}\n    </span>\n  )\n  const style = cssVars({ \"--teletext-line\": line + 1 })\n  const double = doubleHeight ? \"\" : undefined\n  if (heading) {\n    return (\n      <h2 data-slot=\"teletext-row\" data-double={double} style={style}>\n        {cells}\n      </h2>\n    )\n  }\n  return (\n    <div data-slot=\"teletext-row\" data-double={double} style={style}>\n      {cells}\n    </div>\n  )\n}\n\nconst Rows = memo(function Rows({ rows }: { rows: readonly TeletextRow[] }) {\n  const lines: ReactNode[] = []\n  for (let line = 0; line < Math.min(rows.length, pageRows); line++) {\n    const row = rows[line]!\n    lines.push(<Row key={`line-${String(line)}`} row={row} line={line} />)\n    if (normalRow(row).doubleHeight) line++\n  }\n  return lines\n})\n\nconst prefersReducedMotion = () =>\n  typeof matchMedia === \"function\" && matchMedia(\"(prefers-reduced-motion: reduce)\").matches\n\nconst dataAttributes = (values: Record<string, string | undefined>): Record<`data-${string}`, string | undefined> =>\n  Object.fromEntries(Object.entries(values).map(([key, value]) => [`data-${key}`, value]))\n\nconst twoDigits = (value: number) => String(value).padStart(2, \"0\")\n\nfunction Clock({ locale }: { locale: string | undefined }) {\n  const second = useTeletextClock()\n  if (second === null) return <span data-slot=\"teletext-clock\" />\n  const date = new Date(second * 1000)\n  const day = new Intl.DateTimeFormat(locale, { weekday: \"short\", day: \"2-digit\", month: \"short\" })\n    .format(date)\n    .replaceAll(/[.,]/g, \"\")\n  const time = `${twoDigits(date.getHours())}:${twoDigits(date.getMinutes())}/${twoDigits(date.getSeconds())}`\n  return (\n    <span data-slot=\"teletext-clock\">\n      <span data-slot=\"teletext-date\">{day}</span> <span data-slot=\"teletext-time\">{time}</span>\n    </span>\n  )\n}\n\nfunction PageNumber({\n  shown,\n  tuned,\n  entry,\n  searchMs,\n  onArrive,\n}: {\n  shown: number\n  tuned: number\n  entry: string\n  searchMs: number\n  onArrive: (page: number) => void\n}) {\n  const search = useTeletextSearch({ from: shown, to: tuned, searchMs, onArrive })\n  const number = entry ? entry.padEnd(3, \"-\") : String(search.shown)\n  return (\n    <span data-slot=\"teletext-number\" data-searching={search.searching ? \"\" : undefined}>\n      {`P${number}`}\n    </span>\n  )\n}\n\n/**\n * A teletext set: 40 by 25 character cells in the eight broadcast colours, with double-height rows, 2×3 mosaic\n * graphics, flash, a header with the page number, the service and a clock, and the four coloured Fastext keys. Type\n * three digits on the page to tune: the counter runs through the broadcast before the page shows. Subpages rotate.\n * It fills its parent at 4:3, sized to it, so it fits a TV's screen.\n */\nfunction Teletext({\n  label,\n  pages,\n  page,\n  defaultPage,\n  onPageChange,\n  service = \"\",\n  clock = true,\n  searchMs = 900,\n  subpageMs = 12_000,\n  screen = \"crt\",\n  locale: ownLocale,\n  labels: ownLabels,\n  className,\n}: TeletextProps) {\n  const labels = { ...teletextLabels, ...ownLabels }\n  const locale = useLocale(ownLocale)\n  const handle = usePrimitive(teletext, { pages, page, defaultPage, onPageChange })\n  useSyncExternalStore(handle.instance.subscribe, handle.instance.get, handle.instance.get)\n  const { page: tuned, entry, subpage } = handle.state\n  const [shown, setShown] = useState(tuned)\n  const searchesFor = prefersReducedMotion() ? 0 : searchMs\n  if (searchesFor <= 0 && shown !== tuned) setShown(tuned)\n  const region = useRef<HTMLDivElement>(null)\n  const current = pages[shown]\n  const count = subpageCount(current)\n  useTeletextSubpages(region, { count, intervalMs: subpageMs, onTurn: () => handle.api.turnSubpage(1) })\n  const rows = current ? rowsOf(current, subpage) : []\n  const hasHeading = rows.some((row) => normalRow(row).heading)\n  const searching = shown !== tuned\n\n  const pagePart = usePart(\n    handle,\n    \"page\",\n    {},\n    {\n      ref: region,\n      \"aria-label\": current?.title ?? String(shown),\n      \"aria-description\": labels.hint,\n      children: (\n        <>\n          {current && !hasHeading ? <h2 className=\"sr-only\">{current.title}</h2> : null}\n          <Rows rows={rows} />\n        </>\n      ),\n    },\n    \"div\",\n  )\n\n  return usePart(\n    handle,\n    \"root\",\n    {},\n    {\n      \"aria-label\": label,\n      ...dataAttributes({ searching: searching ? \"\" : undefined, screen }),\n      className: cn(\"relative\", typeof className === \"function\" ? className({ page: shown, searching }) : className),\n      children: (\n        <div data-slot=\"teletext-screen\">\n          <div data-slot=\"teletext-header\">\n            <PageNumber shown={shown} tuned={tuned} entry={entry} searchMs={searchesFor} onArrive={setShown} />\n            <span data-slot=\"teletext-service\">{service}</span>\n            {count > 1 ? <span data-slot=\"teletext-subpage\">{`${String(subpage + 1)}/${String(count)}`}</span> : null}\n            {clock ? <Clock locale={locale} /> : null}\n          </div>\n          {pagePart}\n          <div data-slot=\"teletext-fastext\">\n            {fastextColors.map((color) => {\n              const link = current?.fastext?.[color]\n              return link ? (\n                <Button\n                  key={color}\n                  data-fastext={color}\n                  className=\"touch-target\"\n                  onClick={(event) => handle.api.fastext(color, event.nativeEvent)}\n                >\n                  {link.label}\n                </Button>\n              ) : (\n                <span key={color} data-fastext={color} aria-hidden=\"true\" />\n              )\n            })}\n          </div>\n        </div>\n      ),\n    },\n    \"div\",\n  )\n}\n\nexport { Teletext, teletextLabels }\nexport type { TeletextLabels, TeletextProps, TeletextState }\n",
+      "type": "registry:ui"
+    },
+    {
+      "path": "registry/ui/teletext-primitive.ts",
+      "content": "import { createChange, definePrimitive, type ChangeDetails } from \"@ui-sdk/core\"\n\nimport {\n  fastextColors,\n  firstPage,\n  lastPage,\n  subpageCount,\n  type FastextColor,\n  type TeletextPage,\n} from \"@/components/ui/teletext-page\"\nimport { settled, unavailable } from \"@/lib/action-refusal\"\nimport { isOneOf } from \"@/lib/narrow\"\n\n/** Why the page changed: three digits typed (`digit-key`), a coloured key (`fastext-press`), an agent or your code. */\ntype TeletextPageChangeReason = \"digit-key\" | \"fastext-press\" | \"imperative\"\n\ntype TeletextOptions = {\n  /** The service's pages by number, 100 to 899. */\n  pages?: Readonly<Record<number, TeletextPage>>\n  page?: number\n  defaultPage?: number\n  /** Asks to tune to another page; `details.cancel()` stays on this one. */\n  onPageChange?: (page: number, details: ChangeDetails<TeletextPageChangeReason>) => void\n}\n\ntype Call = { reason: TeletextPageChangeReason; event?: Event | undefined }\n\nconst pageNumbers = (pages: Readonly<Record<number, TeletextPage>>) =>\n  Object.keys(pages)\n    .map(Number)\n    .toSorted((a, b) => a - b)\n\nfunction listed(numbers: number[]) {\n  if (numbers.length <= 8) return numbers.join(\", \")\n  return `${numbers.slice(0, 8).join(\", \")} and ${String(numbers.length - 8)} more`\n}\n\nconst teletext = definePrimitive({\n  name: \"teletext\",\n  options: { pages: \"value\", page: \"number\", defaultPage: \"number\", onPageChange: \"callback\" },\n  controlled: [\"page\"],\n  state: (options: TeletextOptions) => ({\n    page: options.page ?? options.defaultPage ?? pageNumbers(options.pages ?? {})[0] ?? firstPage,\n    entry: \"\",\n    subpage: 0,\n  }),\n  sync: (options) => (options.page === undefined ? {} : { page: options.page }),\n  api: (context) => {\n    const change = createChange(context)\n    const pagesNow = () => context.options().pages ?? {}\n\n    const tune = (page: number, action: string, call: Call) => {\n      if (!Number.isInteger(page) || page < firstPage || page > lastPage) {\n        return unavailable(\n          action,\n          `takes a page from ${String(firstPage)} to ${String(lastPage)}, not ${String(page)}`,\n          call,\n        )\n      }\n      if (!pagesNow()[page]) {\n        return unavailable(\n          action,\n          `can't find page ${String(page)}: this service has ${listed(pageNumbers(pagesNow()))}`,\n          call,\n        )\n      }\n      context.store.set({ entry: \"\" })\n      if (context.store.get().page === page) return true\n      const tuned = settled(change(\"page\", page, call), action, call)\n      if (tuned) context.store.set({ subpage: 0 })\n      return tuned\n    }\n\n    const api = {\n      /** Tunes to a page, 100 to 899, as typing its three digits on the remote does. */\n      goToPage(page: number, event?: Event) {\n        return tune(page, \"goToPage\", { reason: \"imperative\", event })\n      },\n      /** Presses a coloured key: red, green, yellow or blue, which goes where the page's bottom row says. */\n      fastext(color: FastextColor, event?: Event) {\n        const call: Call = event ? { reason: \"fastext-press\", event } : { reason: \"imperative\" }\n        if (!isOneOf(fastextColors, color)) {\n          return unavailable(\"fastext\", `takes red, green, yellow or blue, not ${String(color)}`, call)\n        }\n        const { page } = context.store.get()\n        const link = pagesNow()[page]?.fastext?.[color]\n        if (!link) return unavailable(\"fastext\", `has no ${color} link on page ${String(page)}`, call)\n        return tune(link.page, \"fastext\", call)\n      },\n      /** Adds a digit to the page number being typed; the third one tunes. */\n      type(digit: string, event: Event) {\n        const entry = context.store.get().entry\n        const next = (entry.length >= 3 ? \"\" : entry) + digit\n        context.store.set({ entry: next })\n        if (next.length === 3) tune(Number(next), \"goToPage\", { reason: \"digit-key\", event })\n      },\n      /** Shows the next subpage, or the one before with -1, round the page's subpages. */\n      turnSubpage(step: 1 | -1) {\n        const { page, subpage } = context.store.get()\n        const count = subpageCount(pagesNow()[page])\n        context.store.set({ subpage: (subpage + step + count) % count })\n      },\n    }\n    return api\n  },\n  slots: (slot) => ({\n    root: slot({ role: \"group\" }),\n    page: slot({\n      role: \"region\",\n      attrs: (state) => ({\n        tabindex: \"0\",\n        \"aria-keyshortcuts\": \"0 1 2 3 4 5 6 7 8 9\",\n        \"data-entry\": state.entry || undefined,\n      }),\n      on: {\n        keydown: (event, { api, store }) => {\n          if (event.altKey || event.ctrlKey || event.metaKey) return\n          if (/^\\d$/.test(event.key)) {\n            event.preventDefault()\n            api.type(event.key, event)\n          } else if (event.key === \"Backspace\" && store.get().entry) {\n            event.preventDefault()\n            store.set({ entry: store.get().entry.slice(0, -1) })\n          } else if (event.key === \"ArrowRight\" || event.key === \"ArrowLeft\") {\n            event.preventDefault()\n            api.turnSubpage(event.key === \"ArrowRight\" ? 1 : -1)\n          }\n        },\n      },\n    }),\n  }),\n  agent: { actions: [\"goToPage\", \"fastext\"] },\n})\n\nexport { teletext }\nexport type { TeletextOptions, TeletextPageChangeReason }\n",
+      "type": "registry:ui"
+    },
+    {
+      "path": "registry/ui/teletext-page.ts",
+      "content": "/** The eight colours a teletext set could show. */\ntype TeletextColor = \"black\" | \"red\" | \"green\" | \"yellow\" | \"blue\" | \"magenta\" | \"cyan\" | \"white\"\n\n/** The four coloured keys on the remote. */\ntype FastextColor = \"red\" | \"green\" | \"yellow\" | \"blue\"\n\n/**\n * A run of cells in one colour: `text`, or `mosaic` block graphics, one number per cell whose six bits are its 2×3\n * sextants (bit 0 top left, 1 top right, 2 middle left, 3 middle right, 4 bottom left, 5 bottom right).\n */\ntype TeletextSpan = {\n  text?: string\n  mosaic?: readonly number[]\n  /** Text or mosaic colour. Default `white`. */\n  fg?: TeletextColor\n  /** Cell colour. Default `black`. */\n  bg?: TeletextColor\n  /** Blinks once a second, as teletext's flash did; steady under reduced motion. */\n  flash?: boolean\n  /** Draws mosaics as separated blocks, with a gap around each sextant. */\n  separated?: boolean\n}\n\n/** One of the 23 page rows. Spans run left to right from the first column; a row holds 40 cells and cuts the rest. */\ntype TeletextRow =\n  | readonly TeletextSpan[]\n  | {\n      spans: readonly TeletextSpan[]\n      /** Twice as tall, over the next row, which is then not shown. */\n      doubleHeight?: boolean\n      /** The page's heading, for screen readers. */\n      heading?: boolean\n    }\n\n/** A coloured key's link: where it goes and the word it shows on the bottom row. */\ntype FastextLink = { page: number; label: string }\n\ntype TeletextPage = {\n  /** Names the page's region for screen readers, and is its heading when no row is one. */\n  title: string\n  rows?: readonly TeletextRow[]\n  /** Pages that rotate, each its own rows: shown in turn, as subpages were. */\n  subpages?: readonly (readonly TeletextRow[])[]\n  fastext?: Partial<Record<FastextColor, FastextLink>>\n}\n\nconst pageColumns = 40\nconst pageRows = 23\nconst firstPage = 100\nconst lastPage = 899\n\nconst fastextColors: readonly FastextColor[] = [\"red\", \"green\", \"yellow\", \"blue\"]\n\ntype NormalRow = { spans: readonly TeletextSpan[]; doubleHeight: boolean; heading: boolean }\n\nconst isSpanList = (row: TeletextRow): row is readonly TeletextSpan[] => Array.isArray(row)\n\nfunction normalRow(row: TeletextRow): NormalRow {\n  if (isSpanList(row)) return { spans: row, doubleHeight: false, heading: false }\n  return { spans: row.spans, doubleHeight: row.doubleHeight ?? false, heading: row.heading ?? false }\n}\n\n/** The spans of a row cut to the 40 columns a page has. */\nfunction fittedSpans(spans: readonly TeletextSpan[]): TeletextSpan[] {\n  const fitted: TeletextSpan[] = []\n  let used = 0\n  for (const span of spans) {\n    const room = pageColumns - used\n    if (room <= 0) break\n    if (span.mosaic) {\n      const mosaic = span.mosaic.slice(0, room)\n      fitted.push({ ...span, mosaic })\n      used += mosaic.length\n    } else {\n      const text = [...(span.text ?? \"\")].slice(0, room).join(\"\")\n      fitted.push({ ...span, text })\n      used += [...text].length\n    }\n  }\n  return fitted\n}\n\nconst cellsOf = (span: TeletextSpan) => span.mosaic?.length ?? [...(span.text ?? \"\")].length\n\n/** The rows a page shows now: its own, or the subpage's. */\nfunction rowsOf(page: TeletextPage, subpage: number): readonly TeletextRow[] {\n  const subpages = page.subpages\n  if (subpages?.length) return subpages[subpage % subpages.length] ?? []\n  return page.rows ?? []\n}\n\nconst subpageCount = (page: TeletextPage | undefined) => Math.max(1, page?.subpages?.length ?? 0)\n\n/**\n * Turns block art into mosaic cells: every two characters across and three lines down make one cell, and any\n * character but a space or a dot is a lit sextant. Returns one array of cells for each page row the art covers.\n */\nfunction teletextMosaic(art: readonly string[]): number[][] {\n  const width = Math.max(0, ...art.map((line) => line.length))\n  const rows: number[][] = []\n  for (let top = 0; top < art.length; top += 3) {\n    const cells: number[] = []\n    for (let left = 0; left < width; left += 2) {\n      let bits = 0\n      for (let bit = 0; bit < 6; bit++) {\n        const char = art[top + Math.floor(bit / 2)]?.[left + (bit % 2)] ?? \" \"\n        if (char !== \" \" && char !== \".\") bits |= 1 << bit\n      }\n      cells.push(bits)\n    }\n    rows.push(cells)\n  }\n  return rows\n}\n\nexport {\n  cellsOf,\n  fastextColors,\n  firstPage,\n  fittedSpans,\n  lastPage,\n  normalRow,\n  pageColumns,\n  pageRows,\n  rowsOf,\n  subpageCount,\n  teletextMosaic,\n}\nexport type { FastextColor, FastextLink, NormalRow, TeletextColor, TeletextPage, TeletextRow, TeletextSpan }\n",
+      "type": "registry:ui"
+    },
+    {
+      "path": "registry/ui/use-teletext-clock.ts",
+      "content": "import { useSyncExternalStore } from \"react\"\n\nconst listeners = new Set<() => void>()\nlet ticker: ReturnType<typeof setInterval> | undefined\nlet second = 0\n\nfunction subscribe(notify: () => void) {\n  listeners.add(notify)\n  if (!ticker) {\n    second = Math.floor(Date.now() / 1000)\n    ticker = setInterval(() => {\n      second = Math.floor(Date.now() / 1000)\n      for (const listener of listeners) listener()\n    }, 1000)\n  }\n  return () => {\n    listeners.delete(notify)\n    if (listeners.size || !ticker) return\n    clearInterval(ticker)\n    ticker = undefined\n  }\n}\n\nconst now = () => second || Math.floor(Date.now() / 1000)\nconst onServer = () => null\n\n/** The current second, in seconds since 1970, ticking once a second; `null` on the server and before hydration. */\nfunction useTeletextClock(): number | null {\n  return useSyncExternalStore(subscribe, now, onServer)\n}\n\nexport { useTeletextClock }\n",
+      "type": "registry:ui"
+    },
+    {
+      "path": "registry/ui/use-teletext-search.ts",
+      "content": "import { useEffect, useEffectEvent, useState } from \"react\"\n\nimport { firstPage, lastPage } from \"@/components/ui/teletext-page\"\n\nconst tickMs = 45\n\n/**\n * The page counter while a set searches the broadcast: it runs through the pages going past for `searchMs`, then\n * lands on `to` and calls `onArrive`. Returns the number to show, `from` while nothing is searched.\n */\nfunction useTeletextSearch({\n  from,\n  to,\n  searchMs,\n  onArrive,\n}: {\n  from: number\n  to: number\n  searchMs: number\n  onArrive: (page: number) => void\n}) {\n  const [passing, setPassing] = useState<number | null>(null)\n  const arrive = useEffectEvent((page: number) => {\n    setPassing(null)\n    onArrive(page)\n  })\n\n  useEffect(() => {\n    if (from === to || searchMs <= 0) return\n    let shown = from\n    const ticker = setInterval(() => {\n      shown = shown >= lastPage ? firstPage : shown + 1 + Math.floor(Math.random() * 3)\n      setPassing(Math.min(shown, lastPage))\n    }, tickMs)\n    const landing = setTimeout(() => {\n      clearInterval(ticker)\n      arrive(to)\n    }, searchMs)\n    return () => {\n      clearInterval(ticker)\n      clearTimeout(landing)\n    }\n  }, [from, to, searchMs])\n\n  return { searching: from !== to, shown: passing ?? from }\n}\n\nexport { useTeletextSearch }\n",
+      "type": "registry:ui"
+    },
+    {
+      "path": "registry/ui/use-teletext-subpages.ts",
+      "content": "import { useEffect, useEffectEvent, type RefObject } from \"react\"\n\n/**\n * Turns to the next subpage every `intervalMs` while the page has more than one, and holds still while the page has\n * focus or the pointer, so it can be read, and while it's off screen or the tab is hidden.\n */\nfunction useTeletextSubpages(\n  page: RefObject<HTMLElement | null>,\n  { count, intervalMs, onTurn }: { count: number; intervalMs: number; onTurn: () => void },\n) {\n  const turn = useEffectEvent(onTurn)\n\n  useEffect(() => {\n    const element = page.current\n    if (!element || count < 2 || intervalMs <= 0) return\n    let onScreen = true\n    let timer: ReturnType<typeof setInterval> | undefined\n    const held = () => element.matches(\":focus-within, :hover\")\n    const schedule = () => {\n      clearInterval(timer)\n      timer = undefined\n      if (!onScreen || document.visibilityState === \"hidden\") return\n      timer = setInterval(() => {\n        if (!held()) turn()\n      }, intervalMs)\n    }\n    const visibility =\n      typeof IntersectionObserver === \"function\"\n        ? new IntersectionObserver(([entry]) => {\n            onScreen = entry?.isIntersecting ?? true\n            schedule()\n          })\n        : undefined\n    visibility?.observe(element)\n    // oxlint-disable-next-line p-otero/prefer-sync-external-store -- the listener reschedules a timer; no value is copied into state\n    document.addEventListener(\"visibilitychange\", schedule)\n    schedule()\n    return () => {\n      clearInterval(timer)\n      visibility?.disconnect()\n      document.removeEventListener(\"visibilitychange\", schedule)\n    }\n  }, [page, count, intervalMs])\n}\n\nexport { useTeletextSubpages }\n",
+      "type": "registry:ui"
+    }
+  ],
+  "css": {
+    "[data-slot=\"teletext\"]": {
+      "--teletext-black": "#000000",
+      "--teletext-red": "#ff2a1f",
+      "--teletext-green": "#1fff3a",
+      "--teletext-yellow": "#fff22a",
+      "--teletext-blue": "#2a3cff",
+      "--teletext-magenta": "#ff36f0",
+      "--teletext-cyan": "#22f6ff",
+      "--teletext-white": "#ffffff",
+      "position": "relative",
+      "box-sizing": "border-box",
+      "width": "100%",
+      "max-height": "100%",
+      "aspect-ratio": "4 / 3",
+      "padding": "3.5% 4.5%",
+      "container-type": "size",
+      "overflow": "hidden",
+      "color": "var(--teletext-white)",
+      "background-color": "var(--teletext-black)",
+      "font-family": "\"Geist Mono Variable\", ui-monospace, \"Cascadia Mono\", Menlo, Consolas, monospace"
+    },
+    "[data-slot=\"teletext\"][data-screen=\"crt\"]::after": {
+      "position": "absolute",
+      "inset": "0",
+      "pointer-events": "none",
+      "content": "\"\"",
+      "background": "radial-gradient(ellipse 85% 80% at 50% 50%, transparent 60%, #00000080 100%), repeating-linear-gradient(180deg, transparent 0 2px, #00000038 2px 3px)"
+    },
+    "[data-slot=\"teletext-screen\"]": {
+      "--teletext-stretch": "1.4",
+      "--teletext-cell-w": "calc(100cqw / 40 / var(--teletext-stretch))",
+      "--teletext-cell-h": "calc(100cqh / 25)",
+      "display": "grid",
+      "grid-template-rows": "var(--teletext-cell-h) calc(var(--teletext-cell-h) * 23) var(--teletext-cell-h)",
+      "width": "100%",
+      "height": "100%",
+      "font-size": "calc(var(--teletext-cell-h) * 0.95)",
+      "font-weight": "700",
+      "line-height": "var(--teletext-cell-h)",
+      "white-space": "pre"
+    },
+    "[data-slot=\"teletext-screen\"] > *": {
+      "letter-spacing": "calc(var(--teletext-cell-w) - 1ch)",
+      "text-shadow": "0 0 0.14em color-mix(in srgb, currentColor 50%, transparent)"
+    },
+    "[data-slot=\"teletext-header\"]": {
+      "width": "calc(100% / var(--teletext-stretch))",
+      "transform": "scaleX(var(--teletext-stretch))",
+      "transform-origin": "left",
+      "display": "flex",
+      "gap": "calc(var(--teletext-cell-w) * 1)",
+      "overflow": "hidden"
+    },
+    "[data-slot=\"teletext-cells\"]": {
+      "width": "calc(100% / var(--teletext-stretch))",
+      "transform": "scaleX(var(--teletext-stretch))",
+      "transform-origin": "left",
+      "display": "flex",
+      "height": "var(--teletext-cell-h)"
+    },
+    "[data-slot=\"teletext-fastext\"]": {
+      "width": "calc(100% / var(--teletext-stretch))",
+      "transform": "scaleX(var(--teletext-stretch))",
+      "transform-origin": "left",
+      "display": "grid",
+      "grid-template-columns": "repeat(4, calc(var(--teletext-cell-w) * 10))"
+    },
+    "[data-slot=\"teletext-number\"][data-searching]": {
+      "color": "var(--teletext-green)"
+    },
+    "[data-slot=\"teletext-service\"]": {
+      "flex": "1 1 auto",
+      "min-width": "0",
+      "overflow": "hidden",
+      "color": "var(--teletext-yellow)"
+    },
+    "[data-slot=\"teletext-subpage\"]": {
+      "color": "var(--teletext-cyan)"
+    },
+    "[data-slot=\"teletext-time\"]": {
+      "color": "var(--teletext-yellow)"
+    },
+    "[data-slot=\"teletext-page\"]": {
+      "display": "grid",
+      "grid-template-rows": "repeat(23, var(--teletext-cell-h))",
+      "align-content": "start",
+      "min-height": "0",
+      "outline": "none"
+    },
+    "[data-slot=\"teletext-page\"]:focus-visible": {
+      "box-shadow": "0 0 0 2px var(--teletext-white)"
+    },
+    "[data-slot=\"teletext-row\"]": {
+      "grid-row": "var(--teletext-line) / span 1",
+      "display": "block",
+      "height": "var(--teletext-cell-h)",
+      "margin": "0",
+      "font": "inherit"
+    },
+    "[data-slot=\"teletext-row\"][data-double]": {
+      "grid-row": "var(--teletext-line) / span 2",
+      "height": "calc(var(--teletext-cell-h) * 2)"
+    },
+    "[data-slot=\"teletext-row\"][data-double] [data-slot=\"teletext-cells\"]": {
+      "transform": "scale(var(--teletext-stretch), 2)",
+      "transform-origin": "top left"
+    },
+    "[data-slot=\"teletext-span\"]": {
+      "display": "inline-block",
+      "flex": "none",
+      "width": "calc(var(--teletext-cells) * var(--teletext-cell-w))",
+      "height": "var(--teletext-cell-h)",
+      "overflow": "visible"
+    },
+    "[data-slot=\"teletext-mosaic\"]": {
+      "display": "block",
+      "width": "100%",
+      "height": "100%"
+    },
+    "[data-slot=\"teletext\"] [data-fg=\"black\"]": {
+      "color": "var(--teletext-black)"
+    },
+    "[data-slot=\"teletext\"] [data-fg=\"red\"]": {
+      "color": "var(--teletext-red)"
+    },
+    "[data-slot=\"teletext\"] [data-fg=\"green\"]": {
+      "color": "var(--teletext-green)"
+    },
+    "[data-slot=\"teletext\"] [data-fg=\"yellow\"]": {
+      "color": "var(--teletext-yellow)"
+    },
+    "[data-slot=\"teletext\"] [data-fg=\"blue\"]": {
+      "color": "var(--teletext-blue)"
+    },
+    "[data-slot=\"teletext\"] [data-fg=\"magenta\"]": {
+      "color": "var(--teletext-magenta)"
+    },
+    "[data-slot=\"teletext\"] [data-fg=\"cyan\"]": {
+      "color": "var(--teletext-cyan)"
+    },
+    "[data-slot=\"teletext\"] [data-fg=\"white\"]": {
+      "color": "var(--teletext-white)"
+    },
+    "[data-slot=\"teletext\"] [data-bg=\"red\"]": {
+      "background-color": "var(--teletext-red)"
+    },
+    "[data-slot=\"teletext\"] [data-bg=\"green\"]": {
+      "background-color": "var(--teletext-green)"
+    },
+    "[data-slot=\"teletext\"] [data-bg=\"yellow\"]": {
+      "background-color": "var(--teletext-yellow)"
+    },
+    "[data-slot=\"teletext\"] [data-bg=\"blue\"]": {
+      "background-color": "var(--teletext-blue)"
+    },
+    "[data-slot=\"teletext\"] [data-bg=\"magenta\"]": {
+      "background-color": "var(--teletext-magenta)"
+    },
+    "[data-slot=\"teletext\"] [data-bg=\"cyan\"]": {
+      "background-color": "var(--teletext-cyan)"
+    },
+    "[data-slot=\"teletext\"] [data-bg=\"white\"]": {
+      "background-color": "var(--teletext-white)"
+    },
+    "[data-slot=\"teletext\"] [data-flash]": {
+      "animation": "teletext-flash 1s step-end infinite"
+    },
+    "[data-slot=\"teletext-fastext\"] > button": {
+      "min-width": "0",
+      "height": "var(--teletext-cell-h)",
+      "margin": "0",
+      "padding": "0",
+      "overflow": "hidden",
+      "border": "0",
+      "color": "inherit",
+      "font": "inherit",
+      "letter-spacing": "inherit",
+      "text-align": "start",
+      "text-shadow": "inherit",
+      "white-space": "pre",
+      "cursor": "pointer",
+      "background": "none"
+    },
+    "[data-slot=\"teletext-fastext\"] > button:hover": {
+      "text-decoration": "underline",
+      "text-underline-offset": "0.15em"
+    },
+    "[data-slot=\"teletext-fastext\"] > button:focus-visible": {
+      "outline": "2px solid var(--teletext-white)",
+      "outline-offset": "-2px"
+    },
+    "[data-slot=\"teletext-fastext\"] > [data-fastext=\"red\"]": {
+      "color": "var(--teletext-red)"
+    },
+    "[data-slot=\"teletext-fastext\"] > [data-fastext=\"green\"]": {
+      "color": "var(--teletext-green)"
+    },
+    "[data-slot=\"teletext-fastext\"] > [data-fastext=\"yellow\"]": {
+      "color": "var(--teletext-yellow)"
+    },
+    "[data-slot=\"teletext-fastext\"] > [data-fastext=\"blue\"]": {
+      "color": "var(--teletext-cyan)"
+    },
+    "@keyframes teletext-flash": {
+      "75%": {
+        "opacity": "0"
+      }
+    },
+    "@media (prefers-reduced-motion: reduce)": {
+      "[data-slot=\"teletext\"] [data-flash]": {
+        "animation": "none"
+      }
+    }
+  },
+  "docs": "`<Teletext label pages page|defaultPage onPageChange service clock searchMs subpageMs screen locale labels>`. `pages` maps 100 to 899 to `{ title, rows | subpages, fastext }`; a row is a list of spans `{ text | mosaic, fg, bg, flash, separated }` or `{ spans, doubleHeight, heading }`, cut at 40 cells. `teletextMosaic(art)` turns block art (two characters across and three lines down a cell) into mosaic rows. The page region takes focus: digits tune (Backspace takes one back), Left and Right turn subpages, and subpages hold still while it has focus or the pointer. Fastext keys are UI SDK Buttons named by their words, shown only where the page links. The header's clock follows the page's locale and renders only after hydration. `screen=\"flat\"` drops the scanlines, for a set inside a TV that draws its own. The palette is the item's `css`; agents call `goToPage(n)` and `fastext(color)`, and a missing page fails with the pages the service has.",
+  "type": "registry:ui"
+}

@@ -139,5 +139,7 @@ for (const instrument of ["sun-arc", "mixer", "safe-dial", "vinyl-scrubber"]) {
   item(instrument).css = oneSelectorPerRule(tree(read(`${instrument}.css`)))
 }
 item("live-sky").css = oneSelectorPerRule(tree(read("live-sky.css")))
+for (const name of ["led-matrix", "neon-sign", "chalkboard", "teletext"])
+  item(name).css = oneSelectorPerRule(tree(read(`${name}.css`)))
 
 writeFileSync(registryPath, `${JSON.stringify(registry, null, 2)}\n`)

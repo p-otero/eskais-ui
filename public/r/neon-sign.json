@@ -1,0 +1,299 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "neon-sign",
+  "title": "Neon Sign",
+  "description": "A neon tube sign on a brick or dark wall, for a status read at a glance: on air, open, recording. Each letter is a tube of tinted glass that strikes with a flicker when the sign turns on, then glows steady, casting its colour on the wall, with a rare buzz on one letter; reduced motion fades it on and never buzzes. A status named by its label, with turnOn and turnOff for agents. Tilt Neon from npm (OFL-1.1).",
+  "dependencies": [
+    "@ui-sdk/core@0.1.0-beta.12",
+    "@ui-sdk/react@0.1.0-beta.12",
+    "@fontsource-variable/tilt-neon@5.3.0"
+  ],
+  "registryDependencies": [
+    "@eskais/utils",
+    "@eskais/theme",
+    "@eskais/action-refusal"
+  ],
+  "files": [
+    {
+      "path": "registry/ui/neon-sign.tsx",
+      "content": "\"use client\"\n\nimport { usePart, usePrimitive } from \"@ui-sdk/react/primitive\"\nimport { type AnimationEvent, useRef, useState, useSyncExternalStore } from \"react\"\n\nimport { neonSign, type NeonSignOptions } from \"@/components/ui/neon-sign-primitive\"\nimport { useNeonBuzz } from \"@/components/ui/use-neon-buzz\"\nimport { cn, cssVars } from \"@/lib/utils\"\n\ntype NeonColor = \"pink\" | \"red\" | \"orange\" | \"green\" | \"blue\" | \"cyan\" | \"violet\" | \"white\"\n\ntype NeonWall = \"brick\" | \"dark\"\n\ntype NeonSignLabels = {\n  /** Follows the text in the status while the tubes are off: \"On air, off\". */\n  off: string\n}\n\nconst neonSignLabels: NeonSignLabels = { off: \"off\" }\n\ntype NeonSignState = { on: boolean }\n\ntype NeonSignProps = NeonSignOptions & {\n  /** The status's accessible name: \"Studio\", \"Shop\". */\n  label: string\n  /** What the tubes spell: \"On air\", \"Open\", \"Recording\". */\n  text: string\n  /** A smaller second line under it, in its own tube. */\n  sub?: string\n  /** The tube's colour. Default `pink`. */\n  color?: NeonColor\n  /** The second line's colour. Defaults to `color`. */\n  subColor?: NeonColor\n  /** What the sign hangs on. Default `brick`. */\n  wall?: NeonWall\n  /** Now and then dims a letter for a moment while lit, as a tired transformer does. Never under reduced motion. Default true. */\n  buzz?: boolean\n  labels?: Partial<NeonSignLabels>\n  /** Classes for the wall; a function gets the sign's state. */\n  className?: string | ((state: NeonSignState) => string | undefined)\n}\n\nconst strikeDelaysMs = [0, 90, 30, 160, 60, 0, 120, 40]\nconst lateStrikeMs = 620\n\nfunction lettersOf(text: string): string[] {\n  if (typeof Intl.Segmenter === \"function\")\n    return [...new Intl.Segmenter(undefined, { granularity: \"grapheme\" }).segment(text)].map(({ segment }) => segment)\n  return [...text]\n}\n\nconst dataAttributes = (values: Record<string, string | undefined>): Record<`data-${string}`, string | undefined> =>\n  Object.fromEntries(Object.entries(values).map(([key, value]) => [`data-${key}`, value]))\n\ntype Tube = { text: string; color: NeonColor; line: \"main\" | \"sub\" }\n\nfunction Tube({ text, color, line }: Tube) {\n  const letters = lettersOf(text)\n  const late = (letters.length * 5 + 3) % Math.max(1, letters.length)\n  const lettersAs = (lit: boolean) =>\n    letters.map((letter, index) => (\n      <span\n        // oxlint-disable-next-line react/no-array-index-key -- a letter repeats, and only its place in the word tells it apart\n        key={index}\n        data-letter={lit ? \"lit\" : \"glass\"}\n        style={\n          lit\n            ? cssVars({\n                \"--neon-strike\": `${String(index === late ? lateStrikeMs : strikeDelaysMs[index % strikeDelaysMs.length]!)}ms`,\n              })\n            : undefined\n        }\n      >\n        {letter}\n      </span>\n    ))\n  return (\n    <span data-slot=\"neon-sign-tube\" data-line={line} data-color={color} aria-hidden=\"true\">\n      <span data-slot=\"neon-sign-glass\">{lettersAs(false)}</span>\n      <span data-slot=\"neon-sign-light\">{lettersAs(true)}</span>\n    </span>\n  )\n}\n\n/**\n * A neon tube sign on a brick or dark wall, for a status read at a glance: \"On air\", \"Open\", \"Recording\". It strikes\n * with a flicker when turned on, then glows steady with a rare buzz; reduced motion fades it on and never buzzes. It\n * is a status: its label names it, and its text, with \"off\" while dark, is what screen readers hear.\n */\nfunction NeonSign({\n  label,\n  text,\n  sub,\n  color = \"pink\",\n  subColor,\n  wall = \"brick\",\n  buzz = true,\n  on,\n  defaultOn,\n  onOnChange,\n  labels: ownLabels,\n  className,\n}: NeonSignProps) {\n  const labels = { ...neonSignLabels, ...ownLabels }\n  const handle = usePrimitive(neonSign, { on, defaultOn, onOnChange })\n  useSyncExternalStore(handle.instance.subscribe, handle.instance.get, handle.instance.get)\n  const lit = handle.state.on\n  const [wasLit, setWasLit] = useState(lit)\n  const [striking, setStriking] = useState(false)\n  if (lit !== wasLit) {\n    setWasLit(lit)\n    setStriking(lit)\n  }\n  const sign = useRef<HTMLDivElement>(null)\n  useNeonBuzz(sign, lit && buzz && !striking)\n\n  const onAnimationEnd = (event: AnimationEvent<HTMLDivElement>) => {\n    if (event.target === event.currentTarget) setStriking(false)\n  }\n  const spoken = [text, sub].filter(Boolean).join(\", \")\n\n  return usePart(\n    handle,\n    \"root\",\n    {},\n    {\n      ref: sign,\n      \"aria-label\": label,\n      ...dataAttributes({ wall, color, striking: striking ? \"\" : undefined }),\n      onAnimationEnd,\n      className: cn(\n        \"relative flex w-full flex-col items-center justify-center\",\n        typeof className === \"function\" ? className({ on: lit }) : className,\n      ),\n      children: (\n        <>\n          <span data-slot=\"neon-sign-board\">\n            <Tube text={text} color={color} line=\"main\" />\n            {sub ? <Tube text={sub} color={subColor ?? color} line=\"sub\" /> : null}\n          </span>\n          <span className=\"sr-only\">{lit ? spoken : `${spoken}, ${labels.off}`}</span>\n        </>\n      ),\n    },\n    \"div\",\n  )\n}\n\nexport { NeonSign, neonSignLabels }\nexport type { NeonColor, NeonSignLabels, NeonSignProps, NeonSignState, NeonWall }\n",
+      "type": "registry:ui"
+    },
+    {
+      "path": "registry/ui/neon-sign-primitive.ts",
+      "content": "import { createChange, definePrimitive, type ChangeDetails } from \"@ui-sdk/core\"\n\nimport { settled } from \"@/lib/action-refusal\"\n\ntype NeonSignOptions = {\n  on?: boolean\n  defaultOn?: boolean\n  /** Asks to switch the sign on or off: an agent's `turnOn` and `turnOff`, or your code. `details.cancel()` refuses it. */\n  onOnChange?: (on: boolean, details: ChangeDetails<\"imperative\">) => void\n}\n\nconst neonSign = definePrimitive({\n  name: \"neon-sign\",\n  options: { on: \"boolean\", defaultOn: \"boolean\", onOnChange: \"callback\" },\n  controlled: [\"on\"],\n  state: (options: NeonSignOptions) => ({ on: options.on ?? options.defaultOn ?? true }),\n  sync: (options) => (options.on === undefined ? {} : { on: options.on }),\n  api: (context) => {\n    const change = createChange(context)\n    const power = (on: boolean, action: string, event?: Event) => {\n      if (context.store.get().on === on) return true\n      return settled(change(\"on\", on, { reason: \"imperative\", event }), action, { event })\n    }\n    return {\n      /** Lights the tubes, with the flicker of a neon striking. */\n      turnOn: (event?: Event) => power(true, \"turnOn\", event),\n      /** Switches the tubes off. */\n      turnOff: (event?: Event) => power(false, \"turnOff\", event),\n    }\n  },\n  slots: (slot) => ({\n    root: slot({\n      role: \"status\",\n      attrs: (state) => ({ \"data-state\": state.on ? \"on\" : \"off\" }),\n    }),\n  }),\n  agent: { actions: [\"turnOn\", \"turnOff\"] },\n})\n\nexport { neonSign }\nexport type { NeonSignOptions }\n",
+      "type": "registry:ui"
+    },
+    {
+      "path": "registry/ui/use-neon-buzz.ts",
+      "content": "import { useEffect, type RefObject } from \"react\"\n\nconst quietestMs = 3500\nconst loudestMs = 9000\n\nconst prefersReducedMotion = () =>\n  typeof matchMedia === \"function\" && matchMedia(\"(prefers-reduced-motion: reduce)\").matches\n\n/**\n * Now and then dims one lit letter for a few frames, as a tired transformer does: a timer picks the letter and CSS\n * plays the flicker, so nothing runs between buzzes, off screen, in a hidden tab or under reduced motion.\n */\nfunction useNeonBuzz(sign: RefObject<HTMLElement | null>, active: boolean) {\n  useEffect(() => {\n    const root = sign.current\n    if (!root || !active || prefersReducedMotion()) return\n    let timer: ReturnType<typeof setTimeout> | undefined\n    let onScreen = true\n    const letters = () => root.querySelectorAll<HTMLElement>('[data-letter=\"lit\"]')\n\n    const buzz = () => {\n      const lit = [...letters()].filter((letter) => letter.textContent?.trim())\n      const letter = lit[Math.floor(Math.random() * lit.length)]\n      if (letter) {\n        letter.dataset.buzz = \"\"\n        letter.addEventListener(\"animationend\", () => delete letter.dataset.buzz, { once: true })\n      }\n      schedule()\n    }\n    const schedule = () => {\n      clearTimeout(timer)\n      if (!onScreen || document.visibilityState === \"hidden\") return\n      timer = setTimeout(buzz, quietestMs + Math.random() * (loudestMs - quietestMs))\n    }\n\n    const visibility =\n      typeof IntersectionObserver === \"function\"\n        ? new IntersectionObserver(([entry]) => {\n            onScreen = entry?.isIntersecting ?? true\n            schedule()\n          })\n        : undefined\n    visibility?.observe(root)\n    // oxlint-disable-next-line p-otero/prefer-sync-external-store -- the listener reschedules a timer; no value is copied into state\n    document.addEventListener(\"visibilitychange\", schedule)\n    schedule()\n    return () => {\n      clearTimeout(timer)\n      visibility?.disconnect()\n      document.removeEventListener(\"visibilitychange\", schedule)\n    }\n  }, [sign, active])\n}\n\nexport { useNeonBuzz }\n",
+      "type": "registry:ui"
+    }
+  ],
+  "css": {
+    "@import \"@fontsource-variable/tilt-neon\"": {},
+    "[data-slot=\"neon-sign\"]": {
+      "--neon-wall": "#2f2925",
+      "container-type": "inline-size",
+      "position": "relative",
+      "isolation": "isolate",
+      "overflow": "hidden",
+      "padding": "clamp(1.75rem, 8cqw, 4.5rem) 1rem",
+      "border-radius": "0.75rem",
+      "font-family": "\"Tilt Neon Variable\", \"Tilt Neon\", ui-rounded, \"Arial Rounded MT Bold\", system-ui, sans-serif",
+      "background-color": "var(--neon-wall)",
+      "background-image": "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='100'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='3' seed='4' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 -1.1 .62'/%3E%3C/filter%3E%3Cfilter id='s'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.035 .12' numOctaves='2' seed='9' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 .9 0 0 0 0 .8 0 0 0 -.9 .32'/%3E%3C/filter%3E%3Crect width='300' height='100' fill='%232f2925'/%3E%3Crect x='1.5' y='1.5' width='72' height='22' rx='1.5' fill='%237e3a2a'/%3E%3Crect x='76.5' y='1.5' width='72' height='22' rx='1.5' fill='%23843c29'/%3E%3Crect x='151.5' y='1.5' width='72' height='22' rx='1.5' fill='%2368301f'/%3E%3Crect x='226.5' y='1.5' width='72' height='22' rx='1.5' fill='%237b3626'/%3E%3Crect x='-36' y='26.5' width='72' height='22' rx='1.5' fill='%236c2d1f'/%3E%3Crect x='39' y='26.5' width='72' height='22' rx='1.5' fill='%235a2619'/%3E%3Crect x='114' y='26.5' width='72' height='22' rx='1.5' fill='%236c2d1f'/%3E%3Crect x='189' y='26.5' width='72' height='22' rx='1.5' fill='%237e3a2a'/%3E%3Crect x='264' y='26.5' width='72' height='22' rx='1.5' fill='%236c2d1f'/%3E%3Crect x='1.5' y='51.5' width='72' height='22' rx='1.5' fill='%23743524'/%3E%3Crect x='76.5' y='51.5' width='72' height='22' rx='1.5' fill='%237b3626'/%3E%3Crect x='151.5' y='51.5' width='72' height='22' rx='1.5' fill='%235a2619'/%3E%3Crect x='226.5' y='51.5' width='72' height='22' rx='1.5' fill='%23713221'/%3E%3Crect x='-36' y='76.5' width='72' height='22' rx='1.5' fill='%237b3626'/%3E%3Crect x='39' y='76.5' width='72' height='22' rx='1.5' fill='%236c2d1f'/%3E%3Crect x='114' y='76.5' width='72' height='22' rx='1.5' fill='%2368301f'/%3E%3Crect x='189' y='76.5' width='72' height='22' rx='1.5' fill='%2368301f'/%3E%3Crect x='264' y='76.5' width='72' height='22' rx='1.5' fill='%237b3626'/%3E%3Crect width='300' height='100' filter='url(%23s)'/%3E%3Crect width='300' height='100' filter='url(%23g)'/%3E%3C/svg%3E\")",
+      "background-size": "300px 100px",
+      "background-position": "center",
+      "box-shadow": "inset 0 0 0 1px #0006"
+    },
+    "[data-slot=\"neon-sign\"][data-wall=\"dark\"]": {
+      "--neon-wall": "#121316",
+      "background-image": "radial-gradient(ellipse 120% 90% at 50% 0%, #ffffff0a, transparent 60%), url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.75' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 .09 0'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)'/%3E%3C/svg%3E\")",
+      "background-size": "100% 100%, 180px 180px"
+    },
+    "[data-slot=\"neon-sign\"]::after": {
+      "position": "absolute",
+      "inset": "0",
+      "z-index": "-2",
+      "pointer-events": "none",
+      "content": "\"\"",
+      "background": "radial-gradient(ellipse 75% 85% at 50% 50%, transparent 20%, #000000b3 100%), linear-gradient(#0000004d, #0000004d)"
+    },
+    "[data-slot=\"neon-sign\"]::before": {
+      "position": "absolute",
+      "inset": "-10%",
+      "z-index": "-1",
+      "pointer-events": "none",
+      "content": "\"\"",
+      "background": "radial-gradient( ellipse 50% 42% at 50% 50%, color-mix(in srgb, var(--neon) 42%, transparent), color-mix(in srgb, var(--neon) 12%, transparent) 55%, transparent 75% )",
+      "mix-blend-mode": "screen",
+      "opacity": "1",
+      "transition": "opacity 180ms ease-out"
+    },
+    "[data-slot=\"neon-sign\"][data-state=\"off\"]::before": {
+      "opacity": "0"
+    },
+    "[data-slot=\"neon-sign\"][data-striking]::before": {
+      "animation": "neon-sign-strike-wash 1.8s linear both"
+    },
+    "[data-slot=\"neon-sign\"][data-color=\"pink\"]": {
+      "--neon": "#ff3ea5",
+      "--neon-core": "#ffe9f5"
+    },
+    "[data-slot=\"neon-sign-tube\"][data-color=\"pink\"]": {
+      "--neon": "#ff3ea5",
+      "--neon-core": "#ffe9f5"
+    },
+    "[data-slot=\"neon-sign\"][data-color=\"red\"]": {
+      "--neon": "#ff2b2b",
+      "--neon-core": "#ffe2de"
+    },
+    "[data-slot=\"neon-sign-tube\"][data-color=\"red\"]": {
+      "--neon": "#ff2b2b",
+      "--neon-core": "#ffe2de"
+    },
+    "[data-slot=\"neon-sign\"][data-color=\"orange\"]": {
+      "--neon": "#ff7b1c",
+      "--neon-core": "#fff0df"
+    },
+    "[data-slot=\"neon-sign-tube\"][data-color=\"orange\"]": {
+      "--neon": "#ff7b1c",
+      "--neon-core": "#fff0df"
+    },
+    "[data-slot=\"neon-sign\"][data-color=\"green\"]": {
+      "--neon": "#2bff66",
+      "--neon-core": "#e6ffec"
+    },
+    "[data-slot=\"neon-sign-tube\"][data-color=\"green\"]": {
+      "--neon": "#2bff66",
+      "--neon-core": "#e6ffec"
+    },
+    "[data-slot=\"neon-sign\"][data-color=\"blue\"]": {
+      "--neon": "#2f86ff",
+      "--neon-core": "#e4efff"
+    },
+    "[data-slot=\"neon-sign-tube\"][data-color=\"blue\"]": {
+      "--neon": "#2f86ff",
+      "--neon-core": "#e4efff"
+    },
+    "[data-slot=\"neon-sign\"][data-color=\"cyan\"]": {
+      "--neon": "#2fe0ff",
+      "--neon-core": "#e4fbff"
+    },
+    "[data-slot=\"neon-sign-tube\"][data-color=\"cyan\"]": {
+      "--neon": "#2fe0ff",
+      "--neon-core": "#e4fbff"
+    },
+    "[data-slot=\"neon-sign\"][data-color=\"violet\"]": {
+      "--neon": "#a855ff",
+      "--neon-core": "#f2e6ff"
+    },
+    "[data-slot=\"neon-sign-tube\"][data-color=\"violet\"]": {
+      "--neon": "#a855ff",
+      "--neon-core": "#f2e6ff"
+    },
+    "[data-slot=\"neon-sign\"][data-color=\"white\"]": {
+      "--neon": "#ffd9a8",
+      "--neon-core": "#fffaf2"
+    },
+    "[data-slot=\"neon-sign-tube\"][data-color=\"white\"]": {
+      "--neon": "#ffd9a8",
+      "--neon-core": "#fffaf2"
+    },
+    "[data-slot=\"neon-sign-board\"]": {
+      "position": "relative",
+      "display": "flex",
+      "flex-direction": "column",
+      "align-items": "center",
+      "gap": "0.35em",
+      "padding": "0.6em 1.1em 0.75em",
+      "border-radius": "0.5em",
+      "font-size": "clamp(1rem, 4cqw, 2.25rem)",
+      "background-image": "radial-gradient(circle at 0.45em 0.45em, #d8d8d8 0 0.09em, #555 0.12em, transparent 0.15em), radial-gradient(circle at calc(100% - 0.45em) 0.45em, #d8d8d8 0 0.09em, #555 0.12em, transparent 0.15em), radial-gradient(circle at 0.45em calc(100% - 0.45em), #d8d8d8 0 0.09em, #555 0.12em, transparent 0.15em), radial-gradient( circle at calc(100% - 0.45em) calc(100% - 0.45em), #d8d8d8 0 0.09em, #555 0.12em, transparent 0.15em ), linear-gradient(155deg, #ffffff17, #ffffff05 38%, #ffffff02 62%, #ffffff0d)",
+      "box-shadow": "inset 0 0 0 1px #ffffff1f, inset 0 1px 0 #ffffff2e, 0 0.6em 1.4em -0.6em #000000d9"
+    },
+    "[data-slot=\"neon-sign-tube\"]": {
+      "display": "grid",
+      "line-height": "1",
+      "white-space": "pre"
+    },
+    "[data-slot=\"neon-sign-tube\"][data-line=\"main\"]": {
+      "font-size": "3.2em",
+      "font-weight": "400",
+      "letter-spacing": "0.02em"
+    },
+    "[data-slot=\"neon-sign-tube\"][data-line=\"sub\"]": {
+      "font-size": "0.85em",
+      "font-weight": "500",
+      "letter-spacing": "0.34em",
+      "text-transform": "uppercase"
+    },
+    "[data-slot=\"neon-sign-glass\"]": {
+      "grid-area": "1 / 1",
+      "color": "color-mix(in oklab, var(--neon) 28%, #bdb8b0)",
+      "opacity": "0.6",
+      "text-shadow": "0.04em 0.09em 0.05em #000000c4"
+    },
+    "[data-slot=\"neon-sign-light\"]": {
+      "grid-area": "1 / 1",
+      "color": "var(--neon-core)",
+      "text-shadow": "0 0 0.015em #ffffff, 0 0 0.04em var(--neon-core), 0 0 0.07em var(--neon), 0 0 0.14em var(--neon), 0 0 0.26em var(--neon), 0 0 0.5em var(--neon), 0 0 1em color-mix(in srgb, var(--neon) 70%, transparent)",
+      "transition": "opacity 180ms ease-out"
+    },
+    "[data-slot=\"neon-sign\"][data-state=\"on\"] [data-slot=\"neon-sign-glass\"]": {
+      "opacity": "0.35"
+    },
+    "[data-slot=\"neon-sign\"][data-state=\"off\"] [data-slot=\"neon-sign-light\"]": {
+      "opacity": "0"
+    },
+    "[data-slot=\"neon-sign\"][data-striking] [data-letter=\"lit\"]": {
+      "animation": "neon-sign-strike 1.15s linear var(--neon-strike, 0ms) both"
+    },
+    "[data-letter=\"lit\"][data-buzz]": {
+      "animation": "neon-sign-buzz 300ms linear both"
+    },
+    "@keyframes neon-sign-strike": {
+      "0%": {
+        "opacity": "0"
+      },
+      "6%": {
+        "opacity": "0.8"
+      },
+      "10%": {
+        "opacity": "0.08"
+      },
+      "20%": {
+        "opacity": "0.12"
+      },
+      "23%": {
+        "opacity": "1"
+      },
+      "27%": {
+        "opacity": "0.25"
+      },
+      "42%": {
+        "opacity": "0.3"
+      },
+      "45%": {
+        "opacity": "0.95"
+      },
+      "50%": {
+        "opacity": "0.65"
+      },
+      "62%": {
+        "opacity": "1"
+      },
+      "100%": {
+        "opacity": "1"
+      }
+    },
+    "@keyframes neon-sign-strike-wash": {
+      "0%": {
+        "opacity": "0"
+      },
+      "8%": {
+        "opacity": "0"
+      },
+      "14%": {
+        "opacity": "0.5"
+      },
+      "22%": {
+        "opacity": "0.1"
+      },
+      "30%": {
+        "opacity": "0.8"
+      },
+      "36%": {
+        "opacity": "0.3"
+      },
+      "48%": {
+        "opacity": "0.9"
+      },
+      "60%": {
+        "opacity": "1"
+      },
+      "100%": {
+        "opacity": "1"
+      }
+    },
+    "@keyframes neon-sign-buzz": {
+      "0%": {
+        "opacity": "1"
+      },
+      "100%": {
+        "opacity": "1"
+      },
+      "20%": {
+        "opacity": "0.35"
+      },
+      "35%": {
+        "opacity": "0.9"
+      },
+      "55%": {
+        "opacity": "0.55"
+      },
+      "75%": {
+        "opacity": "1"
+      }
+    },
+    "@media (prefers-reduced-motion: reduce)": {
+      "[data-slot=\"neon-sign\"][data-striking] [data-letter=\"lit\"]": {
+        "animation": "neon-sign-fade 400ms ease-out both"
+      },
+      "[data-slot=\"neon-sign\"][data-striking]::before": {
+        "animation": "neon-sign-fade 400ms ease-out both"
+      },
+      "[data-letter=\"lit\"][data-buzz]": {
+        "animation": "none"
+      }
+    },
+    "@keyframes neon-sign-fade": {
+      "from": {
+        "opacity": "0"
+      }
+    }
+  },
+  "docs": "`<NeonSign label text sub color subColor wall on|defaultOn onOnChange buzz labels>`. `color` and `subColor` are tube colours: `pink` (the default), `red`, `orange`, `green`, `blue`, `cyan`, `violet` or `white`; `wall` is `brick` (the default) or `dark`. The root is a `status` named by `label` whose text is the sign's words, followed by `labels.off` while dark, so a change is announced politely. Turning it on plays the strike (`data-striking` until it ends); `buzz` dims one random letter for 300 ms every few seconds while lit, on a timer that stops off screen, in a hidden tab and under reduced motion. Everything moves in CSS opacity; nothing runs between flickers. The wall, the acrylic backboard and the tubes are the item's `css`, which also imports `@fontsource-variable/tilt-neon`.",
+  "type": "registry:ui"
+}
