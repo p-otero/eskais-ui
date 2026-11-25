@@ -46,11 +46,9 @@ type MobileNavProps = Omit<ComponentProps<"nav">, "children" | "defaultValue"> &
 
 const maxSlots = 5
 
-// Each slot is a container, so a label in a narrow slot steps down to the meta size before it wraps to a second line.
 const slotClassName =
   "@container/mobile-nav-item group/mobile-nav-item relative flex h-(--mobile-nav-height) min-w-0 flex-1 cursor-pointer flex-col items-center justify-center gap-px rounded-control px-px py-0 text-caption data-has-icon:flex-col data-has-icon:items-center font-medium text-muted-foreground outline-none transition-colors hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset data-current:text-foreground data-open:text-foreground"
 
-// Never truncated: two short lines at most, the height of one caption line each, so they fit the bar beside the icon.
 const labelClassName =
   "max-w-full text-center leading-none text-balance wrap-break-word @max-[4.5rem]/mobile-nav-item:text-meta @max-[4.5rem]/mobile-nav-item:leading-none"
 
@@ -68,7 +66,7 @@ function target(item: MobileNavItem, renderLink: MobileNavProps["renderLink"]) {
   return render ? { render } : { href: item.href }
 }
 
-// After the label in the DOM, so the link reads "Inbox, 3", and placed over the icon's top end.
+// Spec: after the label in the DOM, so the link's name reads "Inbox, 3".
 function Badge({ children }: { children: ReactNode }) {
   return (
     <span className="absolute start-1/2 top-inline ms-inline inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive px-inset-chip text-meta leading-none text-destructive-foreground">
@@ -78,7 +76,7 @@ function Badge({ children }: { children: ReactNode }) {
   )
 }
 
-// Memoized, so a route change re-renders only the slots whose item changed when the items keep their identity.
+// Perf: a route change re-renders only the slots whose item changed.
 const Slot = memo(function Slot({
   item,
   renderLink,

@@ -139,7 +139,7 @@ type ModelViewerProps = Omit<PartProps<"div">, "children" | "onLoad" | "onError"
 
 const defaultSpin = 20
 
-// Outside the component: React Compiler 1.0 can't compile a ternary inside a logical expression.
+// Workaround: React Compiler 1.0 can't compile a ternary inside a logical expression.
 function describedBy(ids: readonly (string | false)[]) {
   return ids.filter(Boolean).join(" ") || undefined
 }

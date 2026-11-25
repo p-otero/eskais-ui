@@ -12,7 +12,7 @@ type ModelViewerOrbit = { yaw: number; pitch: number; zoom: number }
 
 const modelViewerViews: readonly ModelViewerView[] = ["front", "three-quarter", "side", "back"]
 
-// A glTF model faces +Z, so yaw 0 looks at its front; the three-quarter view turns a little and looks a little down.
+// Spec: a glTF model faces +Z.
 const viewAngles: Record<ModelViewerView, { yaw: number; pitch: number }> = {
   front: { yaw: 0, pitch: 0 },
   "three-quarter": { yaw: 35, pitch: 8 },
@@ -23,8 +23,7 @@ const viewAngles: Record<ModelViewerView, { yaw: number; pitch: number }> = {
 const pitchRange = [-60, 75] as const
 const zoomRange = [0.5, 3] as const
 const fieldOfView = 30
-// Room left around a framed model, as a share of the view.
-const framingMargin = 1.1
+const framingMarginRatio = 1.1
 
 const clampNumber = (value: number, min: number, max: number) =>
   Math.min(max, Math.max(min, Number.isFinite(value) ? value : min))
@@ -149,14 +148,14 @@ const halfTan = (fov: number) => Math.tan(((fov / 2) * Math.PI) / 180)
  */
 function fitBoxDistance(size: Vec3, fov: number, aspect: number) {
   const [width, height, depth] = size
-  const vertical = (height * framingMargin) / 2 / halfTan(fov)
-  const horizontal = (width * framingMargin) / 2 / (halfTan(fov) * aspect)
+  const vertical = (height * framingMarginRatio) / 2 / halfTan(fov)
+  const horizontal = (width * framingMarginRatio) / 2 / (halfTan(fov) * aspect)
   return Math.max(vertical, horizontal) + depth / 2
 }
 
 /** The distance that fits a sphere of `radius`, with the margin, in the narrower side of the view. */
 function fitSphereDistance(radius: number, fov: number, aspect: number) {
-  return (radius * framingMargin) / (halfTan(fov) * Math.min(1, aspect))
+  return (radius * framingMarginRatio) / (halfTan(fov) * Math.min(1, aspect))
 }
 
 /** The world size of the view at `distance` from a camera with a vertical `fov` and `aspect`. */
@@ -187,7 +186,7 @@ export {
   fitBoxDistance,
   fitSize,
   fitSphereDistance,
-  framingMargin,
+  framingMarginRatio,
   modelViewerViews,
   nearestAngle,
   orbitPosition,

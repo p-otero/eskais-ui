@@ -55,10 +55,9 @@ type RigInput = {
   autoRotate: number
 }
 
-// Per second: the camera eases over about a second and a half, weights over about a third of one.
-const cameraRate = 4
-const weightRate = 10
-const clipFade = 0.3
+const cameraRatePerSecond = 4
+const weightRatePerSecond = 10
+const clipFadeSeconds = 0.3
 
 const angleEpsilon = 0.02
 const relativeEpsilon = 1e-4
@@ -72,7 +71,6 @@ type Channels = {
 
 type CameraState = { yaw: number; pitch: number; zoom: number; distance: number; turn: number; ready: boolean }
 
-/** What a replacing model takes over from the one it replaces. */
 type RigSnapshot = {
   cameraState: () => CameraState
   centerNow: () => Vector3
@@ -112,12 +110,9 @@ function createModelRig(model: LoadedModel, owned = true, cleanup?: () => void) 
   let gradient: DataTexture | undefined
   const toons = new Map<Material, MeshToonMaterial>()
   let material: ModelViewerMaterial = "standard"
-  // Two fades multiply: a reveal (ModelScan's photo turning into the model) and a swap (a new model over the old).
   const fades = { reveal: 1, swap: 1 }
   let opacity = 1
 
-  // One channel per target name: where it is, where it goes, and whether the consumer drives it (an undriven one
-  // is left to clips). The bindings to each mesh's influences are found once, so a frame only copies numbers.
   let names: readonly string[] = morphNames
   let index = new Map<string, number>()
   let current = new Float32Array(0)
@@ -159,14 +154,14 @@ function createModelRig(model: LoadedModel, owned = true, cleanup?: () => void) 
   bind(morphNames)
 
   const camera: CameraState = { yaw: 0, pitch: 0, zoom: 1, distance: 0, turn: -1, ready: false }
-  // Reused every frame, so the render loop allocates nothing.
+  // Perf: reused every frame, so the render loop allocates nothing.
   const result = { moving: false, justSettled: false, camera: { yaw: 0, pitch: 0, zoom: 1 } }
   const framed = { center: new Vector3(), distance: 0 }
   const stepping = { dt: 0, jump: false, moved: false }
   const step = (from: number, to: number, epsilon: number) => {
     if (stepping.jump || Math.abs(from - to) < epsilon) return to
     stepping.moved = true
-    return damp(from, to, cameraRate, stepping.dt)
+    return damp(from, to, cameraRatePerSecond, stepping.dt)
   }
   const center = new Vector3()
   const goalCenter = new Vector3()
@@ -192,7 +187,7 @@ function createModelRig(model: LoadedModel, owned = true, cleanup?: () => void) 
 
   const applyOpacity = () => {
     eachMaterial((item) => {
-      // Only a change between opaque and transparent needs the program checked again, not every step of a fade.
+      // Perf: only a change between opaque and transparent needs the program checked again.
       if (item.transparent !== opacity < 1) item.needsUpdate = true
       item.transparent = opacity < 1
       item.opacity = opacity
@@ -368,7 +363,7 @@ function createModelRig(model: LoadedModel, owned = true, cleanup?: () => void) 
       if (clip !== activeClip) {
         const previous = activeClip ? actions.get(activeClip) : undefined
         const next = clip ? actions.get(clip) : undefined
-        const fade = state.reducedMotion || !previous ? 0 : clipFade
+        const fade = state.reducedMotion || !previous ? 0 : clipFadeSeconds
         if (previous) previous.fadeOut(fade)
         if (next) next.reset().fadeIn(fade).play()
         activeClip = clip
@@ -389,12 +384,11 @@ function createModelRig(model: LoadedModel, owned = true, cleanup?: () => void) 
       wasPlaying = playing
 
       if (!weightsSettled) {
-        weightsSettled = dampInto(current, target, active, weightRate, dt)
+        weightsSettled = dampInto(current, target, active, weightRatePerSecond, dt)
         moving = true
       }
       applyWeights()
 
-      // The camera reports where it came to rest, even while a clip keeps the frames coming.
       result.justSettled = !cameraMoving && !settled
       if (!cameraMoving) settled = true
       result.moving = moving

@@ -115,7 +115,6 @@ type DetailHeaderProps = {
   titleId: string
   headingLevel: 2 | 3 | 4
   labels: MasterDetailLabels
-  /** Back on a stacked layout, Close and Collapse beside the list. */
   stacked: boolean
   onClose?: () => void
   onCollapse?: () => void
@@ -189,10 +188,8 @@ type IdleDetailProps = {
   title?: ReactNode
   titleId: string
   labels: MasterDetailLabels
-  /** Stacked under the list, so it collapses to a bar; beside it, it collapses to the rail. */
   stacked: boolean
   collapsed: boolean
-  /** Shows the collapse button. */
   onToggle?: () => void
   children: ReactNode
 }
@@ -228,7 +225,7 @@ function MasterDetailIdle({ title, titleId, labels, stacked, collapsed, onToggle
         </div>
       )}
       {!collapsed && (
-        // A viewport that scrolls with nothing focusable inside becomes a tab stop, so a capped monitor still scrolls by keyboard.
+        // Spec: a scrolling viewport with nothing focusable inside becomes a tab stop, so it still scrolls by keyboard.
         <ScrollArea
           aria-labelledby={title === undefined ? undefined : titleId}
           aria-label={title === undefined ? labels.detail : undefined}
