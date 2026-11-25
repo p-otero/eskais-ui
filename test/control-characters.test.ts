@@ -6,7 +6,7 @@ import { expect, test } from "vitest"
 
 const root = join(import.meta.dirname, "..")
 const binary = /\.(png|jpe?g|gif|webp|avif|ico|woff2?|ttf|otf|pdf|zip|gz|glb)$/i
-// oxlint-disable-next-line no-control-regex
+// oxlint-disable-next-line no-control-regex -- finds the control characters, other than tab, LF and CR, that make git treat a file as binary
 const control = /[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/
 
 function sourceFiles() {
