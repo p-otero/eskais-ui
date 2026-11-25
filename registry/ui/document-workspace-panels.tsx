@@ -17,7 +17,6 @@ type WorkspaceDrawerProps = {
   children: ReactNode
 }
 
-/** The explorer or the aside in the narrow layout: a 20rem drawer from its side, named by its landmark. */
 function WorkspaceDrawer({ open, onOpenChange, side, title, finalFocus, onClosed, children }: WorkspaceDrawerProps) {
   return (
     <Drawer open={open} onOpenChange={onOpenChange} onOpenChangeComplete={(next) => next || onClosed()} side={side}>
@@ -32,7 +31,6 @@ function WorkspaceDrawer({ open, onOpenChange, side, title, finalFocus, onClosed
 
 type PanelsProps = { state: DocumentWorkspaceState; explorer?: ReactNode; aside?: ReactNode }
 
-/** A column's content, scrolling inside the panel that names it. */
 function PanelScroll({ children }: { children: ReactNode }) {
   return (
     <ScrollArea className="size-full">
@@ -43,7 +41,6 @@ function PanelScroll({ children }: { children: ReactNode }) {
   )
 }
 
-/** The wide layout: the explorer, the center and the aside as resizable columns that collapse to nothing. */
 function WorkspaceColumns({ state, explorer, aside, children }: PanelsProps & { children: ReactNode }) {
   const { ids, labels, stored, controller } = state
   return (
@@ -91,13 +88,11 @@ function WorkspaceColumns({ state, explorer, aside, children }: PanelsProps & { 
   )
 }
 
-/** The narrow layout: the explorer and the aside as drawers from their sides. */
 function WorkspaceDrawers({ state, explorer, aside }: PanelsProps) {
   const { ids, labels, context } = state
   const onClosed = () => context.refocusDocument()
 
-  // A file chosen in the drawer is navigation: the drawer closes and focus goes to the document.
-  const closeOnLink = (event: MouseEvent<HTMLElement>) => {
+  const closeExplorerWhenALinkIsFollowed = (event: MouseEvent<HTMLElement>) => {
     if (event.target instanceof Element && event.target.closest("a[href]")) state.explorer.setOpen(false)
   }
 
@@ -116,8 +111,7 @@ function WorkspaceDrawers({ state, explorer, aside }: PanelsProps) {
             <ScrollAreaViewport
               id={ids.explorer}
               aria-label={labels.explorer}
-              // Hears the clicks of the links inside, which Enter fires too.
-              onClick={closeOnLink}
+              onClick={closeExplorerWhenALinkIsFollowed}
               className="h-auto min-h-0 flex-1"
               render={(part) => <nav {...part} data-slot="document-workspace-explorer" />}
             >

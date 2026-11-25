@@ -31,7 +31,6 @@ const listVariants = cva("min-w-0", {
   variants: {
     layout: {
       stacked: "flex flex-col gap-group",
-      // A container, so each row puts its term beside its details only while the list is wide enough.
       inline: "@container/description-list flex flex-col divide-y",
       grid: "grid grid-cols-(--description-grid) gap-x-section gap-y-group",
     },
@@ -69,9 +68,7 @@ type DescriptionListProps = PartProps<"dl"> & {
 
 type ListStyle = DescriptionListProps["style"]
 
-// As many columns as fit at --description-column-min (12rem), never more than `columns`: each track is at least the
-// width that `columns` would give it.
-function gridStyle(columns: number, style: ListStyle): ListStyle {
+function gridFittingUpToColumns(columns: number, style: ListStyle): ListStyle {
   const share = `calc((100% - ${String(columns - 1)} * var(--gap-section)) / ${String(columns)})`
   const variables = cssVars({
     "--description-grid": `repeat(auto-fill, minmax(min(100%, max(var(--description-column-min, 12rem), ${share})), 1fr))`,
@@ -101,7 +98,7 @@ function DescriptionList({
           "data-slot": "description-list",
           "data-layout": layout,
           className: cn(listVariants({ layout }), className),
-          style: layout === "grid" ? gridStyle(columns, style) : style,
+          style: layout === "grid" ? gridFittingUpToColumns(columns, style) : style,
           ...props,
         },
         render,
@@ -110,7 +107,7 @@ function DescriptionList({
   )
 }
 
-/** One term and its details. A `div` is the one wrapper HTML allows inside a `dl`. */
+/** A `div`: the one wrapper HTML allows inside a `dl`. */
 function DescriptionItem({ className, render, ...props }: PartProps<"div">) {
   const { layout } = use(ListContext)
   const termId = useId()
@@ -217,7 +214,6 @@ function CopyableValue({ text, onCopy, labels, children }: CopyableValueProps) {
             variant="ghost"
             size="icon"
             aria-label={copied ? labels.copied : labels.copy}
-            // The group's own copy action serves agents; the button would repeat it under a name every row shares.
             data-agent-hidden=""
             className="size-control-sm shrink-0 text-muted-foreground"
             onClick={(event) => handle.api.copy(event.nativeEvent)}

@@ -32,7 +32,6 @@ type ErrorProps<E> =
 
 type EmptyProps = { empty: ReactNode } | { empty?: undefined; labels: { emptyTitle: ReactNode } }
 
-/** The root's own attributes, like `data-testid`, `id` or `aria-label`, go on its `div`. */
 type DataStateRootProps = Omit<ComponentProps<"div">, "children" | "className">
 
 type DataStateProps<T, E> = DataStateRootProps & {
