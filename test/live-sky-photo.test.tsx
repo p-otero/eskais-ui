@@ -193,3 +193,24 @@ test("over a photo rain falls past the view, slanted only by the wind across it;
   expect(Math.abs(overhead!.velocity.z)).toBeLessThanOrEqual(onScreen * 2.2 + 1e-9)
   expect(curtain!.depth).toBeGreaterThan(overhead!.depth)
 })
+
+const rowOf = (data: Uint8ClampedArray, y: number) => Array.from(data.slice(y * 4, y * 4 + 3))
+
+test("rain's wet sheen stays on dark ground near the bottom, never on a façade just below the horizon", () => {
+  const bronze: [number, number, number, number] = [150, 110, 60, 255]
+  const asphalt: [number, number, number, number] = [60, 62, 64, 255]
+  const photo = imageOf(1, 10, (_x, y) => (y < 7 ? bronze : asphalt))
+  const sky = imageOf(1, 10, () => [0, 0, 0, 0])
+  const rain = lightingAt(12, { cloudCover: 100, weatherCode: 63, precipitation: 3, rain: 3 })
+  const relit = (sheen: readonly [number, number, number]) =>
+    lightPhotoInto(
+      imageOf(1, 10, () => [0, 0, 0, 0]),
+      { photo, sky, windows: null },
+      { ...rain, sheen },
+      0.5,
+    ).data
+  const plain = relit([0, 0, 0])
+  const shiny = relit([1, 1, 1])
+  expect(rowOf(shiny, 6)).toEqual(rowOf(plain, 6))
+  expect(rowOf(shiny, 9)[0]).toBeGreaterThan(rowOf(plain, 9)[0]! + 10)
+})

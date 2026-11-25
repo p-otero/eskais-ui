@@ -89,6 +89,7 @@ function lightPhotoInto(
   for (let y = 0; y < height; y++) {
     const down = y / height
     const below = smooth(horizon - 0.02, Math.min(1, horizon + 0.35), down)
+    const groundBand = smooth(horizon + 0.18, Math.min(1, horizon + 0.5), down)
     const far = 1 - smooth(horizon - 0.1, 1, down) * 0.75
     const haze = Math.min(0.92, lighting.haze * far)
     for (let x = 0; x < width; x++) {
@@ -100,6 +101,8 @@ function lightPhotoInto(
       const green = photo[at + 1]! / 255
       const blue = photo[at + 2]! / 255
       const grey = 0.2126 * red + 0.7152 * green + 0.0722 * blue
+      const saturation = Math.max(red, green, blue) - Math.min(red, green, blue)
+      const ground = groundBand * (1 - smooth(0.08, 0.22, saturation))
       const glow = layers.windows ? (layers.windows.data[at + 3]! / 255) * lighting.windowsOn : 0
       const overcastTint = [0.9, 0.96, 1.06] as const
       const values = [red, green, blue]
@@ -109,14 +112,16 @@ function lightPhotoInto(
         value *= 1 + (overcastTint[index]! - 1) * lighting.overcast
         value *= 1 + (lighting.warmTint[index]! - 1) * lighting.warmth
         value *= 1 - 0.32 * lighting.wetness * (0.35 + 0.65 * below)
-        value += lighting.sheen[index]! * lighting.wetness * below * (1 - grey) * 0.3
+        value += lighting.sheen[index]! * lighting.wetness * ground * (1 - grey) * 0.3
         value *= lighting.exposure
         const blueHour = grey * lighting.exposure * lighting.nightTint[index]! * 0.5 + value * 0.1
         value += (blueHour - value) * lighting.night
         value += lighting.streetLight[index]! * lighting.night * below * (0.03 + 0.12 * grey)
         const lights = smooth(0.84, 0.97, grey) * below
         value +=
-          lighting.streetLight[index]! * lighting.night * (lights * 0.55 + below * lighting.wetness * (1 - grey) * 0.08)
+          lighting.streetLight[index]! *
+          lighting.night *
+          (lights * 0.55 + ground * lighting.wetness * (1 - grey) * 0.08)
         value += lighting.windowLight[index]! * glow
         out[at + index] = channel(value + (lighting.hazeColour[index]! - value) * haze)
       }
