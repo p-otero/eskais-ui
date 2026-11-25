@@ -1,10 +1,6 @@
-// Checks PrismPicker on the built showcase (?demo=prism-picker): drags at 1× and 4× CPU with a move-to-frame ceiling
-// at 1×, key and agent glides, no paint while idle, one paint under reduced motion, and a disabled picker.
-// `--software` renders with SwiftShader, as a runner without a GPU does. Build the showcase first.
 /* oxlint-disable no-await-in-loop -- each pointer move waits for the frame the one before painted */
 import { withShowcase } from "./showcase-browser.mjs"
 
-// A frame at 60 Hz; the median run here is near 3 ms.
 const moveToFrameP95Ms = 16
 const software = process.argv.includes("--software")
 
@@ -97,7 +93,6 @@ await withShowcase(
     await client.send("Emulation.setCPUThrottlingRate", { rate: 1 })
     expect((await value(page)) === "700", `A drag past the red end should hold at 700, not ${await value(page)}`)
 
-    // Grabbing the prism turns it by the angle the pointer travels, from where the knob was.
     const at = await dial(page)
     const before = Number(await value(page))
     await page.mouse.move(...at(0, 20))

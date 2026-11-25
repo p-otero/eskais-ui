@@ -1,7 +1,3 @@
-// iOS Safari zooms into a focused field whose text is under 16px. On an emulated phone every text-entry control in the
-// showcase, in its dialogs (both densities) and in the site's /debug/viewport/ dialogs (once `bun run build:site` built
-// it) renders at 16px or more; on a desktop they keep 14px. Usage: node tooling/touch-check.mjs [--screenshots=<dir>]
-// (after `bun run build:showcase`)
 import { existsSync, mkdirSync } from "node:fs"
 import { join, resolve } from "node:path"
 
@@ -44,8 +40,6 @@ async function entryFontSizes(page) {
   })
 }
 
-// The text-entry controls of the topmost dialog, at the size they render: a transform (a dialog's scale, a sheet pushed
-// back) shrinks the text iOS reads too.
 function dialogEntrySizes() {
   const dialog = [...document.querySelectorAll("[role=dialog], [role=alertdialog]")].findLast((d) =>
     d.checkVisibility(),
@@ -69,7 +63,6 @@ function dialogEntrySizes() {
     })
 }
 
-// Opens each dialog from its trigger with a tap, waits for its transition to end, and measures its fields.
 async function checkDialogFields(page, where, triggers) {
   for (const density of ["default", "compact"]) {
     await page.evaluate((value) => {
@@ -82,7 +75,6 @@ async function checkDialogFields(page, where, triggers) {
       await trigger.tap()
       const dialog = page.locator("[role=dialog]:visible, [role=alertdialog]:visible").last()
       await dialog.waitFor()
-      // The site's search loads its input lazily, after the dialog opens.
       await dialog
         .locator("input, textarea")
         .first()
@@ -132,7 +124,6 @@ function summary(controls) {
   return [...new Set(controls.map((control) => `${control.control} ${control.size}px`))].join(", ")
 }
 
-// The OTP slots were already 16px, and the markdown editor reads at the body size, which compact tightens.
 function desktopSize(control, body) {
   if (control.control.includes("otp-input")) return 16
   if (control.control.includes("cm-content")) return body
@@ -176,7 +167,7 @@ await withShowcase(async (page) => {
     await touch.evaluate(() => matchMedia("(pointer: coarse)").matches && navigator.maxTouchPoints > 0),
   )
   if (shots) {
-    // A screenshot taller than the viewport resizes it and drops the touch emulation, so keep to the viewport.
+    // Workaround: a screenshot taller than the viewport resizes it and drops the touch emulation, so keep to the viewport.
     await touch.getByRole("region", { name: "Form", exact: true }).getByRole("textbox").first().scrollIntoViewIfNeeded()
     await touch.evaluate(() => scrollBy(0, -120))
     await touch.screenshot({ path: join(shots, "touch-form-phone.png"), animations: "disabled" })

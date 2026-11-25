@@ -1,6 +1,3 @@
-// The layout blocks (?demo=master-detail and master-detail-check, ?demo=list-row-actions, ?demo=dashboard-grid, ?demo=settings-page and settings-page-check) at 1440, 768 and 390px, light
-// and dark: axe, no horizontal overflow, no overlapping panes, stacking on narrow screens, focus moves and sticky
-// navigation. Run by tooling/shell-check.mjs.
 import { createRequire } from "node:module"
 
 const axePath = createRequire(import.meta.url).resolve("axe-core/axe.min.js")
@@ -23,7 +20,6 @@ async function open(page, demo, width, scheme, query = "", ready = `[data-slot="
   await settle(page)
 }
 
-// Finish colour transitions so axe reads the settled theme.
 async function settle(page) {
   await page.waitForTimeout(250)
   await page.evaluate(() => {
@@ -42,7 +38,6 @@ async function axe(page) {
   return result.violations.map((violation) => `${violation.id} (${violation.nodes.length})`)
 }
 
-// The visible boxes of `selector`, and whether the page scrolls sideways.
 function layout(page, selector) {
   return page.evaluate((query) => {
     const boxes = [...document.querySelectorAll(query)]
@@ -90,7 +85,6 @@ async function masterDetail(page, check, shot, width, scheme) {
   await page.keyboard.press("Enter")
   await page.getByRole("region", { name: "Garage door" }).waitFor()
   if (!narrow) {
-    // The demo follows focus, so beside the list the first Enter keeps focus on the row and a second one moves it.
     check(`${tag}: followFocus keeps focus on the row`, (await focusedText(page)) === "Garage door")
     await page.keyboard.press("Enter")
   }
@@ -110,7 +104,6 @@ async function masterDetail(page, check, shot, width, scheme) {
   check(`${tag} open: axe`, violations.length === 0, violations.join(", "))
   if (scheme === "light") await shot(page, `master-detail-${width}-keyboard.png`)
 
-  // By mouse: beside the list the demo follows focus, so a second click on the open row moves focus to the heading.
   await page.getByRole("button", { name: narrow ? "Back" : "Close detail" }).click()
   await page.getByRole("region", { name: "Garage door" }).waitFor({ state: "detached" })
   const hall = page.getByRole("button", { name: "Hall camera" })
@@ -155,8 +148,6 @@ const focusedAction = (page) =>
     return `${element?.closest("[data-item-id]")?.getAttribute("data-item-id")} ${element?.getAttribute("data-row-action") ?? element?.getAttribute("data-slot")}`
   })
 
-// ?demo=list-row-actions: worktrees in a MasterDetail whose rows hold Open URL, Copy URL and Start/Stop. The list is a
-// grid: the arrows reach a row's actions, and an action never opens its row or moves the detail.
 async function listRowActions(page, check, shot, width, scheme) {
   const tag = `list-row-actions ${width}px ${scheme}`
   const narrow = width === 390
@@ -193,7 +184,6 @@ async function listRowActions(page, check, shot, width, scheme) {
   )
 
   if (narrow) return
-  // By pointer: open one row, then stop another; the detail stays on the open row.
   await grid.getByRole("button", { name: "row-actions", exact: true }).click()
   await page.getByRole("region", { name: "row-actions" }).waitFor()
   const main = page.locator('[data-item-id="main"]')
@@ -250,7 +240,6 @@ function cardBoxes(page) {
   )
 }
 
-// The titles of cards whose content spills out of their box or scrolls inside it.
 function clippedCards(page) {
   return page.locator('[data-slot="dashboard-card"]').evaluateAll((all) =>
     all
@@ -301,7 +290,6 @@ async function dashboardGrid(page, check, shot, width, scheme) {
   check(`${tag} loading: axe`, busy.length === 0, busy.join(", "))
   if (scheme === "light") await shot(page, `dashboard-grid-${width}-loading.png`, true)
 
-  // Rows shorter than their content grow instead of clipping it.
   await page.getByRole("switch", { name: "Show loading" }).click()
   await page.locator('[data-slot="dashboard-card"][data-status="pending"]').first().waitFor({ state: "detached" })
   await page
@@ -374,7 +362,6 @@ async function settingsPage(page, check, shot, width, scheme) {
   check(`${tag}: scrolling marks the section being read`, marked?.includes("Security"), marked)
 
   if (width !== 1440 || scheme !== "light") return
-  // The demo keeps "Forget device" pending after the confirmation, like work that runs on.
   const forget = page.getByRole("button", { name: "Forget device" })
   const before = await box(forget)
   await forget.click()
@@ -398,7 +385,6 @@ async function settingsPage(page, check, shot, width, scheme) {
   await shot(page, "settings-page-pending.png")
 }
 
-// ?demo=settings-page-check: hashRouter links (#/settings?section=id) and a section that mounts 600 ms in.
 async function settingsPageFocus(page, check) {
   const tag = "settings-page-check"
   const origin = new URL(page.url()).origin
@@ -459,7 +445,6 @@ function visiblePanes(root) {
   )
 }
 
-// ?demo=master-detail-check: `idleDetail="visible"` in a container under 42rem on a wide window, and `height="auto"`.
 async function masterDetailModes(page, check, shot, scheme) {
   const tag = `master-detail modes ${scheme}`
   await page.setViewportSize({ width: 1440, height: 900 })

@@ -1,6 +1,3 @@
-// Drives the showcase's Markdown editor with a real keyboard: line commands leave the caret after their marker, the
-// slash menu stays open on a query that matches nothing, and a long note scrolls in the editor's ScrollArea.
-// Usage: node tooling/markdown-check.mjs (after `bun run build:showcase`)
 import { withShowcase } from "./showcase-browser.mjs"
 
 const failures = []
@@ -22,7 +19,6 @@ async function emptyLineAtEnd(page) {
   return box
 }
 
-// The preview beside the editor renders the same Markdown once onChange has sent it (300 ms).
 async function previewHas(page, selector, text) {
   const found = page
     .getByLabel("Preview")
@@ -37,7 +33,6 @@ async function previewHas(page, selector, text) {
     )
 }
 
-// Items that don't fit the toolbar move into its More menu.
 async function pressFormat(page, name) {
   const toolbar = page.getByRole("toolbar", { name: "Formatting" }).first()
   const button = toolbar.getByRole("button", { name, exact: true })
@@ -60,7 +55,6 @@ const longNote = Array.from({ length: 3000 }, (_, index) =>
     : `Line ${String(index)} with **bold** text and a [link](https://example.com).`,
 ).join("\n")
 
-// Pastes `text` over the whole note, as CodeMirror's paste handler reads it.
 async function replaceNote(page, text) {
   await page.reload()
   const box = page.getByRole("textbox", { name: editorName }).first()

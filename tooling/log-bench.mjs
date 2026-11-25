@@ -1,7 +1,3 @@
-// Times LogViewer in Chrome: a 10,000-line burst to paint, frames and key to paint while lines stream in, and that
-// it follows the end, lets go on a scroll and follows again on End. After `bun run build:showcase`:
-// `node tooling/log-bench.mjs [--cpu=1,4] [--rate=2000] [--ci]`; --ci fails at 1× on a burst of 100 ms or more
-// (about 45 ms measured) or a key-to-paint p95 of 25 ms or more while streaming (about 14 ms).
 import { withShowcase } from "./showcase-browser.mjs"
 
 const args = process.argv.slice(2)
@@ -17,7 +13,6 @@ function percentile(values, p) {
 const round = (value) => Math.round(value * 10) / 10
 const log = '[data-slot="log-viewer-log"]'
 
-// The time from the event to the task after the next frame, which runs after paint.
 async function installProbe(page) {
   await page.evaluate(() => {
     globalThis.keyTimes = []
@@ -36,7 +31,6 @@ async function installProbe(page) {
   })
 }
 
-// Appends `count` lines and resolves with the time to the paint that shows them, and the longest task in between.
 function burst(page, count) {
   return page.evaluate(
     (lines) =>
@@ -49,7 +43,7 @@ function burst(page, count) {
         const start = performance.now()
         globalThis.logBench.burst(lines)
         const appended = performance.now() - start
-        // Queued after the store's own frame callback, so it runs once the viewer has rendered the burst; the
+        // Perf: queued after the store's own frame callback, so it runs once the viewer has rendered the burst; the
         // message after it lands once that frame has painted.
         requestAnimationFrame(() => {
           const channel = new MessageChannel()
@@ -65,7 +59,6 @@ function burst(page, count) {
   )
 }
 
-// Whether the newest line is rendered and whole inside the log's box.
 function newestInView(page) {
   return page.evaluate((selector) => {
     const scroller = document.querySelector(selector)
@@ -78,7 +71,6 @@ function newestInView(page) {
   }, log)
 }
 
-// Frames over two seconds of streaming: their intervals, and how many showed no row at the log's bottom edge.
 function streamFrames(page) {
   return page.evaluate(
     (selector) =>
@@ -122,7 +114,6 @@ async function run(rate) {
     await page.evaluate((perSecond) => globalThis.logBench.stream(perSecond), linesPerSecond)
     await page.waitForTimeout(300)
     const frames = await streamFrames(page)
-    // Lines a timer appended after the last frame aren't on screen yet: stop, let a frame pass, then look.
     await page.evaluate(() => globalThis.logBench.stop())
     await page.waitForTimeout(100)
     const followsStream = await newestInView(page)

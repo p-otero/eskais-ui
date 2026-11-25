@@ -167,7 +167,6 @@ await withShowcase(async (page) => {
   check("chips: a pick filters at once", await page.getByRole("button", { name: "Status: Done" }).isVisible())
   check("chips: the filter is in the URL", (await page.evaluate(() => location.hash)).includes("status=done"))
 
-  // Status comes before Points in the schema; a chip added after Points stays after it once set.
   const chipNames = () =>
     page
       .locator("[data-slot=filter-chip] [aria-haspopup=dialog]")

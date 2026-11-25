@@ -1,7 +1,3 @@
-// Checks LogViewer's terminal colours in Chrome: every one of the 16 named colours, foreground and inverse, a sweep
-// of the 256-colour palette and truecolor extremes, on plain and error lines, holds 4.5:1 against what it sits on, in
-// light and dark and in each palette. After `bun run build:showcase`:
-// `node tooling/log-viewer-check.mjs [--screenshots=<dir>]`, which also saves the log at 1100 and 390 px wide.
 import { mkdir } from "node:fs/promises"
 import { resolve } from "node:path"
 
@@ -48,7 +44,6 @@ async function measure(page) {
     const luminance = ([r, g, b]) => {
       return 0.2126 * channel(r) + 0.7152 * channel(g) + 0.0722 * channel(b)
     }
-    // What a span sits on: its own fill, else the nearest filled ancestor's, composited over the ones below it.
     const backdrop = (element) => {
       const layers = []
       for (let node = element; node; node = node.parentElement) {
