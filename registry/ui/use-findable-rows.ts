@@ -21,7 +21,7 @@ type Latest = Omit<FindableRowsOptions, "findable">
 
 const noKeep: readonly number[] = []
 
-// The layers hold a stand-in for every row, so they wait until the first paint is done and the page is idle.
+// Perf: the layers hold a stand-in for every row, so they wait until the first paint is done and the page is idle.
 function whenIdle(run: () => void) {
   const idle = globalThis.requestIdleCallback as typeof requestIdleCallback | undefined
   const cancelIdle = globalThis.cancelIdleCallback as typeof cancelIdleCallback | undefined
@@ -33,7 +33,6 @@ function whenIdle(run: () => void) {
   return () => clearTimeout(timer)
 }
 
-/** A virtualizer that reads the newest options, which `update` swaps in; outside React, so it can hold them. */
 function createRows(initial: Latest) {
   let latest = initial
   let keep = noKeep
@@ -57,8 +56,7 @@ function createRows(initial: Latest) {
       latest = next
       virtual.refresh()
     },
-    // Read on the virtualizer's next update, like the scroll a key press makes: refreshing here would render the
-    // list on every focus move.
+    // Perf: refreshing here would render the list on every focus move.
     pin(index: number | undefined) {
       if (keep[0] !== index) keep = index === undefined ? noKeep : [index]
     },
@@ -76,7 +74,6 @@ function useFindableRows({ count, estimate, getKey, text, findable }: FindableRo
   const { virtual } = rows
   const [scroller, setScroller] = useState<HTMLElement | null>(null)
 
-  // The virtualizer reads the newest options when it computes; `update` tells it only when they changed.
   useLayoutEffect(() => {
     rows.update({ count, estimate, getKey, text })
   })

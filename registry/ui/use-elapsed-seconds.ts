@@ -2,7 +2,6 @@
 
 import { useMemo, useState, useSyncExternalStore } from "react"
 
-// The seconds since `startedAt`, held still while not running, so a finished recording keeps its length.
 function createClock() {
   let seconds = 0
   let from: number | undefined
@@ -18,7 +17,6 @@ function createClock() {
   }
 }
 
-// Wakes once per whole second since `startedAt`, so a timer renders at most once a second and never drifts.
 function subscribeSeconds(startedAt: number | undefined, running: boolean) {
   return (notify: () => void) => {
     if (startedAt === undefined || !running) return () => {}

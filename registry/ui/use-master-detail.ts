@@ -132,7 +132,7 @@ function useDetailFocus({ selectedId, stacked, list, detail, getRowElement }: De
 
 const flagListeners = new Map<string, Set<() => void>>()
 
-// Storage can throw (blocked site data, a sandboxed frame); the pane then just doesn't remember.
+// Spec: storage can throw (blocked site data, a sandboxed frame).
 function readFlag(key: string): boolean | undefined {
   let value: string | null = null
   try {
@@ -146,9 +146,7 @@ function readFlag(key: string): boolean | undefined {
 function writeFlag(key: string, value: boolean) {
   try {
     localStorage.setItem(key, String(value))
-  } catch {
-    // Not remembered, still applied for this page.
-  }
+  } catch {}
   for (const listener of flagListeners.get(key) ?? []) listener()
 }
 

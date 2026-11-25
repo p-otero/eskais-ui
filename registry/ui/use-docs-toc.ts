@@ -45,7 +45,6 @@ function useActiveId(ids: string, rootMargin: string) {
           else visible.delete(entry.target.id)
         }
         const first = order.find((id) => visible.has(id))
-        // Between two headings the one above stays active, so a long section keeps its entry highlighted.
         const above = elements.findLast((element) => element.getBoundingClientRect().top < 0)
         setActive(first ?? above?.id ?? order[0])
       },

@@ -60,7 +60,6 @@ function useDocumentWorkspaceState(
     () => stored.aside ?? props.defaultAsideOpen ?? true,
     props.onAsideOpenChange,
   )
-  // Only the wide layout's choice is remembered: the drawers always start closed.
   const setExplorerOpen = (open: boolean) => {
     if (!narrow) writePanels(storageKey, { explorer: open })
     setExplorerState(open)
@@ -105,7 +104,6 @@ function useDocumentWorkspaceState(
     labels,
   }
 
-  // A collapse by the handle (Enter, a double-click, a drag past half the minimum) closes the panel too.
   const remember = (layout: number[]) => {
     const panels = { explorerSize: explorer === undefined ? null : ids.explorer, center: ids.center }
     writePanels(

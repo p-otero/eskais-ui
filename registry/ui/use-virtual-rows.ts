@@ -81,14 +81,9 @@ type Row = { index: number; key: string; size?: number; stop?: () => void }
 const boxHeight = (entry: ResizeObserverEntry) =>
   entry.borderBoxSize?.[0]?.blockSize ?? entry.target.getBoundingClientRect().height
 
-/**
- * One list's virtualizer, with the props it reads: `update` swaps in new ones and reads the list again, and `pin`
- * keeps a row rendered wherever the list is scrolled, like the one with focus.
- */
 function createRows(initial: RowsProps, overscan: number) {
   let props = initial
   let pinned: number | undefined
-  // Rows of one size: the first one measured sets the size of every row not measured yet.
   let learned: number | undefined
   const estimateAt = (index: number) =>
     typeof props.estimate === "number" ? (learned ?? props.estimate) : props.estimate(index)
@@ -104,7 +99,7 @@ function createRows(initial: RowsProps, overscan: number) {
     keep: () => (pinned === undefined || pinned >= props.count ? [] : [pinned]),
     ...(findable ? { findable: (index: number) => props.findable?.(index) ?? "" } : {}),
   })
-  // The sizes the virtualizer was given, by key. Every size it records lays out all the rows again, once per row
+  // Perf: the sizes the virtualizer was given, by key. Every size it records lays out all the rows again, once per row
   // (50,000 keys read for one row of a 50,000-commit history), so a row whose size it already has never reaches it.
   const given = new Map<string, number>()
   const knownSize = (row: Row) => given.get(row.key) ?? estimateAt(row.index)
@@ -112,9 +107,8 @@ function createRows(initial: RowsProps, overscan: number) {
     row.stop = virtualizer.measure(row.index, el)
     given.set(row.key, size)
   }
-  // One observer for every row, whose callbacks come after the browser's own layout and before paint, so a size is
-  // read for free and a row never shows at a wrong one. A row the virtualizer measures leaves it: the virtualizer
-  // follows its resizes from then on. Find in page reveals a row through the virtualizer, so findable rows all go.
+  // Perf: one observer for every row, whose callbacks come after the browser's layout and before paint, so a size is
+  // read for free and a row never shows at a wrong one.
   const joining = new Map<Element, Row>()
   const sizes =
     typeof ResizeObserver === "function"
@@ -138,14 +132,13 @@ function createRows(initial: RowsProps, overscan: number) {
           }
         })
       : undefined
-  // Where the list was at its last scroll event. Focusing a row scrolls the browser's way, centring a row that was
-  // out of view, half a page at once; aligning from here instead brings in one row per arrow key.
+  // Spec: focusing a row scrolls the browser's way, centring a row that was out of view; aligning from the last
+  // scroll position instead brings in one row per arrow key.
   let seen: number | undefined
   let view: { top: () => number; height: () => number } | undefined
 
-  // The rows React renders. A change that only moves rows already rendered out of view, like one row of overscan
-  // on an arrow key, reaches React after the next paint instead of inside the key press: the frame shows the same
-  // rows either way, and the press doesn't wait for a row nobody sees yet. A row coming into view renders at once.
+  // Perf: a change that only moves rows already rendered out of view reaches React after the next paint instead of
+  // inside the key press; a row coming into view renders at once.
   let shown: readonly VirtualItem[] = []
   let shownSize = 0
   let pending = 0
@@ -185,7 +178,6 @@ function createRows(initial: RowsProps, overscan: number) {
       listeners.add(listener)
       return () => void listeners.delete(listener)
     },
-    /** The rows to render: the virtualizer's, or the ones React has while a change waits for the next paint. */
     items() {
       if (pending === 0) {
         shown = virtualizer.items()
@@ -194,7 +186,6 @@ function createRows(initial: RowsProps, overscan: number) {
       return shown
     },
     size: () => shownSize,
-    /** Reads the list again and renders the change now, whatever it is. */
     refreshNow() {
       urgent = true
       virtualizer.refresh()
@@ -219,15 +210,10 @@ function createRows(initial: RowsProps, overscan: number) {
         row.stop?.()
       }
     },
-    /** Follows the scroller's scroll events. */
     follow(scroller: { top: () => number; height: () => number }) {
       view = scroller
       seen = scroller.top()
     },
-    /**
-     * Scrolls the least that shows a rendered row whole, from where the list was. UI SDK's scroll reads the list
-     * again at once, so a row it brings into view renders with the key press that moved focus.
-     */
     scrollToIndex(index: number) {
       const item = view && virtualizer.items().find((row) => row.index === index)
       if (!view || !item || seen === undefined) {
@@ -359,7 +345,6 @@ function useVirtualRows({
     },
     [enabled, rows],
   )
-  // A row's ref: measures it, then as it resizes, until React runs the returned cleanup.
   const measureElement = useCallback(
     (node: HTMLElement | null) => {
       if (!node) return undefined

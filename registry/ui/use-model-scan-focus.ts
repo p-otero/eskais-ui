@@ -37,7 +37,6 @@ function useModelScanFocus(stage: string) {
     const onFocusIn = (event: FocusEvent) => {
       focused.current = event.target instanceof HTMLElement ? event.target : null
     }
-    // Focus that leaves for another element is the person's choice; a removed control leaves with nowhere to go.
     const onFocusOut = (event: FocusEvent) => {
       if (event.relatedTarget instanceof Node && !element.contains(event.relatedTarget)) focused.current = null
     }
@@ -49,7 +48,6 @@ function useModelScanFocus(stage: string) {
     }
   }, [])
 
-  // After every render, but it acts only once the stage has changed.
   useLayoutEffect(() => {
     if (shownStage.current === stage) return
     shownStage.current = stage

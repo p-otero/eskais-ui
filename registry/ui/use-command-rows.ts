@@ -67,7 +67,6 @@ function rowsOf<Item extends CommandDataItem>(items: CommandData) {
 
 const commandList = (anchor: HTMLElement) => anchor.closest<HTMLElement>('[data-slot="command-list"]')
 
-// Before a row is measured: a command is `h-control-sm`, a group's label a line of `text-xs` with `py-inline`.
 const estimates = { item: 32, group: 28, separator: 13 }
 
 /**
@@ -115,7 +114,7 @@ function useCommandRows<Item extends CommandDataItem>(
   }, [rowOf, pin, scrollToIndex, highlight, follow])
   useLayoutEffect(() => highlight?.subscribe(follow), [highlight, follow])
 
-  // UI SDK 0.1.0-beta.5 reads `items` in an effect of `Command`, after the effects of the commands inside it: a data
+  // Workaround: UI SDK 0.1.0-beta.5 reads `items` in an effect of `Command`, after the effects of the commands inside it: a data
   // command that mounts in the same commit registers as a composed one, and the arrow keys never highlight it. The
   // rows mount in the next commit instead, still before paint.
   const [ready, setReady] = useState(false)

@@ -4,7 +4,7 @@ import { useEffect, useRef } from "react"
 
 import type { DataStatus } from "@/components/ui/data-state"
 
-// A ref written after commit, not state set during render: that rendered twice for every new `data` array,
+// Perf: a ref written after commit, not state set during render: that rendered twice for every new `data` array,
 // and a render that never commits must not change what counts as the last result.
 function useLastSuccess<T>(status: DataStatus, data: T | undefined) {
   const last = useRef<{ data: T }>(undefined)

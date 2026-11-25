@@ -13,8 +13,7 @@ import {
 
 type StoredPanels = { explorer?: boolean; aside?: boolean; explorerSize?: number; asideSize?: number }
 
-// Storage can throw (blocked site data, a sandboxed frame) or be missing (a server); the panels then just don't
-// remember.
+// Spec: storage can throw (blocked site data, a sandboxed frame) or be missing (a server).
 function readPanels(key: string | undefined): StoredPanels {
   if (!key) return {}
   try {
@@ -30,9 +29,7 @@ function writePanels(key: string | undefined, patch: StoredPanels) {
   if (!key) return
   try {
     localStorage.setItem(key, JSON.stringify({ ...readPanels(key), ...patch }))
-  } catch {
-    // Not remembered, still applied for this page.
-  }
+  } catch {}
 }
 
 /** The sizes of the panels that are open in a committed layout, by key; `null` marks a panel that isn't there. */
@@ -86,8 +83,6 @@ type PanelOptions = {
  * drawer never pops open on its own, and leaving it brings back what the column was.
  */
 function usePanel({ narrow, open, setOpen, controller, panelId }: PanelOptions) {
-  // Derived while rendering, so the drawer stays shut in the render where the layout turns narrow: it may show
-  // only once it has opened in this layout.
   const [track, setTrack] = useState({ narrow, open, allowed: false })
   let allowed = track.allowed
   if (track.narrow !== narrow || track.open !== open) {
@@ -167,7 +162,6 @@ function watchLostFocus(region: HTMLElement | null, refocus: () => void) {
   step()
 }
 
-/** Runs `step` on each frame until it returns true, for up to a second; the result cancels it. */
 function eachFrame(step: () => boolean) {
   let frames = 0
   let frame = 0
@@ -211,7 +205,6 @@ function useModeScroll({ mode, headings, editorRef, documentRef }: ModeScrollOpt
   }
 
   const restore = useEffectEvent((index: number, to: DocumentWorkspaceMode) => {
-    // The other mode's view mounts its content a frame or more later (an editor builds its view in an effect).
     return eachFrame(() => {
       if (to === "read") {
         const container = documentRef.current

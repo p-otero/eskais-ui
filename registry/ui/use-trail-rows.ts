@@ -43,7 +43,6 @@ function useTrailRows({ count, estimate, getKey, text, findable }: TrailRowsOpti
       segment.type === "row" ? { type: "row", index: segment.index } : segment,
     )
 
-  // Rows are memoized: everything they get keeps its identity across scrolls.
   const { measureElement } = flow
   const { measure: measureLayered } = layered
   const measure = useCallback(

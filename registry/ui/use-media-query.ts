@@ -14,7 +14,7 @@ function subscribeTo(query: string) {
   }
 }
 
-// The server and the first client render report no match, so hydration matches before the query runs.
+// Spec: the server and the first client render report no match, so hydration matches.
 function useMediaQuery(query: string) {
   const subscribe = useMemo(() => subscribeTo(query), [query])
   return useSyncExternalStore(
