@@ -288,6 +288,7 @@ const itemNotes: Record<string, ItemNotes> = {
     agent:
       "Agents read the summary as the sky's value and call setLocation (a place name, or a latitude and longitude), geolocate, refresh and, with a photo, calibrate; denied location access, simulated weather or a missing place fails the step with why.",
     related: ["model-viewer", "combobox"],
+  },
   "led-matrix": {
     usage:
       "Reach for it where a notice should feel like a sign in the street: the next turn, a pharmacy on duty, departures. For a status a person must act on, use an Alert or a toast.",

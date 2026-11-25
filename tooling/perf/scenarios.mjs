@@ -271,6 +271,9 @@ const keyScenarios = [
     label: "LiveSky, rain scrubbed (→, ←)",
     focus: 'input[type="range"]',
     keys: [...repeat("ArrowRight", 12), ...repeat("ArrowLeft", 8)],
+    held: "ArrowRight",
+  },
+  {
     id: "teletext",
     label: "Teletext (digits to tune, → subpages)",
     focus: '[data-slot="teletext-page"]',
