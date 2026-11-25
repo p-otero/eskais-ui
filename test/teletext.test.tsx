@@ -5,6 +5,7 @@ import { createAgent } from "@ui-sdk/react/agent"
 import { renderToString } from "react-dom/server"
 import { afterEach, expect, test, vi } from "vitest"
 
+import { RetroTv } from "@/components/ui/retro-tv"
 import { Teletext } from "@/components/ui/teletext"
 import { teletextMosaic, type TeletextPage } from "@/components/ui/teletext-page"
 import { teletext } from "@/components/ui/teletext-primitive"
@@ -150,4 +151,18 @@ test("an agent goes to a page, presses a coloured key, and presses a key by its 
   result = await act(() => agent.act({ steps: [{ ref: "Teletext", action: "goToPage", args: [555] }] }))
   expect(result.error?.message).toContain("can't find page 555")
   expect(region().getAttribute("aria-label")).toBe("Index")
+})
+
+test("inside a RetroTv the set tunes as usual, and switching the TV off leaves the page inert", async () => {
+  const user = userEvent.setup()
+  render(
+    <RetroTv label="Living room TV">
+      <Teletext label="Teletext" pages={pages} screen="flat" searchMs={0} clock={false} />
+    </RetroTv>,
+  )
+  expect(screen.getByRole("group", { name: "Teletext" }).getAttribute("data-screen")).toBe("flat")
+  await user.click(screen.getByRole("button", { name: "Weather" }))
+  expect(region().getAttribute("aria-label")).toBe("Weather")
+  await user.click(screen.getByRole("button", { name: "Power" }))
+  expect(region().closest("[inert]")).not.toBeNull()
 })
