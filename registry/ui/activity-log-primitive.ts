@@ -11,15 +11,13 @@ type ActivityLogOptions = {
 function stateOf(log: ActivityLogOptions["log"]) {
   const snapshot = log?.getSnapshot()
   return {
-    /** How many entries are applied: the position agents read. */
     value: snapshot?.position ?? 0,
     count: snapshot?.entries.length ?? 0,
     busy: snapshot?.busy ?? false,
   }
 }
 
-// The agent bridge passes arguments unchecked, and names an entry by its label or its position as a string.
-function positionOf(target: unknown, count: number) {
+function parseSeekPosition(target: unknown, count: number) {
   const position = typeof target === "string" && target.trim() !== "" ? Number(target) : target
   if (typeof position !== "number" || !Number.isInteger(position) || position < 0 || position > count) {
     throw new RangeError(`No position ${JSON.stringify(target)}: seek takes a whole number from 0 to ${String(count)}.`)
@@ -45,25 +43,24 @@ const activityLog = definePrimitive({
     context.onDestroy(() => unsubscribe?.())
     const connectedLog = (action: string) => log() ?? unavailable(action, "isn't available: no log is connected")
     return {
-      /** Takes back the newest applied entry. Resolves with the changes it couldn't put back. */
+      /** Resolves with the changes it couldn't put back. */
       undo: () => {
         const connected = connectedLog("undo")
         if (context.store.get().value === 0) return unavailable("undo", "has nothing to undo")
         return connected.undo()
       },
-      /** Applies the next entry again. */
       redo: () => {
         const connected = connectedLog("redo")
         const { value, count } = context.store.get()
         if (value >= count) return unavailable("redo", "has nothing to redo")
         return connected.redo()
       },
-      /** Puts the page back to how it was after `position` entries (0 is the start), or forward again. */
+      /** `position` counts applied entries, 0 being the start. */
       seek: (position: unknown) => {
         const connected = connectedLog("seek")
-        return connected.seek(positionOf(position, context.store.get().count))
+        return connected.seek(parseSeekPosition(position, context.store.get().count))
       },
-      /** The entries as items, oldest first: their value is the position that seeking to them restores. */
+      /** Oldest first; each value is the position that seeking to it restores. */
       items: () =>
         (log()?.getSnapshot().entries ?? []).map((entry, index) => ({
           value: String(index + 1),

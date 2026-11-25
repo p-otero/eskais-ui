@@ -131,7 +131,7 @@ function AutocompleteItemIcon({ className, ...props }: ComponentProps<typeof Aut
   )
 }
 
-// The matched part reads in the full foreground weight, the rest muted, so the match never rests on colour alone.
+// Spec: WCAG 1.4.1 — the match differs in weight too, not by colour alone.
 function AutocompleteItemText({ className, ...props }: ComponentProps<typeof AutocompleteItemTextPrimitive>) {
   return (
     <AutocompleteItemTextPrimitive

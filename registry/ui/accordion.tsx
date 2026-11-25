@@ -47,7 +47,7 @@ function AccordionTrigger({ className, children, ...props }: ComponentProps<type
   )
 }
 
-// Overflow is clipped only while the height animates, so focus rings inside an open panel stay visible.
+// Spec: WCAG 2.4.7 — clip overflow only while the height animates, so focus rings in an open panel stay visible.
 function AccordionPanel({ className, children, ...props }: ComponentProps<typeof AccordionPanelPrimitive>) {
   return (
     <AccordionPanelPrimitive

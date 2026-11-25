@@ -13,7 +13,7 @@ type BentoProps = ComponentProps<"div"> & {
   columns?: number
 }
 
-/** A responsive grid of tiles that sizes itself by its container, not the viewport. */
+/** Sizes itself by its container, not the viewport. */
 function Bento({ columns = 6, className, style, children, ...props }: BentoProps) {
   return (
     <div data-slot="bento" className={cn("@container w-full min-w-0", className)} style={style} {...props}>
@@ -38,7 +38,6 @@ type BentoTileProps = Omit<ComponentProps<"section">, "title"> & {
   /** Makes the whole tile a link named by its title; controls inside the tile stay their own targets. */
   href?: string
   onFollow?: LinkProps["onFollow"]
-  /** The live demo or content of the tile. */
   children?: ReactNode
 }
 

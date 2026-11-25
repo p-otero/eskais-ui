@@ -22,7 +22,6 @@ const Parts = createParts(activityLog, { root: "div", entry: "button" })
 const emptySnapshot: ActivityLogSnapshot = { entries: [], position: 0, busy: false }
 const noop = () => () => {}
 
-/** The log's entries, position and busy state, re-rendering when they change. */
 function useActivityLog(log: ActivityLogStore | undefined): ActivityLogSnapshot {
   return useSyncExternalStore(
     log?.subscribe ?? noop,
@@ -60,7 +59,6 @@ const activityLogLabels: ActivityLogLabels = {
 
 const actorIcons = { agent: BotIcon, person: UserIcon, app: WorkflowIcon } satisfies Record<ActivityActor, LucideIcon>
 
-// Cmd/Ctrl+Z in a text field undoes its typing, not the page.
 function outsideTextField() {
   const active = typeof document === "undefined" ? null : document.activeElement
   if (!(active instanceof HTMLElement)) return true
@@ -87,10 +85,7 @@ type ActivityLogProps = Omit<ComponentProps<typeof Parts.Root>, "log" | "childre
   locale?: string
 }
 
-/**
- * A list of the changes an `ActivityLog` recorded, newest first, with who made them and when. Pressing an entry puts
- * the page back to just after it; Undo and Redo step one entry.
- */
+/** Newest first. Pressing an entry puts the page back to just after it; Undo and Redo step one entry. */
 function ActivityLog({
   log,
   label,
@@ -209,8 +204,7 @@ type UndoToastOptions = {
 /** A toast with an Undo action, for a change that just happened: `undoToast("Task archived", { log })`. */
 function undoToast(title: string, { onUndo, log, description, labels, toaster }: UndoToastOptions = {}) {
   let before = log ? log.getSnapshot().position - 1 : undefined
-  // Called from a change callback, the change is recorded once the callback returns.
-  queueMicrotask(() => {
+  queueMicrotask(function rereadOnceTheChangeCallbackRecorded() {
     if (log) before = log.getSnapshot().position - 1
   })
   const show = toaster ?? toast
