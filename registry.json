@@ -3966,6 +3966,1071 @@
       }
     },
     {
+      "name": "retro-tv",
+      "type": "registry:ui",
+      "title": "Retro TV",
+      "description": "A 1980s tube TV in perspective, as a dashboard widget: any children render on its screen in green, amber or white phosphor, behind curved glass with scanlines, a vignette, a flickering glare and glow, in a wood cabinet with knobs, a speaker grille, an LED and a power button (UI SDK's toggle). Switching off collapses the picture to a line, then to a dot that fades; TvPowerOff plays it over the whole page, for logging out.",
+      "docs": "`<RetroTv label power|defaultPower onPowerChange phosphor perspective disabled labels>` with the screen's content as children. The screen is a 4:3 box that children fill (`h-full`), sized by `--retro-tv-screen-width` and `--retro-tv-screen-height`, lengths in pixels for a grid such as 40 × 25 teletext cells, and a size container (`cqw`, `cqh`). Inside it the theme's tokens become phosphor (`foreground`, `muted-foreground`, `card`, `border`, `primary`, `chart-1` to `chart-5`, the series), so stat cards and charts render in it unchanged; add your own padding. The power button is UI SDK's Toggle (`labels.power`, \"Power\" by default) and `onPowerChange(power, details)` gets its details: `details.cancel()` keeps the set as it is. Switching off collapses the picture to a line, then to a dot that fades, and switching on plays it back; under reduced motion it fades. While off, the screen is `inert`. Agents call `powerOn` and `powerOff`. `useTvPowerOff({ phosphor })` gives `{ overlay, powerOff, reset, playing }`: render `overlay` once, and `await powerOff()` before navigating, as on \"log out\"; `TvPowerOff playing` is the overlay alone. The cabinet and screen are a fixed palette in every theme (the item's `css`).",
+      "dependencies": [
+        "@ui-sdk/core@0.1.0-beta.12",
+        "@ui-sdk/react@0.1.0-beta.12"
+      ],
+      "registryDependencies": [
+        "@eskais/utils",
+        "@eskais/theme",
+        "@eskais/tooltip",
+        "@eskais/action-refusal"
+      ],
+      "files": [
+        {
+          "path": "registry/ui/retro-tv.tsx",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/retro-tv-primitive.ts",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/tv-power-off.tsx",
+          "type": "registry:ui"
+        }
+      ],
+      "css": {
+        "@property --retro-tv-screen-width": {
+          "syntax": "\"<length>\"",
+          "inherits": "true",
+          "initial-value": "0px"
+        },
+        "@property --retro-tv-screen-height": {
+          "syntax": "\"<length>\"",
+          "inherits": "true",
+          "initial-value": "0px"
+        },
+        "[data-slot=\"retro-tv\"]": {
+          "--retro-tv-phosphor": "#86ffaf",
+          "--retro-tv-phosphor-dim": "#63e892",
+          "--retro-tv-screen": "#03120a",
+          "--retro-tv-glow": "rgb(70 255 140 / 0.5)",
+          "--retro-tv-spill": "rgb(70 255 140 / 0.16)",
+          "--retro-tv-scanline": "0.16",
+          "--retro-tv-dead-glass": "#151a17",
+          "--retro-tv-wood-dark": "#3e2410",
+          "--retro-tv-wood": "#6d4222",
+          "--retro-tv-wood-light": "#8d5a31",
+          "--retro-tv-depth": "26cqw",
+          "display": "block",
+          "width": "100%",
+          "container-type": "inline-size",
+          "perspective": "150cqw",
+          "padding-block": "2cqw 5cqw",
+          "user-select": "none"
+        },
+        "[data-slot=\"retro-tv\"][data-phosphor=\"amber\"]": {
+          "--retro-tv-phosphor": "#ffc56b",
+          "--retro-tv-phosphor-dim": "#f3a548",
+          "--retro-tv-screen": "#150b02",
+          "--retro-tv-glow": "rgb(255 158 40 / 0.5)",
+          "--retro-tv-spill": "rgb(255 158 40 / 0.15)",
+          "--retro-tv-dead-glass": "#1a1714"
+        },
+        "[data-slot=\"retro-tv\"][data-phosphor=\"white\"]": {
+          "--retro-tv-phosphor": "#eaf3ff",
+          "--retro-tv-phosphor-dim": "#b9c8db",
+          "--retro-tv-screen": "#0a0d12",
+          "--retro-tv-glow": "rgb(200 222 255 / 0.42)",
+          "--retro-tv-spill": "rgb(200 222 255 / 0.13)",
+          "--retro-tv-dead-glass": "#16181b"
+        },
+        "[data-slot=\"retro-tv-set\"]": {
+          "position": "relative",
+          "width": "86cqw",
+          "margin-inline": "auto",
+          "transform-style": "preserve-3d"
+        },
+        "[data-slot=\"retro-tv\"][data-perspective] [data-slot=\"retro-tv-set\"]": {
+          "transform": "rotateY(-18deg) rotateX(-4deg)"
+        },
+        "[data-slot=\"retro-tv-cabinet\"]": {
+          "position": "relative",
+          "transform": "translateZ(0)",
+          "display": "grid",
+          "grid-template-columns": "1fr 15cqw",
+          "gap": "2.6cqw",
+          "padding": "3cqw",
+          "border-radius": "3.4cqw",
+          "background": "linear-gradient(180deg, rgb(255 230 200 / 0.16), transparent 18%, transparent 78%, rgb(0 0 0 / 0.3)), linear-gradient(90deg, rgb(0 0 0 / 0.18), transparent 8%, transparent 92%, rgb(0 0 0 / 0.22)), repeating-linear-gradient(91deg, transparent 0 0.7cqw, rgb(40 18 4 / 0.12) 0.7cqw 0.85cqw), repeating-linear-gradient(88.5deg, transparent 0 2.3cqw, rgb(255 214 170 / 0.06) 2.3cqw 2.6cqw), repeating-linear-gradient(90.6deg, transparent 0 5.1cqw, rgb(30 12 2 / 0.1) 5.1cqw 5.9cqw), linear-gradient( 90deg, var(--retro-tv-wood-dark), var(--retro-tv-wood) 14%, var(--retro-tv-wood-light) 33%, var(--retro-tv-wood) 52%, var(--retro-tv-wood-light) 71%, var(--retro-tv-wood) 88%, var(--retro-tv-wood-dark) )",
+          "box-shadow": "inset 0 0.25cqw 0 rgb(255 225 190 / 0.28), inset 0 -0.5cqw 1.2cqw rgb(0 0 0 / 0.45), inset 0.3cqw 0 0.6cqw rgb(255 220 180 / 0.08), 0 2.4cqw 3.2cqw -1cqw rgb(0 0 0 / 0.5), 0 0.6cqw 1cqw rgb(0 0 0 / 0.25)"
+        },
+        "[data-slot=\"retro-tv-side\"]": {
+          "position": "absolute",
+          "pointer-events": "none",
+          "top": "1.2cqw",
+          "bottom": "1.2cqw",
+          "left": "calc(100% - 0.6cqw)",
+          "width": "var(--retro-tv-depth)",
+          "border-radius": "0 2cqw 2cqw 0",
+          "transform-origin": "left center",
+          "transform": "rotateY(90deg)",
+          "background": "linear-gradient(180deg, rgb(255 225 190 / 0.12), transparent 20%, rgb(0 0 0 / 0.25)), repeating-linear-gradient(180deg, transparent 0 0.9cqw, rgb(0 0 0 / 0.1) 0.9cqw 1.05cqw), linear-gradient(90deg, #6a4022, #3a220f)"
+        },
+        "[data-slot=\"retro-tv-feet\"]": {
+          "position": "absolute",
+          "top": "100%",
+          "left": "18%",
+          "right": "18%",
+          "height": "2.2cqw",
+          "border-radius": "0 0 1.2cqw 1.2cqw",
+          "background": "linear-gradient(180deg, #1d1b19, #0b0a09)",
+          "box-shadow": "inset 0 0.2cqw 0 rgb(255 255 255 / 0.06)"
+        },
+        "[data-slot=\"retro-tv-feet\"]::after": {
+          "content": "\"\"",
+          "position": "absolute",
+          "left": "-30%",
+          "right": "-30%",
+          "top": "60%",
+          "height": "4cqw",
+          "border-radius": "50%",
+          "background": "radial-gradient(closest-side, rgb(0 0 0 / 0.38), transparent)",
+          "transform": "translateZ(-1px)"
+        },
+        "[data-slot=\"retro-tv-bezel\"]": {
+          "padding": "2.2cqw",
+          "border": "0.45cqw solid transparent",
+          "border-radius": "4cqw / 3.6cqw",
+          "background": "linear-gradient(160deg, #34312e, #161513 55%, #0b0b0a) padding-box, linear-gradient(135deg, #f1eee7, #8f8b84 38%, #e2ded6 58%, #6c6863) border-box",
+          "box-shadow": "inset 0 0.35cqw 0.7cqw rgb(0 0 0 / 0.7), inset 0 -0.2cqw 0.25cqw rgb(255 255 255 / 0.07), 0 0.3cqw 0.6cqw rgb(0 0 0 / 0.35)"
+        },
+        "[data-slot=\"retro-tv-tube\"]": {
+          "position": "relative",
+          "aspect-ratio": "4 / 3",
+          "overflow": "hidden",
+          "border-radius": "9% / 12%",
+          "container-type": "size",
+          "background": "radial-gradient( ellipse at 50% 46%, color-mix(in oklab, var(--retro-tv-screen), var(--retro-tv-phosphor) 7%), var(--retro-tv-screen) 72% )",
+          "box-shadow": "0 0 2.4cqw 0.3cqw var(--retro-tv-spill), 0 0 0 0.25cqw #050505",
+          "transition": "background-color var(--transition-duration-dialog) var(--ease-standard), box-shadow var(--transition-duration-dialog) var(--ease-standard)"
+        },
+        "[data-slot=\"retro-tv-tube\"][data-power=\"off\"]": {
+          "background": "radial-gradient(ellipse at 45% 40%, #23292599, var(--retro-tv-dead-glass) 70%)",
+          "box-shadow": "0 0 0 0.25cqw #050505"
+        },
+        "[data-slot=\"retro-tv-picture\"]": {
+          "--retro-tv-screen-width": "92cqw",
+          "--retro-tv-screen-height": "92cqh",
+          "--background": "var(--retro-tv-screen)",
+          "--foreground": "var(--retro-tv-phosphor)",
+          "--card": "color-mix(in oklab, var(--retro-tv-screen), var(--retro-tv-phosphor) 6%)",
+          "--card-foreground": "var(--retro-tv-phosphor)",
+          "--popover": "var(--retro-tv-screen)",
+          "--popover-foreground": "var(--retro-tv-phosphor)",
+          "--muted": "color-mix(in oklab, var(--retro-tv-screen), var(--retro-tv-phosphor) 10%)",
+          "--muted-foreground": "var(--retro-tv-phosphor-dim)",
+          "--primary": "var(--retro-tv-phosphor)",
+          "--primary-foreground": "var(--retro-tv-screen)",
+          "--secondary": "color-mix(in oklab, var(--retro-tv-screen), var(--retro-tv-phosphor) 14%)",
+          "--secondary-foreground": "var(--retro-tv-phosphor)",
+          "--accent": "color-mix(in oklab, var(--retro-tv-screen), var(--retro-tv-phosphor) 14%)",
+          "--accent-foreground": "var(--retro-tv-phosphor)",
+          "--border": "color-mix(in oklab, var(--retro-tv-screen), var(--retro-tv-phosphor) 34%)",
+          "--input": "color-mix(in oklab, var(--retro-tv-screen), var(--retro-tv-phosphor) 34%)",
+          "--input-strong": "var(--retro-tv-phosphor-dim)",
+          "--ring": "var(--retro-tv-phosphor)",
+          "--link": "var(--retro-tv-phosphor)",
+          "--success": "var(--retro-tv-phosphor)",
+          "--warning": "var(--retro-tv-phosphor)",
+          "--destructive": "var(--retro-tv-phosphor)",
+          "--info": "var(--retro-tv-phosphor)",
+          "--chart-1": "var(--retro-tv-phosphor)",
+          "--chart-2": "var(--retro-tv-phosphor-dim)",
+          "--chart-3": "color-mix(in oklab, var(--retro-tv-phosphor), var(--retro-tv-screen) 30%)",
+          "--chart-4": "color-mix(in oklab, var(--retro-tv-phosphor), var(--retro-tv-screen) 45%)",
+          "--chart-5": "color-mix(in oklab, var(--retro-tv-phosphor), var(--retro-tv-screen) 60%)",
+          "--series-positive": "var(--retro-tv-phosphor)",
+          "--series-negative": "var(--retro-tv-phosphor-dim)",
+          "--series-target": "var(--retro-tv-phosphor)",
+          "--series-remaining": "color-mix(in oklab, var(--retro-tv-phosphor), var(--retro-tv-screen) 55%)",
+          "--surface-shadow": "none",
+          "--skeleton": "color-mix(in oklab, var(--retro-tv-screen), var(--retro-tv-phosphor) 16%)",
+          "position": "absolute",
+          "inset": "4%",
+          "display": "flex",
+          "flex-direction": "column",
+          "overflow": "hidden",
+          "container": "retro-tv-screen / size",
+          "border-radius": "5% / 6.5%",
+          "color": "var(--retro-tv-phosphor)",
+          "font-family": "var(--font-mono)",
+          "text-shadow": "0 0 0.35em var(--retro-tv-glow), 0 0 0.08em var(--retro-tv-glow)",
+          "transform-origin": "50% 50%"
+        },
+        "[data-slot=\"retro-tv-picture\"] svg": {
+          "filter": "drop-shadow(0 0 0.2em var(--retro-tv-glow))"
+        },
+        "[data-slot=\"retro-tv-picture\"][data-power=\"off\"]": {
+          "opacity": "0",
+          "transform": "scale(0)"
+        },
+        "[data-slot=\"retro-tv-picture\"][data-switched][data-power=\"off\"]": {
+          "animation": "retro-tv-collapse 520ms cubic-bezier(0.6, 0, 0.4, 1) both"
+        },
+        "[data-slot=\"retro-tv-picture\"][data-switched][data-power=\"on\"]": {
+          "animation": "retro-tv-expand 480ms cubic-bezier(0.2, 0, 0, 1) both"
+        },
+        "[data-slot=\"retro-tv-beam\"]": {
+          "position": "absolute",
+          "top": "50%",
+          "left": "4%",
+          "right": "4%",
+          "height": "2.2cqh",
+          "translate": "0 -50%",
+          "border-radius": "50%",
+          "background": "radial-gradient(closest-side, white 30%, var(--retro-tv-phosphor) 62%, transparent)",
+          "box-shadow": "0 0 2.4cqw 0.4cqw var(--retro-tv-glow)",
+          "opacity": "0",
+          "pointer-events": "none"
+        },
+        "[data-slot=\"retro-tv-beam\"][data-switched][data-power=\"off\"]": {
+          "animation": "retro-tv-beam-off 1300ms ease-out both"
+        },
+        "[data-slot=\"retro-tv-beam\"][data-switched][data-power=\"on\"]": {
+          "animation": "retro-tv-beam-on 480ms cubic-bezier(0.2, 0, 0, 1) both"
+        },
+        "[data-slot=\"retro-tv-glass\"]": {
+          "position": "absolute",
+          "inset": "0",
+          "border-radius": "inherit",
+          "pointer-events": "none",
+          "background": "linear-gradient(112deg, transparent 52%, rgb(255 255 255 / 0.035) 60%, transparent 68%), repeating-linear-gradient(180deg, rgb(0 0 0 / var(--retro-tv-scanline)) 0 1px, transparent 1px 3px), radial-gradient(ellipse at 50% 50%, transparent 56%, rgb(0 0 0 / 0.58) 100%)",
+          "box-shadow": "inset 0 0 3cqw 0.6cqw rgb(0 0 0 / 0.75), inset 0 0.8cqw 1.4cqw rgb(255 255 255 / 0.05)"
+        },
+        "[data-slot=\"retro-tv-glass\"]::before": {
+          "position": "absolute",
+          "inset": "0",
+          "border-radius": "inherit",
+          "pointer-events": "none",
+          "content": "\"\"",
+          "background": "radial-gradient(ellipse 58% 42% at 27% 17%, rgb(255 255 255 / 0.11), transparent 70%), radial-gradient(ellipse 30% 14% at 78% 88%, rgb(255 255 255 / 0.035), transparent 70%)",
+          "animation": "retro-tv-flicker 6s steps(1) infinite"
+        },
+        "[data-slot=\"retro-tv-glass\"]::after": {
+          "position": "absolute",
+          "inset": "-20% 0 auto",
+          "border-radius": "0",
+          "pointer-events": "none",
+          "content": "\"\"",
+          "height": "22%",
+          "background": "linear-gradient(180deg, transparent, rgb(255 255 255 / 0.025) 50%, transparent)",
+          "animation": "retro-tv-roll 9s linear infinite"
+        },
+        "[data-slot=\"retro-tv-glass\"][data-power=\"off\"]::after": {
+          "animation": "none",
+          "opacity": "0"
+        },
+        "[data-slot=\"retro-tv-panel\"]": {
+          "display": "flex",
+          "flex-direction": "column",
+          "align-items": "center",
+          "gap": "2.6cqw",
+          "padding-block": "1cqw"
+        },
+        "[data-slot=\"retro-tv-knob\"]": {
+          "position": "relative",
+          "width": "9cqw",
+          "aspect-ratio": "1",
+          "border-radius": "50%",
+          "rotate": "-32deg",
+          "background": "radial-gradient(circle at 50% 50%, transparent 58%, rgb(0 0 0 / 0.25) 60%, transparent 63%), repeating-conic-gradient(rgb(0 0 0 / 0.16) 0 3deg, transparent 3deg 9deg), radial-gradient(circle at 36% 30%, #f2eee6, #a9a397 52%, #5f5a52)",
+          "box-shadow": "0 0.7cqw 0.9cqw rgb(0 0 0 / 0.5), 0 0.2cqw 0.2cqw rgb(0 0 0 / 0.4), inset 0 -0.3cqw 0.4cqw rgb(0 0 0 / 0.3), inset 0 0.2cqw 0.2cqw rgb(255 255 255 / 0.5)"
+        },
+        "[data-slot=\"retro-tv-knob\"] + [data-slot=\"retro-tv-knob\"]": {
+          "rotate": "48deg"
+        },
+        "[data-slot=\"retro-tv-knob\"]::after": {
+          "content": "\"\"",
+          "position": "absolute",
+          "top": "8%",
+          "left": "calc(50% - 0.3cqw)",
+          "width": "0.6cqw",
+          "height": "28%",
+          "border-radius": "0.3cqw",
+          "background": "#3a342d",
+          "box-shadow": "0 0.1cqw 0 rgb(255 255 255 / 0.35)"
+        },
+        "[data-slot=\"retro-tv-grille\"]": {
+          "flex": "1",
+          "width": "100%",
+          "min-height": "8cqw",
+          "border-radius": "1.2cqw",
+          "background": "repeating-linear-gradient(180deg, #120a04 0 0.55cqw, transparent 0.55cqw 1.2cqw), linear-gradient(90deg, #4a2c15, #6a4021 50%, #4a2c15)",
+          "box-shadow": "inset 0 0.3cqw 0.6cqw rgb(0 0 0 / 0.6), 0 0.15cqw 0 rgb(255 225 190 / 0.18)"
+        },
+        "[data-slot=\"retro-tv-switch\"]": {
+          "display": "flex",
+          "align-items": "center",
+          "gap": "1.8cqw"
+        },
+        "[data-slot=\"retro-tv-led\"]": {
+          "width": "1.3cqw",
+          "aspect-ratio": "1",
+          "border-radius": "50%",
+          "background": "radial-gradient(circle at 40% 35%, #5a2622, #2a0f0d)",
+          "box-shadow": "inset 0 0.1cqw 0.2cqw rgb(0 0 0 / 0.7)",
+          "transition": "background-color var(--transition-duration-micro) var(--ease-standard)"
+        },
+        "[data-slot=\"retro-tv-led\"][data-power=\"on\"]": {
+          "background": "radial-gradient(circle at 40% 35%, #ffd2c8, #ff3b28 45%, #a2140a)",
+          "box-shadow": "0 0 1.2cqw 0.2cqw rgb(255 60 40 / 0.7), inset 0 0.1cqw 0.2cqw rgb(255 255 255 / 0.4)"
+        },
+        "[data-slot=\"retro-tv-power\"]": {
+          "width": "7cqw",
+          "height": "3.6cqw",
+          "padding": "0",
+          "border": "0",
+          "border-radius": "0.8cqw",
+          "cursor": "pointer",
+          "background": "linear-gradient(180deg, #f4f2ee, #c9c5bd 45%, #8e8a83)",
+          "box-shadow": "0 0.6cqw 0 #4b4741, 0 0.9cqw 0.9cqw rgb(0 0 0 / 0.55), inset 0 0.15cqw 0 rgb(255 255 255 / 0.9)",
+          "translate": "0 -0.3cqw",
+          "transition": "translate var(--transition-duration-micro) var(--ease-standard), box-shadow var(--transition-duration-micro) var(--ease-standard)"
+        },
+        "[data-slot=\"retro-tv-power\"][data-pressed]": {
+          "translate": "0 0.15cqw",
+          "background": "linear-gradient(180deg, #d8d4cc, #b3aea5 50%, #8a867f)",
+          "box-shadow": "0 0.15cqw 0 #4b4741, 0 0.3cqw 0.4cqw rgb(0 0 0 / 0.5), inset 0 0.2cqw 0.4cqw rgb(0 0 0 / 0.25)"
+        },
+        "[data-slot=\"retro-tv-power\"]:focus-visible": {
+          "outline": "2px solid white",
+          "outline-offset": "3px"
+        },
+        "[data-slot=\"retro-tv-power\"][data-disabled]": {
+          "cursor": "not-allowed",
+          "filter": "saturate(0.4) brightness(0.8)"
+        },
+        "@container (width < 30rem)": {
+          "[data-slot=\"retro-tv-cabinet\"]": {
+            "grid-template-columns": "1fr",
+            "gap": "3cqw",
+            "padding": "3.6cqw"
+          },
+          "[data-slot=\"retro-tv-panel\"]": {
+            "flex-direction": "row",
+            "padding-block": "0"
+          },
+          "[data-slot=\"retro-tv-knob\"]": {
+            "width": "9.5cqw"
+          },
+          "[data-slot=\"retro-tv-grille\"]": {
+            "align-self": "stretch",
+            "min-height": "0"
+          },
+          "[data-slot=\"retro-tv-power\"]": {
+            "width": "10cqw",
+            "height": "5.2cqw"
+          },
+          "[data-slot=\"retro-tv-led\"]": {
+            "width": "2cqw"
+          }
+        },
+        "@keyframes retro-tv-collapse": {
+          "0%": {
+            "opacity": "1",
+            "transform": "scale(1, 1)",
+            "filter": "brightness(1)"
+          },
+          "40%": {
+            "transform": "scale(1, 0.012)",
+            "filter": "brightness(3)"
+          },
+          "72%": {
+            "opacity": "1",
+            "transform": "scale(0.004, 0.012)",
+            "filter": "brightness(5)"
+          },
+          "100%": {
+            "opacity": "0",
+            "transform": "scale(0, 0)"
+          }
+        },
+        "@keyframes retro-tv-expand": {
+          "0%": {
+            "opacity": "1",
+            "transform": "scale(0.004, 0.012)",
+            "filter": "brightness(5)"
+          },
+          "45%": {
+            "transform": "scale(1, 0.012)",
+            "filter": "brightness(3)"
+          },
+          "100%": {
+            "opacity": "1",
+            "transform": "scale(1, 1)",
+            "filter": "brightness(1)"
+          }
+        },
+        "@keyframes retro-tv-beam-off": {
+          "0%": {
+            "opacity": "0",
+            "scale": "1 1"
+          },
+          "14%": {
+            "opacity": "1",
+            "scale": "1 1"
+          },
+          "30%": {
+            "opacity": "1",
+            "scale": "0.028 1.3"
+          },
+          "100%": {
+            "opacity": "0",
+            "scale": "0.01 0.5"
+          }
+        },
+        "@keyframes retro-tv-beam-on": {
+          "0%": {
+            "opacity": "1",
+            "scale": "0.028 1.3"
+          },
+          "40%": {
+            "opacity": "1",
+            "scale": "1 1"
+          },
+          "75%": {
+            "opacity": "0",
+            "scale": "1 1"
+          },
+          "100%": {
+            "opacity": "0"
+          }
+        },
+        "@keyframes retro-tv-flicker": {
+          "0%": {
+            "opacity": "1"
+          },
+          "31%": {
+            "opacity": "0.86"
+          },
+          "32%": {
+            "opacity": "1"
+          },
+          "77%": {
+            "opacity": "0.92"
+          },
+          "78%": {
+            "opacity": "1"
+          }
+        },
+        "@keyframes retro-tv-roll": {
+          "0%": {
+            "transform": "translateY(0)"
+          },
+          "100%": {
+            "transform": "translateY(600%)"
+          }
+        },
+        "@keyframes retro-tv-fade-in": {
+          "0%": {
+            "opacity": "0"
+          },
+          "100%": {
+            "opacity": "1"
+          }
+        },
+        "@keyframes retro-tv-fade-out": {
+          "0%": {
+            "opacity": "1"
+          },
+          "100%": {
+            "opacity": "0"
+          }
+        },
+        "@media (prefers-reduced-motion: reduce)": {
+          "[data-slot=\"tv-power-off\"]": {
+            "background": "black",
+            "animation": "retro-tv-fade-in var(--tv-power-off-fade) ease-out both"
+          },
+          "[data-slot=\"tv-power-off-beam\"]": {
+            "display": "none"
+          },
+          "[data-slot=\"tv-power-off-dot\"]": {
+            "display": "none"
+          }
+        },
+        "[data-slot=\"tv-power-off\"]": {
+          "position": "fixed",
+          "inset": "0",
+          "z-index": "calc(var(--z-index-toast) + 1)",
+          "overflow": "hidden",
+          "pointer-events": "auto",
+          "--tv-power-off-colour": "#f4f8ff",
+          "--tv-power-off-glow": "rgb(200 222 255 / 0.7)"
+        },
+        "[data-slot=\"tv-power-off\"][data-phosphor=\"green\"]": {
+          "--tv-power-off-colour": "#b9ffd0",
+          "--tv-power-off-glow": "rgb(70 255 140 / 0.7)"
+        },
+        "[data-slot=\"tv-power-off\"][data-phosphor=\"amber\"]": {
+          "--tv-power-off-colour": "#ffe0ad",
+          "--tv-power-off-glow": "rgb(255 158 40 / 0.7)"
+        },
+        "[data-slot=\"tv-power-off-beam\"]": {
+          "position": "absolute",
+          "top": "50%",
+          "left": "50%",
+          "width": "100vw",
+          "height": "100vh",
+          "translate": "-50% -50%",
+          "background": "transparent",
+          "box-shadow": "0 0 0 150vmax black",
+          "animation": "tv-power-off-beam var(--tv-power-off-collapse) cubic-bezier(0.6, 0, 0.4, 1) both"
+        },
+        "[data-slot=\"tv-power-off-dot\"]": {
+          "position": "absolute",
+          "top": "50%",
+          "left": "50%",
+          "width": "10px",
+          "height": "10px",
+          "translate": "-50% -50%",
+          "border-radius": "50%",
+          "background": "radial-gradient(circle, white 25%, var(--tv-power-off-colour) 55%, transparent 72%)",
+          "box-shadow": "0 0 22px 8px var(--tv-power-off-glow)",
+          "opacity": "0",
+          "animation": "tv-power-off-dot var(--tv-power-off-dot) calc(var(--tv-power-off-collapse) * 0.75) ease-out both"
+        },
+        "@keyframes tv-power-off-beam": {
+          "0%": {
+            "width": "100vw",
+            "height": "100vh",
+            "background": "rgb(255 255 255 / 0)",
+            "box-shadow": "0 0 0 150vmax black"
+          },
+          "40%": {
+            "width": "100vw",
+            "height": "3px",
+            "background": "var(--tv-power-off-colour)",
+            "box-shadow": "0 0 16px 4px var(--tv-power-off-glow), 0 0 0 150vmax black"
+          },
+          "75%": {
+            "width": "6px",
+            "height": "3px",
+            "background": "white",
+            "box-shadow": "0 0 16px 4px var(--tv-power-off-glow), 0 0 0 150vmax black"
+          },
+          "100%": {
+            "width": "0",
+            "height": "0",
+            "background": "white",
+            "box-shadow": "0 0 0 150vmax black"
+          }
+        },
+        "@keyframes tv-power-off-dot": {
+          "0%": {
+            "opacity": "1",
+            "scale": "1"
+          },
+          "100%": {
+            "opacity": "0",
+            "scale": "0.3"
+          }
+        }
+      }
+    },
+    {
+      "name": "pill-dialog",
+      "type": "registry:ui",
+      "title": "Pill Dialog",
+      "description": "A confirm dialog whose answers are glossy 3D capsules, a blue pill that cancels and a red pill that confirms: they lift on hover and focus, and the chosen one grows while the other fades as the dialog closes. UI SDK's AlertDialog underneath, with an async confirm, and data-agent-confirm on the red pill.",
+      "docs": "`<PillDialog trigger title description confirmLabel agentConfirm onConfirm labels>`, the API of `ConfirmDialog`: a returned Promise keeps it open and pending (a spinner in the red pill's label), a rejection shows its message (`renderError`), `triggerDisabled` and `triggerPending` stop the trigger, and `open`, `onOpenChange`, `controller` and `pendingAnnouncement` pass to the AlertDialog. `labels={{ cancel }}` names the blue pill, \"Cancel\" by default. Escape, the focus trap and focus return behave as in any alert dialog, and opening focuses the blue pill. `agentConfirm` is required: it becomes the red pill's `data-agent-confirm`, so an agent's press waits for a person through `allow`. The pills' colours are the item's `css`; the dialog follows the theme.",
+      "dependencies": [
+        "@ui-sdk/core@0.1.0-beta.12",
+        "@ui-sdk/react@0.1.0-beta.12"
+      ],
+      "registryDependencies": [
+        "@eskais/utils",
+        "@eskais/theme",
+        "@eskais/button",
+        "@eskais/dialog",
+        "@eskais/spinner"
+      ],
+      "files": [
+        {
+          "path": "registry/ui/pill-dialog.tsx",
+          "type": "registry:ui"
+        }
+      ],
+      "css": {
+        "[data-pill-dialog]": {
+          "--pill-cancel": "#1f66da",
+          "--pill-cancel-light": "#7cbcff",
+          "--pill-cancel-dark": "#072056",
+          "--pill-cancel-glow": "rgb(80 150 255 / 0.55)",
+          "--pill-confirm": "#d9261b",
+          "--pill-confirm-light": "#ff7a66",
+          "--pill-confirm-dark": "#5e0703",
+          "--pill-confirm-glow": "rgb(255 80 60 / 0.55)"
+        },
+        "[data-pill-dialog][data-chosen][data-ending-style]": {
+          "transition-delay": "320ms"
+        },
+        "[data-slot=\"pill-dialog-pills\"]": {
+          "display": "flex",
+          "justify-content": "center",
+          "gap": "var(--gap-section)",
+          "padding-top": "var(--gap-items)"
+        },
+        "[data-slot=\"pill-dialog-pill\"]": {
+          "--pill": "var(--pill-cancel)",
+          "--pill-light": "var(--pill-cancel-light)",
+          "--pill-dark": "var(--pill-cancel-dark)",
+          "--pill-glow": "var(--pill-cancel-glow)",
+          "display": "flex",
+          "min-width": "7.5rem",
+          "flex-direction": "column",
+          "align-items": "center",
+          "gap": "var(--gap-group)",
+          "padding": "var(--gap-group) var(--item-padding-x) var(--item-padding-y)",
+          "border": "0",
+          "border-radius": "var(--surface-radius)",
+          "background": "transparent",
+          "color": "var(--popover-foreground)",
+          "font": "inherit",
+          "cursor": "pointer",
+          "transition": "opacity var(--transition-duration-panel) var(--ease-standard), scale var(--transition-duration-panel) var(--ease-standard)"
+        },
+        "[data-slot=\"pill-dialog-pill\"][data-pill=\"confirm\"]": {
+          "--pill": "var(--pill-confirm)",
+          "--pill-light": "var(--pill-confirm-light)",
+          "--pill-dark": "var(--pill-confirm-dark)",
+          "--pill-glow": "var(--pill-confirm-glow)"
+        },
+        "[data-slot=\"pill-dialog-pill\"]:focus-visible": {
+          "outline": "2px solid var(--ring)",
+          "outline-offset": "2px"
+        },
+        "[data-slot=\"pill-dialog-pill\"][data-pending]": {
+          "cursor": "progress"
+        },
+        "[data-slot=\"pill-dialog-label\"]": {
+          "display": "inline-flex",
+          "align-items": "center",
+          "gap": "var(--gap-inline)",
+          "font-size": "var(--type-body-sm-size)",
+          "line-height": "var(--type-body-sm-leading)",
+          "font-weight": "500"
+        },
+        "[data-slot=\"pill-dialog-pill\"]:not([data-pending]) [data-show=\"pending\"]": {
+          "display": "none"
+        },
+        "[data-slot=\"pill-dialog-capsule\"]": {
+          "position": "relative",
+          "display": "block",
+          "width": "5.75rem",
+          "height": "2.25rem"
+        },
+        "[data-slot=\"pill-dialog-capsule\"]::before": {
+          "content": "\"\"",
+          "position": "absolute",
+          "inset": "70% 8% -26%",
+          "border-radius": "50%",
+          "background": "radial-gradient(closest-side, rgb(0 0 0 / 0.32), transparent)",
+          "transition": "scale var(--transition-duration-panel) var(--ease-standard), opacity var(--transition-duration-panel) var(--ease-standard)"
+        },
+        "[data-slot=\"pill-dialog-shell\"]": {
+          "position": "absolute",
+          "inset": "0",
+          "border-radius": "999px",
+          "rotate": "-16deg",
+          "background": "radial-gradient(ellipse 22% 26% at 20% 26%, rgb(255 255 255 / 0.95), transparent 70%), linear-gradient( 180deg, rgb(255 255 255 / 0.5), rgb(255 255 255 / 0.12) 24%, transparent 46%, rgb(0 0 0 / 0.18) 78%, rgb(0 0 0 / 0.42) ), radial-gradient(ellipse 70% 60% at 50% 70%, var(--pill-light), transparent 75%), linear-gradient( 90deg, var(--pill-dark), var(--pill) 18%, var(--pill) 49.4%, color-mix(in oklab, var(--pill), black 30%) 49.6% 50.4%, color-mix(in oklab, var(--pill), white 10%) 50.6%, var(--pill) 82%, var(--pill-dark) )",
+          "box-shadow": "inset 0 1px 1px rgb(255 255 255 / 0.55), inset 0 -3px 5px color-mix(in oklab, var(--pill-light), transparent 40%), inset 0 -1px 1px rgb(0 0 0 / 0.35), 0 6px 14px -4px var(--pill-glow)",
+          "transition": "translate var(--transition-duration-panel) var(--ease-standard), rotate var(--transition-duration-panel) var(--ease-standard), scale 300ms var(--ease-standard), box-shadow var(--transition-duration-panel) var(--ease-standard)"
+        },
+        "[data-slot=\"pill-dialog-shell\"]::before": {
+          "content": "\"\"",
+          "position": "absolute",
+          "top": "10%",
+          "left": "12%",
+          "right": "14%",
+          "height": "28%",
+          "border-radius": "999px",
+          "background": "linear-gradient(180deg, rgb(255 255 255 / 0.85), rgb(255 255 255 / 0))"
+        },
+        "[data-pill]:hover [data-slot=\"pill-dialog-shell\"]": {
+          "translate": "0 -0.5rem",
+          "rotate": "-10deg",
+          "scale": "1.05",
+          "box-shadow": "inset 0 1px 1px rgb(255 255 255 / 0.55), inset 0 -3px 5px color-mix(in oklab, var(--pill-light), transparent 40%), inset 0 -1px 1px rgb(0 0 0 / 0.35), 0 14px 22px -6px var(--pill-glow)"
+        },
+        "[data-pill]:focus-visible [data-slot=\"pill-dialog-shell\"]": {
+          "translate": "0 -0.5rem",
+          "rotate": "-10deg",
+          "scale": "1.05",
+          "box-shadow": "inset 0 1px 1px rgb(255 255 255 / 0.55), inset 0 -3px 5px color-mix(in oklab, var(--pill-light), transparent 40%), inset 0 -1px 1px rgb(0 0 0 / 0.35), 0 14px 22px -6px var(--pill-glow)"
+        },
+        "[data-pill]:hover [data-slot=\"pill-dialog-capsule\"]::before": {
+          "scale": "0.82",
+          "opacity": "0.55"
+        },
+        "[data-pill]:focus-visible [data-slot=\"pill-dialog-capsule\"]::before": {
+          "scale": "0.82",
+          "opacity": "0.55"
+        },
+        "[data-pill]:active [data-slot=\"pill-dialog-shell\"]": {
+          "translate": "0 -0.25rem",
+          "scale": "0.98"
+        },
+        "[data-pill-dialog][data-chosen=\"cancel\"] [data-pill=\"cancel\"]": {
+          "scale": "1.12"
+        },
+        "[data-pill-dialog][data-chosen=\"confirm\"] [data-pill=\"confirm\"]": {
+          "scale": "1.12"
+        },
+        "[data-pill-dialog][data-chosen] [data-slot=\"pill-dialog-shell\"]": {
+          "translate": "0 -0.5rem",
+          "rotate": "0deg",
+          "scale": "1.25"
+        },
+        "[data-pill-dialog][data-chosen=\"cancel\"] [data-pill=\"confirm\"]": {
+          "opacity": "0",
+          "scale": "0.8"
+        },
+        "[data-pill-dialog][data-chosen=\"confirm\"] [data-pill=\"cancel\"]": {
+          "opacity": "0",
+          "scale": "0.8"
+        },
+        "@media (prefers-reduced-motion: reduce)": {
+          "[data-pill]:hover [data-slot=\"pill-dialog-shell\"]": {
+            "translate": "none",
+            "rotate": "-16deg",
+            "scale": "none"
+          },
+          "[data-pill]:focus-visible [data-slot=\"pill-dialog-shell\"]": {
+            "translate": "none",
+            "rotate": "-16deg",
+            "scale": "none"
+          },
+          "[data-pill-dialog][data-chosen] [data-slot=\"pill-dialog-shell\"]": {
+            "translate": "none",
+            "rotate": "-16deg",
+            "scale": "none"
+          },
+          "[data-pill-dialog][data-chosen] [data-pill]": {
+            "scale": "none"
+          }
+        }
+      }
+    },
+    {
+      "name": "ejector-button",
+      "type": "registry:ui",
+      "title": "Ejector Button",
+      "description": "A destructive action under the hinged cover of a gear-stick knob, seen in perspective over a leather boot: open the cover (UI SDK's toggle), then press the red button. The cover closes after a timeout, on Escape and once the eject finishes; the button carries data-agent-confirm, and agents get arm, disarm and eject, which fails with why while the cover is closed.",
+      "docs": "`<EjectorButton label agentConfirm onEject armTimeoutMs armed|defaultArmed onArmedChange disabled labels>`. `label` names the group and the red button and is engraved on the plate below. The cover is UI SDK's Toggle (`labels.cover`, \"Safety cover\" by default), pressed while open; the red button can be pressed only then, and is out of the tab order while covered. `onEject({ reason, event })` runs on the press; a returned Promise sets `aria-busy` and `data-pending` until it settles, then the cover closes. `onArmedChange(armed, details)` reports `cover-press`, `timeout` (after `armTimeoutMs`, 5000 by default, 0 for never, counted while idle), `escape-key`, `eject` and `imperative`; `details.cancel()` keeps the cover as it is. Agents call `arm` and `disarm` on the group and `eject` on the button, which waits for a person through `allow` (`agentConfirm` becomes `data-agent-confirm`) and fails with why while the cover is closed. The console is dark in every theme (the item's `css`); under reduced motion the cover fades instead of swinging.",
+      "dependencies": [
+        "@ui-sdk/core@0.1.0-beta.12",
+        "@ui-sdk/react@0.1.0-beta.12"
+      ],
+      "registryDependencies": [
+        "@eskais/utils",
+        "@eskais/theme",
+        "@eskais/tooltip",
+        "@eskais/action-refusal"
+      ],
+      "files": [
+        {
+          "path": "registry/ui/ejector-button.tsx",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/ejector-button-primitive.ts",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/use-ejector-disarm-timer.ts",
+          "type": "registry:ui"
+        }
+      ],
+      "css": {
+        "[data-slot=\"ejector-button\"]": {
+          "--ejector-red": "#dc1f12",
+          "--ejector-red-light": "#ff8a78",
+          "--ejector-red-dark": "#5a0602",
+          "--ejector-knob-height": "7cqw",
+          "--ejector-knob-lift": "13cqw",
+          "display": "flex",
+          "flex-direction": "column",
+          "align-items": "center",
+          "width": "100%",
+          "overflow": "hidden",
+          "container-type": "inline-size",
+          "border-radius": "var(--surface-radius)",
+          "background": "radial-gradient(ellipse 80% 60% at 50% 38%, #2c2825, transparent 75%), repeating-linear-gradient(45deg, rgb(255 255 255 / 0.012) 0 2px, transparent 2px 5px), #0e0d0c",
+          "box-shadow": "inset 0 1px 0 rgb(255 255 255 / 0.06), inset 0 0 0 1px rgb(0 0 0 / 0.6)",
+          "user-select": "none"
+        },
+        "[data-slot=\"ejector-button-stage\"]": {
+          "position": "relative",
+          "width": "100%",
+          "aspect-ratio": "1 / 0.92",
+          "perspective": "120cqw",
+          "perspective-origin": "50% 8%"
+        },
+        "[data-slot=\"ejector-button-console\"]": {
+          "position": "absolute",
+          "top": "16%",
+          "left": "50%",
+          "width": "66cqw",
+          "aspect-ratio": "1",
+          "translate": "-50% 0",
+          "transform": "rotateX(58deg)",
+          "transform-style": "preserve-3d"
+        },
+        "[data-slot=\"ejector-button-boot\"]": {
+          "position": "absolute",
+          "inset": "0",
+          "border-radius": "50%",
+          "background": "radial-gradient(circle at 50% 50%, rgb(0 0 0 / 0.6) 0 15%, transparent 30%), repeating-conic-gradient( from 4deg, rgb(255 255 255 / 0.05) 0deg 5deg, rgb(0 0 0 / 0.32) 9deg 13deg, rgb(255 255 255 / 0.035) 17deg 22.5deg ), repeating-radial-gradient(circle at 30% 30%, rgb(255 255 255 / 0.018) 0 1px, transparent 1px 3px), radial-gradient(circle at 42% 34%, #4a3f37, #231d19 55%, #0d0b0a)",
+          "box-shadow": "inset 0 0 6cqw rgb(0 0 0 / 0.85), 0 0 0 2.4cqw #2b2724, 0 0 0 2.8cqw #57514b, 0 0 0 3.1cqw #141210"
+        },
+        "[data-slot=\"ejector-button-boot\"]::after": {
+          "content": "\"\"",
+          "position": "absolute",
+          "inset": "3.5%",
+          "border": "0.5cqw dashed rgb(205 165 115 / 0.55)",
+          "border-radius": "50%"
+        },
+        "[data-slot=\"ejector-button-knob\"]": {
+          "transform-style": "preserve-3d",
+          "position": "absolute",
+          "top": "27%",
+          "left": "27%",
+          "width": "46%",
+          "aspect-ratio": "1",
+          "transform": "translateZ(var(--ejector-knob-lift))"
+        },
+        "[data-slot=\"ejector-button-knob-top\"]": {
+          "transform-style": "preserve-3d",
+          "position": "absolute",
+          "inset": "0",
+          "border-radius": "50%",
+          "background": "radial-gradient(circle at 50% 50%, transparent 66%, rgb(0 0 0 / 0.35) 67%, transparent 69%), conic-gradient( from 210deg, #6f6f6f, #f4f4f4 12%, #9a9a9a 25%, #e2e2e2 40%, #7a7a7a 55%, #f0f0f0 70%, #8a8a8a 85%, #6f6f6f )",
+          "box-shadow": "inset 0 0 0 0.3cqw rgb(255 255 255 / 0.5)"
+        },
+        "[data-slot=\"ejector-button-shaft\"]": {
+          "position": "absolute",
+          "left": "38%",
+          "top": "50%",
+          "transform-origin": "50% 0",
+          "pointer-events": "none",
+          "width": "24%",
+          "height": "var(--ejector-knob-lift)",
+          "transform": "translateZ(calc(var(--ejector-knob-height) * -1)) rotateX(-90deg)",
+          "background": "linear-gradient(90deg, #1a1a1a, #8d8d8d 28%, #e6e6e6 40%, #6a6a6a 64%, #161616)"
+        },
+        "[data-slot=\"ejector-button-knob-side\"]": {
+          "position": "absolute",
+          "left": "0",
+          "top": "50%",
+          "transform-origin": "50% 0",
+          "pointer-events": "none",
+          "width": "100%",
+          "height": "var(--ejector-knob-height)",
+          "transform": "rotateX(-90deg)",
+          "background": "repeating-linear-gradient(90deg, transparent 0 1.1cqw, rgb(0 0 0 / 0.16) 1.1cqw 1.4cqw), linear-gradient(90deg, #1c1c1c, #5c5c5c 12%, #c9c9c9 30%, #f6f6f6 38%, #a3a3a3 55%, #4a4a4a 80%, #141414)"
+        },
+        "[data-slot=\"ejector-button-knob-base\"]": {
+          "position": "absolute",
+          "inset": "0",
+          "border-radius": "50%",
+          "transform": "translateZ(calc(var(--ejector-knob-height) * -1))",
+          "background": "linear-gradient(180deg, transparent 40%, rgb(0 0 0 / 0.35)), linear-gradient(90deg, #1c1c1c, #5c5c5c 12%, #c9c9c9 30%, #f6f6f6 38%, #a3a3a3 55%, #4a4a4a 80%, #141414)",
+          "box-shadow": "0 1cqw 4cqw rgb(0 0 0 / 0.8)"
+        },
+        "[data-slot=\"ejector-button-well\"]": {
+          "position": "absolute",
+          "inset": "14%",
+          "border-radius": "50%",
+          "background": "radial-gradient(circle at 50% 60%, #1b1b1b, #000 70%)",
+          "box-shadow": "inset 0 1.2cqw 1.6cqw rgb(0 0 0 / 0.9), 0 -0.2cqw 0 rgb(255 255 255 / 0.35)"
+        },
+        "[data-slot=\"ejector-release\"]": {
+          "position": "absolute",
+          "inset": "23%",
+          "padding": "0",
+          "border": "0",
+          "border-radius": "50%",
+          "cursor": "pointer",
+          "transform": "translateZ(1.2cqw)",
+          "background": "radial-gradient(ellipse 36% 26% at 38% 30%, rgb(255 255 255 / 0.85), transparent 70%), radial-gradient(circle at 42% 36%, var(--ejector-red-light), var(--ejector-red) 48%, var(--ejector-red-dark))",
+          "box-shadow": "0 0.9cqw 0 #3e0401, 0 1.4cqw 1.6cqw rgb(0 0 0 / 0.7), 0 0 3cqw rgb(255 40 20 / 0.35), inset 0 -0.6cqw 1cqw rgb(0 0 0 / 0.35)",
+          "transition": "transform var(--transition-duration-micro) var(--ease-standard), box-shadow var(--transition-duration-micro) var(--ease-standard)"
+        },
+        "[data-slot=\"ejector-release\"]::before": {
+          "content": "\"\"",
+          "position": "absolute",
+          "inset": "-45% -10%",
+          "border-radius": "50%"
+        },
+        "[data-slot=\"ejector-release\"]:not([data-armed])": {
+          "pointer-events": "none"
+        },
+        "[data-slot=\"ejector-release\"]:active:not([data-pending])": {
+          "transform": "translateZ(0.3cqw)",
+          "box-shadow": "0 0.2cqw 0 #3e0401, 0 0.4cqw 0.6cqw rgb(0 0 0 / 0.7), 0 0 3cqw rgb(255 40 20 / 0.45), inset 0 -0.4cqw 0.8cqw rgb(0 0 0 / 0.35)"
+        },
+        "[data-slot=\"ejector-release\"][data-pending]": {
+          "transform": "translateZ(0.3cqw)",
+          "box-shadow": "0 0.2cqw 0 #3e0401, 0 0.4cqw 0.6cqw rgb(0 0 0 / 0.7), 0 0 3cqw rgb(255 40 20 / 0.45), inset 0 -0.4cqw 0.8cqw rgb(0 0 0 / 0.35)",
+          "cursor": "progress",
+          "animation": "ejector-pending 900ms ease-in-out infinite alternate"
+        },
+        "[data-slot=\"ejector-button-cover\"]": {
+          "position": "absolute",
+          "inset": "9%",
+          "padding": "0",
+          "border": "0",
+          "border-radius": "50%",
+          "background": "none",
+          "cursor": "pointer",
+          "transform-origin": "50% 0",
+          "transform": "translateZ(1.6cqw)",
+          "transform-style": "preserve-3d",
+          "transition": "transform 450ms cubic-bezier(0.3, 1.25, 0.5, 1)"
+        },
+        "[data-slot=\"ejector-button-cover\"][data-pressed]": {
+          "transform": "translateZ(1.6cqw) rotateX(118deg)"
+        },
+        "[data-slot=\"ejector-button-cover-top\"]": {
+          "position": "absolute",
+          "inset": "0",
+          "display": "grid",
+          "place-items": "center",
+          "border-radius": "50%",
+          "backface-visibility": "hidden",
+          "background": "radial-gradient(ellipse 50% 34% at 40% 28%, rgb(255 230 200 / 0.18), transparent 70%), repeating-radial-gradient(circle at 30% 40%, rgb(255 255 255 / 0.03) 0 1px, transparent 1px 3px), radial-gradient(circle at 44% 36%, #5b3b22, #2d1a0c 72%)",
+          "box-shadow": "inset 0 0 0 0.9cqw #c8c8c8, inset 0 0 0 1.2cqw #5b5b5b, inset 0 0 2cqw rgb(0 0 0 / 0.55), 0 1cqw 1.6cqw rgb(0 0 0 / 0.55)"
+        },
+        "[data-slot=\"ejector-button-cover-under\"]": {
+          "position": "absolute",
+          "inset": "0",
+          "display": "grid",
+          "place-items": "center",
+          "border-radius": "50%",
+          "backface-visibility": "hidden",
+          "transform": "rotateX(180deg)",
+          "background": "repeating-linear-gradient(90deg, rgb(255 255 255 / 0.05) 0 1px, transparent 1px 3px), radial-gradient(circle at 50% 40%, #bdbdbd, #6e6e6e 70%, #3a3a3a)",
+          "box-shadow": "inset 0 0 0 0.6cqw #4b4b4b"
+        },
+        "[data-slot=\"ejector-button-pattern\"]": {
+          "width": "46%",
+          "fill": "#efe2cd",
+          "stroke": "#efe2cd",
+          "stroke-width": "3.4",
+          "stroke-linecap": "round",
+          "filter": "drop-shadow(0 -1px 0 rgb(0 0 0 / 0.6))"
+        },
+        "[data-slot=\"ejector-button-pattern\"] circle": {
+          "stroke": "none"
+        },
+        "[data-slot=\"ejector-button-pattern\"] text": {
+          "stroke": "none",
+          "font-family": "var(--font-sans)",
+          "font-size": "9px",
+          "font-weight": "700",
+          "text-anchor": "middle"
+        },
+        "[data-slot=\"ejector-button-hinge\"]": {
+          "position": "absolute",
+          "top": "-1.2cqw",
+          "left": "36%",
+          "right": "36%",
+          "height": "2.4cqw",
+          "border-radius": "1.2cqw",
+          "background": "linear-gradient(180deg, #f2f2f2, #8c8c8c 50%, #3c3c3c)",
+          "box-shadow": "0 0.4cqw 0.6cqw rgb(0 0 0 / 0.5)"
+        },
+        "[data-slot=\"ejector-button-cover\"]:focus-visible > [data-face]": {
+          "outline": "2px solid white",
+          "outline-offset": "3px"
+        },
+        "[data-slot=\"ejector-release\"]:focus-visible": {
+          "outline": "2px solid white",
+          "outline-offset": "3px"
+        },
+        "[data-slot=\"ejector-button-cover\"]:focus-visible": {
+          "outline": "none"
+        },
+        "[data-slot=\"ejector-button\"][data-disabled] [data-slot=\"ejector-button-stage\"]": {
+          "filter": "saturate(0.3) brightness(0.7)"
+        },
+        "[data-slot=\"ejector-button\"][data-disabled] [data-slot=\"ejector-button-cover\"]": {
+          "cursor": "not-allowed"
+        },
+        "[data-slot=\"ejector-button-plate\"]": {
+          "position": "relative",
+          "z-index": "1",
+          "display": "flex",
+          "align-items": "center",
+          "gap": "var(--gap-inline)",
+          "margin-top": "-4cqw",
+          "padding": "var(--chip-padding-y) var(--item-padding-x)",
+          "margin-bottom": "var(--gap-group)",
+          "border-radius": "var(--control-radius)",
+          "background": "linear-gradient(180deg, #2a2724, #1a1816)",
+          "box-shadow": "inset 0 1px 0 rgb(255 255 255 / 0.08), 0 1px 2px rgb(0 0 0 / 0.6)",
+          "color": "#ece3d6",
+          "font-family": "var(--font-mono)",
+          "font-size": "var(--type-meta-size)",
+          "line-height": "var(--type-meta-leading)",
+          "font-weight": "600",
+          "letter-spacing": "0.12em",
+          "text-transform": "uppercase",
+          "text-shadow": "0 -1px 0 black"
+        },
+        "[data-slot=\"ejector-button-led\"]": {
+          "width": "0.5rem",
+          "aspect-ratio": "1",
+          "border-radius": "50%",
+          "background": "radial-gradient(circle at 40% 35%, #5a2622, #2a0f0d)"
+        },
+        "[data-slot=\"ejector-button\"][data-armed] [data-slot=\"ejector-button-led\"]": {
+          "background": "radial-gradient(circle at 40% 35%, #ffd2c8, #ff3b28 45%, #a2140a)",
+          "box-shadow": "0 0 0.6rem rgb(255 60 40 / 0.8)",
+          "animation": "ejector-armed 1s steps(2, jump-none) infinite"
+        },
+        "@keyframes ejector-armed": {
+          "0%": {
+            "opacity": "1"
+          },
+          "100%": {
+            "opacity": "0.35"
+          }
+        },
+        "@keyframes ejector-pending": {
+          "0%": {
+            "filter": "brightness(1)"
+          },
+          "100%": {
+            "filter": "brightness(1.35)"
+          }
+        },
+        "@media (prefers-reduced-motion: reduce)": {
+          "[data-slot=\"ejector-button-cover\"]": {
+            "transition-property": "opacity"
+          },
+          "[data-slot=\"ejector-button-cover\"][data-pressed]": {
+            "transform": "translateZ(1.6cqw)",
+            "opacity": "0.2"
+          },
+          "[data-slot=\"ejector-button\"][data-armed] [data-slot=\"ejector-button-led\"]": {
+            "animation": "none"
+          },
+          "[data-slot=\"ejector-release\"][data-pending]": {
+            "animation": "none"
+          }
+        }
+      }
+    },
+    {
       "name": "led-matrix",
       "type": "registry:ui",
       "title": "LED Matrix",

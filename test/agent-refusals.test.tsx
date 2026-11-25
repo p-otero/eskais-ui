@@ -30,10 +30,12 @@ import { modelScan } from "@/components/ui/model-scan-primitive"
 import { nativeSelect } from "@/components/ui/native-select-primitive"
 import { mixer } from "@/components/ui/mixer-primitive"
 import { neonSign } from "@/components/ui/neon-sign-primitive"
+import { ejectorButton, ejectorRelease } from "@/components/ui/ejector-button-primitive"
 import { prismPicker } from "@/components/ui/prism-picker-primitive"
 import { safeDial } from "@/components/ui/safe-dial-primitive"
 import { sunArc } from "@/components/ui/sun-arc-primitive"
 import { vinylScrubber } from "@/components/ui/vinyl-scrubber-primitive"
+import { retroTv } from "@/components/ui/retro-tv-primitive"
 import { searchField } from "@/components/ui/search-field-primitive"
 import { serverFilters } from "@/components/ui/server-filters-primitive"
 import { sidebar } from "@/components/ui/sidebar-primitive"
@@ -518,6 +520,38 @@ test("live sky: denied location, a missing place, a bad coordinate or simulated 
   await failsWith("Photo sky", "calibrate", "takes a field of view from 20 to 130°, not 200", [180, 200])
   await failsWith("Photo sky", "calibrate", "takes a horizon from 0 to 1 down the photo, not 1.5", [180, 70, 1.5])
   expect(calibrate).not.toHaveBeenCalled()
+test("retro tv: a refused switch or a disabled set fails the step", async () => {
+  let on = true
+  const power = { isPressed: () => on, setPressed: vi.fn((_next: boolean): boolean => false) }
+  mounted(mount(retroTv, { power }, `<root aria-label="Sales monitor"></root>`))
+  await failsWith("Sales monitor", "powerOff", "powerOff was refused by the app.")
+  expect(on).toBe(true)
+  power.setPressed.mockImplementation((next: boolean) => {
+    on = next
+    return true
+  })
+  mounted(mount(retroTv, { power, disabled: true }, `<root aria-label="Disabled monitor"></root>`))
+  await failsWith("Disabled monitor", "powerOff", "powerOff isn't available while the set is disabled")
+  expect(on).toBe(true)
+})
+
+test("ejector button: a refused arm, a disabled or busy ejector, or an eject under the cover fails the step", async () => {
+  let open = false
+  const cover = { isPressed: () => open, setPressed: vi.fn((_next: boolean): boolean => false) }
+  mounted(mount(ejectorButton, { cover }, `<root aria-label="Delete staging"></root>`))
+  await failsWith("Delete staging", "arm", "arm was refused by the app.")
+  expect(open).toBe(false)
+  mounted(mount(ejectorButton, { cover, pending: true }, `<root aria-label="Busy ejector"></root>`))
+  await failsWith("Busy ejector", "disarm", "disarm isn't available while the eject runs")
+  mounted(mount(ejectorButton, { cover, disabled: true }, `<root aria-label="Disabled ejector"></root>`))
+  await failsWith("Disabled ejector", "arm", "arm isn't available while the ejector is disabled")
+
+  const onEject = vi.fn()
+  mounted(mount(ejectorRelease, { onEject }, `<root aria-label="Eject staging"></root>`))
+  await failsWith("Eject staging", "eject", "eject isn't available while the cover is closed: arm it first")
+  mounted(mount(ejectorRelease, { onEject, armed: true, pending: true }, `<root aria-label="Busy release"></root>`))
+  await failsWith("Busy release", "eject", "eject isn't available while the eject runs")
+  expect(onEject).not.toHaveBeenCalled()
 })
 
 test("search field: a refused search fails the step", async () => {

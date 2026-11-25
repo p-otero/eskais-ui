@@ -146,6 +146,9 @@ const pages: Record<string, Page> = {
   "neon-sign": () => import("./signs/neon-sign-demo").then((module) => module.NeonSignDemo),
   chalkboard: () => import("./signs/chalkboard-demo").then((module) => module.ChalkboardDemo),
   teletext: () => import("./signs/teletext-demo").then((module) => module.TeletextDemo),
+  "retro-tv": () => import("./retro/retro-tv-demo").then((module) => module.RetroTvDemo),
+  "pill-dialog": () => import("./retro/pill-dialog-demo").then((module) => module.PillDialogDemo),
+  "ejector-button": () => import("./retro/ejector-button-demo").then((module) => module.EjectorButtonDemo),
   ...Object.fromEntries(
     gitWorkspaceDemoNames.map((name) => [
       name,

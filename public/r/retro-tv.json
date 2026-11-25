@@ -1,0 +1,574 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "retro-tv",
+  "title": "Retro TV",
+  "description": "A 1980s tube TV in perspective, as a dashboard widget: any children render on its screen in green, amber or white phosphor, behind curved glass with scanlines, a vignette, a flickering glare and glow, in a wood cabinet with knobs, a speaker grille, an LED and a power button (UI SDK's toggle). Switching off collapses the picture to a line, then to a dot that fades; TvPowerOff plays it over the whole page, for logging out.",
+  "dependencies": [
+    "@ui-sdk/core@0.1.0-beta.12",
+    "@ui-sdk/react@0.1.0-beta.12"
+  ],
+  "registryDependencies": [
+    "@eskais/utils",
+    "@eskais/theme",
+    "@eskais/tooltip",
+    "@eskais/action-refusal"
+  ],
+  "files": [
+    {
+      "path": "registry/ui/retro-tv.tsx",
+      "content": "\"use client\"\n\nimport type { ChangeDetails } from \"@ui-sdk/core\"\nimport { createParts } from \"@ui-sdk/react/primitive\"\nimport { createToggleController, Toggle, type TogglePressedChangeReason } from \"@ui-sdk/react/toggle\"\nimport { useState, type ReactNode } from \"react\"\n\nimport { retroTv } from \"@/components/ui/retro-tv-primitive\"\nimport { ControlTooltip } from \"@/components/ui/tooltip\"\nimport { cn } from \"@/lib/utils\"\n\nconst { Root: RetroTvRoot } = createParts(retroTv, { root: \"div\" })\n\ntype RetroTvPhosphor = \"green\" | \"amber\" | \"white\"\n\ntype RetroTvLabels = {\n  /** Names the power button, a toggle pressed while the set is on. */\n  power: string\n}\n\nconst retroTvLabels: RetroTvLabels = { power: \"Power\" }\n\ntype RetroTvState = { power: boolean; disabled: boolean }\n\ntype RetroTvPowerChangeDetails = ChangeDetails<TogglePressedChangeReason>\n\ntype RetroTvProps = {\n  /** The accessible name of the set, as a group. */\n  label: string\n  /** What the screen shows, in phosphor: text, stat cards, charts. It fills a 4:3 box sized by `--retro-tv-screen-width` and `--retro-tv-screen-height`. */\n  children?: ReactNode\n  /** Whether the set is on. Pass it to control the set. */\n  power?: boolean\n  /** Whether the set starts on, when uncontrolled. `true` by default. */\n  defaultPower?: boolean\n  /** Runs when the power button or an agent switches the set, with UI SDK's toggle details; `details.cancel()` keeps it as it is. */\n  onPowerChange?: (power: boolean, details: RetroTvPowerChangeDetails) => void\n  /** The colour of the phosphor: `green` by default, `amber` or `white`. */\n  phosphor?: RetroTvPhosphor\n  /** Turns the set a little in 3D; `false` shows it straight on. `true` by default. */\n  perspective?: boolean\n  disabled?: boolean\n  labels?: Partial<RetroTvLabels>\n  /** Classes for the root; a function gets the set's state. */\n  className?: string | ((state: RetroTvState) => string | undefined)\n}\n\n/**\n * A 1980s tube TV with a wood cabinet: its screen shows any children in phosphor, behind curved glass with scanlines,\n * a vignette and a flickering glare. Its power button is UI SDK's toggle; switching off collapses the picture to a line,\n * then to a dot that fades, and switching on plays it back. Agents call `powerOn` and `powerOff`.\n */\nfunction RetroTv({\n  label,\n  children,\n  power,\n  defaultPower = true,\n  onPowerChange,\n  phosphor = \"green\",\n  perspective = true,\n  disabled = false,\n  labels: labelOverrides,\n  className,\n}: RetroTvProps) {\n  const labels = { ...retroTvLabels, ...labelOverrides }\n  const [toggle] = useState(createToggleController)\n  const [ownPower, setOwnPower] = useState(defaultPower)\n  const [switched, setSwitched] = useState(false)\n  const on = power ?? ownPower\n  const powerState = { \"data-power\": on ? \"on\" : \"off\", \"data-switched\": switched ? \"\" : undefined }\n\n  const onPressedChange = (next: boolean, details: RetroTvPowerChangeDetails) => {\n    onPowerChange?.(next, details)\n    if (details.canceled) return\n    setSwitched(true)\n    setOwnPower(next)\n  }\n\n  return (\n    <RetroTvRoot\n      power={toggle}\n      disabled={disabled}\n      aria-label={label}\n      data-phosphor={phosphor}\n      data-perspective={perspective ? \"\" : undefined}\n      {...powerState}\n      className={cn(typeof className === \"function\" ? className({ power: on, disabled }) : className)}\n    >\n      <div data-slot=\"retro-tv-set\">\n        <div data-slot=\"retro-tv-cabinet\">\n          <div data-slot=\"retro-tv-bezel\">\n            <div data-slot=\"retro-tv-tube\" {...powerState}>\n              <div data-slot=\"retro-tv-picture\" inert={!on} {...powerState}>\n                {children}\n              </div>\n              <span data-slot=\"retro-tv-beam\" aria-hidden=\"true\" {...powerState} />\n              <span data-slot=\"retro-tv-glass\" aria-hidden=\"true\" {...powerState} />\n            </div>\n          </div>\n          <div data-slot=\"retro-tv-panel\">\n            <span data-slot=\"retro-tv-knob\" aria-hidden=\"true\" />\n            <span data-slot=\"retro-tv-knob\" aria-hidden=\"true\" />\n            <span data-slot=\"retro-tv-grille\" aria-hidden=\"true\" />\n            <div data-slot=\"retro-tv-switch\">\n              <span data-slot=\"retro-tv-led\" aria-hidden=\"true\" {...powerState} />\n              <ControlTooltip label={labels.power}>\n                <Toggle\n                  controller={toggle}\n                  pressed={on}\n                  onPressedChange={onPressedChange}\n                  disabled={disabled}\n                  aria-label={labels.power}\n                  render={(part) => <button {...part} data-slot=\"retro-tv-power\" className=\"touch-target\" />}\n                />\n              </ControlTooltip>\n            </div>\n          </div>\n        </div>\n        <span data-slot=\"retro-tv-side\" aria-hidden=\"true\" />\n        <span data-slot=\"retro-tv-feet\" aria-hidden=\"true\" />\n      </div>\n    </RetroTvRoot>\n  )\n}\n\nexport { RetroTv, retroTvLabels }\nexport type { RetroTvLabels, RetroTvPhosphor, RetroTvPowerChangeDetails, RetroTvProps, RetroTvState }\n",
+      "type": "registry:ui"
+    },
+    {
+      "path": "registry/ui/retro-tv-primitive.ts",
+      "content": "import { definePrimitive } from \"@ui-sdk/core\"\nimport type { ToggleController } from \"@ui-sdk/core/toggle\"\n\nimport { settled, unavailable } from \"@/lib/action-refusal\"\n\ntype RetroTvSwitch = Pick<ToggleController, \"isPressed\" | \"setPressed\">\n\ntype RetroTvOptions = {\n  power?: RetroTvSwitch\n  disabled?: boolean\n}\n\nfunction switchTo(options: RetroTvOptions, on: boolean, action: string, event: Event | undefined) {\n  if (options.disabled) return unavailable(action, \"isn't available while the set is disabled\", { event })\n  if (!options.power) return unavailable(action, \"isn't available: the power button isn't ready\", { event })\n  if (options.power.isPressed() === on) return true\n  return settled(options.power.setPressed(on, { reason: \"imperative\", event }), action, { event })\n}\n\n/** A retro TV's agent surface: the power button is UI SDK's toggle, pressed while the set is on. */\nconst retroTv = definePrimitive({\n  name: \"retro-tv\",\n  options: { power: \"value\", disabled: \"value\" },\n  // Workaround: not `disabled`: the bridge would hide every action from a disabled part without saying why.\n  state: (options: RetroTvOptions) => ({ inert: Boolean(options.disabled) }),\n  sync: (options) => ({ inert: Boolean(options.disabled) }),\n  api: (context) => ({\n    /** Turns the set on; `true` when it already is. */\n    powerOn(event?: Event) {\n      return switchTo(context.options(), true, \"powerOn\", event)\n    },\n    /** Turns the set off, with the picture collapsing to a dot; `true` when it already is. */\n    powerOff(event?: Event) {\n      return switchTo(context.options(), false, \"powerOff\", event)\n    },\n  }),\n  slots: (slot) => ({\n    root: slot({\n      role: \"group\",\n      attrs: (state) => ({ \"data-disabled\": state.inert ? \"\" : undefined }),\n    }),\n  }),\n  agent: { actions: [\"powerOn\", \"powerOff\"] },\n})\n\nexport { retroTv }\nexport type { RetroTvOptions, RetroTvSwitch }\n",
+      "type": "registry:ui"
+    },
+    {
+      "path": "registry/ui/tv-power-off.tsx",
+      "content": "\"use client\"\n\nimport { useState, type ReactNode } from \"react\"\nimport { createPortal } from \"react-dom\"\n\nimport type { RetroTvPhosphor } from \"@/components/ui/retro-tv\"\nimport { cn, cssVars } from \"@/lib/utils\"\n\nconst collapseMs = 520\nconst dotFadeMs = 900\nconst reducedFadeMs = 240\n\ntype TvPowerOffProps = {\n  /** Plays the transition over the whole page while `true`, and keeps the screen black once it ends. */\n  playing: boolean\n  /** The colour of the last line and dot: `white` by default. */\n  phosphor?: RetroTvPhosphor\n  className?: string\n}\n\n/**\n * A tube TV switching off over the whole page: the picture closes to a bright line, the line to a dot, and the dot\n * fades on black. Under reduced motion the page fades to black. Rendered into `document.body`, above everything.\n */\nfunction TvPowerOff({ playing, phosphor = \"white\", className }: TvPowerOffProps) {\n  if (!playing || typeof document === \"undefined\") return null\n  return createPortal(\n    <div\n      data-slot=\"tv-power-off\"\n      data-phosphor={phosphor}\n      aria-hidden=\"true\"\n      className={cn(className)}\n      style={cssVars({\n        \"--tv-power-off-collapse\": `${String(collapseMs)}ms`,\n        \"--tv-power-off-dot\": `${String(dotFadeMs)}ms`,\n        \"--tv-power-off-fade\": `${String(reducedFadeMs)}ms`,\n      })}\n    >\n      <span data-slot=\"tv-power-off-beam\" />\n      <span data-slot=\"tv-power-off-dot\" />\n    </div>,\n    document.body,\n  )\n}\n\ntype TvPowerOffOptions = { phosphor?: RetroTvPhosphor }\n\ntype TvPowerOffControls = {\n  /** Whether the transition is on the page. */\n  playing: boolean\n  /** Plays the transition; resolves once the screen is black, for navigating after, like on \"log out\". */\n  powerOff: () => Promise<void>\n  /** Takes the black screen away again, when the page stays. */\n  reset: () => void\n  /** Render it once, anywhere in the app. */\n  overlay: ReactNode\n}\n\nconst prefersReducedMotion = () =>\n  typeof matchMedia === \"function\" && matchMedia(\"(prefers-reduced-motion: reduce)\").matches\n\n/** The page-wide power-off: render `overlay`, then `await powerOff()` before navigating. */\nfunction useTvPowerOff({ phosphor }: TvPowerOffOptions = {}): TvPowerOffControls {\n  const [playing, setPlaying] = useState(false)\n  const powerOff = () => {\n    setPlaying(true)\n    const durationMs = prefersReducedMotion() ? reducedFadeMs : collapseMs + dotFadeMs\n    return new Promise<void>((done) => setTimeout(done, durationMs))\n  }\n  return {\n    playing,\n    powerOff,\n    reset: () => setPlaying(false),\n    overlay: <TvPowerOff playing={playing} phosphor={phosphor} />,\n  }\n}\n\nexport { TvPowerOff, useTvPowerOff }\nexport type { TvPowerOffControls, TvPowerOffOptions, TvPowerOffProps }\n",
+      "type": "registry:ui"
+    }
+  ],
+  "css": {
+    "@property --retro-tv-screen-width": {
+      "syntax": "\"<length>\"",
+      "inherits": "true",
+      "initial-value": "0px"
+    },
+    "@property --retro-tv-screen-height": {
+      "syntax": "\"<length>\"",
+      "inherits": "true",
+      "initial-value": "0px"
+    },
+    "[data-slot=\"retro-tv\"]": {
+      "--retro-tv-phosphor": "#86ffaf",
+      "--retro-tv-phosphor-dim": "#63e892",
+      "--retro-tv-screen": "#03120a",
+      "--retro-tv-glow": "rgb(70 255 140 / 0.5)",
+      "--retro-tv-spill": "rgb(70 255 140 / 0.16)",
+      "--retro-tv-scanline": "0.16",
+      "--retro-tv-dead-glass": "#151a17",
+      "--retro-tv-wood-dark": "#3e2410",
+      "--retro-tv-wood": "#6d4222",
+      "--retro-tv-wood-light": "#8d5a31",
+      "--retro-tv-depth": "26cqw",
+      "display": "block",
+      "width": "100%",
+      "container-type": "inline-size",
+      "perspective": "150cqw",
+      "padding-block": "2cqw 5cqw",
+      "user-select": "none"
+    },
+    "[data-slot=\"retro-tv\"][data-phosphor=\"amber\"]": {
+      "--retro-tv-phosphor": "#ffc56b",
+      "--retro-tv-phosphor-dim": "#f3a548",
+      "--retro-tv-screen": "#150b02",
+      "--retro-tv-glow": "rgb(255 158 40 / 0.5)",
+      "--retro-tv-spill": "rgb(255 158 40 / 0.15)",
+      "--retro-tv-dead-glass": "#1a1714"
+    },
+    "[data-slot=\"retro-tv\"][data-phosphor=\"white\"]": {
+      "--retro-tv-phosphor": "#eaf3ff",
+      "--retro-tv-phosphor-dim": "#b9c8db",
+      "--retro-tv-screen": "#0a0d12",
+      "--retro-tv-glow": "rgb(200 222 255 / 0.42)",
+      "--retro-tv-spill": "rgb(200 222 255 / 0.13)",
+      "--retro-tv-dead-glass": "#16181b"
+    },
+    "[data-slot=\"retro-tv-set\"]": {
+      "position": "relative",
+      "width": "86cqw",
+      "margin-inline": "auto",
+      "transform-style": "preserve-3d"
+    },
+    "[data-slot=\"retro-tv\"][data-perspective] [data-slot=\"retro-tv-set\"]": {
+      "transform": "rotateY(-18deg) rotateX(-4deg)"
+    },
+    "[data-slot=\"retro-tv-cabinet\"]": {
+      "position": "relative",
+      "transform": "translateZ(0)",
+      "display": "grid",
+      "grid-template-columns": "1fr 15cqw",
+      "gap": "2.6cqw",
+      "padding": "3cqw",
+      "border-radius": "3.4cqw",
+      "background": "linear-gradient(180deg, rgb(255 230 200 / 0.16), transparent 18%, transparent 78%, rgb(0 0 0 / 0.3)), linear-gradient(90deg, rgb(0 0 0 / 0.18), transparent 8%, transparent 92%, rgb(0 0 0 / 0.22)), repeating-linear-gradient(91deg, transparent 0 0.7cqw, rgb(40 18 4 / 0.12) 0.7cqw 0.85cqw), repeating-linear-gradient(88.5deg, transparent 0 2.3cqw, rgb(255 214 170 / 0.06) 2.3cqw 2.6cqw), repeating-linear-gradient(90.6deg, transparent 0 5.1cqw, rgb(30 12 2 / 0.1) 5.1cqw 5.9cqw), linear-gradient( 90deg, var(--retro-tv-wood-dark), var(--retro-tv-wood) 14%, var(--retro-tv-wood-light) 33%, var(--retro-tv-wood) 52%, var(--retro-tv-wood-light) 71%, var(--retro-tv-wood) 88%, var(--retro-tv-wood-dark) )",
+      "box-shadow": "inset 0 0.25cqw 0 rgb(255 225 190 / 0.28), inset 0 -0.5cqw 1.2cqw rgb(0 0 0 / 0.45), inset 0.3cqw 0 0.6cqw rgb(255 220 180 / 0.08), 0 2.4cqw 3.2cqw -1cqw rgb(0 0 0 / 0.5), 0 0.6cqw 1cqw rgb(0 0 0 / 0.25)"
+    },
+    "[data-slot=\"retro-tv-side\"]": {
+      "position": "absolute",
+      "pointer-events": "none",
+      "top": "1.2cqw",
+      "bottom": "1.2cqw",
+      "left": "calc(100% - 0.6cqw)",
+      "width": "var(--retro-tv-depth)",
+      "border-radius": "0 2cqw 2cqw 0",
+      "transform-origin": "left center",
+      "transform": "rotateY(90deg)",
+      "background": "linear-gradient(180deg, rgb(255 225 190 / 0.12), transparent 20%, rgb(0 0 0 / 0.25)), repeating-linear-gradient(180deg, transparent 0 0.9cqw, rgb(0 0 0 / 0.1) 0.9cqw 1.05cqw), linear-gradient(90deg, #6a4022, #3a220f)"
+    },
+    "[data-slot=\"retro-tv-feet\"]": {
+      "position": "absolute",
+      "top": "100%",
+      "left": "18%",
+      "right": "18%",
+      "height": "2.2cqw",
+      "border-radius": "0 0 1.2cqw 1.2cqw",
+      "background": "linear-gradient(180deg, #1d1b19, #0b0a09)",
+      "box-shadow": "inset 0 0.2cqw 0 rgb(255 255 255 / 0.06)"
+    },
+    "[data-slot=\"retro-tv-feet\"]::after": {
+      "content": "\"\"",
+      "position": "absolute",
+      "left": "-30%",
+      "right": "-30%",
+      "top": "60%",
+      "height": "4cqw",
+      "border-radius": "50%",
+      "background": "radial-gradient(closest-side, rgb(0 0 0 / 0.38), transparent)",
+      "transform": "translateZ(-1px)"
+    },
+    "[data-slot=\"retro-tv-bezel\"]": {
+      "padding": "2.2cqw",
+      "border": "0.45cqw solid transparent",
+      "border-radius": "4cqw / 3.6cqw",
+      "background": "linear-gradient(160deg, #34312e, #161513 55%, #0b0b0a) padding-box, linear-gradient(135deg, #f1eee7, #8f8b84 38%, #e2ded6 58%, #6c6863) border-box",
+      "box-shadow": "inset 0 0.35cqw 0.7cqw rgb(0 0 0 / 0.7), inset 0 -0.2cqw 0.25cqw rgb(255 255 255 / 0.07), 0 0.3cqw 0.6cqw rgb(0 0 0 / 0.35)"
+    },
+    "[data-slot=\"retro-tv-tube\"]": {
+      "position": "relative",
+      "aspect-ratio": "4 / 3",
+      "overflow": "hidden",
+      "border-radius": "9% / 12%",
+      "container-type": "size",
+      "background": "radial-gradient( ellipse at 50% 46%, color-mix(in oklab, var(--retro-tv-screen), var(--retro-tv-phosphor) 7%), var(--retro-tv-screen) 72% )",
+      "box-shadow": "0 0 2.4cqw 0.3cqw var(--retro-tv-spill), 0 0 0 0.25cqw #050505",
+      "transition": "background-color var(--transition-duration-dialog) var(--ease-standard), box-shadow var(--transition-duration-dialog) var(--ease-standard)"
+    },
+    "[data-slot=\"retro-tv-tube\"][data-power=\"off\"]": {
+      "background": "radial-gradient(ellipse at 45% 40%, #23292599, var(--retro-tv-dead-glass) 70%)",
+      "box-shadow": "0 0 0 0.25cqw #050505"
+    },
+    "[data-slot=\"retro-tv-picture\"]": {
+      "--retro-tv-screen-width": "92cqw",
+      "--retro-tv-screen-height": "92cqh",
+      "--background": "var(--retro-tv-screen)",
+      "--foreground": "var(--retro-tv-phosphor)",
+      "--card": "color-mix(in oklab, var(--retro-tv-screen), var(--retro-tv-phosphor) 6%)",
+      "--card-foreground": "var(--retro-tv-phosphor)",
+      "--popover": "var(--retro-tv-screen)",
+      "--popover-foreground": "var(--retro-tv-phosphor)",
+      "--muted": "color-mix(in oklab, var(--retro-tv-screen), var(--retro-tv-phosphor) 10%)",
+      "--muted-foreground": "var(--retro-tv-phosphor-dim)",
+      "--primary": "var(--retro-tv-phosphor)",
+      "--primary-foreground": "var(--retro-tv-screen)",
+      "--secondary": "color-mix(in oklab, var(--retro-tv-screen), var(--retro-tv-phosphor) 14%)",
+      "--secondary-foreground": "var(--retro-tv-phosphor)",
+      "--accent": "color-mix(in oklab, var(--retro-tv-screen), var(--retro-tv-phosphor) 14%)",
+      "--accent-foreground": "var(--retro-tv-phosphor)",
+      "--border": "color-mix(in oklab, var(--retro-tv-screen), var(--retro-tv-phosphor) 34%)",
+      "--input": "color-mix(in oklab, var(--retro-tv-screen), var(--retro-tv-phosphor) 34%)",
+      "--input-strong": "var(--retro-tv-phosphor-dim)",
+      "--ring": "var(--retro-tv-phosphor)",
+      "--link": "var(--retro-tv-phosphor)",
+      "--success": "var(--retro-tv-phosphor)",
+      "--warning": "var(--retro-tv-phosphor)",
+      "--destructive": "var(--retro-tv-phosphor)",
+      "--info": "var(--retro-tv-phosphor)",
+      "--chart-1": "var(--retro-tv-phosphor)",
+      "--chart-2": "var(--retro-tv-phosphor-dim)",
+      "--chart-3": "color-mix(in oklab, var(--retro-tv-phosphor), var(--retro-tv-screen) 30%)",
+      "--chart-4": "color-mix(in oklab, var(--retro-tv-phosphor), var(--retro-tv-screen) 45%)",
+      "--chart-5": "color-mix(in oklab, var(--retro-tv-phosphor), var(--retro-tv-screen) 60%)",
+      "--series-positive": "var(--retro-tv-phosphor)",
+      "--series-negative": "var(--retro-tv-phosphor-dim)",
+      "--series-target": "var(--retro-tv-phosphor)",
+      "--series-remaining": "color-mix(in oklab, var(--retro-tv-phosphor), var(--retro-tv-screen) 55%)",
+      "--surface-shadow": "none",
+      "--skeleton": "color-mix(in oklab, var(--retro-tv-screen), var(--retro-tv-phosphor) 16%)",
+      "position": "absolute",
+      "inset": "4%",
+      "display": "flex",
+      "flex-direction": "column",
+      "overflow": "hidden",
+      "container": "retro-tv-screen / size",
+      "border-radius": "5% / 6.5%",
+      "color": "var(--retro-tv-phosphor)",
+      "font-family": "var(--font-mono)",
+      "text-shadow": "0 0 0.35em var(--retro-tv-glow), 0 0 0.08em var(--retro-tv-glow)",
+      "transform-origin": "50% 50%"
+    },
+    "[data-slot=\"retro-tv-picture\"] svg": {
+      "filter": "drop-shadow(0 0 0.2em var(--retro-tv-glow))"
+    },
+    "[data-slot=\"retro-tv-picture\"][data-power=\"off\"]": {
+      "opacity": "0",
+      "transform": "scale(0)"
+    },
+    "[data-slot=\"retro-tv-picture\"][data-switched][data-power=\"off\"]": {
+      "animation": "retro-tv-collapse 520ms cubic-bezier(0.6, 0, 0.4, 1) both"
+    },
+    "[data-slot=\"retro-tv-picture\"][data-switched][data-power=\"on\"]": {
+      "animation": "retro-tv-expand 480ms cubic-bezier(0.2, 0, 0, 1) both"
+    },
+    "[data-slot=\"retro-tv-beam\"]": {
+      "position": "absolute",
+      "top": "50%",
+      "left": "4%",
+      "right": "4%",
+      "height": "2.2cqh",
+      "translate": "0 -50%",
+      "border-radius": "50%",
+      "background": "radial-gradient(closest-side, white 30%, var(--retro-tv-phosphor) 62%, transparent)",
+      "box-shadow": "0 0 2.4cqw 0.4cqw var(--retro-tv-glow)",
+      "opacity": "0",
+      "pointer-events": "none"
+    },
+    "[data-slot=\"retro-tv-beam\"][data-switched][data-power=\"off\"]": {
+      "animation": "retro-tv-beam-off 1300ms ease-out both"
+    },
+    "[data-slot=\"retro-tv-beam\"][data-switched][data-power=\"on\"]": {
+      "animation": "retro-tv-beam-on 480ms cubic-bezier(0.2, 0, 0, 1) both"
+    },
+    "[data-slot=\"retro-tv-glass\"]": {
+      "position": "absolute",
+      "inset": "0",
+      "border-radius": "inherit",
+      "pointer-events": "none",
+      "background": "linear-gradient(112deg, transparent 52%, rgb(255 255 255 / 0.035) 60%, transparent 68%), repeating-linear-gradient(180deg, rgb(0 0 0 / var(--retro-tv-scanline)) 0 1px, transparent 1px 3px), radial-gradient(ellipse at 50% 50%, transparent 56%, rgb(0 0 0 / 0.58) 100%)",
+      "box-shadow": "inset 0 0 3cqw 0.6cqw rgb(0 0 0 / 0.75), inset 0 0.8cqw 1.4cqw rgb(255 255 255 / 0.05)"
+    },
+    "[data-slot=\"retro-tv-glass\"]::before": {
+      "position": "absolute",
+      "inset": "0",
+      "border-radius": "inherit",
+      "pointer-events": "none",
+      "content": "\"\"",
+      "background": "radial-gradient(ellipse 58% 42% at 27% 17%, rgb(255 255 255 / 0.11), transparent 70%), radial-gradient(ellipse 30% 14% at 78% 88%, rgb(255 255 255 / 0.035), transparent 70%)",
+      "animation": "retro-tv-flicker 6s steps(1) infinite"
+    },
+    "[data-slot=\"retro-tv-glass\"]::after": {
+      "position": "absolute",
+      "inset": "-20% 0 auto",
+      "border-radius": "0",
+      "pointer-events": "none",
+      "content": "\"\"",
+      "height": "22%",
+      "background": "linear-gradient(180deg, transparent, rgb(255 255 255 / 0.025) 50%, transparent)",
+      "animation": "retro-tv-roll 9s linear infinite"
+    },
+    "[data-slot=\"retro-tv-glass\"][data-power=\"off\"]::after": {
+      "animation": "none",
+      "opacity": "0"
+    },
+    "[data-slot=\"retro-tv-panel\"]": {
+      "display": "flex",
+      "flex-direction": "column",
+      "align-items": "center",
+      "gap": "2.6cqw",
+      "padding-block": "1cqw"
+    },
+    "[data-slot=\"retro-tv-knob\"]": {
+      "position": "relative",
+      "width": "9cqw",
+      "aspect-ratio": "1",
+      "border-radius": "50%",
+      "rotate": "-32deg",
+      "background": "radial-gradient(circle at 50% 50%, transparent 58%, rgb(0 0 0 / 0.25) 60%, transparent 63%), repeating-conic-gradient(rgb(0 0 0 / 0.16) 0 3deg, transparent 3deg 9deg), radial-gradient(circle at 36% 30%, #f2eee6, #a9a397 52%, #5f5a52)",
+      "box-shadow": "0 0.7cqw 0.9cqw rgb(0 0 0 / 0.5), 0 0.2cqw 0.2cqw rgb(0 0 0 / 0.4), inset 0 -0.3cqw 0.4cqw rgb(0 0 0 / 0.3), inset 0 0.2cqw 0.2cqw rgb(255 255 255 / 0.5)"
+    },
+    "[data-slot=\"retro-tv-knob\"] + [data-slot=\"retro-tv-knob\"]": {
+      "rotate": "48deg"
+    },
+    "[data-slot=\"retro-tv-knob\"]::after": {
+      "content": "\"\"",
+      "position": "absolute",
+      "top": "8%",
+      "left": "calc(50% - 0.3cqw)",
+      "width": "0.6cqw",
+      "height": "28%",
+      "border-radius": "0.3cqw",
+      "background": "#3a342d",
+      "box-shadow": "0 0.1cqw 0 rgb(255 255 255 / 0.35)"
+    },
+    "[data-slot=\"retro-tv-grille\"]": {
+      "flex": "1",
+      "width": "100%",
+      "min-height": "8cqw",
+      "border-radius": "1.2cqw",
+      "background": "repeating-linear-gradient(180deg, #120a04 0 0.55cqw, transparent 0.55cqw 1.2cqw), linear-gradient(90deg, #4a2c15, #6a4021 50%, #4a2c15)",
+      "box-shadow": "inset 0 0.3cqw 0.6cqw rgb(0 0 0 / 0.6), 0 0.15cqw 0 rgb(255 225 190 / 0.18)"
+    },
+    "[data-slot=\"retro-tv-switch\"]": {
+      "display": "flex",
+      "align-items": "center",
+      "gap": "1.8cqw"
+    },
+    "[data-slot=\"retro-tv-led\"]": {
+      "width": "1.3cqw",
+      "aspect-ratio": "1",
+      "border-radius": "50%",
+      "background": "radial-gradient(circle at 40% 35%, #5a2622, #2a0f0d)",
+      "box-shadow": "inset 0 0.1cqw 0.2cqw rgb(0 0 0 / 0.7)",
+      "transition": "background-color var(--transition-duration-micro) var(--ease-standard)"
+    },
+    "[data-slot=\"retro-tv-led\"][data-power=\"on\"]": {
+      "background": "radial-gradient(circle at 40% 35%, #ffd2c8, #ff3b28 45%, #a2140a)",
+      "box-shadow": "0 0 1.2cqw 0.2cqw rgb(255 60 40 / 0.7), inset 0 0.1cqw 0.2cqw rgb(255 255 255 / 0.4)"
+    },
+    "[data-slot=\"retro-tv-power\"]": {
+      "width": "7cqw",
+      "height": "3.6cqw",
+      "padding": "0",
+      "border": "0",
+      "border-radius": "0.8cqw",
+      "cursor": "pointer",
+      "background": "linear-gradient(180deg, #f4f2ee, #c9c5bd 45%, #8e8a83)",
+      "box-shadow": "0 0.6cqw 0 #4b4741, 0 0.9cqw 0.9cqw rgb(0 0 0 / 0.55), inset 0 0.15cqw 0 rgb(255 255 255 / 0.9)",
+      "translate": "0 -0.3cqw",
+      "transition": "translate var(--transition-duration-micro) var(--ease-standard), box-shadow var(--transition-duration-micro) var(--ease-standard)"
+    },
+    "[data-slot=\"retro-tv-power\"][data-pressed]": {
+      "translate": "0 0.15cqw",
+      "background": "linear-gradient(180deg, #d8d4cc, #b3aea5 50%, #8a867f)",
+      "box-shadow": "0 0.15cqw 0 #4b4741, 0 0.3cqw 0.4cqw rgb(0 0 0 / 0.5), inset 0 0.2cqw 0.4cqw rgb(0 0 0 / 0.25)"
+    },
+    "[data-slot=\"retro-tv-power\"]:focus-visible": {
+      "outline": "2px solid white",
+      "outline-offset": "3px"
+    },
+    "[data-slot=\"retro-tv-power\"][data-disabled]": {
+      "cursor": "not-allowed",
+      "filter": "saturate(0.4) brightness(0.8)"
+    },
+    "@container (width < 30rem)": {
+      "[data-slot=\"retro-tv-cabinet\"]": {
+        "grid-template-columns": "1fr",
+        "gap": "3cqw",
+        "padding": "3.6cqw"
+      },
+      "[data-slot=\"retro-tv-panel\"]": {
+        "flex-direction": "row",
+        "padding-block": "0"
+      },
+      "[data-slot=\"retro-tv-knob\"]": {
+        "width": "9.5cqw"
+      },
+      "[data-slot=\"retro-tv-grille\"]": {
+        "align-self": "stretch",
+        "min-height": "0"
+      },
+      "[data-slot=\"retro-tv-power\"]": {
+        "width": "10cqw",
+        "height": "5.2cqw"
+      },
+      "[data-slot=\"retro-tv-led\"]": {
+        "width": "2cqw"
+      }
+    },
+    "@keyframes retro-tv-collapse": {
+      "0%": {
+        "opacity": "1",
+        "transform": "scale(1, 1)",
+        "filter": "brightness(1)"
+      },
+      "40%": {
+        "transform": "scale(1, 0.012)",
+        "filter": "brightness(3)"
+      },
+      "72%": {
+        "opacity": "1",
+        "transform": "scale(0.004, 0.012)",
+        "filter": "brightness(5)"
+      },
+      "100%": {
+        "opacity": "0",
+        "transform": "scale(0, 0)"
+      }
+    },
+    "@keyframes retro-tv-expand": {
+      "0%": {
+        "opacity": "1",
+        "transform": "scale(0.004, 0.012)",
+        "filter": "brightness(5)"
+      },
+      "45%": {
+        "transform": "scale(1, 0.012)",
+        "filter": "brightness(3)"
+      },
+      "100%": {
+        "opacity": "1",
+        "transform": "scale(1, 1)",
+        "filter": "brightness(1)"
+      }
+    },
+    "@keyframes retro-tv-beam-off": {
+      "0%": {
+        "opacity": "0",
+        "scale": "1 1"
+      },
+      "14%": {
+        "opacity": "1",
+        "scale": "1 1"
+      },
+      "30%": {
+        "opacity": "1",
+        "scale": "0.028 1.3"
+      },
+      "100%": {
+        "opacity": "0",
+        "scale": "0.01 0.5"
+      }
+    },
+    "@keyframes retro-tv-beam-on": {
+      "0%": {
+        "opacity": "1",
+        "scale": "0.028 1.3"
+      },
+      "40%": {
+        "opacity": "1",
+        "scale": "1 1"
+      },
+      "75%": {
+        "opacity": "0",
+        "scale": "1 1"
+      },
+      "100%": {
+        "opacity": "0"
+      }
+    },
+    "@keyframes retro-tv-flicker": {
+      "0%": {
+        "opacity": "1"
+      },
+      "31%": {
+        "opacity": "0.86"
+      },
+      "32%": {
+        "opacity": "1"
+      },
+      "77%": {
+        "opacity": "0.92"
+      },
+      "78%": {
+        "opacity": "1"
+      }
+    },
+    "@keyframes retro-tv-roll": {
+      "0%": {
+        "transform": "translateY(0)"
+      },
+      "100%": {
+        "transform": "translateY(600%)"
+      }
+    },
+    "@keyframes retro-tv-fade-in": {
+      "0%": {
+        "opacity": "0"
+      },
+      "100%": {
+        "opacity": "1"
+      }
+    },
+    "@keyframes retro-tv-fade-out": {
+      "0%": {
+        "opacity": "1"
+      },
+      "100%": {
+        "opacity": "0"
+      }
+    },
+    "@media (prefers-reduced-motion: reduce)": {
+      "[data-slot=\"tv-power-off\"]": {
+        "background": "black",
+        "animation": "retro-tv-fade-in var(--tv-power-off-fade) ease-out both"
+      },
+      "[data-slot=\"tv-power-off-beam\"]": {
+        "display": "none"
+      },
+      "[data-slot=\"tv-power-off-dot\"]": {
+        "display": "none"
+      }
+    },
+    "[data-slot=\"tv-power-off\"]": {
+      "position": "fixed",
+      "inset": "0",
+      "z-index": "calc(var(--z-index-toast) + 1)",
+      "overflow": "hidden",
+      "pointer-events": "auto",
+      "--tv-power-off-colour": "#f4f8ff",
+      "--tv-power-off-glow": "rgb(200 222 255 / 0.7)"
+    },
+    "[data-slot=\"tv-power-off\"][data-phosphor=\"green\"]": {
+      "--tv-power-off-colour": "#b9ffd0",
+      "--tv-power-off-glow": "rgb(70 255 140 / 0.7)"
+    },
+    "[data-slot=\"tv-power-off\"][data-phosphor=\"amber\"]": {
+      "--tv-power-off-colour": "#ffe0ad",
+      "--tv-power-off-glow": "rgb(255 158 40 / 0.7)"
+    },
+    "[data-slot=\"tv-power-off-beam\"]": {
+      "position": "absolute",
+      "top": "50%",
+      "left": "50%",
+      "width": "100vw",
+      "height": "100vh",
+      "translate": "-50% -50%",
+      "background": "transparent",
+      "box-shadow": "0 0 0 150vmax black",
+      "animation": "tv-power-off-beam var(--tv-power-off-collapse) cubic-bezier(0.6, 0, 0.4, 1) both"
+    },
+    "[data-slot=\"tv-power-off-dot\"]": {
+      "position": "absolute",
+      "top": "50%",
+      "left": "50%",
+      "width": "10px",
+      "height": "10px",
+      "translate": "-50% -50%",
+      "border-radius": "50%",
+      "background": "radial-gradient(circle, white 25%, var(--tv-power-off-colour) 55%, transparent 72%)",
+      "box-shadow": "0 0 22px 8px var(--tv-power-off-glow)",
+      "opacity": "0",
+      "animation": "tv-power-off-dot var(--tv-power-off-dot) calc(var(--tv-power-off-collapse) * 0.75) ease-out both"
+    },
+    "@keyframes tv-power-off-beam": {
+      "0%": {
+        "width": "100vw",
+        "height": "100vh",
+        "background": "rgb(255 255 255 / 0)",
+        "box-shadow": "0 0 0 150vmax black"
+      },
+      "40%": {
+        "width": "100vw",
+        "height": "3px",
+        "background": "var(--tv-power-off-colour)",
+        "box-shadow": "0 0 16px 4px var(--tv-power-off-glow), 0 0 0 150vmax black"
+      },
+      "75%": {
+        "width": "6px",
+        "height": "3px",
+        "background": "white",
+        "box-shadow": "0 0 16px 4px var(--tv-power-off-glow), 0 0 0 150vmax black"
+      },
+      "100%": {
+        "width": "0",
+        "height": "0",
+        "background": "white",
+        "box-shadow": "0 0 0 150vmax black"
+      }
+    },
+    "@keyframes tv-power-off-dot": {
+      "0%": {
+        "opacity": "1",
+        "scale": "1"
+      },
+      "100%": {
+        "opacity": "0",
+        "scale": "0.3"
+      }
+    }
+  },
+  "docs": "`<RetroTv label power|defaultPower onPowerChange phosphor perspective disabled labels>` with the screen's content as children. The screen is a 4:3 box that children fill (`h-full`), sized by `--retro-tv-screen-width` and `--retro-tv-screen-height`, lengths in pixels for a grid such as 40 × 25 teletext cells, and a size container (`cqw`, `cqh`). Inside it the theme's tokens become phosphor (`foreground`, `muted-foreground`, `card`, `border`, `primary`, `chart-1` to `chart-5`, the series), so stat cards and charts render in it unchanged; add your own padding. The power button is UI SDK's Toggle (`labels.power`, \"Power\" by default) and `onPowerChange(power, details)` gets its details: `details.cancel()` keeps the set as it is. Switching off collapses the picture to a line, then to a dot that fades, and switching on plays it back; under reduced motion it fades. While off, the screen is `inert`. Agents call `powerOn` and `powerOff`. `useTvPowerOff({ phosphor })` gives `{ overlay, powerOff, reset, playing }`: render `overlay` once, and `await powerOff()` before navigating, as on \"log out\"; `TvPowerOff playing` is the overlay alone. The cabinet and screen are a fixed palette in every theme (the item's `css`).",
+  "type": "registry:ui"
+}

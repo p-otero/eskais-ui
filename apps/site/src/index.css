@@ -16,6 +16,9 @@
 @import "../../../registry/styles/neon-sign.css";
 @import "../../../registry/styles/chalkboard.css";
 @import "../../../registry/styles/teletext.css";
+@import "../../../registry/styles/retro-tv.css";
+@import "../../../registry/styles/pill-dialog.css";
+@import "../../../registry/styles/ejector-button.css";
 
 @source "../../../registry";
 @source "../../showcase/src/theme-editor.tsx";

@@ -1,0 +1,687 @@
+@property --retro-tv-screen-width {
+  syntax: "<length>";
+  inherits: true;
+  initial-value: 0px;
+}
+
+@property --retro-tv-screen-height {
+  syntax: "<length>";
+  inherits: true;
+  initial-value: 0px;
+}
+
+[data-slot="retro-tv"] {
+  --retro-tv-phosphor: #86ffaf;
+  --retro-tv-phosphor-dim: #63e892;
+  --retro-tv-screen: #03120a;
+  --retro-tv-glow: rgb(70 255 140 / 0.5);
+  --retro-tv-spill: rgb(70 255 140 / 0.16);
+  --retro-tv-scanline: 0.16;
+  --retro-tv-dead-glass: #151a17;
+  --retro-tv-wood-dark: #3e2410;
+  --retro-tv-wood: #6d4222;
+  --retro-tv-wood-light: #8d5a31;
+  --retro-tv-depth: 26cqw;
+  display: block;
+  width: 100%;
+  container-type: inline-size;
+  perspective: 150cqw;
+  padding-block: 2cqw 5cqw;
+  user-select: none;
+}
+
+[data-slot="retro-tv"][data-phosphor="amber"] {
+  --retro-tv-phosphor: #ffc56b;
+  --retro-tv-phosphor-dim: #f3a548;
+  --retro-tv-screen: #150b02;
+  --retro-tv-glow: rgb(255 158 40 / 0.5);
+  --retro-tv-spill: rgb(255 158 40 / 0.15);
+  --retro-tv-dead-glass: #1a1714;
+}
+
+[data-slot="retro-tv"][data-phosphor="white"] {
+  --retro-tv-phosphor: #eaf3ff;
+  --retro-tv-phosphor-dim: #b9c8db;
+  --retro-tv-screen: #0a0d12;
+  --retro-tv-glow: rgb(200 222 255 / 0.42);
+  --retro-tv-spill: rgb(200 222 255 / 0.13);
+  --retro-tv-dead-glass: #16181b;
+}
+
+[data-slot="retro-tv-set"] {
+  position: relative;
+  width: 86cqw;
+  margin-inline: auto;
+  transform-style: preserve-3d;
+}
+
+[data-slot="retro-tv"][data-perspective] [data-slot="retro-tv-set"] {
+  transform: rotateY(-18deg) rotateX(-4deg);
+}
+
+/* Workaround: Chrome hit-tests a control on a flat child of a preserve-3d parent against the parent's plane, so the
+   power button took no clicks; its own plane fixes it (Chrome 158). */
+[data-slot="retro-tv-cabinet"] {
+  position: relative;
+  transform: translateZ(0);
+  display: grid;
+  grid-template-columns: 1fr 15cqw;
+  gap: 2.6cqw;
+  padding: 3cqw;
+  border-radius: 3.4cqw;
+  background:
+    linear-gradient(180deg, rgb(255 230 200 / 0.16), transparent 18%, transparent 78%, rgb(0 0 0 / 0.3)),
+    linear-gradient(90deg, rgb(0 0 0 / 0.18), transparent 8%, transparent 92%, rgb(0 0 0 / 0.22)),
+    repeating-linear-gradient(91deg, transparent 0 0.7cqw, rgb(40 18 4 / 0.12) 0.7cqw 0.85cqw),
+    repeating-linear-gradient(88.5deg, transparent 0 2.3cqw, rgb(255 214 170 / 0.06) 2.3cqw 2.6cqw),
+    repeating-linear-gradient(90.6deg, transparent 0 5.1cqw, rgb(30 12 2 / 0.1) 5.1cqw 5.9cqw),
+    linear-gradient(
+      90deg,
+      var(--retro-tv-wood-dark),
+      var(--retro-tv-wood) 14%,
+      var(--retro-tv-wood-light) 33%,
+      var(--retro-tv-wood) 52%,
+      var(--retro-tv-wood-light) 71%,
+      var(--retro-tv-wood) 88%,
+      var(--retro-tv-wood-dark)
+    );
+  box-shadow:
+    inset 0 0.25cqw 0 rgb(255 225 190 / 0.28),
+    inset 0 -0.5cqw 1.2cqw rgb(0 0 0 / 0.45),
+    inset 0.3cqw 0 0.6cqw rgb(255 220 180 / 0.08),
+    0 2.4cqw 3.2cqw -1cqw rgb(0 0 0 / 0.5),
+    0 0.6cqw 1cqw rgb(0 0 0 / 0.25);
+}
+
+[data-slot="retro-tv-side"] {
+  position: absolute;
+  pointer-events: none;
+  top: 1.2cqw;
+  bottom: 1.2cqw;
+  left: calc(100% - 0.6cqw);
+  width: var(--retro-tv-depth);
+  border-radius: 0 2cqw 2cqw 0;
+  transform-origin: left center;
+  transform: rotateY(90deg);
+  background:
+    linear-gradient(180deg, rgb(255 225 190 / 0.12), transparent 20%, rgb(0 0 0 / 0.25)),
+    repeating-linear-gradient(180deg, transparent 0 0.9cqw, rgb(0 0 0 / 0.1) 0.9cqw 1.05cqw),
+    linear-gradient(90deg, #6a4022, #3a220f);
+}
+
+[data-slot="retro-tv-feet"] {
+  position: absolute;
+  top: 100%;
+  left: 18%;
+  right: 18%;
+  height: 2.2cqw;
+  border-radius: 0 0 1.2cqw 1.2cqw;
+  background: linear-gradient(180deg, #1d1b19, #0b0a09);
+  box-shadow: inset 0 0.2cqw 0 rgb(255 255 255 / 0.06);
+}
+
+[data-slot="retro-tv-feet"]::after {
+  content: "";
+  position: absolute;
+  left: -30%;
+  right: -30%;
+  top: 60%;
+  height: 4cqw;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, rgb(0 0 0 / 0.38), transparent);
+  transform: translateZ(-1px);
+}
+
+[data-slot="retro-tv-bezel"] {
+  padding: 2.2cqw;
+  border: 0.45cqw solid transparent;
+  border-radius: 4cqw / 3.6cqw;
+  background:
+    linear-gradient(160deg, #34312e, #161513 55%, #0b0b0a) padding-box,
+    linear-gradient(135deg, #f1eee7, #8f8b84 38%, #e2ded6 58%, #6c6863) border-box;
+  box-shadow:
+    inset 0 0.35cqw 0.7cqw rgb(0 0 0 / 0.7),
+    inset 0 -0.2cqw 0.25cqw rgb(255 255 255 / 0.07),
+    0 0.3cqw 0.6cqw rgb(0 0 0 / 0.35);
+}
+
+[data-slot="retro-tv-tube"] {
+  position: relative;
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+  border-radius: 9% / 12%;
+  container-type: size;
+  background: radial-gradient(
+    ellipse at 50% 46%,
+    color-mix(in oklab, var(--retro-tv-screen), var(--retro-tv-phosphor) 7%),
+    var(--retro-tv-screen) 72%
+  );
+  box-shadow:
+    0 0 2.4cqw 0.3cqw var(--retro-tv-spill),
+    0 0 0 0.25cqw #050505;
+  transition:
+    background-color var(--transition-duration-dialog) var(--ease-standard),
+    box-shadow var(--transition-duration-dialog) var(--ease-standard);
+}
+
+[data-slot="retro-tv-tube"][data-power="off"] {
+  background: radial-gradient(ellipse at 45% 40%, #23292599, var(--retro-tv-dead-glass) 70%);
+  box-shadow: 0 0 0 0.25cqw #050505;
+}
+
+[data-slot="retro-tv-picture"] {
+  --retro-tv-screen-width: 92cqw;
+  --retro-tv-screen-height: 92cqh;
+  --background: var(--retro-tv-screen);
+  --foreground: var(--retro-tv-phosphor);
+  --card: color-mix(in oklab, var(--retro-tv-screen), var(--retro-tv-phosphor) 6%);
+  --card-foreground: var(--retro-tv-phosphor);
+  --popover: var(--retro-tv-screen);
+  --popover-foreground: var(--retro-tv-phosphor);
+  --muted: color-mix(in oklab, var(--retro-tv-screen), var(--retro-tv-phosphor) 10%);
+  --muted-foreground: var(--retro-tv-phosphor-dim);
+  --primary: var(--retro-tv-phosphor);
+  --primary-foreground: var(--retro-tv-screen);
+  --secondary: color-mix(in oklab, var(--retro-tv-screen), var(--retro-tv-phosphor) 14%);
+  --secondary-foreground: var(--retro-tv-phosphor);
+  --accent: color-mix(in oklab, var(--retro-tv-screen), var(--retro-tv-phosphor) 14%);
+  --accent-foreground: var(--retro-tv-phosphor);
+  --border: color-mix(in oklab, var(--retro-tv-screen), var(--retro-tv-phosphor) 34%);
+  --input: color-mix(in oklab, var(--retro-tv-screen), var(--retro-tv-phosphor) 34%);
+  --input-strong: var(--retro-tv-phosphor-dim);
+  --ring: var(--retro-tv-phosphor);
+  --link: var(--retro-tv-phosphor);
+  --success: var(--retro-tv-phosphor);
+  --warning: var(--retro-tv-phosphor);
+  --destructive: var(--retro-tv-phosphor);
+  --info: var(--retro-tv-phosphor);
+  --chart-1: var(--retro-tv-phosphor);
+  --chart-2: var(--retro-tv-phosphor-dim);
+  --chart-3: color-mix(in oklab, var(--retro-tv-phosphor), var(--retro-tv-screen) 30%);
+  --chart-4: color-mix(in oklab, var(--retro-tv-phosphor), var(--retro-tv-screen) 45%);
+  --chart-5: color-mix(in oklab, var(--retro-tv-phosphor), var(--retro-tv-screen) 60%);
+  --series-positive: var(--retro-tv-phosphor);
+  --series-negative: var(--retro-tv-phosphor-dim);
+  --series-target: var(--retro-tv-phosphor);
+  --series-remaining: color-mix(in oklab, var(--retro-tv-phosphor), var(--retro-tv-screen) 55%);
+  --surface-shadow: none;
+  --skeleton: color-mix(in oklab, var(--retro-tv-screen), var(--retro-tv-phosphor) 16%);
+  position: absolute;
+  inset: 4%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  container: retro-tv-screen / size;
+  border-radius: 5% / 6.5%;
+  color: var(--retro-tv-phosphor);
+  font-family: var(--font-mono);
+  text-shadow:
+    0 0 0.35em var(--retro-tv-glow),
+    0 0 0.08em var(--retro-tv-glow);
+  transform-origin: 50% 50%;
+}
+
+[data-slot="retro-tv-picture"] svg {
+  filter: drop-shadow(0 0 0.2em var(--retro-tv-glow));
+}
+
+[data-slot="retro-tv-picture"][data-power="off"] {
+  opacity: 0;
+  transform: scale(0);
+}
+
+[data-slot="retro-tv-picture"][data-switched][data-power="off"] {
+  animation: retro-tv-collapse 520ms cubic-bezier(0.6, 0, 0.4, 1) both;
+}
+
+[data-slot="retro-tv-picture"][data-switched][data-power="on"] {
+  animation: retro-tv-expand 480ms cubic-bezier(0.2, 0, 0, 1) both;
+}
+
+[data-slot="retro-tv-beam"] {
+  position: absolute;
+  top: 50%;
+  left: 4%;
+  right: 4%;
+  height: 2.2cqh;
+  translate: 0 -50%;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, white 30%, var(--retro-tv-phosphor) 62%, transparent);
+  box-shadow: 0 0 2.4cqw 0.4cqw var(--retro-tv-glow);
+  opacity: 0;
+  pointer-events: none;
+}
+
+[data-slot="retro-tv-beam"][data-switched][data-power="off"] {
+  animation: retro-tv-beam-off 1300ms ease-out both;
+}
+
+[data-slot="retro-tv-beam"][data-switched][data-power="on"] {
+  animation: retro-tv-beam-on 480ms cubic-bezier(0.2, 0, 0, 1) both;
+}
+
+[data-slot="retro-tv-glass"],
+[data-slot="retro-tv-glass"]::before,
+[data-slot="retro-tv-glass"]::after {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+}
+
+[data-slot="retro-tv-glass"] {
+  background:
+    linear-gradient(112deg, transparent 52%, rgb(255 255 255 / 0.035) 60%, transparent 68%),
+    repeating-linear-gradient(180deg, rgb(0 0 0 / var(--retro-tv-scanline)) 0 1px, transparent 1px 3px),
+    radial-gradient(ellipse at 50% 50%, transparent 56%, rgb(0 0 0 / 0.58) 100%);
+  box-shadow:
+    inset 0 0 3cqw 0.6cqw rgb(0 0 0 / 0.75),
+    inset 0 0.8cqw 1.4cqw rgb(255 255 255 / 0.05);
+}
+
+[data-slot="retro-tv-glass"]::before {
+  content: "";
+  background:
+    radial-gradient(ellipse 58% 42% at 27% 17%, rgb(255 255 255 / 0.11), transparent 70%),
+    radial-gradient(ellipse 30% 14% at 78% 88%, rgb(255 255 255 / 0.035), transparent 70%);
+  animation: retro-tv-flicker 6s steps(1) infinite;
+}
+
+[data-slot="retro-tv-glass"]::after {
+  content: "";
+  inset: -20% 0 auto;
+  height: 22%;
+  border-radius: 0;
+  background: linear-gradient(180deg, transparent, rgb(255 255 255 / 0.025) 50%, transparent);
+  animation: retro-tv-roll 9s linear infinite;
+}
+
+[data-slot="retro-tv-glass"][data-power="off"]::after {
+  animation: none;
+  opacity: 0;
+}
+
+[data-slot="retro-tv-panel"] {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2.6cqw;
+  padding-block: 1cqw;
+}
+
+[data-slot="retro-tv-knob"] {
+  position: relative;
+  width: 9cqw;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  rotate: -32deg;
+  background:
+    radial-gradient(circle at 50% 50%, transparent 58%, rgb(0 0 0 / 0.25) 60%, transparent 63%),
+    repeating-conic-gradient(rgb(0 0 0 / 0.16) 0 3deg, transparent 3deg 9deg),
+    radial-gradient(circle at 36% 30%, #f2eee6, #a9a397 52%, #5f5a52);
+  box-shadow:
+    0 0.7cqw 0.9cqw rgb(0 0 0 / 0.5),
+    0 0.2cqw 0.2cqw rgb(0 0 0 / 0.4),
+    inset 0 -0.3cqw 0.4cqw rgb(0 0 0 / 0.3),
+    inset 0 0.2cqw 0.2cqw rgb(255 255 255 / 0.5);
+}
+
+[data-slot="retro-tv-knob"] + [data-slot="retro-tv-knob"] {
+  rotate: 48deg;
+}
+
+[data-slot="retro-tv-knob"]::after {
+  content: "";
+  position: absolute;
+  top: 8%;
+  left: calc(50% - 0.3cqw);
+  width: 0.6cqw;
+  height: 28%;
+  border-radius: 0.3cqw;
+  background: #3a342d;
+  box-shadow: 0 0.1cqw 0 rgb(255 255 255 / 0.35);
+}
+
+[data-slot="retro-tv-grille"] {
+  flex: 1;
+  width: 100%;
+  min-height: 8cqw;
+  border-radius: 1.2cqw;
+  background:
+    repeating-linear-gradient(180deg, #120a04 0 0.55cqw, transparent 0.55cqw 1.2cqw),
+    linear-gradient(90deg, #4a2c15, #6a4021 50%, #4a2c15);
+  box-shadow:
+    inset 0 0.3cqw 0.6cqw rgb(0 0 0 / 0.6),
+    0 0.15cqw 0 rgb(255 225 190 / 0.18);
+}
+
+[data-slot="retro-tv-switch"] {
+  display: flex;
+  align-items: center;
+  gap: 1.8cqw;
+}
+
+[data-slot="retro-tv-led"] {
+  width: 1.3cqw;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: radial-gradient(circle at 40% 35%, #5a2622, #2a0f0d);
+  box-shadow: inset 0 0.1cqw 0.2cqw rgb(0 0 0 / 0.7);
+  transition: background-color var(--transition-duration-micro) var(--ease-standard);
+}
+
+[data-slot="retro-tv-led"][data-power="on"] {
+  background: radial-gradient(circle at 40% 35%, #ffd2c8, #ff3b28 45%, #a2140a);
+  box-shadow:
+    0 0 1.2cqw 0.2cqw rgb(255 60 40 / 0.7),
+    inset 0 0.1cqw 0.2cqw rgb(255 255 255 / 0.4);
+}
+
+[data-slot="retro-tv-power"] {
+  width: 7cqw;
+  height: 3.6cqw;
+  padding: 0;
+  border: 0;
+  border-radius: 0.8cqw;
+  cursor: pointer;
+  background: linear-gradient(180deg, #f4f2ee, #c9c5bd 45%, #8e8a83);
+  box-shadow:
+    0 0.6cqw 0 #4b4741,
+    0 0.9cqw 0.9cqw rgb(0 0 0 / 0.55),
+    inset 0 0.15cqw 0 rgb(255 255 255 / 0.9);
+  translate: 0 -0.3cqw;
+  transition:
+    translate var(--transition-duration-micro) var(--ease-standard),
+    box-shadow var(--transition-duration-micro) var(--ease-standard);
+}
+
+[data-slot="retro-tv-power"][data-pressed] {
+  translate: 0 0.15cqw;
+  background: linear-gradient(180deg, #d8d4cc, #b3aea5 50%, #8a867f);
+  box-shadow:
+    0 0.15cqw 0 #4b4741,
+    0 0.3cqw 0.4cqw rgb(0 0 0 / 0.5),
+    inset 0 0.2cqw 0.4cqw rgb(0 0 0 / 0.25);
+}
+
+/* Spec: the cabinet is wood in every theme, so the focus ring is white rather than the theme's ring. */
+[data-slot="retro-tv-power"]:focus-visible {
+  outline: 2px solid white;
+  outline-offset: 3px;
+}
+
+[data-slot="retro-tv-power"][data-disabled] {
+  cursor: not-allowed;
+  filter: saturate(0.4) brightness(0.8);
+}
+
+@container (width < 30rem) {
+  [data-slot="retro-tv-cabinet"] {
+    grid-template-columns: 1fr;
+    gap: 3cqw;
+    padding: 3.6cqw;
+  }
+
+  [data-slot="retro-tv-panel"] {
+    flex-direction: row;
+    padding-block: 0;
+  }
+
+  [data-slot="retro-tv-knob"] {
+    width: 9.5cqw;
+  }
+
+  [data-slot="retro-tv-grille"] {
+    align-self: stretch;
+    min-height: 0;
+  }
+
+  [data-slot="retro-tv-power"] {
+    width: 10cqw;
+    height: 5.2cqw;
+  }
+
+  [data-slot="retro-tv-led"] {
+    width: 2cqw;
+  }
+}
+
+@keyframes retro-tv-collapse {
+  0% {
+    opacity: 1;
+    transform: scale(1, 1);
+    filter: brightness(1);
+  }
+  40% {
+    transform: scale(1, 0.012);
+    filter: brightness(3);
+  }
+  72% {
+    opacity: 1;
+    transform: scale(0.004, 0.012);
+    filter: brightness(5);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0, 0);
+  }
+}
+
+@keyframes retro-tv-expand {
+  0% {
+    opacity: 1;
+    transform: scale(0.004, 0.012);
+    filter: brightness(5);
+  }
+  45% {
+    transform: scale(1, 0.012);
+    filter: brightness(3);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1, 1);
+    filter: brightness(1);
+  }
+}
+
+@keyframes retro-tv-beam-off {
+  0% {
+    opacity: 0;
+    scale: 1 1;
+  }
+  14% {
+    opacity: 1;
+    scale: 1 1;
+  }
+  30% {
+    opacity: 1;
+    scale: 0.028 1.3;
+  }
+  100% {
+    opacity: 0;
+    scale: 0.01 0.5;
+  }
+}
+
+@keyframes retro-tv-beam-on {
+  0% {
+    opacity: 1;
+    scale: 0.028 1.3;
+  }
+  40% {
+    opacity: 1;
+    scale: 1 1;
+  }
+  75% {
+    opacity: 0;
+    scale: 1 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes retro-tv-flicker {
+  0% {
+    opacity: 1;
+  }
+  31% {
+    opacity: 0.86;
+  }
+  32% {
+    opacity: 1;
+  }
+  77% {
+    opacity: 0.92;
+  }
+  78% {
+    opacity: 1;
+  }
+}
+
+@keyframes retro-tv-roll {
+  0% {
+    transform: translateY(0);
+  }
+  100% {
+    transform: translateY(600%);
+  }
+}
+
+@keyframes retro-tv-fade-in {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+@keyframes retro-tv-fade-out {
+  0% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-slot="retro-tv-picture"][data-switched][data-power="off"] {
+    animation-name: retro-tv-fade-out;
+  }
+
+  [data-slot="retro-tv-picture"][data-switched][data-power="on"] {
+    animation-name: retro-tv-fade-in;
+  }
+
+  [data-slot="retro-tv-picture"][data-power="off"] {
+    transform: none;
+  }
+
+  [data-slot="retro-tv-beam"][data-switched],
+  [data-slot="retro-tv-glass"]::before,
+  [data-slot="retro-tv-glass"]::after {
+    animation: none;
+  }
+}
+
+[data-slot="tv-power-off"] {
+  position: fixed;
+  inset: 0;
+  z-index: calc(var(--z-index-toast) + 1);
+  overflow: hidden;
+  pointer-events: auto;
+  --tv-power-off-colour: #f4f8ff;
+  --tv-power-off-glow: rgb(200 222 255 / 0.7);
+}
+
+[data-slot="tv-power-off"][data-phosphor="green"] {
+  --tv-power-off-colour: #b9ffd0;
+  --tv-power-off-glow: rgb(70 255 140 / 0.7);
+}
+
+[data-slot="tv-power-off"][data-phosphor="amber"] {
+  --tv-power-off-colour: #ffe0ad;
+  --tv-power-off-glow: rgb(255 158 40 / 0.7);
+}
+
+[data-slot="tv-power-off-beam"] {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 100vw;
+  height: 100vh;
+  translate: -50% -50%;
+  background: transparent;
+  box-shadow: 0 0 0 150vmax black;
+  animation: tv-power-off-beam var(--tv-power-off-collapse) cubic-bezier(0.6, 0, 0.4, 1) both;
+}
+
+[data-slot="tv-power-off-dot"] {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 10px;
+  height: 10px;
+  translate: -50% -50%;
+  border-radius: 50%;
+  background: radial-gradient(circle, white 25%, var(--tv-power-off-colour) 55%, transparent 72%);
+  box-shadow: 0 0 22px 8px var(--tv-power-off-glow);
+  opacity: 0;
+  animation: tv-power-off-dot var(--tv-power-off-dot) calc(var(--tv-power-off-collapse) * 0.75) ease-out both;
+}
+
+@keyframes tv-power-off-beam {
+  0% {
+    width: 100vw;
+    height: 100vh;
+    background: rgb(255 255 255 / 0);
+    box-shadow: 0 0 0 150vmax black;
+  }
+  40% {
+    width: 100vw;
+    height: 3px;
+    background: var(--tv-power-off-colour);
+    box-shadow:
+      0 0 16px 4px var(--tv-power-off-glow),
+      0 0 0 150vmax black;
+  }
+  75% {
+    width: 6px;
+    height: 3px;
+    background: white;
+    box-shadow:
+      0 0 16px 4px var(--tv-power-off-glow),
+      0 0 0 150vmax black;
+  }
+  100% {
+    width: 0;
+    height: 0;
+    background: white;
+    box-shadow: 0 0 0 150vmax black;
+  }
+}
+
+@keyframes tv-power-off-dot {
+  0% {
+    opacity: 1;
+    scale: 1;
+  }
+  100% {
+    opacity: 0;
+    scale: 0.3;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-slot="tv-power-off"] {
+    background: black;
+    animation: retro-tv-fade-in var(--tv-power-off-fade) ease-out both;
+  }
+
+  [data-slot="tv-power-off-beam"],
+  [data-slot="tv-power-off-dot"] {
+    display: none;
+  }
+}
