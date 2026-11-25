@@ -23,7 +23,6 @@ function wikilink(cx: Context, key: number, slug: string, alias: string | undefi
   const text = alias ?? resolution.label ?? slug
   const href = resolution.exists ? cx.wikilinkHref?.(slug) : undefined
   const { onWikilinkClick } = cx
-  // A Link with onFollow takes the link primitive's data-slot, so data-wikilink is what styles and finds it.
   const props = {
     "data-slot": slot,
     "data-wikilink": slot === "markdown-embed" ? "embed" : "link",

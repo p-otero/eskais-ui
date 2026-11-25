@@ -50,7 +50,6 @@ const block =
     insertBlock(view, kind, range, "input.complete")
   }
 
-/** Removes the typed `/query`, then formats the line it was on. */
 function lineCommand(apply: (view: EditorView) => unknown): SlashCommand["run"] {
   return (view, { from, to }) => {
     view.dispatch({ changes: { from, to }, selection: { anchor: from }, userEvent: "input.complete" })
@@ -101,13 +100,11 @@ const isDataItem = (entry: TriggerMenuData<unknown>[number]): entry is TriggerMe
 
 type MarkdownEditorMenusProps = {
   adapter: TextEditorAdapter | undefined
-  /** Opens the wikilink suggestions for the editor's handle. */
   controller?: TriggerMenuController
   view: EditorView | undefined
   slashCommands: SlashCommand[]
   suggestWikilinks?: SuggestWikilinks
   onOpenChange: (open: boolean) => void
-  /** Runs a slash command's `run`, so the editor knows what it calls from there. */
   runCommand?: (run: () => void) => void
   emptyLabel: ReactNode
 }
@@ -127,8 +124,8 @@ function MarkdownEditorMenus({
       {
         char: "/",
         boundary: "word",
-        // The default pattern ends the match at punctuation such as ? or ), which closed the menu mid-query; any
-        // character but a space keeps it open, with the empty state, until Escape or a space.
+        // Workaround: UI SDK's default trigger pattern ends the match at punctuation such as ? or ), which closed the
+        // menu mid-query.
         pattern: /\S/u,
         type: "command",
         items: slashCommands.map(({ value, label, keywords }) => ({ value, label, keywords })),

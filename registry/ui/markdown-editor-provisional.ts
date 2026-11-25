@@ -22,9 +22,7 @@ type ProvisionalTrigger = {
   head: number
 }
 
-/** Marks the transactions that type a provisional trigger or take it back out. */
 const provisional = Annotation.define<boolean>()
-// A filter can put text before the trigger (a line break after a closing fence that ends the note): it is part of it.
 const setProvisional = StateEffect.define<ProvisionalTrigger | null>({
   map: (value, mapping) => value && { ...value, from: mapping.mapPos(value.from, -1), to: mapping.mapPos(value.to, 1) },
 })
@@ -122,7 +120,6 @@ function revertProvisional(view: EditorView) {
     selection: { anchor: active.anchor, head: active.head },
     effects: setProvisional.of(null),
     annotations: [provisional.of(true), Transaction.addToHistory.of(false)],
-    // The exact inverse of what went in, so the read-only frontmatter's filters have nothing to guard.
     filter: false,
   })
   return active

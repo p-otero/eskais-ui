@@ -49,7 +49,7 @@ type TreeContext = {
 function decorateTree(context: TreeContext, from: number, to: number) {
   const { state, ranges, revealed } = context
   const doc = state.doc
-  // A plugin may not hide a line break, and syntax such as a link title can span lines, so hide line by line.
+  // Spec: a CodeMirror plugin may not hide a line break, and syntax such as a link title can span lines.
   const hide = (start: number, end: number) => {
     for (let pos = start; pos < end;) {
       const current = doc.lineAt(pos)

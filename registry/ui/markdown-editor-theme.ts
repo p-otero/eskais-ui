@@ -27,8 +27,8 @@ const depths = Array.from({ length: 8 }, (_, index) => [
   { paddingInlineStart: `calc(var(--md-quote-inset, 0px) + ${(index + 1) * indent}em)` },
 ])
 
-// CodeMirror injects its base theme unlayered, so Tailwind's layered utilities can't override it; this theme
-// is injected the same way and reads only the semantic tokens.
+// Workaround: CodeMirror injects its base theme unlayered, so Tailwind's layered utilities can't override it;
+// this theme is injected the same way.
 const markdownEditorTheme = EditorView.theme({
   "&": {
     color: "var(--foreground)",

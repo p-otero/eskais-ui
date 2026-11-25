@@ -32,7 +32,6 @@ function scan(state: EditorState, from = 0, to = state.doc.length) {
   return { tables, underlines }
 }
 
-/** Start and end of the top-level blocks around `from` and `to`. */
 function topLevel(state: EditorState, from: number, to: number) {
   const tree = syntaxTree(state)
   const outer = (pos: number, side: -1 | 1) => {
@@ -43,10 +42,8 @@ function topLevel(state: EditorState, from: number, to: number) {
   return { from: Math.min(from, outer(from, -1)?.from ?? from), to: Math.max(to, outer(to, 1)?.to ?? to) }
 }
 
-/**
- * Rescans only the top-level blocks an edit touched, in the old tree and the new one, so an edit that opens or
- * closes a fence still rescans everything the fence swallowed or let go.
- */
+// Perf: rescans only the top-level blocks an edit touched, in the old tree and the new one, so an edit that opens
+// or closes a fence still rescans everything the fence swallowed or let go.
 function rescan(blocks: Blocks, transaction: Transaction) {
   const { state, startState, changes } = transaction
   if (!changes.empty && syntaxTree(state).length < state.doc.length) return scan(state)
@@ -67,7 +64,6 @@ function rescan(blocks: Blocks, transaction: Transaction) {
   return { tables: merge(blocks.tables, found.tables), underlines: merge(blocks.underlines, found.underlines) }
 }
 
-/** The tables to render and the underlines to hide, given where the selection is. */
 function plan(state: EditorState, tables: Span[], underlines: Span[]) {
   const ranges = state.readOnly ? [] : state.selection.ranges
   const touched = (from: number, to: number) => ranges.some((range) => range.from <= to && range.to >= from)
@@ -88,7 +84,7 @@ function plan(state: EditorState, tables: Span[], underlines: Span[]) {
   return shown.toSorted((a, b) => a.from - b.from)
 }
 
-// Block widgets and hidden line breaks may only come from a state field, not from a view plugin.
+// Spec: CodeMirror takes block widgets and hidden line breaks only from a state field, not from a view plugin.
 function decorate(state: EditorState, shown: Block[]) {
   const portals = state.facet(previewConfig).portals
   const decorations: Range<Decoration>[] = shown.map((block) => {
@@ -116,14 +112,13 @@ const blockPreview = StateField.define<Blocks>({
     if (!reparsed && !transaction.docChanged && !reconfigured && !transaction.selection) {
       if (startState.readOnly === state.readOnly) return blocks
     }
-    // A parse that moved on without an edit can change structure anywhere, so it gets a full scan.
     const { tables, underlines } = transaction.docChanged
       ? rescan(blocks, transaction)
       : reparsed
         ? scan(state)
         : blocks
     const shown = plan(state, tables, underlines)
-    // Most transactions leave every rendered block as it was, so the widgets are mapped instead of rebuilt.
+    // Perf: most transactions leave every rendered block as it was, so the widgets are mapped instead of rebuilt.
     const { changes } = transaction
     const same =
       !reconfigured &&
@@ -145,7 +140,6 @@ const blockPreview = StateField.define<Blocks>({
   ],
 })
 
-/** A press on a rendered table puts the caret in the cell it hit, which shows the table's source. */
 function selectTableCell(event: MouseEvent, view: EditorView) {
   const target = event.target instanceof Element ? event.target : null
   const host = target?.closest<HTMLElement>("[data-slot=markdown-table-widget]")

@@ -51,10 +51,8 @@ function plainText(src: string, node: SyntaxNode, from = node.from, to = node.to
   return text + src.slice(pos, to)
 }
 
-// Headings sit at the top level or inside these; the walk skips everything else.
-const CONTAINERS = new Set(["Document", "Blockquote", "BulletList", "OrderedList", "ListItem"])
+const HEADING_CONTAINERS = new Set(["Document", "Blockquote", "BulletList", "OrderedList", "ListItem"])
 
-// An empty heading still needs an anchor; it isn't shown anywhere.
 function slugify(text: string) {
   const slug = text
     .toLowerCase()
@@ -64,7 +62,7 @@ function slugify(text: string) {
   return slug || "heading"
 }
 
-/** GitHub's rule: a slug already taken gets `-1`, `-2`… after it, in document order. */
+// Spec: GitHub's anchors: a slug already taken gets `-1`, `-2`… after it, in document order.
 function createSlugger() {
   const counts = new Map<string, number>()
   return (text: string) => {
@@ -108,7 +106,7 @@ function headingsOf(markdown: string, tree: Tree): MarkdownHeading[] {
     from: start,
     enter(ref) {
       const match = /^(ATX|Setext)Heading(\d)$/.exec(ref.name)
-      if (!match) return CONTAINERS.has(ref.name) ? undefined : false
+      if (!match) return HEADING_CONTAINERS.has(ref.name) ? undefined : false
       if (ref.from < start) return false
       const node = ref.node
       const marks = node.getChildren("HeaderMark")
