@@ -37,7 +37,7 @@ const masterDetail = definePrimitive({
     const change = createChange(context)
     const entries = () => context.options().entries
     return {
-      // The agent bridge passes arguments unchecked.
+      // Security: the agent bridge passes arguments unchecked.
       open(id: unknown, options?: ChangeOptions<MasterDetailSelectReason>) {
         const known = entries()
         if (typeof id !== "string" || (known !== undefined && !known.some((entry) => entry.id === id))) {

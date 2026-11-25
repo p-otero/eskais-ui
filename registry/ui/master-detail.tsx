@@ -106,14 +106,12 @@ type MasterDetailProps = Omit<PartProps<"div">, "children" | "aria-label" | "sty
   style?: CSSProperties
 }
 
-// The container width below which the panes stack; the `@max-2xl/master-detail` variants use the same 42rem.
 const stackBelowRem = 42
 const railSize = "3.25rem"
 
 const stackedClassNames = {
   list: "@max-2xl/master-detail:w-full @max-2xl/master-detail:!flex-auto @max-2xl/master-detail:border-e-0 @max-2xl/master-detail:data-covered:hidden",
   detail: "@max-2xl/master-detail:w-full @max-2xl/master-detail:!flex-auto @max-2xl/master-detail:data-idle:hidden",
-  // Stacked and idle, the detail sits under the list at its content's height, capped, rather than sharing it.
   idleDetail:
     "@max-2xl/master-detail:w-full @max-2xl/master-detail:!flex-auto @max-2xl/master-detail:data-idle:!flex-none @max-2xl/master-detail:data-idle:max-h-(--master-detail-idle-height) @max-2xl/master-detail:data-idle:border-t @max-2xl/master-detail:data-idle:data-collapsed:max-h-none",
 }
@@ -217,7 +215,6 @@ function MasterDetail({
     },
   })
 
-  // Focus is requested only once the change went through: a refused `state.close()` throws before it.
   const open = (id: string, reason: MasterDetailSelectReason = "item-press") => {
     if (reason === "item-press") {
       if (collapsed) setCollapsed(false)
@@ -333,7 +330,7 @@ function MasterDetail({
   const idle = view === null ? "" : undefined
   const flag = collapsed || idleCollapsed ? "" : undefined
   const detailStacking = idleVisible ? stackedClassNames.idleDetail : stackedClassNames.detail
-  // The group lays its panes out in a row with an inline style, so the stacked column needs `!`.
+  // Workaround: UI SDK's group lays its panes out in a row with an inline style, so the stacked column needs `!`.
   const stackColumn = idleVisible ? "@max-2xl/master-detail:!flex-col" : undefined
   const body = resizable ? (
     <Resizable

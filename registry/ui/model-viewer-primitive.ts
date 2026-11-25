@@ -43,14 +43,12 @@ type ModelViewerOptions = {
   errorMessage?: string
 }
 
-// Rotation per arrow press and per CSS pixel dragged, in degrees, and the zoom factor per step.
-const keyStep = 15
-const dragStep = 0.4
-const zoomStep = 1.25
+const keyStepDegrees = 15
+const dragDegreesPerPixel = 0.4
+const zoomFactorPerStep = 1.25
 
 let webgl: boolean | undefined
 
-/** Whether this browser can draw WebGL, asked once per page. */
 function supportsWebGL(doc: Document) {
   if (webgl !== undefined) return webgl
   const canvas = doc.createElement("canvas")
@@ -101,12 +99,10 @@ const modelViewer = definePrimitive({
       pitch: angles.pitch,
       zoom: 1,
       motion: "jump" as ModelViewerMotion,
-      // Counts camera moves, so the scene can tell a new one from a repeat of the same angles.
       turn: 0,
       dragging: false,
       clip: options.clip ?? options.defaultClip ?? null,
       clips: [] as readonly string[],
-      // null until someone chooses: the scene then plays unless motion is reduced.
       playing: (options.playing ?? options.defaultPlaying ?? null) as boolean | null,
       status: "idle" as ModelViewerStatus,
       reducedMotion: false,
@@ -144,7 +140,6 @@ const modelViewer = definePrimitive({
       move({ yaw: nearestAngle(store.get().yaw, angles.yaw), pitch: angles.pitch, ...zoom }, motion)
     }
 
-    // A view set by a press, a prop or an agent turns the camera to it; free rotation clears the view.
     let aimed = store.get().view
     const unsubscribe = store.subscribe(() => {
       const { view } = store.get()
@@ -180,7 +175,7 @@ const modelViewer = definePrimitive({
       /** Zooms in by steps (negative steps zoom out), each a factor of 1.25. */
       zoom(steps: number, event?: Event) {
         ready("zoom")
-        move({ zoom: store.get().zoom * zoomStep ** steps }, event?.type === "keydown" ? "tween" : "jump")
+        move({ zoom: store.get().zoom * zoomFactorPerStep ** steps }, event?.type === "keydown" ? "tween" : "jump")
         return true
       },
       /** Back to the first view and zoom. */
@@ -261,7 +256,6 @@ const modelViewer = definePrimitive({
         if (!supportsWebGL(doc)) part.store.set({ status: "unsupported" })
         motion?.addEventListener("change", readMotion)
         doc.addEventListener("visibilitychange", readHidden)
-        // Loads a little before the stage scrolls in, and stops drawing while it's out of view.
         const observer =
           typeof IntersectionObserver === "function"
             ? new IntersectionObserver(
@@ -306,10 +300,10 @@ const modelViewer = definePrimitive({
           const key = event as KeyboardEvent
           if (!interactive || status !== "ready" || key.altKey || key.ctrlKey || key.metaKey) return
           const turns: Record<string, [number, number]> = {
-            ArrowLeft: [-keyStep, 0],
-            ArrowRight: [keyStep, 0],
-            ArrowUp: [0, -keyStep],
-            ArrowDown: [0, keyStep],
+            ArrowLeft: [-keyStepDegrees, 0],
+            ArrowRight: [keyStepDegrees, 0],
+            ArrowUp: [0, -keyStepDegrees],
+            ArrowDown: [0, keyStepDegrees],
           }
           const turn = turns[key.key]
           if (turn) api.rotate(turn[0], turn[1], event)
@@ -344,11 +338,11 @@ const modelViewer = definePrimitive({
           const dy = event.clientY - last.y
           pointers.set(event.pointerId, { x: event.clientX, y: event.clientY })
           if (pointers.size === 1) {
-            if (dx !== 0 || dy !== 0) part.api.rotate(dx * dragStep, dy * dragStep, event)
+            if (dx !== 0 || dy !== 0) part.api.rotate(dx * dragDegreesPerPixel, dy * dragDegreesPerPixel, event)
             return
           }
           const next = distance()
-          if (spread > 0 && next > 0) part.api.zoom(Math.log(next / spread) / Math.log(zoomStep), event)
+          if (spread > 0 && next > 0) part.api.zoom(Math.log(next / spread) / Math.log(zoomFactorPerStep), event)
           spread = next
         }
         const up = (event: PointerEvent) => {
