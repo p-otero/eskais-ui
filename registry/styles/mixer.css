@@ -250,14 +250,13 @@
   box-shadow: inset 0 1px 2px rgb(0 0 0 / 0.8);
 }
 
+/* Perf: LEDs switch at once, as real ones do. A fade still running when a key comes up leaves style pending, and React
+   reads the focused fader's selection on every keyup, which then recalculates it. */
 [data-slot="mixer-meter"] span {
   flex: 1;
   border-radius: 1px;
   --mixer-led: #58e07a;
   background: color-mix(in oklab, var(--mixer-led) 14%, #15171b);
-  transition:
-    background-color var(--transition-duration-micro) var(--ease-standard),
-    box-shadow var(--transition-duration-micro) var(--ease-standard);
 }
 
 [data-slot="mixer-meter"] span[data-tone="hot"] {
