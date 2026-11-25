@@ -16,6 +16,7 @@ const types = {
   ".woff": "font/woff",
 }
 
+/** Serves `dir` at `base` (default "/"); with `spa`, a path with no file falls back to `index.html`. */
 async function serve(dir, { base = "/", spa = true } = {}) {
   const root = resolve(dir)
   const server = createServer(async (request, response) => {
@@ -71,6 +72,7 @@ async function launch() {
   })
 }
 
+/** A fresh context and page with the probe, CPU throttling and an optional network profile. */
 async function openPage(browser, { cpu = 1, network, viewport = { width: 1280, height: 900 } } = {}) {
   const context = await browser.newContext({ viewport, deviceScaleFactor: 1 })
   await context.addInitScript({ path: probe })

@@ -87,6 +87,7 @@ async function entryFiles(files) {
 const gzip = (chunk) => gzipSync(chunk.code, { level: 9 }).length
 const kb = (bytes) => Math.round(bytes / 102.4) / 10
 
+/** `uiSdkShare: false` skips the second build per item, for CI, which checks only the total. */
 async function measureBundles({ items: names, uiSdkShare = true } = {}) {
   const registry = JSON.parse(await readFile(resolve(root, "registry.json"), "utf8"))
   const items = registry.items
