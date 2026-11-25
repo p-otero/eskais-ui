@@ -158,7 +158,7 @@ function Button({
     <ButtonPrimitive
       ref={(node: HTMLElement | null) => {
         element.current = node
-        // `render` can make the button a link or any element, which UI SDK's ref, typed for a <button>, still receives.
+        // Workaround: UI SDK types the ref for a <button>, though `render` can make the button any element.
         if (typeof ref === "function") return ref(assumeType<HTMLButtonElement | null>(node))
         if (ref) (ref as { current: unknown }).current = node
         return undefined

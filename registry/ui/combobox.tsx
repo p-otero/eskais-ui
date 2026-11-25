@@ -34,7 +34,6 @@ import {
 import { assumeType } from "@/lib/narrow"
 import { cn, cnState } from "@/lib/utils"
 
-// Distributes over the single and multiple variants, so `onValueChange` keeps its parameter type.
 type WithoutItems<Props> = Props extends unknown ? Omit<Props, "items"> : never
 
 type ComboboxProps<T = string, Multiple extends boolean | undefined = false> = WithoutItems<
@@ -44,11 +43,9 @@ type ComboboxProps<T = string, Multiple extends boolean | undefined = false> = W
   items?: readonly ListData<T>[number][]
 }
 
-// UI SDK 0.1.0-beta.10 types `items` as a mutable array, though it only reads it.
 /** UI SDK's Combobox, taking `items` as a readonly array too. */
 function Combobox<T = string, Multiple extends boolean | undefined = false>(props: ComboboxProps<T, Multiple>) {
-  // The readonly `items` above, and `Omit` over props that distribute over a generic `Multiple`, which TypeScript can't
-  // put back together: these are UI SDK's own props.
+  // Workaround: UI SDK 0.1.0-beta.10 types `items` as a mutable array, though it only reads it.
   return <ComboboxPrimitive<T, Multiple> {...assumeType<ComboboxPrimitiveProps<T, Multiple>>(props)} />
 }
 

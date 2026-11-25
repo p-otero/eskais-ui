@@ -45,10 +45,8 @@ type ColorPickerLabels = {
 const colorPickerLabels: ColorPickerLabels = { value: "Colour value" }
 
 const GamutContext = createContext<AreaGamut>("srgb")
-// The area's state, inside an OKLCH area across chroma and up lightness: the one ColorPickerAreaCanvas paints itself.
-const OklchAreaContext = createContext<ColorPickerState | null>(null)
+const SelfPaintedOklchAreaContext = createContext<ColorPickerState | null>(null)
 
-// Where the picker and its thumbs report a lifted pointer or a key, before UI SDK commits the colour.
 const EndingContext = createContext<(ending: Ending) => void>(() => {})
 const AreaAxesContext = createContext<{ x: ColorChannel; y: ColorChannel }>({
   x: "chroma",
@@ -116,8 +114,7 @@ function ColorPicker({ className, children, labels, controller, ...props }: Colo
 
 type Fractions = Partial<Record<ColorChannel, number>>
 
-// Every channel once: the record's type fails to compile when UI SDK adds or drops one.
-const colorChannels: Record<ColorChannel, true> = {
+const everyColorChannelOnce: Record<ColorChannel, true> = {
   hue: true,
   saturation: true,
   brightness: true,
@@ -128,9 +125,8 @@ const colorChannels: Record<ColorChannel, true> = {
   blue: true,
   alpha: true,
 }
-const isColorChannel = (value: string): value is ColorChannel => Object.hasOwn(colorChannels, value)
+const isColorChannel = (value: string): value is ColorChannel => Object.hasOwn(everyColorChannelOnce, value)
 
-// UI SDK ends a drag on the document's pointerup, after the captured pointer's own lifts through the area or slider.
 function useReleaseHandlers(
   { onPointerUpCapture, onPointerCancelCapture }: ReleaseHandlers,
   fractions: (event: PointerEvent<HTMLDivElement>, rect: DOMRect) => Fractions,
@@ -185,9 +181,9 @@ function ColorPickerArea({
         {...props}
       >
         {(state: ColorPickerState) => (
-          <OklchAreaContext value={state.space === "oklch" && chromaByLightness ? state : null}>
+          <SelfPaintedOklchAreaContext value={state.space === "oklch" && chromaByLightness ? state : null}>
             {typeof children === "function" ? children(state) : children}
-          </OklchAreaContext>
+          </SelfPaintedOklchAreaContext>
         )}
       </ColorPickerAreaPrimitive>
     </AreaAxesContext>
@@ -195,14 +191,14 @@ function ColorPickerArea({
 }
 
 const canvasClassName = "pointer-events-none absolute inset-0 size-full rounded-choice"
+const mirrorWithThumbInRtl = "rtl:-scale-x-100"
 
 /**
- * Paints the area pixel by pixel. In an OKLCH area across chroma and up lightness, a point past the gamut's edge
- * shows the colour the picker holds there (the same lightness and hue at the most chroma the gamut allows), so the
- * whole box is colour and the thumb always sits on the colour chosen. Other channels use UI SDK's canvas.
+ * In an OKLCH area across chroma and up lightness, a point past the gamut's edge shows the colour the picker holds
+ * there (the same lightness and hue at the most chroma the gamut allows). Other channels use UI SDK's canvas.
  */
 function ColorPickerAreaCanvas({ className, ...props }: ComponentProps<typeof ColorPickerAreaCanvasPrimitive>) {
-  const area = use(OklchAreaContext)
+  const area = use(SelfPaintedOklchAreaContext)
   const gamut = use(GamutContext)
   const canvas = useRef<HTMLCanvasElement>(null)
   useColorAreaCanvas(area ? canvas : null, area?.color.coords[2] ?? 0, gamut)
@@ -213,8 +209,7 @@ function ColorPickerAreaCanvas({ className, ...props }: ComponentProps<typeof Co
       ref={canvas}
       aria-hidden="true"
       data-slot="color-picker-area-canvas"
-      // UI SDK places the thumb from the inline start, so the canvas mirrors with it in right to left.
-      className={`${typeof classes === "function" ? classes(area) : classes} rtl:-scale-x-100`}
+      className={`${typeof classes === "function" ? classes(area) : classes} ${mirrorWithThumbInRtl}`}
     />
   )
 }
@@ -348,7 +343,6 @@ function ColorPickerSwatches({ className, ...props }: ComponentProps<typeof Colo
   return <ColorPickerSwatchesPrimitive className={cnState("flex flex-wrap gap-inline", className)} {...props} />
 }
 
-// On a coarse pointer the presets grow to 44px rather than overlapping hit areas, since they sit a gap apart.
 function ColorPickerSwatchItem({ className, ...props }: ComponentProps<typeof ColorPickerSwatchItemPrimitive>) {
   return (
     <ColorPickerSwatchItemPrimitive

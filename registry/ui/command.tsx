@@ -51,7 +51,6 @@ type CommandHost = {
 /** Set by CommandDialogContent, so a Command inside starts fresh on every open and Escape can close the dialog. */
 const CommandHostContext = createContext<CommandHost | null>(null)
 
-/** Whether an Escape that would clear the search or go back a page closes the dialog instead. */
 function escapeClosesHost(host: CommandHost | null, details: { reason: string; event?: Event; cancel: () => void }) {
   if (details.reason !== "escape-key" || !host?.closeOnEscape) return false
   details.cancel()
@@ -96,8 +95,6 @@ function Command({
     },
     [ref],
   )
-  // Controlled here rather than remounted on open: a closed dialog can stay mounted (keepMounted, or an exit
-  // animation that never ends), and a remount would replace the input the dialog has just focused.
   const [ownQuery, setOwnQuery] = useState(defaultQuery)
   const [ownPages, setOwnPages] = useState(defaultPages)
   const open = host?.open ?? false
@@ -132,8 +129,6 @@ function Command({
           onPagesChange?.(pages, details)
           if (!details.canceled) setOwnPages(pages)
         }}
-        // A modified click on a link command stays native (a new tab), so CommandLinkItem can't cancel it, and UI SDK
-        // then runs the command's onAction with that click. A link command never runs onAction.
         onAction={(value, details) => (isModifiedLinkPress(details.event) ? undefined : onAction?.(value, details))}
         onValueChange={(value, details) => {
           highlight.set(details.index, details.reason)
@@ -256,9 +251,6 @@ function followCommandLink(
   else view.location.assign(url.href)
 }
 
-// UI SDK runs a link command (`onSelect`, then `onAction`) on the click that follows it, and runs its shortcut with
-// no click at all. Taking the run over makes every way in follow the link and none run `onAction`, the mouse press
-// included, whose click fast links cancel.
 function CommandLinkItem({
   className,
   href,
@@ -398,8 +390,6 @@ const MemoCommandRow = memo(function CommandRow<Item extends CommandDataItem>(pr
     </CommandItem>
   )
 })
-// Memoized: moving the highlight or scrolling renders only the rows that come into view. `memo` drops the row's type
-// parameters, which this gives back.
 const CommandRow = assumeType<<Item extends CommandDataItem>(props: CommandRowProps<Item>) => ReactNode>(MemoCommandRow)
 
 function CommandItemIcon({ className, ...props }: ComponentProps<typeof CommandItemIconPrimitive>) {

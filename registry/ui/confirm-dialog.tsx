@@ -133,7 +133,6 @@ function ConfirmDialog({
       <AlertDialogContent ref={attach} className={cn(contentClassName, "max-w-md", className)} finalFocus={returnFocus}>
         {wrap(
           <>
-            {/* A long description scrolls under the title, and the actions stay in view. */}
             <div className="flex min-h-0 flex-1 flex-col gap-inline">
               <AlertDialogTitle className="shrink-0 text-title leading-none">{title}</AlertDialogTitle>
               {description === undefined && callout === null ? null : (
