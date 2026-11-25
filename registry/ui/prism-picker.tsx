@@ -109,7 +109,6 @@ function arcPath(from: number, to: number, radius: number) {
   return `M ${start.x.toFixed(2)} ${start.y.toFixed(2)} A ${String(radius)} ${String(radius)} 0 0 0 ${end.x.toFixed(2)} ${end.y.toFixed(2)}`
 }
 
-// The engraved scale: the ring is 100 units in a 260-unit square, so the CSS sizes it from the ring's radius.
 const DialScale = memo(function DialScale() {
   return (
     // oxlint-disable-next-line eskais/no-inline-icons -- an instrument's engraved scale, not an icon
@@ -185,7 +184,7 @@ function PrismPicker({
   usePrismPickerScene(canvases, { wavelength, instant, onPaint })
 
   const reading = readingAt(wavelength)
-  // What the server renders, before the hook sets the knob's own angle and colour; it never changes after, so a key
+  // Perf: what the server renders, before the hook sets the knob's own angle and colour; it never changes after, so a key
   // press doesn't restyle the stage.
   const [firstPaint] = useState(() => ({ colour: reading.colour.hex, dial: `${String(angleAt(wavelength))}deg` }))
   const colourNameOf = (nanometres: number) => colourName(colourAt(nanometres).hue, names)
@@ -208,7 +207,6 @@ function PrismPicker({
   const onPointerDown = (event: ReactPointerEvent<HTMLElement>) => {
     if (disabled || event.button !== 0) return
     const { angle, distance, ring } = pointerOnDial(event)
-    // The ring takes a press across a band 48px wide; inside it, the prism turns from where it's grabbed.
     const onRing = Math.abs(distance - ring) <= 24
     if (!onRing && distance > ring - 24) return
     event.preventDefault()

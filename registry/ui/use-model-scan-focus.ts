@@ -3,7 +3,6 @@ import { useEffect, useLayoutEffect, useRef } from "react"
 const enabledControl =
   "button:not(:disabled,[aria-disabled=true]), select:not(:disabled), a[href], input:not(:disabled,[type=hidden])"
 
-// The stage's main control (Make 3D, Cancel, Try again) first, then the bottom bar's, then any.
 const preferred = [
   `[data-model-scan-primary]:is(${enabledControl})`,
   `[data-model-scan-bar] :is(${enabledControl})`,

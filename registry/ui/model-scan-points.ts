@@ -23,7 +23,6 @@ type ModelScanPoints = ModelScanPointList | readonly ModelScanPointGroup[]
  */
 type ModelScanDrawnGroup = { source: string; coords: Float32Array; onPhoto: number; edges?: ModelScanEdges }
 
-// The 33 pose landmarks' skeleton below the face, which a face group draws better.
 const poseEdges: ModelScanEdges = [
   [11, 12],
   [11, 13],

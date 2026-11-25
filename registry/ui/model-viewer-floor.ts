@@ -1,6 +1,6 @@
 import { Color, DoubleSide, Mesh, PlaneGeometry, ShaderMaterial } from "three"
 
-const vertex = /* glsl */ `
+const vertex = `
 varying vec2 vUv;
 void main() {
   vUv = uv;
@@ -8,9 +8,7 @@ void main() {
 }
 `
 
-// A grid and rings fading out from the feet, a contact shadow under them, and a pulse that runs out across the grid.
-// The shadow darkens; the lines draw over it.
-const fragment = /* glsl */ `
+const fragment = `
 uniform vec3 lineColor;
 uniform vec3 accent;
 uniform float opacity;
@@ -61,13 +59,11 @@ function createFloor() {
   mesh.visible = false
   return {
     mesh,
-    /** Under a model `height` tall whose feet are at `y`, centred on `x`, `z`. */
     place(x: number, y: number, z: number, height: number) {
       mesh.position.set(x, y, z)
       mesh.scale.set(height * 1.6, height * 1.6, 1)
       mesh.visible = height > 0
     },
-    /** The theme's line and accent colours. */
     colors(line: Color, accent: Color) {
       uniforms.lineColor.value.copy(line)
       uniforms.accent.value.copy(accent)

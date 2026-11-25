@@ -4,8 +4,6 @@ import { isOnPhoto, type ModelScanDrawnGroup } from "@/components/ui/model-scan-
 import { cssVars } from "@/lib/utils"
 
 /* oxlint-disable shadcn/no-arbitrary-values -- the mesh draws in from each line's and point's place in its group */
-// Each group's lines draw in one after another, then its points pop in, at most 0.7 s and 0.4 s behind the first: a
-// group (the face, the body) lights up on its own when it arrives. Groups take the info, violet and success colours.
 const groupClassName =
   "[--model-scan-point:var(--info)] drop-shadow-[0_0_3px_var(--model-scan-point)] data-[order=1]:[--model-scan-point:var(--violet)] data-[order=2]:[--model-scan-point:var(--success)]"
 const lineClassName =
@@ -14,16 +12,10 @@ const pointClassName =
   "origin-center fill-(--model-scan-point) stroke-background stroke-2 transition-[scale,opacity] delay-[min(calc(var(--model-scan-point-index)*8ms),400ms)] duration-micro ease-standard [transform-box:fill-box] starting:scale-0 starting:opacity-0"
 /* oxlint-enable shadcn/no-arbitrary-values */
 
-// Float32 fractions carry noise past a tenth of a unit, which is far under a pixel.
 const tenth = (value: number) => Math.round(value * 10) / 10
 
 const order = (index: number) => cssVars({ "--model-scan-point-index": String(index) })
 
-/**
- * One group's points and the lines its `edges` join, in a box `width` × 1000 units over the photo. Points past the
- * photo's edges aren't drawn, nor their lines: clamped, they would pile up on the border. A group with edges draws
- * only the points they join, so a skeleton's face points leave the face to the face group.
- */
 function LandmarkGroup({ group, index, width }: { group: ModelScanDrawnGroup; index: number; width: number }) {
   const x = (i: number) => tenth((group.coords[i * 2] ?? -1) * width)
   const y = (i: number) => tenth((group.coords[i * 2 + 1] ?? -1) * 1000)
@@ -50,7 +42,6 @@ function LandmarkGroup({ group, index, width }: { group: ModelScanDrawnGroup; in
   const dots: ReactNode[] = []
   for (let i = 0; i * 2 + 1 < group.coords.length; i += 1) {
     if (!onPhoto(i) || (group.edges && !joined.has(i))) continue
-    // Points of a group only arrive, never move or reorder: their place in the list is their identity.
     dots.push(
       <circle
         key={i}

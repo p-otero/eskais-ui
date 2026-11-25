@@ -1,4 +1,4 @@
-// The optics behind the prism picker: a ray traced through a glass prism with Snell's law, the glass's index from a
+// Spec: the optics behind the prism picker: a ray traced through a glass prism with Snell's law, the glass's index from a
 // Cauchy dispersion curve, and a wavelength's colour from the CIE 1931 observer through OKLab to sRGB.
 
 type Vec = { x: number; y: number }
@@ -7,7 +7,7 @@ type Vec = { x: number; y: number }
 const minWavelength = 380
 const maxWavelength = 700
 
-// A flint-like glass (n_d ≈ 1.57) with an Abbe number near 12, about twice the dispersion of the densest real flints
+// Spec: a flint-like glass (n_d ≈ 1.57) with an Abbe number near 12, about twice the dispersion of the densest real flints
 // (N-SF66, Abbe 21). The exaggeration is deliberate: with real glass the fan spans about 10° and reads as a thin
 // smear at a card's size. Everything else is plain Snell's law, so the fan, its order and its total internal
 // reflection near the red end still behave as a real prism's would.
@@ -20,7 +20,7 @@ function refractiveIndex(wavelength: number) {
   return cauchyA + cauchyB / (micrometres * micrometres)
 }
 
-// Wyman, Sloan and Shirley (2013), "Simple Analytic Approximations to the CIE XYZ Color Matching Functions": the
+// Spec: Wyman, Sloan and Shirley (2013), "Simple Analytic Approximations to the CIE XYZ Color Matching Functions": the
 // multi-lobe fit, within the observer's own noise across the visible range.
 const lobe = (wavelength: number, mean: number, below: number, above: number) => {
   const t = (wavelength - mean) / (wavelength < mean ? below : above)
@@ -40,7 +40,7 @@ function cieXyz(wavelength: number): [number, number, number] {
 /** The luminous efficiency V(λ) = ȳ(λ), 1 near 555 nm. */
 const luminousEfficiency = (wavelength: number) => cieXyz(wavelength)[1]
 
-// Björn Ottosson's XYZ (D65) to OKLab, and linear sRGB to OKLab.
+// Spec: Björn Ottosson's XYZ (D65) to OKLab, and linear sRGB to OKLab.
 function xyzToOklab([x, y, z]: [number, number, number]): [number, number, number] {
   const l = Math.cbrt(0.818_933_010_1 * x + 0.361_866_742_4 * y - 0.128_859_713_7 * z)
   const m = Math.cbrt(0.032_984_543_6 * x + 0.929_311_871_5 * y + 0.036_145_638_7 * z)
@@ -70,8 +70,6 @@ const oklabHue = ([, a, b]: [number, number, number]) => wrap(degrees(Math.atan2
 /** The OKLCH hue of the spectral colour at a wavelength: where the CIE observer places it, before any gamut. */
 const spectralHue = (wavelength: number) => oklabHue(xyzToOklab(cieXyz(wavelength)))
 
-// The most saturated sRGB colours lie on the six cube edges between the primaries and secondaries; t runs along
-// them from red (0) through yellow, green, cyan, blue and magenta (5) back to red (6), in linear light.
 function edgeColour(t: number): [number, number, number] {
   const segment = Math.floor(t) % 6
   const f = t - Math.floor(t)
@@ -97,10 +95,6 @@ const unwrappedEdgeHue = (t: number) => {
   return hue < redHue - 1e-9 ? hue + 360 : hue
 }
 
-/**
- * The sRGB colour at the gamut's cusp for an OKLCH hue: the most chroma the screen shows at that hue, at the
- * lightness where it peaks. Its own hue is `hue`, so the swatch, the rays and the readout agree.
- */
 function cuspColour(hue: number): [number, number, number] {
   let target = wrap(hue)
   if (target < redHue) target += 360
@@ -121,7 +115,6 @@ const encode = (linear: number) => {
 
 type Rgb = [number, number, number]
 
-/** Gamma-encoded sRGB, 0 to 1. */
 const toSrgb = ([red, green, blue]: Rgb): Rgb => [encode(red), encode(green), encode(blue)]
 
 const toHex = (srgb: Rgb) =>
@@ -158,14 +151,11 @@ function colourAtHue(hue: number): PickedColour {
   return { hue: wrap(hue), hslHue: hslHue(srgb), hex: toHex(srgb), srgb }
 }
 
-// The observer's chromaticity barely moves below 420 nm and above 650 nm (and the analytic fit drifts there), so
+// Spec: the observer's chromaticity barely moves below 420 nm and above 650 nm (and the analytic fit drifts there), so
 // the hue holds at both ends, and each wavelength keeps at least the hue of the next so setHue finds one answer.
 const flatBelow = 420
 const flatAbove = 650
 
-// The long end of the spectrum sits a few degrees past sRGB's red primary, toward magenta, so its cusp colour is a
-// crimson (#ff003b). Hues below orange are stretched onto sRGB red's own hue, so the red end shows #ff0000 and the
-// rays, swatch, hex and readout still come from this one table.
 const redAnchor = 60
 
 const hueTable = (() => {
@@ -186,8 +176,6 @@ const hueTable = (() => {
 const violetHue = hueTable[0] ?? 0
 const redEndHue = hueTable.at(-1) ?? 0
 
-// The dial's scale, like a prism spectroscope's, isn't even in nanometres: a nanometre takes room in proportion to
-// how far it moves the hue, plus a floor, so the ends where the hue holds still stay short but reachable.
 const scaleFloor = 0.35
 const scaleTable = (() => {
   const steps = hueTable.length - 1
@@ -247,8 +235,6 @@ function wavelengthAtHue(hue: number): number | undefined {
   return (low + high) / 2
 }
 
-// The prism: equilateral, apex down so the beam bends up, turned by `rotation` degrees about its centroid. Lengths
-// are fractions of the stage's half-size.
 const prismRadius = 0.27
 const beamHeight = 0.06
 /** The picked ray's fixed direction, in degrees, clockwise from the beam: the exit slit sits there. */
@@ -361,7 +347,7 @@ const exitAngle = (rotation: number, wavelength: number) => {
   return traced ? degrees(Math.atan2(traced.direction.y, traced.direction.x)) : undefined
 }
 
-// The rotations the dial drives the prism through: on this side of minimum deviation, the exit angle of every
+// Spec: the rotations the dial drives the prism through: on this side of minimum deviation, the exit angle of every
 // wavelength rises steadily with the rotation, so each wavelength reaches the slit at one rotation.
 const rotationRange = { low: -26, high: 0 }
 

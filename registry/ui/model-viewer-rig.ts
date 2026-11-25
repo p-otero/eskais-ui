@@ -40,7 +40,6 @@ import type { ModelViewerHandle } from "@/components/ui/model-viewer-primitive"
 
 type LoadedModel = { scene: Object3D; animations: readonly AnimationClip[] }
 
-/** One target on one mesh, and what a weight is multiplied by there: its `extras.targetScales` entry, or 1. */
 type Binding = { influences: number[]; index: number; scale: number }
 
 type ModelViewerMaterial = "standard" | "toon"
@@ -98,7 +97,6 @@ function createModelRig(model: LoadedModel, owned = true, cleanup?: () => void) 
   })
   const morphNames = targetNamesOf(meshes)
   const scales = new Map(meshes.map((mesh) => [mesh, targetScalesOf(mesh)]))
-  // Meshes with their own scales bind first, so a copy that shares their influences without them doesn't win.
   const scaledFirst = meshes.toSorted((a, b) => Number(!scales.get(a)) - Number(!scales.get(b)))
   const signature = signatureOf(surfaces)
   const clipNames = model.animations.map((clip) => clip.name)
@@ -119,7 +117,6 @@ function createModelRig(model: LoadedModel, owned = true, cleanup?: () => void) 
   let target = new Float32Array(0)
   let active = new Uint8Array(0)
   let bindings: Binding[][] = []
-  // Each channel's multiplier, from its first binding: what weights sent already scaled are divided by.
   let channelScales = new Float32Array(0)
   let weightsSettled = true
   const bind = (next: readonly string[]) => {
@@ -129,7 +126,6 @@ function createModelRig(model: LoadedModel, owned = true, cleanup?: () => void) 
     current = new Float32Array(next.length)
     target = new Float32Array(next.length)
     active = new Uint8Array(next.length)
-    // A mesh that shares another's influences (an outline hull drawn from the same morphs) is written once.
     bindings = next.map((name) => {
       const found: Binding[] = []
       for (const mesh of scaledFirst) {
@@ -191,7 +187,7 @@ function createModelRig(model: LoadedModel, owned = true, cleanup?: () => void) 
       if (item.transparent !== opacity < 1) item.needsUpdate = true
       item.transparent = opacity < 1
       item.opacity = opacity
-      // Depth writes stay on while fading: a model of several meshes (a body, eyes, hair) still hides what is behind
+      // Spec: depth writes stay on while fading: a model of several meshes (a body, eyes, hair) still hides what is behind
       // its own surfaces, instead of showing its eyes and the back of its hair through its face.
     })
   }
@@ -202,19 +198,13 @@ function createModelRig(model: LoadedModel, owned = true, cleanup?: () => void) 
     clipNames,
     signature,
     owned,
-    /** The order aligned weights follow: `next`, or the GLB's own (`extras.targetNames`). */
     setTargetNames(next: readonly string[] | undefined) {
       const order = next && next.length > 0 ? next : morphNames
       if (order.length === names.length && order.every((name, i) => names[i] === name)) return
       bind(order)
     },
     targetNames: () => names,
-    /** The box's centre and size, in the model's units. */
     bounds: { center: boxCenter, size },
-    /**
-     * New target weights and expressions; `immediate` jumps to them, like the first weights of a model. `scaled`
-     * weights come already multiplied by the GLB's `extras.targetScales`; expressions never do.
-     */
     setWeights(
       weights: ModelViewerWeights | undefined,
       expressions?: ModelViewerExpressions,
@@ -229,15 +219,10 @@ function createModelRig(model: LoadedModel, owned = true, cleanup?: () => void) 
         applyWeights()
       }
     },
-    /** The current weight of a target as given, before its `extras.targetScales` multiplier, for tests and tools. */
     weight: (name: string) => {
       const i = index.get(name)
       return i === undefined ? undefined : current[i]
     },
-    /**
-     * Takes over from the model this one replaces: where its camera is, its weights as they are now (so nothing
-     * jumps when the new one shows), and how far into the same clip it was.
-     */
     inherit(previous: RigSnapshot) {
       Object.assign(camera, previous.cameraState())
       center.copy(previous.centerNow())
@@ -280,7 +265,6 @@ function createModelRig(model: LoadedModel, owned = true, cleanup?: () => void) 
       }
       applyOpacity()
     },
-    /** Fades the whole model: `reveal` for an entrance, `swap` while a new model replaces it. */
     setOpacity(next: number, fade: "reveal" | "swap" = "reveal") {
       fades[fade] = next
       const combined = fades.reveal * fades.swap
@@ -289,7 +273,6 @@ function createModelRig(model: LoadedModel, owned = true, cleanup?: () => void) 
       applyOpacity()
     },
     reveal: () => fades.reveal,
-    /** Where the camera looks and how far it stands at zoom 1, for the current framing and aspect. */
     frame(framing: ModelViewerFraming, view: PerspectiveCamera) {
       if (framing === "full") {
         framed.center.copy(boxCenter)
@@ -300,7 +283,6 @@ function createModelRig(model: LoadedModel, owned = true, cleanup?: () => void) 
       }
       return framed
     },
-    /** Moves everything one frame on; true while something still moves. */
     update(dt: number, input: RigInput) {
       const { handle, camera: view } = input
       const state = handle.get()

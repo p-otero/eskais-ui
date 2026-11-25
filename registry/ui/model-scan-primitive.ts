@@ -40,7 +40,6 @@ const working: readonly ModelScanStage[] = ["detecting", "building", "refining"]
 type ModelScanAction = "start" | "cancel" | "retry" | "restart" | "download"
 type ModelScanCallbackName = "onStart" | "onCancel" | "onRetry" | "onStartOver" | "onDownload"
 
-// Each action, the callback it runs and the stages that offer it.
 const actions: Record<ModelScanAction, { callback: ModelScanCallbackName; stages: readonly ModelScanStage[] }> = {
   start: { callback: "onStart", stages: ["photo"] },
   cancel: { callback: "onCancel", stages: working },
@@ -60,9 +59,8 @@ const during: Record<ModelScanStage, string> = {
 
 const clamp = (value: number) => Math.min(1, Math.max(0, Number.isFinite(value) ? value : 0))
 
-// Progress is read at most every tenth, and no sooner than this after the last reading.
-const progressStep = 10
-const progressInterval = 2000
+const progressStepPercent = 10
+const progressIntervalMs = 2000
 
 const sweepFrames: Keyframe[] = [
   { transform: "translateY(-100%)", opacity: 0 },
@@ -100,7 +98,6 @@ const modelScan = definePrimitive({
   }),
   api: (context) => {
     const { store } = context
-    // An agent's call that can't run throws with why; a person's press returns false.
     const run = (action: ModelScanAction, event?: Event) => {
       const reason: ModelScanActionReason = event ? "trigger-press" : "imperative"
       const call = { reason, event }
@@ -162,16 +159,15 @@ const modelScan = definePrimitive({
           }
           if (!working.includes(state.stage) || state.progress === undefined || !messages) return
           const percent = Math.round(clamp(state.progress) * 100)
-          const step = Math.floor(percent / progressStep)
+          const step = Math.floor(percent / progressStepPercent)
           const now = Date.now()
-          if (step === lastStep || (now - lastTime < progressInterval && percent < 100)) return
+          if (step === lastStep || (now - lastTime < progressIntervalMs && percent < 100)) return
           lastStep = step
           lastTime = now
           announce(messages.progress(percent), { doc })
         })
       },
     }),
-    // Once the 3D scene shows the photo exactly where the 2D one is, the 2D layer goes.
     photo: slot<{ handedOff?: boolean }>({
       props: { handedOff: "boolean" },
       attrs: (state, part) => ({
@@ -185,8 +181,8 @@ const modelScan = definePrimitive({
         "aria-hidden": "true",
         "data-determinate": state.progress === undefined ? undefined : "",
       }),
-      // Until the engine reports progress the beam sweeps down the photo again and again, and under reduced motion
-      // it stays put. A component can't ship CSS keyframes, so the sweep is a Web Animation.
+      // Spec: a registry component can't ship CSS keyframes, so the sweep is a Web Animation; reduced motion keeps it
+      // still.
       bind: (el, part) => {
         const motion = el.ownerDocument.defaultView?.matchMedia?.("(prefers-reduced-motion: reduce)")
         let sweep: Animation | undefined

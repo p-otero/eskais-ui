@@ -70,7 +70,6 @@ const finite = (value: number | undefined) => (value !== undefined && Number.isF
 const isAligned = (weights: ModelViewerWeights): weights is Float32Array | readonly number[] =>
   ArrayBuffer.isView(weights) || Array.isArray(weights)
 
-// A weight sent already multiplied by its target's scale, back in the target's own units; a zero scale moves nothing.
 const unscale = (value: number, scale: number | undefined) => (scale ? value / scale : 0)
 
 /**

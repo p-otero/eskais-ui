@@ -33,7 +33,7 @@ type ModelViewerModelLoad = (
   animations: readonly AnimationClip[],
 ) => ModelCleanup | Promise<ModelCleanup>
 
-// Bytes from another realm (a worker, an iframe) aren't instanceof this one's ArrayBuffer.
+// Spec: bytes from another realm (a worker, an iframe) aren't instanceof this one's ArrayBuffer.
 const isBytes = (source: unknown): source is ArrayBuffer =>
   source instanceof ArrayBuffer || Object.prototype.toString.call(source) === "[object ArrayBuffer]"
 
@@ -75,7 +75,6 @@ function useModelRig(
   useEffect(() => {
     if (source === undefined) return
     let cancelled = false
-    // A replacement loads under the model on screen: the viewer stays ready.
     if (!newest.current) handle.api.loading()
     loadModel(source)
       .then(async (model) => ({ model, cleanup: (await prepareEvent(model)) ?? undefined }))
@@ -150,8 +149,7 @@ type ModelFrameOptions = {
   autoRotate: number
 }
 
-// Seconds the new model takes to fade in over the one it replaces; the old one goes in the last part of it.
-const swapDuration = 0.45
+const swapDurationSeconds = 0.45
 const swapHold = 0.6
 
 /**
@@ -163,7 +161,7 @@ function useModelFrame(options: ModelFrameOptions) {
   const { handle, rig, leaving, finishSwap, framing, weights, targetNames, expressions, scaledWeights, material } =
     options
   const { loop, speed, autoRotate } = options
-  // R3F types `state.camera` as any `Camera`; this canvas isn't `orthographic`, so it is R3F's default
+  // Workaround: R3F types `state.camera` as any `Camera`; this canvas isn't `orthographic`, so it is R3F's default
   // PerspectiveCamera.
   const camera = assumeType<PerspectiveCamera>(useThree((state) => state.camera))
   const invalidate = useThree((state) => state.invalidate)
@@ -174,7 +172,6 @@ function useModelFrame(options: ModelFrameOptions) {
     if (frameloop !== "never") invalidate()
   }, [frameloop, invalidate])
 
-  // The first model's first weights apply at once; later ones ease, and a replacing model eases from the old one's.
   const weighted = useRef(false)
   useEffect(() => {
     if (!rig) return
@@ -199,13 +196,11 @@ function useModelFrame(options: ModelFrameOptions) {
 
   useFrame((state, delta) => {
     if (!rig) return
-    // A long gap (a hidden tab, a stage scrolled back in) would jump a clip or a tween; a frame counts at most 50 ms.
     const dt = Math.min(delta, 0.05)
     const result = rig.update(dt, input.current)
     if (result.moving) state.invalidate()
     if (result.justSettled) {
       const { yaw, pitch, zoom } = result.camera
-      // Where the camera came to rest, for tests and tooling; written only when it stops.
       state.gl.domElement.dataset.camera = `${yaw.toFixed(1)} ${pitch.toFixed(1)} ${zoom.toFixed(2)}`
     }
     if (!leaving) return
@@ -214,7 +209,7 @@ function useModelFrame(options: ModelFrameOptions) {
       fade.from = leaving
       fade.t = 0
     }
-    fade.t = handle.get().reducedMotion ? 1 : Math.min(1, fade.t + dt / swapDuration)
+    fade.t = handle.get().reducedMotion ? 1 : Math.min(1, fade.t + dt / swapDurationSeconds)
     rig.setOpacity(Math.min(1, fade.t / swapHold), "swap")
     leaving.setOpacity(fade.t < swapHold ? 1 : 1 - (fade.t - swapHold) / (1 - swapHold), "swap")
     state.invalidate()
