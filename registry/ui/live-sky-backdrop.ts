@@ -6,7 +6,13 @@ import type { GBuffer } from "@/components/ui/live-sky-gbuffer"
 import type { GlassDrop } from "@/components/ui/live-sky-glass"
 import { lightFor, type SkyLight } from "@/components/ui/live-sky-light"
 import type { SkyPalette } from "@/components/ui/live-sky-palette"
-import { atmosphereFor, fallsFor, type Atmosphere, type Fall } from "@/components/ui/live-sky-precipitation"
+import {
+  atmosphereFor,
+  fallsFor,
+  type Atmosphere,
+  type Fall,
+  type Framing,
+} from "@/components/ui/live-sky-precipitation"
 import type { PhotoLayers } from "@/components/ui/live-sky-photo"
 import { photoLightingFor, type PhotoLighting } from "@/components/ui/live-sky-photo-light"
 import { paintSky } from "@/components/ui/live-sky-sky"
@@ -19,6 +25,7 @@ type SkyScene = {
   /** Device pixels per CSS pixel the sky and the frames are drawn at. */
   ratio: number
   camera: SkyCamera
+  framing: Framing
   conditions: SkyConditions
   light: SkyLight
   palette: SkyPalette
@@ -29,6 +36,9 @@ type SkyScene = {
   falls: Fall[]
   atmosphere: Atmosphere
 }
+
+/** What moves over a scene each frame: the rain or snow, and the veil and sheets of rain in the air. */
+type SceneMotion = { falls: Fall[]; atmosphere: Atmosphere }
 
 /** The street itself, which only a new size or place changes: its traced G-buffer and both rooflines. */
 type StreetFacades = { gbuffer: GBuffer; skyline: Skyline; halfWidth: number }
@@ -43,6 +53,8 @@ type SkyRenderer = {
   kind: "webgl" | "canvas"
   /** Takes a new weather state; the street is lit again once, on the next frame. */
   setScene: (scene: SkyScene) => void
+  /** Takes new rain, snow or veil for the scene shown, without painting or lighting anything again. */
+  setMotion: (motion: SceneMotion) => void
   /** Takes a newly traced street or a photo; it is lit again once, on the next frame. */
   setBackground: (background: SkyBackground) => void
   /** Draws the frame at `seconds` since the scene started, with the glass drops and a lightning flash from 0 to 1. */
@@ -60,6 +72,8 @@ type SceneInput = {
   budget: number
   /** The camera to see through; the street's, looking up, without it. */
   camera?: SkyCamera | undefined
+  /** The exact conditions for what moves, when `conditions` are stepped for the static layers. */
+  moving?: SkyConditions | undefined
 }
 
 function canvasOf(width: number, height: number, ratio: number) {
@@ -80,9 +94,10 @@ function composeScene({
   palette,
   budget,
   camera: given,
+  moving = conditions,
 }: SceneInput): SkyScene | null {
   const camera = given ?? cameraFor(width, height)
-  const framing = given ? "facing" : "overhead"
+  const framing: Framing = given ? "facing" : "overhead"
   const light = lightFor(conditions, palette)
   const sky = canvasOf(width, height, ratio)
   if (!sky.context) return null
@@ -92,6 +107,7 @@ function composeScene({
     height,
     ratio,
     camera,
+    framing,
     conditions,
     light,
     palette,
@@ -99,10 +115,21 @@ function composeScene({
     lighting: facadeLightingFor(conditions, light, palette),
     photoLighting: photoLightingFor(conditions, light, palette),
     deck: cloudDeckFor(conditions, light),
-    falls: fallsFor(camera, conditions, light, palette, budget, framing),
-    atmosphere: atmosphereFor(conditions, light, framing),
+    ...sceneMotion({ camera, framing, light, palette }, moving, budget),
   }
 }
 
-export { composeScene }
-export type { SceneInput, SkyBackground, SkyRenderer, SkyScene, StreetFacades }
+/** The rain, snow and veil for some conditions over a scene's camera and light, cheap enough for every key press. */
+function sceneMotion(
+  scene: Pick<SkyScene, "camera" | "framing" | "light" | "palette">,
+  conditions: SkyConditions,
+  budget: number,
+): SceneMotion {
+  return {
+    falls: fallsFor(scene.camera, conditions, scene.light, scene.palette, budget, scene.framing),
+    atmosphere: atmosphereFor(conditions, scene.light, scene.framing),
+  }
+}
+
+export { composeScene, sceneMotion }
+export type { SceneInput, SceneMotion, SkyBackground, SkyRenderer, SkyScene, StreetFacades }

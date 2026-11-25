@@ -141,6 +141,9 @@ function createCanvasRenderer(canvas: HTMLCanvasElement, context: CanvasRenderin
       clouds.height = Math.max(2, Math.ceil(next.height / cloudDownscale))
       cloudPixels = cloudContext?.createImageData(clouds.width, clouds.height) ?? null
     },
+    setMotion(motion) {
+      if (scene) scene = { ...scene, ...motion }
+    },
     setBackground(next) {
       street = next
       stale = true
