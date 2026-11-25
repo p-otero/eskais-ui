@@ -14,6 +14,15 @@ import { axeViolations } from "./axe"
 
 const agent = createAgent()
 
+window.matchMedia ??= ((media: string) => ({
+  matches: false,
+  media,
+  addEventListener() {},
+  removeEventListener() {},
+  addListener() {},
+  removeListener() {},
+})) as unknown as typeof window.matchMedia
+
 const dial = () => screen.getByRole<HTMLInputElement>("slider", { name: "Dial" })
 const code = () => screen.getByRole<HTMLInputElement>("textbox", { name: "Combination" })
 
