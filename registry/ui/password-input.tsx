@@ -51,8 +51,7 @@ function PasswordInputControl({
   )
 }
 
-// The name stays the same while the password shows: aria-pressed says whether it's shown, so the icon is the only
-// thing that changes.
+// Spec: the name stays the same while the password shows; aria-pressed says whether it's shown.
 function PasswordInputToggle({
   className,
   children,

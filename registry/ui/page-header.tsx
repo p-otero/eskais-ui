@@ -67,7 +67,6 @@ function PageHeader({
         )}
       </div>
       {tabs !== undefined && (
-        // The bleed keeps the tabs' focus rings inside the scroll box, which would clip them.
         <ScrollArea className="-m-inline min-w-0">
           <ScrollAreaViewport
             className="flex h-auto p-inline"

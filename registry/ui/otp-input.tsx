@@ -25,7 +25,6 @@ function OTPInputGroup({ className, ...props }: ComponentProps<typeof OTPInputGr
   return <OTPInputGroupPrimitive className={cnState("flex items-center gap-inline", className)} {...props} />
 }
 
-// The input's own caret is hidden, so the active empty slot draws one.
 function OTPInputSlot({ className, children, ...props }: ComponentProps<typeof OTPInputSlotPrimitive>) {
   return (
     <OTPInputSlotPrimitive

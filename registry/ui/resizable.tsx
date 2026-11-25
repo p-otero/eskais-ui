@@ -24,7 +24,6 @@ type ResizableHandleProps = ComponentProps<typeof ResizableHandlePrimitive> & {
   withGrip?: boolean
 }
 
-// UI SDK widens the hit area past the 1px line on its own, so the line can stay thin.
 function ResizableHandle({ className, withGrip = false, children, ...props }: ResizableHandleProps) {
   return (
     <ResizableHandlePrimitive

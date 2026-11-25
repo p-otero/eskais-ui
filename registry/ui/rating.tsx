@@ -40,12 +40,10 @@ type RatingItemProps = ComponentProps<typeof RatingItemPrimitive> & {
   icon?: ComponentType<SVGProps<SVGSVGElement>>
 }
 
-// The filled copy is clipped from the inline end, so a score of 4.2 fills a fifth of the last star.
 const filledClassName =
   // oxlint-disable-next-line shadcn/no-arbitrary-values -- clips the filled star to --rating-fill from the inline end
   "fill-current [clip-path:inset(0_calc((1-var(--rating-fill,0))*100%)_0_0)] rtl:[clip-path:inset(0_0_0_calc((1-var(--rating-fill,0))*100%))]"
 
-// On a coarse pointer each star grows to a 44px box edge to edge, so neighbouring hit areas never overlap.
 function RatingItem({ className, icon: Icon = StarIcon, children, ...props }: RatingItemProps) {
   return (
     <RatingItemPrimitive
