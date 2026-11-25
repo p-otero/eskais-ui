@@ -141,6 +141,14 @@ function sunStateOf(sunAltitudeDegrees: number, cover: number, falling: boolean)
   return "up"
 }
 
+const thunderGloom = 0.3
+const fallingGloom = 0.35
+
+const gloomOf = (rainRate: number, falling: boolean, thunder: boolean) =>
+  clamp01((falling ? fallingGloom : 0) + Math.min(rainRate, 12) / 16 + (thunder ? thunderGloom : 0))
+
+const wetnessOf = (rainRate: number) => clamp01(rainRate > 0 ? 0.45 + rainRate / 6 : 0)
+
 function skyConditions(weather: SkyWeather, location: SkyLocation, at: Date): SkyConditions {
   const sun = sunPosition(at, location.latitude, location.longitude)
   const moonAt = moonPosition(at, location.latitude, location.longitude)
@@ -167,17 +175,34 @@ function skyConditions(weather: SkyWeather, location: SkyLocation, at: Date): Sk
     rainKind: kind,
     snowRate,
     cover,
-    gloom: clamp01(
-      (falling ? 0.35 : 0) + Math.min(rainRate, 12) / 16 + (thunderCodes.has(weather.weatherCode) ? 0.3 : 0),
-    ),
+    gloom: gloomOf(rainRate, falling, thunderCodes.has(weather.weatherCode)),
     fog: fogOf(weather),
     visibility: weather.visibility,
     wind: { east: Math.sin(towardRadians) * windSpeed, north: Math.cos(towardRadians) * windSpeed },
-    wetness: clamp01(rainRate > 0 ? 0.45 + rainRate / 6 : 0),
+    wetness: wetnessOf(rainRate),
     thunder: thunderCodes.has(weather.weatherCode),
     temperature: weather.temperature,
   }
 }
 
-export { conditionOf, skyConditions }
+const rainStepsPerDecade = 4
+
+/**
+ * The conditions as the static layers see them: the rain rate in steps of a quarter decade, with the gloom and wetness
+ * it implies. A change of rain within a step then only moves the rain, never repaints the sky or relights the street.
+ */
+function steppedRain(conditions: SkyConditions): SkyConditions {
+  if (conditions.rainRate <= 0) return conditions
+  const step = Math.round(Math.log10(conditions.rainRate) * rainStepsPerDecade) / rainStepsPerDecade
+  const rainRate = 10 ** step
+  const falling = conditions.rainKind !== "none" || conditions.snowRate > 0
+  return {
+    ...conditions,
+    rainRate,
+    gloom: gloomOf(rainRate, falling, conditions.thunder),
+    wetness: wetnessOf(rainRate),
+  }
+}
+
+export { conditionOf, skyConditions, steppedRain }
 export type { RainKind, SkyConditions, SunState, WeatherCondition }

@@ -129,6 +129,28 @@ await withShowcase(
 
     await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight))
     await page.setViewportSize({ width: 1100, height: 300 })
+    const staticPaints = () => scene(page).evaluate((element) => Number(element.dataset.staticPaints))
+    await page.getByRole("slider", { name: "Rain" }).focus()
+    await page.waitForTimeout(700)
+    const settledPaints = await staticPaints()
+    for (let press = 0; press < 8; press++) {
+      // oxlint-disable-next-line no-await-in-loop -- keys land one after another, as a person scrubbing presses them
+      await page.keyboard.press("ArrowRight")
+      // oxlint-disable-next-line no-await-in-loop -- the gap between presses is part of the scrub
+      await page.waitForTimeout(40)
+    }
+    const whileScrubbing = await staticPaints()
+    await page.waitForTimeout(700)
+    const afterScrubbing = await staticPaints()
+    console.log(
+      `Scrubbing the rain: ${String(whileScrubbing - settledPaints)} static paints while keys came, ${String(afterScrubbing - whileScrubbing)} once they stopped`,
+    )
+    expect(whileScrubbing === settledPaints, "Scrubbing the rain should only move the rain until the keys stop")
+    expect(
+      afterScrubbing === whileScrubbing + 1,
+      "The sky should be painted and lit again once, after the scrubbing stops",
+    )
+
     await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight))
     await page.waitForTimeout(300)
     const hidden = await framesOver(page, 1500)
@@ -190,8 +212,14 @@ await withShowcase(
     await page.waitForTimeout(800)
     const wet = await darkestAndBrightestFifth(page)
     await page.getByRole("slider", { name: "Rain" }).focus()
+    await page.waitForTimeout(400)
+    const wetPaints = await staticPaints()
     await page.keyboard.press("Home")
-    await page.waitForTimeout(800)
+    await page.waitForFunction(
+      (before) => Number(document.querySelector('[data-slot="live-sky-scene"]').dataset.staticPaints) > before,
+      wetPaints,
+    )
+    await page.waitForTimeout(300)
     const dry = await darkestAndBrightestFifth(page)
     const darkLift = wet.dark / dry.dark - wet.bright / dry.bright
     console.log(`Rain on the Cebu tower's bronze façade: its dark gaps lift ${darkLift.toFixed(3)} against its fins`)

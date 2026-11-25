@@ -10,7 +10,7 @@ import { afterEach, expect, test, vi } from "vitest"
 
 import { LiveSky, type LiveSkySimulation } from "@/components/ui/live-sky"
 import { moonPhase, sunPosition } from "@/components/ui/live-sky-astronomy"
-import { skyConditions } from "@/components/ui/live-sky-conditions"
+import { skyConditions, steppedRain } from "@/components/ui/live-sky-conditions"
 import { createGlass } from "@/components/ui/live-sky-glass"
 import { skyPaletteDefaults } from "@/components/ui/live-sky-palette"
 import { liveSky } from "@/components/ui/live-sky-primitive"
@@ -150,6 +150,20 @@ test("the fetchers round coordinates to 2 decimals and send the key to a configu
   ])
   expect(await meteo.searchPlaces("A", { signal: new AbortController().signal })).toEqual([])
   expect(fetch).toHaveBeenCalledTimes(2)
+})
+
+test("the static layers see the rain rate in quarter-decade steps, so scrubbing within a step only moves the rain", () => {
+  const at = new Date(Date.UTC(2026, 10, 25, 12))
+  const raining = (rate: number) =>
+    steppedRain(
+      skyConditions(weather({ weatherCode: 63, precipitation: rate, rain: rate, cloudCover: 100 }), coruna, at),
+    )
+  expect(raining(2)).toEqual(raining(2.2))
+  expect(raining(2).rainRate).toBeCloseTo(10 ** 0.25, 6)
+  expect(raining(4).wetness).toBeGreaterThan(raining(2).wetness)
+  expect(raining(4).gloom).toBeGreaterThan(raining(2).gloom)
+  const dry = skyConditions(weather(), coruna, at)
+  expect(steppedRain(dry)).toBe(dry)
 })
 
 test("drizzle, rain and downpour are told apart by code and rate; snow and fog by code and visibility", () => {
