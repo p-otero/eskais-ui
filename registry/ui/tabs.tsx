@@ -16,7 +16,6 @@ import { TabsScroll, type TabsScrollLabels } from "@/components/ui/tabs-scroll"
 import { cn, cnState } from "@/lib/utils"
 import { assumeType } from "@/lib/narrow"
 
-// Set only while activateOnPress is on: the controller a tab selects through on pointerdown.
 const TabsPressContext = createContext<TabsController | null>(null)
 
 type TabsProps<T extends string = string> = ComponentProps<typeof TabsPrimitive<T>> & {
@@ -47,9 +46,6 @@ function Tabs<T extends string = string>({ className, activateOnPress = false, c
 const tabsListClassName =
   "relative inline-flex w-fit items-center rounded-control bg-muted p-control-inset text-muted-foreground data-[orientation=vertical]:flex-col data-[orientation=vertical]:items-stretch"
 
-// A scrolling list clips on both axes, so a tab's focus ring drops its offset to fit inside the list's rim.
-// The fades are masks over the list itself, so they work on any surface; each side's width is 0 until it overflows.
-// The scroll padding is the fade's width, so a tab TabsScroll reveals lands clear of it.
 const scrollClassName = [
   // oxlint-disable-next-line eskais/scroll-area -- a scrolling tab list hides its scrollbar on purpose: edge fades and scroll buttons stand for it
   "max-w-full overflow-x-auto overscroll-x-contain [--tabs-fade:2.5rem] scroll-px-(--tabs-fade) [scrollbar-width:none] [&::-webkit-scrollbar]:hidden [&_[data-slot=tabs-tab]]:focus-visible:ring-offset-0",
@@ -82,11 +78,10 @@ function TabsList({ className, scrollable = "auto", scrollLabels, ...props }: Ta
   )
 }
 
-// A solid primary fill on muted, so the selected tab reads at 3:1 rather than as a faint tint.
+// Spec: a solid primary fill on muted, so the selected tab reads at 3:1 (WCAG 1.4.11).
 function TabsTab({ className, onPointerDown, ...props }: ComponentProps<typeof TabsTabPrimitive>) {
   const pressController = use(TabsPressContext)
-  // Selecting on press is allowed by WCAG 2.5.2 (Pointer Cancellation) because it's reversible: pressing another
-  // tab undoes it. It goes through the controller, so onValueChange, cancel() and controlled values still apply.
+  // Spec: selecting on press is allowed by WCAG 2.5.2 (Pointer Cancellation) because pressing another tab undoes it.
   const selectOnPress = (event: PointerEvent<HTMLButtonElement>) => {
     onPointerDown?.(event)
     if (!pressController || event.defaultPrevented || event.button !== 0 || event.pointerType === "touch") return

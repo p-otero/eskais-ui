@@ -29,8 +29,6 @@ import type { Tone } from "@/lib/tone"
 import { cn, cnState } from "@/lib/utils"
 import { isOneOf, keysOf } from "@/lib/narrow"
 
-// The region is a manual popover in the top layer, so the UA popover box (inset, margin, border, canvas) is reset.
-// It takes no pointer events, so only the toasts cover the page beneath.
 const toastRegionClassName =
   // oxlint-disable-next-line p-otero/spacing-tokens -- the offset from the viewport edge pairs with w-[calc(100%-2rem)]
   "pointer-events-none fixed inset-auto z-toast m-4 w-[calc(100%-2rem)] max-w-88 overflow-visible border-0 bg-transparent p-0 data-[side=bottom]:bottom-0 data-[side=top]:top-0 data-[align=end]:end-0 data-[align=start]:start-0 data-[align=center]:left-1/2 data-[align=center]:mx-0 data-[align=center]:-translate-x-1/2 [&>[data-slot=toast-list]]:m-0 [&>[data-slot=toast-list]]:flex [&>[data-slot=toast-list]]:list-none [&>[data-slot=toast-list]]:flex-col [&>[data-slot=toast-list]]:gap-items [&>[data-slot=toast-list]]:p-0 data-[side=bottom]:[&>[data-slot=toast-list]]:flex-col-reverse"
@@ -44,10 +42,9 @@ type ToastRegionProps = ComponentProps<typeof ToastRegionPrimitive> & {
   hoverDelay?: number
 }
 
-// UI SDK pauses the timers on the region's first pointerenter, so a pointer passing over on its way to the page would
-// hold the toasts. A capture listener on the region runs before UI SDK's own one: it holds the enter back and replays
-// it once the pointer has rested, and drops the matching leave when the enter never got through. Enter and leave don't
-// bubble, but a toast's own pass through the region's capture phase, so only the region's are handled.
+// Workaround: UI SDK pauses the timers on the region's first pointerenter, so a pointer passing over on its way to
+// the page would hold the toasts. A capture listener runs before UI SDK's: it holds the enter back until the
+// pointer has rested, and drops the matching leave when the enter never got through.
 function delayHover(region: HTMLElement, delay: number) {
   let timer: ReturnType<typeof setTimeout> | undefined
   let entered = false
@@ -127,7 +124,6 @@ const toastToneClassNames = {
   violet: "border-violet-border",
 } satisfies Record<Tone, string>
 
-// The type is only known from the part's state, so the tone's classes come from a class-name function.
 function Toast({ className, tone, ...props }: ToastProps) {
   return (
     <ToastPrimitive
@@ -242,7 +238,6 @@ type ToastStackProps = Omit<ToastRegionProps, "children"> & {
   closeLabel?: string
 }
 
-// data-agent-hidden by default: an empty region has no name, which leaves agents an unnamed entry.
 function ToastStack({ labels, closeLabel, ...props }: ToastStackProps) {
   const close = labels?.close ?? closeLabel ?? toastStackLabels.close
   return (

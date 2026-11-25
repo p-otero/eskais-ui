@@ -149,7 +149,7 @@ function VoiceToggle({
   )
 }
 
-// The halo scales with --voice-level, which the meter writes straight to the root: no React render per frame.
+// Perf: the halo scales with --voice-level, which the meter writes straight to the root: no render per frame.
 function LevelGlow() {
   return (
     <>
@@ -247,7 +247,6 @@ function VoiceInput({
     bars: variant === "bar" ? bars : 0,
   })
   const showsTime = variant === "bar" && (elapsed !== undefined || startedAt !== undefined)
-  // Only a shown timer ticks, so the button variant never renders while listening.
   const counted = useElapsedSeconds(showsTime && elapsed === undefined ? startedAt : undefined, current === "listening")
   const seconds = elapsed ?? counted
 
