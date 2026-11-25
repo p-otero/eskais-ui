@@ -9,12 +9,9 @@
 @import "../../../registry/styles/prism-picker.css";
 
 @source "../../../registry";
-/* The Theming guide renders the showcase's theme editor. Without this its classes never reach the site's
-   stylesheet, and the colour area, hue track and swatches render with no size or fill. */
 @source "../../showcase/src/theme-editor.tsx";
 
 :root {
-  /* The landing page's floating header: its offset, the bar's rim and border, and one control. */
   --site-header: calc(var(--floating-offset) * 2 + var(--control-height) + var(--gap-inline) * 2 + 2px);
 }
 
@@ -25,7 +22,6 @@
       "calt" 1;
     scroll-padding-top: calc(var(--site-header) + var(--gap-group));
   }
-  /* Docs pages: DocsLayout gives everything in the page a scroll margin for its Topbar, so the root adds none. */
   html:has([data-slot="docs-layout"]) {
     scroll-padding-top: 0;
   }

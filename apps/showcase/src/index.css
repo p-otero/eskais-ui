@@ -8,7 +8,6 @@
 @import "../../../registry/styles/palettes.css";
 
 @source "../../../registry";
-/* ?demo=document-workspace renders the docs site's demo of the block. */
 @source "../../site/src/examples/document-workspace.tsx";
 
 @layer base {
