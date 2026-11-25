@@ -267,6 +267,13 @@ const keyScenarios = [
     held: "ArrowRight",
   },
   {
+    id: "live-sky",
+    label: "LiveSky, rain scrubbed (→, ←)",
+    focus: 'input[type="range"]',
+    keys: [...repeat("ArrowRight", 12), ...repeat("ArrowLeft", 8)],
+    held: "ArrowRight",
+  },
+  {
     id: "log-viewer",
     label: "LogViewer, 10,000 lines (↑, PageUp, F8)",
     focus: '[data-slot="log-viewer-log"]',

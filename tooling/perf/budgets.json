@@ -116,6 +116,11 @@
       "renders": 23,
       "forcedLayouts": 0.05,
       "paintP95": 24
+    },
+    "live-sky": {
+      "renders": 21,
+      "forcedLayouts": 0.05,
+      "paintP95": 40
     }
   },
   "layers": {
@@ -231,6 +236,7 @@
     "lightbox": 78.9,
     "link": 25.5,
     "list-item": 95.5,
+    "live-sky": 119.1,
     "liveness-indicator": 13.9,
     "locale": 0.4,
     "log-viewer": 89.3,
