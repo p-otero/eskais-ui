@@ -36,7 +36,18 @@ void main() {
  * A grid disc and a contact shadow under the model's feet, one draw call. `set` fades it and runs a pulse out from
  * the feet (0 to 1 across the disc); a frame writes only uniforms.
  */
-function createFloor() {
+type ModelViewerFloor = {
+  mesh: Mesh
+  /** Under a model `height` tall whose feet are at `y`, centred on `x`, `z`. */
+  place: (x: number, y: number, z: number, height: number) => void
+  /** The theme's line and accent colours. */
+  colors: (line: Color, accent: Color) => void
+  /** `opacity` from 0 to 1; `pulse` from 0 (at the feet) to 1 (across the disc). */
+  set: (values: { opacity?: number; pulse?: number }) => void
+  dispose: () => void
+}
+
+function createFloor(): ModelViewerFloor {
   const uniforms = {
     lineColor: { value: new Color(0x888888) },
     accent: { value: new Color(0x3b82f6) },
@@ -78,8 +89,6 @@ function createFloor() {
     },
   }
 }
-
-type ModelViewerFloor = ReturnType<typeof createFloor>
 
 export { createFloor }
 export type { ModelViewerFloor }

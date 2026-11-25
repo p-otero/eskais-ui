@@ -15,6 +15,8 @@ import {
   type Texture,
 } from "three"
 
+import type { Cloud } from "@/components/ui/model-scan-cloud-types"
+
 // Perf: one draw call: every particle's path is a function of `progress` in the vertex shader, so a frame writes
 // only uniforms.
 
@@ -291,7 +293,7 @@ type CloudOptions = {
  * The photo on a plane, and the cloud its pixels fly in. `set(progress)` plays it from 0 to 1; without `person`
  * there are no particles, only the photo to crossfade with `fade`.
  */
-function createCloud({ texture, ratio, accent, model, person, bounds, dark }: CloudOptions) {
+function createCloud({ texture, ratio, accent, model, person, bounds, dark }: CloudOptions): Cloud {
   const { rows } = cloudGrid(ratio)
   const cells: number[] = []
   const background: number[] = []
@@ -418,8 +420,6 @@ function createCloud({ texture, ratio, accent, model, person, bounds, dark }: Cl
     },
   }
 }
-
-type Cloud = ReturnType<typeof createCloud>
 
 export { cloudGrid, createCloud, shimmerHeight }
 export type { Cloud }
