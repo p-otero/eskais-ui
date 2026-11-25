@@ -250,7 +250,7 @@ shadcn installs an item's npm `dependencies` before it writes any file. A consum
 
 ## Lint
 
-`.oxlintrc.json` extends the `base`, `react`, `react-agents` and `ui-tailwind` presets of [`@p-otero/oxlint-rules`](https://github.com/p-otero/oxlint-rules) (pinned to a commit) and adds `@shadcn/lint` and the local `eskais` plugin (`tooling/oxlint-plugin-eskais`: `eskais/no-inline-icons` and `eskais/scroll-area` on `registry/**`, `eskais/comment-tags` (see "Comments") and `eskais/icon-button-needs-label` everywhere). Rules from that package are `p-otero/<rule>`.
+`.oxlintrc.json` extends the `base`, `react`, `react-agents` and `ui-tailwind` presets of [`@p-otero/oxlint-rules`](https://github.com/p-otero/oxlint-rules) (pinned to a commit) and adds `@shadcn/lint` and the local `eskais` plugin (`tooling/oxlint-plugin-eskais`: `eskais/no-inline-icons` and `eskais/scroll-area` on `registry/**`, `eskais/comment-tags` and `eskais/icon-button-needs-label` everywhere). Rules from that package are `p-otero/<rule>`.
 
 1. Every suppression says why: `// oxlint-disable-next-line <rule> -- <reason>` (`p-otero/require-suppression-reason`).
 2. Effects live in hook modules: a `use-*.ts` file next to the component (`registry/ui/use-board-focus.ts`) or a `hooks/` folder (`p-otero/no-effect-outside-hooks`). Before writing one, derive during render, act in the event handler, read a subscription with `useSyncExternalStore`, or read the latest props in an Effect with `useEffectEvent`. A new hook file in `registry/ui` joins its item's `files` in `registry.json`.
@@ -261,21 +261,6 @@ shadcn installs an item's npm `dependencies` before it writes any file. A consum
 7. React Compiler: `bun run test:compiler` builds the showcase with `babel-plugin-react-compiler` (`apps/showcase/react-compiler.ts`) and runs the overlay, fast-link, icon tooltip, shell and contrast checks on it. The build fails when a registry component or hook hits a compiler diagnostic not listed in `allowed` there. React Compiler 1.0 can't compile a `try … finally`, a conditional inside `try`, or a default parameter built from `||`/`&&`, so keep those out of components and hooks.
 
 The `lint-rules` item ships consumers the `react` and `ui-tailwind` presets with `@shadcn/lint`, the component-shape rules off, spacing tokens and `eskais/scroll-area` as warnings and `eskais/icon-button-needs-label` (from `registry/rules/eskais-oxlint-plugin.js`, which the repo's plugin also loads).
-
-## Comments
-
-Code describes itself. If it needs a comment to be understood, it is badly defined: rename, extract a named function, constant or type, or split a condition into a named boolean, then delete the comment.
-
-1. A comment stays only for what code can't say, and starts with its tag:
-   - `Workaround:` an upstream, browser or engine bug; name the engine and version or link the issue (`// Workaround: WebKit 26 sizes a flex-1 child from its 0% basis, so …`).
-   - `Spec:` a platform, WCAG, ARIA or protocol constraint.
-   - `Perf:` a measured reason for code that would otherwise look odd (`// Perf: one layer per blur; 142 → 26 on the glass board`).
-   - `Security:` a security reason.
-2. JSDoc (`/** */`) goes only on an exported declaration or a type member (a prop), and only when it states a contract the name and type can't: a unit, a default, a range, when it fires. None on private code.
-3. Suppressions keep their reason: `// oxlint-disable-next-line <rule> -- <reason>`, `// @ts-expect-error -- <reason>`. Tool directives (`prettier-ignore`, `@__PURE__`, `/// <reference>`) and license headers stay as they are.
-4. No commented-out code, section headers or TODOs.
-
-`eskais/comment-tags` flags every other `//` and `/* */` comment (a run of `//` lines counts as one, by its first line); `p-otero/no-low-value-comments` catches the rest. Neither can tell whether a JSDoc states a contract: that is the review's job.
 
 ## Commands
 
