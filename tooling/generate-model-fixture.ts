@@ -1,7 +1,3 @@
-// The demo figure in code: a GLB with engine-style targets (body.pcNN, face.<modifier>.incr|decr, expr.<ARKit>) and
-// Idle and Wave clips, the same figure with other hair as the final character, its front "photo" as an SVG where the
-// viewer's front camera sees it, and the face and body points a detector would report.
-// Usage: bun tooling/generate-model-fixture.ts (writes test/fixtures/model/)
 import { mkdirSync, writeFileSync } from "node:fs"
 import { join, resolve } from "node:path"
 
@@ -45,7 +41,7 @@ const palette = {
 type Part = { name: string; geometry: BufferGeometry; color: string }
 
 function colored({ geometry, color }: Part) {
-  // Color parses the hex as sRGB into three's linear working space, which glTF's COLOR_0 expects.
+  // Spec: glTF's COLOR_0 is linear, and three's Color parses the hex as sRGB into its linear working space.
   const tint = new Color(color)
   const count = geometry.getAttribute("position").count
   const colors = new Float32Array(count * 3)
@@ -57,7 +53,7 @@ function colored({ geometry, color }: Part) {
 
 const at = (geometry: BufferGeometry, x: number, y: number, z: number) => geometry.translate(x, y, z)
 
-// Heights in metres, feet on the ground, facing +Z.
+// Spec: glTF units are metres; the figure stands on the ground facing +Z.
 const head = { y: 1.56, radius: 0.15 }
 const eyes = [-0.055, 0.055].map((x) => ({ x, y: 1.58, z: 0.135 }))
 const mouth = { y: 1.49, z: 0.14 }
@@ -105,7 +101,6 @@ const headParts: Part[] = [
   },
 ]
 
-/** One geometry from its parts, and which vertices each part named owns. */
 function merge(parts: Part[]) {
   const ranges: Record<string, [number, number][]> = {}
   let offset = 0
@@ -165,7 +160,6 @@ const headMesh = morphMesh("Head", face.geometry, [
   morph(face.geometry, "face.head_size.decr", (point) => {
     point.sub(headCenter).multiplyScalar(0.88).add(headCenter)
   }),
-  // The figure's left is +X, as it faces +Z.
   ...([1, -1] as const).map((side) =>
     morph(face.geometry, `expr.mouthSmile${side === 1 ? "Left" : "Right"}`, (point, index) => {
       if (!face.inPart(["mouth"], index) || point.x * side < 0) return
@@ -249,7 +243,7 @@ function wave() {
 
 const clips = [idle(), wave()]
 
-// GLTFExporter writes binary output through FileReader, which Bun and Node lack.
+// Workaround: GLTFExporter writes binary output through FileReader, which Bun and Node lack.
 globalThis.FileReader ??= class {
   result: ArrayBuffer | string | null = null
   onloadend: (() => void) | null = null
@@ -269,7 +263,6 @@ globalThis.FileReader ??= class {
 
 const glb = (await new GLTFExporter().parseAsync(figure, { binary: true, animations: clips })) as ArrayBuffer
 
-// The engine's final character: the same figure with the hair colour it settled on, so the viewer crossfades to it.
 const hairColor = face.geometry.getAttribute("color") as BufferAttribute
 const finalHair = new Color(palette.finalHair)
 for (let index = 0; index < hairColor.count; index += 1) {
@@ -277,8 +270,6 @@ for (let index = 0; index < hairColor.count; index += 1) {
 }
 const finalGlb = (await new GLTFExporter().parseAsync(figure, { binary: true, animations: clips })) as ArrayBuffer
 
-// The photo: the figure seen by the viewer's front camera at zoom 1 in a stage of the photo's ratio, drawn flat at the
-// depth of the model's centre, so the 3D scene can take over from it without a jump. Two of them: 3:4 and 9:16.
 figure.updateMatrixWorld(true)
 const box = new Box3().setFromObject(figure)
 const size = box.getSize(new Vector3())
@@ -322,8 +313,6 @@ function portrait(width: number, height: number) {
     `</svg>`,
   ].join("")
 
-  // What two detectors report, both as fractions of the original photo (x of its width, y of its height): a face
-  // mesh, and a pose model's 33 body landmarks in MediaPipe's order (the subject's left first, on the photo's right).
   const point = (x: number, y: number) => ({ x: round(px(x) / width), y: round(py(y) / height) })
   const ring = (cx: number, cy: number, rx: number, ry: number, count: number, from = 0, to = Math.PI * 2) =>
     Array.from({ length: count }, (_, index) => {
@@ -338,7 +327,6 @@ function portrait(width: number, height: number) {
   ]
   const eyeX = Math.abs(eyes[0]?.x ?? 0.055)
   const eyeY = eyes[0]?.y ?? 1.58
-  // Each pair: the subject's left (+x), then its right.
   const pair = (x: number, y: number) => [point(x, y), point(-x, y)]
   const bodyPoints = [
     point(0, 1.53),

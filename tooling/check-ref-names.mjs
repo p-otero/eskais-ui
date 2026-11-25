@@ -1,6 +1,6 @@
 #!/usr/bin/env node
-// raw.githubusercontent.com resolves `<ref>` in a registry URL to a branch before a tag of the same name,
-// so a branch called like a release tag silently serves consumers different registry files.
+// Security: raw.githubusercontent.com resolves a ref to a branch before a tag of the same name, so a branch named
+// like a release tag would serve consumers different registry files.
 import { execFileSync } from "node:child_process"
 
 const remote = process.argv[2] ?? "origin"

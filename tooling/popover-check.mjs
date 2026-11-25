@@ -1,7 +1,3 @@
-// Drives ?demo=popover-check in Chrome: hover opening (delay, crossing into it, closing on leave, Enter and a tap
-// still open it), a defaultOpen popover staying open while its dialog takes initial focus, and ?demo=task-dialog
-// opening with its header's AcceptancePopover open.
-// Usage: node tooling/popover-check.mjs (after `bun run build:showcase`)
 import { withShowcase } from "./showcase-browser.mjs"
 
 const failures = []

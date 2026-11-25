@@ -1,7 +1,3 @@
-// Drives ?demo=agent-workspace in Chrome: the thread follows a streamed reply, scrolling up stops it and a reply
-// below shows as "1 new below" without moving the view, the pill jumps back (at once under reduced motion); the
-// activity log records the agent's moves and a person's click as a person's, and Ctrl+Z undoes outside text fields.
-// Usage: node tooling/conversation-check.mjs [--screenshots=<dir>] (after `bun run build:showcase`)
 import { mkdirSync } from "node:fs"
 import { join, resolve } from "node:path"
 
@@ -51,7 +47,6 @@ async function thread(page) {
 
   await page.getByRole("button", { name: "Let the agent work" }).click()
   await page.waitForFunction(() => document.querySelector("[data-slot=conversation-message][aria-busy=true]") !== null)
-  // Samples the distance from the end on every frame until the reply is whole.
   const gaps = await log(page).evaluate(
     (el) =>
       new Promise((done) => {

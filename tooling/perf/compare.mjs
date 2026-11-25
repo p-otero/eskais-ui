@@ -1,6 +1,3 @@
-// Before/after table from an A/B run (`bun run perf --builds=<a>,<b> --repeat=N`): medians over the repeats of
-// key-to-paint, renders and main-thread time per press, forced layouts, and the held key's lag and dropped frames.
-// Usage: node tooling/perf/compare.mjs <results name or path> [--markdown]
 import { readFile } from "node:fs/promises"
 import { resolve } from "node:path"
 

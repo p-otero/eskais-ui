@@ -1,7 +1,3 @@
-// Presses links in the showcase's Navigation section in Chrome: a fast Link and a ButtonLink navigate while the
-// mouse button is still down; a `fast={false}` Link and a touch tap wait for the click. A hash route (`#/…`) sets
-// the hash on press, and an in-page anchor (`#navigation`) only on release.
-// Usage: node tooling/fast-link-check.mjs (after `bun run build:showcase`)
 import { withShowcase } from "./showcase-browser.mjs"
 
 const failures = []

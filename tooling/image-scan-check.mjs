@@ -1,7 +1,3 @@
-// ?demo=image-scan-check in Chrome at 320, 390 and 1440 px, light and dark, right to left, compact and glass: no
-// overflow, region boxes where mapRegionBox puts them and on the colour they mark, only transform and opacity
-// animations with no layout per frame, and nothing running under reduced motion.
-// Usage: node tooling/image-scan-check.mjs [--screenshots=<dir>] (after `bun run build:showcase`)
 /* oxlint-disable no-await-in-loop -- each width, mode and fixture is measured in turn on one page */
 import { mkdirSync } from "node:fs"
 import { join, resolve } from "node:path"
@@ -58,8 +54,6 @@ async function overflow(page) {
   })
 }
 
-// Each region's box in the frame's padding box, the frame's size, and the colour painted at the centre of the part
-// of the box the frame shows, read from a screenshot.
 async function regions(page, testid) {
   const section = page.getByTestId(testid)
   await section.scrollIntoViewIfNeeded()

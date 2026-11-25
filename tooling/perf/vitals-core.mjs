@@ -1,4 +1,3 @@
-// Measures one cold page load's Web Vitals in Chrome; bun run perf:vitals (vitals.mjs) and perf:ci (ci.mjs) use it.
 import { openPage } from "./browser.mjs"
 import { percentile } from "./interactions.mjs"
 
@@ -7,7 +6,6 @@ const networks = {
   "4g": { latency: 150, downloadThroughput: (9 * 1024 * 1024) / 8, uploadThroughput: (1.5 * 1024 * 1024) / 8 },
 }
 
-// `ready` is what the page shows once it has loaded; the server fixtures wait out their simulated latency.
 const siteTargets = [
   { id: "site:landing", path: "", ready: "main h1" },
   { id: "site:data-table", path: "docs/components/data-table/", ready: "main h1" },
@@ -31,8 +29,8 @@ const showcaseTargets = [
   },
 ]
 
-// Runs in the page before its scripts. CLS is the largest session window of shifts not caused by input (gaps under
-// 1 s, at most 5 s long), as web-vitals computes it; INP the longest interaction.
+// Spec: CLS is the largest session window of shifts not caused by input (gaps under 1 s, at most 5 s long), as
+// web-vitals computes it.
 const observe = () => {
   // oxlint-disable-next-line unicorn/consistent-function-scoping -- runs in the page through addInitScript, which serializes this function alone
   const describe = (node) => {
@@ -54,7 +52,7 @@ const observe = () => {
         ...extra,
       })
     } catch {
-      // An entry type this browser doesn't report.
+      // Spec: PerformanceObserver.observe throws on an entry type this browser doesn't support.
     }
   }
   watch("paint", (entry) => {
@@ -96,7 +94,6 @@ async function measure(browser, url, target, { cpu, network }) {
     await page.locator(target.ready).first().waitFor({ timeout: 60_000 })
     await page.waitForLoadState("networkidle")
     await page.waitForTimeout(1500)
-    // An interaction for INP that changes nothing: focus moving through the page's first controls.
     for (let press = 0; press < 4; press += 1) await page.keyboard.press("Tab")
     await page.waitForTimeout(300)
     return await page.evaluate(() => {

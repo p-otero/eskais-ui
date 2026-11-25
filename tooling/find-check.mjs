@@ -1,7 +1,3 @@
-// Find in page reaches rows a virtualized List hasn't rendered: a text fragment (`#:~:text=`, which reveals
-// `hidden="until-found"` content the way the find bar does) for rows across the 10,000-row fixture must render that
-// row, in view. Rows sit in chunks of 100; the targets include a chunk's first row and the list's last.
-// Usage: node tooling/find-check.mjs (after `bun run build:showcase`)
 import { withShowcase } from "./showcase-browser.mjs"
 
 const targets = [5000, 5101, 200, 10_000]
@@ -12,7 +8,6 @@ await withShowcase(async (page) => {
   for (const target of targets) {
     await page.goto(`${origin}/?demo=perf&scenario=list-10k`)
     await page.waitForFunction(() => globalThis.perfFixture?.mounted !== undefined)
-    // The layers load on first connect; their groups stay hidden until found, so the browser lays none of them out.
     await page.waitForFunction(() => document.querySelectorAll("[data-findable-layer]").length === 2)
     const visibleStandIns = await page.evaluate(
       () => [...document.querySelectorAll("[data-findable-layer] > :not([hidden])")].length,
@@ -35,7 +30,6 @@ await withShowcase(async (page) => {
   }
 })
 
-// A long MarkdownView: find in page reaches a heading far down and scrolls it into view.
 await withShowcase(async (page) => {
   const origin = new URL(page.url()).origin
   await page.goto(`${origin}/?demo=perf&scenario=markdown-view`)

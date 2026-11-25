@@ -1,4 +1,3 @@
-// Drives one fixture: timed presses, a held key, overlays opening and closing, and mount cost.
 import { heapUsed, openPage } from "./browser.mjs"
 import { summarizeTrace } from "./trace.mjs"
 
@@ -78,7 +77,6 @@ function summarizeInputs(taken, count) {
   }
 }
 
-/** Times `definition.keys` one press at a time (each waits for its paint), then traces a shorter run. */
 async function measureKeys(browser, origin, definition, { cpu, trace }) {
   const { page, context, errors } = await openPage(browser, { cpu })
   try {
@@ -113,7 +111,6 @@ async function measureKeys(browser, origin, definition, { cpu, trace }) {
   }
 }
 
-/** Holds `key` for 2 s at 30 Hz autorepeat, without waiting for paints, as a held arrow key does. */
 async function measureHeld(browser, origin, definition, { cpu }) {
   const { page, context, cdp } = await openPage(browser, { cpu })
   try {
@@ -162,11 +159,6 @@ async function measureHeld(browser, origin, definition, { cpu }) {
   }
 }
 
-/** Opens each overlay from its focused trigger with Enter, then closes it with Escape, five times. */
-/**
- * Opens each overlay from its focused trigger with Enter (or its `shortcut`), then closes it with Escape, five times.
- * Overlays of the same `scenario` share a page; the default is the `overlays` fixture.
- */
 async function measureOverlays(browser, origin, overlays, { cpu, rounds = 5 }) {
   const results = []
   for (const scenario of new Set(overlays.map((overlay) => overlay.scenario ?? "overlays"))) {
@@ -217,7 +209,6 @@ async function measureOverlays(browser, origin, overlays, { cpu, rounds = 5 }) {
   return results
 }
 
-/** First render to first paint, and the JS heap after a GC, over the empty fixture's heap. */
 async function measureMount(browser, origin, scenario, { cpu, rounds = 3 }) {
   const times = []
   let heap = 0
@@ -235,10 +226,6 @@ async function measureMount(browser, origin, scenario, { cpu, rounds = 3 }) {
   return { scenario, mountMs: round(percentile(times, 50)), heapMB: round(heap / 1024 / 1024, 2), renders }
 }
 
-/**
- * The counts CI holds exact, from one traced run of the first `presses` keys at 1×: React renders per press (the
- * most any press caused) and forced layouts per press. Main-thread time per press is reported, not checked.
- */
 async function measureCounts(browser, origin, definition, { presses = 20 } = {}) {
   const { page, context, errors } = await openPage(browser, { cpu: 1 })
   try {

@@ -1,6 +1,3 @@
-// Drives ?demo=git-view-check in Chrome: GitDiff's file tree beside a 34rem list, GitDiff height="auto" in a
-// scrolling body (short, capped by --diff-max-height, and 2,000 lines that scroll only with the body), and an added
-// file in split layout at 1440px and 1920px. Usage: node tooling/git-view-check.mjs (after `bun run build:showcase`)
 import { withShowcase } from "./showcase-browser.mjs"
 
 const failures = []
@@ -94,7 +91,6 @@ async function autoHeight(page) {
   )
   check("auto: the tree beside it stops there too", long.tree <= long.cap + 1, `${String(long.tree)}px`)
 
-  // Scroll the long diff to its end, then wheel over it: the body scrolls on.
   const box = await page.evaluate(() => {
     const body = document.querySelector("[data-testid=dialog-body]")
     body.scrollIntoView({ block: "center" })
@@ -150,7 +146,6 @@ async function autoHuge(page) {
   check("auto, uncapped: rows virtualize against the body", start.rows > 0 && start.rows < 150, String(start.rows))
   check("auto, uncapped: off-screen rows stay findable", start.layers > 0, String(start.layers))
 
-  // Halfway down the body, the rows on screen are rendered.
   const middle = await page.evaluate(async () => {
     const body = document.querySelector("[data-testid=huge-body]")
     body.scrollIntoView({ block: "center" })
@@ -169,7 +164,6 @@ async function autoHuge(page) {
     `${String(middle.row)}, ${String(middle.rows)} rows`,
   )
 
-  // j from the first line moves the body to the next file's hunk.
   await page.evaluate(() => {
     document.querySelector("[data-testid=huge-body]").scrollTop = 0
   })

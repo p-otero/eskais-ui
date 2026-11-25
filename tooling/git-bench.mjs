@@ -1,7 +1,3 @@
-// Times CommitHistory on 50,000 commits and GitTree on 100,000 files in Chrome, with and without the find-in-page
-// layers: first paint, keystroke to paint for a held arrow key and for End then Home, the longest task, when the
-// layers are built and whether a match scrolls its row into view. Run after `bun run build:showcase`.
-// Usage: node tooling/git-bench.mjs [commits, default 50000] [files, default 100000]
 import { withShowcase } from "./showcase-browser.mjs"
 
 const commits = Number(process.argv[2] ?? 50_000)
@@ -33,7 +29,6 @@ async function installProbe(page) {
   })
 }
 
-// A held key repeats about every 33ms; each press waits for the previous paint, so a slow frame shows as latency.
 async function holdArrow(page, key) {
   await page.evaluate(() => {
     globalThis.keyTimes = []
@@ -56,7 +51,6 @@ async function jump(page, key) {
   return page.evaluate(() => globalThis.keyTimes[0])
 }
 
-// Long tasks from the start, so the idle build of the find-in-page layers shows if it blocks a key press.
 async function watchLongTasks(page) {
   await page.addInitScript(() => {
     globalThis.longTasks = []
@@ -66,7 +60,6 @@ async function watchLongTasks(page) {
   })
 }
 
-// Every row has a stand-in once the layers are built; a matched stand-in scrolls its row into view.
 async function checkFindable(page, findable) {
   if (!findable) return { layersMs: "off", found: "off" }
   await page.waitForFunction(
@@ -82,7 +75,6 @@ async function checkFindable(page, findable) {
     target?.dispatchEvent(new Event("beforematch", { bubbles: true }))
     await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)))
     const rows = [...document.querySelectorAll('[role="treeitem"]')]
-    // A chip in the subject spaces its stand-in's text differently from the row's.
     const wanted = text.replaceAll(/\s+/g, " ").trim()
     return rows.some(
       (row) => (row.textContent ?? "").replaceAll(/\s+/g, " ").includes(wanted) && row.getBoundingClientRect().top >= 0,
@@ -139,13 +131,12 @@ const scenarios = pages.flatMap(([name, query]) => [
   [`${name}, findable`, `${query}&findable=true`],
 ])
 const results = []
-// One after another, so they don't compete for the CPU they measure.
+// Perf: one after another, so they don't compete for the CPU they measure.
 for (const [name, query] of scenarios) {
   // oxlint-disable-next-line eslint/no-await-in-loop -- one run at a time, so they don't compete for the CPU they measure
   for (const rate of [1, 4]) results.push(await run(name, query, rate))
 }
 console.table(results)
-// The findable layers are opt-in and documented as costing about a frame on some presses; the gate is the default.
 const slow = results.filter(
   (result) => result.cpu === "1×" && !result.name.endsWith("findable") && result.arrowP95 >= 16,
 )

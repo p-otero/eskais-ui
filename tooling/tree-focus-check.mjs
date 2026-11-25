@@ -1,6 +1,3 @@
-// Drives ?demo=tree-focus-check, in light and dark: a focused dialog, tree or folder must not outline the rows below
-// it, and Tab into a tree outlines exactly the focused row. Covers GitDiff's file tree in a dialog, GitTree, Tree and
-// CommitHistory. Usage: node tooling/tree-focus-check.mjs (after `bun run build:showcase`)
 import { withShowcase } from "./showcase-browser.mjs"
 
 const failures = []
@@ -10,7 +7,6 @@ function check(label, ok, detail = "") {
   if (!ok) failures.push(label)
 }
 
-// The rows of a tree that draw a focus outline or ring, and whether the focused item owns the one that does.
 function outlined(page, scope, part) {
   return page.evaluate(
     ([scopeSelector, partSelector]) => {
@@ -35,7 +31,6 @@ function outlined(page, scope, part) {
   )
 }
 
-// Presses Tab until focus lands on one of the tree's items, up to `presses` times.
 async function tabIntoTree(page, scope, presses = 12) {
   if (presses === 0) return false
   await page.keyboard.press("Tab")
@@ -74,7 +69,6 @@ async function checkMode(page, mode) {
     document.documentElement.classList.toggle("light", !dark)
   }, mode === "dark")
 
-  // Opened from the keyboard with initialFocus="content", the dialog itself is focus-visible above the tree.
   await page.getByRole("button", { name: "Open diff" }).focus()
   await page.keyboard.press("Enter")
   const dialog = page.getByRole("dialog", { name: "Changes" })

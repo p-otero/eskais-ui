@@ -1,5 +1,3 @@
-// Load-time Web Vitals in Chrome: TTFB, FCP, LCP, CLS and INP from PerformanceObservers registered before the page
-// runs, on a cold cache and a slow 4G profile, at 1× and 4× CPU. Usage and options in tooling/perf/README.md.
 import { mkdir, writeFile } from "node:fs/promises"
 import { resolve } from "node:path"
 
@@ -24,7 +22,6 @@ const only = list("only", "")
 const name = option("name", "vitals")
 const wanted = (id) => only.length === 0 || only.some((part) => id === part || id.startsWith(`${part}:`))
 
-// Each source: a showcase build (served from .builds) or a site dist (`label:path`, path from the repository root).
 const sources = [
   ...builds.map((build) => ({
     label: build,
@@ -33,7 +30,7 @@ const sources = [
     url: (origin, target) => `${origin}${target.query}`,
   })),
   ...sites.map((entry) => {
-    // The label ends at the first colon: a Windows path has one of its own.
+    // Spec: a Windows path has a colon of its own, so the label ends at the first one.
     const at = entry.indexOf(":")
     const label = at === -1 ? entry : entry.slice(0, at)
     const dist = at === -1 ? "apps/site/dist" : entry.slice(at + 1)
@@ -50,7 +47,7 @@ const sources = [
 const raw = {}
 const browser = await launch()
 try {
-  // Repeats alternate the order of the sources, so a slow spell hits each of them alike.
+  // Perf: repeats alternate the order of the sources, so a slow spell hits each of them alike.
   for (let rep = 1; rep <= repeat; rep += 1) {
     for (const source of rep % 2 === 0 ? sources.toReversed() : sources) {
       const server = await serve(source.dir, source.base ? { base: source.base, spa: false } : undefined)

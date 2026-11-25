@@ -1,6 +1,3 @@
-// Summarizes a Chrome trace's renderer main thread: self time by kind (scripting, style, layout, paint, gc,
-// other), forced (synchronous) style and layout inside script, and the longest tasks.
-
 const scripting = new Set([
   "EventDispatch",
   "FunctionCall",
@@ -82,7 +79,6 @@ function summarizeTrace(trace, window) {
     .filter((event) => !window || (event.ts >= window[0] && event.ts + event.dur <= window[1]))
     .toSorted((a, b) => a.ts - b.ts || b.dur - a.dur)
 
-  // Walks the nesting with a stack: each slice's self time is its duration minus its children's.
   const stack = []
   const close = (until) => {
     while (stack.length > 0 && stack.at(-1).end <= until) {

@@ -1,6 +1,3 @@
-// Bundles AgentTaskBoard with embedded task data into one self-contained HTML file using Bun's HTML bundler,
-// then opens it from file:// in Chrome with every network request blocked and checks that it works.
-// Usage: node tooling/static-board.mjs [output, default dist/static-board.html]
 import { spawn } from "node:child_process"
 import { mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, statSync, writeFileSync } from "node:fs"
 import { createRequire } from "node:module"
@@ -31,8 +28,8 @@ function run(command, args) {
   })
 }
 
-// Bun's HTML bundler has no Tailwind step without a plugin, so the CSS is compiled here with the
-// same engine the showcase's Vite plugin uses, then handed to Bun as a plain stylesheet.
+// Workaround: Bun's HTML bundler has no Tailwind step without a plugin, so the CSS is compiled here with the engine
+// the showcase's Vite plugin uses and handed to Bun as a plain stylesheet.
 async function compileCss() {
   const require = createRequire(
     join(realpathSync(join(repo, "apps/showcase/node_modules/@tailwindcss/vite")), "package.json"),
@@ -59,7 +56,7 @@ async function taskData(kind) {
 async function bundle(css, data, file) {
   const html = readFileSync(join(source, "index.html"), "utf8").replace(
     "./main.tsx",
-    // Relative on purpose: Bun reads an absolute src as relative to the HTML file's root on POSIX.
+    // Workaround: Bun reads an absolute src as relative to the HTML file's root on POSIX, so this one is relative.
     slash(relative(work, join(source, "main.tsx"))),
   )
   writeFileSync(join(work, "board.css"), css)
@@ -73,34 +70,31 @@ async function bundle(css, data, file) {
     "--production",
     `--outdir=${outdir}`,
   ])
-  // `<` escaped so the JSON can't close its script element.
+  // Security: `<` is escaped so the JSON can't close its script element.
   const embedded = `<script type="application/json" id="board-data">${data.replaceAll("<", "\\u003c")}</script>`
   const built = readFileSync(join(outdir, "index.html"), "utf8")
   const marker = built.includes("<!-- board-data -->") ? "<!-- board-data -->" : '<script type="module"'
   const page = built.replace(marker, marker === "<!-- board-data -->" ? embedded : `${embedded}${marker}`)
   mkdirSync(dirname(file), { recursive: true })
   writeFileSync(file, page)
-  // Only markup and stylesheets count: the inlined JavaScript holds React's warning strings, which look like tags.
   const markup = page.replaceAll(/<(script|style)\b[^>]*>[\s\S]*?<\/\1>/gi, "")
   const styles = [...page.matchAll(/<style\b[^>]*>([\s\S]*?)<\/style>/gi)].map((match) => match[1]).join("\n")
   const checks = [
     [markup, /<script[^>]+src=/i],
     [markup, /<link[^>]+rel="?(stylesheet|preload|modulepreload)/i],
     [styles, /@import\b/i],
-    // Embedded fonts arrive as data: URLs; anything else in url() is fetched from outside the file.
     [styles, /url\(\s*(?!["']?data:)/i],
   ]
   for (const [text, external] of checks) {
     if (external.test(text)) throw new Error(`${file} still loads something from outside the file: ${external}`)
   }
-  // Hosts that size a frame to its content (T3's preview) reject any viewport-height unit anywhere in the page,
-  // class strings in the bundle included: the page must take its height from its content or its parent.
+  // Spec: hosts that size a frame to its content (T3's preview) reject any viewport-height unit anywhere in the page,
+  // class strings in the bundle included.
   const viewportUnit = page.match(/\b\d+(\.\d+)?[dls]?vh\b|\b(min-|max-)?h-(screen|[dls]?vh)\b/)
   if (viewportUnit) throw new Error(`${file} uses a viewport height unit: ${viewportUnit[0]}`)
   return statSync(file).size
 }
 
-// Cancelled tasks start hidden, so they have no card.
 const shownCards = (data) => JSON.parse(data).tasks.filter((task) => task.status !== "cancelled").length
 
 async function check(browser, file, { cards, select, detail }) {

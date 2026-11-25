@@ -1,7 +1,3 @@
-// Drives the showcase's ?demo=icon-tooltip-check fixture in Chrome: an icon button shows its name in a tooltip on
-// hover and keyboard focus, never on a touch screen (tap or long press), not with tooltip={false}, and above an
-// open dialog; the page stays at 0 axe violations with a tooltip open.
-// Usage: node tooling/icon-tooltip-check.mjs [--screenshots=<dir>] (after `bun run build:showcase`)
 import { mkdirSync } from "node:fs"
 import { createRequire } from "node:module"
 import { join } from "node:path"
@@ -17,7 +13,6 @@ function check(label, ok, detail = "") {
   if (!ok) failures.push(label)
 }
 
-// The open tooltip's text, or null; the shortcut keys are read separately.
 function openTooltip(page) {
   return page.evaluate(() => {
     const open = [...document.querySelectorAll("[data-slot=tooltip-content][data-open]")]
@@ -74,7 +69,6 @@ await withShowcase(async (page) => {
   })
   check("the tooltip labels the button with the same text", snapshotName === "Archive", String(snapshotName))
 
-  // Chrome's own accessibility tree: the shortcut keys in the tooltip stay out of the name.
   const cdp = await page.context().newCDPSession(page)
   const { nodes } = await cdp.send("Accessibility.getFullAXTree")
   const names = nodes.filter((node) => node.role?.value === "button").map((node) => node.name?.value)

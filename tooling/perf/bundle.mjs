@@ -1,6 +1,3 @@
-// Gzip size of each registry item with everything it imports (other items, UI SDK, lucide, CodeMirror…),
-// React excluded since every app has it: the initial chunk, the lazily imported chunks, and the UI SDK share
-// (a second build with @ui-sdk/* external).
 import { createRequire } from "node:module"
 import { mkdir, readFile, writeFile } from "node:fs/promises"
 import { resolve } from "node:path"
@@ -63,8 +60,6 @@ async function bundle(name, files, external) {
 
 const base = (file) => file.replace(/^.*\//, "").replace(/\.tsx?$/, "")
 
-// The files an entry should export: an item's files minus the ones it reaches only through `import()` (a lazily
-// loaded scene and what it alone imports), which the build then splits into lazy chunks instead of the entry.
 async function entryFiles(files) {
   const byName = new Map(files.map((file) => [base(file), file]))
   const edges = new Map()
@@ -92,7 +87,6 @@ async function entryFiles(files) {
 const gzip = (chunk) => gzipSync(chunk.code, { level: 9 }).length
 const kb = (bytes) => Math.round(bytes / 102.4) / 10
 
-/** `uiSdkShare: false` skips the second build per item, for CI, which checks only the total. */
 async function measureBundles({ items: names, uiSdkShare = true } = {}) {
   const registry = JSON.parse(await readFile(resolve(root, "registry.json"), "utf8"))
   const items = registry.items

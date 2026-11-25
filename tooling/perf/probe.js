@@ -1,6 +1,3 @@
-// Runs before the page's scripts (Playwright `addInitScript`): a React DevTools hook counting rendered components
-// per commit, an input-to-next-paint probe, Event Timing / Long Task / LoAF observers, and the `__perf` helpers
-// the runner calls (`reset`, `take`, `watch`).
 ;(() => {
   const PerformedWork = 1
   const componentTags = new Set([0, 1, 11, 15])
@@ -21,8 +18,8 @@
     return type.displayName || type.name || type.render?.displayName || type.render?.name || "Anonymous"
   }
 
-  // A subtree React skipped keeps the previous commit's fibers, whose flags are stale: only descend where the
-  // child list was cloned in this render (`fiber.child !== fiber.alternate.child`), as React DevTools does.
+  // Spec: React keeps a skipped subtree's previous fibers with stale flags, so descend only where this render cloned the
+  // child list (`fiber.child !== fiber.alternate.child`), as React DevTools does.
   function countCommit(root) {
     state.commits += 1
     const stack = [root.current]
@@ -53,9 +50,7 @@
     onCommitFiberRoot(_id, root) {
       try {
         countCommit(root)
-      } catch {
-        // A count is diagnostics; never break the page under test.
-      }
+      } catch {}
     },
     onCommitFiberUnmount() {},
     onPostCommitFiberRoot() {},
@@ -100,7 +95,7 @@
     try {
       new PerformanceObserver((list) => list.getEntries().forEach(push)).observe({ type, ...options })
     } catch {
-      // Unsupported entry type in this browser.
+      // Spec: PerformanceObserver.observe throws on an entry type this browser doesn't support.
     }
   }
   observe("event", { durationThreshold: 16 }, (entry) =>
@@ -131,8 +126,6 @@
     requestAnimationFrame(countFrames)
   }
 
-  // Resolves once an element matching `selector` shows (or, with `appear: false`, goes) after the next key or
-  // pointer press: `firstFrame` is that frame painted, `settled` when its animations finished or it left the DOM.
   function watch(selector, appear = true) {
     return new Promise((resolve) => {
       let start = null

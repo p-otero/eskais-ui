@@ -1,6 +1,3 @@
-// ?demo=server-data-check in Chrome, 1440 and 390px, light and dark, each filter UI: axe, scroll, overlap; the live
-// region, "Loading…" past 400 ms, focus on the pressed control, the URL, chips, and the panel as a sheet when narrow.
-// Usage: node tooling/server-data-check.mjs [--screenshots <dir>] (after `bun run build:showcase`)
 import { mkdirSync } from "node:fs"
 import { createRequire } from "node:module"
 import { join, resolve } from "node:path"
@@ -33,8 +30,6 @@ function status(page) {
 
 let runs = 0
 
-// A new query string each time, so `goto` loads the page again instead of only changing the hash. The showcase
-// starts in light mode; dark is set on <html> the way `createAppearance` does.
 async function open(page, { ui, hash = "", width, scheme, delay = 500 }) {
   await page.setViewportSize({ width, height: width > 800 ? 900 : 844 })
   const origin = new URL(page.url()).origin
@@ -59,7 +54,6 @@ async function axe(page) {
   })
 }
 
-// Controls in the toolbar and footer whose boxes overlap, other than one inside another.
 function overlaps(page) {
   return page.evaluate(() => {
     const selector = [

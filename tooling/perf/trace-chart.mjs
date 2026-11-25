@@ -1,7 +1,3 @@
-// Draws one key press from a trace as a flame chart of the renderer main thread and saves it as a PNG: from the
-// keydown's EventDispatch to the end of the frame that painted it, colored like DevTools (script yellow, style and
-// layout purple, paint green, gc orange).
-// Usage: node tooling/perf/trace-chart.mjs <trace.json> <out.png> [press index, default 10] [title]
 import { readFileSync } from "node:fs"
 
 import { chromium } from "playwright"
@@ -24,7 +20,6 @@ const slices = events
 const keydowns = slices.filter((event) => event.name === "EventDispatch" && event.args?.data?.type === "keydown")
 const press = keydowns[Math.min(Number(pressArg), keydowns.length - 1)]
 const nextPress = keydowns[keydowns.indexOf(press) + 1]
-// The press's frame: everything until the first Commit after it, plus a little margin.
 const commit = slices.find((event) => event.ts > press.ts && event.name === "Commit")
 const start = press.ts - 2000
 const end = Math.min(

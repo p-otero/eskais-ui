@@ -7,7 +7,6 @@ type Item = { name: string; cssVars?: { theme: CssVars; light: CssVars; dark: Cs
 const registryPath = "registry.json"
 const read = (file: string) => readFileSync(`registry/styles/${file}`, "utf8").replaceAll(/\/\*[\s\S]*?\*\//g, "")
 
-// Turns plain nested CSS (rules, @media, @supports) into the object shape of a registry item's `css`.
 function tree(css: string): CssTree {
   let index = 0
   function parse(): CssTree {
@@ -21,7 +20,7 @@ function tree(css: string): CssTree {
       } else if (char === "}") {
         break
       } else if (char === ";" && !buffer.includes(":")) {
-        // A statement such as `@slot` or `@custom-variant narrow (…)`: shadcn writes `{}` as `@rule;`.
+        // Spec: shadcn writes `{}` as `@rule;`, a statement such as `@slot` or `@custom-variant narrow (…)`.
         node[buffer.trim().replaceAll(/\s+/g, " ")] = {}
         buffer = ""
       } else if (char === ";") {
@@ -56,9 +55,6 @@ function topLevelSelectors(selector: string) {
   return [...parts, selector.slice(start).trim()]
 }
 
-// shadcn finds the rule to merge into by comparing selector strings, and formatters (Prettier, Biome, oxfmt) put each
-// selector of a list on its own line, so a list never matches again and a second add appends a duplicate. One rule
-// per selector keeps every selector's specificity.
 function oneSelectorPerRule(node: CssTree): CssTree {
   const result: CssTree = {}
   for (const [key, value] of Object.entries(node)) {
@@ -84,8 +80,6 @@ const item = (name: string) => {
 }
 
 const theme = tree(read("theme.css"))
-// shadcn writes its one-line `@custom-variant dark (&:is(.dark *))` into any stylesheet without a custom variant, above
-// what an item adds. Tailwind keeps the last definition of a variant, so the theme's block, appended later, wins.
 const customVariants = Object.fromEntries(
   Object.entries(theme).filter(([selector]) => selector.startsWith("@custom-variant ")),
 )
@@ -104,9 +98,6 @@ const prefixed = (selector: string) =>
   Object.fromEntries(Object.entries(vars(selector)).map(([name, value]) => [`--${name}`, value]))
 
 const themeVars = vars("@theme inline")
-// shadcn mirrors each cssVars.light/dark entry into `@theme inline`: `--color-x: var(--x)` for a value starting with
-// hsl, rgb, # or oklch, a self-referencing `--x: var(--x)` otherwise. Only colours that have their `--color-x` stay;
-// the rest go in `css` rules on the same selectors, which shadcn merges into an existing rule.
 const mirrored = ([name, value]: [string, string]) =>
   /^(hsl|rgb|#|oklch)/.test(value) && Object.hasOwn(themeVars, `color-${name}`)
 function split(entries: CssVars) {
@@ -122,7 +113,6 @@ function split(entries: CssVars) {
 const light = split({ ...vars(":root"), ...vars(derivedLight) })
 const dark = split({ ...vars(".dark"), ...vars(derivedDark) })
 
-// shadcn writes cssVars to :root and .dark only; the palette scopes that repeat the derivation go in `css`.
 item("theme").cssVars = { theme: themeVars, light: light.cssVars, dark: dark.cssVars }
 item("theme").css = oneSelectorPerRule({
   ...customVariants,
@@ -139,7 +129,6 @@ item("theme").css = oneSelectorPerRule({
     ),
   ),
   "@layer components": theme["@layer components"] ?? {},
-  // Apps that skip `shadcn init` have no `* { border-color }` rule, so borders fall back to currentColor.
   "@layer base": theme["@layer base"] ?? {},
 })
 item("palettes").css = oneSelectorPerRule(tree(read("palettes.css")))

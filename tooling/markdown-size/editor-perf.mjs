@@ -1,5 +1,3 @@
-// Times the showcase MarkdownEditor on a 5,000-line note in Chrome, with MarkdownView rendered beside it.
-// Usage: bun run build:showcase && node tooling/markdown-size/editor-perf.mjs [cpu slowdown, default 4]
 import { withShowcase } from "../showcase-browser.mjs"
 
 const slowdown = Number(process.argv[2] ?? 4)
@@ -58,7 +56,6 @@ await withShowcase(async (page) => {
     await new Promise((resolve) => requestAnimationFrame(() => setTimeout(resolve)))
     const pasted = performance.now() - start
     view.dispatch({ selection: { anchor: view.state.doc.line(2500).to }, scrollIntoView: true })
-    // Splits each keystroke's script time into building the new state and updating the view.
     // oxlint-disable-next-line unicorn/consistent-function-scoping -- runs in the page, which can't see this module
     const time = (list, run) => {
       const begin = performance.now()
@@ -78,8 +75,6 @@ await withShowcase(async (page) => {
   await page.waitForTimeout(1500)
   await page.evaluate(() => (window.mdPerf = { keys: [], longTasks: [], states: [], updates: [] }))
 
-  // Keys go one at a time at typing pace; a pause longer than the 300 ms onChange debounce follows every
-  // sixth key, so the view beside the editor re-renders between groups.
   const steps = Array.from({ length: 48 }, (_, index) => index)
   await steps.reduce(
     (previous, index) =>

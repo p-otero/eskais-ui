@@ -1,7 +1,3 @@
-// Drives the showcase where layout decides what shows: the Topbar's ⌘K dialog and Sidebar drawer, tabs and MobileNav
-// labels at phone widths; CardHeader and SidePanel headers; SidePanel's narrow modes; a Form's floating label; a
-// wrapping table column; DescriptionList layouts; ring meters; stat deltas; ?demo=shell-block; the layout blocks.
-// Usage: node tooling/shell-check.mjs [--screenshots=<dir>] [--only=layout] (after `bun run build:showcase`)
 import { mkdirSync } from "node:fs"
 import { createRequire } from "node:module"
 import { join, resolve } from "node:path"
@@ -28,8 +24,6 @@ async function shot(page, file, fullPage = false) {
   console.log(`     ${join(shots, file)}`)
 }
 
-// Rendered and inside the viewport. A dialog left in a hidden slot is open but has no box, and isn't in the
-// accessibility tree either, so a role locator never finds it.
 async function onScreen(locator) {
   const found = await locator.waitFor({ timeout: 3000 }).then(
     () => true,
@@ -37,7 +31,6 @@ async function onScreen(locator) {
   )
   if (!found) return false
   return locator.evaluate(async (element) => {
-    // The transition starts a frame after data-starting-style goes, so wait for that before waiting for it to end.
     const started = () =>
       element.hasAttribute("data-starting-style") ? new Promise(requestAnimationFrame).then(started) : undefined
     await started()
@@ -62,7 +55,6 @@ async function shell(page, width) {
   await page.evaluate(() => document.fonts.ready)
 }
 
-// The tab sits inside the list's box, clear of the edge fades (their widths are 0 on a side with nothing to scroll to).
 async function clearOfFades(tab) {
   return tab.evaluate(async (element) => {
     const list = element.closest('[role="tablist"]')
@@ -104,7 +96,6 @@ async function checkTabs(page, dir) {
   await page.keyboard.press("Home")
   const first = await clearOfFades(tabs.getByRole("tab", { name: "Overview" }))
   check(`${dir} 320px: Home reveals the first tab`, first.ok, first.detail)
-  // A tab cut off at either edge, chosen by pointer near its visible end.
   const partial = await tabs.getByRole("tab").evaluateAll((all) => {
     const bounds = all[0].closest('[role="tablist"]').getBoundingClientRect()
     return all.find((tab) => {
@@ -125,18 +116,14 @@ async function checkTabs(page, dir) {
   }
 }
 
-// Beside the action, the title column keeps at least this much; below it the action wraps under the title.
 const comfortableTitle = 11 * 16
 
-// Date and time segments sit close, as typed text would ("09:38", "11/02/2026"), in both directions: under a
-// third of the font size between a segment's text and its separator, each segment a 24px target, none overlapping.
 async function checkSegmentsIn(page, dir) {
   await page.evaluate((value) => document.documentElement.setAttribute("dir", value), dir)
   const problems = await page.evaluate(() => {
     const found = []
     const roots = document.querySelectorAll('[data-slot="time-input"], [data-slot="date-input"]')
     for (const root of roots) {
-      // Where the text itself sits: a segment centres its text in a box of at least 24px, its target.
       const probe = document.createElement("span")
       probe.style.cssText = "position:absolute;visibility:hidden;white-space:pre"
       document.body.append(probe)
@@ -173,7 +160,6 @@ async function checkSegmentsIn(page, dir) {
           found.push(`${root.dataset.slot} ${segment.type} and ${next.type} overlap`)
         const rtl = getComputedStyle(root).direction === "rtl"
         const gap = rtl ? segment.left - next.right : next.left - segment.right
-        // Two digits' targets can't be closer: 24px boxes around ~17px of text leave under 4px beside a separator.
         if (gap > segment.size * 0.3 || gap < -1.5)
           found.push(`${root.dataset.slot} ${segment.type}→${next.type} gap ${gap.toFixed(1)}px`)
       }
@@ -199,10 +185,6 @@ async function checkSegments(page) {
   await shot(page, "time-input-segments.png")
 }
 
-// Density and radius are separate axes that every component follows through tokens: each combination keeps the
-// shell inside the viewport, a compact density shortens controls whatever the radius, and a radius step reaches
-// buttons, sidebar items and cards whatever the density. data-theme="compact" is compact density with the md radius,
-// unless data-radius says otherwise.
 async function axesAt(page, attributes) {
   return page.evaluate((next) => {
     const html = document.documentElement
@@ -210,7 +192,6 @@ async function axesAt(page, attributes) {
       if (next[name]) html.setAttribute(name, next[name])
       else html.removeAttribute(name)
     }
-    // The first visible button, sidebar item (in a drawer on a phone, so absent) and card.
     const [button, item, card] = ['[data-slot="button"]', '[data-slot="sidebar-item"]', '[data-slot="card"]'].map(
       (selector) =>
         [...document.querySelectorAll(selector)].find((element) => element.getBoundingClientRect().height > 0) ?? null,
@@ -605,8 +586,6 @@ async function checkMobileNav(page) {
   check("MobileNav: with overflow, four routes and More", routes === 4 && moreButton === 1, `${routes} links`)
 }
 
-// A Form's `in`/`on` floats the label of a Field in the floating layout; a padded Field with its own text between the
-// parts keeps it on top, as does `labelPlacement="top"`. In every case the label stays clear of the control's value.
 async function checkFieldPlacement(page) {
   await page.setViewportSize({ width: 1100, height: 720 })
   await page.goto(`${new URL(page.url()).origin}/?demo=field-placement-check`)
@@ -633,7 +612,6 @@ async function checkFieldPlacement(page) {
   )
   for (const { name, placement, label, control, value } of cases) {
     const expected = /boxed|explicit-top/.test(name) ? "top" : name.split("-")[0]
-    // `in`: inside the control, above its value's line; `on`: centred on its top border; `top`: above it.
     const center = (label.top + label.bottom) / 2
     const placed = {
       top: label.bottom <= control.top + 1,
@@ -680,8 +658,6 @@ async function axeClean(page, scope) {
   check(`${scope}: 0 axe violations`, violations.length === 0, violations.join("; "))
 }
 
-// The shell's visible regions, pairwise: none may cover another, and the page never scrolls sideways. Scrolled, the
-// page passes under the sticky topbar by design, so only the chrome is compared.
 async function overlaps(page, withMain = true) {
   return page.evaluate((includeMain) => {
     const regions = [
@@ -698,7 +674,6 @@ async function overlaps(page, withMain = true) {
       for (let j = i + 1; j < regions.length; j++) {
         const [a, boxA] = regions[i]
         const [b, boxB] = regions[j]
-        // The page runs on under the sticky bottom bar until it ends; bottomBarRoom checks that end.
         if (a === "main" && b === "mobile-nav") continue
         const x = Math.min(boxA.right, boxB.right) - Math.max(boxA.left, boxB.left)
         const y = Math.min(boxA.bottom, boxB.bottom) - Math.max(boxA.top, boxB.top)
@@ -711,8 +686,6 @@ async function overlaps(page, withMain = true) {
   }, withMain)
 }
 
-// Scrolled to the end, the last card ends above the bottom bar, which is --mobile-nav-offset tall and sits at the
-// viewport's bottom edge.
 function bottomBarRoom(page) {
   return page.evaluate(() => {
     const bar = document.querySelector('nav[aria-label="Bottom bar"]').getBoundingClientRect()
@@ -767,7 +740,6 @@ async function checkPalette(page, scope, file) {
   await page.keyboard.press("Enter")
   await palette.waitFor({ state: "detached" })
   const heading = await page.getByRole("main").getByRole("heading", { level: 1 }).textContent()
-  // On a phone Reports sits behind the bottom bar's More, which then carries the mark.
   const current = await page
     .locator('a[aria-current="page"], nav[aria-label="Bottom bar"] button[data-current]')
     .evaluateAll((marks) => marks.filter((mark) => mark.checkVisibility()).map((mark) => mark.textContent))
@@ -838,7 +810,6 @@ async function checkFill(page, width) {
   )
 }
 
-// A palette kept mounted while closed, as some Electron windows leave it: open, run a command, reopen with Ctrl+K.
 async function checkPaletteReopen(page) {
   await page.setViewportSize({ width: 1024, height: 700 })
   await page.goto(`${new URL(page.url()).origin}/?demo=palette-reopen-check`)
@@ -875,7 +846,6 @@ async function checkPaletteReopen(page) {
 
 async function checkShell(page) {
   const cases = ["light", "dark"].flatMap((scheme) => [1440, 768, 390].map((width) => ({ scheme, width })))
-  // One page, so one case at a time.
   await cases.reduce(
     (previous, { scheme, width }) => previous.then(() => checkShellAt(page, width, scheme)),
     Promise.resolve(),
@@ -920,7 +890,6 @@ async function checkShell(page) {
   const bar = page.getByRole("navigation", { name: "Bottom bar" })
   await bar.getByRole("link", { name: "Calendar" }).click()
   await page.waitForFunction(() => location.hash === "#/calendar")
-  // The hash changes before React re-renders the bar, so wait for the mark instead of reading it once.
   await bar
     .locator('[aria-current="page"]', { hasText: "Calendar" })
     .waitFor({ timeout: 2000 })
