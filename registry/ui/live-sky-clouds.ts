@@ -42,7 +42,7 @@ function cloudDeckFor(conditions: SkyConditions, light: SkyLight): CloudDeck {
     lit: light.cloudLit,
     shade: light.cloudShade,
     horizon: mix(light.horizon, light.cloudShade, 0.4),
-    sunGlow: light.sunUp ? scale(light.glow, 0.9 * (1 - conditions.gloom)) : [0, 0, 0],
+    sunGlow: light.sunUp ? scale(light.glow, (0.8 + light.glowStrength * 0.7) * (1 - conditions.gloom)) : [0, 0, 0],
     sun: light.sun,
     drift: { x: east / tileM, y: north / tileM },
   }

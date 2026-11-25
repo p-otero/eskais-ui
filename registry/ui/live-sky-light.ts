@@ -93,7 +93,7 @@ function lightFor(conditions: SkyConditions, palette: SkyPalette): SkyLight {
   const daylight = smoothstep(-14, 14, sunDegrees)
   const ambient = Math.max(0.02, daylight * (1 - 0.3 * conditions.cover * (0.3 + conditions.gloom)))
   const nightCloud = mix(scale(palette["cloud-dark"], 0.18), palette["city-glow"], 0.7)
-  const sunTint = mix(palette["cloud-light"], frame.glow, Math.min(1, frame.glowStrength * 0.5))
+  const sunTint = mix(palette["cloud-light"], frame.glow, Math.min(1, frame.glowStrength * 0.75))
   const cloudLit = mix(nightCloud, mix(sunTint, palette["cloud-dark"], conditions.gloom * 0.6), daylight)
   const cloudShade = mix(
     scale(nightCloud, 0.6),
@@ -124,8 +124,11 @@ function skyColourAt(light: SkyLight, direction: Vec3): Rgb {
   const elevation = Math.max(0, direction.y)
   const base = mix(light.horizon, light.zenith, Math.pow(elevation, 0.55))
   const toSun = angleBetween(direction, light.sun)
-  const glow = light.glowStrength * (Math.exp(-toSun * 1.4) * 0.55 + Math.exp(-toSun * 6) * 0.6) * (1 - elevation * 0.4)
-  return add(base, scale(light.glow, glow))
+  const across = Math.hypot(direction.x, direction.z) * Math.hypot(light.sun.x, light.sun.z) || 1
+  const sunward = 0.5 + (0.5 * (direction.x * light.sun.x + direction.z * light.sun.z)) / across
+  const halo = (Math.exp(-toSun * 1.1) * 0.7 + Math.exp(-toSun * 6) * 0.6) * (1 - elevation * 0.4)
+  const wash = 0.22 * sunward * (1 - elevation * 0.6)
+  return add(base, scale(light.glow, light.glowStrength * (halo + wash)))
 }
 
 const brightness = (light: SkyLight) => luminance(light.zenith) + light.ambient * 0.5

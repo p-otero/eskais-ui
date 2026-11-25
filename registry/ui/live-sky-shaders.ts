@@ -29,6 +29,13 @@ uniform vec3 u_veilColour;
 uniform float u_sheets;
 uniform vec2 u_sheetOffset;
 uniform float u_flash;
+uniform sampler2D u_glowMap;
+uniform float u_bloom;
+uniform vec2 u_sunStep;
+
+float fbm(vec2 p) {
+  return texture2D(u_noise, p).r * 0.55 + texture2D(u_noise, p * 2.13 + 0.31).g * 0.3 + texture2D(u_noise, p * 4.37 + 0.67).g * 0.15;
+}
 
 void main() {
   vec2 pixel = vec2(gl_FragCoord.x, u_size.y - gl_FragCoord.y);
@@ -38,19 +45,23 @@ void main() {
   if (ray.y > 0.02) {
     float reach = u_base / ray.y / u_tile;
     vec2 at = ray.xz * reach + u_offset;
-    float n = texture2D(u_noise, at).r * 0.68 + texture2D(u_noise, at * 3.07 + u_offset.yx).g * 0.32;
+    float n = fbm(at);
     float density = smoothstep(u_threshold, u_threshold + u_softness, n);
-    float thick = smoothstep(u_threshold, u_threshold + 0.32, n);
-    float silver = pow(max(0.0, dot(ray, u_sun)), 12.0) * (1.0 - thick);
-    vec3 cloud = mix(u_lit + u_sunGlow * silver, u_shade, thick * u_shadeBias);
+    float thick = smoothstep(u_threshold, u_threshold + 0.3, n);
+    float towardSun = texture2D(u_noise, at + u_sunStep).r - texture2D(u_noise, at).r;
+    float sunSide = clamp(0.5 - towardSun * 6.0, 0.0, 1.0);
+    float silver = pow(max(0.0, dot(ray, u_sun)), 6.0) * (1.0 - thick) * 1.6;
+    vec3 body = mix(u_lit * 1.08, mix(u_lit, u_shade, u_shadeBias), thick);
+    vec3 cloud = body + u_sunGlow * (sunSide * (1.0 - thick * 0.55) * 0.75 + silver);
     float far = smoothstep(0.04, 0.4, ray.y);
     colour = mix(colour, mix(u_horizon, cloud, far), density * (0.55 + 0.45 * far));
   }
   vec4 facade = texture2D(u_facades, uv);
   colour = mix(colour, facade.rgb, facade.a);
   float sheet = texture2D(u_noise, uv * vec2(0.7, 0.35) + u_sheetOffset).r;
-  float veil = u_veil * mix(1.0, 0.4 + sheet * 1.3, u_sheets) * (1.0 - facade.a * 0.35);
+  float veil = u_veil * mix(1.0, 0.35 + sheet * 1.3, u_sheets) * (1.0 - facade.a * 0.85);
   colour = mix(colour, u_veilColour, clamp(veil, 0.0, 0.9));
+  colour += texture2D(u_glowMap, uv).rgb * u_bloom;
   colour += u_flash * vec3(0.82, 0.86, 1.0) * (1.0 - facade.a * 0.7);
   gl_FragColor = vec4(colour, 1.0);
 }
@@ -125,6 +136,9 @@ const fallFragment = `
 precision mediump float;
 uniform vec3 u_colour;
 uniform float u_alpha;
+uniform sampler2D u_glowMap;
+uniform vec2 u_screen;
+uniform float u_bloom;
 varying vec2 v_corner;
 varying float v_alpha;
 varying float v_snow;
@@ -133,7 +147,9 @@ void main() {
   float streak = across * mix(0.3, 1.0, v_corner.x);
   float flake = smoothstep(1.0, 0.2, length(vec2(v_corner.x * 2.0 - 1.0, v_corner.y)));
   float a = mix(streak, flake, v_snow) * v_alpha * u_alpha;
-  gl_FragColor = vec4(u_colour * a, a);
+  vec2 at = vec2(gl_FragCoord.x / u_screen.x, 1.0 - gl_FragCoord.y / u_screen.y);
+  vec3 lit = u_colour + texture2D(u_glowMap, at).rgb * (0.6 + u_bloom * 3.0);
+  gl_FragColor = vec4(lit * a, a);
 }
 `
 
@@ -162,6 +178,8 @@ const dropFragment = `
 precision mediump float;
 uniform sampler2D u_sky;
 uniform sampler2D u_facades;
+uniform sampler2D u_glowMap;
+uniform float u_bloom;
 uniform vec3 u_highlight;
 varying vec2 v_local;
 varying vec2 v_centre;
@@ -179,14 +197,15 @@ void main() {
   }
   float dome = sqrt(1.0 - d * d);
   vec3 normal = normalize(vec3(v_local, dome * 0.9));
-  vec2 seen = clamp(v_centre - v_local * (0.07 + v_radius * 2.0), 0.0, 1.0);
+  vec2 seen = clamp(mix(v_centre, vec2(0.5), 0.45) - v_local * 0.3, 0.0, 1.0);
   vec4 facade = texture2D(u_facades, seen);
   vec3 colour = mix(texture2D(u_sky, seen).rgb, facade.rgb, facade.a) * 1.12 + 0.03;
+  colour += texture2D(u_glowMap, seen).rgb * (1.2 + u_bloom * 3.0);
   float shade = smoothstep(0.62, 1.0, d) * (0.25 + 0.4 * max(0.0, v_local.y));
   colour = mix(colour, colour * 0.45, shade);
   colour += smoothstep(0.75, 0.95, d) * max(0.0, -v_local.y) * u_highlight * 0.25;
   colour += pow(max(0.0, dot(normal, normalize(vec3(-0.3, -0.5, 0.8)))), 40.0) * u_highlight;
-  float a = v_alpha * smoothstep(1.0, 0.88, d);
+  float a = v_alpha * smoothstep(1.0, 0.88, d) * mix(0.6, 1.0, smoothstep(0.4, 0.95, d));
   gl_FragColor = vec4(colour * a, a);
 }
 `

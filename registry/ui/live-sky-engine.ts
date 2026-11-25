@@ -3,6 +3,7 @@ import type { SkyConditions } from "@/components/ui/live-sky-conditions"
 import { createGlass } from "@/components/ui/live-sky-glass"
 import { readPalette } from "@/components/ui/live-sky-palette"
 import { planRenderer } from "@/components/ui/live-sky-renderer"
+import { createStreetBuilder } from "@/components/ui/live-sky-street-builder"
 import type { SkyLocation } from "@/components/ui/live-sky-weather"
 
 /** What the engine draws, and where it reports each frame's cost. */
@@ -30,6 +31,8 @@ const stillSettleSeconds = 6
 const stillStepSeconds = 1 / 30
 const maxStepSeconds = 0.1
 const flashGapSeconds = { min: 7, spread: 12 }
+const traceSliceMs = 6
+const maxTraceRatio = 1.5
 
 function makeCanvas(slot: string) {
   const canvas = document.createElement("canvas")
@@ -69,6 +72,16 @@ function createSkyEngine(stage: HTMLElement): SkyEngine {
   const motion = typeof matchMedia === "function" ? matchMedia("(prefers-reduced-motion: reduce)") : null
 
   if (chosen) stage.append(chosen.canvas, ...stills)
+  let staticPaints = 0
+  const countStaticPaint = () => {
+    staticPaints += 1
+    stage.dataset.staticPaints = String(staticPaints)
+  }
+  const streets = createStreetBuilder((facades) => {
+    chosen?.plan.renderer.setFacades(facades)
+    countStaticPaint()
+  })
+  let traceFrame = 0
 
   const visible = () => inView && document.visibilityState !== "hidden" && size.width > 1 && size.height > 1
   const reduced = () => motion?.matches ?? false
@@ -81,11 +94,12 @@ function createSkyEngine(stage: HTMLElement): SkyEngine {
       ratio,
       conditions: input.conditions,
       palette: paletteOf(),
-      location: input.location,
       budget: chosen.plan.budget,
     })
     if (!scene) return false
     chosen.plan.renderer.setScene(scene)
+    countStaticPaint()
+    streets.request({ ...size, ratio: Math.min(ratio, maxTraceRatio), location: input.location, palette: paletteOf() })
     glass.setRain(
       input.glass ? input.conditions : { ...input.conditions, rainKind: "none" },
       size.width,
@@ -127,10 +141,22 @@ function createSkyEngine(stage: HTMLElement): SkyEngine {
     delete (front === 0 ? stills[1] : stills[0]).dataset.front
   }
 
+  const trace = () => {
+    traceFrame = 0
+    if (!visible() || !streets.pending()) return
+    if (streets.work(traceSliceMs)) {
+      if (mode === "still") showStill()
+      return
+    }
+    traceFrame = requestAnimationFrame(trace)
+  }
+
   const stop = () => {
     cancelAnimationFrame(frame)
+    cancelAnimationFrame(traceFrame)
     clearInterval(stillTimer)
     frame = 0
+    traceFrame = 0
     stillTimer = 0
   }
 
@@ -144,6 +170,7 @@ function createSkyEngine(stage: HTMLElement): SkyEngine {
     }
     mode = reduced() ? "still" : "running"
     stage.dataset.mode = mode
+    traceFrame = requestAnimationFrame(trace)
     if (mode === "still") {
       showStill()
       stillTimer = window.setInterval(showStill, stillEveryMs)
