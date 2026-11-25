@@ -14,7 +14,6 @@ import { StatusDot } from "@/components/ui/status-pill"
 import { useLocale } from "@/lib/locale"
 import { cn } from "@/lib/utils"
 
-// Every string the block shows, in one place to translate or rewrite.
 const inboxCopy = {
   title: "Inbox",
   list: "Messages",
@@ -71,7 +70,6 @@ function Inbox({ items: initialItems, locale: localeProp, timeZone, className }:
   const update = (ids: readonly string[], change: (item: InboxItem) => Partial<InboxItem>) =>
     setItems((current) => current.map((item) => (ids.includes(item.id) ? { ...item, ...change(item) } : item)))
 
-  // While the panel is open it follows the row that has focus, so j/k read through messages.
   const followFocus = (event: FocusEvent<HTMLDivElement>) => {
     if (openId === null || !(event.target instanceof Element)) return
     const id = event.target.closest<HTMLElement>("[data-item-id]")?.dataset.itemId
@@ -160,7 +158,6 @@ function Inbox({ items: initialItems, locale: localeProp, timeZone, className }:
           description={open?.from}
           scope="inbox-detail"
           scopeLabel={inboxCopy.detail}
-          // The list is a tall scroller in a bounded column, so on a phone the message shows instead of it.
           narrow="overlay"
           returnFocus={() => primaryOf(listRoot.current, openId)}
         >

@@ -9,7 +9,6 @@ import { SectionHeading } from "@/components/ui/section-heading"
 import { SiteFooter } from "@/components/ui/site-footer"
 import { Step, Steps } from "@/components/ui/steps"
 
-// The page's content in one place: edit these, then the props below, rather than the layout.
 const content = {
   name: "Acme",
   hero: {

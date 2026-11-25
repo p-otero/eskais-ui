@@ -11,10 +11,9 @@
     }
   }
 }
-/* A viewport width, unrelated to the compact density theme: narrow: applies at 760px and below. */
 @custom-variant narrow (@media (width <= 47.5rem));
 
-/* A FieldLabel inside its control (labelPlacement="in") floats up while the control is focused, holds a value or
+/* Spec: a FieldLabel inside its control (labelPlacement="in") floats up while the control is focused, holds a value or
    has its popup open. Inputs float on :placeholder-shown, so the controls give them a blank placeholder. */
 @custom-variant field-floated {
   :focus-within > & {
@@ -37,7 +36,6 @@
   }
 }
 
-/* Zero specificity, so a data-theme scope always overrides these. */
 :where(:root) {
   --control-radius: calc(var(--radius) * 2);
   --control-height: 2.25rem;
@@ -45,11 +43,9 @@
   --control-height-lg: 2.5rem;
   --control-height-touch: 2.75rem;
   --control-padding: 0.875rem;
-  /* labelPlacement="in": the room a floated label takes above the text, and where the floated label sits. */
   --field-label-offset: 1rem;
   --field-label-float-y: 0.3125rem;
   --field-label-scale: 0.8125;
-  /* labelPlacement="on": what the label cuts the border with. Surfaces set it to their own fill. */
   --field-label-surface: var(--background);
   --choice-radius: calc(var(--radius) / 2);
   --surface-radius: calc(var(--radius) * 1.25);
@@ -67,8 +63,6 @@
   --glass-opacity: 100%;
   --glass-blur: 0px;
   --glass-saturation: 1;
-  /* Floating UI (popovers, menus, dialogs, toasts, a Floating bar) sits one level above surfaces. The radius is an
-     item's radius plus the popup's padding, so a pill item stays concentric with its menu. */
   --floating-radius: calc(min(var(--control-radius), var(--control-height-sm) / 2) + var(--gap-inline));
   --floating-offset: 1rem;
   --floating-opacity: 85%;
@@ -80,20 +74,16 @@
   --board-column-max-height: 40rem;
   --task-panel-width: 26rem;
   --task-panel-max-height: 32rem;
-  /* The task detail's main column and its side column, once the detail is 56rem wide. */
   --task-detail-columns: minmax(0, 1fr) minmax(16rem, 20rem);
   --detail-value-columns: repeat(auto-fill, minmax(8.5rem, 1fr));
-  /* Percentages resolve against the dialog's containing block, so these never use viewport units. */
+  /* Spec: percentages resolve against the dialog's containing block, so these never use viewport units. */
   --dialog-width: calc(100% - 2 * var(--floating-offset));
   --dialog-max-height: calc(100% - 2 * var(--floating-offset));
   --sheet-max-height: calc(100% - var(--floating-offset));
-  /* The width a CardHeader's title keeps beside its action; below it the action wraps under the title. */
   --card-heading-basis: 11rem;
   --sidebar-width: 16rem;
   --sidebar-rail-width: calc(var(--control-height) + 1rem);
-  /* A Topbar: one control, its block padding and its bottom border. Sticky columns under it start here. */
   --topbar-height: calc(var(--control-height) + var(--gap-items) * 2 + 1px);
-  /* A MobileNav's bar, and the space a page keeps clear under it: the bar, its 1px top border and the safe area. */
   --mobile-nav-height: 3.5rem;
   --mobile-nav-offset: calc(var(--mobile-nav-height) + 1px + env(safe-area-inset-bottom));
   --type-meta-size: 0.6875rem;
@@ -112,7 +102,7 @@
   --type-display-sm-leading: 1.75rem;
   --type-display-size: 1.75rem;
   --type-display-leading: 2rem;
-  /* Text in a field. On touch screens it is 16px (below), since iOS Safari zooms into a focused field under 16px. */
+  /* Workaround: text in a field. On touch screens it is 16px (below), since iOS Safari zooms into a focused field under 16px. */
   --type-entry-size: 0.875rem;
   --type-entry-leading: 1.25rem;
 }
@@ -126,11 +116,9 @@
 
 :root {
   --radius: 1rem;
-  /* The seeds: set these to recolour everything derived from them below. */
   --brand: oklch(0.205 0 0);
   --neutral-hue: 0;
   --neutral-chroma: 0;
-  /* Links derive from their own seed, so they stay a recognisable colour under a near-black or grey brand. */
   --link-brand: oklch(0.55 0.2 260);
   --destructive: oklch(0.505 0.213 27.518);
   --destructive-foreground: oklch(0.985 0 0);
@@ -140,7 +128,7 @@
   --warning-foreground: oklch(0.985 0 0);
   --info: oklch(0.488 0.243 264.376);
   --info-foreground: oklch(0.985 0 0);
-  /* Soft tones: a tinted fill, text that reaches 4.5:1 on it, and an edge. Violet is a category, not a status. */
+  /* Spec: soft tones: a tinted fill, text that reaches 4.5:1 on it, and an edge. Violet is a category, not a status. */
   --info-soft: oklch(0.95 0.022 262);
   --info-soft-foreground: oklch(0.47 0.2 262);
   --info-border: oklch(0.84 0.07 262);
@@ -159,14 +147,14 @@
   --violet-soft-foreground: oklch(0.47 0.2 300);
   --violet-border: oklch(0.84 0.08 300);
   --overlay: oklch(0 0 0 / 0.5);
-  /* Series 1-3 are a colour-blind-validated set: keep the exact values. 4 and 5 differ from them in lightness too.
+  /* Spec: series 1-3 are a colour-blind-validated set: keep the exact values. 4 and 5 differ from them in lightness too.
      Aqua is the lightest that still reaches 3:1 on the card, at the same hue and chroma. */
   --chart-1: #2a78d6;
   --chart-2: #eb6834;
   --chart-3: #0ba975;
   --chart-4: oklch(0.44 0.16 305);
   --chart-5: oklch(0.48 0.09 75);
-  /* Code on --muted: every syntax colour reaches 4.5:1 on it and on a highlighted line, in every palette. */
+  /* Spec: code on --muted: every syntax colour reaches 4.5:1 on it and on a highlighted line, in every palette. */
   --syntax-keyword: oklch(0.47 0.2 300);
   --syntax-string: oklch(0.46 0.12 150);
   --syntax-number: oklch(0.48 0.13 45);
@@ -229,7 +217,7 @@
   --ansi-lightness-max: 1;
 }
 
-/* Derived from the seeds. A custom property computes where it's declared, so the derivation repeats on every
+/* Spec: derived from the seeds. A custom property computes where it's declared, so the derivation repeats on every
    [data-palette] scope: a palette set on any element recolours its subtree. */
 :root,
 [data-palette] {
@@ -240,7 +228,7 @@
   --popover: oklch(1 var(--neutral-chroma) var(--neutral-hue));
   --popover-foreground: oklch(0.145 var(--neutral-chroma) var(--neutral-hue));
   --primary: var(--brand);
-  /* A grey picked by the primary's luminance (y in xyz-d65): white or black near y = 0.179, where both reach
+  /* Spec: a grey picked by the primary's luminance (y in xyz-d65): white or black near y = 0.179, where both reach
      4.58:1, settling on the default oklch(0.985 0 0) and oklch(0.205 0 0) further away. */
   --primary-foreground: color(
     from var(--primary) xyz-d65
@@ -260,19 +248,19 @@
   --muted-foreground: oklch(0.43 var(--neutral-chroma) var(--neutral-hue));
   --accent: oklch(from var(--brand) 0.97 min(c, 0.03) h);
   --accent-foreground: oklch(0.205 var(--neutral-chroma) var(--neutral-hue));
-  /* Text colours for links and a caret, capped in lightness so they keep 4.5:1 on muted (the lightest fill text
+  /* Spec: text colours for links and a caret, capped in lightness so they keep 4.5:1 on muted (the lightest fill text
      sits on) for any --link-brand. --accent is a surface, never text. */
   --link: oklch(from var(--link-brand) min(l, 0.5) c h);
   --link-soft: oklch(from var(--link-brand) clamp(0.42, l + 0.12, 0.5) calc(c * 0.55) h);
   --border: oklch(0.922 var(--neutral-chroma) var(--neutral-hue));
-  /* A text field's soft edge: under 3:1, which WCAG 1.4.11 allows because the fill, placeholder and label
+  /* Spec: a text field's soft edge: under 3:1, which WCAG 1.4.11 allows because the fill, placeholder and label
      identify the field. Checkboxes, radios and switch tracks have nothing else, so they use --input-strong. */
   --input: oklch(0.88 var(--neutral-chroma) var(--neutral-hue));
   --input-strong: oklch(0.6 var(--neutral-chroma) var(--neutral-hue));
   --field: oklch(0.985 var(--neutral-chroma) var(--neutral-hue));
   --floating-border: oklch(0.145 var(--neutral-chroma) var(--neutral-hue) / 10%);
   --ring: oklch(from var(--brand) max(l, 0.556) c h);
-  /* Chart series with a meaning, each at least 3:1 on background and card. */
+  /* Spec: chart series with a meaning, each at least 3:1 on background and card. */
   --series-positive: var(--success);
   --series-negative: var(--destructive);
   --series-target: color-mix(in oklab, var(--foreground) 80%, var(--background));
@@ -280,15 +268,11 @@
   --neutral-soft: oklch(0.955 var(--neutral-chroma) var(--neutral-hue));
   --neutral-soft-foreground: oklch(0.32 var(--neutral-chroma) var(--neutral-hue));
   --neutral-border: oklch(0.86 var(--neutral-chroma) var(--neutral-hue));
-  /* Translucent, so it shows on glass and on any surface it loads over. */
   --skeleton: color-mix(in oklab, var(--foreground) 10%, transparent);
-  /* The current page in a nav: a soft fill and a hairline over any surface, glass included, with the foreground
-     on it. */
   --nav-current: color-mix(in oklab, var(--foreground) 6%, transparent);
   --nav-current-border: color-mix(in oklab, var(--foreground) 10%, transparent);
-  /* A highlighted line of code: opaque, so the syntax colours keep their contrast on it. */
   --code-highlight: color-mix(in oklab, var(--foreground) 6%, var(--muted));
-  /* Diff lines: opaque tints of the success and destructive tones over the page, so the syntax colours keep
+  /* Spec: diff lines: opaque tints of the success and destructive tones over the page, so the syntax colours keep
      4.5:1 on a changed line and on its changed words (-strong); -foreground is the +/- sign and the counts. */
   --diff-added: color-mix(in oklab, var(--success) 9%, var(--background));
   --diff-added-strong: color-mix(in oklab, var(--success) 20%, var(--background));
@@ -309,8 +293,6 @@
   --card-foreground: oklch(0.985 var(--neutral-chroma) var(--neutral-hue));
   --popover: oklch(0.205 var(--neutral-chroma) var(--neutral-hue));
   --popover-foreground: oklch(0.985 var(--neutral-chroma) var(--neutral-hue));
-  /* Mirrored around the middle so the default near-black turns near-white, never darker than 0.72 on the dark
-     background. */
   --primary: oklch(from var(--brand) max(l, 1.127 - l, 0.72) c h);
   --primary-foreground: color(
     from var(--primary) xyz-d65
@@ -359,8 +341,6 @@
   --diff-removed-foreground: var(--destructive-soft-foreground);
 }
 
-/* Dark before any script runs: follows the system unless <html> opted into light (.light, or the
-   data-color-scheme="light" that createAppearance writes). Same specificity as .dark; a test keeps the copies equal. */
 @media (prefers-color-scheme: dark) {
   :root:where(:not(.light, [data-color-scheme="light"])) {
     --destructive: oklch(0.704 0.191 22.216);
@@ -467,8 +447,6 @@
   }
 }
 
-/* Corner radius, apart from density: data-radius on <html> or any element. Without it the shape derives from
-   --radius (lg). md is what data-theme="compact" has always used. */
 [data-radius="none"] {
   --radius: 0rem;
   --control-radius: 0rem;
@@ -509,8 +487,6 @@
   --floating-radius: calc(var(--control-height-sm) / 2 + var(--gap-inline));
 }
 
-/* A flat look: floating UI keeps its border but loses depth and translucency. The second selector outranks a
-   theme scope (glass) inside the flat one. */
 [data-elevation="flat"],
 [data-elevation="flat"] [data-theme],
 [data-elevation="flat"][data-theme] {
@@ -519,7 +495,7 @@
   --floating-opacity: 100%;
 }
 
-/* Translucency is only legible behind a blur. */
+/* Spec: translucency is only legible behind a blur. */
 @supports not (backdrop-filter: blur(1px)) {
   @supports not (-webkit-backdrop-filter: blur(1px)) {
     :root,
@@ -539,7 +515,7 @@
   }
 }
 
-/* Custom properties can't fall back, so browsers without relative colours (Safari before 18) get the neutral
+/* Workaround: custom properties can't fall back, so browsers without relative colours (Safari before 18) get the neutral
    default for the tokens that need them. */
 @supports not (color: oklch(from red l c h)) {
   :root,
@@ -575,10 +551,8 @@
 }
 
 @theme inline {
-  /* Falls back to the system font until @eskais/font-geist (or any font with this family name) is installed. */
   --font-sans: "Geist Variable", ui-sans-serif, system-ui, sans-serif;
   --font-mono: "Geist Mono Variable", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-  /* Type roles; the sizes come from variables so a density theme can tighten them. See AGENTS.md "Typography". */
   --text-meta: var(--type-meta-size);
   --text-meta--line-height: var(--type-meta-leading);
   --text-meta--font-weight: 500;
@@ -689,12 +663,10 @@
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
-  /* The whole scale, so it replaces the multiplied one `shadcn init` writes instead of mixing with it. */
   --radius-2xl: calc(var(--radius) + 8px);
   --radius-3xl: calc(var(--radius) + 16px);
   --radius-4xl: calc(var(--radius) + 24px);
   --radius-control: var(--control-radius);
-  /* Capped at 30% of the box, so a small checkbox never rounds into a circle that reads as a radio. */
   --radius-choice: min(var(--choice-radius), 30%);
   --radius-surface: var(--surface-radius);
   --radius-floating: var(--floating-radius);
@@ -702,9 +674,7 @@
   --spacing-control-sm: var(--control-height-sm);
   --spacing-control-lg: var(--control-height-lg);
   --spacing-control-x: var(--control-padding);
-  /* A Field with labelPlacement="in" makes its text controls taller through --field-control-height. */
   --spacing-field-control: var(--field-control-height, var(--control-height));
-  /* Spacing roles; any spacing utility takes them (gap-items, p-inline, -mx-inline). See AGENTS.md "Spacing". */
   --spacing-inline: var(--gap-inline);
   --spacing-items: var(--gap-items);
   --spacing-group: var(--gap-group);
@@ -712,12 +682,11 @@
   --spacing-inset-surface: var(--surface-padding);
   --spacing-surface: var(--surface-padding);
   --spacing-floating: var(--floating-offset);
-  /* Inline, so it computes from the heights in scope where it's used: the rim of a control-height bar around
+  /* Spec: inline, so it computes from the heights in scope where it's used: the rim of a control-height bar around
      control-sm items, like a tab list or a segmented control. */
   --spacing-control-inset: calc((var(--control-height) - var(--control-height-sm)) / 2);
   --shadow-surface: var(--surface-shadow);
   --shadow-floating: var(--floating-shadow);
-  /* Popovers and toasts sit in the top layer where the browser supports it; these order the rest. */
   --z-index-sticky: 20;
   --z-index-overlay: 40;
   --z-index-popover: 50;
@@ -728,7 +697,7 @@
   --ease-standard: cubic-bezier(0.2, 0, 0, 1);
 }
 
-/* A surface inside another, like a card in a board column, shows it through its own translucent fill without a
+/* Perf: a surface inside another, like a card in a board column, shows it through its own translucent fill without a
    second blur: each blur is a composited layer, and a board's cards made over a hundred. */
 @utility backdrop-surface {
   -webkit-backdrop-filter: var(--surface-backdrop);
@@ -744,12 +713,11 @@
   backdrop-filter: var(--floating-backdrop);
 }
 
-/* Inline, so the popover colour comes from the scope it's used in (a nested palette or .dark). */
+/* Spec: inline, so the popover colour comes from the scope it's used in (a nested palette or .dark). */
 @utility bg-floating {
   background-color: color-mix(in oklab, var(--popover) var(--floating-opacity), transparent);
 }
 
-/* The shadow goes through --tw-shadow so a focus ring (ring-*) adds to it instead of replacing it. */
 @utility surface-floating {
   border: 1px solid var(--floating-border);
   border-radius: var(--floating-radius);
@@ -764,9 +732,7 @@
   backdrop-filter: var(--floating-backdrop);
 }
 
-/* The current page in a sidebar or a navigation menu: the soft fill, a hairline inside the edge and a medium weight,
-   so it doesn't rest on colour alone. The hairline goes through --tw-inset-ring-shadow, so a focus ring adds to it.
-   No blur of its own: on glass the fill shows the sidebar's, and a second one would be another composited layer. */
+/* Perf: no blur of its own: on glass the fill shows the sidebar's, and a second one would be another composited layer. */
 @utility nav-current {
   background-color: var(--nav-current);
   color: var(--foreground);
@@ -777,13 +743,11 @@
     var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow, 0 0 #0000);
 }
 
-/* Skips rendering off-screen content; the intrinsic height keeps the scrollbar stable meanwhile. */
 @utility content-auto {
   content-visibility: auto;
   contain-intrinsic-height: auto var(--intrinsic-height, 24rem);
 }
 
-/* Chips and items pad differently on each axis, which a single --spacing-* value can't express. */
 @utility px-inset-chip {
   padding-inline: var(--chip-padding-x);
 }
@@ -800,8 +764,6 @@
   padding-block: var(--item-padding-y);
 }
 
-/* A hit area of at least --control-height-touch around a control on touch screens, without changing how it looks.
-   In the components layer so a consumer's absolute or fixed utility still wins over the relative position. */
 @layer components {
   @media (pointer: coarse) {
     .touch-target {
@@ -816,7 +778,6 @@
   }
 }
 
-/* Page decoration behind a hero: a faint grid that fades out downwards, and a wash from the link and violet seeds. */
 @utility bg-grid-lines {
   background-image:
     linear-gradient(to right, color-mix(in oklab, var(--foreground) 5%, transparent) 1px, transparent 1px),
@@ -831,8 +792,6 @@
     radial-gradient(40rem 28rem at 92% 4rem, color-mix(in oklab, var(--violet) 12%, transparent), transparent);
 }
 
-/* What a labelPlacement="on" label cuts the border with: the fill of the surface the field sits on. A glass card
-   is approximated over the page background. */
 @utility field-label-surface-card {
   --field-label-surface: color-mix(in oklab, var(--card) var(--glass-opacity), var(--background));
 }
@@ -845,7 +804,6 @@
   writing-mode: vertical-rl;
 }
 
-/* A faint wash of --column-tone over a column's header, mixed with transparent so glass still shows through. */
 @utility board-column-wash {
   background-image: linear-gradient(
     to bottom,
@@ -854,7 +812,7 @@
   );
 }
 
-/* The same @apply lists `shadcn init` writes: shadcn merges an item's @apply into an existing one, so the rules
+/* Workaround: the same @apply lists `shadcn init` writes: shadcn merges an item's @apply into an existing one, so the rules
    stay single in a stylesheet that already has them. */
 @layer base {
   * {
@@ -863,7 +821,6 @@
   body {
     @apply bg-background text-foreground;
   }
-  /* A heading or region focused from script (a skip link's target, an opened detail) is not a control: no ring. */
   [tabindex="-1"]:focus {
     outline: none;
   }
