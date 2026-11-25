@@ -223,10 +223,21 @@ const itemNotes: Record<string, ItemNotes> = {
       "On touch only the sun and the ground strip take a drag, so the page still scrolls over the sky. The sun keeps a 44px hit area.",
       "Under reduced motion the sun jumps to a preset instead of gliding.",
       "The stage is a sky in every theme, so the focus ring on it is white; the readout and buttons follow the theme.",
+      "With a photo, the photo is decoration; the time is in the slider. Calibrate's Heading, Field of view and Horizon are named sliders, and Mark the sun a toggle; dragging the sun follows its arc across the photo.",
+      "A sun out of the photo's view waits at the edge it left by with an arrow, and below the horizon on the horizon, so the slider's thumb never leaves the stage.",
     ],
     agent:
-      'Agents find it by its label and call setTime (minutes or "HH:MM"), sunrise, sunset or solarNoon; sunrise and sunset fail the step with why in a polar day or night.',
-    related: ["date-time-picker", "slider", "prism-picker"],
+      'Agents find it by its label and call setTime (minutes or "HH:MM"), sunrise, sunset or solarNoon; sunrise and sunset fail the step with why in a polar day or night. With a photo, calibrate(heading, fov?, horizon?) points the view; without one it fails with why.',
+    related: ["date-time-picker", "slider", "file-input", "prism-picker"],
+  },
+  "sky-photo": {
+    usage:
+      "Reach for it to put a rendered sky, a sun or weather into a photo of a real place. Everything runs on the device: nothing is uploaded and no model is downloaded. SunArc's photo mode is built on it.",
+    a11y: [
+      "It draws nothing itself; a component that shows the photo gives it alt text or hides it as decoration.",
+      "The sky finder yields to the page between its stages, so reading a photo never blocks input for long.",
+    ],
+    related: ["sun-arc", "file-input"],
   },
   mixer: {
     usage:

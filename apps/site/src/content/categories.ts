@@ -39,6 +39,7 @@ const categories = [
       "color-picker",
       "prism-picker",
       "sun-arc",
+      "sky-photo",
       "mixer",
       "safe-dial",
       "vinyl-scrubber",

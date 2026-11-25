@@ -1,15 +1,18 @@
-import { act, render, screen } from "@testing-library/react"
+import { act, fireEvent, render, screen } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { checkServer } from "@ui-sdk/core/testing"
 import { createAgent } from "@ui-sdk/react/agent"
 import { useState } from "react"
 import { renderToString } from "react-dom/server"
-import { expect, test, vi } from "vitest"
+import { describe, expect, test, vi } from "vitest"
 
 import { SunArc } from "@/components/ui/sun-arc"
 import { sunArc } from "@/components/ui/sun-arc-primitive"
-import { calendarIn, skyAt, solarDay, sunAltitude } from "@/components/ui/sun-arc-solar"
+import { photoLocator } from "@/components/ui/sun-arc-photo-scene"
+import { calendarIn, skyAt, solarDay, sunAltitude, sunPosition } from "@/components/ui/sun-arc-solar"
+import { captureOf } from "@/components/ui/use-sun-arc-photo"
 import { parseActionRefusal } from "@/lib/action-refusal"
+import { defaultSkyPhotoFov, projectSky } from "@/lib/sky-photo-projection"
 
 import { axeViolations } from "./axe"
 
@@ -186,4 +189,104 @@ test("in a polar night the sunrise and sunset buttons are disabled and an agent'
   const result = await act(() => agent.act({ steps: [{ ref: "Arctic time", action: "sunrise" }] }))
   expect(result.ok).toBe(false)
   expect(result.error?.message).toContain("the sun doesn't rise on this day here (polar night)")
+})
+
+describe("photo", () => {
+  const photo = { src: "/sky/cebu-skyline.jpg" }
+
+  test("without a heading the calibration opens, and its named sliders report the view", async () => {
+    const user = userEvent.setup()
+    const onPhotoChange = vi.fn()
+    render(<SunArc label="Meeting time" {...coruna} photo={photo} onPhotoChange={onPhotoChange} />)
+    expect(screen.getByRole("slider", { name: "Field of view" })).toBeTruthy()
+    expect(screen.getByRole("slider", { name: "Horizon" })).toBeTruthy()
+    screen.getByRole("slider", { name: "Heading" }).focus()
+    await user.keyboard("{ArrowRight}")
+    expect(onPhotoChange).toHaveBeenLastCalledWith(
+      expect.objectContaining({ src: photo.src, heading: 181, fov: defaultSkyPhotoFov }),
+    )
+    expect(screen.getByRole<HTMLInputElement>("slider", { name: "Heading" }).value).toBe("181")
+  })
+
+  test("with a heading the calibration stays closed until Calibrate is pressed", async () => {
+    const user = userEvent.setup()
+    render(<SunArc label="Meeting time" {...coruna} photo={{ ...photo, heading: 225 }} />)
+    expect(screen.queryByRole("slider", { name: "Heading" })).toBeNull()
+    await user.click(screen.getByRole("button", { name: "Calibrate" }))
+    expect(screen.getByRole<HTMLInputElement>("slider", { name: "Heading" }).value).toBe("225")
+  })
+
+  test("marking the sun turns and tilts the view so the sun at the capture time stands where it was pressed", async () => {
+    const user = userEvent.setup()
+    const onPhotoChange = vi.fn()
+    const capturedAt = "2026-11-25T17:30:00+01:00"
+    const { container } = render(
+      <SunArc label="Meeting time" {...coruna} photo={{ ...photo, capturedAt }} onPhotoChange={onPhotoChange} />,
+    )
+    await user.click(screen.getByRole("button", { name: "Mark the sun" }))
+    const stage = container.querySelector<HTMLElement>('[data-slot="sun-arc-stage"]')!
+    stage.getBoundingClientRect = () => ({
+      left: 0,
+      top: 0,
+      width: 400,
+      height: 300,
+      right: 400,
+      bottom: 300,
+      x: 0,
+      y: 0,
+      toJSON: () => ({}),
+    })
+    stage.setPointerCapture = () => {}
+    fireEvent.pointerDown(stage, { pointerId: 1, button: 0, clientX: 240, clientY: 120 })
+    fireEvent.pointerUp(stage, { pointerId: 1, clientX: 240, clientY: 120 })
+    const [view] = onPhotoChange.mock.lastCall as [{ heading: number; fov: number; horizon: number }]
+    const capture = captureOf(
+      capturedAt,
+      placeOf(43.37, -8.4, "Europe/Madrid", "2026-11-25T12:00:00Z"),
+      "Europe/Madrid",
+    )!
+    const sun = sunPosition(capture.place, capture.minutes)
+    const point = projectSky({ ...view, aspect: 4 / 3 }, sun.azimuth, sun.altitude)
+    expect(point.x).toBeCloseTo(0.6, 3)
+    expect(point.y).toBeCloseTo(0.4, 3)
+  })
+
+  test("an agent calibrates the photo, and a heading off the compass or no photo fails the step with why", async () => {
+    const onPhotoChange = vi.fn()
+    const { unmount } = render(<SunArc label="Window view" {...coruna} photo={photo} onPhotoChange={onPhotoChange} />)
+    expect(agent.snapshot().find((entry) => entry.label === "Window view")?.actions).toContain("calibrate")
+    let result = await act(() =>
+      agent.act({ steps: [{ ref: "Window view", action: "calibrate", args: [230, 95, 0.47] }] }),
+    )
+    expect(result.ok, result.error?.message).toBe(true)
+    expect(onPhotoChange).toHaveBeenLastCalledWith(expect.objectContaining({ heading: 230, fov: 95, horizon: 0.47 }))
+    result = await act(() => agent.act({ steps: [{ ref: "Window view", action: "calibrate", args: [400] }] }))
+    expect(parseActionRefusal(result.error)).toMatchObject({ action: "calibrate", kind: "unavailable" })
+    expect(result.error?.message).toContain("takes a heading from 0 to 360°, not 400")
+    unmount()
+    render(<SunArc label="Drawn city" {...coruna} />)
+    result = await act(() => agent.act({ steps: [{ ref: "Drawn city", action: "calibrate", args: [180] }] }))
+    expect(result.error?.message).toContain("calibrate isn't available without a photo")
+  })
+
+  test("a capture time reads with Z, an offset, or the arc's time zone", () => {
+    const place = placeOf(43.37, -8.4, "Europe/Madrid", "2026-11-25T12:00:00Z")
+    expect(captureOf("2026-07-01T10:00:00Z", place, "Europe/Madrid")).toMatchObject({
+      minutes: 600,
+      place: { utcOffset: 0, month: 7 },
+    })
+    expect(captureOf("2026-07-01T10:00+08:00", place, undefined)).toMatchObject({ place: { utcOffset: 480 } })
+    expect(captureOf("2026-07-01T10:00:00", place, "Europe/Madrid")).toMatchObject({ place: { utcOffset: 120 } })
+    expect(captureOf("yesterday", place, undefined)).toBeUndefined()
+  })
+
+  test("the photo's locator holds a sun out of view at the edge it left by, and under the horizon where it set", () => {
+    const locate = photoLocator({ heading: 225, fov: 90, horizon: 0.5, aspect: 4 / 3 })
+    expect(locate(0, { azimuth: 225, altitude: 20 }).out).toBeUndefined()
+    expect(locate(0, { azimuth: 150, altitude: 20 }).out).toBe("left")
+    expect(locate(0, { azimuth: 45, altitude: 20 }).out).toBe("behind")
+    const set = locate(0, { azimuth: 240, altitude: -12 })
+    expect(set.out).toBe("bottom")
+    expect(set.y).toBeCloseTo(0.5, 2)
+  })
 })

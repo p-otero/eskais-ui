@@ -55,6 +55,8 @@ const scenarios: Record<string, () => Promise<Render>> = {
     prism().then(({ PrismPickerScenario }) => () => <PrismPickerScenario />),
   "sun-arc": () =>
     instruments().then(({ SunArcScenario }) => () => <SunArcScenario />),
+  "sun-arc-photo": () =>
+    instruments().then(({ SunArcPhotoScenario }) => () => <SunArcPhotoScenario />),
   mixer: () =>
     instruments().then(({ MixerScenario }) => () => <MixerScenario />),
   "safe-dial": () =>

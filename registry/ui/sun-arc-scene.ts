@@ -1,4 +1,11 @@
-import { minutesPerDay, skyAt, solarDay, sunAltitude, type SolarPlace } from "@/components/ui/sun-arc-solar"
+import {
+  minutesPerDay,
+  skyAt,
+  solarDay,
+  sunAltitude,
+  sunPosition,
+  type SolarPlace,
+} from "@/components/ui/sun-arc-solar"
 
 const edgeInset = 0.04
 const horizonAt = 0.76
@@ -19,16 +26,34 @@ function altitudeToY(altitude: number, scale: number) {
 
 type SunArcVars = Record<`--sun-arc-${string}`, string>
 
+/** The side of the stage the sun has left by, when it is out of view; `behind` is behind the camera. */
+type SunArcOut = "left" | "right" | "top" | "bottom" | "behind"
+
+/** Where the sun sits on the stage, from 0 to 1 across and down, and the side it left by when it is out of view. */
+type SunArcSpot = { x: number; y: number; out: SunArcOut | undefined }
+
+/** Places the sun on the stage for a time and its position in the sky. */
+type SunArcLocate = (minutes: number, sun: { altitude: number; azimuth: number }) => SunArcSpot
+
+/** The drawn city's locator: time runs across, and altitude up a dome scaled to the day's highest sun. */
+function domeLocator(scale: number): SunArcLocate {
+  return (minutes, sun) => ({ x: timeToX(minutes), y: altitudeToY(sun.altitude, scale), out: undefined })
+}
+
 // Perf: the sky repaints the whole stage, so its colours move in half-degree steps of altitude, about two minutes of the
 // sun: an arrow key in between only moves the sun, the glow and the glint, which sit on their own layers.
 const skyStepDegrees = 0.5
 
-/** The CSS variables the stage paints from at one moment: sky colours, light levels and the sun's place. */
-function sceneVars(place: SolarPlace, scale: number, minutes: number): SunArcVars {
-  const altitude = sunAltitude(place, minutes)
+/** The CSS variables the stage paints from at one moment (sky colours, light levels and the sun's place), and where
+ * the sun is out of view. */
+function sceneAt(place: SolarPlace, locate: SunArcLocate, minutes: number) {
+  const sun = sunPosition(place, minutes)
+  const { x, y, out } = locate(minutes, sun)
+  return { vars: sceneVars(sun.altitude, x, y), out }
+}
+
+function sceneVars(altitude: number, x: number, y: number): SunArcVars {
   const sky = skyAt(Math.round(altitude / skyStepDegrees) * skyStepDegrees)
-  const x = timeToX(minutes)
-  const y = altitudeToY(altitude, scale)
   return {
     "--sun-arc-zenith": sky.zenith,
     "--sun-arc-horizon": sky.horizon,
@@ -138,5 +163,5 @@ const stars = (() => {
   }))
 })()
 
-export { domeScale, horizonAt, sceneVars, skyline, stars, sunPath, timeToX }
-export type { SunArcVars }
+export { domeLocator, domeScale, horizonAt, sceneAt, skyline, stars, sunPath, timeToX }
+export type { SunArcLocate, SunArcOut, SunArcSpot, SunArcVars }

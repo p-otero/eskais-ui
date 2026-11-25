@@ -432,6 +432,12 @@ test("sun arc: a refused move, a time off the clock, a polar sunrise or a disabl
   const night = { kind: "polar-night" as const, sunrise: undefined, sunset: undefined, noon: 715 }
   mounted(mount(sunArc, { slider, day: night }, `<root aria-label="Arctic time"></root>`))
   await failsWith("Arctic time", "sunset", "the sun doesn't rise on this day here (polar night)")
+  const calibrate = vi.fn((): boolean => false)
+  mounted(mount(sunArc, { slider, day, calibrate }, `<root aria-label="Photo arc"></root>`))
+  await failsWith("Photo arc", "calibrate", "calibrate was refused by the app.", [200])
+  await failsWith("Photo arc", "calibrate", "takes a field of view from 20 to 130°, not 170", [200, 170])
+  await failsWith("Meeting time", "calibrate", "calibrate isn't available without a photo", [200])
+  expect(calibrate).toHaveBeenCalledOnce()
   mounted(mount(sunArc, { slider, day, disabled: true }, `<root aria-label="Disabled arc"></root>`))
   await failsWith("Disabled arc", "solarNoon", "solarNoon isn't available while the picker is disabled")
   expect(slider.setValue).toHaveBeenCalledTimes(2)

@@ -23,6 +23,23 @@ function SunArcScenario() {
   )
 }
 
+const cebu = { latitude: 10.326725, longitude: 123.904889, timeZone: "Asia/Manila" }
+
+function SunArcPhotoScenario() {
+  return (
+    <div className="w-full max-w-3xl">
+      <SunArc
+        label="Meeting time"
+        {...cebu}
+        date={new Date("2025-04-14T04:00:00Z")}
+        defaultValue={6 * 60 + 20}
+        step={1}
+        photo={{ src: "/sky/cebu-skyline.jpg", heading: 82 }}
+      />
+    </div>
+  )
+}
+
 function MixerScenario() {
   return (
     <div className="w-full max-w-2xl">
@@ -47,4 +64,4 @@ function VinylScrubberScenario() {
   )
 }
 
-export { MixerScenario, SafeDialScenario, SunArcScenario, VinylScrubberScenario }
+export { MixerScenario, SafeDialScenario, SunArcPhotoScenario, SunArcScenario, VinylScrubberScenario }

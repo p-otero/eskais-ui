@@ -3966,21 +3966,51 @@
       }
     },
     {
+      "name": "sky-photo",
+      "type": "registry:lib",
+      "title": "Sky Photo",
+      "description": "Reads a photo of the sky locally: its EXIF (orientation, capture time and offset, GPS, compass heading, focal length and 35 mm equivalent) with a small parser of its own, its sky found by a classical skyline finder (colour, brightness and texture, a skyline per column by dynamic programming, holes and masts, a feathered mask) with no model to download, and a rectilinear projection from a sun azimuth and altitude to the photo and back, with calibration from one marked point.",
+      "docs": "`analyzeSkyPhoto(src | blob, { skyMask?, signal? })` from `@/lib/sky-photo` resolves with `{ width, height, aspect, exif, mask, sky, foregroundUrl, analysisMs, dispose() }`: `sky` is a canvas opaque where it is sky, `foregroundUrl` an object URL of a PNG for `mask-image`, freed by `dispose`. The finder runs at 512 px on the long side in stages, yielding to the page between them (60 to 90 ms in all on a laptop); `findSky(pixels)` runs it in one go, for a worker or a test. A cross-origin URL needs CORS. `readSkyPhotoExif(bytes)` and `readSkyPhotoExifFrom(blob)` (`@/lib/sky-photo-exif`) never throw; `findSky` lives in `@/lib/sky-photo-mask`. From `@/lib/sky-photo-projection`, `projectSky(view, azimuth, altitude)` maps a sky direction to `{ x, y, behind }` from 0 to 1 over the photo for `view = { heading, fov, horizon, aspect }`, `unprojectSky` maps back, `calibrateSkyView({ fov, aspect }, sun, point)` finds the heading and horizon that put the sun on a marked point, and `fovFromFocalLength35mm(focal, aspect)` reads the field of view from EXIF.",
+      "files": [
+        {
+          "path": "registry/lib/sky-photo.ts",
+          "type": "registry:lib"
+        },
+        {
+          "path": "registry/lib/sky-photo-exif.ts",
+          "type": "registry:lib"
+        },
+        {
+          "path": "registry/lib/sky-photo-mask.ts",
+          "type": "registry:lib"
+        },
+        {
+          "path": "registry/lib/sky-photo-projection.ts",
+          "type": "registry:lib"
+        }
+      ]
+    },
+    {
       "name": "sun-arc",
       "type": "registry:ui",
       "title": "Sun Arc",
-      "description": "A time-of-day picker drawn as the sun's real path over a city: sunrise, solar noon and sunset come from a solar-position model for a latitude, longitude and day, and the sky, the light on the water and the lit windows follow the sun's altitude. UI SDK's slider in minutes since local midnight, with setTime, sunrise, sunset and solarNoon for agents.",
-      "docs": "`<SunArc label latitude longitude date timeZone value|defaultValue onValueChange onValueCommit step locale disabled name labels>`. The value is minutes since local midnight in `timeZone` (the runtime's own without one), 0 to 1439; it starts at solar noon. Times and degrees are written with `Intl` in `locale`. The arc is UI SDK's Slider: arrows move `step` minutes (5 by default), Page Up and Down an hour, Home and End the ends of the day; drag the sun or press the sky (the ground strip on touch). The Sunrise, Solar noon and Sunset buttons move the sun there; in a polar day or night, sunrise and sunset are disabled and the agent's step fails with why. The stage is a sky in every theme (the item's `css`); the card and readout follow the theme.",
+      "description": "A time-of-day picker drawn as the sun's real path over a city: sunrise, solar noon and sunset come from a solar-position model for a latitude, longitude and day, and the sky, the light on the water and the lit windows follow the sun's altitude. With a `photo` of the place, its own sky is replaced by the one for the chosen time, the sun stands at its true azimuth and altitude through the photo's lens, and the foreground is relit. UI SDK's slider in minutes since local midnight, with setTime, sunrise, sunset and solarNoon for agents, and calibrate for a photo.",
+      "docs": "`<SunArc label latitude longitude date timeZone value|defaultValue onValueChange onValueCommit step locale disabled name labels>`. The value is minutes since local midnight in `timeZone` (the runtime's own without one), 0 to 1439; it starts at solar noon. Times and degrees are written with `Intl` in `locale`. The arc is UI SDK's Slider: arrows move `step` minutes (5 by default), Page Up and Down an hour, Home and End the ends of the day; drag the sun or press the sky (the ground strip on touch). The Sunrise, Solar noon and Sunset buttons move the sun there; in a polar day or night, sunrise and sunset are disabled and the agent's step fails with why. The stage is a sky in every theme (the item's `css`); the card and readout follow the theme. `photo={{ src, heading?, fov?, horizon?, skyMask?, capturedAt? }}` draws the sky into a photo of the place: the sky is found locally (`sky-photo`, no model download) or taken from `skyMask`; the heading comes from the EXIF compass, the field of view from the 35 mm focal length (69° without it) and the horizon from the skyline's lowest band. Without a heading the Calibrate panel opens: Mark the sun (press where the sun stands in the photo at its capture time, from the EXIF or `capturedAt`), and Heading, Field of view and Horizon sliders. Each calibration comes out in `onPhotoChange` for the app to keep; nothing is stored. Outside the view the sun waits at the edge it left by, with an arrow; below the horizon it waits on the horizon. `SunArcPhotoUpload label onPhoto` picks a local photo through an object URL (never uploaded) and gives its EXIF place. The demo photo is the Cebu City skyline by DisRaptor18, CC0 (Wikimedia Commons, File:Cebu_city_skyline_2025.jpg).",
       "dependencies": [
         "@ui-sdk/core@0.1.0-beta.12",
-        "@ui-sdk/react@0.1.0-beta.12"
+        "@ui-sdk/react@0.1.0-beta.12",
+        "lucide-react"
       ],
       "registryDependencies": [
         "@eskais/utils",
         "@eskais/theme",
         "@eskais/action-refusal",
         "@eskais/button",
-        "@eskais/locale"
+        "@eskais/locale",
+        "@eskais/sky-photo",
+        "@eskais/slider",
+        "@eskais/toggle",
+        "@eskais/file-input"
       ],
       "files": [
         {
@@ -4002,6 +4032,22 @@
         {
           "path": "registry/ui/use-sun-arc-scene.ts",
           "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/sun-arc-photo.tsx",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/sun-arc-photo-scene.ts",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/use-sun-arc-photo.ts",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/use-sky-photo.ts",
+          "type": "registry:ui"
         }
       ],
       "css": {
@@ -4010,6 +4056,7 @@
         },
         "[data-slot=\"sun-arc-stage\"]": {
           "--sun-arc-horizon-at": "76%",
+          "--sun-arc-track-top": "76cqh",
           "position": "relative",
           "width": "100%",
           "overflow": "hidden",
@@ -4200,7 +4247,7 @@
           "margin": "0 !important",
           "top": "0 !important",
           "left": "0 !important",
-          "translate": "calc(var(--sun-arc-fx) * 100cqw - 4cqw - 50%) calc(var(--sun-arc-fy) * 100cqh - 76cqh - 50%) !important",
+          "translate": "calc(var(--sun-arc-fx) * 100cqw - 4cqw - 50%) calc(var(--sun-arc-fy) * 100cqh - var(--sun-arc-track-top) - 50%) !important",
           "width": "1.75rem",
           "height": "1.75rem",
           "border-radius": "50%",
@@ -4223,6 +4270,109 @@
           "outline": "2px solid white",
           "outline-offset": "4px",
           "box-shadow": "0 0 0 1px color-mix(in oklab, var(--sun-arc-sun), white 30%), 0 0 0 8px rgb(0 0 0 / 0.45), 0 0 46px 14px color-mix(in oklab, var(--sun-arc-glow) 30%, transparent)"
+        },
+        "[data-slot=\"sun-arc-stage\"][data-photo]": {
+          "--sun-arc-band": "2.25rem",
+          "--sun-arc-horizon-at": "calc(100% - var(--sun-arc-band))",
+          "--sun-arc-track-top": "calc(100cqh - var(--sun-arc-band))",
+          "aspect-ratio": "var(--sun-arc-aspect)"
+        },
+        "[data-slot=\"sun-arc-stage\"][data-marking]": {
+          "cursor": "crosshair"
+        },
+        "[data-slot=\"sun-arc-photo\"]": {
+          "position": "absolute",
+          "inset": "0",
+          "overflow": "hidden",
+          "isolation": "isolate",
+          "pointer-events": "none"
+        },
+        "[data-slot=\"sun-arc-photo\"][data-masked]": {
+          "mask-image": "var(--sun-arc-photo-mask)",
+          "mask-size": "100% 100%",
+          "mask-repeat": "no-repeat"
+        },
+        "[data-slot=\"sun-arc-photo\"] img": {
+          "display": "block",
+          "width": "100%",
+          "height": "100%",
+          "object-fit": "cover",
+          "user-select": "none"
+        },
+        "[data-slot=\"sun-arc-photo\"] [data-light]": {
+          "position": "absolute",
+          "inset": "0",
+          "will-change": "opacity"
+        },
+        "[data-slot=\"sun-arc-photo\"] [data-light=\"warm\"]": {
+          "background": "#ff8a3d",
+          "mix-blend-mode": "soft-light",
+          "opacity": "calc(var(--sun-arc-dusk) * 0.9)"
+        },
+        "[data-slot=\"sun-arc-photo\"] [data-light=\"shade\"]": {
+          "background": "#0b1533",
+          "mix-blend-mode": "multiply",
+          "opacity": "calc((1 - var(--sun-arc-daylight)) * 0.82)"
+        },
+        "[data-slot=\"sun-arc-stage\"][data-photo] [data-slot=\"sun-arc-path\"]": {
+          "mask-image": "none"
+        },
+        "[data-slot=\"sun-arc-path\"] [data-part=\"night\"]": {
+          "stroke-opacity": "0.22"
+        },
+        "[data-slot=\"sun-arc-stage\"][data-photo] [data-slot=\"sun-arc-ground\"]": {
+          "background": "linear-gradient(to bottom, rgb(4 6 12 / 0.35), rgb(4 6 12 / 0.7))",
+          "box-shadow": "0 -1px 0 rgb(255 255 255 / 0.18)"
+        },
+        "[data-slot=\"sun-arc-stage\"][data-photo] [data-slot=\"slider-control\"]": {
+          "top": "var(--sun-arc-horizon-at)"
+        },
+        "[data-slot=\"sun-arc-stage\"][data-photo] [data-slot=\"slider-track\"]": {
+          "height": "100%"
+        },
+        "[data-slot=\"sun-arc-stage\"][data-sun-out] [data-slot=\"slider-thumb\"]": {
+          "width": "1.125rem",
+          "height": "1.125rem",
+          "outline": "1.5px dashed rgb(255 255 255 / 0.85)",
+          "outline-offset": "3px"
+        },
+        "[data-slot=\"sun-arc-stage\"][data-sun-out] [data-slot=\"slider-thumb\"]::after": {
+          "content": "\"\"",
+          "position": "absolute",
+          "width": "0.5rem",
+          "height": "0.625rem",
+          "background": "white"
+        },
+        "[data-sun-out=\"left\"] [data-slot=\"slider-thumb\"]::after": {
+          "top": "50%",
+          "left": "-0.875rem",
+          "translate": "0 -50%",
+          "clip-path": "polygon(100% 0, 0 50%, 100% 100%)"
+        },
+        "[data-sun-out=\"right\"] [data-slot=\"slider-thumb\"]::after": {
+          "top": "50%",
+          "right": "-0.875rem",
+          "translate": "0 -50%",
+          "clip-path": "polygon(0 0, 100% 50%, 0 100%)"
+        },
+        "[data-sun-out=\"top\"] [data-slot=\"slider-thumb\"]::after": {
+          "left": "50%",
+          "top": "-0.875rem",
+          "width": "0.625rem",
+          "height": "0.5rem",
+          "translate": "-50% 0",
+          "clip-path": "polygon(0 100%, 50% 0, 100% 100%)"
+        },
+        "[data-sun-out=\"bottom\"] [data-slot=\"slider-thumb\"]::after": {
+          "left": "50%",
+          "bottom": "-0.875rem",
+          "width": "0.625rem",
+          "height": "0.5rem",
+          "translate": "-50% 0",
+          "clip-path": "polygon(0 0, 50% 100%, 100% 0)"
+        },
+        "[data-sun-out=\"behind\"] [data-slot=\"slider-thumb\"]::after": {
+          "display": "none"
         }
       }
     },

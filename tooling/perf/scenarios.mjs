@@ -238,6 +238,14 @@ const keyScenarios = [
     held: "ArrowRight",
   },
   {
+    id: "sun-arc-photo",
+    label: "SunArc over a photo (→, Page Up, ←)",
+    settle: 2500,
+    focus: '[data-slot="sun-arc-stage"] input[type="range"]',
+    keys: [...repeat("ArrowRight", 8), ...repeat("PageUp", 6), ...repeat("ArrowLeft", 6)],
+    held: "ArrowRight",
+  },
+  {
     id: "mixer",
     label: "Mixer, 6 channels (↑, Page Up, ↓)",
     focus: '[data-slot="mixer-desk"] input[type="range"]',
