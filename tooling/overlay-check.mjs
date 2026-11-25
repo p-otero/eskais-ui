@@ -1,6 +1,3 @@
-// Drives the showcase's ?demo=overlay-check fixture in Chrome: a press right after a dialog starts closing
-// reaches the page, and focus returns to the opener when a dialog unmounts while open or a field has autoFocus.
-// Usage: node tooling/overlay-check.mjs (after `bun run build:showcase`)
 import { withShowcase } from "./showcase-browser.mjs"
 
 const failures = []
@@ -14,7 +11,6 @@ async function count(page) {
   return Number((await page.getByTestId("counter").textContent()).replace(/\D/g, ""))
 }
 
-// Runs the steps one after another: each drives the same page.
 function inTurn(items, step) {
   return items.reduce((previous, item) => previous.then(() => step(item)), Promise.resolve())
 }
@@ -23,7 +19,6 @@ async function focusedName(page) {
   return page.evaluate(() => document.activeElement?.getAttribute("aria-label") ?? document.activeElement?.textContent)
 }
 
-// The closing transition is stretched to 1.5s, so the press surely lands while it runs.
 async function pressWhileClosing(page, { open, name, close, known }) {
   await page.getByRole("button", { name: open }).click()
   await page.getByRole("dialog", { name }).or(page.getByRole("alertdialog", { name })).waitFor()

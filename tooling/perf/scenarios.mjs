@@ -1,16 +1,10 @@
-// What each fixture of apps/showcase/src/perf measures. `focus` is the element keys start from; `keys` the
-// presses timed one at a time; `held` the key held at 30 Hz autorepeat; `settle` ms to wait after the first paint,
-// then `setup` runs before focusing.
-
 const repeat = (key, times) => Array.from({ length: times }, () => key)
 const chars = (text) => [...text].map((char) => (char === " " ? "Space" : char))
 
-// A status pulse pings for about three seconds when it starts; a person tabs through a board that has been there.
 const boardSettle = 3500
 
 const firstTabStop = (container) => `${container} [tabindex="0"]`
 
-// The pulsing dots of liveness chips and StatusDot (Tailwind's motion-safe:animate-ping).
 const ping = "[class~='motion-safe:animate-ping']"
 
 async function css(page, content) {
@@ -18,7 +12,6 @@ async function css(page, content) {
   await page.waitForTimeout(300)
 }
 
-// The glass theme blurs what is behind every card, column and panel (backdrop-filter).
 async function glass(page) {
   await page.evaluate(() => document.documentElement.setAttribute("data-theme", "glass"))
   await page.waitForTimeout(400)
@@ -95,7 +88,6 @@ const keyScenarios = [
   },
   {
     id: "board",
-    // The cards are one tab stop: Tab leaves them after the first card and walks the columns and the toolbar.
     label: "AgentTaskBoard, 200 cards (Tab past the cards)",
     settle: boardSettle,
     focus: "[data-task-select]",
@@ -195,7 +187,6 @@ const keyScenarios = [
     keys: [...repeat("j", 40), ...repeat("k", 10)],
     held: "ArrowDown",
   },
-  // Experiments, run with --experiments: the board with its pulsing status dots changed by injected CSS.
   {
     id: "board",
     phase: "pulse-opacity",

@@ -1,4 +1,3 @@
-// A static server for a built app and a Chrome page with the perf probe installed.
 import { readFile, stat } from "node:fs/promises"
 import { createServer } from "node:http"
 import { extname, join, normalize, resolve } from "node:path"
@@ -17,7 +16,6 @@ const types = {
   ".woff": "font/woff",
 }
 
-/** Serves `dir` at `base` (default "/"); a path with no file falls back to `index.html` when `spa` is set. */
 async function serve(dir, { base = "/", spa = true } = {}) {
   const root = resolve(dir)
   const server = createServer(async (request, response) => {
@@ -73,7 +71,6 @@ async function launch() {
   })
 }
 
-/** A fresh context and page with the probe, CPU throttling and an optional network profile. */
 async function openPage(browser, { cpu = 1, network, viewport = { width: 1280, height: 900 } } = {}) {
   const context = await browser.newContext({ viewport, deviceScaleFactor: 1 })
   await context.addInitScript({ path: probe })
@@ -97,7 +94,6 @@ async function heapUsed(cdp) {
   return usedSize
 }
 
-/** The page's composited layers right now, and how many Chrome made for each reason. */
 async function countLayers(page, cdp) {
   await cdp.send("DOM.enable")
   await cdp.send("LayerTree.enable")

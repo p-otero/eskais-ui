@@ -1,7 +1,3 @@
-// Times a 20,000-line TextDiff and a 500-file GitDiff in Chrome: first paint, j/k to paint, j held, a wheel scroll
-// (40 px a frame) and a screen a frame. After `bun run build:showcase`: `node tooling/diff-bench.mjs [--cpu=1,4]
-// [--only=<name>, or <exact name>$]` checks the desktop budgets at 1×; `--ci` (in `bun run test:browser`) runs two
-// scenarios at 1× with loose ones.
 import { withShowcase } from "./showcase-browser.mjs"
 
 const cpuFlag = process.argv.find((arg) => arg.startsWith("--cpu="))
@@ -14,9 +10,6 @@ const scenarios = [
   { name: "patch 500 files, no tree", query: "kind=patch&files=500&tree=false", probe: true },
 ]
 const ci = process.argv.includes("--ci")
-// At 1× CPU on a desktop: a first paint well under a second, and a key press or scroll that paints within a frame
-// or two. CI runners are slower and shared, so --ci checks for regressions (virtualization lost, a render per row)
-// rather than a frame budget: a screen per frame is reported, not budgeted.
 const budgets = ci
   ? { mountMs: 1500, keyP95Ms: 100, wheelP95Ms: 100, scrollP95Ms: Infinity, rows: 150 }
   : { mountMs: 1500, keyP95Ms: 50, wheelP95Ms: 34, scrollP95Ms: 34, rows: 150 }
@@ -56,7 +49,6 @@ async function pressKeys(page, presses) {
   return page.evaluate(() => globalThis.keyTimes)
 }
 
-// Key repeat sends a press every ~33 ms whether or not the last one painted; long frames show as gaps.
 async function holdKey(page, presses) {
   await page.evaluate(() => {
     globalThis.frames = []
@@ -79,8 +71,6 @@ async function holdKey(page, presses) {
   })
 }
 
-// `step` px per frame, or a whole screen: a screen per frame mounts every row each frame, the worst case; 40 px is
-// a brisk wheel or trackpad scroll.
 async function scrollFrames(page, step) {
   return page.evaluate(
     (by) =>

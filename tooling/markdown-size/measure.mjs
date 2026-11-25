@@ -1,5 +1,3 @@
-// Builds each entry alone with Vite (React external, minified) and prints its eager JS, min and gzip.
-// Usage: node tooling/markdown-size/measure.mjs
 import { readdirSync, rmSync } from "node:fs"
 import { createRequire } from "node:module"
 import { join, resolve } from "node:path"
@@ -8,7 +6,6 @@ import { gzipSync } from "node:zlib"
 
 const here = import.meta.dirname
 const root = resolve(here, "../..")
-// Vite is the showcase's dependency, so resolve it from there.
 const { build } = await import(
   pathToFileURL(createRequire(join(root, "apps/showcase/package.json")).resolve("vite")).href
 )
@@ -23,7 +20,7 @@ const gzip = (list) => list.reduce((sum, chunk) => sum + gzipSync(chunk.code, { 
 const rows = []
 for (const name of entries) {
   rmSync(out, { recursive: true, force: true })
-  // One build at a time: they share the output folder and each one is memory-heavy.
+  // Perf: one build at a time: they share the output folder and each one is memory-heavy.
   // oxlint-disable-next-line no-await-in-loop
   const result = await build({
     configFile: false,
@@ -47,7 +44,6 @@ for (const name of entries) {
   const chunks = (Array.isArray(result) ? result : [result])
     .flatMap((output) => output.output)
     .filter((chunk) => chunk.type === "chunk")
-  // Eager is the entry plus everything it imports statically; chunks shared only by lazy languages stay lazy.
   const byName = new Map(chunks.map((chunk) => [chunk.fileName, chunk]))
   const eagerNames = new Set()
   const visit = (chunk) => {

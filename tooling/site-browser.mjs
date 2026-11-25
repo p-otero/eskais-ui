@@ -1,5 +1,3 @@
-// Serves the built site from a sub-path (as GitHub Pages would) with a plain static server, and opens it in
-// the system Chrome. Nothing rewrites URLs, so a route that only works with a server fallback fails here.
 import { readFile, stat } from "node:fs/promises"
 import { createServer } from "node:http"
 import { extname, join, normalize, resolve } from "node:path"
@@ -36,7 +34,6 @@ async function resolveFile(pathname) {
 async function serve() {
   const server = createServer(async (request, response) => {
     const { pathname } = new URL(request.url ?? "/", "http://localhost")
-    // A directory without its trailing slash redirects, as static hosts do.
     const file = await resolveFile(pathname)
     if (!file) {
       response.writeHead(404, { "content-type": "text/plain" })

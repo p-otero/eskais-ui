@@ -1,7 +1,3 @@
-// Drives ?demo=document-workspace in Chrome: the columns collapse and come back, Ctrl+P opens quick open, the
-// outline moves the caret or focus, a mode switch keeps the reading position, menus and drawers give focus back
-// to the document, and on a phone the explorer and the aside are drawers that close when a note opens.
-// Usage: node tooling/document-workspace-check.mjs [--screenshots=<dir>] (after `bun run build:showcase`)
 import { mkdirSync } from "node:fs"
 import { join, resolve } from "node:path"
 
@@ -39,7 +35,6 @@ async function open(page, width, scheme = "light") {
 
 const editorHasFocus = (page) => page.evaluate(() => document.activeElement?.closest(".cm-content") !== null)
 
-// The text of the line the editor shows at the top of its scroller.
 const topLine = (page) =>
   page.evaluate(() => {
     const scroller = document.querySelector("[data-slot=markdown-editor-viewport]")
@@ -125,7 +120,6 @@ async function wide(page) {
   await region.evaluate((node) => (node.scrollTop = 0))
   await outline.getByRole("button", { name: "Rollout" }).click()
   await page.waitForTimeout(200)
-  // The heading at the top of the read view, or the last one above it when the view can't scroll that far.
   const reading = await page.evaluate(() => {
     const container = document.querySelector("[data-slot=document-workspace-document]")
     const top = container.getBoundingClientRect().top + 4
@@ -212,7 +206,6 @@ async function narrow(page) {
   check("narrow: nothing overflows the page", overflow <= 0, `${overflow}px`)
 }
 
-// A tree of buttons, not links: the drawer closes because the workspace's documentId changes.
 async function phone(page) {
   await open(page, 320)
   await page.getByRole("button", { name: "Files", exact: true }).click()
@@ -250,7 +243,7 @@ async function screenshots(page) {
         await page.getByRole("dialog", { name: "Files" }).waitFor()
         await shot(page, name("explorer-drawer"))
         await page.keyboard.press("Escape")
-        // UI SDK 0.1.0-beta.10 drops a press on the page while a drawer slides out (see the drawer item docs).
+        // Workaround: UI SDK 0.1.0-beta.10 drops a press on the page while a drawer slides out.
         await page.getByRole("dialog", { name: "Files" }).waitFor({ state: "detached" })
         await page.getByRole("button", { name: "Details", exact: true }).click()
         await page.getByRole("dialog", { name: "Details" }).waitFor()

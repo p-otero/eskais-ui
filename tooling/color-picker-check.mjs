@@ -1,6 +1,3 @@
-// Drives ?demo=color-picker-check in Chrome, light and dark: pointer drags past every edge and corner of an OKLCH
-// area and both ends of its sliders, and End and Home. The thumb stays where it was left, the value is inside sRGB
-// and the area paints it under the thumb. Usage: node tooling/color-picker-check.mjs (after `bun run build:showcase`)
 /* oxlint-disable no-await-in-loop -- each drag and key starts where the one before left the thumbs */
 import { convertColor, parseColor } from "@ui-sdk/core/color"
 
@@ -16,7 +13,6 @@ function check(label, ok, detail = "") {
 const near = (a, b, tolerance = 0.01) => Math.abs(a - b) <= tolerance
 const frame = (page) => page.evaluate(() => new Promise((done) => requestAnimationFrame(() => setTimeout(done, 0))))
 
-// UI SDK writes four decimals, so a mapped colour on the edge can land a rounding error outside.
 function inGamut(value) {
   const color = parseColor(value)
   return (
@@ -32,7 +28,6 @@ async function areaPoint(thumb) {
   }))
 }
 
-// The canvas pixel under the thumb against the value painted on its own: the thumb sits on the colour chosen.
 function paintedDifference(area, value) {
   return area.evaluate((element, color) => {
     const canvas = element.querySelector("canvas")
@@ -74,7 +69,6 @@ async function checkPicker(page, name, mode) {
   for (const target of targets) {
     const box = await area.boundingBox()
     const start = await thumb.boundingBox()
-    // Past the box, as a hand overshoots: the thumb stops at the edge.
     const toX = box.x + (target.x === 1 ? box.width + 24 : target.x === 0 ? -24 : box.width * target.x)
     const toY = box.y + (target.y === 1 ? -24 : target.y === 0 ? box.height + 24 : box.height * (1 - target.y))
     await page.mouse.move(start.x + start.width / 2, start.y + start.height / 2)
@@ -99,7 +93,6 @@ async function checkPicker(page, name, mode) {
     check(`${label}: the area paints the ${target.name} value under the thumb`, difference <= 10, `Δ ${difference}`)
   }
 
-  // From the right edge, the keyboard: End keeps x at 100%, Home goes to 0, End back to 100%.
   await thumb.focus()
   for (const [key, x] of [
     ["End", 1],

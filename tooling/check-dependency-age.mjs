@@ -1,7 +1,3 @@
-// Fails when an npm dependency pinned in registry.json is younger than 7 days: shadcn installs dependencies before
-// it writes any file, so a consumer with a minimum release age (pnpm `minimumReleaseAge`) can't add the item at all.
-// A dependency listed without a version, allowed only for `unversionedDependencies`, is checked at its floor.
-// Usage: node tooling/check-dependency-age.mjs [--require-network]. Offline it skips, unless --require-network.
 import { readFileSync } from "node:fs"
 import { join } from "node:path"
 import { pathToFileURL } from "node:url"
@@ -9,8 +5,6 @@ import { pathToFileURL } from "node:url"
 export const minimumAgeDays = 7
 const day = 24 * 60 * 60 * 1000
 
-// Pins allowed to be younger, each with its reason. One stays allowed only at this exact version: a bump has to be
-// added here again on purpose. Once it is old enough the check says so, and the entry should go.
 export const youngDependencyExceptions = {
   "@ui-sdk/core@0.1.0-beta.12":
     "UI SDK's first release is from 2026-11-12, so no version is 7 days old yet; the components are built on it",
@@ -18,16 +12,11 @@ export const youngDependencyExceptions = {
     "UI SDK's first release is from 2026-11-12, so no version is 7 days old yet; the components are built on it",
 }
 
-// Dependencies items list without a version, each with its floor, the exact pin in the root package.json. shadcn
-// 4.23 skips a versionless dependency the consumer already has and reinstalls any spec with a version, rewriting the
-// consumer's (an exact pin downgrades). A new install gets the newest release its minimum release age allows, never
-// older than the floor once the floor is 7 days old.
 const rootPackage = JSON.parse(readFileSync(join(import.meta.dirname, "..", "package.json"), "utf8"))
 export const unversionedDependencies = Object.fromEntries(
   ["lucide-react"].map((name) => [name, rootPackage.dependencies[name]]),
 )
 
-// "name@1.2.3" or "@scope/name@1.2.3"; anything that isn't a registry version (github:, a URL) is not checked.
 export function parseDependency(spec) {
   const at = spec.indexOf("@", 1)
   if (at === -1) return { name: spec, version: undefined }
@@ -44,8 +33,6 @@ export function registryDependencies(registry) {
 const exactVersion = /^\d+\.\d+\.\d+(?:-[\w.]+)?$/
 const notOnNpm = /^(?:github:|git\+|git:|https?:|file:|link:|workspace:)/
 
-// `published` maps each "name@version" to its ISO publish time from the npm registry. Returns the pins that fail
-// (`problems`) and the exceptions that are now old enough to remove (`matured`).
 export function findYoungDependencies(
   specs,
   published,

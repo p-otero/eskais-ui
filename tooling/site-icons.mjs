@@ -1,5 +1,3 @@
-// Generates the docs site's favicons from the Eskais symbol (`node tooling/site-icons.mjs`), into apps/site/public:
-// an SVG favicon that follows the system colour scheme, a 32px PNG fallback and a 180px apple-touch-icon.
 import { mkdir, readFile, writeFile } from "node:fs/promises"
 import { resolve } from "node:path"
 
@@ -12,7 +10,6 @@ const symbol = await readFile(resolve(site, "src", "brand", "eskais-symbol.svg")
 const [, , width, height] = /viewBox="([^"]+)"/.exec(symbol)[1].split(" ").map(Number)
 const path = / d="([^"]+)"/.exec(symbol)[1]
 
-// A square canvas with the symbol centred, `padding` of the side left free around its longer edge.
 function square({ padding, background, color, style = "" }) {
   const side = Math.round(width / (1 - 2 * padding))
   const x = Math.round((side - width) / 2)
@@ -27,7 +24,7 @@ function square({ padding, background, color, style = "" }) {
   ].join("")
 }
 
-// Favicons get no currentColor, so the SVG switches itself between black and white with the browser's scheme.
+// Spec: favicons get no currentColor, so the SVG switches between black and white with the browser's scheme.
 const favicon = square({
   padding: 0.04,
   color: "#000",
@@ -50,7 +47,7 @@ const browser = await chromium.launch({ channel: "chrome" })
 try {
   const page = await browser.newPage({ deviceScaleFactor: 1 })
   await writeFile(resolve(out, "favicon-32.png"), await rasterize(page, square({ padding: 0.04, color: "#000" }), 32))
-  // iOS fills a transparent touch icon with black and rounds the corners itself, so it gets an opaque tile.
+  // Spec: iOS fills a transparent touch icon with black and rounds the corners itself, so it gets an opaque tile.
   await writeFile(
     resolve(out, "apple-touch-icon.png"),
     await rasterize(page, square({ padding: 0.18, background: "#fff", color: "#000" }), 180),

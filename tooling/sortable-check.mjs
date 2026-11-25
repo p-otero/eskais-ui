@@ -1,7 +1,3 @@
-// Drives ?demo=sortable-check in Chrome: a pointer drag reorders a list without re-rendering it on every move,
-// a dragged copy scrolls its list near the edge, cards move between a board's columns, and the neighbours slide
-// into place unless reduced motion is on.
-// Usage: node tooling/sortable-check.mjs (after `bun run build:showcase`)
 import { withShowcase } from "./showcase-browser.mjs"
 
 const failures = []
@@ -104,7 +100,6 @@ await withShowcase(async (page) => {
   await reducedFruits.getByRole("option", { name: "Apple" }).focus()
   await page.keyboard.press("Space")
   await page.keyboard.press("ArrowDown")
-  // Only the FLIP's own animations: the base layer still runs a 0.01ms transition for any state change.
   const still = await reducedFruits.evaluate(
     (el) =>
       el

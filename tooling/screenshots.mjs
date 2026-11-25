@@ -1,4 +1,3 @@
-// Captures showcase screenshots in a real browser. Usage: node tooling/screenshots.mjs <out-dir>
 import { mkdirSync } from "node:fs"
 import { join, resolve } from "node:path"
 

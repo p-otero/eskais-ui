@@ -1,4 +1,3 @@
-// Times parsing and rendering a 5,000-line note outside the browser. Usage: bun tooling/markdown-size/view-perf.tsx
 import { renderToStaticMarkup } from "react-dom/server"
 
 import { markdownParser } from "@/components/ui/markdown-syntax"

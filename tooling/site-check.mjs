@@ -1,6 +1,3 @@
-// Smoke test for the built docs site (`bun run test:site`): axe, console errors and horizontal scroll on a few
-// pages; on a 390px phone, nothing covers a page's first heading, ⌘K search opens and breadcrumbs route on the
-// client; "?" from several layouts and the Keyboard shortcuts button open the Shortcuts Dialog with the demo's keys.
 import { createRequire } from "node:module"
 
 import { openPage, withSite } from "./site-browser.mjs"
@@ -37,7 +34,6 @@ const viewports = [
 ]
 const schemes = ["light", "dark"]
 
-// Finish colour transitions so axe reads the settled theme, not a frame of the previous one.
 async function settle(page) {
   await page.waitForTimeout(400)
   await page.evaluate(() => {
@@ -51,7 +47,6 @@ const failures = []
 
 const phone = { viewport: { width: 390, height: 844 }, deviceScaleFactor: 2, isMobile: true, hasTouch: true }
 
-// Problems with `selector`'s first match: outside the viewport, or under a fixed or sticky element across it.
 function coverage(page, selector) {
   return page.evaluate((query) => {
     const target = document.querySelector(query)
@@ -112,7 +107,6 @@ async function checkPhone(browser, origin) {
   await context.close()
 }
 
-// Each crumb, followed by mouse (on press) and by touch, must route without reloading the page.
 async function checkBreadcrumbs(browser, origin) {
   for (const [name, options] of [
     ["1440px", { viewport: { width: 1440, height: 900 } }],
@@ -150,9 +144,6 @@ async function checkBreadcrumbs(browser, origin) {
   }
 }
 
-// The docs shell: the sidebar starts at the Topbar's bottom edge and reaches the viewport's, nothing of it sits
-// under the Topbar (also after scrolling), the breadcrumb sits in the main column, and the trigger collapses the
-// sidebar, which stays collapsed after a reload.
 function shellGeometry(page) {
   return page.evaluate(() => {
     const topbar = document.querySelector('[data-slot="docs-layout"] > [data-slot="topbar"]')
@@ -171,7 +162,6 @@ function shellGeometry(page) {
       const box = element.getBoundingClientRect()
       const y = box.top + box.height / 2
       if (box.width === 0 || y <= side.top || y >= Math.min(side.bottom, innerHeight)) continue
-      // Only what the topbar draws over counts: an item scrolled out of the sidebar's own scroll box isn't drawn.
       const hit = document.elementFromPoint(box.left + Math.min(8, box.width / 2), y)
       if (hit && !sidebar.contains(hit) && topbar.contains(hit))
         problems.push(`"${element.textContent}" is under the topbar`)
@@ -234,7 +224,6 @@ async function checkShell(browser, origin) {
   console.log("docs shell: 4 widths, collapse and drawer checked")
 }
 
-// The theme editor fits its card at every width, draws its colour area and swatches, and recolours the site.
 async function checkThemeEditor(browser, origin) {
   for (const width of [1440, 1100, 768, 390]) {
     const { page, context } = await openPage(browser, `${origin}docs/theming/`, { width, height: 900 })
@@ -243,7 +232,6 @@ async function checkThemeEditor(browser, origin) {
     await editor.scrollIntoViewIfNeeded()
     const layout = await editor.evaluate((card) => {
       const edge = card.getBoundingClientRect()
-      // Content inside a box that scrolls sideways, like the preset row on a phone, is clipped to that box.
       const clipped = (element) => {
         for (let node = element.parentElement; node && node !== card; node = node.parentElement) {
           if (getComputedStyle(node).overflowX !== "visible") return true
@@ -296,7 +284,6 @@ async function checkThemeEditor(browser, origin) {
       for (let step = 0; step < 10; step++) await page.keyboard.press("ArrowRight")
       const tinted = await read()
       if (tinted.card === typed.card) failures.push(`${scope}: the neutral tint leaves the card at ${typed.card}`)
-      // The choices follow the reader to another page from the sidebar, and come back after a reload.
       const brandOf = () =>
         page.evaluate(() => getComputedStyle(document.documentElement).getPropertyValue("--brand").trim())
       const edited = await brandOf()
@@ -311,7 +298,6 @@ async function checkThemeEditor(browser, origin) {
       await page.getByRole("button", { name: "Reset", exact: true }).click()
       if ((await read()).primary !== start.primary) failures.push(`${scope}: reset doesn't restore --primary`)
 
-      // Glass from the editor: the sidebar turns translucent at full strength, dialogs stay opaque, Reset turns it off.
       const alpha = (selector) =>
         page.evaluate((query) => {
           const canvas = document.createElement("canvas").getContext("2d")
@@ -345,7 +331,6 @@ async function checkThemeEditor(browser, origin) {
   console.log("theme editor: layout at 4 widths, area, swatches and recolouring checked")
 }
 
-// "?" as each layout sends it: the produced key with the modifiers that layout needs (CDP: Alt 1, Ctrl 2, Shift 8).
 const questionMarks = [
   { layout: "US Shift+/", code: "Slash", modifiers: 8, keyCode: 191 },
   { layout: "Spanish Shift+'", code: "Minus", modifiers: 8, keyCode: 219 },

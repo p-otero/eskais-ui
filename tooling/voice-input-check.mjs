@@ -1,6 +1,3 @@
-// Drives ?demo=voice-input-check on Chrome's fake microphone: the level follows the audio with no React commits, frames
-// stop and every AudioContext closes on finish, Escape and unmount, reduced motion steps, right to left, 390px, and a
-// denied permission. Usage: node tooling/voice-input-check.mjs [--screenshots=<dir>] (after `bun run build:showcase`)
 /* oxlint-disable no-await-in-loop -- one page drives the steps in order, each at its own viewport and theme */
 import { mkdirSync } from "node:fs"
 import { join, resolve } from "node:path"
@@ -23,8 +20,6 @@ const fakeMicrophone = [
   "--autoplay-policy=no-user-gesture-required",
 ]
 
-// Counts React commits (through the DevTools hook, which production builds call too) and animation frame requests,
-// and keeps every AudioContext the page makes, before any page script runs.
 function probe() {
   const counts = { frames: 0, commits: 0 }
   let renderers = 0
@@ -82,7 +77,6 @@ async function listen(page, variant) {
   )
 }
 
-// Reads the root's --voice-level every 40 ms.
 function sampleLevel(page, variant, ms) {
   return live(page, variant).evaluate(
     (el, duration) =>

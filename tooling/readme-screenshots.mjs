@@ -1,5 +1,3 @@
-// Captures the README images from the built showcase, light theme, 1280px wide at 2x.
-// Usage: bun run build:showcase && node tooling/readme-screenshots.mjs
 import { mkdirSync, statSync } from "node:fs"
 import { join, resolve } from "node:path"
 
@@ -9,7 +7,6 @@ const out = resolve(import.meta.dirname, "..", "docs", "images")
 const width = 1280
 mkdirSync(out, { recursive: true })
 
-// Lifts one element out of the showcase onto a bare page-width frame, so the image has none of the demo's controls.
 async function capture(page, element, file) {
   await element.evaluate((node) => {
     node.style.cssText =

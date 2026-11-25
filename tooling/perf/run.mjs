@@ -1,5 +1,3 @@
-// Navigation and keyboard benchmarks in Chrome; usage and options in tooling/perf/README.md. Builds the showcase
-// (normal and React Compiler) unless --no-build, prints tables and writes tooling/perf/results/<name>.json.
 import { spawnSync } from "node:child_process"
 import { mkdir, writeFile } from "node:fs/promises"
 import { resolve } from "node:path"
@@ -47,7 +45,6 @@ function build(variant) {
 
 const wanted = (id) => only.length === 0 || only.includes(id)
 
-// One measurement: a failure is recorded on its row and the run goes on; the results so far are saved after each.
 async function step(results, rows, tag, measure) {
   try {
     const measured = await measure()
@@ -174,8 +171,8 @@ const results = {
 await mkdir(resolve(here, "results", "traces"), { recursive: true })
 if (!has("no-build")) for (const variant of builds) build(variant)
 
-// A fresh browser per build and repeat: state a long run accumulates (heap, GPU memory) must not favour the
-// build measured first. Repeats alternate the builds, so a slow spell on the machine hits each of them alike.
+// Perf: a fresh browser per build and repeat, so state a long run accumulates (heap, GPU memory) doesn't favour the
+// build measured first; repeats alternate the builds, so a slow spell on the machine hits each of them alike.
 for (let rep = 1; rep <= repeat; rep += 1) {
   results.rep = rep
   const order = rep % 2 === 0 ? builds.toReversed() : builds

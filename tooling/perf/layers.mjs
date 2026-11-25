@@ -1,5 +1,3 @@
-// Counts a fixture's composited layers and why Chrome made them, to explain a high Layerize cost.
-// Usage: node tooling/perf/layers.mjs <scenario> [build=normal] [--glass] [--css=<rules to try>] [--settle=<ms>]
 import { resolve } from "node:path"
 
 import { countLayers, launch, openPage, serve } from "./browser.mjs"

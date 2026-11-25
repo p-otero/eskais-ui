@@ -1,7 +1,3 @@
-// Runs axe in a real browser for every theme and color mode, then measures the contrast axe can't:
-// text over gradients and glass, by rendering the background with the text hidden and checking its worst pixel.
-// Usage: node tooling/contrast-check.mjs [themes, default "default,compact"] [glass-opacity-percent] [--palettes=blue,green]
-// Glass is checked by hand (`bun run test:browser:glass`): blur without a GPU is too slow for CI.
 import { createRequire } from "node:module"
 
 import { setAppearance, withShowcase } from "./showcase-browser.mjs"
@@ -13,7 +9,7 @@ const themes = (themesArg ?? "default,compact").split(",")
 const palettes = palettesFlag ? palettesFlag.slice("--palettes=".length).split(",") : [undefined]
 const failures = []
 
-// page.evaluate has no timeout of its own; a stalled render would hang the job until CI kills it.
+// Workaround: Playwright's page.evaluate has no timeout of its own; a stalled render would hang the job until CI kills it.
 async function within(label, promise, ms = 60_000) {
   let timer
   const timeout = new Promise((_, reject) => {
@@ -45,13 +41,11 @@ async function measure(page, selector) {
     const element = document.querySelector(target)
     if (!element || !element.textContent?.trim()) return null
     element.scrollIntoView({ block: "center" })
-    // `content-visibility: auto` content (board columns) lays out only once it nears the viewport, a frame after
-    // the scroll, and can move everything below it. Boxes read before then point the screenshot at the wrong pixels.
+    // Spec: `content-visibility: auto` content lays out only once it nears the viewport, a frame after the scroll, and can
+    // move everything below it, so boxes read before then point the screenshot at the wrong pixels.
     for (let frame = 0; frame < 3; frame++) await new Promise(requestAnimationFrame)
     const range = document.createRange()
     range.selectNodeContents(element)
-    // Truncated text reports its full range width; clip to the element so a neighbor's pixels don't count.
-    // Text that wraps is measured line by line: the box around both lines takes in the words beside it.
     const own = element.getBoundingClientRect()
     const boxes = [...range.getClientRects()]
       .map((line) => {
@@ -63,20 +57,14 @@ async function measure(page, selector) {
       })
       .filter((line) => line.width >= 1 && line.height >= 1)
     const style = getComputedStyle(element)
-    // SVG text (chart axes) is painted with fill, which text-fill-color neither sets nor hides.
+    // Spec: SVG text is painted with fill, which text-fill-color neither sets nor hides.
     const paint = element instanceof SVGElement ? "fill" : "-webkit-text-fill-color"
     const canvas = new OffscreenCanvas(1, 1).getContext("2d")
     canvas.fillStyle = element instanceof SVGElement ? style.fill : style.color
     canvas.fillRect(0, 0, 1, 1)
     const color = [...canvas.getImageData(0, 0, 1, 1).data]
-    // Fully transparent text paints nothing: a find-in-page layer over coloured tokens (DiffView), whose colours the
-    // token pairs below check.
     if (color[3] === 0) return null
     element.style.setProperty(paint, "transparent")
-    // Marks drawn beside or under the text (a status dot, an icon, a checkbox, a bullet, an underline) aren't
-    // what the text sits on; sampled as background they pair the text with its own colour. An underline is
-    // painted in the colour of the element that declares it, which may be an ancestor. Only glyph-sized marks
-    // are hidden, so a highlight or fill behind the text still counts.
     for (let node = element; node; node = node.parentElement) node.dataset.contrastMeasure = ""
     const line = Number.parseFloat(style.lineHeight) || Number.parseFloat(style.fontSize) * 1.5
     for (const mark of element.querySelectorAll("*")) {
@@ -119,7 +107,6 @@ async function measure(page, selector) {
     ratios.push(ratio([blend(r, background[0]), blend(g, background[1]), blend(b, background[2])], background))
   }
   ratios.sort((x, y) => x - y)
-  // The 2nd percentile, so a few antialiased edge pixels of a neighbor don't decide the result.
   return { contrast: ratios[Math.floor(ratios.length * 0.02)], required: text.large ? 3 : 4.5 }
 }
 
@@ -149,7 +136,6 @@ async function check(page, scope, context) {
   console.log(`${scope}: ${result.violations.length} axe violations, ${measured} measured in pixels`)
 }
 
-// Pairs axe may not meet on the page: [foreground, background, required ratio].
 const tokenPairs = [
   ["primary-foreground", "primary", 4.5],
   ["primary", "background", 4.5],
@@ -171,23 +157,19 @@ const tokenPairs = [
     [`series-${series}`, "background", 3],
     [`series-${series}`, "card", 3],
   ]),
-  // Soft tones: text on the tinted fill; the fill and its edge visible against the page and a card.
   ...["neutral", "info", "success", "warning", "destructive", "violet"].flatMap((tone) => [
     [`${tone}-soft-foreground`, `${tone}-soft`, 4.5],
     [`${tone}-soft`, "card", 1.1],
     [`${tone}-border`, "background", 1.4],
     [`${tone}-border`, "card", 1.4],
   ]),
-  // Toast tone icons, drawn in the solid tone over the popover fill.
   ...["info", "success", "warning", "destructive"].map((tone) => [tone, "popover", 3]),
   ["violet-foreground", "violet", 4.5],
   ["violet", "background", 4.5],
   ["violet", "card", 4.5],
   ["skeleton", "background", 1.15],
   ["skeleton", "card", 1.15],
-  // The current page in a sidebar (on muted) or a navigation menu: a fill you can see, under the foreground.
   ...["muted", "background", "card"].map((surface) => ["nav-current", surface, 1.08]),
-  // Code sits on muted; a highlighted line on code-highlight.
   ...["keyword", "string", "number", "comment", "function", "type", "property", "tag", "punctuation"].flatMap(
     (tone) => [
       [`syntax-${tone}`, "muted", 4.5],
@@ -198,7 +180,6 @@ const tokenPairs = [
   ["muted-foreground", "code-highlight", 4.5],
   ["success-soft-foreground", "success-soft", 4.5],
   ["destructive-soft-foreground", "destructive-soft", 4.5],
-  // Diff lines: code on a changed line and on its changed words, numbers and signs in the gutter, counts on the page.
   ...["added", "removed"].flatMap((side) => [
     ...["keyword", "string", "number", "comment", "function", "type", "property", "tag", "punctuation"].flatMap(
       (tone) => [
@@ -216,10 +197,8 @@ const tokenPairs = [
   ]),
 ]
 
-// Text on a translucent fill over a surface: [text, fill, surface, required ratio].
 const layeredPairs = ["muted", "background", "card"].map((surface) => ["foreground", "nav-current", surface, 4.5])
 
-// A translucent token (the skeleton) shows the surface under it, so it's measured composited over that surface.
 function over([r, g, b, alpha], back) {
   return [r, g, b].map((value, index) => (value * alpha + back[index] * (255 - alpha)) / 255)
 }
@@ -262,7 +241,6 @@ async function checkTokens(page, scope) {
   }
 }
 
-// Popups render only while open, so open each kind once and check it in place.
 const popups = [
   { name: "dialog", open: (page) => page.getByRole("button", { name: "Rename project" }), selector: '[role="dialog"]' },
   {
@@ -334,7 +312,6 @@ await withShowcase(async (page) => {
         await page.locator('[data-slot="toast"][data-type="error"]').waitFor()
         await page.waitForTimeout(250)
         await check(page, `${scope} toasts`, '[data-slot="toast-region"]')
-        // All at once: a toast that starts closing moves the others, so one-by-one clicks race the layout.
         await page.evaluate(() => {
           for (const close of document.querySelectorAll('[data-slot="toast"] [aria-label="Dismiss"]')) close.click()
         })

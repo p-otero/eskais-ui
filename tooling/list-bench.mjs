@@ -1,5 +1,3 @@
-// Times a 2,000-row List in Chrome: the first paint, and keystroke-to-paint for j/k at 1× and 4× CPU.
-// Usage: node tooling/list-bench.mjs [rows, default 2000] (after `bun run build:showcase`)
 import { withShowcase } from "./showcase-browser.mjs"
 
 const rows = Number(process.argv[2] ?? 2000)
@@ -12,8 +10,8 @@ function percentile(values, p) {
 
 const round = (value) => Math.round(value * 10) / 10
 
-// Each key press records the time from the event to the end of its handlers (React renders a key press's
-// update before the event finishes), and to the task after the next frame, which runs after paint.
+// Perf: React renders a key press's update before the event finishes, so time both the end of its handlers and the
+// task after the next frame, which runs after paint.
 async function installProbe(page) {
   await page.evaluate(() => {
     globalThis.keyTimes = []
@@ -40,7 +38,6 @@ async function measureKeys(page) {
     globalThis.handlerTimes = []
   })
   await page.locator('[data-slot="list-item"] button').first().focus()
-  // One press at a time: each waits for the previous one's paint, as a person reading the rows would.
   for (let index = 0; index < presses; index += 1) {
     await page.keyboard.press(index < presses * 0.75 ? "j" : "k")
     await page.waitForFunction((count) => globalThis.keyTimes.length >= count, index + 1)
@@ -75,7 +72,7 @@ async function run(virtualize, rate) {
 }
 
 const results = []
-// Runs one after another, so they don't compete for the CPU they measure.
+// Perf: one after another, so they don't compete for the CPU they measure.
 for (const virtualize of ["auto", false]) {
   for (const rate of [1, 4]) results.push(await run(virtualize, rate))
 }

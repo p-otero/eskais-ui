@@ -1,6 +1,3 @@
-// Drives ?demo=calendar-check: a range draws one continuous band between its ends, in ltr and rtl, while it's picked
-// too, and every day keeps a visible focus ring.
-// Usage: node tooling/calendar-check.mjs [--screenshots=<dir>] (after `bun run build:showcase`)
 import { mkdirSync } from "node:fs"
 import { join, resolve } from "node:path"
 
@@ -22,7 +19,6 @@ async function shot(locator, file) {
   console.log(`     ${join(shots, file)}`)
 }
 
-// Each day's box, its own fill (the band) and its ::before (the end's circle, a hover or the selected day).
 function days(page, id) {
   return page.getByTestId(`calendar-${id}`).evaluate((root) =>
     [...root.querySelectorAll("[data-slot=calendar-day]")].map((day) => {
@@ -74,7 +70,6 @@ function band(list, label, rtl) {
     first.half === bandFill && last.half === bandFill && !filled(first.fill) && !filled(last.fill),
     `${first.half} ${last.half} ${bandFill}`,
   )
-  // In ltr the start's half band sits on its right and the end's on its left; rtl mirrors both.
   const [startOffset, startFlush] = rtl ? [first.halfRight, first.halfLeft] : [first.halfLeft, first.halfRight]
   const [endOffset, endFlush] = rtl ? [last.halfLeft, last.halfRight] : [last.halfRight, last.halfLeft]
   check(

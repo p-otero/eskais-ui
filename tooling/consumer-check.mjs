@@ -1,7 +1,3 @@
-// Installs registry items into fresh Vite apps with npm, pnpm or bun, builds them and checks them in Chrome.
-// Usage: node tooling/consumer-check.mjs [npm|pnpm|bun] [scenario…] (default: all). Scenarios: fresh, init, layouts,
-// aliases (`~/` aliases and the agent skills), imports, imports-flat, imports-tsx (must fail to type-check),
-// release-age (pnpm, bun), existing-lucide, server-data and mockup-cli; each one says what it checks below.
 import { spawn, spawnSync } from "node:child_process"
 import { createReadStream, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, writeFileSync } from "node:fs"
 import { createServer } from "node:http"
@@ -173,7 +169,6 @@ const versions = {
   cn: "0.5.2",
   prettier: "3.9.10",
   zod: "4.6.7",
-  // Newer than the registry's lucide-react floor, as a consumer that already uses lucide may be (existing-lucide).
   "lucide-react": "1.70.0",
 }
 const devDependencies = [
@@ -203,7 +198,6 @@ const { port } = server.address()
 
 const types = { ".html": "text/html", ".js": "text/javascript", ".css": "text/css", ".woff2": "font/woff2" }
 
-// Elements every scenario renders, read by checkProbes.
 const probes = `
 function Probes() {
   return (
@@ -236,11 +230,9 @@ function Probes() {
 }
 `
 
-// What the theme guarantees in any consumer, whatever the stylesheet started as.
 async function checkProbes(page) {
   const color = (probe) =>
     page.evaluate((name) => getComputedStyle(document.querySelector(`[data-probe="${name}"]`)).backgroundColor, probe)
-  // Let colour-scheme listeners (an app's appearance helper) run first, so they can't undo the attributes set here.
   const settle = () =>
     page.evaluate(() => new Promise((done) => requestAnimationFrame(() => requestAnimationFrame(done))))
   const html = async (attributes) => {
@@ -283,7 +275,6 @@ async function checkProbes(page) {
     context.fillRect(0, 0, 1, 1)
     return Array.from(context.getImageData(0, 0, 1, 1).data.slice(0, 3))
   })
-  // The default palette's brand is a near-black grey; links must still have a hue of their own.
   if (Math.max(...link) - Math.min(...link) < 60) throw new Error(`Links are grey: rgb(${link.join(", ")})`)
   const merged = await page.evaluate(() => document.querySelector('[data-probe="cn"]').className)
   if (merged !== "text-meta text-muted-foreground")
@@ -309,7 +300,6 @@ async function withPage(dist, callback) {
   const browser = await chromium.launch({ channel: "chrome" })
   try {
     const page = await browser.newPage()
-    // Counts workers, to prove TextDiff's Blob worker starts in a consumer's production build.
     await page.addInitScript(() => {
       const Native = globalThis.Worker
       globalThis.workersStarted = 0
@@ -331,7 +321,6 @@ async function withPage(dist, callback) {
   }
 }
 
-// Every item: the bundled font is in use, the seeds drive the derived colours and the spacing roles resolve.
 async function checkEverything(page) {
   const result = await page.evaluate(async () => {
     await document.fonts.ready
@@ -369,7 +358,6 @@ async function checkEverything(page) {
     const defaultSpacing = spacing()
     html.setAttribute("data-theme", theme)
     const card = getComputedStyle(document.querySelector("[data-slot=card]"))
-    // The parser loads on first use, so the highlighted keyword appears a moment after the first render.
     const keyword = await new Promise((done) => {
       const started = Date.now()
       const poll = () => {
@@ -457,7 +445,6 @@ async function checkEverything(page) {
     throw new Error(`The spacing roles didn't resolve: ${JSON.stringify(result.spacing)}`)
 }
 
-// The rules directly inside a block, given the text after its `{`. shadcn indents nested rules like top-level ones.
 function childRules(block) {
   const rules = []
   let depth = 0
@@ -481,10 +468,8 @@ function childRules(block) {
   return rules
 }
 
-// The global stylesheet after `shadcn add`, before Tailwind compiles it.
 function checkStylesheet(css) {
   const darkVariants = css.match(/^@custom-variant dark\b.*$/gm) ?? []
-  // shadcn adds its one-line variant to any file without a custom variant; Tailwind keeps the last definition.
   if (!darkVariants.at(-1)?.startsWith("@custom-variant dark {"))
     throw new Error(`The theme's dark variant isn't the last one: ${JSON.stringify(darkVariants)}`)
   const selfReferences = [...css.matchAll(/(--[\w-]+)\s*:\s*var\(\1\)\s*;/g)].map(([line]) => line)
@@ -648,7 +633,6 @@ function App() {
 createRoot(document.getElementById("root")!).render(<App />)
 `
 
-// Only the theme items, in a stylesheet that shadcn init wrote first, with plain elements styled by the tokens.
 const themeOnlyMain = `import { createRoot } from "react-dom/client"
 import { cn } from "@/lib/utils"
 import "./index.css"
@@ -665,7 +649,6 @@ function App() {
 createRoot(document.getElementById("root")!).render(<App />)
 `
 
-// Components that pull registry:lib files, imported through the scenario's alias.
 const aliasesMain = `import { createRoot } from "react-dom/client"
 import { AgentTaskBoard } from "@/components/ui/agent-task-board"
 import { Alert, AlertTitle } from "@/components/ui/alert"
@@ -687,8 +670,6 @@ function App() {
 createRoot(document.getElementById("root")!).render(<App />)
 `
 
-// Items with registry:lib files, and registry:ui files of both extensions (form ships form-messages.ts and
-// form-context.ts next to form.tsx), imported through package.json subpath imports.
 const importsMain = `import { createRoot } from "react-dom/client"
 import { z } from "zod"
 import { Alert, AlertTitle } from "@/components/ui/alert"
@@ -719,7 +700,6 @@ function App() {
 createRoot(document.getElementById("root")!).render(<App />)
 `
 
-// The layout blocks together, as a consumer composes them, with the URL adapter they share.
 const layoutsMain = `import { createRoot } from "react-dom/client"
 import { Bar, BarChart } from "recharts"
 import { DashboardCard, DashboardChart, DashboardGrid, DashboardMeter, DashboardStat, DashboardStats } from "@/components/ui/dashboard-grid"
@@ -777,7 +757,6 @@ function App() {
 createRoot(document.getElementById("root")!).render(<App />)
 `
 
-// A dialog and an icon button: dialog brings button and link, which depend on lucide-react.
 const releaseAgeMain = `import { createRoot } from "react-dom/client"
 import { XIcon } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -820,7 +799,6 @@ async function checkLayouts(page) {
   console.log("layouts: master-detail, dashboard-grid and settings-page work in the consumer")
 }
 
-// A server table with chips, a list that loads more and a remote combobox over in-memory sources, URL in the hash.
 const serverDataMain = `import { createRoot } from "react-dom/client"
 import { Field, FieldLabel } from "@/components/ui/field"
 import { ListItem } from "@/components/ui/list-item"
@@ -970,14 +948,12 @@ const scenarios = {
     check: checkEverything,
   },
   init: {
-    // What `shadcn init` writes with base colour neutral (shadcn 4.23.0), plus the line the install docs ask for.
     css: `@layer ui-sdk;\n${readFileSync(join(repo, "tooling", "fixtures", "shadcn-init-neutral.css"), "utf8")}\n`,
     seed: { "src/lib/utils.ts": 'export { cn } from "cn"\n' },
     dependencies: ["tw-animate-css", "cn"],
     devDependencies: ["prettier"],
     items: ["theme", "theme-glass", "font-geist", "tone"],
     addTwice: true,
-    // Then the consumer's formatter rewrites the stylesheet, and another add must still find every rule.
     format: true,
     main: themeOnlyMain,
     builtCss: ["--brand", "oklch(from var(--brand)", "Geist Variable", ".text-title{"],
@@ -995,10 +971,8 @@ const scenarios = {
   },
   aliases: {
     css: `@layer ui-sdk;\n@import "tailwindcss";\n`,
-    // Not `@/`: shadcn places registry:lib and registry:ui files through these aliases and rewrites imports to them.
     alias: "~",
     items: ["theme", "badge", "alert", "appearance", "agent-task-board", "data-table", "chart", "relative-time"],
-    // Agent skills target `~/.agents/skills/…`: the project root, whatever the aliases are, here a `~` alias too.
     skills: ["eskais-ui-skill", "eskais-mockup-skill", "eskais-perf-skill"],
     main: aliasesMain,
     builtCss: ["--brand", ".text-title{"],
@@ -1018,7 +992,6 @@ const scenarios = {
     css: `@layer ui-sdk;
 @import "tailwindcss";
 `,
-    // Subpath imports in package.json instead of tsconfig paths and a Vite alias: TypeScript, Vite and shadcn read them.
     imports: {
       "#components/*": "./src/components/*",
       "#ui/*": "./src/components/ui/*",
@@ -1026,7 +999,6 @@ const scenarios = {
       "#hooks/*": "./src/hooks/*",
     },
     aliases: { components: "#components", ui: "#ui", utils: "#lib/utils", lib: "#lib", hooks: "#hooks" },
-    // shadcn writes these imports with their .ts and .tsx extensions, as Node resolves subpath imports.
     rewrite: (source) =>
       source
         .replaceAll(/from "@\/components\/ui\/(form-messages)"/g, 'from "#ui/$1.ts"')
@@ -1046,8 +1018,6 @@ const scenarios = {
       "src/components/ui/form-context.ts",
     ],
   },
-  // A flat layout: `ui` is the components folder itself. Both aliases resolve there, and shadcn writes the imports
-  // between registry files through `components`, the first alias that matches.
   "imports-flat": {
     css: `@layer ui-sdk;
 @import "tailwindcss";
@@ -1059,7 +1029,6 @@ const scenarios = {
       "#hooks/*": "./src/hooks/*",
     },
     aliases: { components: "#components", ui: "#ui", utils: "#lib/utils", lib: "#lib", hooks: "#hooks" },
-    // Your own imports may use either alias; the app imports through `#ui`.
     rewrite: (source) =>
       source
         .replaceAll(/from "@\/components\/ui\/(form-messages)"/g, 'from "#ui/$1.ts"')
@@ -1080,8 +1049,8 @@ const scenarios = {
     absent: ["src/components/ui"],
     writes: { file: "src/components/form-actions.tsx", specifier: 'from "#components/form-context.ts"' },
   },
-  // The mapping that appends `.tsx` doesn't work: shadcn then writes `#ui/components/form-context` without an extension,
-  // and `ui` holds `.ts` files too (form-context.ts, *-primitive.ts). Kept so the README's advice stays true.
+  // Workaround: shadcn writes `#ui/components/form-context` without an extension under a mapping that appends `.tsx`,
+  // and `ui` holds `.ts` files too; kept so the README's advice stays true.
   "imports-tsx": {
     unsupported: {
       file: "src/components/ui/form-actions.tsx",
@@ -1118,16 +1087,10 @@ const scenarios = {
     builtCss: ["--brand", ".text-title{"],
     check: checkServerData,
   },
-  // A consumer whose pnpm or bun holds back releases younger than 7 days. shadcn installs dependencies before it writes
-  // any file, so one young pin (lucide-react 1.73.0 in 0.2.0) fails the whole add (pnpm's
-  // ERR_PNPM_NO_MATURE_MATCHING_VERSION). Its lucide-react is the newest release the age allows, never older than the
-  // registry's floor.
   "release-age": {
     packageManagers: ["pnpm", "bun"],
     releaseAge: {
       minutes: 7 * 24 * 60,
-      // Only the documented exceptions of check-dependency-age.mjs, and this app's own build tools, which aren't
-      // what the registry asks consumers to install.
       exclude: [...Object.keys(youngDependencyExceptions), ...devDependencies],
     },
     css: `@layer ui-sdk;\n@import "tailwindcss";\n`,
@@ -1136,9 +1099,6 @@ const scenarios = {
     builtCss: ["--brand", ".text-title{"],
     check: checkLucideIcon,
   },
-  // The mockup CLI, a registry:file item: shadcn copies it into .agents/tools/eskais-mockup as it is, the app's tsc
-  // and Vite build leave the dot folder out, and Bun runs it there against the app's own components. The CI job has
-  // no Bun, so with npm and pnpm there it checks the files and the build and skips running the CLI.
   "mockup-cli": {
     css: `@layer ui-sdk;
 @import "tailwindcss";
@@ -1150,10 +1110,6 @@ const scenarios = {
     check: async () => {},
     mockup: true,
   },
-  // A consumer already on a newer lucide-react than the registry's floor. An item that listed it with any version
-  // made shadcn reinstall it: an exact pin wrote that pin back, npm moved a range to the latest release. Listed
-  // without one, shadcn skips it, and package.json and node_modules keep 1.70.0. Its own `^0.7.1` of
-  // class-variance-authority, which button pins, shows what each package manager does to a range (checkPins).
   "existing-lucide": {
     dependencies: ["lucide-react"],
     dependencySpecs: { "class-variance-authority": "^0.7.1" },
@@ -1175,8 +1131,6 @@ const compareVersions = (a, b) => {
   return x[0] - y[0] || x[1] - y[1] || x[2] - y[2]
 }
 
-// What `add` left in package.json and node_modules: an app that had lucide-react keeps its spec and install; any
-// other gets `^<installed>`, at or above the registry's floor.
 function checkLucideDependency(app, scenario) {
   const spec = JSON.parse(readFileSync(join(app, "package.json"), "utf8")).dependencies?.["lucide-react"]
   const manifest = join(app, "node_modules", "lucide-react", "package.json")
@@ -1191,9 +1145,6 @@ function checkLucideDependency(app, scenario) {
   console.log(`lucide-react: package.json ${spec}, installed ${installed} (floor ${floor})`)
 }
 
-// What `add` left in package.json for every exact pin of the items it installed, as measured with shadcn 4.23: npm
-// writes `^<pin>` (and leaves a consumer's own range), pnpm writes the pin and leaves a consumer's own range, bun
-// writes the pin, also over a consumer's range. So only npm users have to set the UI SDK pins back by hand.
 const pinnedSpec = (version, had) => (pm === "npm" ? `^${version}` : pm === "pnpm" ? (had ?? version) : version)
 
 function checkPins(app, scenario) {
@@ -1216,8 +1167,8 @@ function checkPins(app, scenario) {
     const [name, version] = [dependency.slice(0, at), dependency.slice(at + 1)]
     const had = scenario.dependencySpecs?.[name]
     const expected = pm === "npm" && had ? had : pinnedSpec(version, had)
-    // pnpm 12 kept a consumer's own range on Windows and wrote the pin over it on the Linux CI: accept either for a
-    // dependency the consumer already had. A dependency it didn't have must get the exact pin.
+    // Workaround: pnpm 12 kept a consumer's own range on Windows and wrote the pin over it on the Linux CI, so accept
+    // either for a dependency the consumer already had.
     const accepted = pm === "pnpm" && had ? [had, version] : [expected]
     if (!accepted.includes(specs[name])) {
       throw new Error(`${name}: package.json has ${String(specs[name])}, expected ${expected} for ${dependency}`)
@@ -1227,7 +1178,6 @@ function checkPins(app, scenario) {
   console.log(`pins: ${shown.map((name) => `${name} ${String(specs[name])}`).join(", ")}`)
 }
 
-// Where shadcn put the files and what the imports point at, for a scenario with its own aliases.
 function checkPlacement(app, scenario) {
   for (const file of scenario.files) if (!existsSync(join(app, file))) throw new Error(`shadcn didn't write ${file}`)
   for (const path of scenario.absent ?? []) if (existsSync(join(app, path))) throw new Error(`shadcn wrote ${path}`)
@@ -1245,7 +1195,6 @@ function checkPlacement(app, scenario) {
   if (stale.length > 0) throw new Error(`Imports still point at @/: ${stale.join(", ")}`)
 }
 
-// Every file of a skill or tool item lands at its `~/.agents/` target under the project root, byte for byte.
 function checkSkills(app, names) {
   for (const name of names) {
     const item = JSON.parse(readFileSync(join(registryDir, `${name}.json`), "utf8"))
@@ -1261,7 +1210,6 @@ function checkSkills(app, names) {
   }
 }
 
-// The installed CLI reads the app and validates a mockup of its components, with Bun when there is one.
 async function checkMockupCli(app, run) {
   if (spawnSync("bun", ["--version"], { shell: process.platform === "win32" }).status !== 0) {
     console.log("mockup-cli: no Bun on this machine, so the CLI didn't run")
@@ -1283,7 +1231,7 @@ async function checkMockupCli(app, run) {
 const requested = process.argv.slice(3)
 for (const name of requested) if (!scenarios[name]) throw new Error(`Unknown scenario: ${name}`)
 
-// Async on purpose: a sync child would block the event loop and starve the registry server above.
+// Perf: async on purpose: a sync child would block the event loop and starve the registry server above.
 function runner(app) {
   return (command, args) =>
     new Promise((done, fail) => {
@@ -1367,7 +1315,7 @@ export default defineConfig({
     registries: { "@eskais": `http://127.0.0.1:${port}/{name}.json` },
   })
 
-  // pnpm 11 refuses packages younger than its minimumReleaseAge (a day by default); UI SDK betas are days old.
+  // Spec: pnpm 11 refuses packages younger than its minimumReleaseAge (a day by default); UI SDK betas are days old.
   const { releaseAge } = scenario
   if (pm === "pnpm")
     write(
@@ -1378,7 +1326,7 @@ export default defineConfig({
             .join("")}`
         : "minimumReleaseAge: 0\n",
     )
-  // Bun sets no minimum by default. Its excludes are package names, so an exception covers every version of it.
+  // Spec: Bun sets no minimum by default, and its excludes are package names, so an exception covers every version.
   if (pm === "bun" && releaseAge) {
     const names = releaseAge.exclude.map((spec) => spec.replace(/(?<=.)@[^@]*$/, ""))
     write(
@@ -1406,7 +1354,7 @@ export default defineConfig({
   if (scenario.format) {
     const prettier = () => exec(["prettier", "--write", "src/index.css"])
     await prettier()
-    // shadcn writes back every declaration it owns unformatted, so the file only matches once formatted again.
+    // Workaround: shadcn writes back every declaration it owns unformatted, so the file only matches once formatted again.
     await addAgain("Adding the items to a formatted stylesheet added rules", prettier)
   }
 
@@ -1452,7 +1400,6 @@ try {
     console.log(`\n== ${name} scenario skipped: it runs with ${scenario.packageManagers.join(", ")} only`)
     return false
   })
-  // One at a time: each scenario installs packages and launches Chrome, and the logs stay readable.
   await selected.reduce(
     (previous, [name, scenario]) => previous.then(() => runScenario(name, scenario)),
     Promise.resolve(),

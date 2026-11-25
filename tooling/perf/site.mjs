@@ -1,7 +1,3 @@
-// Site navigation: a sidebar link press to the new page's heading painted, with fast links (follow on
-// pointerdown) and without them (follow on click, after a 90 ms press), on a cold route (its chunks not loaded
-// yet), the same after a 150 ms hover (when `onIntent` can preload), and a warm one (visited before, as a perfect
-// prefetch would leave it), with no network delay and on a slow 4G profile.
 import { spawnSync } from "node:child_process"
 import { existsSync } from "node:fs"
 import { resolve } from "node:path"
@@ -17,7 +13,6 @@ const networks = {
   "4g": { latency: 150, downloadThroughput: (9 * 1024 * 1024) / 8, uploadThroughput: (1.5 * 1024 * 1024) / 8 },
 }
 const pressMs = 90
-// A person aims before pressing: the pointer rests on the link this long, which is when an intent preload starts.
 const hoverMs = 150
 
 async function heading(page) {
@@ -30,7 +25,6 @@ async function goToStart(page, origin) {
   await page.waitForLoadState("networkidle")
 }
 
-/** Presses the sidebar link to `target` like a person (down, 90 ms, up) and times pointerdown to paint. */
 async function pressLink(page, target, { dwell = 0 } = {}) {
   const link = page.locator(`nav[aria-label="Documentation"] a[href$="/docs/components/${target}/"]`).first()
   await link.scrollIntoViewIfNeeded()
@@ -41,8 +35,6 @@ async function pressLink(page, target, { dwell = 0 } = {}) {
       let startedAt = null
       let headingPainted
       addEventListener("pointerdown", (event) => (startedAt ??= event.timeStamp), { capture: true, once: true })
-      // The heading paints first; the page is complete once the site's Suspense fallbacks are gone (an example's own
-      // demo spinner, like a table simulating a fetch, doesn't count).
       // oxlint-disable-next-line unicorn/consistent-function-scoping -- runs in the page through page.evaluate, which serializes this function alone
       const loading = () =>
         [...document.querySelectorAll('main [data-slot="spinner-status"]')].some((status) =>

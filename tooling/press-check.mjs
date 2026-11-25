@@ -1,6 +1,3 @@
-// Drives ?demo=press-check in Chrome: with activateOnPress, a mouse press selects a tab or segment before release;
-// without it, only the release does; a touch never selects on press, only on release.
-// Usage: node tooling/press-check.mjs (after `bun run build:showcase`)
 import { withShowcase } from "./showcase-browser.mjs"
 
 const failures = []
