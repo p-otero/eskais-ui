@@ -22,6 +22,7 @@ import {
   type ScrollAreaModel,
   type ScrollAreaScrollOptions,
   type ScrollAreaStore,
+  type ScrollViewQueries,
 } from "@/components/ui/scroll-area-model"
 import { createScrollbarInput } from "@/components/ui/scroll-area-pointer"
 import { bindTabStop } from "@/components/ui/scroll-area-tab-stop"
@@ -397,13 +398,8 @@ function createScrollView(store: ScrollAreaStore) {
     }
   }
 
-  return {
-    bindRoot,
-    bindViewport,
-    bindScrollbar,
-    bindThumb: input.bindThumb,
-    scrollToEdge,
-    isAt(edge: "start" | "end") {
+  const queries: ScrollViewQueries = {
+    isAt(edge) {
       if (!viewport?.isConnected) return undefined
       measure()
       const axis = mainAxis({
@@ -418,6 +414,14 @@ function createScrollView(store: ScrollAreaStore) {
       if (viewport?.isConnected) update(true)
       refreshVisibility()
     },
+  }
+  return {
+    bindRoot,
+    bindViewport,
+    bindScrollbar,
+    bindThumb: input.bindThumb,
+    scrollToEdge,
+    ...queries,
   }
 }
 

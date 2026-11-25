@@ -17,6 +17,13 @@ type FindableRowsOptions = {
   findable: boolean
 }
 
+type FindableRowsHandles = {
+  /** The scroller, the nearest element that scrolls the rows: pass it as its `ref`. */
+  setScroller: (scroller: HTMLElement | null) => void
+  /** Keeps a row rendered wherever the list scrolls, like the one with focus; `undefined` lets it go. */
+  pin: (index: number | undefined) => void
+}
+
 type Latest = Omit<FindableRowsOptions, "findable">
 
 const noKeep: readonly number[] = []
@@ -106,14 +113,14 @@ function useFindableRows({ count, estimate, getKey, text, findable }: FindableRo
     [virtual, enabled],
   )
 
+  const handles: FindableRowsHandles = { setScroller, pin }
   return {
     enabled,
     items,
     size,
-    setScroller,
     measure: virtual.measure,
     findableText: virtual.findableText,
-    pin,
+    ...handles,
     scrollToIndex,
   }
 }

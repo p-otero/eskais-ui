@@ -87,12 +87,19 @@ function defaultRow(list: HTMLElement | null, id: string) {
   return row.querySelector<HTMLElement>('[data-slot="list-item-primary"], a[href], button:not([disabled]), [tabindex]')
 }
 
+type DetailFocus = {
+  /** Where focus goes after the next selection change: the open item's heading, or its row. */
+  request: (target: FocusRequest) => void
+  /** Focuses the open item's heading now, like when its row is pressed again. */
+  heading: () => void
+}
+
 /**
  * Moves focus once the selection has rendered: to the detail's heading when it opens, back to the row that opened
  * it when it closes. A change that didn't ask (followed focus, an agent, the URL) only moves focus that would
  * otherwise be lost: on the body, in the pane being hidden, or in the detail that just closed.
  */
-function useDetailFocus({ selectedId, stacked, list, detail, getRowElement }: DetailFocusOptions) {
+function useDetailFocus({ selectedId, stacked, list, detail, getRowElement }: DetailFocusOptions): DetailFocus {
   const previous = useRef(selectedId)
   const pending = useRef<FocusRequest | null>(null)
   const panes = useRef({ detail })
@@ -118,9 +125,9 @@ function useDetailFocus({ selectedId, stacked, list, detail, getRowElement }: De
     const inDetail = active !== null && detail?.contains(active) === true
     if (request === "row" || lost || inDetail) rowOf(before)?.focus()
   }, [selectedId, list, detail])
-  return useMemo(
+  return useMemo<DetailFocus>(
     () => ({
-      request: (target: FocusRequest) => {
+      request: (target) => {
         pending.current = target
       },
       heading: () => focusHeading(panes.current.detail),

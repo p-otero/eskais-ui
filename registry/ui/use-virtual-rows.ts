@@ -81,6 +81,22 @@ type Row = { index: number; key: string; size?: number; stop?: () => void }
 const boxHeight = (entry: ResizeObserverEntry) =>
   entry.borderBoxSize?.[0]?.blockSize ?? entry.target.getBoundingClientRect().height
 
+type VirtualRowsActions = {
+  /** Renders a row now, wherever the list is scrolled, like one an agent is about to activate. */
+  renderNow: (index: number) => void
+}
+
+type RowsRendering = {
+  /** The rows to render: the virtualizer's, or the ones React has while a change waits for the next paint. */
+  items: () => readonly VirtualItem[]
+  /** Reads the list again and renders the change now, whatever it is. */
+  refreshNow: () => void
+  /** Follows the scroller's scroll events. */
+  follow: (scroller: { top: () => number; height: () => number }) => void
+  /** Scrolls the least that shows a rendered row whole, from where the list was at its last scroll event. */
+  scrollToIndex: (index: number) => void
+}
+
 function createRows(initial: RowsProps, overscan: number) {
   let props = initial
   let pinned: number | undefined
@@ -171,13 +187,7 @@ function createRows(initial: RowsProps, overscan: number) {
       requestAnimationFrame(() => setTimeout(() => pending === at && publish()))
     } else if (pending === 0 || !covered(virtualizer.items())) publish()
   })
-  return {
-    findable,
-    virtualizer,
-    subscribe(listener: () => void) {
-      listeners.add(listener)
-      return () => void listeners.delete(listener)
-    },
+  const rendering: RowsRendering = {
     items() {
       if (pending === 0) {
         shown = virtualizer.items()
@@ -185,13 +195,38 @@ function createRows(initial: RowsProps, overscan: number) {
       }
       return shown
     },
-    size: () => shownSize,
     refreshNow() {
       urgent = true
       virtualizer.refresh()
       urgent = false
       if (pending !== 0) publish()
     },
+    follow(scroller) {
+      view = scroller
+      seen = scroller.top()
+    },
+    scrollToIndex(index) {
+      const item = view && virtualizer.items().find((row) => row.index === index)
+      if (!view || !item || seen === undefined) {
+        virtualizer.scrollToIndex(index, { align: "auto" })
+        return
+      }
+      const end = item.start + props.margin + item.size
+      if (item.start < seen) virtualizer.scrollToIndex(index, { align: "start" })
+      else if (end > seen + view.height()) virtualizer.scrollToIndex(index, { align: "end" })
+      else return
+      seen = view.top()
+    },
+  }
+  return {
+    findable,
+    virtualizer,
+    ...rendering,
+    subscribe(listener: () => void) {
+      listeners.add(listener)
+      return () => void listeners.delete(listener)
+    },
+    size: () => shownSize,
     update(next: RowsProps) {
       props = next
       virtualizer.refresh()
@@ -209,22 +244,6 @@ function createRows(initial: RowsProps, overscan: number) {
         if (joining.get(el) === row) joining.delete(el)
         row.stop?.()
       }
-    },
-    follow(scroller: { top: () => number; height: () => number }) {
-      view = scroller
-      seen = scroller.top()
-    },
-    scrollToIndex(index: number) {
-      const item = view && virtualizer.items().find((row) => row.index === index)
-      if (!view || !item || seen === undefined) {
-        virtualizer.scrollToIndex(index, { align: "auto" })
-        return
-      }
-      const end = item.start + props.margin + item.size
-      if (item.start < seen) virtualizer.scrollToIndex(index, { align: "start" })
-      else if (end > seen + view.height()) virtualizer.scrollToIndex(index, { align: "end" })
-      else return
-      seen = view.top()
     },
   }
 }
@@ -353,12 +372,13 @@ function useVirtualRows({
     [rows],
   )
 
+  const actions: VirtualRowsActions = { renderNow }
   return {
     enabled,
     anchor,
     segments,
     pin,
-    renderNow,
+    ...actions,
     rendered: (index: number) => !enabled || segments.some((s) => s.type === "row" && s.index === index),
     measureElement: enabled ? measureElement : undefined,
     scrollToIndex,
