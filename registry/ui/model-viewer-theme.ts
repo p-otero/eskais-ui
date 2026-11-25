@@ -7,7 +7,7 @@ function changed() {
   for (const listener of listeners) listener()
 }
 
-// One observer for every canvas on the page: the theme (`.dark`, `data-theme`, `data-color-scheme`, a palette) is
+// Perf: one observer for every canvas on the page: the theme (`.dark`, `data-theme`, `data-color-scheme`, a palette) is
 // switched on <html>, and the system's scheme applies until a script sets one.
 function watch(doc: Document) {
   const observer = new MutationObserver(changed)

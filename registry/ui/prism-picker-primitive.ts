@@ -28,7 +28,7 @@ function ready(options: PrismPickerOptions, { action, event }: Call) {
 const prismPicker = definePrimitive({
   name: "prism-picker",
   options: { slider: "value", disabled: "value" },
-  // Not `disabled`: the bridge would hide every action from a disabled part without saying why.
+  // Workaround: not `disabled`: the bridge would hide every action from a disabled part without saying why.
   state: (options: PrismPickerOptions) => ({ inert: Boolean(options.disabled) }),
   sync: (options) => ({ inert: Boolean(options.disabled) }),
   api: (context) => ({

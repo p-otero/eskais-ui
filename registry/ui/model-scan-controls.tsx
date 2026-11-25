@@ -49,15 +49,12 @@ type ModelScanControlsProps = {
 }
 
 const steps: readonly ModelScanStage[] = ["detecting", "building", "refining", "ready"]
-// The toolbar's views: the back of a character tells little, and three fit a phone's width with the other controls.
 const toolbarViews: readonly ModelViewerView[] = ["front", "three-quarter", "side"]
 
-// On a coarse pointer the gaps grow so neighbouring 44px hit areas don't overlap.
 const floatingBar =
   "pointer-events-auto flex max-w-full items-center gap-inline surface-floating p-inline pointer-coarse:gap-items"
 const inlineBar = "flex max-w-full flex-wrap items-center gap-items"
 
-/** How far the stage is through the run, as a ring: full at `value` 1, a turning quarter while unknown. */
 function ProgressRing({ value }: { value?: number }) {
   return (
     // oxlint-disable-next-line eskais/no-inline-icons -- a progress ring drawn from the value, not an icon
@@ -301,7 +298,6 @@ function ModelScanControls(props: ModelScanControlsProps) {
   let bottom: ReactNode = null
   if (stage === "photo") {
     top = <StylePicker {...props} />
-    // The ring keeps the button's edge visible over a photo as dark or light as its fill.
     bottom =
       start || actions ? (
         <div className="pointer-events-auto flex flex-wrap items-center justify-center gap-items">

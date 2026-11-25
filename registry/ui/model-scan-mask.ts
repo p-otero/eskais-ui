@@ -30,7 +30,6 @@ function sampleMask(mask: ModelScanMask, x: number, y: number) {
 
 type Capsule = { ax: number; ay: number; bx: number; by: number; r: number }
 
-// The 33 pose landmarks' limbs, each with a radius in shoulder widths: how wide a body is around its skeleton.
 const limbs: readonly (readonly [number, number, number])[] = [
   [11, 13, 0.14],
   [12, 14, 0.14],
@@ -99,10 +98,8 @@ function landmarkHull(body: ModelScanDrawnGroup, ratio: number) {
   }
 }
 
-// The hull's own mask, on the long side: enough for the cloud's grid and a soft edge in 2D.
 const hullSize = 128
 
-/** The hull as a mask of the photo's aspect, so it dims the photo and picks the cloud's cells as a mask would. */
 function hullMask(body: ModelScanDrawnGroup, ratio: number): ModelScanMask | null {
   const hull = landmarkHull(body, ratio)
   if (!hull) return null

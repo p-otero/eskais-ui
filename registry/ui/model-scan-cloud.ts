@@ -15,12 +15,10 @@ import {
   type Texture,
 } from "three"
 
-// The photo becomes a cloud of its own pixels. The person's fly on curved, swirling paths onto the character's
-// surface, turning the accent colour mid-flight and the surface's own colour as they land; a shimmer runs down the
-// body as they resolve into it, and the background's pixels drift towards the camera and out of focus. One draw call:
-// every particle's path is a function of `progress` in the vertex shader, so a frame writes only uniforms.
+// Perf: one draw call: every particle's path is a function of `progress` in the vertex shader, so a frame writes
+// only uniforms.
 
-const planeVertex = /* glsl */ `
+const planeVertex = `
 varying vec2 vUv;
 void main() {
   vUv = uv;
@@ -28,15 +26,14 @@ void main() {
 }
 `
 
-// Shared by the photo and the particles, so a cell of the photo goes exactly when its particle lifts off.
-const timing = /* glsl */ `
+const timing = `
 float liftOf(vec2 spot) { return 0.03 + (1.0 - spot.y) * 0.22; }
 const float flight = 0.46;
 // The shimmer runs down the body behind the landings, top first; ModelScan's model is revealed under it (shimmerY).
 float shimmerOf(float h) { return 0.6 + (1.0 - h) * 0.2; }
 `
 
-const photoFragment = /* glsl */ `
+const photoFragment = `
 uniform sampler2D map;
 uniform float opacity;
 uniform float progress;
@@ -50,7 +47,7 @@ void main() {
 }
 `
 
-const cloudVertex = /* glsl */ `
+const cloudVertex = `
 attribute vec2 spot;
 attribute vec3 goal;
 attribute vec3 tint;
@@ -129,7 +126,7 @@ void main() {
 }
 `
 
-const cloudFragment = /* glsl */ `
+const cloudFragment = `
 uniform float additive;
 varying vec3 vColor;
 varying float vAlpha;
@@ -160,11 +157,6 @@ const seeded = (start: number) => {
   }
 }
 
-/**
- * `count` points spread evenly over the model's surface (by triangle area, so detailed hands and hair don't take more
- * than their share), in world space as it stands now (morphs and skinning applied), with the surface's colour there:
- * its vertex colours times its material's.
- */
 function surfacePoints(root: Object3D, count: number) {
   root.updateMatrixWorld(true)
   const meshes: Mesh[] = []
@@ -240,10 +232,6 @@ function surfacePoints(root: Object3D, count: number) {
   return { points, colors }
 }
 
-/**
- * Pairs person cells with surface points so neighbours stay neighbours: both sorted into the same number of
- * horizontal bands by height, then by x inside each band. The photo's head lands on the model's head.
- */
 function pairByBands(cells: number[], spots: Float32Array, goals: Float32Array, bands = 56) {
   const order = cells.toSorted((a, b) => (spots[a * 2 + 1] ?? 0) - (spots[b * 2 + 1] ?? 0))
   const targets = Array.from({ length: cells.length }, (_, i) => i).toSorted(
@@ -260,10 +248,9 @@ function pairByBands(cells: number[], spots: Float32Array, goals: Float32Array, 
 }
 
 const columns = 150
-// Skinned surface samples are the costly part of building the cloud; particles share them, each a little apart.
+// Perf: skinned surface samples are the costly part of building the cloud; particles share them, each a little apart.
 const surfaceSamples = 5000
 
-/** `count` points and colours from fewer `samples`, each repeated with a random offset of up to `jitter`. */
 function spread(
   samples: { points: Float32Array; colors: Float32Array },
   count: number,
@@ -312,10 +299,8 @@ function createCloud({ texture, ratio, accent, model, person, bounds, dark }: Cl
   const total = person ? columns * rows : 0
   for (let i = 0; i < total; i += 1) {
     if ((person?.[i] ?? 0) >= 0.5) cells.push(i)
-    // A third of the background is enough to read as the photo dissolving, and keeps the person in focus.
     else if (random() < 0.34) background.push(i)
   }
-  // Two particles per person cell, jittered inside it, so the body reads as a dense cloud.
   const people = cells.length * 2
   const count = people + background.length
   const spots = new Float32Array(count * 2)
@@ -397,7 +382,6 @@ function createCloud({ texture, ratio, accent, model, person, bounds, dark }: Cl
     objects: [photo, cloud] as Object3D[],
     particles: count,
     people,
-    /** The photo at `center`, `width` × `height`; `pixels` per world unit at distance 1; `focus` the camera's distance. */
     place(center: Vector3, width: number, height: number, pixels: number, focus: number) {
       photo.position.copy(center)
       photo.scale.set(width, height, 1)
@@ -409,7 +393,6 @@ function createCloud({ texture, ratio, accent, model, person, bounds, dark }: Cl
     set(progress: number) {
       uniforms.progress.value = progress
     },
-    /** The theme's accent, and glowing sprites on a dark stage. */
     theme(next: Color, onDark: boolean) {
       uniforms.accent.value.copy(next)
       uniforms.additive.value = onDark ? 1 : 0
@@ -419,7 +402,6 @@ function createCloud({ texture, ratio, accent, model, person, bounds, dark }: Cl
       material.premultipliedAlpha = onDark
       material.needsUpdate = true
     },
-    /** The whole photo at `opacity` and no particles: the reduced-motion crossfade. */
     fade(opacity: number) {
       uniforms.opacity.value = opacity
       cloud.visible = false

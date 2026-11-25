@@ -21,8 +21,7 @@ import { ModelViewerSceneContext, type ModelRig } from "@/components/ui/model-vi
 import { isDark, onThemeChange, tokenColor } from "@/components/ui/model-viewer-theme"
 import { assumeType } from "@/lib/narrow"
 
-// Seconds: the cloud flies while the camera turns, or the photo crossfades under reduced motion.
-const flight = 3.4
+const flightSeconds = 3.4
 const crossfade = 0.7
 
 const smoothstep = (from: number, to: number, value: number) => {
@@ -30,13 +29,12 @@ const smoothstep = (from: number, to: number, value: number) => {
   return t * t * (3 - 2 * t)
 }
 
-// The chosen view becomes the three-quarter one, and the camera turns there even if it was chosen already.
 function turn(handle: ModelViewerHandle) {
   handle.api.setView("three-quarter")
   handle.api.aim("three-quarter")
 }
 
-// A clipping plane compiles the model's materials again: done on the first frame, under the 2D photo, and once the
+// Perf: a clipping plane compiles the model's materials again: done on the first frame, under the 2D photo, and once the
 // cloud has landed.
 function setClipping(root: Object3D, planes: Plane[] | null) {
   root.traverse((object) => {
@@ -48,7 +46,6 @@ function setClipping(root: Object3D, planes: Plane[] | null) {
   })
 }
 
-/** A clipping plane that keeps what is above a height and cuts the rest. */
 function createReveal() {
   const plane = new Plane(new Vector3(0, 1, 0), 0)
   return {
@@ -83,12 +80,11 @@ type IntroOptions = {
  */
 function useModelScanIntro({ src, ratio, fit, mask, person, onHandOff, onDone }: IntroOptions) {
   const scene = use(ModelViewerSceneContext)
-  // R3F types `state.camera` as any `Camera`; the model viewer's canvas isn't `orthographic`, so it is R3F's default
+  // Workaround: R3F types `state.camera` as any `Camera`; the model viewer's canvas isn't `orthographic`, so it is R3F's default
   // PerspectiveCamera.
   const camera = assumeType<PerspectiveCamera>(useThree((state) => state.camera))
   const gl = useThree((state) => state.gl)
   const invalidate = useThree((state) => state.invalidate)
-  // `texture: null` once the photo failed to load.
   const [texture, setTexture] = useState<{ src: string; texture: Texture | null } | null>(null)
 
   useEffect(() => {
@@ -105,7 +101,6 @@ function useModelScanIntro({ src, ratio, fit, mask, person, onHandOff, onDone }:
         setTexture({ src, texture: loaded })
       },
       () => {
-        // Without the photo in 3D the model still appears, and the 2D photo hands over to it.
         if (!cancelled) setTexture({ src, texture: null })
       },
     )
@@ -116,7 +111,6 @@ function useModelScanIntro({ src, ratio, fit, mask, person, onHandOff, onDone }:
   }, [src])
 
   const group = useMemo(() => new Group(), [])
-  // Built on the transition's first frame, from the model as it stands then.
   const cloud = useRef<Cloud | null>(null)
   useEffect(
     () => () => {
@@ -139,7 +133,6 @@ function useModelScanIntro({ src, ratio, fit, mask, person, onHandOff, onDone }:
     return onThemeChange(read)
   }, [gl, colors, invalidate])
 
-  // The model is revealed from the head down, just behind the cloud's shimmer.
   const reveal = useMemo(() => createReveal(), [])
   const clipped = useRef<ModelRig | null>(null)
   const rig = scene?.rig
@@ -153,14 +146,13 @@ function useModelScanIntro({ src, ratio, fit, mask, person, onHandOff, onDone }:
     },
     [rig, floor],
   )
-  // The canvas draws on demand, and the intro moves only inside a frame: once the photo's texture and the model are
+  // Spec: the canvas draws on demand, and the intro moves only inside a frame: once the photo's texture and the model are
   // both here, ask for one. Without it, a texture that loads after the scene has gone still never starts the intro.
   const loaded = texture?.src === src && rig !== undefined && rig !== null
   useEffect(() => {
     if (loaded) invalidate()
   }, [loaded, invalidate])
 
-  // useFrame calls the newest render's callback, so these are the newest props.
   const handOff = () => onHandOff()
   const done = () => onDone()
   const clock = useRef({ frames: 0, start: -1, aimed: false, finished: false })
@@ -188,8 +180,6 @@ function useModelScanIntro({ src, ratio, fit, mask, person, onHandOff, onDone }:
     const pixels = state.gl.domElement.height / (2 * Math.tan(((camera.fov / 2) * Math.PI) / 180))
 
     intro.frames += 1
-    // The rig turns the camera on the frame after a call: the first frame jumps to the front and builds the cloud
-    // while the 2D photo still covers the stage, the second draws the photo there, and the third hands over.
     if (intro.frames === 1) {
       state.gl.localClippingEnabled = true
       handle.api.aim("front", "jump")
@@ -213,7 +203,6 @@ function useModelScanIntro({ src, ratio, fit, mask, person, onHandOff, onDone }:
       canvas.person = person
       canvas.cloudMs = (performance.now() - built).toFixed(1)
     }
-    // A model that replaces the base one mid-flight (the final character) is revealed the same way.
     if (!reduced && clipped.current !== rig) {
       if (clipped.current) setClipping(clipped.current.scene, null)
       setClipping(rig.scene, [reveal.plane])
@@ -228,7 +217,7 @@ function useModelScanIntro({ src, ratio, fit, mask, person, onHandOff, onDone }:
     state.invalidate()
     if (intro.start < 0) return
 
-    const u = (state.clock.elapsedTime - intro.start) / (reduced ? crossfade : flight)
+    const u = (state.clock.elapsedTime - intro.start) / (reduced ? crossfade : flightSeconds)
     if (reduced) {
       cloud.current?.fade(1 - smoothstep(0, 1, u))
       rig.setOpacity(smoothstep(0, 1, u))

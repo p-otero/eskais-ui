@@ -46,7 +46,7 @@ const {
   Points: ModelScanPointLayer,
 } = createParts(modelScan, { photo: "div", effect: "div", points: "div" })
 
-// Loaded inside the viewer's canvas, after the viewer's own scene: only ModelScan pays for the photo transition.
+// Perf: only ModelScan loads the photo transition, inside the viewer's canvas after its own scene.
 const ModelScanIntro = lazy(() =>
   import("@/components/ui/model-scan-intro").then((module) => ({ default: module.ModelScanIntro })),
 )
@@ -80,7 +80,6 @@ type ModelScanViewerProps = Omit<
 >
 
 type ModelScanProps = Omit<PartProps<"div">, "children"> & {
-  /** The photo. */
   src: string
   /** Describes the photo, and names the scan. */
   alt: string
@@ -153,31 +152,25 @@ type ModelScanProps = Omit<PartProps<"div">, "children"> & {
 }
 
 /* oxlint-disable shadcn/no-arbitrary-values -- the photo's drawn box and the scan effect follow the ratio, progress and container variables */
-// The photo's drawn box inside the stage, as ImageScan places its regions: a stage of another ratio letterboxes it
-// (contain) or crops it (cover), and points land on the pixels they name either way.
 const layerClassName =
   "pointer-events-none absolute top-1/2 left-1/2 h-[min(100cqh,calc(100cqw/var(--model-scan-ratio)))] w-[min(100cqw,calc(100cqh*var(--model-scan-ratio)))] -translate-x-1/2 -translate-y-1/2 data-[fit=cover]:h-[max(100cqh,calc(100cqw/var(--model-scan-ratio)))] data-[fit=cover]:w-[max(100cqw,calc(100cqh*var(--model-scan-ratio)))]"
-// A size container (Tailwind's @container is inline-size only), so the photo's box sizes from it.
+// Workaround: Tailwind's @container is inline-size only; the photo's box sizes from a size container.
 const photoClassName =
   "pointer-events-none absolute inset-0 overflow-hidden [container-type:size] [--model-scan-accent:var(--info)] data-handed-off:invisible"
-// While detecting the photo dims a little, so the points and the beam read over it.
 const imageClassName =
   "absolute inset-0 size-full transition-[filter] duration-dialog ease-standard in-data-[stage=detecting]:brightness-[.92] in-data-[stage=detecting]:saturate-[.55]"
 const effectClassNames = {
   root: "group/effect absolute inset-0 overflow-hidden",
   grid: "absolute inset-0 [background-image:radial-gradient(color-mix(in_oklab,var(--model-scan-accent)_55%,transparent)_1px,transparent_1.25px)] [background-size:12px_12px] [mask-image:radial-gradient(ellipse_70%_60%_at_50%_45%,black,transparent)] opacity-50 transition-opacity duration-dialog ease-standard starting:opacity-0",
-  // A Web Animation sweeps it down until progress is known (model-scan-primitive); then it follows progress.
   beam: "absolute inset-x-0 top-0 h-[34%] -translate-y-full border-b-2 border-(--model-scan-accent) bg-linear-to-b from-transparent to-(--model-scan-accent)/25 shadow-[0_8px_22px_-4px_color-mix(in_oklab,var(--model-scan-accent)_75%,transparent)] transition-transform duration-panel ease-standard group-data-determinate/effect:translate-y-[calc(var(--model-scan-progress,0)*294%-100%)]",
   bracket:
     "absolute size-6 border-(--model-scan-accent) drop-shadow-[0_0_4px_color-mix(in_oklab,var(--model-scan-accent)_60%,transparent)] transition-[scale,opacity] duration-dialog ease-standard starting:scale-150 starting:opacity-0",
 }
-// Once the person is known, the background dims around them and they glow faintly in the accent.
 const maskClassNames = {
   dim: "absolute inset-0 bg-overlay/45 [mask-size:100%_100%] transition-opacity duration-dialog ease-standard starting:opacity-0",
   person:
     "absolute inset-0 bg-(--model-scan-accent)/20 mix-blend-screen [mask-size:100%_100%] transition-opacity duration-dialog ease-standard starting:opacity-0",
 }
-// Over the stage, the box of its own ratio: what floats over the model never covers a summary under it.
 const overlayClassName = "pointer-events-none absolute inset-x-0 top-0 aspect-(--model-scan-stage)"
 /* oxlint-enable shadcn/no-arbitrary-values */
 
@@ -230,7 +223,6 @@ function ModelScan({
     ...viewerProps?.labels,
     view: { ...modelViewerLabels.view, ...viewerProps?.labels?.view },
   }
-  // The loaded photo's own ratio; until then the given size's, or the engine's `aspect`.
   const [measured, setMeasured] = useState<{ src: string; ratio: number } | null>(null)
   const measure = (img: HTMLImageElement | null) => {
     if (!img?.complete || !img.naturalWidth || !img.naturalHeight) return
@@ -260,7 +252,6 @@ function ModelScan({
   const [introDone, setIntroDone] = useState(false)
   const [handle, setHandle] = useState<ModelViewerHandle | null>(null)
   const viewerState = useModelViewerControls(handle)
-  // A new run (back to the photo, or detecting again) starts over in 2D.
   if ((stage === "photo" || stage === "detecting") && (handedOff || introDone)) {
     setHandedOff(false)
     setIntroDone(false)

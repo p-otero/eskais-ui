@@ -17,7 +17,7 @@ const isMesh = (object: Object3D): object is Mesh => "isMesh" in object && objec
 const isMorphMesh = (mesh: Mesh): mesh is MorphMesh =>
   mesh.morphTargetDictionary !== undefined && mesh.morphTargetInfluences !== undefined
 
-// `Material` declares neither: the standard, physical, basic and toon materials a GLB loads each add their own.
+// Workaround: `Material` declares neither: the standard, physical, basic and toon materials a GLB loads each add their own.
 const colorOf = (material: Material) =>
   "color" in material && material.color instanceof Color ? material.color : undefined
 const mapOf = (material: Material) => ("map" in material && material.map instanceof Texture ? material.map : null)

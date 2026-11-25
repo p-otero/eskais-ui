@@ -40,8 +40,6 @@ type ModelViewerSceneProps = {
   children?: ReactNode
 }
 
-// A neutral rig: a soft sky over a grey floor, a key from the front left and a rim from behind, all white, so a
-// model's own colours read the same in light and dark mode.
 function Lights() {
   return (
     <>
@@ -68,7 +66,6 @@ function ModelLayer({
   return (
     <ModelViewerSceneContext value={{ handle, rig, framing: frame.framing, floor }}>
       {floor ? <primitive object={floor.mesh} /> : null}
-      {/* Keyed by scene, so a swap mounts the new model and keeps the old one where it is. */}
       {leaving ? <primitive key={leaving.scene.uuid} object={leaving.scene} /> : null}
       {rig ? <primitive key={rig.scene.uuid} object={rig.scene} /> : null}
       <Suspense fallback={null}>{children}</Suspense>

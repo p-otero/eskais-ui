@@ -8,11 +8,9 @@ type PrismCanvases = {
   light: RefObject<HTMLCanvasElement | null>
 }
 
-/** Offscreen buffers: the fan at half the stage's size, and the glow at a quarter, blurred into `soft`. */
 type GlowBuffers = { field: HTMLCanvasElement; glow: HTMLCanvasElement; soft: HTMLCanvasElement }
 
 type SceneOptions = {
-  /** The wavelength to show. */
   wavelength: number
   /** Jump to it, for a drag: the pointer already moves smoothly. */
   instant: boolean
@@ -22,7 +20,7 @@ type SceneOptions = {
 
 type Size = { width: number; height: number }
 
-// A machine without a GPU (a CI runner, a VM, some remote desktops) emulates GL in software: SwiftShader, llvmpipe,
+// Perf: a machine without a GPU (a CI runner, a VM, some remote desktops) emulates GL in software: SwiftShader, llvmpipe,
 // WARP. An accelerated canvas there paints about 20 times slower than Skia on the CPU, which `willReadFrequently`
 // asks for; with a real GPU the accelerated canvas is the fastest, by about 10 ms a frame at a DPR of 2. The CPU
 // rasterizes every pixel, so there the canvas stays at a DPR of 1: a runner or a VM rarely shows a sharper screen.
@@ -35,7 +33,7 @@ function planCanvas(): CanvasPlan {
   const gl = document.createElement("canvas").getContext("webgl")
   let software = true
   if (gl) {
-    // Chrome and Safari report a generic RENDERER and the real one through the debug extension; Firefox reports it
+    // Workaround: Chrome and Safari report a generic RENDERER and the real one through the debug extension; Firefox reports it
     // in RENDERER and deprecates the extension.
     const generic = String(gl.getParameter(gl.RENDERER))
     const debug = generic === "WebKit WebGL" ? gl.getExtension("WEBGL_debug_renderer_info") : null
@@ -46,17 +44,14 @@ function planCanvas(): CanvasPlan {
   canvasPlan = { settings: { willReadFrequently: software }, maxRatio: software ? 1 : 2 }
   return canvasPlan
 }
-// The glow buffer's scale: a soft field needs few pixels, and scaling it up blurs it further for free.
 const glowScale = 4
-// The old CSS blur(7px), in the glow buffer's pixels.
 const glowBlur = `blur(${String(7 / glowScale)}px)`
 
-// The panel duration token: a key press or an agent's step glides the prism there, a drag follows the pointer.
 const glideMs = 180
 const glideAbove = 2
 const ease = (t: number) => 1 - (1 - t) ** 4
 
-// The size comes from the ResizeObserver, never from the element, so a paint inside a layout effect, right after
+// Perf: the size comes from the ResizeObserver, never from the element, so a paint inside a layout effect, right after
 // React wrote the DOM, doesn't force a layout.
 // The knob carries its own angle and colour: set on the stage, they would restyle the whole engraved scale on
 // every frame, which a compositor without a GPU felt as a dropped frame per key press.
@@ -68,7 +63,7 @@ function sized(canvas: HTMLCanvasElement, width: number, height: number) {
   return canvas.getContext("2d", planCanvas().settings)
 }
 
-// The glow used to be a second canvas with a CSS blur and an additive blend, which a compositor without a GPU redid
+// Perf: the glow used to be a second canvas with a CSS blur and an additive blend, which a compositor without a GPU redid
 // over the whole stage on every frame. Now it is blurred at a quarter size and added into the one canvas.
 function paint(canvases: PrismCanvases, buffers: GlowBuffers, size: Size | null, wavelength: number) {
   const stage = canvases.stage.current
@@ -99,14 +94,14 @@ function paint(canvases: PrismCanvases, buffers: GlowBuffers, size: Size | null,
   light.setTransform(1, 0, 0, 1, 0, 0)
   light.globalCompositeOperation = "lighter"
   light.drawImage(buffers.field, 0, 0, lightCanvas.width, lightCanvas.height)
-  // The knob follows the painted wavelength, not the value, so it glides with the prism without a React render.
+  // Perf: the knob follows the painted wavelength, not the value, so it glides with the prism without a React render.
   const knob = knobOf(stage)
   knob?.style.setProperty("--prism-dial", `${String(angleAt(wavelength))}deg`)
   knob?.style.setProperty("--prism-shown", reading.colour.hex)
   return true
 }
 
-// Outside the hook: React Compiler can't compile `??=`.
+// Workaround: outside the hook, since React Compiler 1.0 can't compile `??=`.
 function glowBuffersOf(ref: { current: GlowBuffers | null }): GlowBuffers {
   if (ref.current === null) {
     ref.current = {
@@ -122,7 +117,6 @@ function glowBuffersOf(ref: { current: GlowBuffers | null }): GlowBuffers {
 function usePrismPickerScene(canvases: PrismCanvases, { wavelength, instant, onPaint }: SceneOptions) {
   const shown = useRef<number | null>(null)
   const size = useRef<Size | null>(null)
-  // Made on the first paint, in the browser: the hook also renders on the server.
   const buffers = useRef<GlowBuffers | null>(null)
 
   const paintAt = useEffectEvent((at: number) => {
@@ -148,17 +142,15 @@ function usePrismPickerScene(canvases: PrismCanvases, { wavelength, instant, onP
     }
   }, [canvases])
 
-  // A layout effect, so a drag paints the canvas in the same frame React commits the knob and the readout.
   useLayoutEffect(() => {
     const from = shown.current
     const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches
-    // An arrow key moves a nanometre or two, which a glide wouldn't show: it would only repaint for 180 ms.
+    // Perf: an arrow key moves a nanometre or two, which a glide wouldn't show: it would only repaint for 180 ms.
     if (from === null || instant || reduced || Math.abs(wavelength - from) <= glideAbove) {
       shown.current = wavelength
       paintAt(wavelength)
       return
     }
-    // The canvas still shows where the glide starts; only the knob, which React just rendered at its end, goes back.
     const stage = canvases.stage.current
     if (stage) knobOf(stage)?.style.setProperty("--prism-dial", `${String(angleAt(from))}deg`)
     const started = performance.now()

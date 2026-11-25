@@ -4,7 +4,6 @@ import type { ModelViewerControlsState, ModelViewerHandle } from "@/components/u
 
 const none = () => () => {}
 
-/** What a control bar shows, from the viewer's state; the same object while none of it changes. */
 function controlsOf(handle: ModelViewerHandle, last: ModelViewerControlsState | null): ModelViewerControlsState {
   const state = handle.get()
   const clip = state.clip !== null && state.clips.includes(state.clip) ? state.clip : (state.clips[0] ?? null)
