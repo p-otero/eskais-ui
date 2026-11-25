@@ -37,6 +37,7 @@ import {
 } from "@/components/ui/model-viewer-meshes"
 import type { ModelViewerFloor } from "@/components/ui/model-viewer-floor"
 import type { ModelViewerHandle } from "@/components/ui/model-viewer-primitive"
+import type { CameraState, Channels, ModelRig, RigSnapshot } from "@/components/ui/model-viewer-rig-types"
 
 type LoadedModel = { scene: Object3D; animations: readonly AnimationClip[] }
 
@@ -61,29 +62,12 @@ const clipFadeSeconds = 0.3
 const angleEpsilon = 0.02
 const relativeEpsilon = 1e-4
 
-type Channels = {
-  index: ReadonlyMap<string, number>
-  current: Float32Array
-  target: Float32Array
-  active: Uint8Array
-}
-
-type CameraState = { yaw: number; pitch: number; zoom: number; distance: number; turn: number; ready: boolean }
-
-type RigSnapshot = {
-  cameraState: () => CameraState
-  centerNow: () => Vector3
-  channels: () => Channels
-  clipState: () => { name: string | null; time: number }
-  reveal: () => number
-}
-
 /**
  * Everything a loaded model does per frame, outside React: the camera eased to the orbit the primitive holds, morph
  * weights eased to their targets, and the animation mixer. `update` says whether it needs another frame, so the
  * canvas draws only while something moves. `cleanup` runs on dispose, for what an `onModelLoad` made.
  */
-function createModelRig(model: LoadedModel, owned = true, cleanup?: () => void) {
+function createModelRig(model: LoadedModel, owned = true, cleanup?: () => void): ModelRig {
   const box = new Box3().setFromObject(model.scene)
   const size = box.getSize(new Vector3())
   const boxCenter = box.getCenter(new Vector3())
@@ -192,7 +176,7 @@ function createModelRig(model: LoadedModel, owned = true, cleanup?: () => void) 
     })
   }
 
-  const rig = {
+  const rig: ModelRig = {
     scene: model.scene,
     morphNames,
     clipNames,
@@ -399,8 +383,6 @@ function createModelRig(model: LoadedModel, owned = true, cleanup?: () => void) 
   }
   return rig
 }
-
-type ModelRig = ReturnType<typeof createModelRig>
 
 type ModelViewerSceneState = {
   handle: ModelViewerHandle
