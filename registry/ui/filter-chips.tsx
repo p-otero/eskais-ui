@@ -71,10 +71,9 @@ function dateText(value: DateInput | undefined, locale: string | undefined) {
     return new Intl.DateTimeFormat(locale, { dateStyle: "medium", timeStyle: "short" }).format(time)
   }
   if (value instanceof Date) return new Intl.DateTimeFormat(locale, { dateStyle: "medium" }).format(value)
-  // A Temporal value's `toLocaleString` takes a locale and options, which `Object`'s, in its type, doesn't.
-  const format: unknown = Reflect.get(value, "toLocaleString")
-  return typeof format === "function"
-    ? String(Reflect.apply(format, value, [locale, { dateStyle: "medium" }]))
+  const temporalToLocaleString: unknown = Reflect.get(value, "toLocaleString")
+  return typeof temporalToLocaleString === "function"
+    ? String(Reflect.apply(temporalToLocaleString, value, [locale, { dateStyle: "medium" }]))
     : value.toString()
 }
 
@@ -153,19 +152,15 @@ function FilterChips<S extends FilterSchema>({
   const [editing, setEditing] = useState<{ key: string; draft: unknown } | null>(null)
   const [chosenLabels, setValueLabels] = useState<Record<string, string>>({})
   const valueLabels = { ...knownLabels, ...chosenLabels }
-  // The keys in the order their chips were added here, so a chip keeps its place when it's set or edited.
-  const [order, setOrder] = useState<readonly string[]>([])
+  const [orderAddedHere, setOrderAddedHere] = useState<readonly string[]>([])
   const addButton = useRef<HTMLButtonElement>(null)
 
   const active = activeFilterKeys(schema, state.filter).filter((key) => offered.includes(key))
-  // Chips added elsewhere (the URL, an agent, the app) follow in the order the filter gained them, not the schema's.
-  const shown = [...new Set([...order, ...Object.keys(values), ...(editing ? [editing.key] : [])])].filter(
+  const shown = [...new Set([...orderAddedHere, ...Object.keys(values), ...(editing ? [editing.key] : [])])].filter(
     (key) => active.includes(key) || editing?.key === key,
   )
   const available = offered.filter((key) => !shown.includes(key))
 
-  // Each chip sets its own field by key with what that field's editor produced; the controller's filter type is
-  // invariant (it takes and returns `F`), so it can't be widened to a record without a cast.
   const apply = (key: string, value: unknown) =>
     assumeType<PageController<Record<string, unknown>>>(controller).setFilterValue(key, value)
 
@@ -183,7 +178,7 @@ function FilterChips<S extends FilterSchema>({
       isFiltered={active.length > 0}
       onReset={() => {
         setEditing(null)
-        setOrder([])
+        setOrderAddedHere([])
         for (const key of active) apply(key, undefined)
       }}
       resetLabel={labels.reset}
@@ -228,7 +223,7 @@ function FilterChips<S extends FilterSchema>({
               className="size-control-sm rounded-s-none"
               onClick={() => {
                 if (open) setEditing(null)
-                setOrder(shown.filter((other) => other !== key))
+                setOrderAddedHere(shown.filter((other) => other !== key))
                 apply(key, undefined)
                 requestAnimationFrame(() => addButton.current?.focus())
               }}
@@ -242,7 +237,7 @@ function FilterChips<S extends FilterSchema>({
         <DropdownMenu
           onAction={(value) => {
             const key = String(value)
-            setOrder([...shown, key])
+            setOrderAddedHere([...shown, key])
             setEditing({ key, draft: undefined })
           }}
         >

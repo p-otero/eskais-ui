@@ -36,8 +36,9 @@ const rowClassName =
 
 const cellClassName = "outline-none focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring"
 
-// `memo` drops a component's type parameters (React's types), so the row is typed back as generic in `Row`.
-const DataTableRow = assumeType<<Row>(props: DataTableRowProps<Row>) => ReactNode>(
+type GenericDataTableRow = <Row>(props: DataTableRowProps<Row>) => ReactNode
+
+const DataTableRow = assumeType<GenericDataTableRow>(
   memo(function DataTableRow<Row>(props: DataTableRowProps<Row>) {
     const cells = useCellNavigationActive()
     if (cells) return <DataTableRowElement {...props} cells />

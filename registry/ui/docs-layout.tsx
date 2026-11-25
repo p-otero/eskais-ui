@@ -36,19 +36,18 @@ type DocsLayoutProps = ComponentProps<"div"> & {
   as?: "main" | "div"
 }
 
-/**
- * A documentation page: a topbar, a sidebar under it, the main column with a breadcrumb above the page, and a table
- * of contents. Without a `topbar`, pass `--docs-top` in `style` for the height of anything fixed above it, like a
- * floating site header. `--docs-sidebar-width` resizes the sidebar, and `--docs-height` (the viewport by default) is the
- * height of the box that scrolls the page, for a layout inside a pane.
- */
-// Derived below the root, where a consumer's `--docs-top`, `--docs-height` and `--docs-sidebar-width` are set.
+// Spec: a custom property resolves its var() where it's declared, so these derive below the root, where a consumer's
+// `--docs-top`, `--docs-height` and `--docs-sidebar-width` are set.
 const columns = cssVars({
   "--docs-column-height": "calc(var(--docs-height) - var(--docs-top))",
   "--docs-scroll-margin": "calc(var(--docs-top) + var(--gap-group))",
 })
 const sidebarWidth = cssVars({ "--sidebar-width": "var(--docs-sidebar-width)" })
 
+/**
+ * Without a `topbar`, pass `--docs-top` in `style` for the height of anything fixed above it. `--docs-sidebar-width`
+ * resizes the sidebar; `--docs-height` (the viewport by default) is the height of the box that scrolls the page.
+ */
 function DocsLayout({
   topbar,
   sidebar,
@@ -83,8 +82,6 @@ function DocsLayout({
         style={columns}
       >
         {sidebar !== undefined && (
-          // With a topbar, its SidebarTrigger opens the drawer on narrow screens, so this box steps aside. Without
-          // one, it's the row that holds the Sidebar's own drawer button above the page.
           <div
             data-slot="docs-layout-sidebar"
             style={sidebarWidth}
@@ -110,7 +107,6 @@ function DocsLayout({
               as={as}
               id={as === "main" ? mainId : undefined}
               width="full"
-              // Anchors, focus and scrollIntoView all stop below the topbar, whatever the page scrolls to.
               className="min-w-0 flex-1 p-0 narrow:p-0 **:scroll-mt-(--docs-scroll-margin)"
             >
               {children}
@@ -151,7 +147,6 @@ function Arrow({ direction }: { direction: "previous" | "next" }) {
   return <Icon className="size-3.5 rtl:-scale-x-100" />
 }
 
-/** Links to the previous and next pages, as two cards. */
 function DocsPager({ previous, next, labels: overrides, className, ...props }: DocsPagerProps) {
   const labels = { navigation: "Previous and next pages", previous: "Previous", next: "Next", ...overrides }
   return (

@@ -274,7 +274,6 @@ function isErrorInput(value: unknown): value is FormErrorInput {
   return typeof value === "string" || (isRecord(value) && typeof value.code === "string")
 }
 
-/** The field errors an app threw, keeping the entries in a shape `FormErrorInput` describes. */
 function errorInputs(value: unknown): Record<string, FormErrorInput> | undefined {
   if (!isRecord(value)) return undefined
   const inputs: Record<string, FormErrorInput> = {}

@@ -93,7 +93,6 @@ function DateTimePicker({
 }: DateTimePickerProps) {
   const text = { ...defaultLabels, ...labels }
   const outer = useFieldControl()
-  // UI SDK types `props()` by the two attributes it always adds; it returns every attribute the field gives.
   const fieldAttributes: Record<string, unknown> | undefined = outer?.props({})
   const invalid = fieldAttributes ? Boolean(fieldAttributes["aria-invalid"]) || undefined : undefined
   const [parts, setParts] = useState(() => split(value ?? defaultValue))
