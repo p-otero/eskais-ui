@@ -12,11 +12,11 @@ import { isElementOf } from "@/lib/narrow"
 type InlineEditOptions = {
   value?: string
   defaultValue?: string
-  /** Runs when a new text is saved: Enter, Tab, leaving the field (with `blur="commit"`) or an agent's `rename`. */
+  /** Fires on Enter, Tab, leaving the field (with `blur="commit"`) or an agent's `rename`. */
   onValueChange?: (value: string, details: ChangeDetails<InlineEditReason>) => void
   /** Return `false` to keep editing, like for an empty name. */
   validate?: (text: string) => boolean
-  /** What leaving the field does: `"commit"` saves what it holds (the default), `"cancel"` puts the text back. */
+  /** What leaving the field does: `"commit"` (the default) saves it, `"cancel"` puts the text back. */
   blur?: "commit" | "cancel"
   /** `"press"` (the default) starts editing on a press of the text; `"double-click"` leaves a press to the host, like selecting a row. */
   startOn?: "press" | "double-click"
@@ -51,8 +51,7 @@ const inlineEdit = definePrimitive({
   }),
   api: (context) => {
     const change = createChange(context)
-    // After Enter or Escape the text's element replaces the field, so focus goes back to it once it binds.
-    let returnFocus = false
+    let focusTextOnceItReplacesField = false
     const edit = createInlineEdit(context, {
       key: "editing",
       value: () => context.store.get().value,
@@ -65,11 +64,10 @@ const inlineEdit = definePrimitive({
     })
     return {
       edit,
-      /** Starts editing, like a press on the text or its edit button. */
       start(event?: Event) {
         return edit.start(EDITED, { reason: "imperative", event })
       },
-      /** Saves a new text at once, without opening the field. */
+      /** Saves at once, without opening the field. */
       rename(text: string) {
         if (context.store.get().disabled) return unavailable("rename", "isn't available while disabled")
         if (context.options().validate?.(text) === false) return settled(false, "rename")
@@ -77,7 +75,7 @@ const inlineEdit = definePrimitive({
         if (text === context.store.get().value) return true
         return settled(change("value", text, { reason: "imperative" }), "rename")
       },
-      /** Stops editing and puts the text back. */
+      /** Puts the text back. */
       cancel() {
         if (edit.editing(context.store.get()) === null)
           return unavailable("cancel", "isn't available while not editing")
@@ -88,11 +86,11 @@ const inlineEdit = definePrimitive({
         const { key } = event
         if (!edit.inputKeydown(event)) return
         if (key === "Escape") event.stopPropagation()
-        if (key === "Enter" || key === "Escape") returnFocus = true
+        if (key === "Enter" || key === "Escape") focusTextOnceItReplacesField = true
       },
       takeReturnFocus() {
-        const wanted = returnFocus
-        returnFocus = false
+        const wanted = focusTextOnceItReplacesField
+        focusTextOnceItReplacesField = false
         return wanted
       },
     }

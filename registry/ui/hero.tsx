@@ -4,7 +4,7 @@ import { CodeBlock } from "@/components/ui/code-block"
 import { cn } from "@/lib/utils"
 
 type HeroProps = Omit<ComponentProps<"section">, "title"> & {
-  /** A short line above the title, shown as a chip. */
+  /** Shown as a chip above the title. */
   eyebrow?: ReactNode
   title: ReactNode
   /** A second line of the title, in the muted colour. */
@@ -12,13 +12,11 @@ type HeroProps = Omit<ComponentProps<"section">, "title"> & {
   /** `false` lets the muted part continue the title's line instead of starting its own. */
   titleBreak?: boolean
   description?: ReactNode
-  /** Buttons or links, usually a primary call to action and a secondary one. */
   actions?: ReactNode
-  /** Anything beside the text on wide containers and below it on narrow ones, like a live demo. */
+  /** Beside the text on wide containers, below it on narrow ones. */
   aside?: ReactNode
-  /** A shell command shown in a copyable CodeBlock below the actions. */
+  /** A shell command, shown in a copyable CodeBlock below the actions. */
   install?: string
-  /** The install block's name for screen readers and agents. */
   installLabel?: string
   align?: "start" | "center"
   /** `grid` draws faint grid lines that fade out behind the hero; `glow` adds a wash from the link colour. */

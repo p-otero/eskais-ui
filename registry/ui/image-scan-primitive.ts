@@ -23,7 +23,6 @@ type ImageScanStatus = "uploaded" | "scanning" | "result" | "error"
 
 type ImageScanRegionItem = { value: string; label: string }
 
-/** Why a region was selected: a press on its box or its legend row, or a call (an agent, a controller). */
 type ImageScanSelectReason = "item-press" | "imperative"
 
 type ImageScanActionReason = "trigger-press" | "imperative"
@@ -47,9 +46,9 @@ type ImageScanOptions = {
   onCancel?: (value: null, details: ChangeDetails<ImageScanActionReason>) => void
   onRetry?: (value: null, details: ChangeDetails<ImageScanActionReason>) => void
   onScan?: (value: null, details: ChangeDetails<ImageScanActionReason>) => void
-  /** The image's width over its height, when known before it loads. */
+  /** Width over height, when known before the image loads. */
   ratio?: number
-  /** The frame's width over its height; the image's own ratio by default. */
+  /** The frame's width over height; the image's own ratio by default. */
   aspectRatio?: number
   fit?: ImageScanFit
   announcements?: ImageScanAnnouncements
@@ -57,13 +56,10 @@ type ImageScanOptions = {
 
 const percentOf = (value: number) => `${String(Math.round(value * 10_000) / 100)}%`
 
-// Progress is read at most every tenth, and no sooner than this after the last reading, so a screen reader isn't
-// talked over by a fast scan.
-const progressStep = 10
-const progressInterval = 2000
+const announcedProgressStepPercent = 10
+const minMsBetweenProgressAnnouncements = 2000
 
-// A box this close to the top has no room for its label above it, so the label sits inside.
-const topEdge = 0.12
+const topOffsetWithoutRoomForLabelAbove = 0.12
 
 const defaultRatio = 4 / 3
 
@@ -123,23 +119,22 @@ const imageScan = definePrimitive({
       return settled(!dispatch(context, name, null, call), action, call)
     }
     const api = {
-      /** Stops a running scan through `onCancel`. */
       cancel: (event?: Event) => run("onCancel", "scanning", event),
-      /** Starts again after an error through `onRetry`. */
       retry: (event?: Event) => run("onRetry", "error", event),
-      /** Starts a scan of the uploaded image through `onScan`. */
       scan: (event?: Event) => run("onScan", "uploaded", event),
-      /** Selects a detected region by its id or label; `null` clears the selection. */
-      selectRegion(region: string | null, event?: Event) {
+      /** Takes an id or label; `null` clears the selection. */
+      selectRegion(valueOrLabel: string | null, event?: Event) {
         const { regions, status } = context.store.get()
         const call = { reason: event ? "item-press" : "imperative", event } as const
         if (status !== "result")
           return unavailable("selectRegion", `works only in the result (status: ${status})`, call)
         const match =
-          region === null ? null : regions.find((item) => item.value === region || item.label === region)?.value
+          valueOrLabel === null
+            ? null
+            : regions.find((item) => item.value === valueOrLabel || item.label === valueOrLabel)?.value
         if (match === undefined) {
           const names = regions.map((item) => item.label).join(", ")
-          throw new Error(`No region "${region ?? ""}". Its regions: ${names || "none"}.`)
+          throw new Error(`No region "${valueOrLabel ?? ""}". Its regions: ${names || "none"}.`)
         }
         return settled(change("selectedRegion", match, call), "selectRegion", call)
       },
@@ -195,9 +190,9 @@ const imageScan = definePrimitive({
           }
           if (status !== "scanning" || state.progress === undefined || !messages) return
           const percent = Math.round(clamp(state.progress) * 100)
-          const step = Math.floor(percent / progressStep)
+          const step = Math.floor(percent / announcedProgressStepPercent)
           const now = Date.now()
-          if (step === lastStep || (now - lastTime < progressInterval && percent < 100)) return
+          if (step === lastStep || (now - lastTime < minMsBetweenProgressAnnouncements && percent < 100)) return
           lastStep = step
           lastTime = now
           announce(messages.progress(percent), { doc })
@@ -249,7 +244,7 @@ const imageScan = definePrimitive({
           "data-selected": state.selectedRegion === part.key ? "" : undefined,
           "data-highlighted": state.highlighted === part.key ? "" : undefined,
           "data-tone": part.props.tone,
-          "data-edge": box.y < topEdge ? "top" : undefined,
+          "data-edge": box.y < topOffsetWithoutRoomForLabelAbove ? "top" : undefined,
           "data-align": box.x > 0.4 && box.x + box.width > 0.6 ? "end" : undefined,
           style: css({
             left: percentOf(box.x),

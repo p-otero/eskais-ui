@@ -35,15 +35,12 @@ const imageCropperLabels: ImageCropperLabels = {
 const handlePositions = ["nw", "n", "ne", "e", "se", "s", "sw", "w"] as const
 
 type ImageCropperProps = ComponentProps<typeof ImageCropperPrimitive> & {
-  /** Describes the image, for the default layout. */
+  /** Used only by the default layout, without children. */
   alt?: string
   labels?: Partial<ImageCropperLabels>
 }
 
-/**
- * A group around the parts. Without children it renders the image with a selection (a grid and eight handles, or
- * none in `mode="frame"`), then zoom, rotate and flip below it.
- */
+/** Without children, renders the image with its selection, then zoom, rotate and flip controls. */
 function ImageCropper({ className, children, alt = "", labels: ownLabels, ...props }: ImageCropperProps) {
   const labels = { ...imageCropperLabels, ...ownLabels }
   const frame = props.mode === "frame"
@@ -84,7 +81,6 @@ function ImageCropper({ className, children, alt = "", labels: ownLabels, ...pro
   )
 }
 
-// A box viewport takes the image's ratio once it loads; a frame is a square the image pans under.
 function ImageCropperViewport({ className, ...props }: ComponentProps<typeof ImageCropperViewportPrimitive>) {
   return (
     <ImageCropperViewportPrimitive
@@ -133,7 +129,6 @@ function ImageCropperGrid({ className, ...props }: ComponentProps<typeof ImageCr
   )
 }
 
-// Each handle sits centred on its edge or corner; touch-target grows its hit area without changing its look.
 function ImageCropperHandle({ className, ...props }: ComponentProps<typeof ImageCropperHandlePrimitive>) {
   return (
     <ImageCropperHandlePrimitive
@@ -170,12 +165,12 @@ function ImageCropperZoom({ className, ...props }: ComponentProps<typeof ImageCr
   )
 }
 
-// Buttons with a visible label: they are disabled until the image loads, and a disabled button can't show a tooltip.
-const buttonClassName = cn(buttonVariants({ variant: "outline", size: "sm" }), "rtl:[&_svg]:-scale-x-100")
+// Spec: a disabled button can't show a tooltip, and these stay disabled until the image loads, so they carry a visible label.
+const labelledButtonClassName = cn(buttonVariants({ variant: "outline", size: "sm" }), "rtl:[&_svg]:-scale-x-100")
 
 function ImageCropperRotate({ className, children, ...props }: ComponentProps<typeof ImageCropperRotatePrimitive>) {
   return (
-    <ImageCropperRotatePrimitive className={cnState(buttonClassName, className)} {...props}>
+    <ImageCropperRotatePrimitive className={cnState(labelledButtonClassName, className)} {...props}>
       {children ?? (
         <>
           <RotateCwIcon />
@@ -194,7 +189,7 @@ function ImageCropperFlip({
 }: ComponentProps<typeof ImageCropperFlipPrimitive>) {
   const vertical = direction === "vertical"
   return (
-    <ImageCropperFlipPrimitive direction={direction} className={cnState(buttonClassName, className)} {...props}>
+    <ImageCropperFlipPrimitive direction={direction} className={cnState(labelledButtonClassName, className)} {...props}>
       {children ?? (
         <>
           {vertical ? <FlipVerticalIcon /> : <FlipHorizontalIcon />}

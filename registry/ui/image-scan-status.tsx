@@ -49,7 +49,6 @@ type ImageScanStatusBarProps = {
   retry?: (event: Event) => void
 }
 
-/** What sits under the image in each state: the progress and Cancel, the error and Retry, or the count. */
 function ImageScanStatusBar({
   status,
   progress,

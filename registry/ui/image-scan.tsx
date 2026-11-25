@@ -44,29 +44,27 @@ const {
   "legend-item": "li",
 })
 
-/** Something the scan found, with its box on the image as fractions of the image's width and height. */
 type ImageScanRegion = {
   id: string
   label: string
+  /** In fractions of the image's width and height. */
   box: ImageScanBox
-  /** Extra text after the label, like a confidence: `"92%"`. */
+  /** Shown after the label, like a confidence: `"92%"`. */
   description?: string
   tone?: Tone
 }
 
 type ImageScanProps = Omit<PartProps<"div">, "children"> & {
   src: string
-  /** Describes the image. Required: the scan is about what it shows. */
   alt: string
-  /** The image's size in pixels, so the frame keeps its ratio before the image loads. */
+  /** In pixels; keeps the frame's ratio before the image loads. */
   width?: number
   height?: number
-  /** More props for the image element, like `srcSet`, `sizes` or `crossOrigin`. */
   imageProps?: Omit<ComponentProps<"img">, "src" | "alt" | "width" | "height">
   status?: ImageScanStatus
   /** From 0 to 1 while scanning; leave it out while the scan can't tell how far it is. */
   progress?: number
-  /** What the scan is doing now, shown as the progress bar's label; `labels.scanning` by default. */
+  /** The progress bar's label; `labels.scanning` by default. */
   statusText?: string
   steps?: readonly ImageScanStep[]
   /** The id of the step running now; the steps before it show as done. */
@@ -75,21 +73,21 @@ type ImageScanProps = Omit<PartProps<"div">, "children"> & {
   selectedRegion?: string | null
   defaultSelectedRegion?: string | null
   onSelectedRegionChange?: (region: string | null, details: ImageScanChangeDetails) => void
-  /** Shows Cancel while scanning; agents call `cancel`. */
+  /** Without it, no Cancel while scanning. */
   onCancel?: (details: ImageScanEventDetails) => void
-  /** Shows Retry after an error; agents call `retry`. */
+  /** Without it, no Retry after an error. */
   onRetry?: (details: ImageScanEventDetails) => void
-  /** Shows a Scan button while the image waits; agents call `scan`. */
+  /** Without it, no Scan button while the image waits. */
   onScan?: (details: ImageScanEventDetails) => void
-  /** What went wrong, shown and read at once in the error state; `labels.error` by default. */
+  /** Announced at once in the error state; `labels.error` by default. */
   error?: string
-  /** How the image fills a frame of another ratio. Regions follow it. */
+  /** How the image fills a frame of another ratio; regions follow it. */
   fit?: ImageScanFit
-  /** The frame's width over its height; the image's own by default, which leaves nothing to fit. */
+  /** The frame's width over height; the image's own by default. */
   aspectRatio?: number
-  /** Lists the regions under the image, linked to their boxes on hover. On by default. */
+  /** Lists the regions under the image. @defaultValue true */
   legend?: boolean
-  /** More controls beside the state's own, like a button to choose another image. */
+  /** Shown beside the state's own controls. */
   actions?: ReactNode
   labels?: Partial<ImageScanLabels>
 }
@@ -97,9 +95,7 @@ type ImageScanProps = Omit<PartProps<"div">, "children"> & {
 type ImageScanEventDetails = ChangeDetails<ImageScanActionReason>
 type ImageScanChangeDetails = ChangeDetails<ImageScanSelectReason>
 
-// The image's drawn box: a frame of another ratio letterboxes it (contain) or crops it (cover), and regions are
-// placed in fractions of this box, so they land on the pixels the image shows without measuring anything.
-const layerClassName =
+const drawnImageBoxClassName =
   // oxlint-disable-next-line shadcn/no-arbitrary-values -- the drawn image's size from the frame's container units and the image's ratio, for both fits
   "pointer-events-none absolute top-1/2 left-1/2 h-[min(100cqh,calc(100cqw/var(--image-scan-ratio)))] w-[min(100cqw,calc(100cqh*var(--image-scan-ratio)))] -translate-x-1/2 -translate-y-1/2 data-[fit=cover]:h-[max(100cqh,calc(100cqw/var(--image-scan-ratio)))] data-[fit=cover]:w-[max(100cqw,calc(100cqh*var(--image-scan-ratio)))]"
 
@@ -120,22 +116,17 @@ const chipClassName =
 
 /* oxlint-disable shadcn/no-arbitrary-values -- the effect follows the progress and container variables, and draws a wedge and a halo no token describes */
 const effectClassNames = {
-  // The accent the sweep, the line and the brackets draw in: scanning is work in progress, the info tone's meaning.
   root: "group/effect absolute inset-0 overflow-hidden [--image-scan-accent:var(--info)]",
-  // Dims the image, and once progress is known only the part still to scan: a scale, so nothing lays out.
+  // Perf: the veil, sweep and line move by transform only, so progress never lays out.
   veil: "absolute inset-0 origin-bottom bg-overlay opacity-50 transition-transform duration-panel ease-standard group-data-determinate/effect:scale-y-[calc(1-var(--image-scan-progress,0))]",
-  // While progress is unknown a wedge turns around the centre: one rotation on the compositor, gone under reduced
-  // motion. 150cqmax covers the frame's diagonal from its centre.
   sweep:
     "absolute top-1/2 left-1/2 hidden size-[150cqmax] -translate-x-1/2 -translate-y-1/2 animate-spin rounded-full bg-[conic-gradient(from_0deg,transparent_0deg_250deg,color-mix(in_oklch,var(--image-scan-accent)_40%,transparent)_356deg,var(--image-scan-accent)_360deg)] [animation-duration:2.4s] group-not-data-determinate/effect:motion-safe:block",
-  // With progress, a line that has scanned that far down: a translate of a box the height of the image.
   line: "absolute inset-x-0 bottom-full hidden h-full translate-y-[calc(var(--image-scan-progress,0)*100%)] border-b-2 border-(--image-scan-accent) bg-linear-to-b from-transparent to-(--image-scan-accent)/25 transition-transform duration-panel ease-standard group-data-determinate/effect:block",
   bracket:
     "absolute size-6 border-(--image-scan-accent) drop-shadow-[0_0_1px_var(--background)] motion-safe:animate-pulse",
 }
 
-// The frame is a size container (Tailwind's @container is inline-size only), so the layer and the sweep can size
-// themselves from it in CSS.
+// Workaround: Tailwind's `@container` is inline-size only, and the layer and sweep size from the frame's height too.
 const frameClassName =
   "relative aspect-(--image-scan-frame-ratio) w-full overflow-hidden rounded-surface border bg-muted [container-type:size]"
 /* oxlint-enable shadcn/no-arbitrary-values */
@@ -146,11 +137,6 @@ function readingOrder(regions: readonly ImageScanRegion[]) {
   return regions.toSorted((a, b) => a.box.y - b.box.y || a.box.x - b.box.x)
 }
 
-/**
- * An image under analysis, from a controlled `status`: `uploaded` (a preview), `scanning` (a sweep over the image, a
- * progress bar and Cancel), `result` (the detected regions as buttons over the image and a legend) or `error` (the
- * message and Retry). Screen readers hear each change, progress at most every tenth, errors at once.
- */
 function ImageScan({
   src,
   alt,
@@ -218,7 +204,7 @@ function ImageScan({
             imageProps?.className,
           )}
         />
-        <ImageScanLayer className={layerClassName}>
+        <ImageScanLayer className={drawnImageBoxClassName}>
           <ImageScanEffect className={effectClassNames.root}>
             <span className={effectClassNames.veil} />
             <span className={effectClassNames.sweep} />
