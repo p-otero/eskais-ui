@@ -8,7 +8,7 @@ import { useRef, useState, type KeyboardEvent as ReactKeyboardEvent } from "reac
 import { ejectorButton, ejectorRelease, type EjectReason } from "@/components/ui/ejector-button-primitive"
 import { ControlTooltip } from "@/components/ui/tooltip"
 import { useEjectorDisarmTimer } from "@/components/ui/use-ejector-disarm-timer"
-import { cn } from "@/lib/utils"
+import { cn, cssVars } from "@/lib/utils"
 
 const { Root: EjectorButtonRoot } = createParts(ejectorButton, { root: "div" })
 const { Root: EjectorRelease } = createParts(ejectorRelease, { root: "button" })
@@ -53,6 +53,9 @@ type EjectorButtonProps = {
 }
 
 const defaultArmTimeoutMs = 5000
+
+const knobRingCount = 16
+const knobRingDepths = Array.from({ length: knobRingCount }, (_, index) => (knobRingCount - index) / knobRingCount)
 
 function isThenable(value: unknown): value is PromiseLike<unknown> {
   return typeof value === "object" && value !== null && "then" in value && typeof value.then === "function"
@@ -140,9 +143,14 @@ function EjectorButton({
         <div data-slot="ejector-button-console">
           <span data-slot="ejector-button-boot" aria-hidden="true" />
           <div data-slot="ejector-button-knob">
-            <span data-slot="ejector-button-shaft" aria-hidden="true" />
-            <span data-slot="ejector-button-knob-base" aria-hidden="true" />
-            <span data-slot="ejector-button-knob-side" aria-hidden="true" />
+            {knobRingDepths.map((depth) => (
+              <span
+                key={depth}
+                data-slot="ejector-button-knob-ring"
+                aria-hidden="true"
+                style={cssVars({ "--ejector-ring-depth": depth })}
+              />
+            ))}
             <div data-slot="ejector-button-knob-top">
               <span data-slot="ejector-button-well" aria-hidden="true" />
               <ControlTooltip label={labels.cover}>

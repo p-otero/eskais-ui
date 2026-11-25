@@ -4815,34 +4815,15 @@
           "background": "radial-gradient(circle at 50% 50%, transparent 66%, rgb(0 0 0 / 0.35) 67%, transparent 69%), conic-gradient( from 210deg, #6f6f6f, #f4f4f4 12%, #9a9a9a 25%, #e2e2e2 40%, #7a7a7a 55%, #f0f0f0 70%, #8a8a8a 85%, #6f6f6f )",
           "box-shadow": "inset 0 0 0 0.3cqw rgb(255 255 255 / 0.5)"
         },
-        "[data-slot=\"ejector-button-shaft\"]": {
-          "position": "absolute",
-          "left": "38%",
-          "top": "50%",
-          "transform-origin": "50% 0",
-          "pointer-events": "none",
-          "width": "24%",
-          "height": "var(--ejector-knob-lift)",
-          "transform": "translateZ(calc(var(--ejector-knob-height) * -1)) rotateX(-90deg)",
-          "background": "linear-gradient(90deg, #1a1a1a, #8d8d8d 28%, #e6e6e6 40%, #6a6a6a 64%, #161616)"
-        },
-        "[data-slot=\"ejector-button-knob-side\"]": {
-          "position": "absolute",
-          "left": "0",
-          "top": "50%",
-          "transform-origin": "50% 0",
-          "pointer-events": "none",
-          "width": "100%",
-          "height": "var(--ejector-knob-height)",
-          "transform": "rotateX(-90deg)",
-          "background": "repeating-linear-gradient(90deg, transparent 0 1.1cqw, rgb(0 0 0 / 0.16) 1.1cqw 1.4cqw), linear-gradient(90deg, #1c1c1c, #5c5c5c 12%, #c9c9c9 30%, #f6f6f6 38%, #a3a3a3 55%, #4a4a4a 80%, #141414)"
-        },
-        "[data-slot=\"ejector-button-knob-base\"]": {
+        "[data-slot=\"ejector-button-knob-ring\"]": {
           "position": "absolute",
           "inset": "0",
           "border-radius": "50%",
-          "transform": "translateZ(calc(var(--ejector-knob-height) * -1))",
-          "background": "linear-gradient(180deg, transparent 40%, rgb(0 0 0 / 0.35)), linear-gradient(90deg, #1c1c1c, #5c5c5c 12%, #c9c9c9 30%, #f6f6f6 38%, #a3a3a3 55%, #4a4a4a 80%, #141414)",
+          "pointer-events": "none",
+          "transform": "translateZ(calc(var(--ejector-knob-height) * var(--ejector-ring-depth) * -1))",
+          "background": "repeating-linear-gradient(90deg, transparent 0 1.1cqw, rgb(0 0 0 / 0.16) 1.1cqw 1.4cqw), linear-gradient(90deg, #1c1c1c, #5c5c5c 12%, #c9c9c9 30%, #f6f6f6 38%, #a3a3a3 55%, #4a4a4a 80%, #141414)"
+        },
+        "[data-slot=\"ejector-button-knob-ring\"]:first-child": {
           "box-shadow": "0 1cqw 4cqw rgb(0 0 0 / 0.8)"
         },
         "[data-slot=\"ejector-button-well\"]": {
