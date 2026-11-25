@@ -6,15 +6,7 @@
     "./node_modules/@p-otero/oxlint-rules/presets/react-agents.json",
     "./node_modules/@p-otero/oxlint-rules/presets/ui-tailwind.json"
   ],
-  "plugins": [
-    "typescript",
-    "react",
-    "jsx-a11y",
-    "import",
-    "unicorn",
-    "oxc",
-    "vitest"
-  ],
+  "plugins": ["typescript", "react", "jsx-a11y", "import", "unicorn", "oxc", "vitest"],
   "jsPlugins": [
     "./node_modules/@p-otero/oxlint-rules/dist/plugin.js",
     "@shadcn/lint",
@@ -85,12 +77,7 @@
     "vitest/expect-expect": [
       "error",
       {
-        "assertFunctionNames": [
-          "expect",
-          "checkServer",
-          "checkPattern",
-          "checkDirection"
-        ]
+        "assertFunctionNames": ["expect", "checkServer", "checkPattern", "checkDirection"]
       }
     ],
     "no-underscore-dangle": [
@@ -164,7 +151,7 @@
       }
     },
     {
-      "files": ["tooling/oxlint-plugin-eskais/**"],
+      "files": ["registry/ui/[a-l]*", "tooling/oxlint-plugin-eskais/**"],
       "rules": {
         "eskais/comment-tags": "error"
       }
@@ -223,25 +210,13 @@
         "no-underscore-dangle": [
           "warn",
           {
-            "allow": [
-              "__REACT_DEVTOOLS_GLOBAL_HOOK__",
-              "__perf",
-              "__perfNav",
-              "__perfWatch",
-              "__vitals"
-            ]
+            "allow": ["__REACT_DEVTOOLS_GLOBAL_HOOK__", "__perf", "__perfNav", "__perfWatch", "__vitals"]
           }
         ]
       }
     },
     {
-      "files": [
-        "test/**",
-        "tooling/**",
-        "apps/site/src/content/**",
-        "registry/**/*-labels.ts",
-        "packages/mockup/**"
-      ],
+      "files": ["test/**", "tooling/**", "apps/site/src/content/**", "registry/**/*-labels.ts", "packages/mockup/**"],
       "rules": {
         "max-lines": "off"
       }
