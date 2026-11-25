@@ -117,11 +117,6 @@ function HeaderActions({ children }: { children?: ReactNode }) {
   )
 }
 
-/**
- * The site's one app bar, on the landing, the docs and every other page: the brand and the main navigation, then
- * search and settings. Docs pages pass their sidebar's trigger, which opens the navigation below lg; without one,
- * a Docs link stands in for the main navigation there.
- */
 function SiteTopbar({ trigger }: { trigger?: ReactNode }) {
   return (
     <Topbar

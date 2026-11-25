@@ -31,10 +31,6 @@ const GithubIcon = (props: IconProps) => (
 const symbolViewBox = /viewBox="([^"]+)"/.exec(symbol)?.[1]
 const symbolPath = / d="([^"]+)"/.exec(symbol)?.[1]
 
-/**
- * The Eskais "Ribbon Slash" symbol, in the text colour. Brand rules: monochrome, symbol only between 16 and 64px,
- * never animated. It is named "Eskais" unless `aria-hidden`, for when text beside it already names it.
- */
 function Logo({ "aria-hidden": hidden, ...props }: Omit<IconProps, "children">) {
   const name = hidden ? { "aria-hidden": hidden } : { role: "img", "aria-label": "Eskais" }
   return (

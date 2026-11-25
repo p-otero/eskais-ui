@@ -17,10 +17,6 @@ import {
 } from "../sections/model-fixtures"
 import { useModelProbe } from "./use-model-probe"
 
-// ?demo=model-check, for tooling/model-check.mjs: the demo character, and a scan replaying its recording. ?slowdown=,
-// ?fit=cover&stage=<ratio>, ?mask=off (the landmarks' hull), ?controls=below, ?photo=light|dark (the extremes the
-// controls read over), ?scan-only (no viewer, for frame times); ?fail[=<code>] runs a fake engine that fails, since the
-// recording has no error. A tall spacer scrolls both out of view.
 const rest = {}
 const morphed = { jawOpen: 1, mouthSmileLeft: 1, mouthSmileRight: 1, browInnerUp: 1 }
 
@@ -88,7 +84,6 @@ function ModelCheck() {
         aria-label="Scan"
         data-photo={photoTone ?? undefined}
         data-downloads={downloads}
-        // What the run has sent so far, for model-check's dump when a scan stalls.
         data-replay={JSON.stringify({
           stage: scan.props.stage,
           running: scan.running,

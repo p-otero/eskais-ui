@@ -4,7 +4,7 @@ import { usePerfMounted } from "../hooks/use-perf-mounted"
 
 type Render = () => ReactNode
 
-// Each scenario loads only its own file, so the vitals of the server fixtures count none of the others.
+// Perf: each scenario loads only its own file, so the vitals of the server fixtures count none of the others.
 const collections = () => import("./perf-collections")
 const blocks = () => import("./perf-blocks")
 const overlays = () => import("./perf-overlays")
@@ -58,7 +58,6 @@ const scenarios: Record<string, () => Promise<Render>> = {
 
 const scenario = new URLSearchParams(location.search).get("scenario") ?? "list-1k"
 
-/** ?demo=perf&scenario=list-1k: the fixtures tooling/perf/run.mjs measures. */
 function PerfPage({ render }: { render: Render | undefined }) {
   usePerfMounted()
   return (
@@ -68,7 +67,7 @@ function PerfPage({ render }: { render: Render | undefined }) {
   )
 }
 
-/** Loads the scenario's file, then starts the mount clock, so the mount time counts the render and not the download. */
+// Perf: loads the scenario's file before the mount clock starts, so the mount time counts the render, not the download.
 async function loadPerfPage(): Promise<ComponentType> {
   const render = await scenarios[scenario]?.()
   globalThis.perfFixture = { scenario, start: performance.now() }

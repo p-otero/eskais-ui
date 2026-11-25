@@ -2,7 +2,6 @@ import type { CSSProperties } from "react"
 
 import SettingsPageExample from "../../../../site/src/examples/settings-page"
 
-/** ?demo=settings-page: the settings page under a sticky bar, as in an app shell. */
 function SettingsPageDemo() {
   return (
     <>

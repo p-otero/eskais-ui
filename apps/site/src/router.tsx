@@ -44,10 +44,6 @@ function navigate(route: string) {
   else window.scrollTo({ top: 0 })
 }
 
-/**
- * Props for a registry Link (or SidebarItem, NavigationMenuLink, ButtonLink) that routes on the client: on a mouse
- * press, a click or Enter, and preloads the route's code when someone is about to follow it.
- */
 function linkTo(route: string) {
   return {
     href: hrefFor(route),
@@ -56,7 +52,6 @@ function linkTo(route: string) {
   }
 }
 
-/** Like linkTo, and also offers agents a `follow` action; keep it for the few links an agent should follow. */
 function followTo(route: string) {
   return { href: hrefFor(route), onFollow: () => navigate(route), onIntent: () => preloadRoute(route) }
 }

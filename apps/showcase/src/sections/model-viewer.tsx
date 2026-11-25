@@ -17,7 +17,6 @@ import {
   useScanReplay,
 } from "./model-fixtures"
 
-// ARKit expressions over the character's own body and face weights, which its GLB carries.
 const expressions = [
   { names: ["mouthSmileLeft", "mouthSmileRight"], label: "Smile" },
   { names: ["eyeBlinkLeft", "eyeBlinkRight"], label: "Blink" },
@@ -110,7 +109,6 @@ function ModelScanSection() {
           width={photo.width}
           height={photo.height}
           {...props}
-          // The replay sends the soft toon character; the finished one takes the chosen style.
           model={props.stage === "ready" ? { glb: character[style] } : props.model}
           modelAlt="A 3D character made from the photo"
           idleClip="wave"

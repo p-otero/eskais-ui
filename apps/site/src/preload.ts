@@ -28,15 +28,12 @@ function track(key: string, load: (() => Promise<Module>) | undefined) {
   return promise as Promise<Module>
 }
 
-/** An item's example module, loaded once; read it with `use`. */
 const loadExample = (name: string) => track(`example:${name}`, exampleModules[`./examples/${name}.tsx`])
 
-/** A guide's page module, loaded once; read it with `use`. */
 const loadGuide = (slug: string) => track(`guide:${slug}`, guideModules[`./guides/${slug}.tsx`])
 
 const startedChunks = new Set<string>()
 
-/** Starts loading what `route` renders: the docs chunk and the item's example or the guide. Safe to call often. */
 function preloadRoute(route: string) {
   const path = route.split("#")[0] ?? route
   if (startedChunks.has(path)) return
@@ -55,10 +52,6 @@ function preloadRoute(route: string) {
   void loadGuide(path === "/docs" ? "installation" : path.slice("/docs/".length))
 }
 
-/**
- * The guide `route` shows, once it has loaded; undefined for other pages. A component page isn't waited for: its
- * title shows before its example.
- */
 function routeGuide(route: string) {
   const path = route.split("#")[0] ?? route
   if (!path.startsWith("/docs") || path.startsWith("/docs/components")) return undefined

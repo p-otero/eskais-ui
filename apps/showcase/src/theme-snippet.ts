@@ -2,7 +2,6 @@ type Seeds = { brand: string; linkBrand: string; neutralHue: number; neutralChro
 
 type Attributes = { density: string; radius: string; glass?: number | undefined }
 
-/** The glass tokens for a strength from 0 to 100: 0 is opaque and sharp, 100 clear behind a 50px blur. */
 function glassTokens(strength: number) {
   return { opacity: `${String(100 - strength)}%`, blur: `${String(strength / 2)}px` }
 }

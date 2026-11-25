@@ -16,7 +16,7 @@ export default defineConfig({
       preserveEntrySignatures: false,
       output: {
         keepNames: process.env.SHOWCASE_KEEP_NAMES === "1",
-        // Each ?demo= page loads apart; the chunks pages share would cut one into 50 to 140 requests, each paying the
+        // Perf: each ?demo= page loads apart; the chunks pages share would cut one into 50 to 140 requests, each paying the
         // vitals' 150 ms of 4G latency over HTTP/1.1 (about 1 s of LCP). Shared chunks under 60 KB go into their users
         // instead: 10 to 25 files, about 10% more bytes. Each copy registers with a shared runtime, so it runs once.
         codeSplitting: { experimentalInlineCommonChunks: { maxSize: 60_000, exclude: /\.css/ } },

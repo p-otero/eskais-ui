@@ -6,11 +6,10 @@ import { toast } from "@/components/ui/toast"
 
 import { Section } from "../section"
 
-// Loads apart so the log viewer stays out of the page chunk the vitals measure.
+// Perf: loads apart so the log viewer stays out of the page chunk the vitals measure.
 const LogViewerSection = lazy(() => import("./log-viewer").then((module) => ({ default: module.LogViewerSection })))
 
-// Touches every syntax tone, so the contrast check measures each on the code surface and on a highlighted line.
-const sample = `import { Card, type CardProps } from "@/components/ui/card"
+const everySyntaxToneSample = `import { Card, type CardProps } from "@/components/ui/card"
 
 // Every tone: keyword, string, number, comment, function, type, property, tag, punctuation
 export function Stat({ label, value = 42 }: { label: string; value?: number }) {
@@ -25,7 +24,6 @@ const diff = `diff --git a/theme.css b/theme.css
 +  --radius: 1rem;
  }`
 
-// The log viewer shows code too, as a process prints it; it sits beside the code blocks.
 function CodeSection() {
   return (
     <>
@@ -35,7 +33,7 @@ function CodeSection() {
       >
         <div className="flex w-full min-w-0 flex-col gap-group">
           <CodeBlock
-            code={sample}
+            code={everySyntaxToneSample}
             language="tsx"
             title="stat.tsx"
             lineNumbers

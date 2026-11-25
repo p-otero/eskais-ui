@@ -2,7 +2,6 @@ import { Code, H2, P, Pre, Ul } from "../../docs/prose"
 
 import { holdCode, networkCode, patchCode, refetchCode } from "./snippets"
 
-/** The guide's sections on `usePatchSource` and the refetch triggers. */
 export function PatchAndRefetch() {
   return (
     <>
@@ -127,7 +126,6 @@ export function PatchAndRefetch() {
   )
 }
 
-/** The guide's section on `networkMode`. */
 export function NetworkMode() {
   return (
     <>

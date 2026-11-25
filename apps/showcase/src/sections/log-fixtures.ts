@@ -1,7 +1,5 @@
 import type { LogInput } from "@/components/ui/log-viewer-store"
 
-// A local environment's output, as its three services print it: Vite's colours, a JSON-ish API log with levels,
-// and Postgres. Deterministic, so screenshots and benchmarks see the same lines.
 const ESC = "\u001b"
 const sgr = (codes: string, text: string) => `${ESC}[${codes}m${text}${ESC}[0m`
 
@@ -57,7 +55,6 @@ function dbLine(n: number): { text: string; level: string } {
 
 const start = Date.UTC(2026, 10, 20, 9, 0, 0)
 
-/** The `n`th line of the simulated environment, from one of three services in turn. */
 function simulatedLine(n: number): LogInput {
   const time = start + n * 37
   const service = n % 5

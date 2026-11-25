@@ -11,11 +11,6 @@ function read(key: string): Stored {
   }
 }
 
-/**
- * Which docs sidebar sections are open. The current page's section opens whenever the reader arrives in it, and can
- * still be closed; every other section keeps what the reader last chose, remembered under `key`, and starts closed
- * except for `defaultOpen`.
- */
 function useOpenSections(key: string, current: string | undefined, defaultOpen: string | undefined) {
   const [stored, setStored] = useState(() => read(key))
   const [closedHere, setClosedHere] = useState(false)

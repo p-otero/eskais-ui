@@ -6,7 +6,6 @@ import { GitMasterDemo } from "./git-master"
 import { GitTabDemo } from "./git-tab"
 import type { GitWorkspaceDemoName } from "./names"
 
-/** The git views of the reference frames, one per ?demo= page. */
 const gitWorkspaceDemos: Record<GitWorkspaceDemoName, ComponentType> = {
   "git-master": () => <GitMasterDemo initialRepo="api" />,
   "git-worktree": () => <GitMasterDemo initialRepo="app" worktreeLayout="toggle" />,

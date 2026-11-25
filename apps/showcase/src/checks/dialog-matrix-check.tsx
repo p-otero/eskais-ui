@@ -40,9 +40,6 @@ import { StepDialog, type FormStep } from "@/components/ui/step-dialog"
 
 import { screenshots } from "../sections/media-fixtures"
 
-// ?demo=dialog-matrix-check[&content=tall]: every kind of dialog tooling/dialog-mobile-check.mjs opens on each
-// device and viewport model, with short content or with content taller than any screen. The page is taller than the
-// screen, so the check also sees whether opening one scrolls the page behind it.
 const tall = new URLSearchParams(location.search).get("content") === "tall"
 const lineCount = tall ? 40 : 2
 const lines = Array.from({ length: lineCount }, (_, index) => `Line ${String(index + 1)} of the notes kept with it.`)
@@ -85,8 +82,6 @@ function PlainDialog({ size, label }: { size?: "full"; label: string }) {
   )
 }
 
-// A touch open focuses the content itself, whatever `initialFocus` says, so the heading takes focus as an app's
-// own code would move it there once the dialog is in the page (StepDialog's result step does).
 const focusOnMount = (node: HTMLElement | null) => {
   requestAnimationFrame(() => node?.focus())
 }

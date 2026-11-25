@@ -50,7 +50,6 @@ function Rows({ rows }: { rows: Row[] }) {
   )
 }
 
-// Measures when pressed, so the copy describes the dialog open now, also when its rows haven't rendered since.
 function useCopy() {
   const [copied, setCopied] = useState(false)
   const copy = () => {
@@ -65,7 +64,6 @@ function useCopy() {
 type Report = ReturnType<typeof useViewportReport>
 type Copy = ReturnType<typeof useCopy>
 
-// The rows that say whether the open dialog fits: which one, its edges, and how far past the visible part it goes.
 function Fit({ report }: { report: Report }) {
   return <Rows rows={report.sheet.slice(0, 4)} />
 }
@@ -78,8 +76,6 @@ function CopyButton({ copy, variant = "default", size }: { copy: Copy; variant?:
   )
 }
 
-// The Copy button goes in the header's description, beside its text: the part of a dialog that stays in view when
-// the rest is cut off, as a FormDialog's body was on iOS 26.
 function Described({ copy, children }: { copy: Copy; children: ReactNode }) {
   return (
     <span className="flex flex-wrap items-center justify-between gap-items">
@@ -116,7 +112,6 @@ function SampleSheet({ report, copy }: { report: Report; copy: Copy }) {
 
 const stepSchema = z.object({ name: z.string().min(3), region: z.string() })
 
-// The same steps as the StepDialog docs demo, with the measurements under each.
 function useSteps(report: Report): FormStep<z.input<typeof stepSchema>>[] {
   const measured = <Fit report={report} />
   return [
@@ -208,7 +203,6 @@ function SampleSidePanel({ report, copy }: { report: Report; copy: Copy }) {
       <Button variant="outline" onClick={() => setOpen(true)}>
         Open SidePanel sheet
       </Button>
-      {/* A sheet on narrow screens; wider, the panel shows beside the page instead. */}
       <SidePanel
         open={open}
         onOpenChange={setOpen}
@@ -226,7 +220,6 @@ function SampleSidePanel({ report, copy }: { report: Report; copy: Copy }) {
   )
 }
 
-/** Not linked from the docs: prints what the browser reports about its viewport, to debug dialogs on real phones. */
 function ViewportDebug() {
   const report = useViewportReport()
   const copy = useCopy()
@@ -237,7 +230,6 @@ function ViewportDebug() {
       className="mx-auto flex w-full max-w-2xl flex-col gap-group px-group py-section outline-none"
     >
       <meta name="robots" content="noindex" />
-      {/* Fills the containing block of a fixed element, where a dialog lays out, and reads the safe areas. */}
       <div
         id="viewport-debug-probe"
         aria-hidden="true"
@@ -266,7 +258,6 @@ function ViewportDebug() {
         <h2 className="text-title-sm">Dialog (last measured while open)</h2>
         <Rows rows={report.sheet} />
       </section>
-      {/* Taller than any screen, as a docs page is, so Safari's toolbars collapse as you scroll and the page can lock. */}
       <p aria-hidden="true" className="h-750 text-caption text-muted-foreground">
         Scroll down to collapse the toolbars, then scroll back and open a dialog.
       </p>
