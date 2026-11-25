@@ -3966,6 +3966,213 @@
       }
     },
     {
+      "name": "live-sky",
+      "type": "registry:ui",
+      "title": "Live Sky",
+      "description": "The sky over a place right now, seen looking up between buildings: real weather from Open-Meteo (or your fetcher) drawn with WebGL, the sun and moon where they stand, clouds from the cloud cover, and rain that falls toward the viewer with depth, slants with the wind and runs down a pane of glass. Drizzle, rain and downpour, snow and fog look different; reduced motion shows stills with a slow crossfade. A place search, a geolocation button, and setLocation, geolocate and refresh for agents.",
+      "docs": "`<LiveSky label location onLocationChange fetchWeather searchPlaces onWeather refreshMs simulate glass locale labels>`. `location` is `{ latitude, longitude, name? }` or `\"geolocate\"` (the default), which offers a button that asks the browser where the person is (and locates on its own when access was already granted). The search is UI SDK's Combobox over `searchPlaces` (Open-Meteo's geocoder by default, `false` hides it), debounced. Coordinates are rounded to 2 decimals before any request and nothing is stored. The default fetchers use Open-Meteo's free API, which is for non-commercial use: for commercial use, `createOpenMeteo({ forecastUrl, geocodingUrl, apiKey })` points them at the customer hosts with your key, or pass your own `fetchWeather`. The weather is fetched while the sky is on screen and the page visible, again every `refreshMs` (10 minutes); `onWeather` gets each answer. The scene is aria-hidden: a readout shows the place, temperature and the WMO description (`labels.conditions`), and a summary sentence (`labels.summary`, \"Moderate rain, 12 °C, sun behind clouds\") describes the sky and is what agents read as its value. Agents call `setLocation(name | { latitude, longitude } | latitude, longitude)`, `geolocate` (fails with why when access is denied) and `refresh`; with `simulate={{ weather, time, location }}` nothing is fetched and the actions fail with why. WebGL draws it, at a lower resolution and frame rate on software GL; a 2D canvas where WebGL is missing; nothing runs while it's hidden. The palette is the item's `css`: `--live-sky-*` hex colours on `[data-slot=\"live-sky\"]`.",
+      "dependencies": [
+        "@ui-sdk/core@0.1.0-beta.12",
+        "@ui-sdk/react@0.1.0-beta.12",
+        "lucide-react"
+      ],
+      "registryDependencies": [
+        "@eskais/utils",
+        "@eskais/theme",
+        "@eskais/narrow",
+        "@eskais/action-refusal",
+        "@eskais/badge",
+        "@eskais/button",
+        "@eskais/spinner",
+        "@eskais/combobox"
+      ],
+      "files": [
+        {
+          "path": "registry/ui/live-sky.tsx",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/live-sky-primitive.ts",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/live-sky-labels.ts",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/live-sky-search.tsx",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/live-sky-weather.ts",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/live-sky-feed.ts",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/live-sky-conditions.ts",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/live-sky-astronomy.ts",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/live-sky-camera.ts",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/live-sky-palette.ts",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/live-sky-light.ts",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/live-sky-street.ts",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/live-sky-noise.ts",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/live-sky-sky.ts",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/live-sky-facades.ts",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/live-sky-clouds.ts",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/live-sky-precipitation.ts",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/live-sky-glass.ts",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/live-sky-backdrop.ts",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/live-sky-shaders.ts",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/live-sky-webgl.ts",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/live-sky-canvas.ts",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/live-sky-renderer.ts",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/live-sky-engine.ts",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/use-live-sky-scene.ts",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/use-live-sky-weather.ts",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/use-live-sky-geolocation.ts",
+          "type": "registry:ui"
+        }
+      ],
+      "css": {
+        "[data-slot=\"live-sky\"]": {
+          "container-type": "inline-size",
+          "--live-sky-night-zenith": "#03050c",
+          "--live-sky-night-horizon": "#121a30",
+          "--live-sky-blue-zenith": "#101d47",
+          "--live-sky-blue-horizon": "#3f5288",
+          "--live-sky-dawn-zenith": "#24356c",
+          "--live-sky-dawn-horizon": "#d9845c",
+          "--live-sky-dawn-glow": "#ff8f4a",
+          "--live-sky-golden-zenith": "#4c77b9",
+          "--live-sky-golden-horizon": "#f0c07c",
+          "--live-sky-golden-glow": "#ffc25e",
+          "--live-sky-day-zenith": "#2a68cc",
+          "--live-sky-day-horizon": "#a6cbf0",
+          "--live-sky-day-glow": "#fff4dc",
+          "--live-sky-cloud-light": "#f3f4f6",
+          "--live-sky-cloud-dark": "#474d5a",
+          "--live-sky-city-glow": "#6a5650",
+          "--live-sky-fog": "#b4bbc4",
+          "--live-sky-sun": "#fff2d2",
+          "--live-sky-moon": "#efece2",
+          "--live-sky-window-warm": "#ffc173",
+          "--live-sky-window-cool": "#cfe0ff",
+          "--live-sky-street-light": "#ffb35c",
+          "--live-sky-facade": "#d8d0c2",
+          "--live-sky-facade-stone": "#b3a089",
+          "--live-sky-facade-concrete": "#8d9399",
+          "--live-sky-facade-gallery": "#ecebe6",
+          "--live-sky-rain": "#cbd8e8",
+          "--live-sky-snow": "#ffffff"
+        },
+        "[data-slot=\"live-sky-scene\"]": {
+          "position": "relative",
+          "width": "100%",
+          "overflow": "hidden",
+          "aspect-ratio": "16 / 10",
+          "background-color": "var(--live-sky-night-horizon)",
+          "background-image": "linear-gradient(to bottom, var(--live-sky-blue-zenith), var(--live-sky-blue-horizon))",
+          "user-select": "none"
+        },
+        "@container (width < 32rem)": {
+          "[data-slot=\"live-sky-scene\"]": {
+            "aspect-ratio": "4 / 5"
+          }
+        },
+        "[data-slot=\"live-sky-canvas\"]": {
+          "position": "absolute",
+          "inset": "0",
+          "display": "block",
+          "width": "100%",
+          "height": "100%",
+          "pointer-events": "none"
+        },
+        "[data-slot=\"live-sky-still\"]": {
+          "position": "absolute",
+          "inset": "0",
+          "display": "none",
+          "width": "100%",
+          "height": "100%",
+          "pointer-events": "none",
+          "opacity": "0",
+          "transition-property": "opacity",
+          "transition-timing-function": "linear"
+        },
+        "[data-slot=\"live-sky-scene\"][data-mode=\"still\"] [data-slot=\"live-sky-still\"]": {
+          "display": "block"
+        },
+        "[data-slot=\"live-sky-scene\"][data-mode=\"still\"] [data-slot=\"live-sky-canvas\"]": {
+          "visibility": "hidden"
+        },
+        "[data-slot=\"live-sky-still\"][data-front]": {
+          "opacity": "1"
+        }
+      }
+    },
+    {
       "name": "sky-photo",
       "type": "registry:lib",
       "title": "Sky Photo",

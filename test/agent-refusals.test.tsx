@@ -21,6 +21,7 @@ import { lightbox } from "@/components/ui/lightbox-primitive"
 import { logViewer } from "@/components/ui/log-viewer-primitive"
 import { createLogStore } from "@/components/ui/log-viewer-store"
 import { link } from "@/components/ui/link-primitive"
+import { liveSky } from "@/components/ui/live-sky-primitive"
 import { list } from "@/components/ui/list-primitive"
 import { masterDetail } from "@/components/ui/master-detail-primitive"
 import { modelScan } from "@/components/ui/model-scan-primitive"
@@ -487,6 +488,26 @@ test("vinyl scrubber: a refused seek or play, a time past the end or an unknown 
   await failsWith("Loading", "seek", "seek isn't available until the media's duration is known", [30])
   expect(seek).toHaveBeenCalledOnce()
   expect(setPlaying).toHaveBeenCalledOnce()
+})
+
+test("live sky: denied location, a missing place, a bad coordinate or simulated weather fail the step", async () => {
+  const handlers = {
+    setLocation: vi.fn(),
+    geolocate: vi.fn(() => Promise.resolve({ latitude: 0, longitude: 0 })),
+    refresh: vi.fn(() => Promise.resolve()),
+  }
+  mounted(mount(liveSky, { handlers, geolocation: "denied", hasLocation: false }, `<root aria-label="Sky"></root>`))
+  await failsWith("Sky", "geolocate", "geolocate isn't available: the person denied location access in the browser")
+  await failsWith("Sky", "refresh", "refresh isn't available before the sky has a place")
+  await failsWith("Sky", "setLocation", "can't look a place up by name here", ["Vigo"])
+  await failsWith("Sky", "setLocation", "takes a latitude from -90 to 90", [95, 0])
+  expect(handlers.geolocate).not.toHaveBeenCalled()
+  expect(handlers.setLocation).not.toHaveBeenCalled()
+  mounted(mount(liveSky, { handlers, geolocation: "unsupported" }, `<root aria-label="Old browser sky"></root>`))
+  await failsWith("Old browser sky", "geolocate", "geolocate isn't available: this browser can't tell where it is")
+  mounted(mount(liveSky, { handlers, simulated: true, hasLocation: true }, `<root aria-label="Demo sky"></root>`))
+  await failsWith("Demo sky", "refresh", "refresh isn't available while the sky shows simulated weather")
+  expect(handlers.refresh).not.toHaveBeenCalled()
 })
 
 test("search field: a refused search fails the step", async () => {

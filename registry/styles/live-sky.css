@@ -1,0 +1,76 @@
+[data-slot="live-sky"] {
+  container-type: inline-size;
+  --live-sky-night-zenith: #03050c;
+  --live-sky-night-horizon: #121a30;
+  --live-sky-blue-zenith: #101d47;
+  --live-sky-blue-horizon: #3f5288;
+  --live-sky-dawn-zenith: #24356c;
+  --live-sky-dawn-horizon: #d9845c;
+  --live-sky-dawn-glow: #ff8f4a;
+  --live-sky-golden-zenith: #4c77b9;
+  --live-sky-golden-horizon: #f0c07c;
+  --live-sky-golden-glow: #ffc25e;
+  --live-sky-day-zenith: #2a68cc;
+  --live-sky-day-horizon: #a6cbf0;
+  --live-sky-day-glow: #fff4dc;
+  --live-sky-cloud-light: #f3f4f6;
+  --live-sky-cloud-dark: #474d5a;
+  --live-sky-city-glow: #6a5650;
+  --live-sky-fog: #b4bbc4;
+  --live-sky-sun: #fff2d2;
+  --live-sky-moon: #efece2;
+  --live-sky-window-warm: #ffc173;
+  --live-sky-window-cool: #cfe0ff;
+  --live-sky-street-light: #ffb35c;
+  --live-sky-facade: #d8d0c2;
+  --live-sky-facade-stone: #b3a089;
+  --live-sky-facade-concrete: #8d9399;
+  --live-sky-facade-gallery: #ecebe6;
+  --live-sky-rain: #cbd8e8;
+  --live-sky-snow: #ffffff;
+}
+
+[data-slot="live-sky-scene"] {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+  aspect-ratio: 16 / 10;
+  background-color: var(--live-sky-night-horizon);
+  background-image: linear-gradient(to bottom, var(--live-sky-blue-zenith), var(--live-sky-blue-horizon));
+  user-select: none;
+}
+
+@container (width < 32rem) {
+  [data-slot="live-sky-scene"] {
+    aspect-ratio: 4 / 5;
+  }
+}
+
+[data-slot="live-sky-canvas"],
+[data-slot="live-sky-still"] {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+[data-slot="live-sky-still"] {
+  display: none;
+  opacity: 0;
+  transition-property: opacity;
+  transition-timing-function: linear;
+}
+
+[data-slot="live-sky-scene"][data-mode="still"] [data-slot="live-sky-still"] {
+  display: block;
+}
+
+[data-slot="live-sky-scene"][data-mode="still"] [data-slot="live-sky-canvas"] {
+  visibility: hidden;
+}
+
+[data-slot="live-sky-still"][data-front] {
+  opacity: 1;
+}
