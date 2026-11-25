@@ -15,7 +15,7 @@ function RouteIcon({ route, className }: { route: ShellRoute; className?: string
   return Icon ? <Icon className={className} /> : null
 }
 
-// Memoized: on navigation only the item that was current and the one that is now re-render.
+// Perf: on navigation only the item that was current and the one that is now re-render.
 const ShellSidebarItem = memo(function ShellSidebarItem({
   route,
   current,
@@ -33,7 +33,6 @@ const ShellSidebarItem = memo(function ShellSidebarItem({
       current={current}
       icon={<RouteIcon route={route} />}
       badge={route.badge}
-      // Always set, so agents can follow every route; without onNavigate it loads the href like a plain link.
       onFollow={() => navigate(route.id)}
       onIntent={intent ? () => intent(route.id) : undefined}
     >

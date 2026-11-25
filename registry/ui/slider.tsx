@@ -62,7 +62,6 @@ function SliderIndicator({ className, ...props }: ComponentProps<typeof SliderIn
   return <SliderIndicatorPrimitive className={cnState("rounded-full bg-primary", className)} {...props} />
 }
 
-// UI SDK positions thumbs and the indicator with inline styles; the thumb's border carries the 3:1 edge.
 function SliderThumb({ className, ...props }: ComponentProps<typeof SliderThumbPrimitive>) {
   return (
     <SliderThumbPrimitive

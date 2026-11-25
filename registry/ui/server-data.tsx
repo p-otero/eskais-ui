@@ -108,8 +108,8 @@ function createDataClient(options: DataClientOptions = {}): QueryClient {
 
 let fallback: QueryClient | undefined
 
-// Without any provider the hooks share one client, mounted once, so a single-page app needs no setup. A server
-// renderer should mount `DataProvider` per request instead, so no cache outlives it.
+// Security: a server renderer mounts `DataProvider` per request, so no cache outlives it; this shared client is for
+// a single-page app.
 function fallbackClient() {
   if (!fallback) {
     fallback = createDataClient()

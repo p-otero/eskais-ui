@@ -71,7 +71,6 @@ function Sortable({
         if (typeof ref === "function") ref(node)
         else if (ref) ref.current = node
       }}
-      // The FLIP timing: the root transitions nothing itself, but carries the motion tokens for `useFlip`.
       className={cnState(
         cn(
           "group/sortable min-w-0 transition-none duration-panel ease-standard outline-none",

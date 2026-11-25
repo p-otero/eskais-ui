@@ -35,7 +35,6 @@ function subscribeTo(query: string) {
   }
 }
 
-// The server and the first client render assume a wide screen, so hydration matches before the query runs.
 function useNarrow(query: string) {
   const subscribe = useMemo(() => subscribeTo(query), [query])
   return useSyncExternalStore(
@@ -47,9 +46,8 @@ function useNarrow(query: string) {
 
 type DrawerState = { open: boolean; listeners: Set<() => void> }
 
-// The sidebar's controller drives the collapsed rail, which UI SDK binds to the mounted <nav>. On narrow screens that
-// <nav> lives inside a closed drawer, so a SidebarTrigger elsewhere opens the drawer through this state, keyed by the
-// same controller, instead.
+// Workaround: UI SDK binds the collapsed rail to the mounted <nav>, which on narrow screens sits inside a closed
+// drawer, so a SidebarTrigger elsewhere opens the drawer through this state, keyed by the same controller.
 const drawers = new WeakMap<SidebarController, DrawerState>()
 
 function drawerOf(controller: SidebarController) {
@@ -116,7 +114,6 @@ type SidebarTriggerProps = Omit<ComponentProps<typeof Button>, "size" | "aria-la
   narrowQuery?: string
 }
 
-// UI SDK's Button keeps its own data-slot over a prop; the rendered element's props win.
 function sidebarTriggerElement(part: ComponentProps<"button">) {
   return <button {...part} data-slot="sidebar-trigger" />
 }

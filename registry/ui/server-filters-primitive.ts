@@ -12,7 +12,7 @@ type ServerFiltersOptions = {
   clear?: () => void
 }
 
-// The agent bridge passes arguments unchecked; `apply` validates the field and the value against the schema.
+// Security: the agent bridge passes arguments unchecked; `apply` validates the field and the value against the schema.
 const serverFilters = definePrimitive({
   name: "server-filters",
   options: { fields: "list", apply: "value", clear: "value" },

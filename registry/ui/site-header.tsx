@@ -27,7 +27,6 @@ type SiteHeaderLabels = {
   more: string
   /** The narrow-screen button that opens every link in a drawer. */
   menu: string
-  /** The drawer's close button. */
   close: string
 }
 
@@ -53,7 +52,6 @@ type SiteHeaderProps = Omit<ComponentProps<"header">, "children"> & {
 // oxlint-disable-next-line shadcn/no-arbitrary-values -- sticks below the safe area, like Floating's top edge
 const stickyClassName = "sticky top-[calc(var(--floating-offset)+env(safe-area-inset-top))]"
 
-// The floating fill and shadow, one step stronger: more opaque, and the floating shadow laid twice, so flat stays flat.
 const scrolledClassName = [
   "group-data-scrolled/site-header:bg-[color-mix(in_oklab,var(--popover)_min(100%,calc(var(--floating-opacity)+10%)),transparent)]",
   "group-data-scrolled/site-header:shadow-[var(--floating-shadow),var(--floating-shadow)]",
@@ -179,7 +177,7 @@ function SiteHeader({
                 )}
               </NavigationMenuList>
             </NavigationMenu>
-            {/* An invisible row wider than the bar still widens the page: on a phone the layout viewport grows with
+            {/* Spec: an invisible row wider than the bar still widens the page: on a phone the layout viewport grows with
                 it, and fixed overlays (dialogs, sheets) are laid out past the screen's edge. */}
             <div aria-hidden="true" inert className="pointer-events-none invisible absolute inset-0 overflow-hidden">
               <div

@@ -18,7 +18,6 @@ import {
 } from "@/components/ui/command"
 import { CommandDialog, CommandDialogContent, type CommandDialogController } from "@/components/ui/command-dialog"
 
-// Keeps the generated commands apart from the consumer's own `commandGroups` values.
 const goToPrefix = "shell:go-to:"
 
 type ShellSearchLabels = { palette: string; search: string; searchPlaceholder?: string; empty: string; goTo: string }
@@ -53,13 +52,11 @@ function ShellSearch({
   onQueryChange,
   footer,
 }: ShellSearchProps) {
-  // Route commands are links, which never reach onAction; only the consumer's commands run here.
   const run = async (value: string) => {
     await onCommand?.(value)
     controller.close()
   }
   const follow = (id: string) => {
-    // Closed first, so focus is back on the trigger before the route changes.
     controller.close()
     navigate(id)
   }
