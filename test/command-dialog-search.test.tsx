@@ -252,7 +252,7 @@ for (const keepMounted of [false, true]) {
     await settle(20)
     const input = screen.getByRole<HTMLInputElement>("combobox", { name: "Find a command" })
     expect(document.activeElement).toBe(input)
-    // A kept-mounted search field must be the one the dialog focused: replacing it on open loses focus in Electron.
+    // Workaround: Electron loses focus when the dialog replaces the search field it focused on open.
     expect(keepMounted ? input : first).toBe(first)
     expect(input.value).toBe("")
     expect(highlighted()).toBe("Apollo")

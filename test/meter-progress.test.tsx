@@ -88,7 +88,6 @@ test("Meter variant=ring keeps role=meter on the root and draws the value as an 
   expect(meter.getAttribute("aria-valuenow")).toBe("68")
   expect(meter.dataset.variant).toBe("ring")
   expect(meter.className).toContain("group/gauge")
-  // Caps a long label at a narrow column's width; tooling/shell-check.mjs measures it in Chrome.
   expect(meter.className.split(" ")).toEqual(expect.arrayContaining(["max-w-full", "min-w-0"]))
   expect(meter.querySelector("[data-slot=meter-label]")?.className.split(" ")).toEqual(
     expect.arrayContaining(["max-w-full", "min-w-0"]),

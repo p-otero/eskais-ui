@@ -141,7 +141,6 @@ test("onNavigate routes a plain click and Enter on the client; a modified click 
   anchor.dispatchEvent(native)
   expect(onNavigate).toHaveBeenCalledTimes(2)
   expect(native.defaultPrevented).toBe(false)
-  // It routes without offering agents a follow action, unlike onFollow.
   expect(agent.snapshot().some((entry) => entry.label === "List")).toBe(false)
 })
 

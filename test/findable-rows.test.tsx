@@ -18,7 +18,7 @@ function scrollTo(this: Element, options?: ScrollToOptions | number) {
   this.dispatchEvent(new Event("scroll"))
 }
 
-// jsdom has no layout and no hidden="until-found": give the scroller a height, and say the browser finds hidden text.
+// Workaround: jsdom has no layout and no hidden="until-found": the scroller gets a height, and the browser is said to find hidden text.
 beforeEach(() => {
   vi.spyOn(HTMLElement.prototype, "clientHeight", "get").mockImplementation(function (this: HTMLElement) {
     return this.classList.contains("overflow-y-auto") ? 320 : 0
@@ -42,7 +42,7 @@ test("off by default: no findable layers", async () => {
   expect(document.querySelector("[data-findable-layer]")).toBeNull()
 })
 
-// jsdom's accessible names drop the space that ends a piece in its own element; browsers keep it.
+// Workaround: jsdom's accessible names drop the space that ends a piece in its own element; browsers keep it.
 test("findable: rows show their subject through findableText, and the layers hold every other row once idle", async () => {
   render(<CommitHistory aria-label="History" commits={commits} now={0} findable />)
   const first = screen.getByRole("treeitem", { name: /^Change 0 in ?file-0\.ts/ })

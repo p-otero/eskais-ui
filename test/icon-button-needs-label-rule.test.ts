@@ -7,7 +7,6 @@ import { afterAll, expect, test } from "vitest"
 const dir = mkdtempSync(join(tmpdir(), "eskais-icon-button-rule-"))
 afterAll(() => rmSync(dir, { recursive: true, force: true }))
 
-// The plugin consumers get from the lint-rules item, so the test covers the file that ships.
 writeFileSync(
   join(dir, ".oxlintrc.json"),
   JSON.stringify({

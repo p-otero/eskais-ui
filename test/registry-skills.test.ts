@@ -36,10 +36,8 @@ function markdownFiles(dir: string): string[] {
     .toSorted()
 }
 
-// `references/forms.md`, `scripts/check.ts` or a relative Markdown link: a file the skill tells the agent to open.
 function referencedFiles(markdown: string): string[] {
   const named = [...markdown.matchAll(/`((?:references|scripts|assets)\/[\w./-]+)`/g)].map((match) => match[1] ?? "")
-  // A link inside a fenced block is an example of what to write, not a file the skill ships.
   const prose = markdown.replaceAll(/^[ \t]*```[\s\S]*?^[ \t]*```/gm, "")
   const linked = [...prose.matchAll(/\]\((?!https?:|#|mailto:)([^)\s]+)\)/g)].map((match) => match[1] ?? "")
   return [...new Set([...named, ...linked])]

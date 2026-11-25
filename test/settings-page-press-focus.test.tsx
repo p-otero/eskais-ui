@@ -30,8 +30,6 @@ const url = () => createUrlParam("section", { router: hashRouter() })
 
 const heading = (name: string) => screen.getByRole("heading", { name })
 
-// A mouse press on a hash-route link: fast-link follows on pointerdown, then the browser's mousedown default would
-// focus the anchor unless something prevents it, then click.
 function mousePress(link: HTMLElement, { focusAnyway = false } = {}) {
   act(() => {
     link.dispatchEvent(

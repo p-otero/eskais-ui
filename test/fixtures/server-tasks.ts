@@ -107,7 +107,6 @@ function matchesTask(task: ServerTask, filter: ServerTaskFilter) {
 
 type DemoSourceOptions = { delay?: number; fail?: () => boolean; key?: readonly unknown[] }
 
-/** An in-memory task source with latency and failures you switch on, for demos and checks. */
 function taskSource(options: DemoSourceOptions = {}) {
   return arraySource<ServerTask, ServerTaskFilter>(serverTasks, {
     key: options.key ?? ["demo", "tasks"],
@@ -119,7 +118,6 @@ function taskSource(options: DemoSourceOptions = {}) {
 
 type WireFormat = "params" | "rsql" | "odata" | "spring" | "graphql" | "json" | "q"
 
-/** What the filter looks like on the wire in each format, as a backend switcher shows it. */
 function wireFilter(format: WireFormat, filter: ServerTaskFilter): string {
   const ast = toFilterAst(serverTaskFilters, filter)
   const terms = searchTerms(serverTaskFilters, filter)
@@ -138,7 +136,6 @@ function wireFilter(format: WireFormat, filter: ServerTaskFilter): string {
 
 type Backend = "page" | "cursor" | "spring"
 
-// A pretend server: it reads the request the adapter built (`call.request`) and answers in its own wire shape.
 function serve(request: PageRequest<ServerTaskFilter>, signal: AbortSignal, delay: number) {
   const all = taskSource()
   const position = "page" in request.position ? { page: 1 } : request.position
@@ -152,10 +149,6 @@ function serve(request: PageRequest<ServerTaskFilter>, signal: AbortSignal, dela
   })
 }
 
-/**
- * The same tasks behind three backends, each through its adapter: `?page=&size=` with a total, keyset cursors, and a
- * Spring `Page<T>` with `sort=field,asc`. `onWire` gets each request as it would go over the network.
- */
 function backendSource(
   backend: Backend,
   onWire: (wire: string) => void,

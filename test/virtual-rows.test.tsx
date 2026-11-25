@@ -8,7 +8,7 @@ const ROW = 50
 const VIEW = 500
 const keyAt = (index: number) => `row-${String(index)}`
 
-// jsdom has no layout: the scroller is VIEW px tall and scrolls when told to; rows are ROW px.
+// Workaround: jsdom has no layout: the scroller is VIEW px tall and scrolls when told to; rows are ROW px.
 let scrollTop = 0
 const scrolls: number[] = []
 const descriptors = {
@@ -50,7 +50,6 @@ afterEach(() => {
 
 const parentOf = (el: HTMLElement) => el.parentElement
 
-// Buttons stand in for what a list does on a key press: scroll to the focused row, or render one an agent acts on.
 function Rows({ count = 1000 }: { count?: number }) {
   const { anchor, measureElement, segments, ...virtual } = useVirtualRows({
     count,
@@ -105,11 +104,9 @@ const nextPaint = () => act(() => new Promise<void>((done) => requestAnimationFr
 test("a row the browser centred on focus is aligned from where the list was, one row per arrow key", () => {
   const { container } = render(<Rows />)
   expect(renderedIndexes(container)).toContain(10)
-  // Focusing row 10 (just below the view) scrolls the browser's way, centring it, before the list sees a scroll.
   scrollTop = 300
   fireEvent.click(screen.getByRole("button", { name: "Scroll to 10" }))
   expect(scrolls).toEqual([11 * ROW - VIEW])
-  // A row already in view from there doesn't scroll.
   fireEvent.click(screen.getByRole("button", { name: "Scroll to 5" }))
   expect(scrolls).toHaveLength(1)
 })
@@ -118,7 +115,6 @@ test("a scroll that only moves rows out of view renders after the next paint; on
   const { container } = render(<Rows />)
   const before = renderedIndexes(container)
   scrollBy(container, ROW)
-  // Rows 1 to 10 are in view, and all were already rendered: the overscan moves later.
   expect(renderedIndexes(container)).toEqual(before)
   await nextPaint()
   expect(renderedIndexes(container)).not.toEqual(before)
@@ -155,7 +151,6 @@ test("rows the size the virtualizer already has never reach its measure; a row o
     },
   )
   const { container } = render(<Rows />)
-  // The scroller's own observer, from UI SDK, observes the scroller only; ours observes the rows.
   const rows = observers.find((observer) => [...observer.observed].some((el) => el.hasAttribute("data-index")))
   expect(rows).toBeDefined()
   const rowElements = [...container.querySelectorAll("li[data-index]")]

@@ -22,7 +22,6 @@ import { Input } from "@/components/ui/input"
 let approve = false
 const agent = createAgent({ allow: (step) => !step.confirm || approve })
 
-// Effect Schema and others expose only `~standard` with `message` and `path` per issue: no vendor codes.
 function effectLike<T extends Record<string, string>>(
   check: (value: Record<string, unknown>) => StandardSchemaV1.Issue[],
 ): StandardSchemaV1<T, T> {

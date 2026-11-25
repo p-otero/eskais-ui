@@ -62,7 +62,6 @@ describe("easing", () => {
     }
     expect(current).toBe(before)
     expect([...current]).toEqual([0, 1, expect.closeTo(-0.8, 6)])
-    // About 0.7 s at 60 fps: 1/rate per two thirds of the way, down to a thousandth.
     expect(frames).toBeGreaterThan(30)
     expect(frames).toBeLessThan(60)
   })

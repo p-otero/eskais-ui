@@ -61,7 +61,6 @@ test("a card's handle moves it to the next column that takes it, which reports a
   expect(screen.getByRole("button", { name: "Open T-012 Write the migration for the attempts table" })).toBeTruthy()
 
   act(() => handle.focus())
-  // To do's "Waiting" group doesn't take a ready task, so Right goes on to Working.
   await user.keyboard(" {ArrowRight} ")
   expect(onMove).toHaveBeenCalledWith({ id: "T-012", from: "todo", to: "working", index: 0, before: "T-014" })
   expect(cardIds("working")).toEqual(["T-012", "T-014"])
@@ -81,7 +80,6 @@ test("a card's handle follows the board's tab stops: only the active card's hand
   const other = screen.getByRole("button", { name: "Move Write the migration for the attempts table" })
   expect(handle.tabIndex).toBe(0)
   expect(other.tabIndex).toBe(-1)
-  // Back past the card's pull request link, the one control between the handle and the title.
   await user.tab({ shift: true })
   await user.tab({ shift: true })
   expect(document.activeElement).toBe(handle)

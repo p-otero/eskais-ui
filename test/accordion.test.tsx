@@ -75,7 +75,7 @@ test("an agent can open a section by name", async () => {
   }
   const accordion = components.find((entry) => entry.label === "Task questions")
   expect(accordion, "Task questions is missing from the snapshot").toBeTruthy()
-  // UI SDK beta.5 names accordion items by value, not by their trigger text.
+  // Workaround: UI SDK beta.5 names accordion items by value, not by their trigger text.
   const retries = accordion?.items?.find((item) => item.value === "retries")
   expect(retries, JSON.stringify(accordion?.items)).toBeTruthy()
   const result = await agent.act({ steps: [{ ref: "Task questions", action: "open", args: [retries?.value] }] })

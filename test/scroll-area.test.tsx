@@ -17,7 +17,6 @@ import { axeViolations } from "./axe"
 
 const markup = `<root><viewport aria-label="Notes"><content><p>Text</p></content></viewport><scrollbar orientation="vertical"><thumb orientation="vertical"></thumb></scrollbar><corner></corner></root>`
 
-// jsdom lays nothing out, so a test gives the viewport its sizes and scroll position.
 function layOut(el: HTMLElement, sizes: { client: number; scroll: number; top?: number }) {
   let top = sizes.top ?? 0
   Object.defineProperties(el, {
@@ -131,7 +130,6 @@ test("primitive: a roving tabindex moving between rows never rescans the content
     items[index]!.tabIndex = 0
     await tick()
   }
-  // The other order, the old stop first and the new one after, as some roving code writes it.
   items.at(-1)!.tabIndex = -1
   items[0]!.tabIndex = 0
   await tick()
@@ -175,7 +173,6 @@ test("primitive: a hidden scrollbar lets presses through, and type always keeps 
   views.push(always)
   const fits = always.part("viewport")!
   layOut(fits, { client: 100, scroll: 100 })
-  // A new child is what a ResizeObserver reports in a browser: the viewport measures again.
   fits.append(document.createElement("p"))
   await tick()
   expect(always.part("scrollbar")!.hasAttribute("data-visible")).toBe(true)

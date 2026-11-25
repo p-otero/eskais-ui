@@ -201,7 +201,6 @@ test("glass turns on for the whole page, its strength is a rule on glass scopes,
   await user.keyboard("{ArrowRight}{ArrowRight}")
   const rule = document.getElementById("theme-editor-glass")?.textContent
   expect(rule).toBe('[data-theme="glass"] { --glass-opacity: 50%; --glass-blur: 25px; }')
-  // Never inline on <html>: outside glass, --glass-opacity keeps the fills opaque.
   expect(html.style.getPropertyValue("--glass-opacity")).toBe("")
   expect(editorText()).toContain("--glass-blur: 25px;")
   expect(JSON.parse(localStorage.getItem(key) ?? "{}")).toEqual({ glass: 50 })

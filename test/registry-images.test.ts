@@ -8,8 +8,6 @@ function files(dir: string): string[] {
   )
 }
 
-// An image reserves its box before it loads when it has a width and a height (CSS keeps `height: auto`) or an
-// `aspect-*` class; one that passes its props through leaves that to the caller, whose `width`/`height` it forwards.
 const reserves = (tag: string) =>
   (/\bwidth=/.test(tag) && /\bheight=/.test(tag)) || /\baspect-/.test(tag) || /\{\.\.\.props\}/.test(tag)
 

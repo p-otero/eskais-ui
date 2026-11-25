@@ -8,7 +8,6 @@ import { afterAll, beforeAll, expect, test, vi } from "vitest"
 
 import { GitDiff } from "@/components/ui/git-diff"
 
-// The tree scrolls in a scroll area, which takes its width and cap.
 const treeBox = () =>
   screen.getByRole("tree", { name: "Changed files" }).closest<HTMLElement>("[data-slot=scroll-area]")!
 

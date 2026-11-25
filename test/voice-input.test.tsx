@@ -21,13 +21,11 @@ import { audio, fakeStream, installFakeAudio, pendingFrames, stepFrames } from "
 
 const agent = createAgent()
 
-// The primitive and agent tests keep the real animation frames, which mount's key presses and act wait for.
 beforeEach(({ task }) => {
   if (!/^(primitive|agent):/.test(task.name)) installFakeAudio()
 })
 afterEach(() => vi.unstubAllGlobals())
 
-// What an app does: onStart gets the microphone, onConfirm transcribes, onCancel drops it.
 function Harness({
   initial = "idle",
   outcome = "listening",

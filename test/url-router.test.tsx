@@ -144,7 +144,6 @@ test("MasterDetail keeps its selection in an app router's query through the adap
   expect(screen.getByRole("region", { name: "Kitchen sensor" })).toBeTruthy()
 })
 
-// An app whose router owns a path segment, `#/devices/<id>`, controls the selection from the route instead.
 function RoutedDevices({ router }: { router: UrlRouter }) {
   const path = useSyncExternalStore(router.subscribe, () => router.read().path)
   const id = /^\/devices\/([^/]+)$/.exec(path)?.[1] ?? null

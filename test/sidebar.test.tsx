@@ -87,7 +87,6 @@ test("the toggle collapses it to a rail of items named by tooltips, and expands 
   expect(nav.hasAttribute("data-collapsed")).toBe(true)
   expect(screen.getByRole("button", { name: "Expand sidebar" }).getAttribute("aria-expanded")).toBe("false")
   const tips = screen.getAllByRole("tooltip", { hidden: true })
-  // The toggle's own tooltip first, then one per rail item.
   expect(tips.map((tip) => tip.textContent)).toEqual(["Expand sidebar", "Overview", "Projects", "Settings"])
   expect(screen.getByRole("link", { name: "Settings" })).toBeTruthy()
   expect(screen.getByRole("link", { name: "Overview" }).getAttribute("aria-current")).toBe("page")

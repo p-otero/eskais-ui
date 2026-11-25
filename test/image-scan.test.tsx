@@ -60,21 +60,18 @@ describe("mapRegionBox", () => {
   })
 
   test("contain letterboxes a wide image in a square frame", () => {
-    // 800×400 in 300×300: drawn 300×150, 75px bands above and below.
     expect(
       mapRegionBox(box, { fit: "contain", image: { width: 800, height: 400 }, frame: { width: 300, height: 300 } }),
     ).toEqual({ x: 75, y: 150, width: 150, height: 37.5 })
   })
 
   test("contain pillarboxes a tall image in a wide frame", () => {
-    // 300×600 in 400×200: drawn 100×200, 150px bands at the sides.
     expect(
       mapRegionBox(box, { fit: "contain", image: { width: 300, height: 600 }, frame: { width: 400, height: 200 } }),
     ).toEqual({ x: 175, y: 100, width: 50, height: 50 })
   })
 
   test("cover crops a wide image to a square frame, reaching past its sides", () => {
-    // 800×400 in 300×300: drawn 600×300, 150px cut from each side.
     const mapped = mapRegionBox(
       { x: 0, y: 0, width: 1, height: 1 },
       { fit: "cover", image: { width: 800, height: 400 }, frame: { width: 300, height: 300 } },
@@ -263,7 +260,6 @@ test("result: regions are named toggle buttons in reading order, and the legend 
   await user.keyboard(" ")
   expect(onSelectedRegionChange).toHaveBeenLastCalledWith("spot", expect.anything())
 
-  // A pointer on a legend row highlights its box, and a press there selects it.
   fireEvent.pointerEnter(legendItems[2] as Element)
   expect(buttons[2]?.hasAttribute("data-highlighted")).toBe(true)
   await user.click(legendItems[2] as Element)
@@ -323,7 +319,6 @@ test("status changes are read in the labels' words, progress at most every tenth
   at(2500, { status: "scanning", progress: 0.27 })
   at(2600, { status: "scanning", progress: 0.28 })
   at(5000, { status: "scanning", progress: 0.61 })
-  // Long enough after, but still the same tenth.
   at(7500, { status: "scanning", progress: 0.67 })
   at(7600, { status: "result", regions: regions.slice(0, 1) })
   at(7700, { status: "scanning" })

@@ -31,7 +31,6 @@ test("with the detail dialog open, an agent reads it, opens a thread, uses board
   for (const label of ["Agent tasks", "T-014 Index the docs for search", "Attempts", "Open thread th-2"]) {
     expect(labels, `${label} is missing from the snapshot`).toContain(label)
   }
-  // The board behind the modal is inert for people, so its controls are hidden from agents too.
   for (const label of ["Search tasks", "Profile", "View", "Open T-015 Review the agent approval flow"]) {
     expect(labels).not.toContain(label)
   }

@@ -11,10 +11,6 @@ function c(id: string, parents: string[], date = NOW): Commit {
   return { id, parents, message: id, date }
 }
 
-/**
- * Main `m0` (newest) to `m{length-1}`, and branches forking from main at `fork` with `ahead` commits of their own,
- * placed right above main's commit at `at` (0 puts them at the top), as `git log --all --topo-order` would.
- */
 function history(length: number, branches: { name: string; fork: number; ahead: number; at?: number }[]) {
   const before = new Map<number, Commit[]>()
   for (const branch of branches) {

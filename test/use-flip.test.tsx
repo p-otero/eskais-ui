@@ -16,7 +16,7 @@ function Row({ order }: { order: string[] }) {
   )
 }
 
-// jsdom lays nothing out, so each element sits where its index says.
+// Workaround: jsdom has no layout, so each element sits where its index says.
 function layOut() {
   vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockImplementation(function (this: HTMLElement) {
     const index = this.parentElement ? [...this.parentElement.children].indexOf(this) : 0

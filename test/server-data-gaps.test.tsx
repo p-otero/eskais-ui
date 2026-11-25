@@ -20,7 +20,6 @@ type Filter = Record<string, never>
 
 type Pending<T> = { signal: AbortSignal; resolve: (value: T) => void; reject: (error: unknown) => void }
 
-/** A source whose every fetch waits until the test settles it. */
 function fakeSource() {
   const calls: (Pending<PageResult<Row>> & { request: PageRequest<Filter> })[] = []
   const source: PageSource<Row, Filter> = {
@@ -35,7 +34,6 @@ function fakeSource() {
   return { source, calls }
 }
 
-/** A resource fetch that waits until the test settles it. */
 function fakeFetch<T>() {
   const calls: Pending<T>[] = []
   const fetch = ({ signal }: { signal: AbortSignal }) =>
@@ -81,7 +79,6 @@ describe("useServerQuery", () => {
     rerender({ id: "b" })
     await waitFor(() => expect(calls).toHaveLength(2))
     expect(calls[0]?.signal.aborted).toBe(true)
-    // Without keepPrevious a detail never shows another id's data.
     expect(result.current).toMatchObject({ data: undefined, status: "pending" })
     unmount()
     expect(calls[1]?.signal.aborted).toBe(true)
@@ -247,7 +244,6 @@ describe("settle", () => {
     await waitFor(() => expect(result.current.other.status).toBe("success"))
     await waitFor(() => expect(result.current.infinite.status).toBe("success"))
 
-    // A reload of the page and the detail is in flight when the answer comes back.
     act(() => {
       void client.refetchQueries({ queryKey: source.key, predicate: (query) => query.queryKey[1] !== "infinite" })
     })
@@ -268,13 +264,11 @@ describe("settle", () => {
     expect(result.current.infinite.items[0]).toEqual({ id: "a", name: "Saved" })
     expect(result.current.detail).toMatchObject({ data: { id: "a", name: "Saved" }, fetching: false })
     expect(result.current.other.data).toEqual({ id: "b", name: "b" })
-    // A late answer to a cancelled read never lands.
     act(() => reloads.page?.resolve({ items: rows("a", "b"), total: 2 }))
     expect(calls).toHaveLength(3)
     expect(detail.calls).toHaveLength(2)
     expect(result.current.page.items[0]?.name).toBe("Saved")
     expect(client.getQueryState([...source.key, "detail", "a"])?.isInvalidated).toBe(false)
-    // The detail settle left alone was loading from before the change: that read starts again.
     expect(reloads.other?.signal.aborted).toBe(true)
     expect(other.calls).toHaveLength(3)
     act(() => other.calls[2]?.resolve({ id: "b", name: "B" }))
@@ -367,7 +361,6 @@ describe("useInvalidateSource throwOnError", () => {
   })
 })
 
-/** Renders a page and awaits one act() around its source settling; returns the status React shows then. */
 async function settledAfterOneAct() {
   const source = arraySource(rows("a", "b"))
   const { wrapper } = setup()

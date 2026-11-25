@@ -31,7 +31,7 @@ const few: CommandData = [
   "Retry failed tasks",
 ]
 
-// jsdom has no layout: give rows a height and the command list a viewport, and let it scroll.
+// Workaround: jsdom has no layout, so rows get a height and the command list a viewport.
 const descriptors = {
   offsetHeight: Object.getOwnPropertyDescriptor(HTMLElement.prototype, "offsetHeight"),
   clientHeight: Object.getOwnPropertyDescriptor(Element.prototype, "clientHeight"),

@@ -47,7 +47,6 @@ test("a Button part sets its slot through render and still hides the idle spinne
   const save = screen.getByRole("button", { name: "Save" })
   expect(save.getAttribute("data-slot")).toBe("save-action")
   expect(save.getAttribute("type")).toBe("button")
-  // The spinner hides by the button's own class, not by the theme's [data-slot=button] rule.
   expect(save.className).toContain("not-data-pending:[&>[data-show=pending]]:hidden")
   expect(screen.getByRole("button", { name: "Copy" }).getAttribute("data-slot")).toBe("button")
 })
@@ -71,8 +70,6 @@ test("composed parts built on UI SDK buttons keep their slots", () => {
   expect(container.querySelector("[data-slot=code-tabs]")).not.toBeNull()
 })
 
-// UI SDK keeps a part's own data-slot over a prop; only the props of the element passed to `render` replace it.
-// So a registry file never passes `data-slot` straight to a part it imports from UI SDK.
 function uiSdkParts(source: string) {
   const names: string[] = []
   const from = /import\s*\{([^}]*)\}\s*from\s*"(?:@ui-sdk\/react\/[\w-]+|@\/components\/ui\/button)"/g

@@ -40,8 +40,7 @@ function checkMatches(a: Int32Array, b: Int32Array, matches: Int32Array) {
   return count
 }
 
-// A small seeded generator, so a failing case can be replayed.
-function random(seed: number) {
+function seededRandom(seed: number) {
   let state = seed
   return () => {
     state = (state * 1_103_515_245 + 12_345) % 2_147_483_648
@@ -55,7 +54,7 @@ function randomSequence(next: () => number, length: number, alphabet: number) {
 
 describe("sequence diff", () => {
   test("Myers finds a longest common subsequence, against a naive LCS on random inputs", () => {
-    const next = random(42)
+    const next = seededRandom(42)
     for (let round = 0; round < 400; round++) {
       const a = randomSequence(next, Math.floor(next() * 40), 1 + Math.floor(next() * 6))
       const b =
@@ -66,7 +65,7 @@ describe("sequence diff", () => {
   })
 
   test("histogram gives a valid common subsequence on random inputs", () => {
-    const next = random(7)
+    const next = seededRandom(7)
     for (let round = 0; round < 400; round++) {
       const a = randomSequence(next, Math.floor(next() * 60), 1 + Math.floor(next() * 10))
       const b = randomSequence(next, Math.floor(next() * 60), 1 + Math.floor(next() * 10))
@@ -76,7 +75,7 @@ describe("sequence diff", () => {
   })
 
   test("the cost cut still gives a valid, if longer, script", () => {
-    const next = random(3)
+    const next = seededRandom(3)
     const a = randomSequence(next, 3000, 50)
     const b = randomSequence(next, 3000, 50)
     const matched = checkMatches(a, b, sequenceDiff.match(a, b, "myers", 4))
@@ -154,14 +153,14 @@ describe("line diff", () => {
     const next = old.map((line, index) => (index % 50 === 0 ? `${line} changed` : line))
     const start = performance.now()
     const diff = diffText(old.join("\n"), next.join("\n"))
-    // Guards against a quadratic blowup (minutes), loose for shared CI runners; diff-bench times it for real.
+    // Perf: guards against a quadratic blowup (minutes), loose for shared CI runners; diff-bench times it for real.
     expect(performance.now() - start).toBeLessThan(5000)
     expect(diff.additions).toBe(400)
     expect(diff.deletions).toBe(400)
   })
 
   test("two unrelated large files stay fast", () => {
-    const next = random(9)
+    const next = seededRandom(9)
     const a = Array.from({ length: 10_000 }, () => String(Math.floor(next() * 500))).join("\n")
     const b = Array.from({ length: 10_000 }, () => String(Math.floor(next() * 500))).join("\n")
     const start = performance.now()

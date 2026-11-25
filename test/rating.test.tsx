@@ -58,7 +58,7 @@ test("no axe violations", async () => {
   expect(await axeViolations(container)).toEqual([])
 })
 
-// UI SDK 0.1.0-beta.5 keeps the aria-hidden radio buttons inside a read-only rating's role="img": nested-interactive.
+// Workaround: UI SDK 0.1.0-beta.5 keeps aria-hidden radios inside a read-only rating's role="img": nested-interactive.
 test.fails("a read-only rating has no axe violations", async () => {
   const { container } = render(
     <main>

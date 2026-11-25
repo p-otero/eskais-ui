@@ -105,7 +105,6 @@ test("a cancelled open keeps the link from following", async () => {
     />,
   )
   const link = screen.getByRole("link", { name: /spec\.pdf/ })
-  // React handles clicks at its root, so read the outcome once the event reaches the document.
   const record = (event: Event) => {
     defaultPrevented = event.defaultPrevented
   }

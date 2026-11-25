@@ -9,7 +9,6 @@ import { fakeScene } from "./fixtures/model/fake-scene"
 
 vi.mock("@/components/ui/model-viewer-scene", () => import("./fixtures/model/fake-scene"))
 
-// The test setup's canvas has no context, as in a browser without WebGL.
 test("without WebGL the poster stays with a message, the scene never loads, and agents hear why", async () => {
   const agent = createAgent()
   render(

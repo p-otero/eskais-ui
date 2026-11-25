@@ -15,7 +15,7 @@ const rows: Row[] = Array.from({ length: COUNT }, (_, index) => ({
   title: `Row ${String(index + 1)}`,
 }))
 
-// jsdom has no layout: give rendered rows a height so the virtualizer measures something.
+// Workaround: jsdom has no layout, so rendered rows get a height for the virtualizer to measure.
 const offsetHeight = Object.getOwnPropertyDescriptor(HTMLElement.prototype, "offsetHeight")
 beforeEach(() => {
   Object.defineProperty(HTMLElement.prototype, "offsetHeight", {
@@ -24,9 +24,8 @@ beforeEach(() => {
       return this.dataset.index === undefined ? 0 : 52
     },
   })
-  // The window scrolls as far as the document is tall, which jsdom reports as 0.
+  // Workaround: jsdom reports the document's height as 0, which caps how far the window scrolls.
   Object.defineProperty(document.documentElement, "scrollHeight", { configurable: true, value: COUNT * 52 + 800 })
-  // The virtualizer reveals a row by scrolling the window; make that scroll, so the row renders and takes focus.
   vi.spyOn(globalThis, "scrollTo").mockImplementation(((options?: ScrollToOptions | number, y?: number) => {
     const top = typeof options === "number" ? (y ?? 0) : (options?.top ?? globalThis.scrollY)
     Object.defineProperty(globalThis, "scrollY", { configurable: true, value: top })
@@ -78,7 +77,7 @@ for (const [name, Rows] of [
     expect(rendered[0]?.getAttribute("aria-setsize")).toBe(String(COUNT))
     expect(rendered[0]?.getAttribute("aria-posinset")).toBe("1")
     expect(list.querySelector('[data-slot="list-gap"]')).not.toBeNull()
-    // Unrendered rows' text is in UI SDK's findable layers, which need hidden="until-found": find-check covers it.
+    // Workaround: jsdom has no hidden="until-found" for UI SDK's findable layers; tooling/find-check.mjs covers them.
     expect(list.textContent).not.toContain("Row 4321")
   })
 

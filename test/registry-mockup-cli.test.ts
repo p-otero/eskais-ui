@@ -24,8 +24,6 @@ const built = JSON.parse(readFileSync(join(repo, "public", "r", "eskais-mockup-c
   files: BuiltFile[]
 }
 
-// Static imports and re-exports at the start of a line. The CLI also writes import lines inside template strings,
-// which start with a backtick and aren't matched.
 const staticImport =
   /^(?:import|export)\s+(?:type\s+)?(?:\{[^}]*\}|\*\s+as\s+\w+|\w+(?:\s*,\s*\{[^}]*\})?)\s+from\s+"([^"]+)"|^import\s+"([^"]+)"/gm
 

@@ -23,7 +23,7 @@ import { settle } from "./overlay-helpers"
 const agent = createAgent()
 const WIDTH = 300
 
-// jsdom has no layout: give the viewport and each slide a width so the carousel can measure its pages.
+// Workaround: jsdom has no layout, so the viewport and each slide get a width for the carousel to measure.
 const restore: (() => void)[] = []
 function stub<K extends keyof HTMLElement>(key: K, get: (element: HTMLElement) => unknown) {
   const original = Object.getOwnPropertyDescriptor(HTMLElement.prototype, key)

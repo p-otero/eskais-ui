@@ -51,7 +51,7 @@ describe("Link fast navigation", () => {
 
   test("without onFollow, the press claims the link and the click's default navigation is prevented", () => {
     render(<Link href="/plain">Plain</Link>)
-    // jsdom logs `location.assign` as not implemented; tooling/fast-link-check.mjs covers it in Chrome.
+    // Workaround: jsdom logs `location.assign` as not implemented; tooling/fast-link-check.mjs covers it in Chrome.
     expect(press(screen.getByRole("link", { name: "Plain" })).defaultPrevented).toBe(true)
   })
 

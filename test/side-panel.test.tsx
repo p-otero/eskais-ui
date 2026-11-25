@@ -49,7 +49,7 @@ function mockNarrow(matches: boolean) {
     addEventListener: () => {},
     removeEventListener: () => {},
   }))
-  // The drawer's sheet snaps with one once matchMedia exists; jsdom has none.
+  // Workaround: jsdom has no matchMedia, which the drawer's sheet needs to snap.
   vi.stubGlobal(
     "IntersectionObserver",
     class {

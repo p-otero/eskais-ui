@@ -209,7 +209,7 @@ test("the menu button opens every link in a drawer, grouped, and a link closes i
       .map((link) => link.textContent?.replace(/\s+/g, " ").trim()),
   ).toEqual(["Product", "StartupsShip the first version fast.", "Enterprise", "Pricing", "Docs", "Blog"])
   expect(within(nav).getByRole("link", { name: "Product" }).getAttribute("aria-current")).toBe("page")
-  // jsdom has no styles, so the bar's own navigation, display: none on narrow screens, would count as a second one.
+  // Workaround: jsdom has no styles, so the bar's navigation hidden on narrow screens would count as a second one.
   expect(await axeViolations(drawer)).toEqual([])
 
   await user.click(within(nav).getByRole("link", { name: "Docs" }))

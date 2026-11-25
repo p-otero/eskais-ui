@@ -13,7 +13,6 @@ function sources(folder: string): string[] {
   })
 }
 
-// The site is built from registry items: links are Link, code is CodeBlock, controls are UI SDK parts.
 test("the site renders no raw <a>, <button>, <input> or <pre>", () => {
   const found = sources(site).flatMap((file) =>
     readFileSync(file, "utf8")

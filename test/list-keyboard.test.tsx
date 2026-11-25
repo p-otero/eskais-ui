@@ -50,7 +50,7 @@ function Rows({
   )
 }
 
-// jsdom has no layout: give rendered rows a height so the virtualizer measures something.
+// Workaround: jsdom has no layout, so rendered rows get a height for the virtualizer to measure.
 const offsetHeight = Object.getOwnPropertyDescriptor(HTMLElement.prototype, "offsetHeight")
 beforeEach(() => {
   Object.defineProperty(HTMLElement.prototype, "offsetHeight", {

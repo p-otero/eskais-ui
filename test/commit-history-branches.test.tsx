@@ -16,7 +16,6 @@ const c = (id: string, parents: string[], message: string, minutes: number): Com
   date: ago(minutes),
 })
 
-// git log --all --topo-order: each branch's own commits before the main commit it forked from.
 const commits: Commit[] = [
   c("w2", ["w1"], "Back off with jitter", 4),
   c("w1", ["m0"], "Retry failed webhooks", 9),

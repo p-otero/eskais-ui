@@ -17,7 +17,7 @@ import { parsePatch } from "@/lib/diff-patch"
 const agent = createAgent()
 const patch = readFileSync(join(import.meta.dirname, "fixtures", "diff", "real.patch"), "utf8")
 
-// jsdom lays nothing out: give the diff's scroller a height, so the virtualizer renders a screen of rows.
+// Workaround: jsdom has no layout, so the diff's scroller gets a height for the virtualizer to render rows.
 function noScroll() {}
 
 const height = Object.getOwnPropertyDescriptor(Element.prototype, "clientHeight")!
@@ -118,7 +118,6 @@ describe("TextDiff", () => {
     const onLineSelect = vi.fn()
     const { container } = render(<TextDiff oldText={before} newText={after} onLineSelect={onLineSelect} />)
     await settle()
-    // Line numbers are pseudo-elements: a press left of the code (jsdom lays the code out at 0) lands on them.
     const cells = [...container.querySelectorAll<HTMLElement>('[role="gridcell"][data-new]')]
     const lineFour = cells.find((cell) => cell.dataset.new === "4")!
     fireEvent.pointerDown(lineFour, { button: 0, clientX: -1 })

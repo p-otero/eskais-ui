@@ -24,8 +24,6 @@ test("every item whose files import lucide-react depends on it", () => {
   expect(missing).toEqual([])
 })
 
-// shadcn 4.23 skips a versionless dependency the consumer already has; with any version it reinstalls it, rewriting
-// the consumer's spec (an exact pin downgraded a newer lucide, npm moves a range to the latest release).
 test("items list lucide-react without a version", () => {
   const versioned = registry.items.flatMap((item) =>
     dependenciesOf(item).filter((dependency) => dependency.startsWith("lucide-react@")),

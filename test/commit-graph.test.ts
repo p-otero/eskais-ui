@@ -32,7 +32,6 @@ function lanes(commits: Commit[], expanded: Iterable<string> | "all" = "all", ma
   return { graph, visible, rows }
 }
 
-// The first frame: a merge whose branch nests under it, then the mainline continues from the fork point.
 const merged = [c("M", "m1", "f3"), c("f3", "f2"), c("f2", "f1"), c("f1", "m1"), c("m1", "m0"), c("m0")]
 
 describe("nesting", () => {
@@ -180,7 +179,6 @@ describe("lanes", () => {
       c("b"),
     ])
     expect(rows.m2?.out).toEqual([2, 1])
-    // Lanes stay where they opened rather than shifting left, so a row never jumps sideways.
     expect(rows.b).toMatchObject({ lane: 1, into: [1], out: [] })
   })
 

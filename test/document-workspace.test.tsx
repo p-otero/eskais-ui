@@ -117,7 +117,7 @@ test("the toggles collapse and restore the columns, and storageKey remembers it"
   fireEvent.click(files)
   await settle()
   expect(onExplorerOpenChange).toHaveBeenLastCalledWith(false)
-  // jsdom has no layout for the columns to collapse in; tooling/document-workspace-check.mjs sees them go in Chrome.
+  // Workaround: jsdom has no layout for the columns to collapse in; tooling/document-workspace-check.mjs covers it.
   expect(files.getAttribute("aria-expanded")).toBe("false")
   expect(JSON.parse(localStorage.getItem("notes") ?? "{}")).toMatchObject({ explorer: false })
   unmount()
@@ -249,7 +249,6 @@ test("switching modes keeps the reading position by heading", async () => {
   const handle = fakeEditor()
   handle.getScrollLine.mockReturnValue(6)
   const editor = { current: handle } as RefObject<DocumentEditor | null>
-  // Where each element sits: the region's top is at 100, and the headings wherever `tops` says.
   const tops: Record<string, number> = { Document: 100, Plan: 100, Goals: 340, Risks: 600 }
   const rect = vi.spyOn(Element.prototype, "getBoundingClientRect").mockImplementation(function (this: Element) {
     const name = this.getAttribute("aria-label") ?? this.textContent ?? ""
@@ -261,10 +260,8 @@ test("switching modes keeps the reading position by heading", async () => {
 
   fireEvent.click(screen.getByRole("radio", { name: "Read" }))
   await frames()
-  // Line 6 is under Goals, so Goals goes to the top of the read view.
   expect(region.scrollTop).toBe(240)
 
-  // Back in edit mode, the heading at the top of the read view is the line the editor scrolls to.
   Object.assign(tops, { Plan: -300, Goals: 90, Risks: 400 })
   fireEvent.click(screen.getByRole("radio", { name: "Edit" }))
   await frames()
@@ -304,7 +301,6 @@ test("agents switch the mode, open the explorer and the aside, and run quick ope
 
 const notes = ["plan", "goals", "risks"]
 
-/** A tree of buttons, not links: what it opens reaches the workspace only through `documentId`. */
 function ButtonTree({ onOpen, close = false }: { onOpen: (id: string) => void; close?: boolean }) {
   const workspace = useDocumentWorkspace()
   return (
@@ -347,7 +343,6 @@ function ButtonTreeHarness({
   )
 }
 
-/** The workspace measures 320px wide, a phone's width. */
 function phoneWidth() {
   const original = Element.prototype.getBoundingClientRect
   return vi.spyOn(Element.prototype, "getBoundingClientRect").mockImplementation(function (this: Element) {
@@ -369,7 +364,6 @@ test("320px: a button in the explorer drawer that opens another document closes 
   await settle()
   expect(document.querySelector("[data-slot=document-workspace]")?.getAttribute("data-layout")).toBe("narrow")
 
-  // The current document again: nothing changes, so the drawer stays.
   fireEvent.click(within(await openFiles()).getByRole("button", { name: "plan" }))
   await settle()
   expect(screen.getByRole("dialog", { name: "Files" })).toBeTruthy()

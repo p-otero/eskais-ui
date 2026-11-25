@@ -16,12 +16,11 @@ import {
 
 import { settle } from "./overlay-helpers"
 
-// Holds every exit transition open until `finish()`, the way a 200ms CSS transition keeps a closing dialog mounted.
-// UI SDK also ends an exit on a timer, after the animation's remaining time plus 50ms, so the fake animation reports
-// a long one: with none, a slow run passes those 50ms before the test looks.
+const longerThanUiSdkExitTimeout = 60_000
+
 function holdExitAnimations() {
   const { promise: finished, resolve: finish } = Promise.withResolvers<void>()
-  const effect = { getComputedTiming: () => ({ endTime: 60_000, localTime: 0 }) }
+  const effect = { getComputedTiming: () => ({ endTime: longerThanUiSdkExitTimeout, localTime: 0 }) }
   const spy = vi.spyOn(Element.prototype, "getAnimations").mockImplementation(function (this: Element) {
     if (!this.hasAttribute("data-ending-style")) return []
     return [{ finished, effect, playState: "running", cancel: () => {}, finish: () => {} } as unknown as Animation]
@@ -174,7 +173,6 @@ test.each([false, true])(
   },
 )
 
-// Opens a modal of another library that moves focus in a frame after it mounts, and closes when focus leaves it.
 function LateFocusModal({ onClose }: { onClose: () => void }) {
   return (
     <dialog

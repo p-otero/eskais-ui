@@ -15,7 +15,7 @@ vi.mock("@/components/ui/model-viewer-scene", () => import("./fixtures/model/fak
 
 const agent = createAgent()
 
-// jsdom has no WebGL: report a context so the viewer takes its WebGL path, with the scene stubbed out.
+// Workaround: jsdom has no WebGL: report a context so the viewer takes its WebGL path, with the scene stubbed out.
 beforeAll(() => {
   HTMLCanvasElement.prototype.getContext = (() => ({ getExtension: () => null })) as never
 })
@@ -97,7 +97,6 @@ describe("primitive", () => {
       expect(view.state.pitch).toBe(75)
       view.api.zoom(20)
       expect(view.state.zoom).toBe(3)
-      // Turned to -165°, the back is at -180°, not 180°.
       view.api.rotate(200)
       view.api.setView("back")
       expect(view.state.yaw).toBe(-180)
@@ -295,6 +294,5 @@ test("aligned weights, target names and expressions reach the scene; a new model
   await tick()
   expect(fakeScene.props?.model).toBe("final.glb")
   expect(fakeScene.props?.expressions).toEqual({ mouthSmileLeft: 1 })
-  // The viewer stays ready while the new model loads under the old one.
   expect(document.querySelector('[data-slot="model-viewer"]')?.getAttribute("data-status")).toBe("ready")
 })

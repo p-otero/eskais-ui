@@ -158,7 +158,6 @@ test('navigation="cells" makes the cells one tab stop: arrows by cell, Home/End,
 })
 
 test("cells reach rows a virtualized table hasn't rendered", async () => {
-  // The table scrolls with the window here: let a reveal scroll it, so the row renders and its cell takes focus.
   Object.defineProperty(document.documentElement, "scrollHeight", { configurable: true, value: 1000 * 41 + 800 })
   vi.mocked(globalThis.scrollTo).mockImplementation(((options?: ScrollToOptions | number, y?: number) => {
     const top = typeof options === "number" ? (y ?? 0) : (options?.top ?? globalThis.scrollY)

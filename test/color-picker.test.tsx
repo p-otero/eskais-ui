@@ -243,7 +243,6 @@ test("a drag past the right edge leaves the thumb there when the pointer lifts",
   expect(onValueChange).toHaveBeenLastCalledWith(committed, expect.anything())
 })
 
-// UI SDK moves once a frame, so a pointer lifting sooner commits a move that never rendered.
 test("a pointer that lifts in the frame it reached the edge leaves the thumb there too", () => {
   const { onValueCommit, down, move, up } = renderDraggable()
   down(100)

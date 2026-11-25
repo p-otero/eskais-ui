@@ -231,13 +231,11 @@ test("a menu item's shortcut presses it while the menu is open", async () => {
   await user.click(screen.getByRole("button", { name: "Actions" }))
   const item = await screen.findByRole("menuitem", { name: /Pin/ })
   expect(item.getAttribute("aria-keyshortcuts")).toBe("P")
-  // Focus moves into the menu a frame after it opens; keys pressed before that still go to the trigger.
   await vi.waitFor(() => expect(item.closest('[role="menu"]')?.contains(document.activeElement)).toBe(true))
   await user.keyboard("p")
   expect(pin).toHaveBeenCalledTimes(1)
 })
 
-// What each layout sends for "?" or "/": the produced key, with the modifiers that layout needed to make it.
 const keyEvents = {
   "? on a US layout (Shift+/)": { key: "?", code: "Slash", shiftKey: true },
   "? on a Spanish layout (Shift+')": { key: "?", code: "Minus", shiftKey: true },

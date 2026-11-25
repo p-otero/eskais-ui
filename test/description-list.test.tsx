@@ -88,7 +88,7 @@ test("an empty value shows a dash and reads the overridable empty label", () => 
 })
 
 test("copyable details copy their text, announce it, and are named by their term", async () => {
-  // After setup: user-event installs a clipboard of its own.
+  // Workaround: user-event's setup() installs a clipboard of its own, so stub it after.
   const user = userEvent.setup()
   const writeText = stubClipboard()
   render(<Details />)
@@ -100,7 +100,7 @@ test("copyable details copy their text, announce it, and are named by their term
 })
 
 test("copyValue copies something other than what shows", async () => {
-  // After setup: user-event installs a clipboard of its own.
+  // Workaround: user-event's setup() installs a clipboard of its own, so stub it after.
   const user = userEvent.setup()
   const writeText = stubClipboard()
   render(

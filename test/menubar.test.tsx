@@ -87,7 +87,7 @@ test("Enter opens a menu, arrows switch menus while open, Escape closes and retu
   expect(document.activeElement).toBe(file)
 })
 
-// UI SDK 0.1.0-beta.10: after ArrowRight switches menus, Escape focuses the first menu's trigger, not the open one's.
+// Workaround: UI SDK 0.1.0-beta.10 focuses the first menu's trigger on Escape after ArrowRight switched menus.
 test.fails("Escape after switching menus with the arrows focuses the open menu's trigger", async () => {
   const user = userEvent.setup()
   render(<Editor />)

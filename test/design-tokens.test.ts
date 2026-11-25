@@ -20,7 +20,6 @@ test("every type step has a size and line height, and compact tightens all but m
   expect(theme).toContain('--font-mono: "Geist Mono Variable"')
 })
 
-// Body text inherits its weight, so <strong>, <b> and <th> stay bold; labels, titles and display text set one.
 test.each(["caption", "body-sm", "body"])("text-%s sets no font weight", (step) => {
   expect(theme).not.toContain(`--text-${step}--font-weight`)
 })
@@ -108,8 +107,6 @@ test("the narrow and dark variants ship with the theme item", () => {
   })
 })
 
-// shadcn merges a rule into the stylesheet by its exact selector or at-rule params. Prettier, Biome and oxfmt put each
-// selector of a list on its own line and wrap anything past 80 columns, so such a key never matches after formatting.
 test("every rule in the theme items keeps its key through a formatter", () => {
   const registry = JSON.parse(readFileSync("registry.json", "utf8")) as {
     items: { name: string; css?: Record<string, unknown> }[]
@@ -119,7 +116,6 @@ test("every rule in the theme items keeps its key through a formatter", () => {
     for (const [key, value] of Object.entries(node)) {
       if (typeof value !== "object" || value === null) continue
       const outsideParens = key.replaceAll(/\((?:[^()]|\([^()]*\))*\)|\[[^\]]*\]/g, "")
-      // Four-space indentation, the widest common setting, with " {" after the key.
       if (depth * 4 + key.length + 2 > 80 || (!key.startsWith("@") && outsideParens.includes(","))) unstable.push(key)
       walk(value as Record<string, unknown>, depth + 1)
     }
@@ -138,7 +134,6 @@ test("the theme item gives shadcn nothing to mirror into @theme inline as a self
   }
   const item = registry.items.find((entry) => entry.name === "theme")!
   const { theme: inline, light, dark } = item.cssVars!
-  // shadcn adds `--color-x: var(--x)` for a value starting with hsl, rgb, # or oklch, and `--x: var(--x)` otherwise.
   for (const [name, value] of [...Object.entries(light), ...Object.entries(dark)]) {
     expect(value).toMatch(/^(hsl|rgb|#|oklch)/)
     expect(inline).toHaveProperty(`color-${name}`)

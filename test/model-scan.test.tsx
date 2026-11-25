@@ -167,7 +167,6 @@ describe("points", () => {
   })
 
   test("points are the photo's fractions as sent, whatever the aspect, and points off the photo are kept", () => {
-    // MediaPipe reports every landmark, also those a crop cut off: past 0 or 1.
     const sent = new Float32Array([0.5, 0.5, 0, 1, -0.2, 0.5, 0.5, 1.3])
     const [group] = pointGroups([{ source: "body", aspect: 9 / 16, points: sent }])
     expect(group?.coords).toBe(sent)
@@ -344,7 +343,6 @@ test("building and refining hand the model and the weights to the viewer; ready 
   rerender(<Scan stage="refining" model="figure.glb" weights={{ Smile: 0.5 }} progress={0.25} statusText="Fitting" />)
   expect(fakeScene.props?.weights).toEqual({ Smile: 0.5 })
   expect(screen.getByRole("progressbar", { name: "Fitting" }).getAttribute("aria-valuenow")).toBe("25")
-  // Until ready the viewer can't be turned, and clips wait.
   expect(screen.queryByRole("group", { name: "3D view controls" })).toBeNull()
   rerender(<Scan stage="ready" model="figure.glb" weights={{ Smile: 1 }} modelAlt="A 3D figure" />)
   await tick()
@@ -421,7 +419,6 @@ test("a failed run ends with the engine's error event, mapped to the consumer's 
   expect(events.at(-1)).toEqual({ type: "error", error: { code: "no-face", message: expect.any(String) as string } })
   expect(toModelScanProps(state).error).toBe(scanErrors["no-face"])
   expect(toModelScanProps(state, { "no-face": "Sin cara" }).error).toBe("Sin cara")
-  // Without WebGL2 the words are ModelViewer's own for a browser without WebGL, and a new run can't help.
   state = idleEngine
   const noWebgl = runFakeEngine(emit, { model: "figure.glb", character: "final.glb", fail: "webgl2-unavailable" })
   await vi.runAllTimersAsync()

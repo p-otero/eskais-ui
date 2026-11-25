@@ -486,8 +486,6 @@ describe("agents", () => {
       ),
     })
     await tick()
-    // The row's own button reads the action in its row text, so the name alone is ambiguous: the documented
-    // flow is to take the ref from the snapshot.
     const copy = onPage().find((entry) => entry.label === "Copy command for T-013")
     expect(copy?.actions).toContain("press")
     const result = await agent.act({ steps: [{ ref: copy!.ref, action: "press" }] })

@@ -63,7 +63,6 @@ test("the collapse toggle ends the column header, names its column and shows a t
   const toggle = screen.getByRole("button", { name: "Contraer Hechas" })
   const count = header?.querySelector('[data-slot="board-column-count"]')
   expect(header?.contains(toggle)).toBe(true)
-  // After the title and the count, so it no longer reads as "move left".
   expect(count && count.compareDocumentPosition(toggle) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
   const icon = () => toggle.querySelector('[data-slot="board-column-collapse-icon"]')?.getAttribute("data-icon")
   expect(icon()).toBe("circle-minus")
