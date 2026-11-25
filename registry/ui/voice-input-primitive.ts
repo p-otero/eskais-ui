@@ -59,7 +59,7 @@ const voiceInput = definePrimitive({
     })
     context.onDestroy(unsubscribe)
 
-    // A UI SDK Toggle reports its press without the event; its own details say who pressed it.
+    // Workaround: a UI SDK Toggle reports its press without the event; its own details say who pressed it.
     let pressedBy: ChangeSource | undefined
     const request = (action: string, next: VoiceInputState, reason: VoiceInputStateChangeReason, event?: Event) =>
       settled(change("state", next, { reason, event, ...(pressedBy ? { source: pressedBy } : {}) }), action, {
@@ -89,7 +89,6 @@ const voiceInput = definePrimitive({
         const root = context.element("root")
         const focused = root?.contains(root.ownerDocument.activeElement) === true
         if (!request("cancel", "idle", reason, event)) return false
-        // The cancel button leaves with the state, so focus moves to the toggle, which is always there.
         if (focused) root?.querySelector<HTMLElement>("[data-voice-input-toggle]")?.focus()
         return true
       },
@@ -125,7 +124,6 @@ const voiceInput = definePrimitive({
         keydown: (event, { api, store }) => {
           const keyboard = event as KeyboardEvent
           const { state } = store.get()
-          // Only while it's on, so Escape still closes a dialog or clears a field around an idle voice input.
           if (keyboard.key !== "Escape" || (state !== "listening" && state !== "requesting")) return
           keyboard.preventDefault()
           keyboard.stopPropagation()

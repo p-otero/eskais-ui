@@ -93,8 +93,6 @@ type TreeProps<Mode extends TreeMode = "single"> = TreePrimitiveProps<Mode> & {
   onFollow?: FastLinkOptions["onFollow"]
 }
 
-// Every row indents by its level: one indicator plus the gap after it per level, so a child's text starts under
-// its parent's icon and the guide line of its group runs through the parent's indicator.
 const treeClassName =
   // oxlint-disable-next-line shadcn/no-arbitrary-values -- one level of indent is the size-4 indicator and its gap
   "flex flex-col text-body outline-none [--tree-indent:calc(1rem+var(--gap-inline))] data-disabled:opacity-50"

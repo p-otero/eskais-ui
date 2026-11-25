@@ -18,7 +18,6 @@ type TopbarProps = Omit<ComponentProps<"header">, "children"> & {
   trailing?: ReactNode
 }
 
-// Leading and trailing grow equally from zero, so the centre slot stays centred whatever each side holds.
 function Topbar({ brand, leading, center, centerCompact, trailing, className, ...props }: TopbarProps) {
   return (
     <header
