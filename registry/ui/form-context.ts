@@ -1,8 +1,5 @@
 "use client"
 
-// Internal to Form: its shape changes without notice. Apps import from `@/components/ui/form` (`useFormInstance`,
-// `useFormWatch`, `useFormFieldArray`, `useFormField`), never from this file.
-
 import { standardSchemaResolver } from "@hookform/resolvers/standard-schema"
 import type { StandardSchemaV1 } from "@standard-schema/spec"
 import { createContext, useContext } from "react"
@@ -36,9 +33,8 @@ type FormContextValue = {
   fields: Map<string, string | undefined>
   setRoot: (root: HTMLElement | null) => void
   setConfirm: (confirm: boolean) => void
-  /** FormActions holds submits while it is disabled or forced pending by the app. */
+  /** While `true`, submits are held. */
   setBlocked: (blocked: boolean) => void
-  /** A StepForm takes over submits: Next on its earlier steps, and the step to show after errors. */
   setInterceptor: (interceptor: SubmitInterceptor | null) => void
   /** Puts an error in any shape `onSubmit` may throw on its fields and the root error. */
   applyError: (error: unknown) => void
@@ -69,9 +65,8 @@ function withValueAt(values: unknown, path: string[], value: unknown): unknown {
 }
 
 /**
- * Probes the schema with each field emptied in turn: a field is required when that alone gives it an issue. This
- * reads any Standard Schema, but only one that reports every issue (Zod, Valibot, ArkType) and validates
- * synchronously; an async schema marks nothing.
+ * A field is required when emptying it alone gives it an issue. Needs a synchronous schema that reports every issue
+ * (Zod, Valibot, ArkType); an async one marks nothing.
  */
 function requiredProbe(schema: StandardSchemaV1, defaults: unknown) {
   const cache = new Map<string, boolean>()
@@ -121,10 +116,7 @@ function errorAt(errors: Record<string, unknown>, path: string) {
   return isRecord(current) ? current : undefined
 }
 
-/**
- * `standardSchemaResolver` keeps only each issue's message. This wraps the schema to see the issues too, and writes
- * each one's code and params onto the error at its path, so messages can be translated from codes.
- */
+/** `standardSchemaResolver`, plus each issue's code and params on its error, so messages translate from codes. */
 function issueResolver(schema: StandardSchemaV1): Resolver<FieldValues> {
   let issues: readonly StandardSchemaV1.Issue[] = []
   const capture = (result: StandardSchemaV1.Result<unknown>) => {

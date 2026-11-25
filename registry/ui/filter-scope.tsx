@@ -26,10 +26,7 @@ type FilterScopeProps<S extends FilterSchema> = {
   children?: ReactNode
 }
 
-/**
- * Gives filter UIs inside it (`FilterSearch`, `FilterChips`, `FilterPanel`) their schema and controller, and lets
- * agents filter by a field's label: `filter("Status", ["Open", "Blocked"])`.
- */
+/** Agents filter by a field's label: `filter("Status", ["Open", "Blocked"])`. */
 function FilterScope<S extends FilterSchema>({
   schema,
   controller,
@@ -74,7 +71,7 @@ function FilterScope<S extends FilterSchema>({
   )
 }
 
-/** The schema and controller of the nearest `FilterScope`, or the ones passed; and the controller's state. */
+/** A passed `schema` or `controller` wins over the nearest `FilterScope`'s; throws when neither has one. */
 function useFilterScope<S extends FilterSchema>(props: { schema?: S; controller?: PageController<FilterValues<S>> }) {
   const scope = use(FilterScopeContext)
   // The scope stored them for any schema (React context isn't generic); a UI inside it reads them as its own `S`.

@@ -11,12 +11,11 @@ import { useFormFlag } from "@/components/ui/use-form-sync"
 import { cn } from "@/lib/utils"
 
 type FormRootErrorProps = {
-  /** A heading above the message, in the page's language. */
   title?: ReactNode
   className?: string
 }
 
-/** The form's own error: a thrown error, a server message or a schema issue with no field. Focused after a submit. */
+/** A thrown error, a server message or a schema issue with no field. Focused after a submit. */
 function FormRootError({ title, className }: FormRootErrorProps) {
   const { form, messages, setRoot } = useFormContext("FormRootError")
   const { errors } = useFormState({ control: form.control, name: "root" })

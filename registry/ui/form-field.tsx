@@ -40,8 +40,6 @@ const checkedAdapter: FormControlAdapter = {
   toControl: (value) => value ?? false,
 }
 
-// Every other registry control (NumberInput, Select, Combobox, RadioGroup, Slider, DatePicker, SegmentedControl,
-// ToggleGroup, NativeSelect, DateTimePicker) takes `value` and `onValueChange` as is; TokenInput adds itself.
 formControlAdapters
   .set(Input, textAdapter)
   .set(Textarea, textAdapter)
@@ -63,7 +61,6 @@ type FormFieldState = {
 
 const FormFieldContext = createContext<FormFieldState | null>(null)
 
-/** The field around a custom control: its value, change handler and error. */
 function useFormField() {
   const field = useContext(FormFieldContext)
   if (!field) throw new Error("useFormField must be inside a FormField.")
@@ -181,9 +178,8 @@ function FormField<Values extends FieldValues = FieldValues>({
     })
   }
 
-  // A form's default reaches only controls that can hold a floating label (a checkbox or switch never floats), in a
-  // field without padding of its own, which would move the control away from the label.
-  const inherited = floats && !padsItself(className) ? context.labelPlacement : undefined
+  const takesFormPlacement = floats && !padsItself(className)
+  const inherited = takesFormPlacement ? context.labelPlacement : undefined
   const placement = checkedLayout ? "top" : (labelPlacement ?? inherited ?? "top")
   const fieldLabel =
     label === undefined ? null : (

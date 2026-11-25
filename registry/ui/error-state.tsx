@@ -59,7 +59,7 @@ function ErrorState({
       {...props}
       render={<div data-slot="error-state" />}
     >
-      {/* The alert holds only the title and message, so the announcement leaves out the buttons. */}
+      {/* Spec: role="alert" announces everything inside it, so the buttons stay outside. */}
       <EmptyHeader role="alert">
         {size === "inline" ? null : (
           <EmptyMedia variant="icon" className="bg-destructive/10 text-destructive">
