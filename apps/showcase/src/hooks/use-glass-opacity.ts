@@ -1,5 +1,6 @@
 import { useEffect } from "react"
 
+/** Writes the glass opacity to `<html>` while the glass theme is on, and removes it after. */
 function useGlassOpacity(glass: boolean, opacity: number) {
   useEffect(() => {
     const root = document.documentElement

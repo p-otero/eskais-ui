@@ -1,6 +1,7 @@
 import { readSeeds } from "./hooks/use-theme-measurements"
 import { glassTokens } from "./theme-snippet"
 
+/** `glass` is the glass strength, 0 to 100. */
 type Overrides = { brand?: string; linkBrand?: string; tint?: number; glass?: number }
 
 const colourKeys = ["brand", "linkBrand"] as const
@@ -71,6 +72,10 @@ function writeStorage(key: string | undefined, overrides: Overrides) {
   }
 }
 
+/**
+ * Kept outside React, so the choices outlive the editor; with a `storageKey` they come back on the next visit. Call
+ * `apply()` before the first render.
+ */
 function createThemeEditorStore({ storageKey }: { storageKey?: string } = {}) {
   let overrides = readStorage(storageKey)
   const listeners = new Set<() => void>()

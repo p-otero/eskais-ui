@@ -16,6 +16,7 @@ const allowed = [
   },
 ]
 
+/** Fails the build on a registry compiler diagnostic not in `allowed`, or when nothing in the registry compiled. */
 function reactCompiler(): PluginOption[] {
   const compiled = new Set<string>()
   const problems: string[] = []

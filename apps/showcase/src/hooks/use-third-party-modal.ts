@@ -1,5 +1,6 @@
 import { useEffect, useEffectEvent, useRef } from "react"
 
+/** Moves focus inside a frame after mounting and closes when focus leaves, as a modal from another library does. */
 function useThirdPartyModal(onClose: (reason: string) => void) {
   const ref = useRef<HTMLDialogElement>(null)
   const close = useEffectEvent(onClose)

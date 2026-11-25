@@ -4,6 +4,7 @@ import type { LogStore } from "@/components/ui/log-viewer-store"
 
 import { simulatedLines } from "../sections/log-fixtures"
 
+/** Streams into `store` while `running`, `linesPerSecond` lines written every 50 ms. Returns `burst(count)`. */
 function useSimulatedLogs(
   store: LogStore,
   { running, linesPerSecond, from = 0 }: { running: boolean; linesPerSecond: number; from?: number },

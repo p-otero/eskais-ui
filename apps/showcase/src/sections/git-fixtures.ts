@@ -94,6 +94,7 @@ function pendingCommit(now: number, parent: string): Commit {
   }
 }
 
+/** `count` commits in `git log --topo-order` shape: every tenth mainline commit merges a branch of eight. */
 function generatedCommits(count: number, now = Date.now()): Commit[] {
   const commits: Commit[] = []
   const subjects = ["Fix rounding in `proration.ts`", "Add tests for `queue.ts`", "Refactor the invoice exporter"]
@@ -140,6 +141,7 @@ function generatedCommits(count: number, now = Date.now()): Commit[] {
 const branchCommit = (now: number, id: string, parent: string, message: string, minutes: number, author: string) =>
   ({ id, parents: [parent], message, date: minutesAgo(now, minutes), author }) satisfies Commit
 
+/** As `git log --all --topo-order` lists them: each branch's own commits before the main commit they forked from. */
 function branchHistory(now: number): { commits: Commit[]; branches: CommitBranch[] } {
   const main = trailCommits(now)
   const at = (id: string) => main.findIndex((commit) => commit.id === id)
@@ -178,6 +180,7 @@ function branchHistory(now: number): { commits: Commit[]; branches: CommitBranch
   return { commits, branches }
 }
 
+/** `count` mainline commits with `branchCount` branches of 5 to 11 commits forking along it. */
 function branchedCommits(count: number, branchCount: number, now = Date.now()) {
   const spacing = Math.max(1, Math.floor((count * 0.9) / branchCount))
   const plans = Array.from({ length: branchCount }, (_, index) => ({

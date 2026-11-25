@@ -11,6 +11,10 @@ function read(key: string): Stored {
   }
 }
 
+/**
+ * The current page's section opens whenever the reader arrives in it; every other section keeps the reader's last
+ * choice, remembered under `key`.
+ */
 function useOpenSections(key: string, current: string | undefined, defaultOpen: string | undefined) {
   const [stored, setStored] = useState(() => read(key))
   const [closedHere, setClosedHere] = useState(false)
