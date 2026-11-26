@@ -695,7 +695,7 @@ const itemNotes: Record<string, ItemNotes> = {
   },
   "dashboard-grid": {
     usage:
-      "A home or metrics screen: a row of DashboardStats over DashboardCards that load through status and data, with charts and meters inside.",
+      "A home or metrics screen: a row of DashboardStats (icon and tone give a stat its chip) over DashboardCards that load through status and data, with charts and meters inside.",
     a11y: [
       "Each card is a region named by its title; a DashboardChart inside is named by the same title, and a DashboardMeter keeps role=meter with its label.",
       "Cards in a row share its height, at least --dashboard-row-height, so a card keeps its size from loading to loaded and grows its row rather than clip.",
@@ -1079,7 +1079,12 @@ const itemNotes: Record<string, ItemNotes> = {
     related: ["stat", "meter"],
   },
   stat: {
-    a11y: ["A labelled group of figures; unknown values show a dash and estimates a tilde, explained in their title."],
+    usage:
+      "For a KPI card, put a StatMedia with an icon and a tone among the parts; the Stat lays it out at the end, beside the label, value and hint.",
+    a11y: [
+      "A labelled group of figures; unknown values show a dash and estimates a tilde, explained in their title.",
+      "A StatMedia is decorative and hidden unless its label makes it an image with that name.",
+    ],
     related: ["quantity", "chart", "usage"],
   },
   "description-list": {

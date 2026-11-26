@@ -1,3 +1,4 @@
+import { ActivityIcon, CircleCheckIcon, TimerIcon, WalletIcon } from "lucide-react"
 import { useState } from "react"
 import { Area, AreaChart, Bar, BarChart, CartesianGrid, XAxis } from "recharts"
 
@@ -72,18 +73,37 @@ export default function DashboardGridDemo() {
             <DashboardStat
               label="Runs"
               value={261}
+              icon={<ActivityIcon />}
+              tone="info"
               delta={<StatDelta value={0.12} comparison="vs. last week" />}
               loading={loading}
             />
-            <DashboardStat label="Pass rate" value={94.2} format={(n) => `${n}%`} hint="Target 95%" loading={loading} />
+            <DashboardStat
+              label="Pass rate"
+              value={94.2}
+              format={(n) => `${n}%`}
+              hint="Target 95%"
+              icon={<CircleCheckIcon />}
+              tone="success"
+              loading={loading}
+            />
             <DashboardStat
               label="Median latency"
               value={126}
+              icon={<TimerIcon />}
+              tone="warning"
               format={(n) => `${n} ms`}
               delta={<StatDelta value={-0.05} invert comparison="vs. last week" />}
               loading={loading}
             />
-            <DashboardStat label="Spend" value={182.4} format={(n) => `$${n.toFixed(2)}`} loading={loading} />
+            <DashboardStat
+              label="Spend"
+              value={182.4}
+              format={(n) => `$${n.toFixed(2)}`}
+              icon={<WalletIcon />}
+              tone="violet"
+              loading={loading}
+            />
           </DashboardStats>
         }
       >
