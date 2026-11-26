@@ -19,7 +19,7 @@ const toggleVariants = cva(
       variant: {
         default: "hover:bg-accent hover:text-accent-foreground hover:glass-control data-pressed:glass-control",
         outline:
-          "border border-input bg-background/(--glass-opacity) glass-control hover:bg-accent hover:text-accent-foreground data-pressed:border-primary",
+          "border border-control-edge bg-background/(--glass-opacity) glass-control hover:bg-accent hover:text-accent-foreground data-pressed:border-primary",
       },
       size: {
         sm: "h-control-sm px-control-x",

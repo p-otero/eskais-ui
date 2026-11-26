@@ -16,6 +16,15 @@ const itemNotes: Record<string, ItemNotes> = {
     ],
     related: ["tone", "segmented-control", "switch"],
   },
+  "liquid-lens": {
+    usage:
+      'Render one <LiquidLens /> in a page that uses data-theme="liquid", so floating UI refracts what is behind its edges in Chromium.',
+    a11y: [
+      "Hidden from assistive tech: it draws nothing itself, only the filter the theme's backdrop references.",
+      'Under prefers-reduced-transparency, data-elevation="flat" or without backdrop-filter, floating UI is opaque and the lens is off.',
+    ],
+    related: ["appearance", "floating", "popover"],
+  },
   ansi: {
     usage:
       "Use parseAnsi to read terminal output yourself (LogViewer already does): it returns the plain text and styled runs, and ansiCssColor turns a run's colour into theme-aware CSS. stripAnsi gives the text alone, for copying or search.",

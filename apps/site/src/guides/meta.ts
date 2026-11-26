@@ -25,8 +25,8 @@ const guides: GuideMeta[] = [
     slug: "theming",
     group: "Theming",
     title: "Theming",
-    description: "Seed tokens, palettes, the compact and glass themes, dark mode and the theme editor.",
-    covers: ["theme", "theme-compact", "theme-glass", "palettes"],
+    description: "Seed tokens, palettes, the compact, glass and liquid glass themes, dark mode and the theme editor.",
+    covers: ["theme", "theme-compact", "theme-glass", "theme-liquid", "palettes"],
   },
   {
     slug: "tokens",

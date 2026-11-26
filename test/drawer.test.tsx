@@ -49,7 +49,7 @@ test.each(["right", "bottom"] as const)("a %s drawer opens on that side and Esca
   const user = userEvent.setup()
   render(<TaskDrawer side={side} />)
   const trigger = screen.getByRole("button", { name: "Open task" })
-  expect(trigger.className).toContain("border-input")
+  expect(trigger.className).toContain("border-control-edge")
 
   await user.click(trigger)
   const drawer = screen.getByRole("dialog", { name: "Index the docs" })

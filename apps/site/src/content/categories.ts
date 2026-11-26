@@ -1,7 +1,17 @@
 const categories = [
   {
     name: "Foundations",
-    items: ["appearance", "tone", "button", "kbd", "shortcuts", "shortcuts-dialog", "separator", "label"],
+    items: [
+      "appearance",
+      "liquid-lens",
+      "tone",
+      "button",
+      "kbd",
+      "shortcuts",
+      "shortcuts-dialog",
+      "separator",
+      "label",
+    ],
   },
   {
     name: "Forms",

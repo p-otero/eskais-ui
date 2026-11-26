@@ -39,7 +39,7 @@ function SegmentedControl<T extends string = string>({
       <SegmentedControlPrimitive<T>
         controller={active}
         className={cnState(
-          "relative isolate inline-flex w-fit rounded-control border bg-muted/(--glass-opacity) p-control-inset glass-control data-disabled:opacity-50 data-[orientation=horizontal]:h-control data-[orientation=vertical]:flex-col",
+          "relative isolate inline-flex w-fit rounded-control border border-control-track-edge bg-muted/(--glass-opacity) p-control-inset glass-control data-disabled:opacity-50 data-[orientation=horizontal]:h-control data-[orientation=vertical]:flex-col",
           className,
         )}
         {...props}

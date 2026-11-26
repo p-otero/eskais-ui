@@ -77,6 +77,10 @@ Other tools:
   share.
 - `node tooling/perf/layers.mjs <scenario> [build] [--glass | --theme=<name>] [--css=<rules>] [--settle=<ms>]`: composited layers and their
   reasons, counted after `--settle` ms (500 by default; 4000 lets the status pings end).
+- `node tooling/perf/lens-bench.mjs [build] [--runs=3] [--frames=240]`: a `surface-floating` panel over the 200-card
+  board while the board moves under it every frame, in glass, liquid without the lens and liquid, on the GPU and the
+  `--disable-gpu` path, each at 1× and 4× CPU: frame times and busy ms per frame on the renderer main and compositor
+  threads, the GPU main thread and the Viz compositor, from a trace.
 - `node tooling/perf/trace-chart.mjs <trace.json> <out.png> [press] [title]`: one key press as a flame chart.
 
 Fixtures are `?demo=perf&scenario=<id>` in the showcase (`apps/showcase/src/perf/`). Run nothing else on the

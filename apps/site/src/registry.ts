@@ -23,6 +23,7 @@ const guideItems = [
   "theme",
   "theme-compact",
   "theme-glass",
+  "theme-liquid",
   "palettes",
   "font-geist",
   "font-inter",
