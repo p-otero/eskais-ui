@@ -29,7 +29,8 @@ function VinylScrubberDemo() {
         </header>
         <VinylScrubber
           label="Track 2"
-          title="Side A"
+          title="Midnight Static"
+          subtitle="Side A · Track 3"
           duration={400}
           defaultValue={72}
           peaks={peaks}

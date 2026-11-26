@@ -8,6 +8,7 @@ import { expect, test, vi } from "vitest"
 
 import { VinylScrubber } from "@/components/ui/vinyl-scrubber"
 import { secondsOf, vinylScrubber } from "@/components/ui/vinyl-scrubber-primitive"
+import { pointOnRecord, projectToStage, recordPointAt } from "@/components/ui/vinyl-scrubber-view"
 import { parseActionRefusal } from "@/lib/action-refusal"
 
 import { axeViolations } from "./axe"
@@ -79,11 +80,49 @@ test("primitive: renders on the server", () => {
   checkServer(vinylScrubber, {}, `<root aria-label="Track"></root>`)
 })
 
-test("the scrubber renders on the server with the record and the time", () => {
-  const html = renderToString(<VinylScrubber label="Track" duration={400} defaultValue={72} title="Side A" />)
+test("the scrubber renders on the server with the drawn record, its label and the time, and no canvas", () => {
+  const html = renderToString(
+    <VinylScrubber label="Track" duration={400} defaultValue={72} title="Midnight Static" subtitle="Side A" />,
+  )
   expect(html).toContain('data-slot="vinyl-record"')
   expect(html).toContain("1:12")
+  expect(html).toContain("Midnight Static")
   expect(html).toContain("Side A")
+  expect(html).not.toContain("<canvas")
+})
+
+test("without WebGL the drawn turntable stays, with the title and the subtitle on its label", () => {
+  render(<VinylScrubber label="Track" duration={60} title="Midnight Static" subtitle="Side A · Track 3" />)
+  const table = document.querySelector<HTMLElement>('[data-slot="vinyl-turntable"]')!
+  expect(table.dataset.renderer).toBeUndefined()
+  expect(table.querySelector("canvas")).toBeNull()
+  const label = table.querySelector('[data-slot="vinyl-label"]')!
+  expect(label.textContent).toBe("Midnight StaticSide A · Track 3")
+  expect(label.querySelector("[data-subtitle]")?.textContent).toBe("Side A · Track 3")
+})
+
+test("a point of the 3D record seen in perspective maps back to its angle around the spindle", () => {
+  for (const aspect of [900 / 620, 1.15]) {
+    for (const angle of [-3, -Math.PI / 2, -0.4, 0, 1, Math.PI / 2, 2.6]) {
+      for (const distance of [0.4, 0.75, 0.98]) {
+        const onStage = projectToStage(pointOnRecord(angle, distance), aspect)
+        const point = recordPointAt(onStage.x, onStage.y, aspect)!
+        expect(point.angle).toBeCloseTo(angle, 6)
+        expect(point.distance).toBeCloseTo(distance, 6)
+      }
+    }
+  }
+})
+
+test("in perspective, the record's near edge is lower on the stage than its far edge, and the corners miss it", () => {
+  const aspect = 900 / 620
+  const near = projectToStage(pointOnRecord(Math.PI / 2, 1), aspect)
+  const far = projectToStage(pointOnRecord(-Math.PI / 2, 1), aspect)
+  const right = projectToStage(pointOnRecord(0, 1), aspect)
+  expect(near.y).toBeGreaterThan(far.y)
+  expect(right.x).toBeGreaterThan(near.x)
+  expect(recordPointAt(0.02, 0.98, aspect)!.distance).toBeGreaterThan(1)
+  expect(recordPointAt(0.5, 0.02, aspect)?.distance ?? Infinity).toBeGreaterThan(1)
 })
 
 test("the timeline is a slider in seconds: arrows by the step, Page Up 30 s, Home and End", async () => {
@@ -125,7 +164,8 @@ test("a drag on the record scratches: a quarter turn forward moves 0.45 s", () =
   const onValueChange = vi.fn()
   render(<VinylScrubber label="Track" duration={400} defaultValue={72} onValueChange={onValueChange} />)
   const table = document.querySelector<HTMLElement>('[data-slot="vinyl-turntable"]')!
-  table.getBoundingClientRect = () => ({
+  const platter = table.querySelector<HTMLElement>('[data-slot="vinyl-platter"]')!
+  platter.getBoundingClientRect = () => ({
     left: 0,
     top: 0,
     width: 200,
@@ -143,6 +183,29 @@ test("a drag on the record scratches: a quarter turn forward moves 0.45 s", () =
   const [seconds, details] = onValueChange.mock.lastCall as [number, { reason: string }]
   expect(seconds).toBeCloseTo(72.45, 5)
   expect(details.reason).toBe("scratch")
+})
+
+test("a press off the record doesn't scratch", () => {
+  const onValueChange = vi.fn()
+  render(<VinylScrubber label="Track" duration={400} defaultValue={72} onValueChange={onValueChange} />)
+  const table = document.querySelector<HTMLElement>('[data-slot="vinyl-turntable"]')!
+  const platter = table.querySelector<HTMLElement>('[data-slot="vinyl-platter"]')!
+  platter.getBoundingClientRect = () => ({
+    left: 0,
+    top: 0,
+    width: 200,
+    height: 200,
+    right: 200,
+    bottom: 200,
+    x: 0,
+    y: 0,
+    toJSON: () => ({}),
+  })
+  table.setPointerCapture = () => {}
+  fireEvent.pointerDown(table, { pointerId: 1, button: 0, clientX: 196, clientY: 100 })
+  fireEvent.pointerMove(table, { pointerId: 1, clientX: 100, clientY: 196 })
+  expect(onValueChange).not.toHaveBeenCalled()
+  expect(table.closest('[data-slot="vinyl-deck"]')?.hasAttribute("data-scratching")).toBe(false)
 })
 
 test("controlled, it shows the value and playing it is given", async () => {

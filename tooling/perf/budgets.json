@@ -350,12 +350,13 @@
     "url-state": 0.9,
     "usage": 32.4,
     "utils": 10.5,
-    "vinyl-scrubber": 62.9,
+    "vinyl-scrubber": 69,
     "virtual-rows": 4.8,
     "voice-input": 63.9
   },
   "lazyBundles": {
     "model-scan": 374.4,
-    "model-viewer": 366.7
+    "model-viewer": 366.7,
+    "vinyl-scrubber": 150
   }
 }

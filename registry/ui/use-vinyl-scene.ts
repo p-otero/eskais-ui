@@ -1,5 +1,7 @@
 import { useEffectEvent, useLayoutEffect, useRef, type RefObject } from "react"
 
+import { secondsPerTurn } from "@/components/ui/vinyl-scrubber-view"
+
 type VinylSceneOptions = {
   time: number
   duration: number
@@ -8,8 +10,6 @@ type VinylSceneOptions = {
   onPaint?: ((milliseconds: number) => void) | undefined
 }
 
-/** One turn of a record at 33⅓ rpm, in seconds. */
-const secondsPerTurn = 1.8
 const armRestDegrees = 19
 const armSweepDegrees = 21
 const maxLeadSeconds = 0.4
@@ -54,4 +54,4 @@ function useVinylScene(deck: RefObject<HTMLElement | null>, { time, duration, pl
   }, [playing, duration])
 }
 
-export { secondsPerTurn, useVinylScene }
+export { useVinylScene }
