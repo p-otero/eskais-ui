@@ -79,6 +79,55 @@ const darkestAndBrightestFifth = (page) =>
 
 const scene = (page) => page.locator('[data-slot="live-sky-scene"]').first()
 
+// Spec: each case opens its own page, so the console error a blocked worker logs doesn't fail the showcase's own page.
+async function drawsIn(page, { setup, csp } = {}) {
+  const other = await page
+    .context()
+    .browser()
+    .newPage({ viewport: { width: 1100, height: 900 } })
+  try {
+    await other.addInitScript(() => {
+      const Native = globalThis.Worker
+      globalThis.workersStarted = 0
+      globalThis.Worker = class extends Native {
+        constructor(...args) {
+          super(...args)
+          globalThis.workersStarted += 1
+        }
+      }
+    })
+    if (setup) await other.addInitScript(setup)
+    if (csp) {
+      await other.route(
+        (url) => url.pathname === "/",
+        async (route) => {
+          const response = await route.fetch()
+          await route.fulfill({ response, headers: { ...response.headers(), "content-security-policy": csp } })
+        },
+      )
+    }
+    await other.goto(page.url().replace(/\/(\?.*)?$/, "/?demo=live-sky&live=0&preset=downpour"))
+    await other.waitForFunction(
+      () => Number(document.querySelector('[data-slot="live-sky-scene"]')?.dataset.staticPaints) >= 2,
+      undefined,
+      { timeout: 30_000 },
+    )
+    await other.waitForTimeout(500)
+    const frames = await framesOver(other, 1500)
+    return other.evaluate((count) => {
+      const sky = document.querySelector('[data-slot="live-sky-scene"]')
+      return {
+        frames: count,
+        thread: sky.dataset.thread,
+        renderer: sky.dataset.renderer,
+        workers: globalThis.workersStarted ?? 0,
+      }
+    }, frames.length)
+  } finally {
+    await other.close()
+  }
+}
+
 const photoShown = (page) =>
   page.locator('[data-slot="live-sky-scene"][data-background="photo"]').first().waitFor({ timeout: 60_000 })
 
@@ -256,6 +305,25 @@ await withShowcase(
     await scene(page).and(page.locator("[data-mode]")).waitFor()
     const ratio = await scene(page).evaluate((element) => element.clientHeight / element.clientWidth)
     expect(ratio > 1.1, "At phone width the street should stand taller than wide")
+    const inWorker = await drawsIn(page)
+    console.log(`In a worker: ${JSON.stringify(inWorker)}`)
+    expect(inWorker.thread === "worker" && inWorker.workers >= 1, "The sky should draw in a worker where it can")
+    expect(inWorker.frames >= 20, "The sky should draw at least 20 frames in 1.5 s in its worker")
+    const throwing = await drawsIn(page, {
+      setup: () => {
+        // oxlint-disable-next-line unicorn/consistent-function-scoping -- an init script is sent to the page alone, so it can't reach anything outside it
+        globalThis.Worker = function Worker() {
+          throw new Error("Workers are blocked here")
+        }
+      },
+    })
+    console.log(`Worker constructor throws: ${JSON.stringify(throwing)}`)
+    expect(throwing.thread === "page", "A sky whose worker can't be made should draw on the page")
+    expect(throwing.frames >= 20, "A sky drawn on the page should still draw at least 20 frames in 1.5 s")
+    const blocked = await drawsIn(page, { csp: "worker-src 'none'" })
+    console.log(`CSP without worker-src: ${JSON.stringify(blocked)}`)
+    expect(blocked.thread === "page", "A sky whose worker the CSP blocks should draw on the page")
+    expect(blocked.frames >= 20, "A sky drawn on the page should still draw at least 20 frames in 1.5 s")
     console.log("live-sky-check: ok")
   },
   {},

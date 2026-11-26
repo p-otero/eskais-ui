@@ -633,6 +633,61 @@ function App() {
 createRoot(document.getElementById("root")!).render(<App />)
 `
 
+// Spec: valid as main.tsx and as main.jsx, for a project with `tsx: false`: no type syntax at all.
+const liveSkyMain = `import { createRoot } from "react-dom/client"
+import { LiveSky } from "@/components/ui/live-sky"
+import { cn } from "@/lib/utils"
+import "./index.css"
+${probes}
+let frames = 0
+const coruna = { latitude: 43.37, longitude: -8.4, name: "A Coruña" }
+const downpour = { weatherCode: 65, precipitation: 9, rain: 9, cloudCover: 100, windSpeed: 30 }
+
+function App() {
+  return (
+    <main className="flex flex-col gap-items p-inset-surface">
+      <LiveSky
+        label="Consumer sky"
+        simulate={{ location: coruna, time: Date.UTC(2026, 10, 25, 11), weather: downpour }}
+        onFrame={() => {
+          frames += 1
+          document.body.dataset.skyFrames = String(frames)
+        }}
+      />
+      <Probes />
+    </main>
+  )
+}
+
+createRoot(document.querySelector("#root") ?? document.body).render(<App />)
+`
+
+async function checkLiveSky(page) {
+  await page.waitForFunction(
+    () => Number(document.querySelector('[data-slot="live-sky-scene"]')?.dataset.staticPaints) >= 2,
+    undefined,
+    { timeout: 30_000 },
+  )
+  const framesNow = () => page.evaluate(() => Number(document.body.dataset.skyFrames ?? 0))
+  const before = await framesNow()
+  await page.waitForTimeout(1500)
+  const drawn = (await framesNow()) - before
+  const sky = await page.evaluate(() => {
+    const scene = document.querySelector('[data-slot="live-sky-scene"]')
+    return {
+      thread: scene.dataset.thread,
+      renderer: scene.dataset.renderer,
+      mode: scene.dataset.mode,
+      workers: globalThis.workersStarted,
+    }
+  })
+  console.log("LiveSky:", JSON.stringify({ ...sky, frames: drawn }))
+  if (sky.thread !== "worker" || sky.workers < 1)
+    throw new Error(`LiveSky didn't draw in its worker in the production build: ${JSON.stringify(sky)}`)
+  if (sky.mode !== "running" || drawn < 20)
+    throw new Error(`LiveSky drew ${String(drawn)} frames in 1.5 s, in mode ${String(sky.mode)}`)
+}
+
 const themeOnlyMain = `import { createRoot } from "react-dom/client"
 import { cn } from "@/lib/utils"
 import "./index.css"
@@ -925,7 +980,38 @@ export default function Hello() {
 }
 `
 
+const liveSkyScenario = {
+  css: `@layer ui-sdk;\n@import "tailwindcss";\n`,
+  items: ["theme", "live-sky"],
+  main: liveSkyMain,
+  builtCss: ["--brand"],
+  check: checkLiveSky,
+  literals: ["@"],
+}
+
 const scenarios = {
+  "live-sky": {
+    ...liveSkyScenario,
+    files: [
+      "src/components/ui/live-sky.tsx",
+      "src/components/ui/live-sky-engine.ts",
+      "src/components/ui/live-sky-runner.ts",
+      "src/components/ui/live-sky-worker.js",
+    ],
+  },
+  // Spec: shadcn writes a `tsx: false` project's TypeScript as JavaScript and copies the worker entry as it is; its
+  // extensionless import of the runner has to find live-sky-runner.js.
+  "live-sky-js": {
+    ...liveSkyScenario,
+    tsx: false,
+    files: [
+      "src/components/ui/live-sky.jsx",
+      "src/components/ui/live-sky-engine.js",
+      "src/components/ui/live-sky-runner.js",
+      "src/components/ui/live-sky-worker.js",
+    ],
+    absent: ["src/components/ui/live-sky.tsx", "src/components/ui/live-sky-runner.ts"],
+  },
   fresh: {
     css: `@layer ui-sdk;\n@import "tailwindcss";\n`,
     items: allItems,
@@ -1191,8 +1277,9 @@ function checkPlacement(app, scenario) {
   for (const literal of scenario.literals ?? ["@", scenario.alias]) {
     if (existsSync(join(app, literal))) throw new Error(`shadcn wrote files into a literal "${literal}" folder`)
   }
+  if (!scenario.alias && !scenario.aliases) return
   const sources = readdirSync(join(app, "src"), { recursive: true, withFileTypes: true })
-    .filter((entry) => entry.isFile() && /.tsx?$/.test(entry.name))
+    .filter((entry) => entry.isFile() && /\.[jt]sx?$/.test(entry.name))
     .map((entry) => join(entry.parentPath, entry.name))
   const stale = sources.filter((file) => readFileSync(file, "utf8").includes('from "@/'))
   if (stale.length > 0) throw new Error(`Imports still point at @/: ${stale.join(", ")}`)
@@ -1296,9 +1383,11 @@ export default defineConfig({
 })
 `,
   )
+  const typescript = scenario.tsx !== false
+  const mainFile = typescript ? "src/main.tsx" : "src/main.jsx"
   write(
     "index.html",
-    `<!doctype html><html lang="en"><body><div id="root"></div><script type="module" src="/src/main.tsx"></script></body></html>`,
+    `<!doctype html><html lang="en"><body><div id="root"></div><script type="module" src="/${mainFile}"></script></body></html>`,
   )
   write("src/index.css", scenario.css)
   for (const [path, content] of Object.entries(scenario.seed ?? {})) write(path, content)
@@ -1306,7 +1395,7 @@ export default defineConfig({
     $schema: "https://ui.shadcn.com/schema.json",
     style: "new-york",
     rsc: false,
-    tsx: true,
+    tsx: typescript,
     tailwind: { config: "", css: "src/index.css", baseColor: "neutral", cssVariables: true },
     aliases: scenario.aliases ?? {
       components: `${alias}/components`,
@@ -1363,7 +1452,7 @@ export default defineConfig({
 
   if (scenario.files) checkPlacement(app, scenario)
   if (scenario.skills) checkSkills(app, scenario.skills)
-  write("src/main.tsx", scenario.rewrite?.(scenario.main) ?? scenario.main.replaceAll('from "@/', `from "${alias}/`))
+  write(mainFile, scenario.rewrite?.(scenario.main) ?? scenario.main.replaceAll('from "@/', `from "${alias}/`))
   if (scenario.unsupported) {
     const { file, specifier } = scenario.unsupported
     if (!readFileSync(join(app, file), "utf8").includes(specifier)) throw new Error(`${file} lacks ${specifier}`)
@@ -1375,7 +1464,7 @@ export default defineConfig({
     console.log(`Consumer check (${name}) failed to type-check, as the README says, with ${pm} in ${app}`)
     return
   }
-  await exec(["tsc", "--noEmit"])
+  if (typescript) await exec(["tsc", "--noEmit"])
   await exec(["vite", "build"])
   const assets = join(app, "dist", "assets")
   const css = readdirSync(assets)

@@ -59,7 +59,7 @@ function workerLink(
   if (!("transferControlToOffscreen" in canvas)) return null
   let worker: Worker
   try {
-    worker = new Worker(new URL("./live-sky-worker.ts", import.meta.url), { type: "module" })
+    worker = new Worker(new URL("./live-sky-worker.js", import.meta.url), { type: "module" })
   } catch {
     return null
   }
@@ -108,6 +108,7 @@ function createSkyEngine(stage: HTMLElement): SkyEngine {
   let size = { width: 0, height: 0 }
   let inView = typeof IntersectionObserver !== "function"
   let front: 0 | 1 = 0
+  let drawsIn: "worker" | "page" = "worker"
   let lastNoted = Number.NEGATIVE_INFINITY
 
   const showStill = (image: Surface | ImageBitmap) => {
@@ -124,6 +125,7 @@ function createSkyEngine(stage: HTMLElement): SkyEngine {
   const events: PageEvents = {
     ready: (renderer) => {
       stage.dataset.renderer = renderer
+      stage.dataset.thread = drawsIn
     },
     frame: (milliseconds) => input?.onFrame?.(milliseconds),
     painted: (paints, background) => {
@@ -174,6 +176,7 @@ function createSkyEngine(stage: HTMLElement): SkyEngine {
     const fresh = makeCanvas("live-sky-canvas")
     canvas.replaceWith(fresh)
     canvas = fresh
+    drawsIn = "page"
     link = createSkyRunner(fresh, palette, events)
     if (!link) {
       unsupported()
@@ -184,7 +187,11 @@ function createSkyEngine(stage: HTMLElement): SkyEngine {
     if (input) send(input)
   }
 
-  let link: SkyRunner | null = workerLink(canvas, palette, events, fallBack) ?? createSkyRunner(canvas, palette, events)
+  let link = workerLink(canvas, palette, events, fallBack)
+  if (!link) {
+    drawsIn = "page"
+    link = createSkyRunner(canvas, palette, events)
+  }
   if (!link) unsupported()
   const sendView = () => link?.setView(currentView())
 

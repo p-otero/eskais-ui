@@ -331,5 +331,38 @@ function createSkyRunner(canvas: Surface, palette: SkyPalette, events: RunnerEve
   }
 }
 
-export { createSkyRunner }
+const send = (message: FromRunner, transfer: Transferable[] = []) => self.postMessage(message, { transfer })
+
+/**
+ * Serves a runner from inside a worker: takes the page's canvas and messages, and sends back the runner's events. The
+ * worker entry, `live-sky-worker.js`, only calls this.
+ */
+function serveSkyRunner() {
+  let runner: SkyRunner | null = null
+  const events: RunnerEvents = {
+    ready: (renderer) => send({ type: "ready", renderer }),
+    frame: (milliseconds) => send({ type: "frame", milliseconds }),
+    painted: (paints, background) => send({ type: "painted", paints, background }),
+    mode: (mode) => send({ type: "mode", mode }),
+    still: (canvas) => {
+      void createImageBitmap(canvas).then((bitmap) => send({ type: "still", bitmap }, [bitmap]))
+    },
+  }
+  self.addEventListener("message", (event: MessageEvent<ToRunner>) => {
+    const message = event.data
+    if (message.type === "start") {
+      runner =
+        typeof requestAnimationFrame === "function" ? createSkyRunner(message.canvas, message.palette, events) : null
+      if (!runner) send({ type: "unsupported" })
+      return
+    }
+    if (!runner) return
+    if (message.type === "view") runner.setView(message.view)
+    else if (message.type === "update") runner.update(message.input)
+    else if (message.type === "photo") runner.setPhoto(message.id, message.layers)
+    else runner.noteInput()
+  })
+}
+
+export { createSkyRunner, serveSkyRunner }
 export type { EngineMode, FromRunner, RunnerEvents, RunnerInput, RunnerView, SkyRunner, ToRunner }
