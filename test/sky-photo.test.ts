@@ -143,7 +143,7 @@ describe("EXIF", () => {
   })
 
   test("reads the CC0 demo photo's camera data", () => {
-    const photo = readFileSync(resolve(import.meta.dirname, "../apps/showcase/public/sky/cebu-skyline.jpg"))
+    const photo = readFileSync(resolve(import.meta.dirname, "../apps/showcase/src/assets/cebu-skyline.jpg"))
     expect(readSkyPhotoExif(photo)).toMatchObject({
       capturedAt: "2025-04-14T06:43:28",
       focalLength35mm: 26,

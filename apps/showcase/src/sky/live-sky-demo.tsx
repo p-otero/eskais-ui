@@ -11,6 +11,7 @@ import { Slider, SliderControl, SliderIndicator, SliderThumb, SliderTrack, Slide
 import { Switch } from "@/components/ui/switch"
 
 import { agent } from "../agent"
+import cebuSkyline from "../assets/cebu-skyline.jpg"
 import "../../../../registry/styles/live-sky.css"
 
 declare global {
@@ -34,7 +35,7 @@ const at = (hour: number, utcOffsetHours = centralEuropeanOffsetHours) =>
 
 const cebu = { latitude: 10.33, longitude: 123.9, name: "Cebu City" }
 const manilaOffsetHours = 8
-const cebuPhoto: LiveSkyPhoto = { src: "/sky/cebu-skyline.jpg", heading: 200 }
+const cebuPhoto: LiveSkyPhoto = { src: cebuSkyline, heading: 200 }
 
 type Background = "street" | "photo"
 type Scene = { location: typeof coruna; utcOffsetHours: number }

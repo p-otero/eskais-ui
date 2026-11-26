@@ -6,6 +6,7 @@ import { SunArc } from "@/components/ui/sun-arc"
 import { SunArcPhotoUpload, type SunArcPhoto } from "@/components/ui/sun-arc-photo"
 import { Switch } from "@/components/ui/switch"
 
+import cebuSkyline from "../assets/cebu-skyline.jpg"
 import { exposeInstrumentProbe, recordPaint } from "./instrument-probe"
 import "../../../../registry/styles/sun-arc.css"
 
@@ -18,7 +19,7 @@ const cebu = {
   timeZone: "Asia/Manila",
   date: new Date("2025-04-14T04:00:00Z"),
 }
-const cebuPhoto: SunArcPhoto = { src: "/sky/cebu-skyline.jpg" }
+const cebuPhoto: SunArcPhoto = { src: cebuSkyline }
 
 type Mode = "city" | "photo"
 

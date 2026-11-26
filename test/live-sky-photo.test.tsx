@@ -163,7 +163,7 @@ test("the upload reads the file locally and offers its EXIF position, rounded", 
   vi.stubGlobal("URL", Object.assign(URL, { createObjectURL, revokeObjectURL: vi.fn() }))
   const onPhoto = vi.fn()
   render(<LiveSkyPhotoUpload label="Use a photo" onPhoto={onPhoto} />)
-  const bytes = readFileSync(resolve(import.meta.dirname, "../apps/showcase/public/sky/cebu-skyline.jpg"))
+  const bytes = readFileSync(resolve(import.meta.dirname, "../apps/showcase/src/assets/cebu-skyline.jpg"))
   const file = new File([bytes], "cebu.jpg", { type: "image/jpeg" })
   const input = document.querySelector<HTMLInputElement>('input[type="file"]')!
   await act(async () => {

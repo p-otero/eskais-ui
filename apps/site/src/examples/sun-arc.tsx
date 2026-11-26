@@ -3,10 +3,12 @@ import { useState } from "react"
 import { SunArc } from "@/components/ui/sun-arc"
 import { SunArcPhotoUpload, type SunArcPhoto } from "@/components/ui/sun-arc-photo"
 
+import cebuSkyline from "../assets/cebu-skyline.jpg"
+
 const cebu = { latitude: 10.326725, longitude: 123.904889, timeZone: "Asia/Manila" }
 
 export default function SunArcDemo() {
-  const [photo, setPhoto] = useState<SunArcPhoto>({ src: "/sky/cebu-skyline.jpg" })
+  const [photo, setPhoto] = useState<SunArcPhoto>({ src: cebuSkyline })
   const [place, setPlace] = useState(cebu)
   return (
     <div className="flex w-full max-w-2xl flex-col gap-items">
