@@ -58,7 +58,7 @@ type DeviceCodePromptProps = {
   /** Shown between groups and copied with the code; "-" by default. */
   separator?: string
   size?: PairingCodeSize
-  /** Adds a button that copies the verification page's address. */
+  /** Adds an icon button beside Open that copies the verification page's address. */
   copyLink?: boolean
   /** When the code expires, as a Date or epoch milliseconds. */
   expiresAt?: Date | number
@@ -158,11 +158,7 @@ function DeviceCodePrompt({
           <>
             <p data-slot="device-code-prompt-instructions" className="text-body text-muted-foreground">
               {text.instructions(
-                <span
-                  data-slot="device-code-prompt-link"
-                  data-agent-hidden={hidden}
-                  className="inline-flex max-w-full items-center gap-inline align-middle"
-                >
+                <span data-slot="device-code-prompt-link" data-agent-hidden={hidden}>
                   <Link
                     href={verificationUri}
                     external
@@ -170,24 +166,10 @@ function DeviceCodePrompt({
                     newTabLabel={labels.newTab}
                     fast={false}
                     translate="no"
-                    className="min-w-0 font-medium break-all"
+                    className="font-medium break-all"
                   >
                     {withoutScheme(verificationUri)}
                   </Link>
-                  {copyLink ? (
-                    <Button
-                      size="icon"
-                      variant="ghost"
-                      className="size-control-sm shrink-0 text-muted-foreground"
-                      aria-label={state.linkCopied ? labels.linkCopied : labels.copyLink}
-                      onClick={(event) => {
-                        const copied = api.copyLink(event.nativeEvent)
-                        if (copied) copied.then(undefined, ignoreRefusal)
-                      }}
-                    >
-                      {state.linkCopied ? <CheckIcon /> : <CopyIcon />}
-                    </Button>
-                  ) : null}
                 </span>,
               )}
             </p>
@@ -205,11 +187,25 @@ function DeviceCodePrompt({
               <ExpiryCountdown data-slot="device-code-prompt-countdown" expiresAt={expiry} expiresIn={text.expiresIn} />
             ) : null}
             <div data-slot="device-code-prompt-actions" className={actionsClassName}>
-              <span data-agent-hidden={hidden} className="contents">
-                <Button className="narrow:w-full" onClick={(event) => api.open(event.nativeEvent)}>
+              <span data-agent-hidden={hidden} className="flex items-center gap-inline narrow:w-full">
+                <Button className="narrow:flex-1" onClick={(event) => api.open(event.nativeEvent)}>
                   <ExternalLinkIcon />
                   {text.open}
                 </Button>
+                {copyLink ? (
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    className="text-muted-foreground"
+                    aria-label={state.linkCopied ? labels.linkCopied : labels.copyLink}
+                    onClick={(event) => {
+                      const copied = api.copyLink(event.nativeEvent)
+                      if (copied) copied.then(undefined, ignoreRefusal)
+                    }}
+                  >
+                    {state.linkCopied ? <CheckIcon /> : <CopyIcon />}
+                  </Button>
+                ) : null}
               </span>
               {actions}
             </div>
