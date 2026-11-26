@@ -1,0 +1,14 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "rejection-content",
+  "title": "Rejection content",
+  "description": "rejectionContent(error, fallback): what an error alert shows when an app's callback rejects. A string or a React node shows as it is; anything else shows the fallback, which can be a function of the error that picks a message per failure. InvitationPanel and DeviceApproval use it.",
+  "files": [
+    {
+      "path": "registry/lib/rejection-content.ts",
+      "content": "import { isValidElement, type ReactNode } from \"react\"\n\n/** The text for a failure that isn't a string or a node, or a function of the failure that picks one. */\ntype RejectionFallback = ReactNode | ((error: unknown) => ReactNode)\n\n/** What an alert shows for a rejection: a string or a React node as it is, otherwise `fallback`, called with it when a function. */\nfunction rejectionContent(error: unknown, fallback: RejectionFallback): ReactNode {\n  if (typeof error === \"string\" || isValidElement(error)) return error\n  return typeof fallback === \"function\" ? fallback(error) : fallback\n}\n\nexport { rejectionContent }\nexport type { RejectionFallback }\n",
+      "type": "registry:lib"
+    }
+  ],
+  "type": "registry:lib"
+}

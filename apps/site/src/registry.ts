@@ -39,6 +39,7 @@ const guideItems = [
   "eskais-perf-skill",
   "locale",
   "action-refusal",
+  "rejection-content",
   "narrow",
 ]
 

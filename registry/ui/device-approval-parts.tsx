@@ -121,12 +121,14 @@ function ApproveButton({
   approve,
   blocked,
   pending,
+  describedBy,
   agentConfirm,
   children,
 }: {
   approve: (event?: Event) => unknown
   blocked: boolean
   pending: boolean
+  describedBy?: string
   agentConfirm: string
   children: ReactNode
 }) {
@@ -143,6 +145,7 @@ function ApproveButton({
       children: (
         <Button
           id={buttonId}
+          aria-describedby={describedBy}
           data-agent-hidden=""
           className="narrow:w-full"
           disabled={blocked}

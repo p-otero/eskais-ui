@@ -736,6 +736,7 @@ const itemNotes: Record<string, ItemNotes> = {
       "The visual groups are hidden from screen readers, which hear the code spelled out a character at a time with a pause between groups (labels.spell).",
       "The input inserts its own separators and keeps the caret after what was typed; pending makes it read-only with aria-busy, and an error is a live alert that describes the field, which turns aria-invalid.",
       "In enter mode each group shows a tick, a cross or a dashed circle beside its colour, and a status line says whether the codes match.",
+      "PairingCodeInput passes id, data-* and aria-* to its input without replacing the busy, invalid, label and description attributes the field manages; a passed aria-describedby joins the field's own.",
     ],
     agent:
       "Agents read code from the pairing-code component and call copy() and confirm(true | false); they type into PairingCodeInput with setValue, normalized like typing. agentHidden keeps the code, its copy button and its comparison from agents, and copy and confirm fail the step with why.",
@@ -747,10 +748,12 @@ const itemNotes: Record<string, ItemNotes> = {
     a11y: [
       "The block is a group named by the device's name; each permission list is named by its heading, and ticks and ban signs tell them apart beside their colour.",
       "The countdown is a timer that isn't live: the time left is announced once a minute and at 30, 20 and 10 seconds, and the expiry once.",
-      "Approve stays focusable with aria-disabled while the codes don't match or the request has expired; a decision being sent marks the block busy.",
+      "Approve stays focusable with aria-disabled while the codes don't match, the app blocks it or the request has expired; a decision being sent marks the block busy.",
+      "approveBlockedReason shows beside the actions and describes Approve, so a screen reader hears why it's off.",
+      "A failed decision is a live alert with the app's own message when it rejects with a string or a node.",
     ],
     agent:
-      "Approve carries data-agent-confirm, so an agent's approve waits for a person; deny is the block's own action. The code and its comparison are hidden from agents by default. Approving while the codes differ, after expiry or twice fails the step with why.",
+      "Approve carries data-agent-confirm, so an agent's approve waits for a person; deny is the block's own action. The code and its comparison are hidden from agents by default. Approving while the codes differ, while the app blocks it (with approveBlockedReason as the message), after expiry or twice fails the step with why.",
     related: ["pairing-code", "alert", "card", "secret-list"],
   },
   "secret-list": {

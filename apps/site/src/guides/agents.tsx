@@ -216,6 +216,12 @@ export default function Agents() {
           UI SDK's own components keep UI SDK's rule: a cancelled <Code>setValue</Code> reports <Code>ok: true</Code>{" "}
           with no change, so read the step's <Code>changes</Code> and the returned <Code>values</Code> there.
         </li>
+        <li>
+          When an app's callback rejects, like <Code>onApprove</Code> or <Code>onCreate</Code>, the block's live alert
+          shows a string or a React node as it is and anything else through its error text, which can be a function of
+          the error. <Code>rejectionContent(error, fallback)</Code> from <Code>@/lib/rejection-content</Code> does it,
+          for your own blocks too.
+        </li>
       </Ul>
 
       <H2 id="end-to-end">Testing agent actions end to end</H2>

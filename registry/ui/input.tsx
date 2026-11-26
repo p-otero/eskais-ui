@@ -207,5 +207,5 @@ function InputClear({
 
 floatingLabelControls.add(Input).add(InputGroup)
 
-export { fieldSurfaceClassName, Input, InputClear, InputGroup }
+export { fieldSurfaceClassName, Input, InputClear, InputGroup, namingAndMarkingAttributesOf }
 export type { InputProps }

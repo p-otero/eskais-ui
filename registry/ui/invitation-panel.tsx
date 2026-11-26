@@ -2,7 +2,7 @@
 
 import type { StandardSchemaV1 } from "@standard-schema/spec"
 import { usePart, usePrimitive } from "@ui-sdk/react/primitive"
-import { isValidElement, useId, useRef, useState, type ReactNode } from "react"
+import { useId, useRef, useState, type ReactNode } from "react"
 import type { DefaultValues, FieldValues } from "react-hook-form"
 
 import { Alert, AlertDescription } from "@/components/ui/alert"
@@ -23,6 +23,7 @@ import { InvitationNewLink } from "@/components/ui/invitation-panel-link"
 import { List, ListItem } from "@/components/ui/list-item"
 import { RelativeTime } from "@/components/ui/relative-time"
 import { Select } from "@/components/ui/select"
+import { rejectionContent, type RejectionFallback } from "@/lib/rejection-content"
 import { formatInstant, type Instant } from "@/lib/time"
 import { cn } from "@/lib/utils"
 
@@ -49,7 +50,7 @@ type InvitationPanelText = {
    * The create alert's text when `onCreate` fails with something other than a string or a node, which show as they
    * are; a function of the error picks one per failure.
    */
-  createError: ReactNode | ((error: unknown) => ReactNode)
+  createError: RejectionFallback
   newLink: ReactNode
   /** Under `newLink`, like "Copy it now: it won't be shown again." */
   newLinkDescription?: ReactNode
@@ -168,11 +169,9 @@ function hasFields<Schema extends StandardSchemaV1>(
   return props.schema !== undefined
 }
 
-function createErrorContent(error: unknown, fallback: InvitationPanelText["createError"]) {
-  if (typeof error === "string" || isValidElement(error)) return error
+function createErrorContent(error: unknown, fallback: RejectionFallback) {
   const message = toFormErrors(error)?.message
-  if (typeof message === "string") return message
-  return typeof fallback === "function" ? fallback(error) : fallback
+  return typeof message === "string" ? message : rejectionContent(error, fallback)
 }
 
 function InvitationPanel<Schema extends StandardSchemaV1>(props: InvitationPanelProps<Schema>) {

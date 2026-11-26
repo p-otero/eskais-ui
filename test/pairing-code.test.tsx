@@ -343,6 +343,70 @@ test("input: agentHidden hides the field from agents", () => {
   expect(agent.snapshot().some((entry) => !entry.offPage && entry.label === "Device code")).toBe(false)
 })
 
+test("input: id, data-*, aria-*, focus and key handlers and inputMode reach the input; className and style the wrapper", () => {
+  const onFocus = vi.fn()
+  const onBlur = vi.fn()
+  const onKeyDown = vi.fn()
+  render(
+    <>
+      <span id="code-hint">Eight letters</span>
+      <CodeInput
+        id="device-code"
+        data-testid="device-code"
+        data-track="pairing"
+        aria-describedby="code-hint"
+        aria-busy={true}
+        inputMode="numeric"
+        // oxlint-disable-next-line jsx-a11y/no-autofocus -- checks that autoFocus reaches the input
+        autoFocus
+        onFocus={onFocus}
+        onBlur={onBlur}
+        onKeyDown={onKeyDown}
+        className="max-w-sm"
+        style={{ minWidth: 0 }}
+      />
+    </>,
+  )
+  const input = screen.getByTestId<HTMLInputElement>("device-code")
+  expect(input).toBe(codeField())
+  expect(input.id).toBe("device-code")
+  expect(input.getAttribute("data-track")).toBe("pairing")
+  expect(input.getAttribute("aria-describedby")).toContain("code-hint")
+  expect(input.hasAttribute("aria-busy")).toBe(false)
+  expect(input.getAttribute("inputmode")).toBe("numeric")
+  expect(document.activeElement).toBe(input)
+  expect(onFocus).toHaveBeenCalled()
+  fireEvent.keyDown(input, { key: "Enter" })
+  expect(onKeyDown).toHaveBeenCalledTimes(1)
+  fireEvent.blur(input)
+  expect(onBlur).toHaveBeenCalledTimes(1)
+  const wrapper = input.closest<HTMLElement>("[data-slot=pairing-code-input]")
+  expect(wrapper?.className).toContain("max-w-sm")
+  expect(wrapper?.style.minWidth).toBe("0px")
+})
+
+test("input: a passed aria-describedby joins the field's description and error", async () => {
+  render(
+    <>
+      <span id="code-hint">Eight letters</span>
+      <CodeInput aria-describedby="code-hint" aria-invalid={false} description="On the device" error="Not found." />
+    </>,
+  )
+  const alert = await screen.findByRole("alert")
+  const describedBy = codeField().getAttribute("aria-describedby") ?? ""
+  expect(describedBy).toContain("code-hint")
+  expect(describedBy).toContain(alert.id)
+  expect(codeField().getAttribute("aria-invalid")).toBe("true")
+})
+
+test("the code's root takes id and data-*, and keeps its own slot and name", () => {
+  render(<PairingCode code="BCDFGHJK" label="Pairing code" id="shown-code" data-testid="shown-code" />)
+  const root = screen.getByTestId("shown-code")
+  expect(root.id).toBe("shown-code")
+  expect(root.getAttribute("data-slot")).toBe("pairing-code")
+  expect(screen.getByRole("group", { name: "Pairing code" })).toBe(root)
+})
+
 test("a controlled input shows the value it's given, formatted", () => {
   const { rerender } = render(<CodeInput value="bcdf" />)
   expect(codeField().value).toBe("BCDF")

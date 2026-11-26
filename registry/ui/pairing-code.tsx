@@ -5,6 +5,7 @@ import { CheckIcon, CircleDashedIcon, CopyIcon, XIcon } from "lucide-react"
 import { useState, type ReactNode } from "react"
 
 import { Button } from "@/components/ui/button"
+import { namingAndMarkingAttributesOf } from "@/components/ui/input"
 import { PairingCodeInput, type PairingCodeInputProps, type PairingCodeSize } from "@/components/ui/pairing-code-input"
 import {
   comparePairingCodeGroups,
@@ -66,7 +67,9 @@ type PairingCodeBaseProps = {
   /** Runs once the code, with separators, is on the clipboard. */
   onCopy?: (code: string) => void
   labels?: Partial<PairingCodeLabels>
+  id?: string
   className?: string
+  [key: `data-${string}`]: string | number | boolean | undefined
 }
 
 type PairingCodeCompareProps =
@@ -241,6 +244,7 @@ function PairingCode(props: PairingCodeProps) {
     agentHidden = false,
     onCopy,
     labels: overrides,
+    id,
     className,
   } = props
   const labels = { ...pairingCodeLabels, ...overrides }
@@ -275,7 +279,9 @@ function PairingCode(props: PairingCodeProps) {
     "root",
     {},
     {
+      ...namingAndMarkingAttributesOf(props),
       ...rootAttributes(size),
+      id,
       "aria-label": label,
       className: cn("flex min-w-0 flex-col gap-items", className),
       children: (state: PairingCodeState) => (

@@ -1,10 +1,10 @@
 "use client"
 
-import { useState, type ReactNode } from "react"
+import { useState, type AriaAttributes, type CSSProperties, type ReactNode } from "react"
 
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Field, FieldDescription, FieldError, FieldLabel } from "@/components/ui/field"
-import { Input } from "@/components/ui/input"
+import { Input, type InputProps } from "@/components/ui/input"
 import {
   editPairingCode,
   formatPairingCode,
@@ -15,7 +15,13 @@ import { cn } from "@/lib/utils"
 
 type PairingCodeSize = "default" | "lg"
 
-type PairingCodeInputProps = {
+type DataAttributes = { [key: `data-${string}`]: string | number | boolean | undefined }
+
+type PairingCodeInputElementProps = DataAttributes &
+  AriaAttributes &
+  Pick<InputProps, "id" | "autoFocus" | "inputMode" | "onBlur" | "onFocus" | "onKeyDown">
+
+type PairingCodeInputProps = PairingCodeInputElementProps & {
   /** The field's visible label, which names it for screen readers and agents. */
   label: ReactNode
   /** How many characters a full code has. */
@@ -43,7 +49,9 @@ type PairingCodeInputProps = {
   size?: PairingCodeSize
   name?: string
   placeholder?: string
+  /** On the field's wrapper, like `style`. */
   className?: string
+  style?: CSSProperties
 }
 
 function deletionDirection(event: Event | undefined) {
@@ -75,6 +83,9 @@ function PairingCodeInput({
   name,
   placeholder,
   className,
+  style,
+  inputMode = "text",
+  ...inputProps
 }: PairingCodeInputProps) {
   const format: PairingCodeFormat = { alphabet, length, groupSize, separator }
   const [ownCode, setOwnCode] = useState(() => normalizePairingCode(defaultValue ?? "", format))
@@ -95,10 +106,12 @@ function PairingCodeInput({
       data-agent-hidden={agentHidden ? "" : undefined}
       data-complete={code.length === length ? "" : undefined}
       className={cn("flex min-w-0 flex-col", className)}
+      style={style}
     >
       <Field invalid={invalid ? true : undefined}>
         <FieldLabel>{label}</FieldLabel>
         <Input
+          {...inputProps}
           name={name}
           value={formatted}
           placeholder={placeholder}
@@ -108,7 +121,7 @@ function PairingCodeInput({
           autoCorrect="off"
           autoCapitalize="characters"
           spellCheck={false}
-          inputMode="text"
+          inputMode={inputMode}
           translate="no"
           className={size === "lg" ? "h-control-lg font-mono text-title tracking-wider" : "font-mono tracking-wider"}
           onValueChange={(text, details) => {

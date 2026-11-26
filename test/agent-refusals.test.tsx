@@ -736,3 +736,25 @@ test("device approval: deny after expiry, approve while the codes differ, and a 
   expect(expiring.state.expired).toBe(true)
   expect(onDeny).toHaveBeenCalledTimes(1)
 })
+
+test("device approval: an approve the app blocks fails with the app's reason, and the state stays", async () => {
+  const onApprove = vi.fn()
+  const reason = "Your role can't grant any of these permissions."
+  const view = mounted(
+    mount(deviceApproval, { onApprove, approveBlocked: reason }, `<root aria-label="Build agent"></root>`),
+  )
+  expect(() => view.api.approve()).toThrow(`approve isn't available: ${reason}`)
+  mounted(
+    mount(
+      deviceApprovalApprove,
+      { approve: (event?: Event) => view.api.approve(event) },
+      `<root aria-label="Approve"></root>`,
+    ),
+  )
+  const step = await createAgent({ allow: () => true }).act({ steps: [{ ref: "Approve", action: "approve" }] })
+  expect(step.ok).toBe(false)
+  expect(parseActionRefusal(step.error)).toMatchObject({ action: "approve", kind: "unavailable" })
+  expect(step.error?.message).toContain(reason)
+  expect(onApprove).not.toHaveBeenCalled()
+  expect(view.state).toMatchObject({ pending: null, decided: null, error: null })
+})
