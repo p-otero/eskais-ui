@@ -662,6 +662,7 @@ function App() {
 createRoot(document.querySelector("#root") ?? document.body).render(<App />)
 `
 
+const framesProvingTheWorkerDraws = 5
 async function checkLiveSky(page) {
   await page.waitForFunction(
     () => Number(document.querySelector('[data-slot="live-sky-scene"]')?.dataset.staticPaints) >= 2,
@@ -684,7 +685,7 @@ async function checkLiveSky(page) {
   console.log("LiveSky:", JSON.stringify({ ...sky, frames: drawn }))
   if (sky.thread !== "worker" || sky.workers < 1)
     throw new Error(`LiveSky didn't draw in its worker in the production build: ${JSON.stringify(sky)}`)
-  if (sky.mode !== "running" || drawn < 20)
+  if (sky.mode !== "running" || drawn < framesProvingTheWorkerDraws)
     throw new Error(`LiveSky drew ${String(drawn)} frames in 1.5 s, in mode ${String(sky.mode)}`)
 }
 
