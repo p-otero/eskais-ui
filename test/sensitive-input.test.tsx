@@ -289,3 +289,36 @@ test("has no axe violations, empty, filled and shown", async () => {
   await user.click(screen.getByRole("button", { name: "Show" }))
   expect(await axeViolations(container)).toEqual([])
 })
+
+test("a sensitive Input passes id, data-* and aria-* through, and the value still never reaches the markup", async () => {
+  const user = userEvent.setup()
+  const onFocus = vi.fn()
+  const { container } = render(
+    <>
+      <span id="key-hint">Starts with sk-</span>
+      <Input
+        sensitive
+        id="api-key"
+        data-testid="api-key"
+        data-track="settings"
+        aria-label="API key"
+        aria-describedby="key-hint"
+        maxLength={64}
+        onFocus={onFocus}
+        className="max-w-sm"
+        style={{ minWidth: 0 }}
+      />
+    </>,
+  )
+  const input = screen.getByTestId<HTMLInputElement>("api-key")
+  expect(input.id).toBe("api-key")
+  expect(input.getAttribute("data-track")).toBe("settings")
+  expect(input.getAttribute("aria-describedby")).toBe("key-hint")
+  expect(input.maxLength).toBe(64)
+  expect(input.closest('[data-slot="password-input"]')?.className).toContain("max-w-sm")
+  await user.type(input, SECRET)
+  expect(onFocus).toHaveBeenCalled()
+  expect(input.value).toBe(SECRET)
+  expect(container.outerHTML).not.toContain(SECRET)
+  expect(leaks()).toEqual(noLeaks)
+})

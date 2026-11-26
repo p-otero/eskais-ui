@@ -1,7 +1,10 @@
 import { useState, type ReactNode } from "react"
+import { z } from "zod"
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { InvitationPanel, type Invitation, type InvitationLink } from "@/components/ui/invitation-panel"
+import { FormField } from "@/components/ui/form"
+import { Input } from "@/components/ui/input"
+import { InvitationPanel, type Invitation, type InvitationRequest } from "@/components/ui/invitation-panel"
 
 const HOUR = 3_600_000
 const DAY = 24 * HOUR
@@ -20,20 +23,30 @@ function oneTimeToken() {
 }
 
 const seeded: Invitation[] = [
-  { id: "inv-41", role: "editor", createdBy: "Leo Park", expiresAt: Date.now() + 2 * DAY },
+  {
+    id: "inv-41",
+    role: "editor",
+    createdBy: "Leo Park",
+    invitee: "mia@northwind.example",
+    expiresAt: Date.now() + 2 * DAY,
+  },
   { id: "inv-42", role: "viewer", createdBy: "Ana Ruiz", expiresAt: Date.now() + 5 * HOUR },
 ]
 
 const expiresIn = (time: ReactNode) => <>Expires {time}</>
 
+const invitee = z.object({ name: z.string().min(1), email: z.email() })
+
 export default function InvitationPanelDemo() {
   const [invitations, setInvitations] = useState(seeded)
 
-  const create = async ({ role }: { role: string | undefined }): Promise<InvitationLink> => {
+  const create = async ({ role, values }: InvitationRequest<z.output<typeof invitee>>) => {
     await wait(500)
+    if (invitations.some((invitation) => invitation.invitee === values.email))
+      throw new Error(`${values.email} already has a pending invitation.`)
     const id = `inv-${String(Date.now())}`
     const expiresAt = Date.now() + 2 * DAY
-    setInvitations((current) => [{ id, role, createdBy: "You", expiresAt }, ...current])
+    setInvitations((current) => [{ id, role, createdBy: "You", invitee: values.email, expiresAt }, ...current])
     return { id, url: `https://northwind.example/join/${oneTimeToken()}`, expiresAt }
   }
 
@@ -54,12 +67,25 @@ export default function InvitationPanelDemo() {
           roles={roles}
           defaultRole="editor"
           invitations={invitations}
+          schema={invitee}
+          defaultValues={{ name: "", email: "" }}
+          fields={
+            <div className="grid gap-items sm:grid-cols-2">
+              <FormField name="name" label="Name">
+                <Input autoComplete="off" />
+              </FormField>
+              <FormField name="email" label="Email">
+                <Input type="email" autoComplete="off" />
+              </FormField>
+            </div>
+          }
           onCreate={create}
           onRevoke={revoke}
           text={{
             create: "Create invitation link",
             role: "Role",
-            createError: "The invitation couldn't be created. Try again.",
+            createError: (error) =>
+              error instanceof Error ? error.message : "The invitation couldn't be created. Try again.",
             newLink: "New invitation link",
             newLinkDescription: "Copy it now: it's shown only once. If it gets lost, revoke it and create another.",
             copy: "Copy link",

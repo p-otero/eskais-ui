@@ -2,6 +2,20 @@
 
 Versions follow [semver](https://semver.org). Before 1.0, a minor version can break compatibility. Release with `bun pm version <patch|minor|major>`, which bumps `package.json`, rebuilds `public/r` (the mockup CLI reports the version) and tags `vX.Y.Z`.
 
+## Unreleased
+
+### Added
+
+- `invitation-panel`: `fields`, with `schema` and `defaultValues`, puts invitee FormFields (a name, an email, sensitive ones too) above the create button inside a Form. Create, from the button, Enter or an agent, validates them first, shows errors on each field and calls `onCreate({ role, values })` with the schema's parsed output, typed; the fields reset after each link, and the URL stays shown once and out of every agent surface. With fields, an agent's `create` submits the form and returns `true`.
+- `invitation-panel`: pending invitations take `invitee` (a name or an email, display only), which titles the row and names its revoke button.
+
+### Changed
+
+- `invitation-panel`: a string or React node that `onCreate` rejects with shows in the live destructive alert as it is, a `FormServerError` shows its message there and its field errors on the fields, and `text.createError` can be a function of the error.
+- `invitation-panel`: a pending row's revoke button is named by its invitee, or by its role, creator and expiry, so two invitations from one admin never share a name. `labels.revokeInvitation` also gets `invitee` and `expires`.
+- `secret-list`: Delete shows on configured secrets only, and an agent's `delete` of a missing one fails with why. `deleteTitle`, `deleteDescription`, `deleteConfirm` and `deleteAgentConfirm` take a function of the secret as well as a string. A missing secret's button (`text.set`) is named by `labels.setSecret`, "Set <name>", instead of "Replace <name>".
+- `input`: a sensitive input passes `id`, `className`, `style`, `data-*` and `aria-*` attributes, `tabIndex`, `maxLength`, `minLength`, `pattern`, `inputMode` and the focus, blur, click, pointer and mouse handlers through, `data-testid` included; nothing else, so no prop can put the value in an attribute.
+
 ## 0.2.14 (2026-11-26)
 
 ### Added

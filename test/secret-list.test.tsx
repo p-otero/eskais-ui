@@ -96,7 +96,37 @@ test("a missing secret has a warning status, no mask, and Set in place of Replac
     "warning",
   )
   expect(github.querySelector('[data-slot="secret-list-mask"]')).toBeNull()
-  expect(within(github).getByRole("button", { name: "Replace GitHub token" }).textContent).toBe("Set")
+  expect(within(github).getByRole("button", { name: "Set GitHub token" }).textContent).toBe("Set")
+  expect(within(github).queryByRole("button", { name: /Delete/ })).toBeNull()
+})
+
+test("an agent can't delete a missing secret: the step fails with why and nothing opens", async () => {
+  render(<Secrets />)
+  const result = await agent.act({ steps: [{ ref: "API keys", action: "delete", args: ["github"] }] })
+  expect(result.ok).toBe(false)
+  expect(result.error?.message).toContain(`delete isn't available: "github" has no stored value.`)
+  expect(screen.queryByRole("alertdialog")).toBeNull()
+})
+
+test("the confirmation's text can name the secret it deletes, and plain strings still work", async () => {
+  const { unmount } = render(
+    <Secrets
+      text={{
+        ...text,
+        deleteTitle: (secret) => `Delete ${secret.name}?`,
+        deleteDescription: (secret) => `${secret.name} stops working at once.`,
+        deleteAgentConfirm: (secret) => `Deletes ${secret.name}`,
+      }}
+    />,
+  )
+  fireEvent.click(screen.getByRole("button", { name: "Delete OpenAI key" }))
+  const dialog = await screen.findByRole("alertdialog", { name: "Delete OpenAI key?" })
+  expect(dialog.textContent).toContain("OpenAI key stops working at once.")
+  expect(dialog.querySelector("[data-agent-confirm]")?.getAttribute("data-agent-confirm")).toBe("Deletes OpenAI key")
+  unmount()
+  render(<Secrets />)
+  fireEvent.click(screen.getByRole("button", { name: "Delete Stripe webhook secret" }))
+  expect(await screen.findByRole("alertdialog", { name: "Delete this secret?" })).toBeTruthy()
 })
 
 test("the stored secret's type has no value field, only a fingerprint", () => {

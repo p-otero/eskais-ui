@@ -16,6 +16,10 @@ type InvitationRole = { value: string; label: string }
 
 type InvitationPanelOptions = {
   onCreate?: (request: { role: string | undefined }) => InvitationLink | PromiseLike<InvitationLink>
+  /** With invitee fields: submits their form, which validates them and then calls `createWith`. */
+  submitFields?: () => void
+  /** Moves the role choice to the role `create(role)` asked for, so a person sees what is being created. */
+  selectRole?: (role: string) => void
   /** Revokes an invitation, pending or the new link, once the confirmation is accepted. */
   onRevoke?: (id: string) => unknown
   roles?: readonly InvitationRole[]
@@ -47,6 +51,8 @@ const invitationPanel = definePrimitive({
   name: "invitation-panel",
   options: {
     onCreate: "callback",
+    submitFields: "callback",
+    selectRole: "callback",
     onRevoke: "callback",
     roles: "value",
     role: "value",
@@ -65,6 +71,7 @@ const invitationPanel = definePrimitive({
   }),
   api: (context) => {
     let heldUrl: string | undefined
+    let requestedRole: string | undefined
     let copiedTimer: ReturnType<typeof setTimeout> | undefined
     let destroyed = false
     const forgetLink = () => {
@@ -91,47 +98,73 @@ const invitationPanel = definePrimitive({
       return { refusal: unavailable("create", `takes one of these roles: ${names}`, call) }
     }
 
+    const startCreating = (
+      run: (role: string | undefined) => InvitationLink | PromiseLike<InvitationLink>,
+      role: string | undefined,
+    ): Promise<InvitationCreated> => {
+      forgetLink()
+      context.store.set({ creating: true, error: null, copied: false, link: null })
+      let request: InvitationLink | PromiseLike<InvitationLink>
+      try {
+        request = run(role)
+      } catch (error) {
+        context.store.set({ creating: false, error })
+        return Promise.reject(error instanceof Error ? error : new Error(String(error)))
+      }
+      return Promise.resolve(request).then(
+        (link) => {
+          const expiresAt = toTime(link.expiresAt)
+          if (destroyed) return { id: link.id, expiresAt }
+          heldUrl = link.url
+          context.store.set({
+            creating: false,
+            link: { id: link.id, expiresAt, expired: expiresAt <= Date.now() },
+          })
+          const { createdAnnouncement } = context.options()
+          if (createdAnnouncement) announce(createdAnnouncement)
+          return { id: link.id, expiresAt }
+        },
+        (error: unknown) => {
+          if (!destroyed) context.store.set({ creating: false, error })
+          throw error
+        },
+      )
+    }
+
     const api = {
       /**
        * Asks `onCreate` for a new one-time link, with `role` (a role's value or label) or the role choice's. Resolves
-       * to `{ id, expiresAt }`; the URL only ever reaches the screen, once, and the clipboard through `copy`.
+       * to `{ id, expiresAt }`; the URL only ever reaches the screen, once, and the clipboard through `copy`. With
+       * invitee fields it submits their form instead and returns `true`: the link appears once they pass the schema,
+       * and otherwise their errors show on the fields.
        */
-      create(role?: unknown, event?: Event): Promise<InvitationCreated> | false {
+      create(role?: unknown, event?: Event): Promise<InvitationCreated> | boolean {
         const call = { event }
         if (context.store.get().creating) {
           return unavailable("create", "isn't available while an invitation is being created", call)
         }
         const picked = pickRole(role, call)
         if ("refusal" in picked) return false
-        const { onCreate } = context.options()
+        const { onCreate, submitFields, selectRole } = context.options()
         if (!onCreate) return unavailable("create", "isn't available: the panel has no onCreate", call)
-        forgetLink()
-        context.store.set({ creating: true, error: null, copied: false, link: null })
-        let request: InvitationLink | PromiseLike<InvitationLink>
-        try {
-          request = onCreate({ role: picked.role })
-        } catch (error) {
-          context.store.set({ creating: false, error })
-          return Promise.reject(error instanceof Error ? error : new Error(String(error)))
+        if (!submitFields) return startCreating((chosen) => onCreate({ role: chosen }), picked.role)
+        requestedRole = picked.role
+        if (picked.role !== undefined) selectRole?.(picked.role)
+        submitFields()
+        return true
+      },
+      /** Creates from the invitee fields' form once they pass its schema: `run` calls `onCreate` with their values. */
+      createWith(
+        run: (role: string | undefined) => InvitationLink | PromiseLike<InvitationLink>,
+      ): Promise<InvitationCreated> {
+        const role = requestedRole
+        requestedRole = undefined
+        if (context.store.get().creating) {
+          return Promise.reject(new Error("create isn't available while an invitation is being created."))
         }
-        return Promise.resolve(request).then(
-          (link) => {
-            const expiresAt = toTime(link.expiresAt)
-            if (destroyed) return { id: link.id, expiresAt }
-            heldUrl = link.url
-            context.store.set({
-              creating: false,
-              link: { id: link.id, expiresAt, expired: expiresAt <= Date.now() },
-            })
-            const { createdAnnouncement } = context.options()
-            if (createdAnnouncement) announce(createdAnnouncement)
-            return { id: link.id, expiresAt }
-          },
-          (error: unknown) => {
-            if (!destroyed) context.store.set({ creating: false, error })
-            throw error
-          },
-        )
+        const picked = pickRole(role, {})
+        if ("refusal" in picked) return Promise.reject(new Error("create needs a role."))
+        return startCreating(run, picked.role)
       },
       /** Writes the new link to the clipboard. Resolves to `"copied"`, never to the link. */
       copy(event?: Event): Promise<"copied" | false> | false {

@@ -43,8 +43,26 @@ const passwordManagerOptOut = {
 
 const sensitiveRootClassName = `${fieldSurfaceClassName} flex h-field-control w-full min-w-0 items-center gap-inline rounded-control ps-control-x text-entry has-aria-invalid:border-destructive has-[input:focus-visible]:ring-2 has-[input:focus-visible]:ring-ring`
 
+type AttributeValue = string | number | boolean | undefined
+
+type PassThrough = Record<`data-${string}` | `aria-${string}`, AttributeValue>
+
+const isPassThroughKey = (key: string): key is keyof PassThrough => key.startsWith("data-") || key.startsWith("aria-")
+
+const isAttributeValue = (value: unknown): value is AttributeValue =>
+  value === undefined || typeof value === "string" || typeof value === "number" || typeof value === "boolean"
+
+function namingAndMarkingAttributesOf(props: object): PassThrough {
+  const attributes: PassThrough = {}
+  for (const [key, value] of Object.entries(props)) {
+    if (isPassThroughKey(key) && isAttributeValue(value)) attributes[key] = value
+  }
+  return attributes
+}
+
 function SensitiveInput({
   className,
+  style,
   revealable = false,
   revealLabel = "Show",
   sensitiveController,
@@ -58,14 +76,21 @@ function SensitiveInput({
   disabled,
   readOnly,
   placeholder,
+  tabIndex,
+  maxLength,
+  minLength,
+  pattern,
+  inputMode,
   onValueChange,
   onBlur,
   onFocus,
+  onClick,
+  onPointerDown,
+  onPointerUp,
+  onMouseEnter,
+  onMouseLeave,
   ref,
-  "aria-label": ariaLabel,
-  "aria-labelledby": labelledBy,
-  "aria-describedby": describedBy,
-  "aria-invalid": invalid,
+  ...rest
 }: InputProps) {
   if (value !== undefined || defaultValue !== undefined) {
     throw new Error("A sensitive Input is uncontrolled: drop value and defaultValue, and read it on submit.")
@@ -81,21 +106,29 @@ function SensitiveInput({
       disabled={disabled}
       readOnly={readOnly}
       onValueChange={onValueChange}
+      style={style}
       className={cnState(
         `${sensitiveRootClassName} ${revealable ? "pe-inline" : "pe-control-x"}`,
         typeof className === "string" ? className : undefined,
       )}
     >
       <PasswordInputControlPrimitive
+        {...namingAndMarkingAttributesOf(rest)}
         ref={ref}
         id={id}
         placeholder={useFloatingPlaceholder(placeholder)}
-        aria-label={ariaLabel}
-        aria-labelledby={labelledBy}
-        aria-describedby={describedBy}
-        aria-invalid={invalid}
+        tabIndex={tabIndex}
+        maxLength={maxLength}
+        minLength={minLength}
+        pattern={pattern}
+        inputMode={inputMode}
         onBlur={onBlur}
         onFocus={onFocus}
+        onClick={onClick}
+        onPointerDown={onPointerDown}
+        onPointerUp={onPointerUp}
+        onMouseEnter={onMouseEnter}
+        onMouseLeave={onMouseLeave}
         {...passwordManagerOptOut}
         className="h-full w-full min-w-0 bg-transparent font-mono outline-none placeholder:font-sans placeholder:text-muted-foreground data-disabled:cursor-not-allowed"
       />

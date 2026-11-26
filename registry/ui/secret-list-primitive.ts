@@ -11,23 +11,28 @@ type SecretListOptions = {
   onDelete?: (id: string) => unknown
   /** The secrets as agents read them: by id, named. */
   secrets?: readonly SecretListItem[]
+  /** The ids of secrets with no stored value, which have nothing to delete. */
+  missing?: readonly string[]
 }
 
-type SecretListState = { deleting: string | null }
+type SecretListState = {
+  deleting: string | null
+  /** The secret the confirmation last asked about; it stays while the confirmation closes, so its text holds. */
+  confirming: string | null
+}
 
 const unknownId = (action: string, id: unknown, event: Event | undefined) =>
   unavailable(action, `has no secret with the id ${JSON.stringify(id)}`, { event })
 
 const secretList = definePrimitive({
   name: "secret-list",
-  options: { onReplace: "callback", onDelete: "callback", secrets: "value" },
-  state: (_options: SecretListOptions): SecretListState => ({ deleting: null }),
+  options: { onReplace: "callback", onDelete: "callback", secrets: "value", missing: "value" },
+  state: (_options: SecretListOptions): SecretListState => ({ deleting: null, confirming: null }),
   api: (context) => {
     const known = (id: unknown): id is string =>
       typeof id === "string" && (context.options().secrets ?? []).some((secret) => secret.value === id)
 
     return {
-      /** Runs `onReplace` for the secret. */
       replace(id: unknown, event?: Event) {
         if (!known(id)) return unknownId("replace", id, event)
         const { onReplace } = context.options()
@@ -41,7 +46,10 @@ const secretList = definePrimitive({
         if (!context.options().onDelete) {
           return unavailable("delete", "isn't offered: the list has no onDelete", { event })
         }
-        context.store.set({ deleting: id })
+        if ((context.options().missing ?? []).includes(id)) {
+          return unavailable("delete", `isn't available: ${JSON.stringify(id)} has no stored value`, { event })
+        }
+        context.store.set({ deleting: id, confirming: id })
         return true
       },
       confirmDelete() {

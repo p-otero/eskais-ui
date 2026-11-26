@@ -28,20 +28,25 @@ type StoredSecret = {
   lastUsedAt?: Instant | null
 }
 
+/** Text that can name the secret it's about: a node, or a function of the secret. */
+type SecretText<Value extends ReactNode = ReactNode> = Value | ((secret: StoredSecret) => Value)
+
 /** The list's visible text. None has a default: pass it in the page's language. */
 type SecretListText = {
   configured: ReactNode
   missing: ReactNode
+  /** The button of a configured secret, which overwrites its value. */
   replace: ReactNode
-  /** The replace button of a missing secret, like "Set"; `replace` by default. */
+  /** The button of a missing secret, which stores its first value, like "Set"; `replace` until you pass it. */
   set?: ReactNode
+  /** Shown on configured secrets only: a missing one has nothing to delete. */
   delete: ReactNode
-  deleteTitle: ReactNode
-  deleteDescription?: ReactNode
+  deleteTitle: SecretText
+  deleteDescription?: SecretText
   /** The confirmation's button; keep it apart from `delete`, so an agent's press finds this one. */
-  deleteConfirm: ReactNode
-  /** What a person approves when an agent deletes, like "Deletes the secret; anything using it stops working". */
-  deleteAgentConfirm: string
+  deleteConfirm: SecretText
+  /** What a person approves when an agent deletes, like "Deletes the OpenAI key; anything using it stops working". */
+  deleteAgentConfirm: SecretText<string>
   /** Each date, around a live relative time: (time) => <>Updated {time}</>. */
   created?: (time: ReactNode) => ReactNode
   updated?: (time: ReactNode) => ReactNode
@@ -60,6 +65,8 @@ type SecretListLabels = {
   /** Read in place of the mask of a configured secret with no fingerprint. */
   hidden: string
   replaceSecret: (name: string) => string
+  /** Names the button of a missing secret; it holds the `set` text. */
+  setSecret: (name: string) => string
   deleteSecret: (name: string) => string
   cancel?: ReactNode
 }
@@ -68,6 +75,7 @@ const secretListLabels: SecretListLabels = {
   fingerprint: (fingerprint) => `Hidden value ending in ${fingerprint}`,
   hidden: "Hidden value",
   replaceSecret: (name) => `Replace ${name}`,
+  setSecret: (name) => `Set ${name}`,
   deleteSecret: (name) => `Delete ${name}`,
 }
 
@@ -95,6 +103,11 @@ const noSecrets: readonly StoredSecret[] = []
 const rootAttributes: Record<`data-${string}`, string> = { "data-slot": "secret-list" }
 
 const MASK = "••••"
+
+function forSecret<Value extends ReactNode>(text: SecretText<Value>, secret: StoredSecret | undefined) {
+  if (typeof text !== "function") return text
+  return secret === undefined ? undefined : text(secret)
+}
 
 function MaskedValue({ secret, labels }: { secret: StoredSecret; labels: SecretListLabels }) {
   if (!secret.configured) return null
@@ -143,8 +156,10 @@ function SecretList({
     onReplace,
     onDelete,
     secrets: secrets.map((secret) => ({ value: secret.id, label: secret.name })),
+    missing: secrets.filter((secret) => !secret.configured).map((secret) => secret.id),
   })
   const { api } = handle
+  const confirming = (state: SecretListState) => secrets.find((secret) => secret.id === state.confirming)
   return usePart(
     handle,
     "root",
@@ -206,19 +221,23 @@ function SecretList({
                         <Button
                           size="sm"
                           variant="outline"
-                          aria-label={labels.replaceSecret(secret.name)}
+                          aria-label={
+                            secret.configured ? labels.replaceSecret(secret.name) : labels.setSecret(secret.name)
+                          }
                           onClick={(event) => api.replace(secret.id, event.nativeEvent)}
                         >
                           {secret.configured ? text.replace : (text.set ?? text.replace)}
                         </Button>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          aria-label={labels.deleteSecret(secret.name)}
-                          onClick={(event) => api.delete(secret.id, event.nativeEvent)}
-                        >
-                          {text.delete}
-                        </Button>
+                        {secret.configured ? (
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            aria-label={labels.deleteSecret(secret.name)}
+                            onClick={(event) => api.delete(secret.id, event.nativeEvent)}
+                          >
+                            {text.delete}
+                          </Button>
+                        ) : null}
                       </>
                     }
                   />
@@ -232,10 +251,10 @@ function SecretList({
               if (!open) api.closeDelete()
             }}
             tone="destructive"
-            title={text.deleteTitle}
-            description={text.deleteDescription}
-            confirmLabel={text.deleteConfirm}
-            agentConfirm={text.deleteAgentConfirm}
+            title={forSecret(text.deleteTitle, confirming(state))}
+            description={forSecret(text.deleteDescription, confirming(state))}
+            confirmLabel={forSecret(text.deleteConfirm, confirming(state))}
+            agentConfirm={forSecret(text.deleteAgentConfirm, confirming(state)) ?? ""}
             labels={labels.cancel === undefined ? undefined : { cancel: labels.cancel }}
             onConfirm={() => api.confirmDelete()}
           />
@@ -246,4 +265,4 @@ function SecretList({
 }
 
 export { SecretList, secretListLabels }
-export type { SecretListLabels, SecretListProps, SecretListText, StoredSecret }
+export type { SecretListLabels, SecretListProps, SecretListText, SecretText, StoredSecret }
