@@ -276,6 +276,7 @@ const itemNotes: Record<string, ItemNotes> = {
       "The waveform strip is a slider in seconds: arrows step by the step (5 s), Page Up and Page Down 30 s, Home and End the ends, and it reads as the time of the duration.",
       "Play is a toggle that stays pressed while it plays, with a tooltip.",
       "Under reduced motion the record doesn't spin between time updates.",
+      "The 3D turntable is a picture hidden from assistive tech; the slider and the toggle carry everything it shows.",
     ],
     agent:
       'Agents find it by its label and call seek (seconds or "m:ss"), play and pause; a seek past the end, or before the duration is known, fails the step with why.',

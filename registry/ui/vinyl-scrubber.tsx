@@ -16,8 +16,10 @@ import { memo, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent
 import { ControlTooltip } from "@/components/ui/tooltip"
 import { useVinylClock } from "@/components/ui/use-vinyl-clock"
 import { useVinylMedia } from "@/components/ui/use-vinyl-media"
-import { secondsPerTurn, useVinylScene } from "@/components/ui/use-vinyl-scene"
+import { useVinylScene } from "@/components/ui/use-vinyl-scene"
+import { useVinylStage } from "@/components/ui/use-vinyl-stage"
 import { vinylScrubber } from "@/components/ui/vinyl-scrubber-primitive"
+import { recordPointAt, secondsPerTurn } from "@/components/ui/vinyl-scrubber-view"
 import { cn } from "@/lib/utils"
 
 const { Root: VinylScrubberRoot } = createParts(vinylScrubber, { root: "div" })
@@ -61,8 +63,10 @@ type VinylScrubberProps = {
   peaks?: readonly number[]
   /** Seconds per arrow key; 5 by default. Page Up and Page Down move 30. */
   step?: number
-  /** Printed on the record's label. */
+  /** Printed big on the record's label. */
   title?: string
+  /** Printed on the label under the title: a side, a track, an artist. */
+  subtitle?: string
   disabled?: boolean
   labels?: Partial<VinylScrubberLabels>
   /** Classes for the root; a function gets the player's state. */
@@ -131,15 +135,37 @@ const Waveform = memo(function Waveform({ peaks }: { peaks: readonly number[] | 
   )
 })
 
-const Record = memo(function Record({ title }: { title: string | undefined }) {
+const Drawing = memo(function Drawing({
+  title,
+  subtitle,
+}: {
+  title: string | undefined
+  subtitle: string | undefined
+}) {
   return (
-    <div data-slot="vinyl-record" aria-hidden="true">
-      <div data-slot="vinyl-label">{title ? <span>{title}</span> : null}</div>
+    <div data-slot="vinyl-drawing" aria-hidden="true">
+      <div data-slot="vinyl-platter" />
+      <div data-slot="vinyl-record">
+        <div data-slot="vinyl-label">
+          {title ? <span>{title}</span> : null}
+          {subtitle ? <span data-subtitle="">{subtitle}</span> : null}
+        </div>
+      </div>
+      <div data-slot="vinyl-sheen" />
+      <div data-slot="vinyl-arm">
+        <div data-slot="vinyl-arm-base" />
+        <div data-slot="vinyl-arm-tube" />
+        <div data-slot="vinyl-arm-head" />
+        <div data-slot="vinyl-arm-weight" />
+      </div>
     </div>
   )
 })
 
 type Scratch = { pointer: number; from: number; time: number; resume: boolean }
+
+const drawnRecordShare = 82 / 92
+const fullTurn = Math.PI * 2
 
 function seekMedia(element: HTMLMediaElement | null | undefined, seconds: number) {
   if (element) element.currentTime = seconds
@@ -151,17 +177,33 @@ function playMedia(element: HTMLMediaElement | null | undefined, playing: boolea
   else element.pause()
 }
 
-function angleOn(event: ReactPointerEvent<HTMLElement>) {
-  const rect = event.currentTarget.getBoundingClientRect()
-  const x = event.clientX - (rect.left + rect.width / 2)
-  const y = event.clientY - (rect.top + rect.height / 2)
-  return { angle: (Math.atan2(y, x) * 180) / Math.PI, distance: Math.hypot(x, y), radius: rect.width / 2 }
+function drawnRecordPoint(stage: HTMLElement, clientX: number, clientY: number) {
+  const platter = stage.querySelector('[data-slot="vinyl-platter"]')
+  if (!platter) return null
+  const rect = platter.getBoundingClientRect()
+  const radius = (rect.width / 2) * drawnRecordShare
+  if (radius <= 0) return null
+  const x = clientX - (rect.left + rect.width / 2)
+  const y = clientY - (rect.top + rect.height / 2)
+  return { angle: Math.atan2(y, x), distance: Math.hypot(x, y) / radius }
+}
+
+function recordPointUnder(event: ReactPointerEvent<HTMLElement>) {
+  const stage = event.currentTarget
+  if (stage.dataset.renderer !== "webgl") return drawnRecordPoint(stage, event.clientX, event.clientY)
+  const rect = stage.getBoundingClientRect()
+  if (rect.width <= 0 || rect.height <= 0) return null
+  return recordPointAt(
+    (event.clientX - rect.left) / rect.width,
+    (event.clientY - rect.top) / rect.height,
+    rect.width / rect.height,
+  )
 }
 
 /**
- * A media timeline drawn as a turntable: the record turns with the position and a drag on it scratches back and
- * forth, the tonearm follows the track, and a waveform strip under it is UI SDK's slider in seconds (arrows by
- * `step`, Page Up and Down 30 s, Home and End). It controls an `HTMLMediaElement` through `media`, or works controlled.
+ * A media timeline shown as a 3D turntable: the record turns with the position, a drag on it scratches and the
+ * waveform under it is UI SDK's slider in seconds. It drives an `HTMLMediaElement` through `media`, or works
+ * controlled. A drawn turntable stands in on the server, without WebGL and until the scene has loaded.
  */
 function VinylScrubber({
   label,
@@ -176,6 +218,7 @@ function VinylScrubber({
   peaks,
   step = 5,
   title,
+  subtitle,
   disabled = false,
   labels: labelOverrides,
   className,
@@ -190,9 +233,11 @@ function VinylScrubber({
   const time = Math.min(duration || Infinity, value ?? (reading ? reading.time : ownTime))
   const playing = playingProp ?? (reading ? reading.playing : ownPlaying)
   const deck = useRef<HTMLDivElement>(null)
+  const turntable = useRef<HTMLDivElement>(null)
   const scratch = useRef<Scratch | null>(null)
   const [scratching, setScratching] = useState(false)
   useVinylScene(deck, { time, duration, playing: playing && !scratching, onPaint })
+  useVinylStage(turntable, { time, duration, playing: playing && !scratching, title, subtitle })
 
   const seek = (seconds: number, reason: string, event: Event | undefined) => {
     const next = Math.max(0, Math.min(duration, seconds))
@@ -225,13 +270,13 @@ function VinylScrubber({
 
   const onPointerDown = (event: ReactPointerEvent<HTMLElement>) => {
     if (disabled || event.button !== 0 || duration <= 0) return
-    const { angle, distance, radius } = angleOn(event)
-    if (distance > radius) return
+    const point = recordPointUnder(event)
+    if (!point || point.distance > 1) return
     event.preventDefault()
     event.currentTarget.setPointerCapture(event.pointerId)
     const resume = playing
     if (resume) playMedia(media?.current, false, () => {})
-    scratch.current = { pointer: event.pointerId, from: angle, time, resume }
+    scratch.current = { pointer: event.pointerId, from: point.angle, time, resume }
     setScratching(true)
     slider.focus()
   }
@@ -239,10 +284,11 @@ function VinylScrubber({
   const onPointerMove = (event: ReactPointerEvent<HTMLElement>) => {
     const active = scratch.current
     if (active?.pointer !== event.pointerId) return
-    const { angle } = angleOn(event)
-    const delta = ((((angle - active.from + 180) % 360) + 360) % 360) - 180
-    active.from = angle
-    active.time = Math.max(0, Math.min(duration, active.time + (delta / 360) * secondsPerTurn))
+    const point = recordPointUnder(event)
+    if (!point) return
+    const delta = ((((point.angle - active.from + Math.PI) % fullTurn) + fullTurn) % fullTurn) - Math.PI
+    active.from = point.angle
+    active.time = Math.max(0, Math.min(duration, active.time + (delta / fullTurn) * secondsPerTurn))
     seek(active.time, "scratch", event.nativeEvent)
   }
 
@@ -277,21 +323,14 @@ function VinylScrubber({
         data-disabled={disabled ? "" : undefined}
       >
         <div
+          ref={turntable}
           data-slot="vinyl-turntable"
           onPointerDown={onPointerDown}
           onPointerMove={onPointerMove}
           onPointerUp={endScratch}
           onPointerCancel={endScratch}
         >
-          <div data-slot="vinyl-platter" aria-hidden="true" />
-          <Record title={title} />
-          <div data-slot="vinyl-sheen" aria-hidden="true" />
-          <div data-slot="vinyl-arm" aria-hidden="true">
-            <div data-slot="vinyl-arm-base" />
-            <div data-slot="vinyl-arm-tube" />
-            <div data-slot="vinyl-arm-head" />
-            <div data-slot="vinyl-arm-weight" />
-          </div>
+          <Drawing title={title} subtitle={subtitle} />
         </div>
         <div data-slot="vinyl-panel">
           <div data-slot="vinyl-time">

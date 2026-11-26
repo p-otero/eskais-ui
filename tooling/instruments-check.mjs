@@ -267,24 +267,52 @@ async function vinyl(page) {
   await page.waitForTimeout(2000)
   expect((await paints(page)) === 0, "The vinyl scrubber paints while paused")
 
-  const table = await page.locator('[data-slot="vinyl-turntable"]').boundingBox()
+  const turntable = page.locator('[data-slot="vinyl-turntable"]')
+  await turntable
+    .locator("canvas")
+    .waitFor({ state: "attached", timeout: 5000 })
+    .catch(() => {})
+  await page
+    .waitForFunction(() => document.querySelector('[data-slot="vinyl-turntable"]')?.dataset.renderer, undefined, {
+      timeout: 15_000,
+    })
+    .catch(() => {})
+  const rendered = await turntable.getAttribute("data-renderer")
+  console.log(`vinyl: the turntable draws with ${rendered ?? "CSS"}`)
   const before = Number(await position.inputValue())
-  const centre = [table.x + table.width * 0.44, table.y + table.height / 2]
-  const radius = table.height * 0.3
-  await page.mouse.move(centre[0], centre[1] - radius)
+  const table = await turntable.boundingBox()
+  const platter = await turntable.locator('[data-slot="vinyl-platter"]').boundingBox()
+  const recordRingOnStage = rendered
+    ? {
+        x: table.x + table.width * 0.4335,
+        y: table.y + table.height * 0.5056,
+        rx: table.width * 0.1,
+        ry: table.height * 0.065,
+      }
+    : {
+        x: platter.x + platter.width / 2,
+        y: platter.y + platter.height / 2,
+        rx: platter.width * 0.3,
+        ry: platter.width * 0.3,
+      }
+  const ring = recordRingOnStage
+  await page.mouse.move(ring.x, ring.y - ring.ry)
   await page.mouse.down()
   for (let step = 1; step <= 108; step++) {
     const angle = -90 + step * 10
     await page.mouse.move(
-      centre[0] + Math.cos((angle * Math.PI) / 180) * radius,
-      centre[1] + Math.sin((angle * Math.PI) / 180) * radius,
+      ring.x + Math.cos((angle * Math.PI) / 180) * ring.rx,
+      ring.y + Math.sin((angle * Math.PI) / 180) * ring.ry,
     )
     await nextFrame(page)
   }
   await page.mouse.up()
   const scratched = Number(await position.inputValue())
   console.log(`vinyl: three turns scratched ${String(before)} s to ${String(scratched)} s`)
-  expect(scratched > before, "Turning the record clockwise should move forward")
+  expect(
+    Math.abs(scratched - before - 3 * 1.8) < 0.5,
+    "Three turns clockwise on the record should move about 5.4 s forward",
+  )
 
   const seek = await act(page, "Track 2", "seek", ["5:00"])
   expect(seek.ok && (await position.inputValue()) === "300", "An agent's seek should move to 5:00")

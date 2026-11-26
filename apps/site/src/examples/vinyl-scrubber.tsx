@@ -8,7 +8,7 @@ const peaks = Array.from(
 export default function VinylScrubberDemo() {
   return (
     <div className="w-full max-w-2xl">
-      <VinylScrubber label="Track" title="Side B" duration={312} peaks={peaks} />
+      <VinylScrubber label="Track" title="Night Drive" subtitle="Side B · Track 2" duration={312} peaks={peaks} />
     </div>
   )
 }
