@@ -111,41 +111,43 @@ function Inbox({ items: initialItems, locale: localeProp, timeZone, className }:
       <div className="relative flex min-h-0 flex-1">
         <ScrollArea className="flex min-h-0 min-w-0 flex-1 flex-col">
           <ScrollAreaViewport
-            className="h-auto min-h-0 flex-1 p-inline"
+            className="h-auto min-h-0 flex-1"
             render={(part) => <div {...part} data-slot="inbox-scroller" />}
           >
-            <List
-              ref={listRoot}
-              aria-label={inboxCopy.list}
-              items={items}
-              itemText={(item) => `${item.subject} ${item.from}`}
-              estimateSize={56}
-              checkedIds={checked}
-              onCheckedIdsChange={setChecked}
-              onFocus={followFocus}
-              renderItem={(item) => (
-                <ListItem
-                  id={item.id}
-                  title={item.subject}
-                  selected={item.id === openId}
-                  onSelect={() => setOpenId(item.id)}
-                  leading={
-                    <StatusDot tone="info" label={inboxCopy.unread} className={item.read ? "invisible" : undefined} />
-                  }
-                  subtitle={`${item.from} · ${item.preview}`}
-                  status={item.label && <Badge tone={item.label.tone}>{item.label.text}</Badge>}
-                  trailing={
-                    <>
-                      {item.pinned && <Badge variant="outline">{inboxCopy.pinned}</Badge>}
-                      <time dateTime={item.receivedAt} className="tabular-nums">
-                        {time.format(new Date(item.receivedAt))}
-                      </time>
-                    </>
-                  }
-                  className={item.read ? "text-muted-foreground" : "font-medium"}
-                />
-              )}
-            />
+            <div className="p-inline">
+              <List
+                ref={listRoot}
+                aria-label={inboxCopy.list}
+                items={items}
+                itemText={(item) => `${item.subject} ${item.from}`}
+                estimateSize={56}
+                checkedIds={checked}
+                onCheckedIdsChange={setChecked}
+                onFocus={followFocus}
+                renderItem={(item) => (
+                  <ListItem
+                    id={item.id}
+                    title={item.subject}
+                    selected={item.id === openId}
+                    onSelect={() => setOpenId(item.id)}
+                    leading={
+                      <StatusDot tone="info" label={inboxCopy.unread} className={item.read ? "invisible" : undefined} />
+                    }
+                    subtitle={`${item.from} · ${item.preview}`}
+                    status={item.label && <Badge tone={item.label.tone}>{item.label.text}</Badge>}
+                    trailing={
+                      <>
+                        {item.pinned && <Badge variant="outline">{inboxCopy.pinned}</Badge>}
+                        <time dateTime={item.receivedAt} className="tabular-nums">
+                          {time.format(new Date(item.receivedAt))}
+                        </time>
+                      </>
+                    }
+                    emphasis={item.read ? "muted" : "strong"}
+                  />
+                )}
+              />
+            </div>
           </ScrollAreaViewport>
           <ScrollAreaScrollbar data-agent-hidden="" />
         </ScrollArea>

@@ -1,4 +1,3 @@
-// oxlint-disable unicorn/consistent-function-scoping -- a Web Worker runs the factory below from its source, so every helper lives inside it
 type SequenceAlgorithm = "histogram" | "myers"
 
 type SequenceDiff = {
@@ -9,6 +8,7 @@ type SequenceDiff = {
   match: (a: Int32Array, b: Int32Array, algorithm?: SequenceAlgorithm, maxCost?: number) => Int32Array
 }
 
+// oxlint-disable unicorn/consistent-function-scoping -- a Web Worker runs the factory below from its source, so every helper lives inside it
 /**
  * The sequence diff, written as one self-contained function so a Web Worker can be built from its source
  * (`String(createSequenceDiff)`): it must not reference anything outside its body.
