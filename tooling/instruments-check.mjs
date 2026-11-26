@@ -284,10 +284,10 @@ async function vinyl(page) {
   const platter = await turntable.locator('[data-slot="vinyl-platter"]').boundingBox()
   const recordRingOnStage = rendered
     ? {
-        x: table.x + table.width * 0.4335,
-        y: table.y + table.height * 0.5056,
+        x: table.x + table.width * 0.4258,
+        y: table.y + table.height * 0.5674,
         rx: table.width * 0.1,
-        ry: table.height * 0.065,
+        ry: table.height * 0.072,
       }
     : {
         x: platter.x + platter.width / 2,

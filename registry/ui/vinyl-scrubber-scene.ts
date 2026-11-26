@@ -207,7 +207,7 @@ function suitcase(m: Materials) {
   group.add(part(new RoundedBoxGeometry(caseWidth, caseHeight, caseDepth, 6, 0.9), m.leather, 0, caseHeight / 2 + 0.6))
   group.add(part(new BoxGeometry(caseWidth - 2.6, 0.4, caseDepth - 2.6), m.fabric, 0, caseHeight + 0.45))
   const lid = new Group()
-  lid.position.set(0, caseHeight + 0.6, -caseDepth / 2 + 0.3)
+  lid.position.set(0, caseHeight + 0.6, -caseDepth / 2 - 0.3)
   lid.rotation.x = -1.68
   lid.add(part(new RoundedBoxGeometry(caseWidth, 4, caseDepth, 6, 0.9), m.leather, 0, 2, caseDepth / 2 - 0.3))
   lid.add(part(new BoxGeometry(caseWidth - 2.4, 0.2, caseDepth - 2.4), m.fabric, 0, -0.05, caseDepth / 2 - 0.3))
