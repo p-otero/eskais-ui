@@ -712,6 +712,43 @@ const itemNotes: Record<string, ItemNotes> = {
       "Agents follow a section's link or set the section picker by name, set each row's control by its label, and need a person's approval to confirm a danger action.",
     related: ["field", "description-list", "confirm-dialog", "select"],
   },
+  "auth-page": {
+    usage:
+      "The page for signing in with a passkey, registering from a one-time link or recovering an account: map your ceremony's state to status, put fields in children, other ways in under secondary and terms and privacy in footer.",
+    a11y: [
+      "The card is the page's main landmark, with the title as its only h1.",
+      "While working, the action keeps focus with aria-busy and ignores presses, and workingLabel is read once, politely; it empties outside working so the next attempt is read again.",
+      "An error is a live destructive alert, read at once, with its retry beside it; success is a status, read when it appears.",
+      "The padding clears the notch and home indicator, and the card fills a 390px phone.",
+    ],
+    agent:
+      "Agents press the primary action and the retry by their text; the page's own fields are UI SDK controls agents fill by their labels.",
+    related: ["account-menu", "invitation-panel", "alert", "button"],
+  },
+  "account-menu": {
+    usage:
+      "Put it in the Shell's actions (or a Topbar's trailing), with your app's entries in items and sign-out last; pass confirmSignOut when signing out costs the person something.",
+    a11y: [
+      "The trigger is named for the account (Account: Ana Ruiz by default, overridable), so its visible name stays part of it when the name hides on narrow screens.",
+      "The header with the name, email and role names the group of entries; the avatar is decorative.",
+      "Sign-out with a confirmation opens an alert dialog, with Cancel beside the confirm button.",
+    ],
+    agent:
+      "Agents press the trigger with an entry's text, like Devices or Sign out. With confirmSignOut, the dialog's confirm button carries data-agent-confirm, so an agent's sign-out waits for a person.",
+    related: ["shell", "dropdown-menu", "avatar", "confirm-dialog"],
+  },
+  "invitation-panel": {
+    usage:
+      "An admin's invite screen: onCreate returns the one-time link, which the panel shows once; pending invitations come from your API without their links, with DataState's status for loading and errors.",
+    a11y: [
+      "Creating announces that a link was created, and copying that it was copied, never the link itself.",
+      "The new link is a region named by its heading; the expiry is a time element that counts down and reads Expired when it passes.",
+      "Each pending row's Revoke is named for its role and creator, and opens an alert dialog before anything is revoked.",
+    ],
+    agent:
+      "Agents call create (with a role), copy and revoke(id) on the panel, and read the new link's id and expiry from its state, never its URL. revoke opens the confirmation, whose button needs a person; copy with no fresh link, an unknown id or a role the panel doesn't offer fails the step with why.",
+    related: ["auth-page", "account-menu", "states", "relative-time", "confirm-dialog"],
+  },
   "document-workspace": {
     usage:
       "For any notes or docs app: put a MarkdownEditor (edit) or MarkdownView (read) in document, your file tree in explorer, DocumentOutline and backlinks in aside, and DocumentQuickOpen in quickOpen: items to filter in the browser, or a PageSource as source to search notes on the server, bodies included; an item's snippet shows the passage that matched under its title, with the query's words marked. Pass the editor's ref as editorRef, extractHeadings(markdown) as headings and the open note's id as documentId, so the narrow explorer drawer closes when any control opens a note. In a Shell, main fill (on the Shell or the route) lets it fill the height left.",

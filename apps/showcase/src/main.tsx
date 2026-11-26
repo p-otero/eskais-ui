@@ -88,6 +88,9 @@ const pages: Record<string, Page> = {
   "settings-page": () => import("./sections/layout-blocks/settings-page").then((module) => module.SettingsPageDemo),
   "settings-page-check": () => import("./checks/settings-page-check").then((module) => module.SettingsPageCheck),
   "shell-block": () => import("./shell/shell-block-demo").then((module) => module.ShellBlockDemo),
+  "auth-page": () => import("./sections/auth/auth-page").then((module) => module.AuthPageDemo),
+  "account-menu": () => import("./sections/auth/account-menu").then((module) => module.AccountMenuDemo),
+  "invitation-panel": () => import("./sections/auth/invitation-panel").then((module) => module.InvitationPanelDemo),
   "document-workspace": () => import("./sections/document-workspace").then((module) => module.DocumentWorkspacePage),
   "server-data-check": () => import("./checks/server-data-check").then((module) => module.ServerDataCheck),
   "agent-workspace": () =>

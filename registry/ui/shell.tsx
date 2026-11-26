@@ -97,7 +97,7 @@ type ShellProps<Route extends ShellRoute = ShellRoute> = Omit<ComponentProps<"di
   onIntent?: (href: string, route: Route) => void
   /** A logo or product name, after the sidebar trigger. */
   brand?: ReactNode
-  /** The topbar's end: notifications, appearance, the account menu. */
+  /** The topbar's end: notifications, appearance, an `AccountMenu`. It stays in place in every sidebar layout. */
   actions?: ReactNode
   /** More `CommandGroup`s in the palette, after Go to. */
   commandGroups?: ReactNode

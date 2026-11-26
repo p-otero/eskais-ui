@@ -182,6 +182,10 @@ const categories = [
     ],
   },
   {
+    name: "Accounts",
+    items: ["auth-page", "account-menu", "invitation-panel"],
+  },
+  {
     name: "3D",
     items: ["model-viewer", "model-scan", "live-sky"],
   },

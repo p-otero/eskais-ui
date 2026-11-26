@@ -2,6 +2,14 @@
 
 Versions follow [semver](https://semver.org). Before 1.0, a minor version can break compatibility. Release with `bun pm version <patch|minor|major>`, which bumps `package.json`, rebuilds `public/r` (the mockup CLI reports the version) and tags `vX.Y.Z`.
 
+## Unreleased
+
+### Added
+
+- `auth-page`: `AuthPage`, a centred, brand-led page for signing in with a passkey, registering from a one-time link and recovering an account: `logo`, `title`, `description`, one primary `action` (`{ label, icon, onAction }`), fields as `children`, an `alert` slot, `secondary` options and `footer` links. `status` is `idle`, `working` (the action shows `loading` with `aria-busy` and keeps focus, and `workingLabel` is read politely while the ceremony is open), `error` (a live destructive Alert with `retry`, which reruns the action by default) or `success` (the `success` slot replaces the actions). The card is at most `--auth-page-width` (26rem) wide, with safe-area padding, so it fills a 390px phone. No auth logic and no default copy. `?demo=auth-page` shows the three flows (`&flow=register`, `&flow=recover`).
+- `account-menu`: `AccountMenu` for a Shell's `actions` or a Topbar's `trailing`: the trigger shows an avatar or initials and the name (the name hides on narrow screens; the trigger stays named `Account: <name>`, overridable), and the menu has a header with the name, email and an optional role Badge (`roleLabel`, `roleTone`), your `items` (Devices, Security, Invite) and sign-out. `confirmSignOut` asks first through ConfirmDialog, whose confirm carries `data-agent-confirm`. Agents press the trigger with an entry's text. The showcase's Shell demo carries one, so `shell-check` covers it at every density, radius and width. `?demo=account-menu`.
+- `invitation-panel`: `InvitationPanel`, an admin's invitations. `onCreate` returns a one-time link (`{ id, url, expiresAt }`), shown once in the new link view with a copy button, a live expiry countdown (RelativeTime, by the second in the last two minutes) that switches to expired with no timer while the page is hidden, a revoke behind a confirmation (`data-agent-confirm`) and Done. The URL is never in the panel's state, the address, storage, a `data-*`, `title` or `aria-*` attribute, or an announcement, and is forgotten on Done, revoke, expiry and unmount; the pending `Invitation` type has no `url`. Pending invitations list role, creator, expiry and a revoke named for the row, with DataState for loading, empty and error, and a role choice when `roles` is given. Agents call `create(role?)` (resolving to `{ id, expiresAt }`), `copy()` (resolving to `"copied"`) and `revoke(id)` (which opens the confirmation), read `link: { id, expiresAt, expired }` and `copied` from the snapshot, and never see the URL, which sits under `data-agent-hidden`. Copy with no fresh link, an unknown id or a role the panel doesn't offer fails the step with why. `?demo=invitation-panel`.
+
 ## 0.2.13 (2026-11-26)
 
 ### Added
