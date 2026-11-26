@@ -49,7 +49,7 @@ test("opens named and described, and Escape returns focus to the trigger", async
   const user = userEvent.setup()
   render(<RenameDialog />)
   const trigger = screen.getByRole("button", { name: "Rename project" })
-  expect(trigger.className).toContain("border-input")
+  expect(trigger.className).toContain("border-control-edge")
 
   await user.click(trigger)
   const dialog = screen.getByRole("dialog", { name: "Rename Apollo" })

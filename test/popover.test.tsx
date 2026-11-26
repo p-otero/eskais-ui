@@ -42,7 +42,7 @@ test("opens named and described with focus inside, and Escape returns focus to t
   const user = userEvent.setup()
   render(<AttemptDetails />)
   const trigger = screen.getByRole("button", { name: "Attempt 2 details" })
-  expect(trigger.className).toContain("border-input")
+  expect(trigger.className).toContain("border-control-edge")
 
   await user.click(trigger)
   const popover = screen.getByRole("dialog", { name: "Attempt 2" })

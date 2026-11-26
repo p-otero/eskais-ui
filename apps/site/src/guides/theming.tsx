@@ -103,7 +103,7 @@ appearance.radius.set("full")`}
         title="src/appearance.ts"
       />
 
-      <H2 id="themes">Compact and glass</H2>
+      <H2 id="themes">Compact, glass and liquid glass</H2>
       <DocTable
         label="Themes"
         head={["Item", "Attribute", "What it changes"]}
@@ -119,6 +119,11 @@ appearance.radius.set("full")`}
             <Code key="a">data-theme="glass"</Code>,
             "Translucent, blurred chrome: popovers, menus, toasts, sidebar and cards. Dialogs stay opaque.",
           ],
+          [
+            <Code key="i">theme-liquid</Code>,
+            <Code key="a">data-theme="liquid"</Code>,
+            "Thick, nearly clear glass on the same chrome, with specular rims, a sheen and pill controls; secondary, outline and ghost buttons, toggles, segmented controls and tab lists turn to glass too. Dialogs stay opaque.",
+          ],
         ]}
       />
       <P>
@@ -132,6 +137,13 @@ appearance.radius.set("full")`}
         rule. Dialogs and drawers stay opaque at any strength: a translucent fill over the dimmed backdrop reads grey.
         Glass falls back to solid surfaces when the browser lacks <Code>backdrop-filter</Code> or the person asks for
         reduced transparency.
+      </P>
+      <P>
+        Liquid glass keeps the same knobs (<Code>--glass-opacity</Code>, <Code>--glass-blur</Code>,{" "}
+        <Code>--glass-saturation</Code>) and adds <Code>--glass-rim</Code>, <Code>--glass-specular</Code> and{" "}
+        <Code>--glass-sheen</Code>. Render <Code>&lt;LiquidLens /&gt;</Code> once in the page and, in Chromium, menus,
+        popovers, toasts and Floating bars bend what is behind their edges; other browsers keep the blur. It turns
+        opaque on the same terms as glass, and <Code>data-elevation="flat"</Code> drops its rims and translucency.
       </P>
 
       <H2 id="dark-mode">Dark mode</H2>

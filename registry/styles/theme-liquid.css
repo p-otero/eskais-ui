@@ -2,22 +2,23 @@
   --glass-opacity: 40%;
   --glass-blur: 12px;
   --glass-saturation: 1.9;
-  --glass-rim-light: oklch(1 0 0 / 0.85);
-  --glass-rim-glow: oklch(1 0 0 / 0.4);
   --glass-rim:
     inset 1px 1.5px 0 -0.5px var(--glass-rim-light), inset -1px -1px 0 -0.5px var(--glass-rim-glow),
     inset 0 -0.75rem 1.25rem -1rem var(--glass-rim-glow);
-  --glass-specular: radial-gradient(120% 90% at 18% 0%, oklch(1 0 0 / 0.28), oklch(1 0 0 / 0) 55%);
-  --glass-sheen: radial-gradient(90% 60% at 12% 0%, oklch(1 0 0 / 0.16), oklch(1 0 0 / 0) 60%);
+  --glass-specular: radial-gradient(120% 90% at 18% 0%, var(--glass-highlight), oklch(1 0 0 / 0) 55%);
+  --glass-sheen: radial-gradient(90% 60% at 12% 0%, var(--glass-sheen-highlight), oklch(1 0 0 / 0) 60%);
   --surface-backdrop: blur(var(--glass-blur)) saturate(var(--glass-saturation));
   --surface-shadow: var(--glass-rim), 0 10px 32px -12px oklch(0 0 0 / 0.22);
-  --floating-border: oklch(1 0 0 / 0.5);
-  --floating-opacity: min(100%, var(--glass-opacity) + 30%);
+  --floating-border: var(--glass-edge);
+  --floating-opacity: min(100%, var(--glass-opacity) + var(--glass-floating-lift));
   --floating-backdrop: blur(calc(var(--glass-blur) * 0.75)) saturate(var(--glass-saturation));
   --floating-shadow: var(--glass-rim), 0 4px 12px -4px oklch(0 0 0 / 0.12), 0 24px 56px -16px oklch(0 0 0 / 0.35);
   --control-glass-opacity: 45%;
   --control-glass-rim: var(--glass-rim), 0 1px 2px oklch(0 0 0 / 0.08), 0 4px 10px -4px oklch(0 0 0 / 0.16);
   --control-glass-sheen: var(--glass-specular);
+  --control-edge: color-mix(in oklab, var(--input-strong) 65%, var(--foreground));
+  --control-track-edge: var(--control-edge);
+  --control-glass-edge: var(--control-edge);
 }
 
 [data-theme="liquid"]:not([data-radius]) {
@@ -29,16 +30,6 @@
 :where(:root:has(#eskais-liquid-lens)) [data-theme="liquid"],
 [data-theme="liquid"]:where(:root:has(#eskais-liquid-lens)) {
   --floating-backdrop: url("#eskais-liquid-lens") blur(calc(var(--glass-blur) * 0.75)) saturate(var(--glass-saturation));
-}
-
-:where(.dark) [data-theme="liquid"],
-[data-theme="liquid"]:where(.dark) {
-  --glass-rim-light: oklch(1 0 0 / 0.3);
-  --glass-rim-glow: oklch(1 0 0 / 0.1);
-  --glass-specular: radial-gradient(120% 90% at 18% 0%, oklch(1 0 0 / 0.12), oklch(1 0 0 / 0) 55%);
-  --glass-sheen: radial-gradient(90% 60% at 12% 0%, oklch(1 0 0 / 0.06), oklch(1 0 0 / 0) 60%);
-  --floating-border: oklch(1 0 0 / 0.14);
-  --floating-opacity: min(100%, var(--glass-opacity) + 40%);
 }
 
 @supports not (backdrop-filter: blur(1px)) {

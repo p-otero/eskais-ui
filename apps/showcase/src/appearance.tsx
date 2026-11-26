@@ -5,6 +5,7 @@ import { useState } from "react"
 import { createAppearance } from "@/components/ui/appearance"
 import { Button } from "@/components/ui/button"
 import { Field, FieldLabel } from "@/components/ui/field"
+import { Link } from "@/components/ui/link"
 import { SegmentedControl, SegmentedControlIndicator, SegmentedControlItem } from "@/components/ui/segmented-control"
 import { Slider, SliderControl, SliderIndicator, SliderThumb, SliderTrack, SliderValue } from "@/components/ui/slider"
 
@@ -82,12 +83,19 @@ function DarkToggle() {
   )
 }
 
+const onLiquidGlassDemo = new URLSearchParams(location.search).get("demo") === "liquid-glass"
+
 function AppearanceControls() {
   return (
     <div className="flex flex-wrap items-end gap-4">
       <ThemePicker />
       <GlassOpacity />
       <DarkToggle />
+      {!onLiquidGlassDemo && (
+        <Link href="?demo=liquid-glass" className="self-center">
+          Liquid glass demo
+        </Link>
+      )}
     </div>
   )
 }

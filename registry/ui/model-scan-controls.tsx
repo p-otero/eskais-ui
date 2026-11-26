@@ -98,7 +98,7 @@ function StylePicker({
       }}
       className={
         placement === "overlay"
-          ? "pointer-events-auto max-w-full border-floating-border bg-floating shadow-floating backdrop-floating"
+          ? "pointer-events-auto max-w-full border-floating-border bg-floating shadow-floating backdrop-floating glass-rim-none"
           : "max-w-full"
       }
     >

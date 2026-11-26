@@ -44,7 +44,7 @@ function Tabs<T extends string = string>({ className, activateOnPress = false, c
 }
 
 const tabsListClassName =
-  "relative inline-flex w-fit items-center rounded-control bg-muted/(--control-glass-opacity) p-control-inset glass-control text-muted-foreground data-[orientation=vertical]:flex-col data-[orientation=vertical]:items-stretch"
+  "relative inline-flex w-fit items-center rounded-control bg-muted/(--control-glass-opacity) p-control-inset glass-control glass-control-edge text-muted-foreground data-[orientation=vertical]:flex-col data-[orientation=vertical]:items-stretch"
 
 const scrollClassName = [
   // oxlint-disable-next-line eskais/scroll-area -- a scrolling tab list hides its scrollbar on purpose: edge fades and scroll buttons stand for it

@@ -55,7 +55,7 @@ test("the trigger looks like a button and opens a menu that the arrow keys move 
   const onAction = vi.fn()
   render(<TaskActions onAction={onAction} />)
   const trigger = screen.getByRole("button", { name: "Actions for Index the docs" })
-  expect(trigger.className).toContain("border-input")
+  expect(trigger.className).toContain("border-control-edge")
 
   trigger.focus()
   await user.keyboard("{Enter}")

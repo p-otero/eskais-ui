@@ -29,6 +29,8 @@ const allItems = [
   "theme",
   "theme-compact",
   "theme-glass",
+  "theme-liquid",
+  "liquid-lens",
   "palettes",
   "font-geist",
   "appearance",
@@ -753,6 +755,51 @@ function App() {
 createRoot(document.getElementById("root")!).render(<App />)
 `
 
+const liquidMain = `import { createRoot } from "react-dom/client"
+import { Button } from "@/components/ui/button"
+import { LiquidLens } from "@/components/ui/liquid-lens"
+import { cn } from "@/lib/utils"
+import "./index.css"
+${probes}
+document.documentElement.dataset.theme = "liquid"
+
+function App() {
+  return (
+    <main className="flex flex-col gap-items p-inset-surface">
+      <LiquidLens />
+      <Button variant="secondary">Secondary</Button>
+      <Button variant="outline">Outline</Button>
+      <div data-testid="floating" className="surface-floating p-inline">Floating</div>
+      <Probes />
+    </main>
+  )
+}
+
+createRoot(document.getElementById("root")!).render(<App />)
+`
+
+async function checkLiquid(page) {
+  const state = await page.evaluate(() => {
+    const secondary = document.querySelector('[data-variant="secondary"]')
+    const outline = document.querySelector('[data-variant="outline"]')
+    const floating = document.querySelector('[data-testid="floating"]')
+    return {
+      lens: Boolean(document.getElementById("eskais-liquid-lens")),
+      backdrop: getComputedStyle(floating).backdropFilter,
+      rim: getComputedStyle(secondary).boxShadow,
+      fill: getComputedStyle(secondary).backgroundColor,
+      edge: getComputedStyle(outline).borderTopColor,
+    }
+  })
+  if (!state.lens) throw new Error("LiquidLens didn't render its filter in Chrome")
+  if (!state.backdrop.startsWith('url("#eskais-liquid-lens")')) {
+    throw new Error(`The floating surface doesn't refract: ${state.backdrop}`)
+  }
+  if (!state.rim.includes("inset")) throw new Error(`The secondary button has no glass rim: ${state.rim}`)
+  if (!state.fill.endsWith("/ 0.45)")) throw new Error(`The secondary button isn't glass: ${state.fill}`)
+  if (state.edge === "rgba(0, 0, 0, 0)") throw new Error("The outline button lost its edge")
+}
+
 const aliasesMain = `import { createRoot } from "react-dom/client"
 import { AgentTaskBoard } from "@/components/ui/agent-task-board"
 import { Alert, AlertTitle } from "@/components/ui/alert"
@@ -1272,6 +1319,22 @@ const scenarios = {
     builtCss: ["--brand", ".text-title{"],
     check: async () => {},
     mockup: true,
+  },
+  liquid: {
+    css: `@layer ui-sdk;
+@import "tailwindcss";
+`,
+    items: ["theme", "theme-liquid", "liquid-lens", "button"],
+    addTwice: true,
+    main: liquidMain,
+    builtCss: [
+      '[data-theme="liquid"]',
+      ".glass-control{",
+      ".glass-control-edge{",
+      "--glass-rim-light",
+      "#eskais-liquid-lens",
+    ],
+    check: checkLiquid,
   },
   "existing-lucide": {
     dependencies: ["lucide-react"],
