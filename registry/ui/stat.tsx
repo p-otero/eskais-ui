@@ -4,6 +4,7 @@ import { renderElement, type PartProps } from "@ui-sdk/react/primitive"
 import { Children, isValidElement, type ReactNode } from "react"
 
 import { useLocale } from "@/lib/locale"
+import type { Tone } from "@/lib/tone"
 import { formatQuantity, isQuantity, type FormatQuantityOptions, type Quantity } from "@/lib/quantity"
 import { cn } from "@/lib/utils"
 import { QuantityValue } from "@/components/ui/quantity-value"
@@ -21,12 +22,56 @@ function part(slot: string, base: string) {
   }
 }
 
+const besideMedia = [
+  "has-[>[data-slot=stat-media]]:grid has-[>[data-slot=stat-media]]:grid-cols-[minmax(0,1fr)_auto] has-[>[data-slot=stat-media]]:content-start has-[>[data-slot=stat-media]]:gap-x-group",
+  "*:col-start-1 [&>[data-slot=stat-media]]:col-start-2 [&>[data-slot=stat-media]]:row-span-2 [&>[data-slot=stat-media]]:row-start-1",
+].join(" ")
+
 const Stat = part(
   "stat",
-  "flex h-full flex-col gap-inline rounded-surface border bg-card/(--glass-opacity) p-inset-surface text-card-foreground backdrop-surface",
+  cn(
+    "flex h-full flex-col gap-inline rounded-surface border bg-card/(--glass-opacity) p-inset-surface text-card-foreground backdrop-surface",
+    besideMedia,
+  ),
 )
 const StatLabel = part("stat-label", "text-sm text-muted-foreground")
 const StatHint = part("stat-hint", "text-xs text-muted-foreground")
+
+const mediaToneClassNames = {
+  neutral: "bg-neutral-soft text-neutral-soft-foreground",
+  info: "bg-info-soft text-info-soft-foreground",
+  success: "bg-success-soft text-success-soft-foreground",
+  warning: "bg-warning-soft text-warning-soft-foreground",
+  destructive: "bg-destructive-soft text-destructive-soft-foreground",
+  violet: "bg-violet-soft text-violet-soft-foreground",
+} satisfies Record<Tone, string>
+
+type StatMediaProps = PartProps<"div"> & {
+  /** The chip's soft fill and the colour of the icon on it. Default `neutral`. */
+  tone?: Tone
+  /** Names what the media shows (`role="img"`); without it the chip is decorative and hidden from assistive technology. */
+  label?: string
+}
+
+/** An icon or a small chart at the end of a `Stat`, top-aligned beside its label, value and hint. */
+function StatMedia({ tone = "neutral", label, className, render, ...props }: StatMediaProps) {
+  const named = label !== undefined && label !== ""
+  return renderElement(
+    "div",
+    {
+      "data-slot": "stat-media",
+      "data-tone": tone,
+      ...(named ? { role: "img", "aria-label": label } : { "aria-hidden": true }),
+      className: cn(
+        "flex h-control min-w-control shrink-0 items-center justify-center self-start rounded-choice [&_svg]:size-5",
+        mediaToneClassNames[tone],
+        className,
+      ),
+      ...props,
+    },
+    render,
+  )
+}
 
 type StatValueProps = PartProps<"div"> & FormatQuantityOptions & { value?: number | Quantity }
 
@@ -75,5 +120,5 @@ function StatGroup({ className, render, children, ...props }: StatGroupProps) {
   )
 }
 
-export { Stat, StatDelta, statDeltaLabels, StatGroup, StatHint, StatLabel, StatValue }
-export type { StatDeltaDirection, StatDeltaLabels, StatDeltaProps, StatGroupProps, StatValueProps }
+export { Stat, StatDelta, statDeltaLabels, StatGroup, StatHint, StatLabel, StatMedia, StatValue }
+export type { StatDeltaDirection, StatDeltaLabels, StatDeltaProps, StatGroupProps, StatMediaProps, StatValueProps }

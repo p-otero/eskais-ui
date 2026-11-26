@@ -10,7 +10,8 @@ import { ErrorState } from "@/components/ui/error-state"
 import { LoadingState } from "@/components/ui/loading-state"
 import { Meter, MeterLabel, MeterRing, type MeterProps, type MeterRingSize } from "@/components/ui/meter"
 import { Skeleton } from "@/components/ui/skeleton"
-import { Stat, StatGroup, StatHint, StatLabel, StatValue, type StatValueProps } from "@/components/ui/stat"
+import { Stat, StatGroup, StatHint, StatLabel, StatMedia, StatValue, type StatValueProps } from "@/components/ui/stat"
+import type { Tone } from "@/lib/tone"
 import { cn, cssVars, mergeStyleVars } from "@/lib/utils"
 
 type DashboardLabels = {
@@ -113,6 +114,12 @@ type DashboardStatProps = Omit<ComponentProps<typeof Stat>, "children"> &
     hint?: ReactNode
     /** Draws a placeholder of the value's height instead of the value. */
     loading?: boolean
+    /** An icon element (or a small chart) in a tinted chip at the end of the stat, as a `StatMedia`. */
+    icon?: ReactNode
+    /** The icon chip's tone. Default `neutral`. */
+    tone?: Tone
+    /** Names the icon for assistive technology; without it the icon is decorative. */
+    iconLabel?: string
     children?: ReactNode
   }
 
@@ -131,6 +138,9 @@ function DashboardStat({
   delta,
   hint,
   loading = false,
+  icon,
+  tone,
+  iconLabel,
   format,
   locale,
   children,
@@ -150,6 +160,11 @@ function DashboardStat({
       )}
       {loading && delta !== undefined ? <DeltaPlaceholderOfSameHeight delta={delta} /> : delta}
       {hint !== undefined && <StatHint>{hint}</StatHint>}
+      {icon !== undefined && (
+        <StatMedia tone={tone} label={iconLabel}>
+          {icon}
+        </StatMedia>
+      )}
     </Stat>
   )
 }

@@ -2644,7 +2644,7 @@
       "name": "stat",
       "type": "registry:ui",
       "title": "Stat",
-      "description": "Summary figures: Stat, StatLabel, StatValue (a number, a Quantity or a node), StatHint and StatDelta (a change with its direction in words), in a responsive StatGroup list.",
+      "description": "Summary figures: Stat, StatLabel, StatValue (a number, a Quantity or a node), StatHint, StatDelta (a change with its direction in words) and StatMedia (an icon in a tone chip at the end), in a responsive StatGroup list.",
       "dependencies": [
         "@ui-sdk/react@0.1.0-beta.12",
         "class-variance-authority@0.7.1",
@@ -2667,7 +2667,7 @@
           "type": "registry:ui"
         }
       ],
-      "docs": "`<StatDelta value comparison invert direction tone format locale labels>` shows a change beside a value: an arrow (mirrored in right to left) and the size of the change in a soft tone chip, then `comparison` (\"vs. last week\", your words). `value` is a ratio by default (0.12 reads \"12%\"); `format` takes `Intl.NumberFormat` options or a function. Its sign gives the direction (zero is flat) and the direction the tone: up is success, down destructive, flat neutral; `invert` swaps them for a metric where down is good, like cost. The arrow and colour are hidden from screen readers, which hear `labels.up/down/flat(formatted)` (\"up 12%\") and then the comparison, so the meaning never rests on colour or the icon. Override the labels in the page's language."
+      "docs": "`<StatDelta value comparison invert direction tone format locale labels>` shows a change beside a value: an arrow (mirrored in right to left) and the size of the change in a soft tone chip, then `comparison` (\"vs. last week\", your words). `value` is a ratio by default (0.12 reads \"12%\"); `format` takes `Intl.NumberFormat` options or a function. Its sign gives the direction (zero is flat) and the direction the tone: up is success, down destructive, flat neutral; `invert` swaps them for a metric where down is good, like cost. The arrow and colour are hidden from screen readers, which hear `labels.up/down/flat(formatted)` (\"up 12%\") and then the comparison, so the meaning never rests on colour or the icon. Override the labels in the page's language. `<StatMedia tone label>` is an icon (or a small chart) in a chip at the end of a `Stat`, top-aligned beside the label, value and hint, wherever it is written among them, with no wrapper: the chip is `--control-height` tall with the choice radius, the icon 20px, and `tone` (neutral by default) gives it the tone's soft fill and text. It is decorative (`aria-hidden`) unless `label` names it, which makes it `role=\"img\"`."
     },
     {
       "name": "description-list",
@@ -9727,7 +9727,7 @@
       "name": "dashboard-grid",
       "type": "registry:block",
       "title": "Dashboard Grid",
-      "description": "DashboardGrid: a row of stats over a container-query grid of cards (one column, two from 42rem, `columns` from 64rem) where rows are at least one height and cards in a row share it, so they line up, keep their size from loading to loaded and grow their row rather than clip. DashboardCard spans columns and rows and loads through DataState (a skeleton, the error with Retry, an empty title); DashboardChart fills a card and is named by its title; DashboardMeter centres a ring meter in one; DashboardStats and DashboardStat (with a StatDelta in `delta`) draw placeholders of the value's height.",
+      "description": "DashboardGrid: a row of stats over a container-query grid of cards (one column, two from 42rem, `columns` from 64rem) where rows are at least one height and cards in a row share it, so they line up, keep their size from loading to loaded and grow their row rather than clip. DashboardCard spans columns and rows and loads through DataState (a skeleton, the error with Retry, an empty title); DashboardChart fills a card and is named by its title; DashboardMeter centres a ring meter in one; DashboardStats and DashboardStat (with a StatDelta in `delta`, and `icon` with `tone` for a KPI chip) draw placeholders of the value's height.",
       "dependencies": [
         "@ui-sdk/react@0.1.0-beta.12"
       ],
@@ -9740,7 +9740,8 @@
         "@eskais/empty",
         "@eskais/meter",
         "@eskais/skeleton",
-        "@eskais/stat"
+        "@eskais/stat",
+        "@eskais/tone"
       ],
       "files": [
         {
@@ -9748,7 +9749,7 @@
           "type": "registry:ui"
         }
       ],
-      "docs": "`<DashboardGrid columns={3} labels={{ errorTitle, emptyTitle }} stats={<DashboardStats aria-label=\"This week\" loading={pending}><DashboardStat label=\"Runs\" value={261} delta={<StatDelta value={0.12} comparison=\"vs. last week\" />} loading={pending} /></DashboardStats>}><DashboardCard title=\"Runs\" span={2} status={query.status} data={query.data} error={query.error} onRetry={query.refetch}>{(data) => <DashboardChart config={config}><BarChart data={data}>…</BarChart></DashboardChart>}</DashboardCard></DashboardGrid>`. Rows are at least `--dashboard-row-height` (20rem) tall and cards in a row share the height; a card whose content is taller grows its row, never clips it, so set the row height to fit your cards to keep loading and loaded the same height. Without `status`, a card shows its children as they are; `DashboardMeter label value hint` centres a ring meter in it. `retry`, `loading` and `refreshing` default to English and every label is overridable on the grid or a card."
+      "docs": "`<DashboardGrid columns={3} labels={{ errorTitle, emptyTitle }} stats={<DashboardStats aria-label=\"This week\" loading={pending}><DashboardStat label=\"Runs\" value={261} delta={<StatDelta value={0.12} comparison=\"vs. last week\" />} icon={<ActivityIcon />} tone=\"info\" loading={pending} /></DashboardStats>}><DashboardCard title=\"Runs\" span={2} status={query.status} data={query.data} error={query.error} onRetry={query.refetch}>{(data) => <DashboardChart config={config}><BarChart data={data}>…</BarChart></DashboardChart>}</DashboardCard></DashboardGrid>`. Rows are at least `--dashboard-row-height` (20rem) tall and cards in a row share the height; a card whose content is taller grows its row, never clips it, so set the row height to fit your cards to keep loading and loaded the same height. Without `status`, a card shows its children as they are; `DashboardMeter label value hint` centres a ring meter in it. `DashboardStat icon tone iconLabel` renders a `StatMedia` at the stat's end: `icon` is an element, like the stat's other slots, so a small chart fits too; it is decorative unless `iconLabel` names it. `retry`, `loading` and `refreshing` default to English and every label is overridable on the grid or a card."
     },
     {
       "name": "settings-page",
