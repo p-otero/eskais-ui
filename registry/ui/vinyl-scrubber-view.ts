@@ -4,18 +4,18 @@ type Vector = { x: number; y: number; z: number }
 const secondsPerTurn = 1.8
 
 const cameraFovDegrees = 26
-const cameraDistance = 124
+const cameraDistance = 112
 const cameraElevationDegrees = 26
-const cameraTarget: Vector = { x: 0, y: 13, z: 0 }
+const cameraTarget: Vector = { x: 0, y: 16, z: 0 }
 const cameraLift = 14
 
 const deckTop = 11.65
 const recordRadius = 15
 const labelRadius = 5
-const recordCenter: Vector = { x: -5.5, y: deckTop + 1.4, z: 1 }
+const recordCenter: Vector = { x: -5.5, y: deckTop + 1.4, z: 2 }
 const recordTop = recordCenter.y + 0.09
 
-const armOuterGrooveRadians = -0.36
+const armOuterGrooveRadians = -0.324
 const armSweepRadians = 0.5
 
 const add = (a: Vector, b: Vector, scale = 1): Vector => ({
