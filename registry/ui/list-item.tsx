@@ -28,6 +28,8 @@ const stretchedClassNames = {
   card: "after:rounded-lg",
 } satisfies Record<ListVariant, string>
 
+type ListItemEmphasis = "muted" | "strong"
+
 const toneClassNames = {
   neutral: "bg-neutral-soft text-neutral-soft-foreground",
   info: "bg-info-soft text-info-soft-foreground",
@@ -117,6 +119,8 @@ type ListItemProps = {
   onSelect?: () => void
   /** Overrides the List's variant. */
   variant?: ListVariant
+  /** `muted` fades the row's text, like a read message; `strong` sets it in a medium weight, like an unread one. */
+  emphasis?: ListItemEmphasis
   /** The checkbox's name in a list with `checkedIds`; English by default. */
   checkLabel?: string
   className?: string
@@ -135,6 +139,7 @@ function ListItem({
   href,
   onSelect,
   variant: variantProp,
+  emphasis,
   checkLabel,
   className,
 }: ListItemProps) {
@@ -272,6 +277,8 @@ function ListItem({
   const rowClassName = cn(
     "group/list-item relative flex min-w-0 flex-wrap items-start gap-items px-inset-item py-inset-item transition-colors duration-micro ease-standard",
     variant === "card" ? rowClassNames.card : rowClassNames.row,
+    emphasis === "muted" && "text-muted-foreground",
+    emphasis === "strong" && "font-medium",
     className,
   )
 
@@ -354,5 +361,5 @@ function ListItem({
 
 export { IconTile, ListItem, ListItemActions, ListItemMeta, ListItemTitle }
 export { List, ListGroup }
-export type { ListItemProps }
+export type { ListItemEmphasis, ListItemProps }
 export type { ListGroupProps, ListProps, ListVariant }

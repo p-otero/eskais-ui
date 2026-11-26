@@ -137,6 +137,22 @@ test("a row's tooltip mounts only once its title is cut off, and its title keeps
   }
 })
 
+const row = (title: string) => screen.getByText(title).closest('[data-slot="list-item"]')!
+
+test("emphasis sets a row strong or muted, and the row keeps its own classes", () => {
+  render(
+    <List aria-label="Messages">
+      <ListItem id="new" title="Unread" emphasis="strong" />
+      <ListItem id="old" title="Read" emphasis="muted" className="gap-group" />
+      <ListItem id="plain" title="Plain" />
+    </List>,
+  )
+  expect(row("Unread").className).toContain("font-medium")
+  expect(row("Read").className).toContain("text-muted-foreground")
+  expect(row("Read").className).toContain("gap-group")
+  expect(row("Plain").className).not.toMatch(/text-muted-foreground|font-medium/)
+})
+
 test("rows with href are links, current one marked as the page", async () => {
   const { container } = render(
     <List aria-label="Projects" variant="card">

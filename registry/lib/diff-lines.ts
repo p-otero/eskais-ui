@@ -1,4 +1,3 @@
-// oxlint-disable unicorn/consistent-function-scoping -- a Web Worker runs the factory below from its source, so every helper lives inside it
 import { sequenceDiff, type SequenceDiff } from "@/lib/diff-sequence"
 import type { DiffHunk, DiffLine, DiffOptions, FileDiff, IgnoreWhitespace, TextDiff } from "@/lib/diff-types"
 
@@ -10,6 +9,7 @@ type LineDiff = {
   headingAbove: (lines: readonly string[], oldStart: number) => string | undefined
 }
 
+// oxlint-disable unicorn/consistent-function-scoping -- a Web Worker runs the factory below from its source, so every helper lives inside it
 /**
  * Line diffs and hunks over a sequence diff. Self-contained like `createSequenceDiff`, which it takes as its only
  * input, so a Web Worker can run both from their source.

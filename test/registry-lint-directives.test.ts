@@ -144,7 +144,7 @@ test("every rule a shipped file suppresses comes from a plugin the consumer pres
   expect(missing).toEqual([])
 })
 
-test("linting the installed files with the consumer preset reports no unused disable directive", () => {
+test("linting the installed files with the consumer preset reports no error and no unused disable directive", () => {
   installLikeShadcn()
   const { stdout, stderr } = spawnSync(
     process.execPath,
@@ -159,4 +159,6 @@ test("linting the installed files with the consumer preset reports no unused dis
   expect(lintedFiles, output).toBeGreaterThanOrEqual(shippedFiles.length)
   const unused = output.split("Unused oxlint-disable directive").length - 1
   expect(unused, output).toBe(0)
+  const errors = /Found \d+ warnings? and (\d+) errors?/.exec(output)?.[1]
+  expect(errors, output).toBe("0")
 }, 60_000)

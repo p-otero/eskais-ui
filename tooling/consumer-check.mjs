@@ -185,12 +185,8 @@ const devDependencies = [
 const pick = (names) => Object.fromEntries(names.map((name) => [name, versions[name]]))
 
 const installedTypes = new Set(["registry:ui", "registry:lib", "registry:hook", "registry:component"])
-const itemsWithDisableDirectives = JSON.parse(readFileSync(join(repo, "registry.json"), "utf8"))
-  .items.filter((item) =>
-    (item.files ?? []).some(
-      (file) => installedTypes.has(file.type) && readFileSync(join(repo, file.path), "utf8").includes("oxlint-disable"),
-    ),
-  )
+const itemsWithCode = JSON.parse(readFileSync(join(repo, "registry.json"), "utf8"))
+  .items.filter((item) => (item.files ?? []).some((file) => installedTypes.has(file.type)))
   .map((item) => item.name)
 
 const server = createServer((request, response) => {
@@ -1131,9 +1127,9 @@ const scenarios = {
     builtCss: ["@container", ".text-title{"],
     check: checkLayouts,
   },
-  "lint-directives": {
+  lint: {
     css: `@layer ui-sdk;\n@import "tailwindcss";\n`,
-    items: ["lint-rules", ...itemsWithDisableDirectives],
+    items: ["lint-rules", ...itemsWithCode],
     lintOnly: true,
   },
   aliases: {
@@ -1389,7 +1385,7 @@ function captured(app, command, args) {
   })
 }
 
-async function checkDisableDirectives(app) {
+async function checkInstalledLint(app) {
   writeFileSync(
     join(app, ".oxlintrc.json"),
     JSON.stringify({ extends: ["./eskais-ui.oxlintrc.json"], options: { reportUnusedDisableDirectives: "error" } }),
@@ -1400,7 +1396,12 @@ async function checkDisableDirectives(app) {
   if (!linted || Number(linted[1]) === 0) throw new Error(`oxlint didn't lint the installed files:\n${output}`)
   const unused = output.split("Unused oxlint-disable directive").length - 1
   if (unused > 0) throw new Error(`The installed files carry ${String(unused)} unused disable directives:\n${output}`)
-  console.log(`lint-directives: no unused disable directive in the ${linted[1]} installed files`)
+  const found = /Found (\d+) warnings? and (\d+) errors?/.exec(output)
+  if (!found || found[2] !== "0")
+    throw new Error(`The consumer preset reports errors in the installed files:\n${output}`)
+  console.log(
+    `lint: no error and no unused disable directive in the ${linted[1]} installed files (${found[1]} warnings)`,
+  )
 }
 
 async function checkMockupCli(app, run) {
@@ -1556,7 +1557,7 @@ export default defineConfig({
   if (scenario.files) checkPlacement(app, scenario)
   if (scenario.skills) checkSkills(app, scenario.skills)
   if (scenario.lintOnly) {
-    await checkDisableDirectives(app)
+    await checkInstalledLint(app)
     console.log(`Consumer check (${name}) passed with ${pm} in ${app}`)
     return
   }
