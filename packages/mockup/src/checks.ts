@@ -52,7 +52,7 @@ export function pageProblems(page: string): string[] {
   }
   if (/<img[^>]+src="?(?!data:)/i.test(markup)) problems.push("still loads an external image")
   if (/@import\b/i.test(styles)) problems.push("still imports a stylesheet")
-  if (/url\((?!\s*["']?data:)/i.test(styles)) problems.push("still loads an asset that is not inlined")
+  if (/url\((?!\s*["']?(?:data:|#))/i.test(styles)) problems.push("still loads an asset that is not inlined")
   if (TEMPLATE_PLACEHOLDER.test(page)) problems.push("still has a template placeholder")
   return problems
 }

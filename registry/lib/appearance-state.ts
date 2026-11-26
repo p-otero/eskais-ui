@@ -1,7 +1,7 @@
 import { createColorScheme, createPreference, type ColorSchemeValue, type ValueStorage } from "@ui-sdk/core"
 import { assumeType } from "@/lib/narrow"
 
-const defaultThemes = ["default", "compact", "glass"] as const
+const defaultThemes = ["default", "compact", "glass", "liquid"] as const
 const defaultPalettes = ["default", "neutral", "blue", "violet", "green", "orange"] as const
 const densities = ["default", "compact"] as const
 const radii = ["default", "none", "sm", "md", "lg", "full"] as const

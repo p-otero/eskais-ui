@@ -9,9 +9,10 @@ try {
   const { page, cdp } = await openPage(browser)
   await page.goto(`${server.origin}?demo=perf&scenario=${scenario}`)
   await page.waitForFunction(() => globalThis.perfFixture?.mounted !== undefined)
-  if (process.argv.includes("--glass")) {
-    await page.evaluate(() => document.documentElement.setAttribute("data-theme", "glass"))
-  }
+  const theme = process.argv.includes("--glass")
+    ? "glass"
+    : process.argv.find((arg) => arg.startsWith("--theme="))?.slice("--theme=".length)
+  if (theme) await page.evaluate((name) => document.documentElement.setAttribute("data-theme", name), theme)
   const css = process.argv.find((arg) => arg.startsWith("--css="))?.slice(6)
   if (css) await page.addStyleTag({ content: css })
   await page.waitForTimeout(Number(process.argv.find((arg) => arg.startsWith("--settle="))?.slice(9) ?? 500))

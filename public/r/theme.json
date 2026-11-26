@@ -394,6 +394,10 @@
       "--glass-opacity": "100%",
       "--glass-blur": "0px",
       "--glass-saturation": "1",
+      "--glass-sheen": "none",
+      "--control-glass-opacity": "100%",
+      "--control-glass-rim": "0 0 #0000",
+      "--control-glass-sheen": "none",
       "--floating-radius": "calc(min(var(--control-radius), var(--control-height-sm) / 2) + var(--gap-inline))",
       "--floating-offset": "1rem",
       "--floating-opacity": "85%",
@@ -781,43 +785,61 @@
     "[data-elevation=\"flat\"]": {
       "--floating-shadow": "0 0 #0000",
       "--floating-backdrop": "none",
-      "--floating-opacity": "100%"
+      "--floating-opacity": "100%",
+      "--glass-sheen": "none",
+      "--control-glass-opacity": "100%",
+      "--control-glass-rim": "0 0 #0000",
+      "--control-glass-sheen": "none"
     },
     "[data-elevation=\"flat\"] [data-theme]": {
       "--floating-shadow": "0 0 #0000",
       "--floating-backdrop": "none",
-      "--floating-opacity": "100%"
+      "--floating-opacity": "100%",
+      "--glass-sheen": "none",
+      "--control-glass-opacity": "100%",
+      "--control-glass-rim": "0 0 #0000",
+      "--control-glass-sheen": "none"
     },
     "[data-elevation=\"flat\"][data-theme]": {
       "--floating-shadow": "0 0 #0000",
       "--floating-backdrop": "none",
-      "--floating-opacity": "100%"
+      "--floating-opacity": "100%",
+      "--glass-sheen": "none",
+      "--control-glass-opacity": "100%",
+      "--control-glass-rim": "0 0 #0000",
+      "--control-glass-sheen": "none"
     },
     "@supports not (backdrop-filter: blur(1px))": {
       "@supports not (-webkit-backdrop-filter: blur(1px))": {
         ":root": {
-          "--floating-opacity": "100% !important"
+          "--floating-opacity": "100% !important",
+          "--control-glass-opacity": "100% !important"
         },
         "[data-theme]": {
-          "--floating-opacity": "100% !important"
+          "--floating-opacity": "100% !important",
+          "--control-glass-opacity": "100% !important"
         },
         "[data-elevation]": {
-          "--floating-opacity": "100% !important"
+          "--floating-opacity": "100% !important",
+          "--control-glass-opacity": "100% !important"
         }
       }
     },
     "@media (prefers-reduced-transparency: reduce)": {
       ":root": {
         "--floating-opacity": "100% !important",
-        "--floating-backdrop": "none !important"
+        "--floating-backdrop": "none !important",
+        "--control-glass-opacity": "100% !important"
       },
       "[data-theme]": {
         "--floating-opacity": "100% !important",
-        "--floating-backdrop": "none !important"
+        "--floating-backdrop": "none !important",
+        "--control-glass-opacity": "100% !important"
       },
       "[data-elevation]": {
         "--floating-opacity": "100% !important",
-        "--floating-backdrop": "none !important"
+        "--floating-backdrop": "none !important",
+        "--control-glass-opacity": "100% !important"
       }
     },
     "@supports not (color: oklch(from red l c h))": {
@@ -909,8 +931,17 @@
       "--field-label-surface": "color-mix(in oklab, var(--popover) var(--floating-opacity), var(--background))",
       "--tw-shadow": "var(--floating-shadow)",
       "box-shadow": "var(--tw-inset-shadow, 0 0 #0000), var(--tw-inset-ring-shadow, 0 0 #0000), var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow)",
+      "background-image": "var(--glass-sheen)",
       "-webkit-backdrop-filter": "var(--floating-backdrop)",
       "backdrop-filter": "var(--floating-backdrop)"
+    },
+    "@utility glass-sheen": {
+      "background-image": "var(--glass-sheen)"
+    },
+    "@utility glass-control": {
+      "background-image": "var(--control-glass-sheen)",
+      "--tw-inset-shadow": "var(--control-glass-rim)",
+      "box-shadow": "var(--tw-inset-shadow), var(--tw-inset-ring-shadow, 0 0 #0000), var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow, 0 0 #0000)"
     },
     "@utility nav-current": {
       "background-color": "var(--nav-current)",

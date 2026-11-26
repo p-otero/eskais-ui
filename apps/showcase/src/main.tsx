@@ -2,6 +2,7 @@ import { StrictMode, type ComponentType } from "react"
 import { createRoot } from "react-dom/client"
 
 import { Appearance } from "@/components/ui/appearance"
+import { LiquidLens } from "@/components/ui/liquid-lens"
 
 import { appearance } from "./appearance"
 import { loadPerfPage } from "./perf/perf-page"
@@ -146,6 +147,7 @@ const pages: Record<string, Page> = {
   "sun-arc": () => import("./instruments/sun-arc-demo").then((module) => module.SunArcDemo),
   mixer: () => import("./instruments/mixer-demo").then((module) => module.MixerDemo),
   "safe-dial": () => import("./instruments/safe-dial-demo").then((module) => module.SafeDialDemo),
+  "liquid-glass": () => import("./liquid/liquid-glass-demo").then((module) => module.LiquidGlassDemo),
   "vinyl-scrubber": () => import("./instruments/vinyl-scrubber-demo").then((module) => module.VinylScrubberDemo),
   "live-sky": () => import("./sky/live-sky-demo").then((module) => module.LiveSkyDemo),
   "led-matrix": () => import("./signs/led-matrix-demo").then((module) => module.LedMatrixDemo),
@@ -181,6 +183,7 @@ void (load ?? loadApp)().then((Loaded) => {
       ) : (
         <Loaded />
       )}
+      <LiquidLens />
     </StrictMode>,
   )
 })

@@ -11,7 +11,7 @@ import { Slider, SliderControl, SliderIndicator, SliderThumb, SliderTrack, Slide
 import { useGlassOpacity } from "./hooks/use-glass-opacity"
 import { createThemeEditorStore } from "./theme-editor-store"
 
-const themes = ["default", "compact", "glass"] as const
+const themes = ["default", "compact", "glass", "liquid"] as const
 type Theme = (typeof themes)[number]
 const palettes = ["neutral", "blue", "violet", "green", "orange"] as const
 

@@ -1,0 +1,19 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "liquid-lens",
+  "title": "Liquid Lens",
+  "description": "The SVG displacement filter that data-theme=\"liquid\" refracts floating UI through, rendered only where backdrop-filter can use it.",
+  "registryDependencies": [
+    "@eskais/narrow",
+    "@eskais/theme-liquid"
+  ],
+  "files": [
+    {
+      "path": "registry/ui/liquid-lens.tsx",
+      "content": "\"use client\"\n\nimport { useSyncExternalStore } from \"react\"\n\nimport { isRecord } from \"@/lib/narrow\"\n\nconst liquidLensId = \"eskais-liquid-lens\"\n\nconst edgeRamp = [\n  [0, 255],\n  [0.05, 196],\n  [0.16, 128],\n  [0.84, 128],\n  [0.95, 60],\n  [1, 0],\n] as const\n\nfunction rampImage(axis: \"x\" | \"y\") {\n  const color = (value: number) => (axis === \"x\" ? `rgb(${String(value)},0,0)` : `rgb(0,${String(value)},0)`)\n  const direction = axis === \"x\" ? \"x2='1' y2='0'\" : \"x2='0' y2='1'\"\n  const stops = edgeRamp\n    .map(([offset, value]) => `<stop offset='${String(offset)}' stop-color='${color(value)}'/>`)\n    .join(\"\")\n  const svg = `<svg xmlns='http://www.w3.org/2000/svg' width='100' height='100' preserveAspectRatio='none'><linearGradient id='g' ${direction}>${stops}</linearGradient><rect width='100' height='100' fill='url(#g)'/></svg>`\n  return `data:image/svg+xml,${encodeURIComponent(svg)}`\n}\n\nconst horizontalRamp = rampImage(\"x\")\nconst verticalRamp = rampImage(\"y\")\n\nfunction rendersBackdropLenses() {\n  const userAgentData: unknown = Reflect.get(navigator, \"userAgentData\")\n  return (\n    isRecord(userAgentData) &&\n    Array.isArray(userAgentData.brands) &&\n    userAgentData.brands.some((entry: unknown) => isRecord(entry) && entry.brand === \"Chromium\")\n  )\n}\n\nconst subscribeNever = () => () => {}\n\ntype LiquidLensProps = {\n  /** How far the edges shift what's behind, as a fraction of the element's size: 0 is flat glass. Defaults to 0.08. */\n  refraction?: number\n}\n\n/**\n * The lens `data-theme=\"liquid\"` refracts floating UI through: an SVG displacement filter that `backdrop-filter`\n * references by id. Render it once per page; it renders nothing where browsers can't use an SVG backdrop filter, and\n * the theme falls back to blur and saturation there.\n */\nfunction LiquidLens({ refraction = 0.08 }: LiquidLensProps) {\n  const supported = useSyncExternalStore(subscribeNever, rendersBackdropLenses, () => false)\n  if (!supported) return null\n  return (\n    // oxlint-disable-next-line eskais/no-inline-icons -- an SVG filter that backdrop-filter references, not an icon\n    <svg data-slot=\"liquid-lens\" aria-hidden=\"true\" width=\"0\" height=\"0\" className=\"pointer-events-none absolute\">\n      <filter\n        id={liquidLensId}\n        x=\"0\"\n        y=\"0\"\n        width=\"1\"\n        height=\"1\"\n        primitiveUnits=\"objectBoundingBox\"\n        colorInterpolationFilters=\"sRGB\"\n      >\n        <feImage x=\"0\" y=\"0\" width=\"1\" height=\"1\" preserveAspectRatio=\"none\" href={horizontalRamp} result=\"x\" />\n        <feImage x=\"0\" y=\"0\" width=\"1\" height=\"1\" preserveAspectRatio=\"none\" href={verticalRamp} result=\"y\" />\n        <feComposite in=\"x\" in2=\"y\" operator=\"arithmetic\" k2=\"1\" k3=\"1\" result=\"map\" />\n        <feDisplacementMap in=\"SourceGraphic\" in2=\"map\" scale={refraction} xChannelSelector=\"R\" yChannelSelector=\"G\" />\n      </filter>\n    </svg>\n  )\n}\n\nexport { LiquidLens, liquidLensId }\nexport type { LiquidLensProps }\n",
+      "type": "registry:ui"
+    }
+  ],
+  "docs": "Render `<LiquidLens />` once, anywhere in the page. In Chromium it adds a hidden SVG filter with the id `eskais-liquid-lens`, and the liquid theme adds it to `--floating-backdrop`; elsewhere it renders nothing and the theme keeps blur and saturation. `refraction` is how far the edges shift what's behind, as a fraction of the element's size.",
+  "type": "registry:ui"
+}
