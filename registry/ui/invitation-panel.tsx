@@ -9,7 +9,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
 import { ConfirmDialog } from "@/components/ui/confirm-dialog"
 import { DataState, type DataStatus } from "@/components/ui/data-state"
-import { Field, FieldLabel } from "@/components/ui/field"
+import { Field, FieldLabel, type FieldLabelPlacement } from "@/components/ui/field"
 import { Form } from "@/components/ui/form"
 import { toFormErrors, type FormMessages } from "@/components/ui/form-messages"
 import {
@@ -117,6 +117,10 @@ type InvitationFieldsProps<Schema extends StandardSchemaV1> = {
   schema: Schema
   defaultValues?: DefaultValues<StandardSchemaV1.InferInput<Schema> & FieldValues>
   messages?: FormMessages
+  /** The fields' form's accessible name, like "Invited person". */
+  formLabel?: string
+  /** Where every field's label sits, unless a field sets its own; `top` by default. */
+  labelPlacement?: FieldLabelPlacement
   /** Creates an invitation from the role and the fields' parsed values; resolves to its one-time link. */
   onCreate: CreateLink<StandardSchemaV1.InferOutput<Schema>>
 }
@@ -126,6 +130,8 @@ type InvitationNoFieldsProps = {
   schema?: undefined
   defaultValues?: undefined
   messages?: undefined
+  formLabel?: undefined
+  labelPlacement?: undefined
   /** Creates an invitation and resolves to its one-time `url`, its `id` and when it expires. */
   onCreate: CreateLink<undefined>
 }
@@ -257,6 +263,8 @@ function InvitationPanel<Schema extends StandardSchemaV1>(props: InvitationPanel
                 schema={withFields.schema}
                 defaultValues={withFields.defaultValues}
                 messages={withFields.messages}
+                label={withFields.formLabel}
+                labelPlacement={withFields.labelPlacement}
                 className="gap-items"
                 onSubmit={async (values, helpers) => {
                   await api.createWith((chosen) => withFields.onCreate({ role: chosen, values }))

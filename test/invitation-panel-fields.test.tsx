@@ -62,9 +62,19 @@ const schema = z.object({
 
 type Created = InvitationRequest<z.output<typeof schema>>
 
-function Invite({ onCreate }: { onCreate: (request: Created) => InvitationLink | PromiseLike<InvitationLink> }) {
+function Invite({
+  onCreate,
+  formLabel,
+  labelPlacement,
+}: {
+  onCreate: (request: Created) => InvitationLink | PromiseLike<InvitationLink>
+  formLabel?: string
+  labelPlacement?: "top" | "in" | "on"
+}) {
   return (
     <InvitationPanel
+      formLabel={formLabel}
+      labelPlacement={labelPlacement}
       aria-label="Invitations"
       roles={roles}
       onCreate={onCreate}
@@ -199,4 +209,12 @@ test("has no axe violations with fields, empty and after a link is created", asy
   await user.click(within(container).getByRole("button", { name: "Create invitation" }))
   await screen.findByText(SECRET)
   expect(await axeViolations(container)).toEqual([])
+})
+
+test("the fields' form takes a name, and one label placement for every field", () => {
+  const { container } = render(<Invite onCreate={link} formLabel="Invited person" labelPlacement="in" />)
+  expect(screen.getByRole("form", { name: "Invited person" })).toBeTruthy()
+  const fields = container.querySelectorAll("[data-slot=field]")
+  expect(fields.length).toBeGreaterThan(0)
+  for (const field of fields) expect(field.getAttribute("data-label-placement")).toBe("in")
 })
