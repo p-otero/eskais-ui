@@ -689,6 +689,49 @@ async function checkLiveSky(page) {
     throw new Error(`LiveSky drew ${String(drawn)} frames in 1.5 s, in mode ${String(sky.mode)}`)
 }
 
+const vinylMain = `import { createRoot } from "react-dom/client"
+import { VinylScrubber } from "@/components/ui/vinyl-scrubber"
+import { cn } from "@/lib/utils"
+import "./index.css"
+${probes}
+function App() {
+  return (
+    <main className="flex flex-col gap-items p-inset-surface">
+      <VinylScrubber label="Consumer track" title="Consumer" subtitle="Side A" duration={240} defaultValue={30} />
+      <Probes />
+    </main>
+  )
+}
+
+createRoot(document.querySelector("#root") ?? document.body).render(<App />)
+`
+
+async function checkVinyl(page) {
+  await page.waitForFunction(
+    () => document.querySelector('[data-slot="vinyl-turntable"]')?.dataset.renderer === "webgl",
+    undefined,
+    { timeout: 30_000 },
+  )
+  const deck = await page.evaluate(() => ({
+    workers: globalThis.workersStarted,
+    canvas: document.querySelectorAll('[data-slot="vinyl-canvas"]').length,
+  }))
+  console.log("VinylScrubber:", JSON.stringify(deck))
+  if (deck.workers < 1 || deck.canvas !== 1)
+    throw new Error(`VinylScrubber didn't draw its turntable in its worker: ${JSON.stringify(deck)}`)
+}
+
+const vinylScenario = {
+  css: `@layer ui-sdk;
+@import "tailwindcss";
+`,
+  items: ["theme", "vinyl-scrubber"],
+  main: vinylMain,
+  builtCss: ["--vinyl-amber"],
+  check: checkVinyl,
+  literals: ["@"],
+}
+
 const themeOnlyMain = `import { createRoot } from "react-dom/client"
 import { cn } from "@/lib/utils"
 import "./index.css"
@@ -1012,6 +1055,26 @@ const scenarios = {
       "src/components/ui/live-sky-worker.js",
     ],
     absent: ["src/components/ui/live-sky.tsx", "src/components/ui/live-sky-runner.ts"],
+  },
+  "vinyl-scrubber": {
+    ...vinylScenario,
+    files: [
+      "src/components/ui/vinyl-scrubber.tsx",
+      "src/components/ui/vinyl-scrubber-stage.ts",
+      "src/components/ui/vinyl-scrubber-runner.ts",
+      "src/components/ui/vinyl-scrubber-worker.js",
+    ],
+  },
+  "vinyl-scrubber-js": {
+    ...vinylScenario,
+    tsx: false,
+    files: [
+      "src/components/ui/vinyl-scrubber.jsx",
+      "src/components/ui/vinyl-scrubber-stage.js",
+      "src/components/ui/vinyl-scrubber-runner.js",
+      "src/components/ui/vinyl-scrubber-worker.js",
+    ],
+    absent: ["src/components/ui/vinyl-scrubber.tsx", "src/components/ui/vinyl-scrubber-runner.ts"],
   },
   fresh: {
     css: `@layer ui-sdk;\n@import "tailwindcss";\n`,
