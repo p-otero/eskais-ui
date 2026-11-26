@@ -1,9 +1,12 @@
 import { describe, expect, test, vi } from "vitest"
 
 import { arraySource } from "@/lib/array-source"
-import { HttpError, readJson, type PageRequest } from "@/lib/page-source"
-import { cursorSource, linkHeaderSource, parseLinkHeader, relaySource } from "@/lib/page-source-cursor"
-import { offsetSource, pagedSource, springPageSource, springSliceSource, type RestCall } from "@/lib/page-source-rest"
+import { HttpError, readJson, type PageRequest, type RestCall } from "@/lib/page-source"
+import { cursorSource } from "@/lib/page-source-cursor"
+import { linkHeaderSource, parseLinkHeader } from "@/lib/page-source-link"
+import { relaySource } from "@/lib/page-source-relay"
+import { offsetSource, pagedSource } from "@/lib/page-source-rest"
+import { springPageSource, springSliceSource } from "@/lib/page-source-spring"
 
 type Task = { id: number; title: string }
 type Filter = { status?: string }

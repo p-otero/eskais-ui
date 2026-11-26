@@ -12,6 +12,7 @@ type RegistryItem = {
   dependencies?: string[]
   registryDependencies?: string[]
   files?: RegistryFile[]
+  meta?: { adapterOf?: string }
 }
 
 const items: RegistryItem[] = registry.items
@@ -41,7 +42,13 @@ const guideItems = [
   "narrow",
 ]
 
-const componentItems = items.filter((item) => !guideItems.includes(item.name))
+const adapterItems = items.filter((item) => item.meta?.adapterOf !== undefined)
+
+const componentItems = items.filter((item) => !guideItems.includes(item.name) && !adapterItems.includes(item))
+
+function adaptersOf(name: string) {
+  return adapterItems.filter((item) => item.meta?.adapterOf === name)
+}
 
 // Spec: raw.githubusercontent.com serves a branch over a tag of the same name, so the site, deployed only from a
 // release, pins its version through `refs/tags/`.
@@ -62,5 +69,16 @@ function findItem(name: string) {
   return items.find((item) => item.name === name)
 }
 
-export { componentItems, findItem, guideItems, items, registryUrl, releaseTag, skillsCliVersion, uiSdkVersion }
+export {
+  adapterItems,
+  adaptersOf,
+  componentItems,
+  findItem,
+  guideItems,
+  items,
+  registryUrl,
+  releaseTag,
+  skillsCliVersion,
+  uiSdkVersion,
+}
 export type { RegistryFile, RegistryItem }

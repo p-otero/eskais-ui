@@ -10,13 +10,13 @@ import { Tabs, TabsIndicator, TabsList, TabsPanel, TabsTab } from "@/components/
 
 import { categoryOf } from "../content/categories"
 import { itemNotes } from "../content/items"
-import { findItem, type RegistryItem } from "../registry"
+import { adaptersOf, findItem, type RegistryItem } from "../registry"
 import { componentPath } from "../routes"
 import { loadExample } from "../preload"
 import { linkTo } from "../router"
 import { AgentPanel } from "./agent-panel"
 import { ApiSection, importSnippet, useItemApi } from "./api-section"
-import { DocTitle, H2, P, Ul } from "./prose"
+import { DocTitle, H2, H3, P, Ul } from "./prose"
 
 const exampleSources = import.meta.glob<string>("../examples/*.tsx", { query: "?raw", import: "default" })
 
@@ -52,6 +52,9 @@ const runners = [
 ] as const
 
 const installCommand = (name: string, run: string = runners[0].run) => `${run} shadcn@latest add @eskais/${name}`
+
+const installAllCommand = (names: readonly string[]) =>
+  `${runners[0].run} shadcn@latest add ${names.map((name) => `@eskais/${name}`).join(" ")}`
 
 function Preview({ item, preview }: { item: RegistryItem; preview: RefObject<HTMLDivElement | null> }) {
   return (
@@ -133,6 +136,37 @@ function Dependencies({ item }: { item: RegistryItem }) {
   )
 }
 
+function ExampleAdapters({ names }: { names: readonly string[] }) {
+  if (names.length === 0) return null
+  return (
+    <>
+      <P>The example also uses the {names.join(", ")} adapters:</P>
+      <CodeBlock code={installAllCommand(names)} language="bash" title="Example adapters" />
+    </>
+  )
+}
+
+function Adapters({ item }: { item: RegistryItem }) {
+  const adapters = adaptersOf(item.name)
+  if (adapters.length === 0) return null
+  return (
+    <section className="flex flex-col gap-items" aria-labelledby="adapters">
+      <H2 id="adapters">Adapters</H2>
+      <P>Each adapter is an item of its own that brings {item.name} along. Install only the ones your backend needs.</P>
+      <ul className="flex flex-col gap-group">
+        {adapters.map((adapter) => (
+          <li key={adapter.name} className="flex flex-col gap-items">
+            <H3 id={adapter.name}>{adapter.title ?? adapter.name}</H3>
+            {adapter.description && <MarkdownView markdown={adapter.description} className="max-w-prose" />}
+            <CodeBlock code={installCommand(adapter.name)} language="bash" title={adapter.name} />
+            {adapter.docs && <MarkdownView markdown={adapter.docs} className="max-w-prose" />}
+          </li>
+        ))}
+      </ul>
+    </section>
+  )
+}
+
 function ItemPage({ item }: { item: RegistryItem }) {
   return (
     <>
@@ -175,7 +209,10 @@ function ItemBody({ item }: { item: RegistryItem }) {
           }))}
         />
         <Dependencies item={item} />
+        <ExampleAdapters names={notes?.exampleAdapters ?? []} />
       </section>
+
+      <Adapters item={item} />
 
       <section className="flex flex-col gap-items" aria-labelledby="usage">
         <H2 id="usage">Usage</H2>

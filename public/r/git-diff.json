@@ -11,6 +11,7 @@
   "registryDependencies": [
     "@eskais/utils",
     "@eskais/diff",
+    "@eskais/diff-patch",
     "@eskais/diff-view",
     "@eskais/segmented-control",
     "@eskais/toggle",

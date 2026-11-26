@@ -7,18 +7,44 @@ import { categories } from "../apps/site/src/content/categories"
 import { itemNotes } from "../apps/site/src/content/items"
 import { guides } from "../apps/site/src/guides/meta"
 import { extractApi } from "../apps/site/src/lib/extract-api"
-import { componentItems, guideItems, items } from "../apps/site/src/registry"
+import { adapterItems, componentItems, guideItems, items } from "../apps/site/src/registry"
 import { componentPath, routes } from "../apps/site/src/routes"
 
 const site = join(import.meta.dirname, "..", "apps", "site", "src")
 const categorized: string[] = categories.flatMap((category) => [...category.items])
+const hasPage = (name: string) => routes.some((route) => route.path === componentPath(name))
 
 describe("site pages", () => {
-  it("gives every registry item a component page or a Getting started guide", () => {
+  it("gives every registry item a component page, a Getting started guide or its core's page", () => {
     const missing = items
+      .filter((item) => !adapterItems.includes(item))
       .map((item) => item.name)
-      .filter((name) => !guideItems.includes(name) && !routes.some((route) => route.path === componentPath(name)))
+      .filter((name) => !guideItems.includes(name) && !hasPage(name))
+    const orphanAdapters = adapterItems.filter((item) => !hasPage(item.meta?.adapterOf ?? ""))
     expect(missing).toEqual([])
+    expect(orphanAdapters.map((item) => item.name)).toEqual([])
+  })
+
+  it("installs the adapters an example imports, and only those", () => {
+    const adapterModules = new Map(
+      adapterItems.flatMap((item) =>
+        (item.files ?? []).map(
+          (file) => [file.path.replace(/^registry\/lib\/(.+)\.ts$/, "@/lib/$1"), item.name] as const,
+        ),
+      ),
+    )
+    const mismatched = componentItems.flatMap((item) => {
+      const source = readFileSync(join(site, "examples", `${item.name}.tsx`), "utf8")
+      const imported = [...source.matchAll(/from\s+"(@\/lib\/[^"]+)"/g)].flatMap((match) => {
+        const adapter = adapterModules.get(match[1] ?? "")
+        return adapter ? [adapter] : []
+      })
+      const declared = itemNotes[item.name]?.exampleAdapters ?? []
+      return [...new Set(imported)].toSorted().join() === [...declared].toSorted().join()
+        ? []
+        : [`${item.name}: imports ${imported.join(", ") || "none"}, declares ${declared.join(", ") || "none"}`]
+    })
+    expect(mismatched).toEqual([])
   })
 
   it("has an example and a sidebar category for every component page", () => {
