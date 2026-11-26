@@ -9902,6 +9902,84 @@
       "docs": "`<SecretList aria-label=\"API keys\" secrets={secrets} status={status} error={error} onRetry={refetch} onReplace={(id) => setReplacing(id)} onDelete={(id) => api.delete(id)} text={{ configured: \"Configured\", missing: \"Missing\", replace: \"Replace\", delete: \"Delete\", updated: (time) => <>Updated {time}</>, … }} />`.\n\nA `StoredSecret` is `{ id, name, configured, fingerprint?, description?, createdAt?, updatedAt?, lastUsedAt? }` and has no value field: the list can't show a value because it never gets one. `fingerprint` is whatever few characters your server derives, like the last four, shown after a mask and read as \"Hidden value ending in a1b2\" (`labels.fingerprint`); a configured secret without one shows the mask alone, and a missing one no mask, a warning status and `text.set` on its replace button. `lastUsedAt: null` shows `text.neverUsed`. Dates are RelativeTimes, by `locale`.\n\nReplace runs `onReplace(id)`: open a `FormDialog` with `<FormField name=\"value\"><Input sensitive revealable /></FormField>`, which never puts the new value in the DOM and clears it once saved. Delete opens a ConfirmDialog whose confirm button carries `data-agent-confirm` (`text.deleteAgentConfirm`) and runs `onDelete(id)`, pending while its Promise runs. Agents read the secrets as the list's items, by id and name, and call `replace(id)` and `delete(id)`, which opens the confirmation, so the delete itself waits for a person; an unknown id, or an action without its callback, fails the step with why.\n\nRows are a List rather than a DataTable: a handful of secrets with two actions each read better as rows that stack on a phone than as columns, and each row's buttons are named for its secret. Every visible word comes from `text`; `labels` holds the screen-reader names, in English by default.\n\n**Per secret.** Delete shows on configured secrets only (an agent's `delete` of a missing one fails with why). `deleteTitle`, `deleteDescription`, `deleteConfirm` and `deleteAgentConfirm` take a string or a function of the secret, to name it: `deleteTitle: (secret) => `Delete ${secret.name}?``. The button of a missing secret holds `text.set` (falling back to `text.replace`) and is named by `labels.setSecret(name)`, \"Set GitHub token\", so its name matches what it says."
     },
     {
+      "name": "pairing-code",
+      "type": "registry:ui",
+      "title": "Pairing Code",
+      "description": "PairingCode and PairingCodeInput for pairing a device by code (OAuth device authorization, RFC 8628). PairingCode shows a short user code big, monospaced and grouped (BCDF-GHJK), spelled out character by character for screen readers, with a copy button, and can compare it with the code on the other screen: `confirm` asks whether they match, `enter` checks a typed code group by group. PairingCodeInput is the verification page's field: it normalizes case, drops characters outside `alphabet`, inserts the separator as the person types or pastes, and calls `onComplete` once the code is full. `agentHidden` keeps the code from agents.",
+      "dependencies": [
+        "@ui-sdk/core@0.1.0-beta.12",
+        "@ui-sdk/react@0.1.0-beta.12",
+        "lucide-react"
+      ],
+      "registryDependencies": [
+        "@eskais/utils",
+        "@eskais/theme",
+        "@eskais/action-refusal",
+        "@eskais/alert",
+        "@eskais/button",
+        "@eskais/field",
+        "@eskais/input"
+      ],
+      "files": [
+        {
+          "path": "registry/ui/pairing-code-format.ts",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/pairing-code-primitive.ts",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/pairing-code-input.tsx",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/pairing-code.tsx",
+          "type": "registry:ui"
+        }
+      ],
+      "docs": "`<PairingCode code=\"BCDF-GHJK\" label=\"Pairing code\" />` on the screen that shows the code; `<PairingCodeInput label=\"Code shown on your device\" length={8} alphabet=\"BCDFGHJKLMNPQRSTVWXZ\" onComplete={(code) => verify(code)} pending={looking} error={notFound ? \"No device is waiting for that code.\" : undefined} />` on the verification page, which never knows the code.\n\n**Display.** `code` takes the code with or without separators, in any case; `groupSize` (4) and `separator` (\"-\") shape it and what Copy writes. The groups are `aria-hidden` and a screen reader reads `labels.spell(groups)` instead (\"B C D F, G H J K\"). `size=\"lg\"` takes `text-display` over `text-display-sm`. Copy announces `labels.copiedAnnouncement` and calls `onCopy(code)`.\n\n**Comparison.** `compare=\"confirm\"` with `text={{ prompt, matches, mismatch }}` shows the two answers and calls `onConfirm(matches)`. `compare=\"enter\"` with `text={{ label, description, matches, mismatch }}` adds a field: each group of the shown code turns match (success, a tick), mismatch (destructive, a cross) or pending (neutral, a dashed circle) as the person types, a status line says whether they match, and `onMatchChange(matches)` runs when that flips.\n\n**Input.** `PairingCodeInput` is UI SDK's Input in a Field: upper case, separators the person types are dropped and the component inserts its own at group boundaries, with the caret kept after the same characters; deleting next to a separator removes the character beside it. A character outside `alphabet` is never inserted. A pasted code fills it with or without separators. `onChange(code)` gets the normalized code on each edit; `onComplete(code)` runs each time an edit makes it full. `pending` makes it read-only with `aria-busy`; `error` shows in a live destructive Alert that describes the field, which turns `aria-invalid`. It sets `autoComplete=\"off\"`, `spellCheck={false}`, `autoCapitalize=\"characters\"` and `inputMode=\"text\"`; `value`/`defaultValue` take a code.\n\n**Agents.** The code group is a `pairing-code` component with `code` in its state and `copy()` and `confirm(true | false)` actions; an agent types into PairingCodeInput with `setValue`, normalized like typing. `agentHidden` puts the value, the copy button and the comparison under `data-agent-hidden` and leaves `code` out of the state, so agents can't read, copy, compare or type the code, and `copy` and `confirm` fail the step with why; a person still copies. Every visible word of the comparison comes from `text`; `labels` holds the accessible names, in English by default."
+    },
+    {
+      "name": "device-approval",
+      "type": "registry:block",
+      "title": "Device Approval",
+      "description": "DeviceApproval: approve or deny a device that asked to pair. It shows the device's name, kind and detail, the pairing code through PairingCode with its comparison, a security warning, what the device gets and what it asked for but won't get (with why), a countdown to the request's expiry, and Approve and Deny with pending and error states. Approve waits for a person when an agent presses it, stays off while the codes don't match and after expiry, and agents never read or type the code.",
+      "dependencies": [
+        "@ui-sdk/core@0.1.0-beta.12",
+        "@ui-sdk/react@0.1.0-beta.12",
+        "lucide-react"
+      ],
+      "registryDependencies": [
+        "@eskais/utils",
+        "@eskais/theme",
+        "@eskais/action-refusal",
+        "@eskais/alert",
+        "@eskais/badge",
+        "@eskais/button",
+        "@eskais/pairing-code"
+      ],
+      "files": [
+        {
+          "path": "registry/ui/device-approval-primitive.ts",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/use-device-approval-expiry.ts",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/device-approval-parts.tsx",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/device-approval.tsx",
+          "type": "registry:ui"
+        }
+      ],
+      "docs": "`<DeviceApproval device={{ name: \"Studio laptop\", kind: \"Desktop\", detail: \"Asked 2 minutes ago\" }} code=\"BCDF-GHJK\" compare=\"enter\" compareText={{ label: \"Code on your device\", matches: \"Codes match\", mismatch: \"Codes don't match\" }} granted={[{ id: \"read\", label: \"Read projects\" }]} withheld={[{ id: \"admin\", label: \"Manage members\", reason: \"Your role can't grant this\" }]} warning=\"Only approve a device you're holding.\" expiresAt={request.expiresAt} onExpire={refresh} onApprove={() => api.approve(id)} onDeny={() => api.deny(id)} text={{ granted: \"It will be able to\", withheld: \"It asked for, but won't get\", approve: \"Approve\", deny: \"Deny\", approveAgentConfirm: \"Gives Studio laptop access to your workspace\", error: \"The decision couldn't be sent.\", expiresIn: (_ms, time) => `Expires in ${time}`, expired: \"This request has expired.\" }} />`.\n\n**Permissions.** `granted` and `withheld` are `{ id, label, description?, reason? }`: two lists named by their headings (`text.granted`, `text.withheld`), side by side on a wide container, a tick on success for what it gets and a ban sign on warning for what it won't. An empty list leaves its section out.\n\n**Decision.** `onApprove` and `onDeny` may return a Promise: the block is busy and the other button off until it settles; a rejection shows `text.error` in a live destructive Alert, and `text.approved`/`text.denied` show once it's accepted. Or pass `actions`, a node or `(state) => node` with `{ expired, codesMatch, approveBlocked }`, for your own; mark your approve control with `data-agent-confirm`.\n\n**Agents.** Approve carries `data-agent-confirm` (`text.approveAgentConfirm`), so an agent's `approve` waits for a person; the block's own `deny` doesn't. With `code` and `compare`, Approve stays off until the codes match, and an agent's approve fails the step with why. `agentHidden` is on by default here: agents never read the code, copy it, answer the comparison or type into its field; `agentHidden={false}` turns that off.\n\n**Expiry.** `expiresAt` (a Date or epoch ms) shows `text.expiresIn(remainingMs, \"m:ss\")` each second in a `role=\"timer\"` (not live), and announces it politely once a minute and at 30, 20 and 10 seconds. One timeout per second runs while the page is visible and none while it's hidden. When it passes, Approve and Deny turn off (an agent's step fails with \"the request has expired\"), `text.expired` shows and is announced, and `onExpire` runs once. Every visible word comes from `text`; `labels.code` names the code, in English by default."
+    },
+    {
       "name": "eskais-mockup-skill",
       "type": "registry:file",
       "title": "Mockup skill",

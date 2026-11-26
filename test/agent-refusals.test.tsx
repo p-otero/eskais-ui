@@ -15,6 +15,7 @@ import { confirmButton } from "@/components/ui/confirm-button-primitive"
 import { conversation } from "@/components/ui/conversation-primitive"
 import { dataTable } from "@/components/ui/data-table-primitive"
 import { descriptionValue } from "@/components/ui/description-list-primitive"
+import { deviceApproval, deviceApprovalApprove } from "@/components/ui/device-approval-primitive"
 import { formRoot } from "@/components/ui/form-primitive"
 import { gitTree, type GitTreeLookup } from "@/components/ui/git-tree-primitive"
 import { inlineEdit } from "@/components/ui/inline-edit-primitive"
@@ -30,6 +31,7 @@ import { modelScan } from "@/components/ui/model-scan-primitive"
 import { nativeSelect } from "@/components/ui/native-select-primitive"
 import { mixer } from "@/components/ui/mixer-primitive"
 import { neonSign } from "@/components/ui/neon-sign-primitive"
+import { pairingCode } from "@/components/ui/pairing-code-primitive"
 import { prismPicker } from "@/components/ui/prism-picker-primitive"
 import { safeDial } from "@/components/ui/safe-dial-primitive"
 import { sunArc } from "@/components/ui/sun-arc-primitive"
@@ -683,4 +685,54 @@ test("teletext: a missing page, a page out of range, a colour key with no link o
   )
   await failsWith("Refusing set", "goToPage", "goToPage was refused by the app.", [101])
   expect(refused.state.page).toBe(100)
+})
+
+test("pairing code: copy and confirm of a hidden code, confirm outside its mode or without a boolean fail the step", async () => {
+  const hidden = mounted(
+    mount(
+      pairingCode,
+      { copyText: "BCDF-GHJK", agentHidden: true, compare: "confirm" },
+      `<root aria-label="Hidden code"></root>`,
+    ),
+  )
+  await failsWith("Hidden code", "copy", "copy isn't available: the code is hidden from agents")
+  await failsWith("Hidden code", "confirm", "confirm isn't available: the code is hidden from agents", [true])
+  expect(hidden.state.matches).toBe(null)
+  mounted(mount(pairingCode, { copyText: "BCDF-GHJK" }, `<root aria-label="Shown code"></root>`))
+  await failsWith("Shown code", "confirm", "confirm isn't available: this code isn't compared by confirmation", [true])
+  mounted(mount(pairingCode, { copyText: "BCDF-GHJK", compare: "confirm" }, `<root aria-label="Compared code"></root>`))
+  await failsWith("Compared code", "confirm", "confirm takes true when the codes match and false when they don't", [
+    "yes",
+  ])
+})
+
+test("device approval: deny after expiry, approve while the codes differ, and a second decision fail the step", async () => {
+  const onApprove = vi.fn()
+  const onDeny = vi.fn()
+  const view = mounted(
+    mount(
+      deviceApproval,
+      { onApprove, onDeny, approveBlocked: "the typed code doesn't match the device's code" },
+      `<root aria-label="Studio laptop"></root>`,
+    ),
+  )
+  expect(() => view.api.approve()).toThrow("approve isn't available: the typed code doesn't match the device's code")
+  mounted(
+    mount(
+      deviceApprovalApprove,
+      { approve: (event?: Event) => view.api.approve(event) },
+      `<root aria-label="Approve"></root>`,
+    ),
+  )
+  const step = await createAgent({ allow: () => true }).act({ steps: [{ ref: "Approve", action: "approve" }] })
+  expect(step.error?.message).toContain("approve isn't available: the typed code doesn't match")
+  expect(onApprove).not.toHaveBeenCalled()
+  await agent.act({ steps: [{ ref: "Studio laptop", action: "deny" }] })
+  expect(onDeny).toHaveBeenCalledTimes(1)
+  await failsWith("Studio laptop", "deny", "deny isn't available: the device was already denied")
+  const expiring = mounted(mount(deviceApproval, { onApprove, onDeny }, `<root aria-label="Old tablet"></root>`))
+  expiring.api.expire()
+  await failsWith("Old tablet", "deny", "deny isn't available: the request has expired")
+  expect(expiring.state.expired).toBe(true)
+  expect(onDeny).toHaveBeenCalledTimes(1)
 })
