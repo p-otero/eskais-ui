@@ -5,6 +5,7 @@
 @import "../../../registry/styles/theme.css";
 @import "../../../registry/styles/theme-compact.css";
 @import "../../../registry/styles/theme-glass.css";
+@import "../../../registry/styles/theme-liquid.css";
 @import "../../../registry/styles/palettes.css";
 
 @source "../../../registry";
@@ -18,7 +19,8 @@
   }
 }
 
-html[data-theme="glass"] body {
+html[data-theme="glass"] body,
+html[data-theme="liquid"] body {
   background:
     radial-gradient(40rem 30rem at 10% 0%, color-mix(in oklch, var(--info) 35%, transparent), transparent),
     radial-gradient(36rem 28rem at 90% 30%, color-mix(in oklch, var(--success) 30%, transparent), transparent),

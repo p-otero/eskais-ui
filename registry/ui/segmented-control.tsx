@@ -39,7 +39,7 @@ function SegmentedControl<T extends string = string>({
       <SegmentedControlPrimitive<T>
         controller={active}
         className={cnState(
-          "relative isolate inline-flex w-fit rounded-control border bg-muted/(--glass-opacity) p-control-inset data-disabled:opacity-50 data-[orientation=horizontal]:h-control data-[orientation=vertical]:flex-col",
+          "relative isolate inline-flex w-fit rounded-control border bg-muted/(--glass-opacity) p-control-inset glass-control data-disabled:opacity-50 data-[orientation=horizontal]:h-control data-[orientation=vertical]:flex-col",
           className,
         )}
         {...props}
@@ -54,7 +54,7 @@ function SegmentedControlIndicator({ className, ...props }: ComponentProps<typeo
     <SegmentedControlIndicatorPrimitive
       className={cnState(
         // oxlint-disable-next-line shadcn/no-arbitrary-values -- transitions only the properties that move; transition-all also eased every colour and shadow change
-        "absolute top-(--segmented-control-indicator-top) left-(--segmented-control-indicator-left) -z-10 h-(--segmented-control-indicator-height) w-(--segmented-control-indicator-width) rounded-control bg-primary shadow-sm transition-[top,left,width,height] duration-panel ease-standard motion-reduce:transition-none",
+        "absolute top-(--segmented-control-indicator-top) left-(--segmented-control-indicator-left) -z-10 h-(--segmented-control-indicator-height) w-(--segmented-control-indicator-width) rounded-control bg-primary shadow-sm glass-control transition-[top,left,width,height] duration-panel ease-standard motion-reduce:transition-none",
         className,
       )}
       {...props}

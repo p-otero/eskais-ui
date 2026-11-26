@@ -75,7 +75,7 @@ Other tools:
 
 - `node tooling/perf/bundle.mjs [items…]`: gzip size of registry items with their dependencies, and the UI SDK
   share.
-- `node tooling/perf/layers.mjs <scenario> [build] [--glass] [--css=<rules>] [--settle=<ms>]`: composited layers and their
+- `node tooling/perf/layers.mjs <scenario> [build] [--glass | --theme=<name>] [--css=<rules>] [--settle=<ms>]`: composited layers and their
   reasons, counted after `--settle` ms (500 by default; 4000 lets the status pings end).
 - `node tooling/perf/trace-chart.mjs <trace.json> <out.png> [press] [title]`: one key press as a flame chart.
 

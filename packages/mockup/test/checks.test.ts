@@ -45,6 +45,11 @@ describe("pageProblems", () => {
     ])
   })
 
+  test("an SVG filter in the page, referenced by fragment, is not an asset", () => {
+    const page = `<style>.a { backdrop-filter: url("#eskais-liquid-lens") blur(9px) } .b { filter: url(#glow) }</style>`
+    expect(pageProblems(page)).toEqual([])
+  })
+
   test("leaves viewport units in the bundle and stylesheet to the installed components", () => {
     const page = '<style>[data-slot="shell"]{--shell-height:100dvh}</style><script type="module">h-screen</script>'
     expect(pageProblems(page)).toEqual([])
