@@ -12,6 +12,7 @@ import {
   UsersIcon,
 } from "lucide-react"
 
+import { AccountMenu } from "@/components/ui/account-menu"
 import { Shell, type ShellRoute, type ShellRouteGroup } from "@/components/ui/shell"
 import { Button } from "@/components/ui/button"
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -85,9 +86,18 @@ function ShellBlockDemo() {
         labels={{ searchPlaceholder: "Pages and commands" }}
         brand={<span className="text-title-sm narrow:sr-only">Acme</span>}
         actions={
-          <Button variant="ghost" size="icon" aria-label="Notifications">
-            <BellIcon />
-          </Button>
+          <>
+            <Button variant="ghost" size="icon" aria-label="Notifications">
+              <BellIcon />
+            </Button>
+            <AccountMenu
+              user={{ name: "Ana Ruiz", email: "ana@acme.example" }}
+              roleLabel="Admin"
+              items={[{ value: "devices", label: "Devices" }]}
+              signOutLabel="Sign out"
+              onSignOut={() => toast("Signed out")}
+            />
+          </>
         }
         commandGroups={
           <CommandGroup>

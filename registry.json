@@ -9703,6 +9703,86 @@
       "docs": "`<SettingsPage url={createUrlParam(\"section\")} style={{ \"--settings-top\": \"var(--topbar-height)\" }}><SettingsSection id=\"security\" title=\"Security\" description=\"…\" actions={…}><SettingsRow label=\"Two-factor authentication\" description=\"…\"><Switch /></SettingsRow></SettingsSection><SettingsSection id=\"device\" title=\"This device\"><SettingsFacts aria-label=\"This device\"><DescriptionItem>…</DescriptionItem></SettingsFacts></SettingsSection><SettingsDangerZone id=\"danger\" title=\"Danger zone\"><SettingsDangerAction label trigger title confirmLabel agentConfirm onConfirm disabled pending /></SettingsDangerZone></SettingsPage>`. The navigation lists every direct `SettingsSection` child with a text title (`navLabel` otherwise), or pass `sections`. `--settings-top` is the height of anything sticky above the page and `--settings-height` the box that scrolls it. `currentSection` and `onSectionChange` (reason `scroll`, `nav` or `url`) follow your own state. The navigation's links take their href from the `url` adapter (`createUrlParam(\"section\", { router: hashRouter() })` gives `#/settings?section=id`, which opens the right route in a new tab), else `#id`; `getHref` overrides it, and `navigation=\"buttons\"` renders buttons that only scroll, for sections with no address. A `SettingsRow` is a `Field` that names a UI SDK control; `field={false}` for a button. Labels `nav` and `jump` are overridable."
     },
     {
+      "name": "auth-page",
+      "type": "registry:block",
+      "title": "Auth Page",
+      "description": "AuthPage: a centred, brand-led page for signing in, registering from a one-time link and recovering an account, with a logo, a title, a description, one primary action, other options, an alert slot and footer links. `status` (idle, working, error, success) marks the action pending and announces `workingLabel` while a ceremony such as WebAuthn is open, shows the error in a live destructive Alert with a retry, and swaps the actions for a success slot. It holds no auth logic.",
+      "registryDependencies": [
+        "@eskais/utils",
+        "@eskais/theme",
+        "@eskais/alert",
+        "@eskais/button"
+      ],
+      "files": [
+        {
+          "path": "registry/ui/auth-page.tsx",
+          "type": "registry:ui"
+        }
+      ],
+      "docs": "`<AuthPage logo={<Brand />} title=\"Sign in\" description=\"…\" status={status} action={{ label: \"Sign in with a passkey\", icon: <KeyRoundIcon />, onAction: signIn }} workingLabel=\"Waiting for your passkey\" error=\"The passkey request was cancelled.\" retry={{ label: \"Try again\" }} success={<Alert tone=\"success\">…</Alert>} secondary={<Button variant=\"link\">Recover your account</Button>} footer={<><Link href=\"/terms\">Terms</Link>…</>} />`. Put fields (a name, a recovery code) in `children`, between the description and the action, and a note for any status (who invited you, when the link expires) in `alert`. `working` gives the action `loading` (a spinner, `aria-busy`, presses ignored while it keeps focus) and reads `workingLabel` once, politely; `error` shows `error` in an `Alert tone=\"destructive\" live` whose retry runs `retry.onRetry`, or the action again; `success` replaces the action and `secondary` with `success`. The card is at most `--auth-page-width` (26rem) wide and the page at least `--auth-page-height` (100dvh) tall, padded clear of the safe areas, so it fills a phone at 390px. Every visible word comes from you: there is no default copy."
+    },
+    {
+      "name": "account-menu",
+      "type": "registry:ui",
+      "title": "Account Menu",
+      "description": "AccountMenu: the signed-in user in a Shell or topbar. The trigger shows an avatar (or initials) and the name, which hides on narrow screens; the menu has a header with the name, email and an optional role Badge, your app entries (Devices, Security, Invite) and sign-out, which can ask first through ConfirmDialog, whose confirm then needs a person's approval for agents.",
+      "registryDependencies": [
+        "@eskais/utils",
+        "@eskais/theme",
+        "@eskais/tone",
+        "@eskais/avatar",
+        "@eskais/badge",
+        "@eskais/confirm-dialog",
+        "@eskais/dropdown-menu"
+      ],
+      "files": [
+        {
+          "path": "registry/ui/account-menu.tsx",
+          "type": "registry:ui"
+        }
+      ],
+      "docs": "`<Shell actions={<AccountMenu user={{ name, email, avatarSrc }} roleLabel=\"Admin\" items={[{ value: \"devices\", label: \"Devices\", icon: <MonitorSmartphoneIcon />, onSelect: () => router.push(\"/devices\") }]} signOutLabel=\"Sign out\" onSignOut={signOut} confirmSignOut={{ title: \"Sign out?\", confirmLabel: \"Sign out now\", agentConfirm: \"Signs you out of this device\" }} />} />`. It goes in the Shell's `actions`, the topbar's end, which stays put whether the sidebar is a rail, hidden or a drawer, or in any Topbar's `trailing`. An item's `onSelect` that returns a Promise keeps it pending and the menu open until it settles, and so does `onSignOut`. Agents press the trigger with an item's text (`press` with \"Devices\"); with `confirmSignOut`, the dialog's confirm button carries `data-agent-confirm`, so an agent's sign-out waits for your `allow` (the mark sits on the button that confirms, not on the menu item that opens the dialog, so a person is asked once). `labels.trigger(name)` names the trigger (\"Account: Ana Ruiz\" by default)."
+    },
+    {
+      "name": "invitation-panel",
+      "type": "registry:ui",
+      "title": "Invitation Panel",
+      "description": "InvitationPanel: an admin creates an invitation and gets a one-time link, shown once with a copy button, a live expiry countdown that switches to expired, and a revoke behind a confirmation; below, the pending invitations with role, creator, expiry and revoke, through DataState. Agents can create, copy and revoke, and never read the link.",
+      "dependencies": [
+        "@ui-sdk/core@0.1.0-beta.12",
+        "@ui-sdk/react@0.1.0-beta.12",
+        "lucide-react"
+      ],
+      "registryDependencies": [
+        "@eskais/utils",
+        "@eskais/theme",
+        "@eskais/action-refusal",
+        "@eskais/alert",
+        "@eskais/button",
+        "@eskais/confirm-dialog",
+        "@eskais/states",
+        "@eskais/field",
+        "@eskais/list-item",
+        "@eskais/relative-time",
+        "@eskais/select"
+      ],
+      "files": [
+        {
+          "path": "registry/ui/invitation-panel-primitive.ts",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/use-invitation-expiry.ts",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/invitation-panel.tsx",
+          "type": "registry:ui"
+        }
+      ],
+      "docs": "`<InvitationPanel aria-label=\"Invitations\" roles={[{ value: \"editor\", label: \"Editor\" }]} invitations={pending} status={status} onRetry={refetch} onCreate={({ role }) => api.invite(role)} onRevoke={(id) => api.revoke(id)} text={{ create: \"Create invitation\", newLink: \"New invitation link\", expiresIn: (time) => <>Expires {time}</>, createdBy: (name) => `Created by ${name}`, … }} />`.\n\n**The link is shown once.** `onCreate` resolves to `{ id, url, expiresAt }`, and the URL appears in one place only: the new link view, right after it resolves. The panel keeps it in memory, out of its state, and forgets it when the view is dismissed, when the link is revoked or expires, and when the panel unmounts. It never writes it to the address, storage, a `data-*` attribute, a `title` or any `aria-*` text. The pending list's `Invitation` type has no `url`, so your API never has to hand a link out again: a lost link is revoked and a new one created. Keep the URL out of your own logs and state too.\n\n**Agents never read it.** The URL sits under `data-agent-hidden`, so it is left out of the agent snapshot, `query` and every `act` result, and announcements only say a link was created or copied. Agents see the new link in the panel's state as `link: { id, expiresAt, expired }`. `create(role?)` takes a role's value or label and resolves to `{ id, expiresAt }`; `copy()` writes the URL to the clipboard and resolves to `\"copied\"`. UI SDK's bridge doesn't wait for a promise, so an agent's step reports both as `pending` and reads `link` and `copied` from the next snapshot. `copy` fails with why when no fresh link is held (dismissed, expired, revoked) or the page has no clipboard. `revoke(id)` opens the confirmation for a pending invitation or the new link; its confirm button carries `data-agent-confirm` (`text.revokeAgentConfirm`), so the revoke waits for a person, and an unknown id fails the step. The pending invitations are the panel's agent items, by id.\n\nThe countdown is a RelativeTime that ticks by the second in the last two minutes. Expiry takes one timeout per boundary, none while the page is hidden, and checks the clock when the page shows again. The pending list's loading, empty and error states come from DataState (`status`, `error`, and `onRetry` with `text.retry`). Every visible word comes from `text`, with no default; `labels` holds the screen-reader names and announcements, in English by default."
+    },
+    {
       "name": "eskais-mockup-skill",
       "type": "registry:file",
       "title": "Mockup skill",
