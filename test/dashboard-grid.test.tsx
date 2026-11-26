@@ -13,6 +13,7 @@ import {
   DashboardStats,
 } from "@/components/ui/dashboard-grid"
 import type { DataStatus } from "@/components/ui/data-state"
+import { cssVars } from "@/lib/utils"
 
 import { axeViolations } from "./axe"
 import { settle } from "./overlay-helpers"
@@ -63,6 +64,26 @@ test("DashboardGrid: cards are named regions that span columns and rows, capped 
   expect(within(runs).getByText("2 runs")).toBeTruthy()
   expect(within(screen.getByRole("region", { name: "Queue" })).getByText("Nothing yet")).toBeTruthy()
   expect(await axeViolations(container)).toEqual([])
+})
+
+test("DashboardCard: an object style and a function style both apply beside the span variables", () => {
+  render(
+    <DashboardGrid columns={3}>
+      <DashboardCard title="Object" span={2} style={{ color: "red", ...cssVars({ "--dashboard-span": 9 }) }}>
+        <p>Object</p>
+      </DashboardCard>
+      <DashboardCard title="Function" rowSpan={2} style={() => ({ color: "blue" })}>
+        <p>Function</p>
+      </DashboardCard>
+    </DashboardGrid>,
+  )
+  const object = screen.getByRole("region", { name: "Object" })
+  expect(object.style.color).toBe("red")
+  expect(object.style.getPropertyValue("--dashboard-span")).toBe("2")
+  const fromFunction = screen.getByRole("region", { name: "Function" })
+  expect(fromFunction.style.color).toBe("blue")
+  expect(fromFunction.style.getPropertyValue("--dashboard-span")).toBe("1")
+  expect(fromFunction.style.getPropertyValue("--dashboard-row-span")).toBe("2")
 })
 
 test("DashboardGrid: loading draws placeholders, an error offers Retry", async () => {

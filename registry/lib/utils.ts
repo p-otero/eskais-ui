@@ -45,10 +45,23 @@ function cnState<State>(base: string, className: StateClassName<State>) {
   return cn(base, className)
 }
 
+type CSSVariables = Record<`--${string}`, string | number | undefined>
+
 /** CSS custom properties for a `style` prop, typed without a cast: `style={cssVars({ "--lanes": 3 })}`. */
-function cssVars(variables: Record<`--${string}`, string | number | undefined>): CSSProperties {
+function cssVars(variables: CSSVariables): CSSProperties {
   return variables
 }
 
-export { cn, cnState, cssVars }
-export type { StateClassName }
+type StateStyle<State> = CSSProperties | ((state: State) => CSSProperties | undefined) | undefined
+
+/** Adds custom properties to a UI SDK `style`, which may be a function of the part's state; the variables win. */
+function mergeStyleVars<State>(
+  style: StateStyle<State>,
+  variables: CSSVariables,
+): CSSProperties | ((state: State) => CSSProperties) {
+  if (typeof style === "function") return (state: State) => ({ ...style(state), ...cssVars(variables) })
+  return { ...style, ...cssVars(variables) }
+}
+
+export { cn, cnState, cssVars, mergeStyleVars }
+export type { StateClassName, StateStyle }

@@ -109,6 +109,17 @@ test("a returned Promise marks the button pending until it settles", async () =>
   expect(button.hasAttribute("aria-busy")).toBe(false)
 })
 
+test("a function style applies beside the hold duration", () => {
+  render(
+    <ConfirmButton agentConfirm="Deletes the project" hold={800} style={() => ({ color: "blue" })}>
+      Delete
+    </ConfirmButton>,
+  )
+  const button = screen.getByRole("button", { name: "Delete" })
+  expect(button.style.color).toBe("blue")
+  expect(button.style.getPropertyValue("--confirm-hold-duration")).toBe("800ms")
+})
+
 test("holding the button confirms, and the release doesn't arm it again", async () => {
   vi.useFakeTimers()
   const onConfirm = vi.fn()

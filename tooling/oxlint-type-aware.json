@@ -12,6 +12,7 @@
   },
   "rules": {
     "typescript/restrict-template-expressions": "error",
-    "typescript/no-unsafe-type-assertion": "error"
+    "typescript/no-unsafe-type-assertion": "error",
+    "typescript/no-misused-spread": ["error", { "allow": ["string"] }]
   }
 }

@@ -11,7 +11,7 @@ import {
   type ConfirmButtonOptions,
 } from "@/components/ui/confirm-button-primitive"
 import { Spinner } from "@/components/ui/spinner"
-import { cn, cnState, cssVars } from "@/lib/utils"
+import { cn, cnState, mergeStyleVars } from "@/lib/utils"
 
 const { Root: ConfirmButtonRoot } = createParts(confirmButton, { root: "button" })
 
@@ -59,14 +59,13 @@ function ConfirmButton({
   ...props
 }: ConfirmButtonProps) {
   const labels = { ...confirmButtonLabels, ...ownLabels }
-  const holdStyle = hold ? cssVars({ "--confirm-hold-duration": `${String(hold)}ms` }) : undefined
   return (
     <ConfirmButtonRoot
       data-agent-confirm={agentConfirm}
       hold={hold}
       armedAnnouncement={labels.armed}
       title={hold ? labels.holdHint : undefined}
-      style={{ ...holdStyle, ...style }}
+      style={hold ? mergeStyleVars(style, { "--confirm-hold-duration": `${String(hold)}ms` }) : style}
       className={cnState(
         cn(
           buttonVariants({ variant, size }),

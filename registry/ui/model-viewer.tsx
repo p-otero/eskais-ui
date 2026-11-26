@@ -32,7 +32,7 @@ import type {
   ModelViewerSource,
 } from "@/components/ui/use-model-viewer-scene"
 import { useModelViewerControls } from "@/components/ui/use-model-viewer-controls"
-import { cnState } from "@/lib/utils"
+import { cnState, mergeStyleVars } from "@/lib/utils"
 
 const {
   Stage: ModelViewerStage,
@@ -304,7 +304,7 @@ function ModelViewer({
     {
       "aria-label": alt,
       ...props,
-      style: { ...style, "--model-viewer-ratio": String(ratio) } as PartProps<"div">["style"],
+      style: mergeStyleVars(style, { "--model-viewer-ratio": String(ratio) }),
       className: cnState("flex w-full min-w-0 flex-col gap-items", className),
       children: content,
     },
