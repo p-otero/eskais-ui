@@ -759,6 +759,8 @@ test("device approval: an approve the app blocks fails with the app's reason, an
   expect(step.error?.message).toContain(reason)
   expect(onApprove).not.toHaveBeenCalled()
   expect(view.state).toMatchObject({ pending: null, decided: null, error: null })
+})
+
 test("connected account: an action its status doesn't offer, without its callback or while another runs fails the step", async () => {
   const onConnect = vi.fn()
   const onCancel = vi.fn(() => new Promise(() => undefined))
