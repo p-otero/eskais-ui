@@ -1296,6 +1296,7 @@ const scenarios = {
     main: serverDataMain,
     builtCss: ["--brand", ".text-title{"],
     check: checkServerData,
+    literals: ["@"],
     files: ["src/lib/filter-schema.ts", "src/lib/filter-rsql.ts", "src/lib/page-source.ts", "src/lib/array-source.ts"],
     absent: [
       "src/lib/filter-odata.ts",
