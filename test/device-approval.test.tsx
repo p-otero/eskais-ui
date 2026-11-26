@@ -130,6 +130,82 @@ test("a rejected decision shows a live destructive alert and lets the person try
   expect(onDeny).toHaveBeenCalledTimes(2)
 })
 
+test.each([
+  [
+    "a string",
+    "This device is already paired with another account.",
+    "This device is already paired with another account.",
+  ],
+  ["a node", <strong key="node">Your session expired.</strong>, "Your session expired."],
+])("a decision rejected with %s shows it as it is in the alert", async (_case, reason, shown) => {
+  render(<Approval onApprove={() => Promise.reject(reason)} />)
+  fireEvent.click(approveButton())
+  const alert = await screen.findByRole("alert")
+  expect(alert.textContent).toBe(shown)
+})
+
+test("text.error as a function picks the message per failure, and a deny that throws shows it too", async () => {
+  const onDeny = vi.fn(() => {
+    throw new Error("nothing to grant")
+  })
+  render(
+    <Approval
+      text={{ ...text, error: (error) => (error instanceof Error ? `Failed: ${error.message}` : "Failed") }}
+      onApprove={() => Promise.reject(new Error("offline"))}
+      onDeny={onDeny}
+    />,
+  )
+  fireEvent.click(approveButton())
+  expect((await screen.findByRole("alert")).textContent).toBe("Failed: offline")
+  fireEvent.click(screen.getByRole("button", { name: "Deny" }))
+  await waitFor(() => expect(screen.getByRole("alert").textContent).toBe("Failed: nothing to grant"))
+  expect(onDeny).toHaveBeenCalledTimes(1)
+  expect(screen.getByRole("button", { name: "Deny" }).hasAttribute("disabled")).toBe(false)
+})
+
+test("approveBlocked turns Approve off, shows the reason beside the actions, describes Approve and tells an agent", async () => {
+  approve = true
+  const onApprove = vi.fn()
+  const onDeny = vi.fn()
+  const reason = "Your role can't grant any of these permissions."
+  const { rerender } = render(
+    <Approval approveBlocked approveBlockedReason={reason} onApprove={onApprove} onDeny={onDeny} />,
+  )
+  expect(approveButton().getAttribute("aria-disabled")).toBe("true")
+  const shown = document.querySelector<HTMLElement>("[data-slot=device-approval-blocked]")
+  expect(shown?.textContent).toBe(reason)
+  expect(approveButton().getAttribute("aria-describedby")).toBe(shown?.id)
+  fireEvent.click(approveButton())
+  expect(onApprove).not.toHaveBeenCalled()
+  const refused = await agent.act({ steps: [{ ref: "Approve", action: "approve" }] })
+  expect(refused.ok).toBe(false)
+  expect(refused.error?.message).toContain(`approve isn't available: ${reason}`)
+  expect(onApprove).not.toHaveBeenCalled()
+  expect(screen.getByRole("button", { name: "Deny" }).hasAttribute("disabled")).toBe(false)
+  rerender(<Approval approveBlocked={false} approveBlockedReason={reason} onApprove={onApprove} onDeny={onDeny} />)
+  expect(document.querySelector("[data-slot=device-approval-blocked]")).toBeNull()
+  expect(approveButton().hasAttribute("aria-describedby")).toBe(false)
+  const done = await agent.act({ steps: [{ ref: "Approve", action: "approve" }] })
+  expect(done.ok, done.error?.message).toBe(true)
+  expect(onApprove).toHaveBeenCalledTimes(1)
+})
+
+test("approveBlocked wins over a matching comparison, and without a reason an agent still hears why", async () => {
+  approve = true
+  render(<Approval code="BCDF-GHJK" compare="enter" compareText={compareText} approveBlocked />)
+  typeCode("BCDFGHJK")
+  expect(approveButton().getAttribute("aria-disabled")).toBe("true")
+  expect(document.querySelector("[data-slot=device-approval-blocked]")).toBeNull()
+  const refused = await agent.act({ steps: [{ ref: "Approve", action: "approve" }] })
+  expect(refused.error?.message).toContain("approve isn't available: the app doesn't allow approving this request")
+})
+
+test("codeLabels reach the inner code: its copy button and how the code is spelled", () => {
+  render(<Approval code="BCDFGHJK" codeLabels={{ copy: "Copiar código", spell: (groups) => groups.join(" / ") }} />)
+  expect(screen.getByRole("button", { name: "Copiar código" })).toBeTruthy()
+  expect(screen.getByRole("group", { name: "Pairing code" }).textContent).toContain("BCDF / GHJK")
+})
+
 test("Approve carries data-agent-confirm: an agent's approval is refused, then runs once a person approves", async () => {
   const onApprove = vi.fn()
   render(<Approval onApprove={onApprove} />)
@@ -378,6 +454,25 @@ test("actions replaces Approve and Deny, and gets the expiry and match state", (
   expect(screen.getByTestId("own").textContent).toBe("blocked")
   expect(actions).toHaveBeenLastCalledWith({ expired: false, codesMatch: null, approveBlocked: true })
   typeCode("BCDFGHJK")
+  expect(screen.getByTestId("own").textContent).toBe("open")
+})
+
+test("actions get approveBlocked from the app's block too, and the reason still shows", () => {
+  const actions = vi.fn(({ approveBlocked }: { approveBlocked: boolean }) => (
+    <span data-testid="own">{approveBlocked ? "blocked" : "open"}</span>
+  ))
+  const { rerender } = render(
+    <Approval
+      actions={actions}
+      onApprove={undefined}
+      onDeny={undefined}
+      approveBlocked
+      approveBlockedReason="Nothing to grant."
+    />,
+  )
+  expect(screen.getByTestId("own").textContent).toBe("blocked")
+  expect(document.querySelector("[data-slot=device-approval-blocked]")?.textContent).toBe("Nothing to grant.")
+  rerender(<Approval actions={actions} onApprove={undefined} onDeny={undefined} />)
   expect(screen.getByTestId("own").textContent).toBe("open")
 })
 

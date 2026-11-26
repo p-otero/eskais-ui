@@ -1,7 +1,7 @@
 "use client"
 
 import { usePart, usePrimitive } from "@ui-sdk/react/primitive"
-import { ClockAlertIcon, MonitorSmartphoneIcon, TriangleAlertIcon } from "lucide-react"
+import { CircleSlashIcon, ClockAlertIcon, MonitorSmartphoneIcon, TriangleAlertIcon } from "lucide-react"
 import { useId, useState, type ReactNode } from "react"
 
 import { Alert, AlertDescription } from "@/components/ui/alert"
@@ -18,8 +18,14 @@ import {
   type DeviceApprovalState,
   type DeviceDecision,
 } from "@/components/ui/device-approval-primitive"
-import { PairingCode, type PairingCodeConfirmText, type PairingCodeEnterText } from "@/components/ui/pairing-code"
+import {
+  PairingCode,
+  type PairingCodeConfirmText,
+  type PairingCodeEnterText,
+  type PairingCodeLabels,
+} from "@/components/ui/pairing-code"
 import { useDeviceApprovalExpiry } from "@/components/ui/use-device-approval-expiry"
+import { rejectionContent, type RejectionFallback } from "@/lib/rejection-content"
 import { cn } from "@/lib/utils"
 
 /** The device asking for access. */
@@ -47,8 +53,11 @@ type DeviceApprovalText = {
   deny: ReactNode
   /** What a person approves when an agent approves, like "Gives Studio laptop access to your account". */
   approveAgentConfirm: string
-  /** Shown in a live alert when approving or denying fails. */
-  error: ReactNode
+  /**
+   * Shown in a live alert when approving or denying fails with something other than a string or a node, which show as
+   * they are; a function of the error picks one per failure.
+   */
+  error: RejectionFallback
   /** The time left, from the milliseconds left and the same as `m:ss`; shown each second and read once a minute. */
   expiresIn?: (remainingMs: number, formatted: string) => string
   /** Shown, and read, once `expiresAt` passes. */
@@ -58,8 +67,9 @@ type DeviceApprovalText = {
   denied?: ReactNode
 }
 
-/** Names for screen readers and agents; English by default. */
+/** Names for screen readers and agents; English by default. `codeLabels` holds the inner PairingCode's. */
 type DeviceApprovalLabels = {
+  /** Names the pairing code; `text.code` wins over it. */
   code: string
 }
 
@@ -70,7 +80,7 @@ type DeviceApprovalActionState = {
   expired: boolean
   /** Whether the codes match, with `code` and `compare`; `null` without a comparison or before an answer. */
   codesMatch: boolean | null
-  /** True while the comparison or the expiry stops an approval. */
+  /** True while the app (`approveBlocked`), the comparison or the expiry stops an approval. */
   approveBlocked: boolean
 }
 
@@ -90,8 +100,17 @@ type DeviceApprovalBaseProps = {
   expiresAt?: Date | number
   /** Runs once, when `expiresAt` passes. */
   onExpire?: () => void
+  /** Turns Approve off for a reason of the app's, like an account that can't grant any requested permission. */
+  approveBlocked?: boolean
+  /**
+   * Why `approveBlocked` stops approving, in the page's language: shown beside the actions, describing Approve, and the
+   * message an agent's `approve` fails with. Without it, nothing shows and an agent reads an English reason.
+   */
+  approveBlockedReason?: string
   text: DeviceApprovalText
   labels?: Partial<DeviceApprovalLabels>
+  /** The inner PairingCode's names (its copy button and the spelled-out code), merged over its English defaults. */
+  codeLabels?: Partial<PairingCodeLabels>
   className?: string
 }
 
@@ -102,7 +121,10 @@ type DeviceApprovalCompareProps =
 
 type DeviceApprovalActionProps =
   | {
-      /** Approves the device; a returned Promise keeps the block pending, and a rejection shows `text.error`. */
+      /**
+       * Approves the device; a returned Promise keeps the block pending, and a rejection shows in the error alert: a
+       * string or a node as it is, anything else through `text.error`.
+       */
       onApprove: () => unknown
       onDeny: () => unknown
       actions?: undefined
@@ -126,7 +148,9 @@ function hasContent(node: ReactNode) {
   return node !== undefined && node !== null && node !== false
 }
 
-function blockedReason(compare: DeviceApprovalProps["compare"], codesMatch: boolean | null) {
+const appBlockedFallback = "the app doesn't allow approving this request"
+
+function compareBlockedReason(compare: DeviceApprovalProps["compare"], codesMatch: boolean | null) {
   if (compare === "confirm" && codesMatch !== true) return "the person hasn't confirmed that the codes match"
   if (compare === "enter" && codesMatch !== true) return "the typed code doesn't match the device's code"
   return null
@@ -144,15 +168,20 @@ function DeviceApproval(props: DeviceApprovalProps) {
     warning,
     expiresAt,
     onExpire,
+    approveBlocked = false,
+    approveBlockedReason,
     text,
     labels: overrides,
+    codeLabels,
     className,
   } = props
   const labels = { ...deviceApprovalLabels, ...overrides }
   const nameId = useId()
+  const blockedReasonId = useId()
   const [codesMatch, setCodesMatch] = useState<boolean | null>(null)
   const comparing = code !== undefined && props.compare !== undefined
-  const blocked = comparing ? blockedReason(props.compare, codesMatch) : null
+  const compareBlocked = comparing ? compareBlockedReason(props.compare, codesMatch) : null
+  const blocked = approveBlocked ? (approveBlockedReason ?? appBlockedFallback) : compareBlocked
   const handle = usePrimitive(deviceApproval, {
     onApprove: props.onApprove,
     onDeny: props.onDeny,
@@ -166,7 +195,7 @@ function DeviceApproval(props: DeviceApprovalProps) {
 
   const pairing = (() => {
     if (code === undefined) return null
-    const shared = { code, label: text.code ?? labels.code, groupSize, separator, agentHidden }
+    const shared = { code, label: text.code ?? labels.code, groupSize, separator, agentHidden, labels: codeLabels }
     if (props.compare === "confirm") {
       return (
         <PairingCode
@@ -212,6 +241,8 @@ function DeviceApproval(props: DeviceApprovalProps) {
       className: cn("@container flex min-w-0 flex-col gap-group", className),
       children: (state: DeviceApprovalState) => {
         const decision = decidedText(state.decided)
+        const undecided = !state.expired && state.decided === null
+        const showBlockedReason = approveBlocked && undecided && approveBlockedReason !== undefined
         const actionState: DeviceApprovalActionState = {
           expired: state.expired,
           codesMatch: comparing ? codesMatch : null,
@@ -268,7 +299,9 @@ function DeviceApproval(props: DeviceApprovalProps) {
             ) : null}
             {state.error === null ? null : (
               <Alert data-slot="device-approval-error" tone="destructive" live>
-                <AlertDescription className="text-foreground">{text.error}</AlertDescription>
+                <AlertDescription className="text-foreground">
+                  {rejectionContent(state.error, text.error)}
+                </AlertDescription>
               </Alert>
             )}
             {hasContent(decision) ? (
@@ -279,6 +312,16 @@ function DeviceApproval(props: DeviceApprovalProps) {
               >
                 <AlertDescription>{decision}</AlertDescription>
               </Alert>
+            ) : null}
+            {showBlockedReason ? (
+              <p
+                id={blockedReasonId}
+                data-slot="device-approval-blocked"
+                className="flex items-center justify-end gap-inline text-end text-body-sm text-muted-foreground narrow:justify-start narrow:text-start [&_svg]:size-4 [&_svg]:shrink-0"
+              >
+                <CircleSlashIcon />
+                {approveBlockedReason}
+              </p>
             ) : null}
             <div
               data-slot="device-approval-actions"
@@ -302,6 +345,7 @@ function DeviceApproval(props: DeviceApprovalProps) {
                     approve={(event) => api.approve(event)}
                     blocked={actionState.approveBlocked || state.decided !== null || state.pending === "deny"}
                     pending={state.pending === "approve"}
+                    describedBy={showBlockedReason ? blockedReasonId : undefined}
                     agentConfirm={text.approveAgentConfirm}
                   >
                     {text.approve}
