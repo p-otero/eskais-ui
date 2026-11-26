@@ -719,6 +719,30 @@ const itemNotes: Record<string, ItemNotes> = {
       "Agents follow a section's link or set the section picker by name, set each row's control by its label, and need a person's approval to confirm a danger action.",
     related: ["field", "description-list", "confirm-dialog", "select"],
   },
+  "pairing-code": {
+    usage:
+      'Device pairing by code (RFC 8628): PairingCode on the screen that shows the user code, PairingCodeInput on the verification page that never knows it. Pass the code with or without separators; compare="confirm" or "enter" checks it against the other screen.',
+    a11y: [
+      "The visual groups are hidden from screen readers, which hear the code spelled out a character at a time with a pause between groups (labels.spell).",
+      "The input inserts its own separators and keeps the caret after what was typed; pending makes it read-only with aria-busy, and an error is a live alert that describes the field, which turns aria-invalid.",
+      "In enter mode each group shows a tick, a cross or a dashed circle beside its colour, and a status line says whether the codes match.",
+    ],
+    agent:
+      "Agents read code from the pairing-code component and call copy() and confirm(true | false); they type into PairingCodeInput with setValue, normalized like typing. agentHidden keeps the code, its copy button and its comparison from agents, and copy and confirm fail the step with why.",
+    related: ["device-approval", "input", "field", "otp-input"],
+  },
+  "device-approval": {
+    usage:
+      "The approval screen for a device that asked to pair: the device, the code and its comparison, what it gets and what it won't, a security warning and a countdown, with Approve and Deny (or your own actions). Put it in a Card; it fills the width on a phone.",
+    a11y: [
+      "The block is a group named by the device's name; each permission list is named by its heading, and ticks and ban signs tell them apart beside their colour.",
+      "The countdown is a timer that isn't live: the time left is announced once a minute and at 30, 20 and 10 seconds, and the expiry once.",
+      "Approve stays focusable with aria-disabled while the codes don't match or the request has expired; a decision being sent marks the block busy.",
+    ],
+    agent:
+      "Approve carries data-agent-confirm, so an agent's approve waits for a person; deny is the block's own action. The code and its comparison are hidden from agents by default. Approving while the codes differ, after expiry or twice fails the step with why.",
+    related: ["pairing-code", "alert", "card", "secret-list"],
+  },
   "secret-list": {
     usage:
       "A settings page of stored secrets: rows with a mask and the server's fingerprint, never a value; Replace opens your FormDialog with a sensitive Input, and Delete asks first.",
