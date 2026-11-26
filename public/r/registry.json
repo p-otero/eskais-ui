@@ -1496,7 +1496,8 @@
           "path": "registry/ui/input.tsx",
           "type": "registry:ui"
         }
-      ]
+      ],
+      "docs": "`<Field><FieldLabel>Name</FieldLabel><Input /></Field>`; `InputGroup` wraps it with icons and an `InputClear`. **Secrets:** `<Input sensitive />` is for an API key, a token or any value that mustn't leak. A controlled input (`value` with `onValueChange`, as every `FormField` binds it) makes React write the value into the DOM `value` attribute, where anything that reads attributes, the agent tree included, finds it. A sensitive input is uncontrolled and takes no `value` or `defaultValue` (it throws if given one): it is UI SDK's password field, which agents read as `[redacted]` even while shown, though they can still `setValue` it, under `data-agent-secret`. `autoComplete` is `new-password` by default rather than `off`, which browsers ignore on password fields: it keeps a saved sign-in password from being filled into it. `spellCheck`, `autoCapitalize` and `autoCorrect` are off, and `data-1p-ignore`, `data-lpignore` and `data-bwignore` ask password managers not to offer to save it. `revealable` adds a Show toggle (`revealLabel`, overridable) that switches the type between password and text and hides it again when its form submits and when the page is hidden. Read it with a `ref` or `sensitiveController={createPasswordInputController()}` (`getValue()`, `clear()`), or put it in a `FormField`, which reads it on submit and clears it (see Form)."
     },
     {
       "name": "password-input",
@@ -1738,7 +1739,8 @@
         "@eskais/switch",
         "@eskais/button",
         "@eskais/alert",
-        "@eskais/action-refusal"
+        "@eskais/action-refusal",
+        "@eskais/password-input"
       ],
       "files": [
         {
@@ -1778,7 +1780,7 @@
           "type": "registry:ui"
         }
       ],
-      "docs": "`<Form schema defaultValues onSubmit messages label>` with `<FormField name label description required>` around one control: Input, Textarea, NumberInput, Select, Combobox, Checkbox, Switch, RadioGroup, Slider, DatePicker, SegmentedControl, ToggleGroup or TokenInput bind by `name` (no `control` or `render`); `bind` or `render` for anything else, `useFormField()` inside a custom control. Give every field a default value. A field the schema rejects when empty (probed synchronously with the default values; Zod, Valibot and ArkType report every issue) gets a required marker, an `aria-hidden` asterisk in `text-destructive`, and its control `required`; `required` forces it, `required={false}` drops it. `requiredLabel` on the Form or field adds words for screen readers, like \"required\" in the page's language, which join the field's name; unset, screen readers announce the control's `required` state instead. `const { Form, FormField, useFormInstance, useFormWatch, useFormFieldArray } = createForm<typeof schema>()` types `name` against the schema's input; they are the same components. `onSubmit(values, { setError })` may return a Promise: the submit Button shows `loading`, fields are disabled (`disableWhilePending={false}` keeps them), a second submit is ignored. Throw a `FormServerError(message, fieldErrors)`, `{ fieldErrors, message }` or a Standard Schema issue list (`toFormErrors`) to put errors on fields and in `<FormRootError />` (an `Alert tone=\"destructive\" live`); any other error shows its message there. Focus then goes to the first invalid field, or to the root error. Messages: `messages={formMessagesEs}`, a dictionary, or a function of the issue for i18next, FormatJS or Lingui (`createFormMessages(t)` makes one from `t(key, params)`, keys `form.<code>`); `FormField messages` wins over the form's. An issue is `{ code, field, label, params, message }`; codes: `required`, `minLength`, `maxLength`, `minItems`, `maxItems`, `min`, `max` (params `min`/`max`), `email`, `url`, `pattern`, `invalid`, `server`, or a schema message that looks like a key (`form.email.taken`), or a server error's own `code`. Schemas whose issues carry no code or params (Effect Schema) write the code into the message: `formIssueMessage(\"form.name.min\", { min: 3 })` gives `@@form:form.name.min|{\"min\":3}` (a reserved prefix, never read from prose), read back as code `form.name.min` with `params.min` and no `message`; a built-in code works the same way (`formIssueMessage(\"minLength\", { min: 3 })` gets the built-in translations). Unmatched, the key shows without its params. Inside a Form, `useFormInstance<Values>()` returns the typed react-hook-form instance (`trigger`, `setValue`, `getValues`, `control`, `formState`); its `watch` re-renders the Form, so read a live value with `useFormWatch(name)`. `useFormFieldArray(name, options)` is `useFieldArray` bound to the form: key rows by `field.id` (or, when the items carry their own `id`, by the property `keyName: \"fieldKey\"` names) and name their fields `items.${index}.title`. `form-context.ts` is internal; import only from `form`. Agents fill fields through their own parts and call the form's `submit` and `reset` when it has a `label`; `<FormActions tone=\"destructive\" confirm=\"…\">` puts `data-agent-confirm` on the submit button and hides the form's `submit` from agents. `FormActions disabled` (submit and cancel), `submitDisabled` (submit only) and `pending` (the pending look) reflect a busy state outside the form; while set, the form doesn't submit."
+      "docs": "`<Form schema defaultValues onSubmit messages label>` with `<FormField name label description required>` around one control: Input, Textarea, NumberInput, Select, Combobox, Checkbox, Switch, RadioGroup, Slider, DatePicker, SegmentedControl, ToggleGroup or TokenInput bind by `name` (no `control` or `render`); `bind` or `render` for anything else, `useFormField()` inside a custom control. Give every field a default value. A field the schema rejects when empty (probed synchronously with the default values; Zod, Valibot and ArkType report every issue) gets a required marker, an `aria-hidden` asterisk in `text-destructive`, and its control `required`; `required` forces it, `required={false}` drops it. `requiredLabel` on the Form or field adds words for screen readers, like \"required\" in the page's language, which join the field's name; unset, screen readers announce the control's `required` state instead. `const { Form, FormField, useFormInstance, useFormWatch, useFormFieldArray } = createForm<typeof schema>()` types `name` against the schema's input; they are the same components. `onSubmit(values, { setError })` may return a Promise: the submit Button shows `loading`, fields are disabled (`disableWhilePending={false}` keeps them), a second submit is ignored. Throw a `FormServerError(message, fieldErrors)`, `{ fieldErrors, message }` or a Standard Schema issue list (`toFormErrors`) to put errors on fields and in `<FormRootError />` (an `Alert tone=\"destructive\" live`); any other error shows its message there. Focus then goes to the first invalid field, or to the root error. Messages: `messages={formMessagesEs}`, a dictionary, or a function of the issue for i18next, FormatJS or Lingui (`createFormMessages(t)` makes one from `t(key, params)`, keys `form.<code>`); `FormField messages` wins over the form's. An issue is `{ code, field, label, params, message }`; codes: `required`, `minLength`, `maxLength`, `minItems`, `maxItems`, `min`, `max` (params `min`/`max`), `email`, `url`, `pattern`, `invalid`, `server`, or a schema message that looks like a key (`form.email.taken`), or a server error's own `code`. Schemas whose issues carry no code or params (Effect Schema) write the code into the message: `formIssueMessage(\"form.name.min\", { min: 3 })` gives `@@form:form.name.min|{\"min\":3}` (a reserved prefix, never read from prose), read back as code `form.name.min` with `params.min` and no `message`; a built-in code works the same way (`formIssueMessage(\"minLength\", { min: 3 })` gets the built-in translations). Unmatched, the key shows without its params. Inside a Form, `useFormInstance<Values>()` returns the typed react-hook-form instance (`trigger`, `setValue`, `getValues`, `control`, `formState`); its `watch` re-renders the Form, so read a live value with `useFormWatch(name)`. `useFormFieldArray(name, options)` is `useFieldArray` bound to the form: key rows by `field.id` (or, when the items carry their own `id`, by the property `keyName: \"fieldKey\"` names) and name their fields `items.${index}.title`. `form-context.ts` is internal; import only from `form`. Agents fill fields through their own parts and call the form's `submit` and `reset` when it has a `label`; `<FormActions tone=\"destructive\" confirm=\"…\">` puts `data-agent-confirm` on the submit button and hides the form's `submit` from agents. `FormActions disabled` (submit and cancel), `submitDisabled` (submit only) and `pending` (the pending look) reflect a busy state outside the form; while set, the form doesn't submit. **Secrets:** a `FormField` around `<Input sensitive />` (or `FormField sensitive` around a `PasswordInput`) binds without a value: the control stays uncontrolled, so nothing reaches a DOM attribute. The form reads it through a controller only for the submit (and for a StepForm's Next), validates it with the schema, hands it to `onSubmit`, then empties it from the form's values; a successful submit, a reset and unmounting the field empty the control too, while a failed submit keeps what was typed so the person can fix it. Typing clears its error; it validates on submit only, doesn't count toward `onDirtyChange` or `confirmDiscard`, and a `FormDialog` `reviewStep` holds the reviewed values, the secret included, in memory until it confirms."
     },
     {
       "name": "form-dialog",
@@ -3791,6 +3793,7 @@
         "@eskais/narrow",
         "@eskais/utils",
         "@eskais/theme",
+        "@eskais/field",
         "@eskais/input",
         "@eskais/tooltip"
       ],
@@ -8858,6 +8861,7 @@
         "@eskais/narrow",
         "@eskais/utils",
         "@eskais/theme",
+        "@eskais/field",
         "@eskais/markdown-view",
         "@eskais/button",
         "@eskais/input",
@@ -9701,6 +9705,118 @@
         }
       ],
       "docs": "`<SettingsPage url={createUrlParam(\"section\")} style={{ \"--settings-top\": \"var(--topbar-height)\" }}><SettingsSection id=\"security\" title=\"Security\" description=\"…\" actions={…}><SettingsRow label=\"Two-factor authentication\" description=\"…\"><Switch /></SettingsRow></SettingsSection><SettingsSection id=\"device\" title=\"This device\"><SettingsFacts aria-label=\"This device\"><DescriptionItem>…</DescriptionItem></SettingsFacts></SettingsSection><SettingsDangerZone id=\"danger\" title=\"Danger zone\"><SettingsDangerAction label trigger title confirmLabel agentConfirm onConfirm disabled pending /></SettingsDangerZone></SettingsPage>`. The navigation lists every direct `SettingsSection` child with a text title (`navLabel` otherwise), or pass `sections`. `--settings-top` is the height of anything sticky above the page and `--settings-height` the box that scrolls it. `currentSection` and `onSectionChange` (reason `scroll`, `nav` or `url`) follow your own state. The navigation's links take their href from the `url` adapter (`createUrlParam(\"section\", { router: hashRouter() })` gives `#/settings?section=id`, which opens the right route in a new tab), else `#id`; `getHref` overrides it, and `navigation=\"buttons\"` renders buttons that only scroll, for sections with no address. A `SettingsRow` is a `Field` that names a UI SDK control; `field={false}` for a button. Labels `nav` and `jump` are overridable."
+    },
+    {
+      "name": "auth-page",
+      "type": "registry:block",
+      "title": "Auth Page",
+      "description": "AuthPage: a centred, brand-led page for signing in, registering from a one-time link and recovering an account, with a logo, a title, a description, one primary action, other options, an alert slot and footer links. `status` (idle, working, error, success) marks the action pending and announces `workingLabel` while a ceremony such as WebAuthn is open, shows the error in a live destructive Alert with a retry, and swaps the actions for a success slot. It holds no auth logic.",
+      "registryDependencies": [
+        "@eskais/utils",
+        "@eskais/theme",
+        "@eskais/alert",
+        "@eskais/button"
+      ],
+      "files": [
+        {
+          "path": "registry/ui/auth-page.tsx",
+          "type": "registry:ui"
+        }
+      ],
+      "docs": "`<AuthPage logo={<Brand />} title=\"Sign in\" description=\"…\" status={status} action={{ label: \"Sign in with a passkey\", icon: <KeyRoundIcon />, onAction: signIn }} workingLabel=\"Waiting for your passkey\" error=\"The passkey request was cancelled.\" retry={{ label: \"Try again\" }} success={<Alert tone=\"success\">…</Alert>} secondary={<Button variant=\"link\">Recover your account</Button>} footer={<><Link href=\"/terms\">Terms</Link>…</>} />`. Put fields (a name, a recovery code) in `children`, between the description and the action, and a note for any status (who invited you, when the link expires) in `alert`. `working` gives the action `loading` (a spinner, `aria-busy`, presses ignored while it keeps focus) and reads `workingLabel` once, politely; `error` shows `error` in an `Alert tone=\"destructive\" live` whose retry runs `retry.onRetry`, or the action again; `success` replaces the action and `secondary` with `success`. The card is at most `--auth-page-width` (26rem) wide and the page at least `--auth-page-height` (100dvh) tall, padded clear of the safe areas, so it fills a phone at 390px. Every visible word comes from you: there is no default copy."
+    },
+    {
+      "name": "account-menu",
+      "type": "registry:ui",
+      "title": "Account Menu",
+      "description": "AccountMenu: the signed-in user in a Shell or topbar. The trigger shows an avatar (or initials) and the name, which hides on narrow screens; the menu has a header with the name, email and an optional role Badge, your app entries (Devices, Security, Invite) and sign-out, which can ask first through ConfirmDialog, whose confirm then needs a person's approval for agents.",
+      "registryDependencies": [
+        "@eskais/utils",
+        "@eskais/theme",
+        "@eskais/tone",
+        "@eskais/avatar",
+        "@eskais/badge",
+        "@eskais/confirm-dialog",
+        "@eskais/dropdown-menu"
+      ],
+      "files": [
+        {
+          "path": "registry/ui/account-menu.tsx",
+          "type": "registry:ui"
+        }
+      ],
+      "docs": "`<Shell actions={<AccountMenu user={{ name, email, avatarSrc }} roleLabel=\"Admin\" items={[{ value: \"devices\", label: \"Devices\", icon: <MonitorSmartphoneIcon />, onSelect: () => router.push(\"/devices\") }]} signOutLabel=\"Sign out\" onSignOut={signOut} confirmSignOut={{ title: \"Sign out?\", confirmLabel: \"Sign out now\", agentConfirm: \"Signs you out of this device\" }} />} />`. It goes in the Shell's `actions`, the topbar's end, which stays put whether the sidebar is a rail, hidden or a drawer, or in any Topbar's `trailing`. An item's `onSelect` that returns a Promise keeps it pending and the menu open until it settles, and so does `onSignOut`. Agents press the trigger with an item's text (`press` with \"Devices\"); with `confirmSignOut`, the dialog's confirm button carries `data-agent-confirm`, so an agent's sign-out waits for your `allow` (the mark sits on the button that confirms, not on the menu item that opens the dialog, so a person is asked once). `labels.trigger(name)` names the trigger (\"Account: Ana Ruiz\" by default)."
+    },
+    {
+      "name": "invitation-panel",
+      "type": "registry:ui",
+      "title": "Invitation Panel",
+      "description": "InvitationPanel: an admin creates an invitation and gets a one-time link, shown once with a copy button, a live expiry countdown that switches to expired, and a revoke behind a confirmation; below, the pending invitations with role, creator, expiry and revoke, through DataState. Agents can create, copy and revoke, and never read the link.",
+      "dependencies": [
+        "@ui-sdk/core@0.1.0-beta.12",
+        "@ui-sdk/react@0.1.0-beta.12",
+        "lucide-react"
+      ],
+      "registryDependencies": [
+        "@eskais/utils",
+        "@eskais/theme",
+        "@eskais/action-refusal",
+        "@eskais/alert",
+        "@eskais/button",
+        "@eskais/confirm-dialog",
+        "@eskais/states",
+        "@eskais/field",
+        "@eskais/list-item",
+        "@eskais/relative-time",
+        "@eskais/select"
+      ],
+      "files": [
+        {
+          "path": "registry/ui/invitation-panel-primitive.ts",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/use-invitation-expiry.ts",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/invitation-panel.tsx",
+          "type": "registry:ui"
+        }
+      ],
+      "docs": "`<InvitationPanel aria-label=\"Invitations\" roles={[{ value: \"editor\", label: \"Editor\" }]} invitations={pending} status={status} onRetry={refetch} onCreate={({ role }) => api.invite(role)} onRevoke={(id) => api.revoke(id)} text={{ create: \"Create invitation\", newLink: \"New invitation link\", expiresIn: (time) => <>Expires {time}</>, createdBy: (name) => `Created by ${name}`, … }} />`.\n\n**The link is shown once.** `onCreate` resolves to `{ id, url, expiresAt }`, and the URL appears in one place only: the new link view, right after it resolves. The panel keeps it in memory, out of its state, and forgets it when the view is dismissed, when the link is revoked or expires, and when the panel unmounts. It never writes it to the address, storage, a `data-*` attribute, a `title` or any `aria-*` text. The pending list's `Invitation` type has no `url`, so your API never has to hand a link out again: a lost link is revoked and a new one created. Keep the URL out of your own logs and state too.\n\n**Agents never read it.** The URL sits under `data-agent-hidden`, so it is left out of the agent snapshot, `query` and every `act` result, and announcements only say a link was created or copied. Agents see the new link in the panel's state as `link: { id, expiresAt, expired }`. `create(role?)` takes a role's value or label and resolves to `{ id, expiresAt }`; `copy()` writes the URL to the clipboard and resolves to `\"copied\"`. UI SDK's bridge doesn't wait for a promise, so an agent's step reports both as `pending` and reads `link` and `copied` from the next snapshot. `copy` fails with why when no fresh link is held (dismissed, expired, revoked) or the page has no clipboard. `revoke(id)` opens the confirmation for a pending invitation or the new link; its confirm button carries `data-agent-confirm` (`text.revokeAgentConfirm`), so the revoke waits for a person, and an unknown id fails the step. The pending invitations are the panel's agent items, by id.\n\nThe countdown is a RelativeTime that ticks by the second in the last two minutes. Expiry takes one timeout per boundary, none while the page is hidden, and checks the clock when the page shows again. The pending list's loading, empty and error states come from DataState (`status`, `error`, and `onRetry` with `text.retry`). Every visible word comes from `text`, with no default; `labels` holds the screen-reader names and announcements, in English by default."
+    },
+    {
+      "name": "secret-list",
+      "type": "registry:ui",
+      "title": "Secret List",
+      "description": "SecretList: stored secrets, like API keys, as rows with their name, a mask with the fingerprint the server supplies (•••• abcd), a configured or missing StatusPill, created, updated and last-used dates, and Replace and Delete. The data type has no value field. Loading, empty and error come through DataState. Agents can replace and delete by id; delete waits for a person.",
+      "dependencies": [
+        "@ui-sdk/core@0.1.0-beta.12",
+        "@ui-sdk/react@0.1.0-beta.12"
+      ],
+      "registryDependencies": [
+        "@eskais/utils",
+        "@eskais/theme",
+        "@eskais/action-refusal",
+        "@eskais/button",
+        "@eskais/confirm-dialog",
+        "@eskais/states",
+        "@eskais/list-item",
+        "@eskais/relative-time",
+        "@eskais/status-pill"
+      ],
+      "files": [
+        {
+          "path": "registry/ui/secret-list-primitive.ts",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/secret-list.tsx",
+          "type": "registry:ui"
+        }
+      ],
+      "docs": "`<SecretList aria-label=\"API keys\" secrets={secrets} status={status} error={error} onRetry={refetch} onReplace={(id) => setReplacing(id)} onDelete={(id) => api.delete(id)} text={{ configured: \"Configured\", missing: \"Missing\", replace: \"Replace\", delete: \"Delete\", updated: (time) => <>Updated {time}</>, … }} />`.\n\nA `StoredSecret` is `{ id, name, configured, fingerprint?, description?, createdAt?, updatedAt?, lastUsedAt? }` and has no value field: the list can't show a value because it never gets one. `fingerprint` is whatever few characters your server derives, like the last four, shown after a mask and read as \"Hidden value ending in a1b2\" (`labels.fingerprint`); a configured secret without one shows the mask alone, and a missing one no mask, a warning status and `text.set` on its replace button. `lastUsedAt: null` shows `text.neverUsed`. Dates are RelativeTimes, by `locale`.\n\nReplace runs `onReplace(id)`: open a `FormDialog` with `<FormField name=\"value\"><Input sensitive revealable /></FormField>`, which never puts the new value in the DOM and clears it once saved. Delete opens a ConfirmDialog whose confirm button carries `data-agent-confirm` (`text.deleteAgentConfirm`) and runs `onDelete(id)`, pending while its Promise runs. Agents read the secrets as the list's items, by id and name, and call `replace(id)` and `delete(id)`, which opens the confirmation, so the delete itself waits for a person; an unknown id, or an action without its callback, fails the step with why.\n\nRows are a List rather than a DataTable: a handful of secrets with two actions each read better as rows that stack on a phone than as columns, and each row's buttons are named for its secret. Every visible word comes from `text`; `labels` holds the screen-reader names, in English by default."
     },
     {
       "name": "eskais-mockup-skill",
