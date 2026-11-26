@@ -37,23 +37,23 @@ test("a job runs a step per frame once its delay has passed", () => {
   }
   expect(Math.max(...perFrame)).toBe(1)
   expect(done).toEqual(["a1", "a2", "a3"])
-  idle.dispose()
+  idle.stop()
 })
 
-test("a key press holds the next step until input has been quiet", () => {
+test("input noted holds the next step until input has been quiet", () => {
   const idle = createIdleWork(quietMs)
   const done: string[] = []
   idle.run(job(done, "a", 3))
   vi.advanceTimersByTime(5)
   expect(done).toEqual(["a1"])
-  window.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowRight" }))
+  idle.noteInput()
   vi.advanceTimersByTime(quietMs - 20)
   expect(done).toEqual(["a1"])
   expect(idle.quiet()).toBe(false)
   vi.advanceTimersByTime(80)
   expect(done).toEqual(["a1", "a2", "a3"])
   expect(idle.quiet()).toBe(true)
-  idle.dispose()
+  idle.stop()
 })
 
 test("a new job drops the one not finished, and finish runs one to its end at once", () => {
@@ -68,5 +68,5 @@ test("a new job drops the one not finished, and finish runs one to its end at on
   idle.finish(job(done, "d", 3))
   vi.advanceTimersByTime(300)
   expect(done).toEqual(["a1", "b1", "b2", "d1", "d2", "d3"])
-  idle.dispose()
+  idle.stop()
 })

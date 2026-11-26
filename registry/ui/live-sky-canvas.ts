@@ -5,6 +5,7 @@ import type { GlassDrop } from "@/components/ui/live-sky-glass"
 import { cssColour } from "@/components/ui/live-sky-palette"
 import type { Fall } from "@/components/ui/live-sky-precipitation"
 import { seededRandom } from "@/components/ui/live-sky-street"
+import { context2d, createSurface, type Surface, type Surface2D } from "@/components/ui/live-sky-surface"
 
 const cloudDownscale = 10
 const maxCanvasParticles = 700
@@ -19,7 +20,7 @@ function cycleRandom(seed: Seed, cycle: number) {
   )
 }
 
-function drawFall(context: CanvasRenderingContext2D, scene: SkyScene, layer: Fall, seeds: Seed[], seconds: number) {
+function drawFall(context: Surface2D, scene: SkyScene, layer: Fall, seeds: Seed[], seconds: number) {
   const { camera } = scene
   const tanX = camera.width / 2 / camera.focal
   const tanY = camera.height / 2 / camera.focal
@@ -60,7 +61,7 @@ function drawFall(context: CanvasRenderingContext2D, scene: SkyScene, layer: Fal
   }
 }
 
-function drawDrop(context: CanvasRenderingContext2D, scene: SkyScene, drop: GlassDrop) {
+function drawDrop(context: Surface2D, scene: SkyScene, drop: GlassDrop) {
   const highlight = 0.35 + scene.light.ambient * 0.65
   if (drop.splash > 0) {
     context.strokeStyle = cssColour([highlight, highlight, highlight], drop.alpha * 0.5)
@@ -88,28 +89,26 @@ function drawDrop(context: CanvasRenderingContext2D, scene: SkyScene, drop: Glas
 }
 
 function pixelsOf(source: CanvasImageSource, width: number, height: number) {
-  const scratch = document.createElement("canvas")
-  scratch.width = width
-  scratch.height = height
-  const scratchContext = scratch.getContext("2d")
+  const scratch = createSurface(width, height)
+  const scratchContext = context2d(scratch)
   scratchContext?.drawImage(source, 0, 0, width, height)
   return scratchContext?.getImageData(0, 0, width, height) ?? null
 }
 
 /** Draws the scene on a 2D canvas where WebGL is missing: coarser clouds, fewer streaks, shaded drops without refraction. */
-function createCanvasRenderer(canvas: HTMLCanvasElement, context: CanvasRenderingContext2D): SkyRenderer {
+function createCanvasRenderer(canvas: Surface, context: Surface2D): SkyRenderer {
   const random = seededRandom(0xc1a55)
   const seeds: Seed[] = Array.from({ length: maxCanvasParticles }, () => [random(), random(), random(), random()])
-  const clouds = document.createElement("canvas")
-  const cloudContext = clouds.getContext("2d")
+  const clouds = createSurface(2, 2)
+  const cloudContext = context2d(clouds)
   let cloudPixels: ImageData | null = null
   let scene: SkyScene | null = null
   let street: SkyBackground | null = null
-  let facades = document.createElement("canvas")
-  let back = document.createElement("canvas")
+  let facades = createSurface(1, 1)
+  let back = createSurface(1, 1)
 
   const relight = (current: SkyScene, shown: SkyBackground) => {
-    const facadeContext = back.getContext("2d")
+    const facadeContext = context2d(back)
     if (!facadeContext) return
     const size = shown.kind === "street" ? shown.gbuffer : shown
     if (back.width !== size.width) back.width = size.width

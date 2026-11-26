@@ -21,9 +21,17 @@ function useLiveSkyScene(
     }
   }, [stage])
 
+  const reportsFrames = onFrame !== undefined
   useEffect(() => {
-    engine.current?.update({ conditions, location, glass, onFrame: reportFrame, photo, awaitingPhoto })
-  }, [conditions, location, glass, photo, awaitingPhoto])
+    engine.current?.update({
+      conditions,
+      location,
+      glass,
+      onFrame: reportsFrames ? reportFrame : undefined,
+      photo,
+      awaitingPhoto,
+    })
+  }, [conditions, location, glass, photo, awaitingPhoto, reportsFrames])
 }
 
 const skyTickMs = 2 * 60_000

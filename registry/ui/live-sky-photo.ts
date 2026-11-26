@@ -22,7 +22,7 @@ type LiveSkyPhotoView = { heading: number; fov: number; horizon: number }
 type PhotoLayers = {
   image: ImageBitmap
   /** Opaque where the photo is sky. */
-  sky: HTMLCanvasElement
+  sky: ImageBitmap
   /** Opaque on the window panes to light at night; null when none were found. */
   windows: ImageBitmap | null
   aspect: number
@@ -74,7 +74,8 @@ async function loadPhotoLayers(src: string, analysis: SkyPhotoAnalysis, signal: 
     bitmapOf(src, signal),
     analysis.windowsUrl ? bitmapOf(analysis.windowsUrl, signal) : Promise.resolve(null),
   ])
-  return { image, sky: analysis.sky, windows, aspect: analysis.aspect }
+  const sky = await createImageBitmap(analysis.sky)
+  return { image, sky, windows, aspect: analysis.aspect }
 }
 
 export { loadPhotoLayers, photoCamera }

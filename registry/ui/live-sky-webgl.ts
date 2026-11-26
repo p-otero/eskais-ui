@@ -3,6 +3,7 @@ import { attributes, bindTextures, link, noiseTexture, texture, type GL } from "
 import type { GlassDrop } from "@/components/ui/live-sky-glass"
 import { maxParticles, type Fall } from "@/components/ui/live-sky-precipitation"
 import { createRelighter } from "@/components/ui/live-sky-relight"
+import type { Surface } from "@/components/ui/live-sky-surface"
 import {
   backdropFragment,
   backdropVertex,
@@ -50,7 +51,7 @@ function particleBuffer(gl: GL) {
  * Draws the scene with WebGL: the lit street and the clouds in one full-screen pass, rain or snow as particles, drops
  * as lenses. The street is lit into a texture only when the weather or the street changes, a step at a time.
  */
-function createWebGLRenderer(canvas: HTMLCanvasElement, gl: GL): SkyRenderer {
+function createWebGLRenderer(canvas: Surface, gl: GL): SkyRenderer {
   const backdrop = link(gl, backdropVertex, backdropFragment)
   const fall = link(gl, fallVertex, fallFragment)
   const drop = link(gl, dropVertex, dropFragment)

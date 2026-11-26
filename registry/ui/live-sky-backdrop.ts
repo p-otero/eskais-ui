@@ -17,6 +17,7 @@ import {
 import type { PhotoLayers } from "@/components/ui/live-sky-photo"
 import { photoLightingFor, type PhotoLighting } from "@/components/ui/live-sky-photo-light"
 import { paintSky } from "@/components/ui/live-sky-sky"
+import { context2d, createSurface, type Surface } from "@/components/ui/live-sky-surface"
 
 /** Everything one weather state draws: the sky behind the street, the light on it, and what moves each frame. */
 type SkyScene = {
@@ -30,7 +31,7 @@ type SkyScene = {
   conditions: SkyConditions
   light: SkyLight
   palette: SkyPalette
-  sky: HTMLCanvasElement
+  sky: Surface
   lighting: FacadeLighting
   photoLighting: PhotoLighting
   deck: CloudDeck
@@ -79,10 +80,8 @@ type SceneInput = {
 }
 
 function canvasOf(width: number, height: number, ratio: number) {
-  const canvas = document.createElement("canvas")
-  canvas.width = Math.max(1, Math.round(width * ratio))
-  canvas.height = Math.max(1, Math.round(height * ratio))
-  const context = canvas.getContext("2d")
+  const canvas = createSurface(width * ratio, height * ratio)
+  const context = context2d(canvas)
   context?.setTransform(ratio, 0, 0, ratio, 0, 0)
   return { canvas, context }
 }

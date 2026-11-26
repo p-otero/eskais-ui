@@ -2,7 +2,7 @@
 
 import { createParts } from "@ui-sdk/react/primitive"
 import { LocateFixedIcon, RefreshCwIcon } from "lucide-react"
-import { useId, useRef, useState } from "react"
+import { memo, useId, useMemo, useRef, useState } from "react"
 
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -116,13 +116,71 @@ const coordinates = (location: SkyLocation, locale: string | undefined) => {
   return `${degrees.format(location.latitude)}°, ${degrees.format(location.longitude)}°`
 }
 
-function formatters(locale: string | undefined) {
-  return {
+type Formatters = { temperature: Intl.NumberFormat; rate: Intl.NumberFormat; wind: Intl.NumberFormat }
+
+const formattersByLocale = new Map<string, Formatters>()
+
+// Perf: an Intl.NumberFormat costs more to build than to use, and a scrubbed rain renders the readout on every key.
+function formatters(locale: string | undefined): Formatters {
+  const key = locale ?? ""
+  const known = formattersByLocale.get(key)
+  if (known) return known
+  const made = {
     temperature: new Intl.NumberFormat(locale, { style: "unit", unit: "celsius", maximumFractionDigits: 0 }),
     rate: new Intl.NumberFormat(locale, { style: "unit", unit: "millimeter-per-hour", maximumFractionDigits: 1 }),
     wind: new Intl.NumberFormat(locale, { style: "unit", unit: "kilometer-per-hour", maximumFractionDigits: 0 }),
   }
+  formattersByLocale.set(key, made)
+  return made
 }
+
+type AllLabels = LiveSkyLabels & LiveSkyPhotoLabels
+
+function mergedLabels(overrides: LiveSkyProps["labels"]): AllLabels {
+  return {
+    ...liveSkyLabels,
+    ...liveSkyPhotoLabels,
+    ...overrides,
+    conditions: { ...liveSkyLabels.conditions, ...overrides?.conditions },
+    sun: { ...liveSkyLabels.sun, ...overrides?.sun },
+  }
+}
+
+type HeadingProps = {
+  place: string
+  simulated: boolean
+  /** The photo's src when it's ready to calibrate. */
+  calibratable: string | null
+  calibrationOpen: boolean
+  onCalibrating: (calibrating: { src: string; open: boolean }) => void
+  labels: AllLabels
+}
+
+const LiveSkyHeading = memo(function LiveSkyHeading({
+  place,
+  simulated,
+  calibratable,
+  calibrationOpen,
+  onCalibrating,
+  labels,
+}: HeadingProps) {
+  return (
+    <div className="flex flex-wrap items-center gap-inline">
+      <span className="text-title-sm tracking-tight">{place}</span>
+      {simulated ? <Badge variant="outline">{labels.simulated}</Badge> : null}
+      {calibratable ? (
+        <Toggle
+          variant="outline"
+          size="sm"
+          pressed={calibrationOpen}
+          onPressedChange={(open) => onCalibrating({ src: calibratable, open })}
+        >
+          {labels.calibrate}
+        </Toggle>
+      ) : null}
+    </div>
+  )
+})
 
 /**
  * The sky over a place right now, seen looking up between buildings: the real weather from Open-Meteo (or your
@@ -146,13 +204,7 @@ function LiveSky({
   className,
   onFrame,
 }: LiveSkyProps) {
-  const labels: LiveSkyLabels & LiveSkyPhotoLabels = {
-    ...liveSkyLabels,
-    ...liveSkyPhotoLabels,
-    ...overrides,
-    conditions: { ...liveSkyLabels.conditions, ...overrides?.conditions },
-    sun: { ...liveSkyLabels.sun, ...overrides?.sun },
-  }
+  const labels = useMemo(() => mergedLabels(overrides), [overrides])
   const summaryId = useId()
   const stage = useRef<HTMLDivElement>(null)
   const [locating, setLocating] = useState(false)
@@ -293,20 +345,14 @@ function LiveSky({
       ) : null}
       <div data-slot="live-sky-panel" className="flex flex-wrap items-start justify-between gap-group p-inset-surface">
         <div className="flex min-w-48 grow basis-0 flex-col gap-inline">
-          <div className="flex flex-wrap items-center gap-inline">
-            <span className="text-title-sm tracking-tight">{placeName ?? labels.noPlace}</span>
-            {simulate ? <Badge variant="outline">{labels.simulated}</Badge> : null}
-            {photo && photoReady ? (
-              <Toggle
-                variant="outline"
-                size="sm"
-                pressed={calibrationOpen}
-                onPressedChange={(open) => setCalibrating({ src: photo.src, open })}
-              >
-                {labels.calibrate}
-              </Toggle>
-            ) : null}
-          </div>
+          <LiveSkyHeading
+            place={placeName ?? labels.noPlace}
+            simulated={Boolean(simulate)}
+            calibratable={photo && photoReady ? photo.src : null}
+            calibrationOpen={calibrationOpen}
+            onCalibrating={setCalibrating}
+            labels={labels}
+          />
           {photoScene.status === "reading" || photoScene.status === "failed" ? (
             <span className="flex items-center gap-inline text-caption text-muted-foreground">
               {photoScene.status === "reading" ? <Spinner size="sm" /> : null}
