@@ -23,3 +23,17 @@ test("the site renders no raw <a>, <button>, <input> or <pre>", () => {
   )
   expect(found).toEqual([])
 })
+
+const absoluteAssetPath = /["'`]\/[^"'`\s]+\.(?:avif|gif|glb|gltf|hdr|jpe?g|mp3|mp4|png|svg|wav|webm|webp|woff2?)["'`]/
+
+test.each(["site", "showcase"])("the %s imports its assets instead of naming them from the server root", (app) => {
+  const folder = join(import.meta.dirname, "..", "apps", app, "src")
+  const found = sources(folder).flatMap((file) =>
+    readFileSync(file, "utf8")
+      .split("\n")
+      .map((line, index) => ({ line, index }))
+      .filter(({ line }) => absoluteAssetPath.test(line))
+      .map(({ line, index }) => `${relative(folder, file)}:${index + 1}: ${line.trim()}`),
+  )
+  expect(found).toEqual([])
+})

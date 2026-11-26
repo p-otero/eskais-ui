@@ -3,6 +3,7 @@ import { SafeDial } from "@/components/ui/safe-dial"
 import { SunArc } from "@/components/ui/sun-arc"
 import { VinylScrubber } from "@/components/ui/vinyl-scrubber"
 
+import cebuSkyline from "../assets/cebu-skyline.jpg"
 import "../../../../registry/styles/mixer.css"
 import "../../../../registry/styles/safe-dial.css"
 import "../../../../registry/styles/sun-arc.css"
@@ -34,7 +35,7 @@ function SunArcPhotoScenario() {
         date={new Date("2025-04-14T04:00:00Z")}
         defaultValue={6 * 60 + 20}
         step={1}
-        photo={{ src: "/sky/cebu-skyline.jpg", heading: 82 }}
+        photo={{ src: cebuSkyline, heading: 82 }}
       />
     </div>
   )

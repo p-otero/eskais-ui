@@ -379,6 +379,26 @@ async function checkShortcutsDialog(browser, origin) {
   }
 }
 
+async function checkPhotos(browser, origin) {
+  for (const path of ["docs/components/sky-photo/", "docs/components/sun-arc/", "docs/components/live-sky/"]) {
+    const { page, context } = await openPage(browser, origin + path)
+    const missing = []
+    page.on("response", (response) => response.status() >= 400 && missing.push(response.url()))
+    await page.reload()
+    await page.waitForLoadState("networkidle")
+    if (path.endsWith("live-sky/")) {
+      await page.getByRole("radio", { name: "Photo" }).click()
+      await page.waitForLoadState("networkidle")
+    }
+    const broken = await page.$$eval("main img", (images) =>
+      images.filter((image) => image.complete && image.naturalWidth === 0).map((image) => image.src),
+    )
+    for (const url of [...missing, ...broken]) failures.push(`/${path}: ${url} doesn't load`)
+    console.log(`/${path}: ${missing.length + broken.length} broken images`)
+    await context.close()
+  }
+}
+
 await withSite(async ({ browser, origin }) => {
   for (const path of pages) {
     for (const viewport of viewports) {
@@ -415,6 +435,7 @@ await withSite(async ({ browser, origin }) => {
   await checkPhone(browser, origin)
   await checkBreadcrumbs(browser, origin)
   await checkShortcutsDialog(browser, origin)
+  await checkPhotos(browser, origin)
 })
 
 if (failures.length > 0) {

@@ -1,10 +1,10 @@
 import { useSkyPhoto } from "@/components/ui/use-sky-photo"
 import { fovFromFocalLength35mm } from "@/lib/sky-photo-projection"
 
-const src = "/sky/cebu-skyline.jpg"
+import cebuSkyline from "../assets/cebu-skyline.jpg"
 
 export default function SkyPhotoDemo() {
-  const sky = useSkyPhoto(src)
+  const sky = useSkyPhoto(cebuSkyline)
   const analysis = sky?.status === "ready" ? sky.analysis : undefined
   const fov = analysis?.exif.focalLength35mm
     ? fovFromFocalLength35mm(analysis.exif.focalLength35mm, analysis.aspect)
@@ -12,7 +12,7 @@ export default function SkyPhotoDemo() {
   return (
     <div className="flex w-full max-w-2xl flex-col gap-items">
       <div className="relative overflow-hidden rounded-surface border" aria-busy={sky?.status === "reading"}>
-        <img src={src} alt="Cebu City skyline" width={1440} height={1080} className="block h-auto w-full" />
+        <img src={cebuSkyline} alt="Cebu City skyline" width={1440} height={1080} className="block h-auto w-full" />
         {analysis ? (
           <div
             className="absolute inset-0 bg-violet opacity-60"
