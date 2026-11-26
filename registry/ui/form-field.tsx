@@ -1,5 +1,6 @@
 "use client"
 
+import { createPasswordInputController, type PasswordInputController } from "@ui-sdk/react/password-input"
 import {
   Children,
   cloneElement,
@@ -7,6 +8,7 @@ import {
   isValidElement,
   useContext,
   useMemo,
+  useState,
   type ReactElement,
   type ReactNode,
 } from "react"
@@ -27,9 +29,10 @@ import {
 import { errorText, useFormContext } from "@/components/ui/form-context"
 import type { FormMessages } from "@/components/ui/form-messages"
 import { Input } from "@/components/ui/input"
+import { PasswordInput } from "@/components/ui/password-input"
 import { Switch } from "@/components/ui/switch"
 import { Textarea } from "@/components/ui/textarea"
-import { useFieldRegistration } from "@/components/ui/use-form-sync"
+import { useFieldRegistration, useSensitiveField } from "@/components/ui/use-form-sync"
 import { cn } from "@/lib/utils"
 
 const valueAdapter: FormControlAdapter = { value: "value", change: "onValueChange" }
@@ -86,6 +89,13 @@ type FormFieldProps<Values extends FieldValues = FieldValues> = {
   messages?: FormMessages
   /** `"checked"` binds `checked`/`onCheckedChange`; an adapter binds any other prop pair. Read from the child by default. */
   bind?: "value" | "checked" | FormControlAdapter
+  /**
+   * A secret, like an API key, in an `Input` (made `sensitive`) or a `PasswordInput`: the control stays uncontrolled,
+   * so its value never reaches a DOM attribute, and the form reads it only to validate and submit, then forgets it.
+   * A successful submit, a reset and unmounting empty it. On by default for an `Input sensitive` child. It doesn't
+   * count toward the form's dirty state, and validates on submit only.
+   */
+  sensitive?: boolean
   /** For a control the adapters don't know: render it from the field's state, inside the Field. */
   render?: (field: FormFieldState) => ReactNode
   className?: string
@@ -105,6 +115,24 @@ function chain(own: unknown, bound: (...args: unknown[]) => void) {
     if (typeof own === "function") own(...args)
     bound(...args)
   }
+}
+
+function bindSecretWithoutItsValue(
+  child: ReactElement<Record<string, unknown>>,
+  name: string,
+  required: boolean,
+  controller: PasswordInputController,
+  onType: () => void,
+) {
+  if (child.type !== Input && child.type !== PasswordInput) {
+    throw new Error("A sensitive FormField takes an Input or a PasswordInput.")
+  }
+  return cloneElement(child, {
+    name: child.props.name ?? name,
+    required: child.props.required ?? (required || undefined),
+    ...(child.type === Input ? { sensitive: true, sensitiveController: controller } : { controller }),
+    onValueChange: chain(child.props.onValueChange, onType),
+  })
 }
 
 function RequiredMarker({ label }: { label: string | undefined }) {
@@ -129,6 +157,7 @@ function FormField<Values extends FieldValues = FieldValues>({
   disabled,
   messages,
   bind,
+  sensitive: sensitiveProp,
   render,
   className,
   children,
@@ -139,6 +168,12 @@ function FormField<Values extends FieldValues = FieldValues>({
   const textLabel = typeof label === "string" ? label : undefined
 
   useFieldRegistration(context.fields, name, textLabel)
+  const onlyChild = render ? undefined : Children.only(children)
+  const sensitive =
+    sensitiveProp ?? (isValidElement<{ sensitive?: unknown }>(onlyChild) && onlyChild.props.sensitive === true)
+  const [ownController] = useState<PasswordInputController>(createPasswordInputController)
+  const secretController = sensitive ? ownController : undefined
+  useSensitiveField(context.form, context.secrets, name, secretController)
 
   const error = fieldState.error
   const message = error ? errorText(error, name, textLabel, messages, context.messages) : undefined
@@ -167,15 +202,19 @@ function FormField<Values extends FieldValues = FieldValues>({
     const adapter = adapterFor(child, bind)
     checkedLayout = adapter === checkedAdapter
     floats = typeof child.type !== "string" && floatingLabelControls.has(child.type)
-    control = cloneElement(child, {
-      name: child.props.name ?? name,
-      required: child.props.required ?? (required || undefined),
-      [adapter.value]: adapter.toControl ? adapter.toControl(field.value) : field.value,
-      [adapter.change]: chain(child.props[adapter.change], (value) =>
-        field.onChange(adapter.fromControl ? adapter.fromControl(value) : value),
-      ),
-      ...(adapter.blur ? { onBlur: chain(child.props.onBlur, field.onBlur) } : {}),
-    })
+    control = secretController
+      ? bindSecretWithoutItsValue(child, name, required, secretController, () => {
+          if (context.form.getFieldState(name).error) context.form.clearErrors(name)
+        })
+      : cloneElement(child, {
+          name: child.props.name ?? name,
+          required: child.props.required ?? (required || undefined),
+          [adapter.value]: adapter.toControl ? adapter.toControl(field.value) : field.value,
+          [adapter.change]: chain(child.props[adapter.change], (value) =>
+            field.onChange(adapter.fromControl ? adapter.fromControl(value) : value),
+          ),
+          ...(adapter.blur ? { onBlur: chain(child.props.onBlur, field.onBlur) } : {}),
+        })
   }
 
   const takesFormPlacement = floats && !padsItself(className)

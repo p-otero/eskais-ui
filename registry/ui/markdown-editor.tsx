@@ -5,6 +5,7 @@ import type { EditorView } from "@codemirror/view"
 import { createTriggerMenuController, type TriggerMenuController } from "@ui-sdk/react/trigger-menu"
 import { useId, useMemo, useState, type ReactNode, type Ref } from "react"
 
+import { fieldSurfaceClassName } from "@/components/ui/field"
 import { openProvisionally, setMenuOpen } from "@/components/ui/markdown-editor-adapter"
 import {
   insertAtCaret,
@@ -48,7 +49,6 @@ import type { MarkdownConflict } from "@/components/ui/markdown-editor-sync"
 import { MarkdownEditorToolbar } from "@/components/ui/markdown-editor-toolbar"
 import { PortalStore } from "@/components/ui/markdown-editor-widgets"
 import type { WikilinkResolver } from "@/components/ui/markdown-syntax"
-import { fieldSurfaceClassName } from "@/components/ui/input"
 import { ScrollArea, ScrollAreaCorner, ScrollAreaScrollbar, ScrollAreaViewport } from "@/components/ui/scroll-area"
 import { useEditorHandle, useMarkdownEditorView } from "@/components/ui/use-markdown-editor"
 import { cn } from "@/lib/utils"

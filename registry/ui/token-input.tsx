@@ -17,8 +17,7 @@ import { XIcon } from "lucide-react"
 import { createContext, useContext, useMemo, useState, type ComponentProps, type FocusEventHandler } from "react"
 
 import { badgeVariants } from "@/components/ui/badge"
-import { floatingLabelControls, formControlAdapters } from "@/components/ui/field"
-import { fieldSurfaceClassName } from "@/components/ui/input"
+import { fieldSurfaceClassName, floatingLabelControls, formControlAdapters } from "@/components/ui/field"
 import {
   draftText,
   labelCodec,

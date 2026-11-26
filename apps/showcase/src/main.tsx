@@ -91,6 +91,7 @@ const pages: Record<string, Page> = {
   "auth-page": () => import("./sections/auth/auth-page").then((module) => module.AuthPageDemo),
   "account-menu": () => import("./sections/auth/account-menu").then((module) => module.AccountMenuDemo),
   "invitation-panel": () => import("./sections/auth/invitation-panel").then((module) => module.InvitationPanelDemo),
+  "secret-list": () => import("./sections/auth/secret-list").then((module) => module.SecretListDemo),
   "document-workspace": () => import("./sections/document-workspace").then((module) => module.DocumentWorkspacePage),
   "server-data-check": () => import("./checks/server-data-check").then((module) => module.ServerDataCheck),
   "agent-workspace": () =>

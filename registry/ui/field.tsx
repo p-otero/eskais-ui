@@ -37,6 +37,10 @@ type FormControlAdapter = {
   blur?: boolean
 }
 
+/** The border, fill and states every text control's box shares. */
+const fieldSurfaceClassName =
+  "border border-input bg-field/(--glass-opacity) shadow-xs transition-colors hover:border-input-strong/50 aria-invalid:border-destructive data-disabled:cursor-not-allowed data-disabled:opacity-50"
+
 /** How FormField binds each control, by component; a control missing from it binds `value`/`onValueChange` as is. */
 const formControlAdapters = new Map<unknown, FormControlAdapter>()
 
@@ -195,6 +199,7 @@ function FieldSet({ legend, description, className, children, ...props }: FieldS
 
 export {
   Field,
+  fieldSurfaceClassName,
   FieldDescription,
   FieldError,
   FieldGroup,

@@ -13,8 +13,7 @@ import {
 import type { ComponentProps } from "react"
 import { MinusIcon, PlusIcon } from "lucide-react"
 
-import { floatingLabelControls, useFloatingPlaceholder } from "@/components/ui/field"
-import { fieldSurfaceClassName } from "@/components/ui/input"
+import { fieldSurfaceClassName, floatingLabelControls, useFloatingPlaceholder } from "@/components/ui/field"
 import { ControlTooltip, type ControlTooltipOption } from "@/components/ui/tooltip"
 import { cnState } from "@/lib/utils"
 

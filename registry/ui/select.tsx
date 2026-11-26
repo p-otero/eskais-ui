@@ -20,8 +20,7 @@ import { cva } from "class-variance-authority"
 import { Fragment, useState, type ComponentProps, type ReactNode } from "react"
 import { CheckIcon, ChevronDownIcon } from "lucide-react"
 
-import { floatingLabelControls } from "@/components/ui/field"
-import { fieldSurfaceClassName } from "@/components/ui/input"
+import { fieldSurfaceClassName, floatingLabelControls } from "@/components/ui/field"
 import { assumeType } from "@/lib/narrow"
 import { cnState } from "@/lib/utils"
 

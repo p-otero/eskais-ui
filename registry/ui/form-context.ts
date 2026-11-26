@@ -2,6 +2,7 @@
 
 import { standardSchemaResolver } from "@hookform/resolvers/standard-schema"
 import type { StandardSchemaV1 } from "@standard-schema/spec"
+import type { PasswordInputController } from "@ui-sdk/react/password-input"
 import { createContext, useContext } from "react"
 import type { FieldError, FieldErrors, FieldValues, Resolver, UseFormReturn } from "react-hook-form"
 
@@ -31,6 +32,8 @@ type FormContextValue = {
   pending: boolean
   disabled: boolean
   fields: Map<string, string | undefined>
+  /** The sensitive fields, by name: read into the form's values only for a submit or a step's validation. */
+  secrets: Map<string, PasswordInputController>
   setRoot: (root: HTMLElement | null) => void
   setConfirm: (confirm: boolean) => void
   /** While `true`, submits are held. */
@@ -46,6 +49,23 @@ type FormContextValue = {
 }
 
 const FormContext = createContext<FormContextValue | null>(null)
+
+const quietly = { shouldDirty: false, shouldValidate: false, shouldTouch: false }
+
+/** Copies each sensitive field's value into the form's values, for validation and the submit that follows. */
+function loadSecrets(form: UseFormReturn<FieldValues>, secrets: Map<string, PasswordInputController>) {
+  for (const [name, controller] of secrets) form.setValue(name, controller.getValue(), quietly)
+}
+
+/** Empties the sensitive fields in the form's values; their controls keep what's typed. */
+function forgetSecrets(form: UseFormReturn<FieldValues>, secrets: Map<string, PasswordInputController>) {
+  for (const name of secrets.keys()) form.setValue(name, "", quietly)
+}
+
+/** Empties the sensitive controls themselves, after a submit succeeds or the form resets. */
+function clearSecrets(secrets: Map<string, PasswordInputController>) {
+  for (const controller of secrets.values()) controller.clear()
+}
 
 function emptyLike(value: unknown) {
   if (value === null) return null
@@ -176,5 +196,16 @@ function errorText(
   return resolveFormMessage(issueFromError(error, field, label), ...layers)
 }
 
-export { FormContext, errorAt, errorText, issueResolver, requiredProbe, toFieldError, useFormContext }
+export {
+  FormContext,
+  clearSecrets,
+  errorAt,
+  errorText,
+  forgetSecrets,
+  issueResolver,
+  loadSecrets,
+  requiredProbe,
+  toFieldError,
+  useFormContext,
+}
 export type { ErrorLike, FormContextValue, IssueError, SubmitInterceptor }

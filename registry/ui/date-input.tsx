@@ -7,8 +7,7 @@ import {
 } from "@ui-sdk/react/date-input"
 import type { ComponentProps } from "react"
 
-import { floatingLabelControls } from "@/components/ui/field"
-import { fieldSurfaceClassName } from "@/components/ui/input"
+import { fieldSurfaceClassName, floatingLabelControls } from "@/components/ui/field"
 import { cnState } from "@/lib/utils"
 
 // Spec: at least 24px wide, so each segment stays a target (WCAG 2.5.8).

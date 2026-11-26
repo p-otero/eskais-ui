@@ -21,8 +21,12 @@ import { renderElement, type PartProps } from "@ui-sdk/react/primitive"
 import type { ComponentProps } from "react"
 import { ChevronDownIcon, XIcon } from "lucide-react"
 
-import { floatingLabelControls, formControlAdapters, useFloatingPlaceholder } from "@/components/ui/field"
-import { fieldSurfaceClassName } from "@/components/ui/input"
+import {
+  fieldSurfaceClassName,
+  floatingLabelControls,
+  formControlAdapters,
+  useFloatingPlaceholder,
+} from "@/components/ui/field"
 import {
   listGroupLabelClassName,
   listItemClassName,

@@ -10,8 +10,7 @@ import { TimeInput as TimeInputPrimitive } from "@ui-sdk/react/time-input"
 import { useState, type ComponentProps } from "react"
 
 import { DatePicker, type DatePickerLabels } from "@/components/ui/date-picker"
-import { floatingLabelControls } from "@/components/ui/field"
-import { fieldSurfaceClassName } from "@/components/ui/input"
+import { fieldSurfaceClassName, floatingLabelControls } from "@/components/ui/field"
 import { cn, cnState } from "@/lib/utils"
 
 type DateTimePickerLabels = DatePickerLabels & {

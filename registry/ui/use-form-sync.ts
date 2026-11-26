@@ -1,6 +1,8 @@
 "use client"
 
+import type { PasswordInputController } from "@ui-sdk/react/password-input"
 import { useEffect, useEffectEvent, type RefObject } from "react"
+import type { FieldValues, UseFormReturn } from "react-hook-form"
 
 /** Calls `onChange` with `value` once mounted and whenever it changes, never because `onChange` itself changed. */
 function useReportChange<Value>(value: Value, onChange: ((value: Value) => void) | undefined) {
@@ -45,4 +47,32 @@ function useFieldRegistration(fields: Map<string, string | undefined>, name: str
   }, [fields, name, label])
 }
 
-export { useFieldRegistration, useFocusRequest, useFormFlag, useReportChange, useRestoreFocusAfterPending }
+/**
+ * Registers a sensitive field's controller with its form while mounted, so the form reads it on submit; on unmount it
+ * empties the control and the form's value for it.
+ */
+function useSensitiveField(
+  form: UseFormReturn<FieldValues>,
+  secrets: Map<string, PasswordInputController>,
+  name: string,
+  controller: PasswordInputController | undefined,
+) {
+  useEffect(() => {
+    if (!controller) return
+    secrets.set(name, controller)
+    return () => {
+      secrets.delete(name)
+      controller.clear()
+      form.setValue(name, "", { shouldDirty: false, shouldValidate: false })
+    }
+  }, [form, secrets, name, controller])
+}
+
+export {
+  useFieldRegistration,
+  useSensitiveField,
+  useFocusRequest,
+  useFormFlag,
+  useReportChange,
+  useRestoreFocusAfterPending,
+}

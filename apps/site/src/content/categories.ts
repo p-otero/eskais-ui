@@ -183,7 +183,7 @@ const categories = [
   },
   {
     name: "Accounts",
-    items: ["auth-page", "account-menu", "invitation-panel"],
+    items: ["auth-page", "account-menu", "invitation-panel", "secret-list"],
   },
   {
     name: "3D",
