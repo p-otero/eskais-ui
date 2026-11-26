@@ -24,7 +24,11 @@ import {
   type PatchResult,
   type SourcePatch,
 } from "@/components/ui/server-data-cache"
+import { isPollFetch, type PollOptions } from "@/components/ui/server-data-poll"
 import { holdSource, type HoldPatchOptions, type SourceHold } from "@/components/ui/server-data-hold"
+import { networkModeOf, readOptionsOf, type ReadOptions } from "@/components/ui/server-data-options"
+import type { RefetchOptions, RefetchTrigger } from "@/components/ui/server-data-options"
+import { useServerPoll } from "@/components/ui/use-server-poll"
 import {
   createPageController,
   type PageController,
@@ -46,45 +50,14 @@ import {
 
 type ServerStatus = "pending" | "error" | "success"
 
-/** `true` reloads a stale query on the event, `"always"` a fresh one too, `false` never. */
-type RefetchTrigger = boolean | "always"
+type ServerPageOptions<T = unknown, TError = DefaultServerError> = ReadOptions &
+  PollOptions<ServerPageState<T, TError>> & {
+    /** Overrides the navigation `"auto"` picks from the source. */
+    navigation?: NavigationMode
+  }
 
-/**
- * When a query reloads on its own, per hook; otherwise the client's (`createDataClient`: no reload on focus, reload a
- * stale query on mount, and on reconnect unless `networkMode` is `"always"`). TanStack reloads a query when any hook that reads it asks to, so a resource
- * that must never reload this way (one whose reads overwrite per-item ETags kept for later writes) says so in
- * `defineResource`, for every screen.
- */
-type RefetchOptions = {
-  refetchOnWindowFocus?: RefetchTrigger
-  refetchOnReconnect?: RefetchTrigger
-  refetchOnMount?: RefetchTrigger
-}
-
-/** What every reading hook takes besides its request: when a read may run and when it reloads on its own. */
-type ReadOptions = RefetchOptions & {
-  enabled?: boolean
-  /** When a read may run, as `createDataClient`'s `networkMode`; otherwise the client's. */
-  networkMode?: NetworkMode
-}
-
-type ServerPageOptions = ReadOptions & {
-  /** Overrides the navigation `"auto"` picks from the source. */
-  navigation?: NavigationMode
-}
-
-function networkModeOf(networkMode: NetworkMode | undefined) {
-  return networkMode === undefined ? {} : { networkMode }
-}
-
-const refetchKeys = ["refetchOnWindowFocus", "refetchOnReconnect", "refetchOnMount"] as const
-
-/** A query's `networkMode` and refetch triggers, the unset ones left out so the client's defaults apply. */
-function readOptionsOf(options: ReadOptions): Omit<ReadOptions, "enabled"> {
-  const picked: Omit<ReadOptions, "enabled"> = { ...networkModeOf(options.networkMode) }
-  for (const name of refetchKeys) if (options[name] !== undefined) picked[name] = options[name]
-  return picked
-}
+type ServerInfiniteOptions<T = unknown, TError = DefaultServerError> = ReadOptions &
+  PollOptions<ServerInfiniteState<T, TError>>
 
 type ServerPageState<T, TError = DefaultServerError> = {
   /** The page's rows; while another page loads, the previous page's rows stay here. */
@@ -93,6 +66,8 @@ type ServerPageState<T, TError = DefaultServerError> = {
   status: ServerStatus
   /** A request is in flight, the first one or a refetch. */
   fetching: boolean
+  /** The request in flight is a `refetchInterval` poll's, which a status shouldn't announce. */
+  polling: boolean
   /** The rows shown belong to the previous request while the new one loads. */
   previous: boolean
   total: TotalInfo
@@ -116,6 +91,10 @@ const pageMeta = { serverData: "page" }
 const infiniteMeta = { serverData: "infinite" }
 const totalMeta = { serverData: "total" }
 
+function totalKey<F>(source: PageSource<unknown, F>, filter: F): QueryKey {
+  return [...source.key, "total", filter]
+}
+
 /** The source's own count, as a query of its own (`[...key, "total", filter]`); idle without `fetchTotal`. */
 function useServerTotal<T, F, TError = DefaultServerError>(
   source: PageSource<T, F>,
@@ -126,7 +105,7 @@ function useServerTotal<T, F, TError = DefaultServerError>(
   const fetchTotal = source.fetchTotal
   const query = useQuery<number, TError>(
     {
-      queryKey: [...source.key, "total", filter],
+      queryKey: totalKey(source, filter),
       queryFn: (context) =>
         pausedRead(client, context, () =>
           fetchTotal
@@ -150,14 +129,16 @@ function useServerTotal<T, F, TError = DefaultServerError>(
 function useServerPage<T, F, TError = DefaultServerError>(
   source: PageSource<T, F>,
   request: PageRequest<F>,
-  options: ServerPageOptions = {},
+  options: ServerPageOptions<T, TError> = {},
 ): ServerPageState<T, TError> {
   const client = useDataClient()
+  const enabled = options.enabled !== false
+  const queryKey = pageKey(source, request)
   const query = useQuery<PageResult<T>, TError>(
     {
-      queryKey: pageKey(source, request),
+      queryKey,
       queryFn: (context) => pausedRead(client, context, () => source.fetchPage(request, { signal: context.signal })),
-      enabled: options.enabled !== false,
+      enabled,
       meta: pageMeta,
       ...readOptionsOf(options),
       placeholderData: keepPreviousData,
@@ -171,17 +152,20 @@ function useServerPage<T, F, TError = DefaultServerError>(
   const retry = useCallback(() => {
     void refetch()
   }, [refetch])
-  return {
+  const state: ServerPageState<T, TError> = {
     items: result?.items ?? [],
     result,
     status: query.status,
     fetching: query.isFetching,
+    polling: query.isFetching && isPollFetch(client, queryKey),
     previous: query.isPlaceholderData,
     total,
     navigation: resolveNavigation(source.capabilities, options.navigation, total),
     error: query.error,
     retry,
   }
+  useServerPoll(client, source.fetchTotal ? [queryKey, totalKey(source, request.filter)] : [queryKey], options, state)
+  return state
 }
 
 type InfiniteRequest<F> = { filter: F; sort: readonly SortSpec[]; size: number }
@@ -192,6 +176,8 @@ type ServerInfiniteState<T, TError = DefaultServerError> = {
   pages: PageResult<T>[]
   status: ServerStatus
   fetching: boolean
+  /** The request in flight is a `refetchInterval` poll's, which a status shouldn't announce. */
+  polling: boolean
   loadingMore: boolean
   hasMore: boolean
   loadMore: () => Promise<void>
@@ -206,13 +192,15 @@ type PageParam = number | string | null
 function useServerInfinite<T, F, TError = DefaultServerError>(
   source: PageSource<T, F>,
   request: InfiniteRequest<F>,
-  options: ReadOptions = {},
+  options: ServerInfiniteOptions<T, TError> = {},
 ): ServerInfiniteState<T, TError> {
   const client = useDataClient()
+  const enabled = options.enabled !== false
   const cursorMode = source.capabilities.position === "cursor"
+  const queryKey: QueryKey = [...source.key, "infinite", request.filter, request.sort, request.size]
   const query = useInfiniteQuery<PageResult<T>, TError, InfiniteData<PageResult<T>, PageParam>, QueryKey, PageParam>(
     {
-      queryKey: [...source.key, "infinite", request.filter, request.sort, request.size],
+      queryKey,
       queryFn: (context: { queryKey: QueryKey; signal: AbortSignal; pageParam: PageParam }) =>
         pausedRead(client, context, () =>
           source.fetchPage(
@@ -233,7 +221,7 @@ function useServerInfinite<T, F, TError = DefaultServerError>(
           last.hasMore ?? (total === undefined ? last.items.length >= request.size : all.length * request.size < total)
         return more && last.items.length > 0 ? all.length + 1 : undefined
       },
-      enabled: options.enabled !== false,
+      enabled,
       meta: infiniteMeta,
       ...readOptionsOf(options),
       placeholderData: keepPreviousData,
@@ -250,11 +238,12 @@ function useServerInfinite<T, F, TError = DefaultServerError>(
   const retry = useCallback(() => {
     void refetch()
   }, [refetch])
-  return {
+  const state: ServerInfiniteState<T, TError> = {
     items: pages.flatMap((page) => page.items),
     pages,
     status: query.status,
     fetching: query.isFetching,
+    polling: query.isFetching && isPollFetch(client, queryKey),
     loadingMore: isFetchingNextPage,
     hasMore: hasNextPage,
     loadMore,
@@ -262,6 +251,8 @@ function useServerInfinite<T, F, TError = DefaultServerError>(
     error: query.error,
     retry,
   }
+  useServerPoll(client, source.fetchTotal ? [queryKey, totalKey(source, request.filter)] : [queryKey], options, state)
+  return state
 }
 
 type InvalidateOptions = {
@@ -471,6 +462,7 @@ export type {
   ReadOptions,
   RefetchOptions,
   RefetchTrigger,
+  ServerInfiniteOptions,
   ServerInfiniteState,
   ServerPageOptions,
   ServerPageState,

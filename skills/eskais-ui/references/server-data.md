@@ -104,7 +104,7 @@ Every serializer escapes for its grammar, or throws `FilterSerializeError` for w
 ## Hooks without a component
 
 ```tsx
-const page = useServerPage(tasks, state.request) // items, status, fetching, previous, total, navigation, error, retry
+const page = useServerPage(tasks, state.request) // items, status, fetching, polling, previous, total, navigation, error, retry
 const more = useServerInfinite(tasks, { filter, sort, size: 25 }) // items, loadMore, hasMore, loadingMore
 
 // A resource that isn't paged: a detail, a snapshot, a short list. Same shape, with `data`.
@@ -203,6 +203,26 @@ const editable = defineResource({ key, fetch, refetchOnWindowFocus: false, refet
 
 Never reload a resource whose reads overwrite per-item ETags (or versions) a later write sends back: a read on focus or reconnect during an edit swaps in an ETag for a version the person never saw, and the save that should conflict overwrites it. Turn both off on its `defineResource` (TanStack reloads a query when any reader asks to, so set it where every screen gets it) and write saves back with `settle` or `patch`.
 
+## Polling
+
+`refetchInterval` reloads a query every so many ms while it's shown: on `useServerQuery`, `useServerResource`, `useServerPage` and `useServerInfinite` (a number, `false`, or a function of the hook's state), and as a number on `ServerDataTable` and `ServerList`. Default off, with no timer set.
+
+```ts
+// Ask every 2 s while the login is pending; stop once it isn't.
+const login = useServerQuery([...auth.key, "login", attempt], ({ signal }) => api.loginStatus(attempt, { signal }), {
+  refetchInterval: (state) => (state.data?.status === "pending" ? 2000 : false),
+})
+<ServerList aria-label="Jobs" source={jobs} refetchInterval={10_000} refetchIntervalInBackground {...rest} />
+```
+
+- Don't hand-write a timer that calls `retry` or invalidates: the option never overlaps requests, pauses with the tab, and shares one timer per key.
+- The next poll counts from when the last read settled, so requests never stack; any other read of the query (a mutation's refresh, a patch, `retry`) pushes it back, and a hold pauses it like any read.
+- It stops while the document is hidden (TanStack's `focusManager`, `visibilitychange`) and, visible again, reloads at once when an interval went by. `refetchIntervalInBackground: true` keeps it going.
+- A poll is a background refresh: data stays, `fetching` and `polling` are true, `status` stays `success`. A failed poll follows the retry rules and keeps the last data beside the error; a function can stop on `state.status === "error"`.
+- Hooks that read the same key share one timer at the shortest interval any of them asks for; it stops when the last unmounts or changes key, and a new key starts its own.
+- The table and list don't mark rows busy or say "Loading…" for a poll. With your own status, leave polls out: `fetching={page.fetching && !page.polling}`.
+- A page or infinite list polls its separate total (`fetchTotal`) at the same interval; an infinite list reloads every loaded page.
+
 ## Offline
 
 TanStack's default `networkMode: "online"` pauses reads and writes after the browser's `offline` event: a page stays pending and never reaches its error state. For a local backend (Electron IPC, localhost) or an app with its own offline UI:
@@ -255,7 +275,7 @@ Counts, page sizes and the chips' numbers and dates follow the page's `<html lan
 ## Guarantees to keep
 
 - Never empty while loading or after an error; the previous page's rows stay (`aria-busy`) while the next loads.
-- A polite status says "Showing 21–40 of 312" after each load and "Loading…" only past 400 ms.
+- A polite status says "Showing 21–40 of 312" after each load and "Loading…" only past 400 ms, never for a poll.
 - Focus stays on the control pressed (pagination, Load more); row navigation restarts at the first row without moving focus.
 - Agents: `sortBy`/`setPage` on the table, `filter(field, value)`/`clearFilters()` on the "{label} filters" group, `select(id)` on a list, Load more by name.
 
@@ -274,4 +294,5 @@ Counts, page sizes and the chips' numbers and dates follow the page's `<html lan
 | Query client   | the app's; a shared default, or `DataProvider`                                  |
 | Query defaults | keep previous data, 2 retries except 4xx, `staleTime` 30 s, no refetch on focus |
 | Refetch        | stale queries on mount and reconnect (not with `networkMode: "always"`)         |
+| Polling        | off; `refetchInterval` paused while hidden unless `refetchIntervalInBackground` |
 | Network mode   | TanStack's `online`: paused while the browser is offline                        |

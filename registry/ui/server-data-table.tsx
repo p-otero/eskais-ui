@@ -87,6 +87,13 @@ type ServerDataTableProps<T, S extends FilterSchema> = Pick<
   navigation?: NavigationMode
   /** Keeps filters, sort and page in the URL: `hashUrlState()`, `historyUrlState()` or your router's adapter. */
   urlState?: UrlStateAdapter | ServerTableUrlState
+  /**
+   * Reloads the shown rows every so many ms while the document is visible, as the hooks' `refetchInterval`: the rows
+   * stay, unmarked, and the status announces nothing. Default false.
+   */
+  refetchInterval?: number | false
+  /** Keeps polling while the document is hidden, as the hooks' `refetchIntervalInBackground`. Default false. */
+  refetchIntervalInBackground?: boolean
   /** A controller of your own, from `usePageController`, to drive the table from outside. */
   controller?: PageController<FilterValues<S>>
   labels: ServerDataTableLabels
@@ -129,6 +136,8 @@ function ServerDataTable<T, S extends FilterSchema = Record<never, never>>({
   pageSizes = defaultPageSizes,
   navigation: navigationMode = "auto",
   urlState,
+  refetchInterval = false,
+  refetchIntervalInBackground = false,
   controller: controllerProp,
   labels: labelOverrides,
   locale: localeProp,
@@ -161,11 +170,12 @@ function ServerDataTable<T, S extends FilterSchema = Record<never, never>>({
   const panelTrigger = useRef<HTMLButtonElement>(null)
 
   const accumulating = ["load-more", "infinite"].includes(resolveNavigation(source.capabilities, navigationMode))
-  const paged = useServerPage(source, state.request, { enabled: !accumulating, navigation: navigationMode })
+  const poll = { refetchInterval, refetchIntervalInBackground }
+  const paged = useServerPage(source, state.request, { enabled: !accumulating, navigation: navigationMode, ...poll })
   const more = useServerInfinite(
     source,
     { filter: state.filter, sort: state.sort, size: state.size },
-    { enabled: accumulating },
+    { enabled: accumulating, ...poll },
   )
   const view = accumulating ? more : paged
   const navigation = accumulating ? resolveNavigation(source.capabilities, navigationMode) : paged.navigation
@@ -179,7 +189,7 @@ function ServerDataTable<T, S extends FilterSchema = Record<never, never>>({
       : index + (paged.result?.hasMore ? 1 : 0)
   const offset = accumulating ? 0 : (index - 1) * state.size
   const range = pageRange(offset, view.items.length, view.total)
-  const slow = useDelayedFlag(view.fetching, JSON.stringify(state.request))
+  const slow = useDelayedFlag(view.fetching && !view.polling, JSON.stringify(state.request))
   const statusText =
     view.status === "error"
       ? ""
@@ -230,7 +240,7 @@ function ServerDataTable<T, S extends FilterSchema = Record<never, never>>({
       onSortChange={onSortChange}
       loading={loading}
       loadingRows={tableProps.loadingRows ?? Math.min(state.size, 25)}
-      busy={view.fetching && !loading}
+      busy={view.fetching && !view.polling && !loading}
       empty={empty}
       renderPagination={() => null}
       tableClassName={tableClassName}
