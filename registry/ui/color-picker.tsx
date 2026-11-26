@@ -30,7 +30,7 @@ import {
 } from "react"
 import { PipetteIcon } from "lucide-react"
 
-import { fieldSurfaceClassName } from "@/components/ui/input"
+import { fieldSurfaceClassName } from "@/components/ui/field"
 import { ControlTooltip, type ControlTooltipOption } from "@/components/ui/tooltip"
 import { useColorAreaCanvas } from "@/components/ui/use-color-area-canvas"
 import { useHeldColor, type Ending } from "@/components/ui/use-held-color"

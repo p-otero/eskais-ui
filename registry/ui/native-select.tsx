@@ -5,8 +5,7 @@ import { createParts } from "@ui-sdk/react/primitive"
 import type { ComponentProps, ReactNode } from "react"
 import { ChevronDownIcon } from "lucide-react"
 
-import { floatingLabelControls } from "@/components/ui/field"
-import { fieldSurfaceClassName } from "@/components/ui/input"
+import { fieldSurfaceClassName, floatingLabelControls } from "@/components/ui/field"
 import { nativeSelect, type NativeSelectItem, type NativeSelectOptions } from "@/components/ui/native-select-primitive"
 import { cn } from "@/lib/utils"
 

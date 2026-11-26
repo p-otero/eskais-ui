@@ -9,8 +9,12 @@ import {
 import type { ComponentProps } from "react"
 import { EyeIcon, EyeOffIcon } from "lucide-react"
 
-import { floatingLabelControls, formControlAdapters, useFloatingPlaceholder } from "@/components/ui/field"
-import { fieldSurfaceClassName } from "@/components/ui/input"
+import {
+  fieldSurfaceClassName,
+  floatingLabelControls,
+  formControlAdapters,
+  useFloatingPlaceholder,
+} from "@/components/ui/field"
 import { ControlTooltip, type ControlTooltipOption } from "@/components/ui/tooltip"
 import { cnState } from "@/lib/utils"
 

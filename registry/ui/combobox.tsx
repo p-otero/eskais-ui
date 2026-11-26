@@ -21,8 +21,7 @@ import { renderElement, type PartProps } from "@ui-sdk/react/primitive"
 import type { ComponentProps } from "react"
 import { CheckIcon, ChevronDownIcon, XIcon } from "lucide-react"
 
-import { floatingLabelControls, useFloatingPlaceholder } from "@/components/ui/field"
-import { fieldSurfaceClassName } from "@/components/ui/input"
+import { fieldSurfaceClassName, floatingLabelControls, useFloatingPlaceholder } from "@/components/ui/field"
 import { ControlTooltip, type ControlTooltipOption } from "@/components/ui/tooltip"
 import {
   listGroupLabelClassName,

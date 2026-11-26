@@ -15,8 +15,7 @@ import { CalendarIcon, XIcon } from "lucide-react"
 import { buttonVariants } from "@/components/ui/button"
 import { ControlTooltip, type ControlTooltipOption } from "@/components/ui/tooltip"
 import { CalendarMonths, type CalendarLabels } from "@/components/ui/calendar"
-import { floatingLabelControls, useFloatingPlaceholder } from "@/components/ui/field"
-import { fieldSurfaceClassName } from "@/components/ui/input"
+import { fieldSurfaceClassName, floatingLabelControls, useFloatingPlaceholder } from "@/components/ui/field"
 import { cn, cnState } from "@/lib/utils"
 
 type DatePickerLabels = CalendarLabels & {

@@ -14,7 +14,7 @@ import {
   type FormProps,
   type FormValuesOf,
 } from "@/components/ui/form"
-import { useFormContext } from "@/components/ui/form-context"
+import { forgetSecrets, loadSecrets, useFormContext } from "@/components/ui/form-context"
 import { StepFormProgress } from "@/components/ui/step-form-progress"
 import { useHeadingFocus, useSeenFields, useSubmitInterceptor } from "@/components/ui/use-step-form"
 import { isRecord } from "@/lib/narrow"
@@ -147,8 +147,11 @@ function StepFormContent({
     form.clearErrors("root")
     const names = step.fields ?? [...context.fields.keys()]
     const validate = async () => {
-      if (names.length > 0 && !(await form.trigger(names))) return context.requestFocus()
-      const problem = await step.validate?.(form.getValues())
+      loadSecrets(context.form, context.secrets)
+      const valid = names.length === 0 || (await form.trigger(names))
+      const problem = valid ? await step.validate?.(form.getValues()) : undefined
+      forgetSecrets(context.form, context.secrets)
+      if (!valid) return context.requestFocus()
       if (problem !== undefined && problem !== null) {
         context.applyError(problem)
         return context.requestFocus()

@@ -9,7 +9,7 @@ import {
 } from "@ui-sdk/react/otp-input"
 import type { ComponentProps } from "react"
 
-import { fieldSurfaceClassName } from "@/components/ui/input"
+import { fieldSurfaceClassName } from "@/components/ui/field"
 import { cnState } from "@/lib/utils"
 
 function OTPInput({ className, ...props }: ComponentProps<typeof OTPInputPrimitive>) {

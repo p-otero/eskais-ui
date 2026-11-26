@@ -3,12 +3,16 @@
 import type { StandardSchemaV1 } from "@standard-schema/spec"
 import { createParts } from "@ui-sdk/react/primitive"
 import { useMemo, useRef, useState, type FormEvent, type ReactNode } from "react"
+import type { PasswordInputController } from "@ui-sdk/react/password-input"
 import { useForm, type DefaultValues, type FieldValues, type Path, type UseFormReturn } from "react-hook-form"
 
 import { FieldLabelPlacementDefault, type FieldLabelPlacement } from "@/components/ui/field"
 import {
   FormContext,
+  clearSecrets,
+  forgetSecrets,
   issueResolver,
+  loadSecrets,
   requiredProbe,
   toFieldError,
   type FormContextValue,
@@ -134,6 +138,7 @@ function Form<Schema extends StandardSchemaV1>({
   const interceptor = useRef<SubmitInterceptor | null>(null)
   const restoreFocus = useRef<Element | null>(null)
   const [fields] = useState(() => new Map<string, string | undefined>())
+  const [secrets] = useState(() => new Map<string, PasswordInputController>())
   const dirty = form.formState.isDirty
 
   useReportChange(pending, onPendingChange)
@@ -169,6 +174,7 @@ function Form<Schema extends StandardSchemaV1>({
       applyFormError(untyped, fields, error)
     }
     form.clearErrors("root")
+    loadSecrets(untyped, secrets)
     const submit = form.handleSubmit(
       async (values) => {
         setPending(true)
@@ -192,6 +198,8 @@ function Form<Schema extends StandardSchemaV1>({
       () => submit(event),
       () => {
         running.current = false
+        forgetSecrets(untyped, secrets)
+        if (!failed) clearSecrets(secrets)
         if (failed) {
           restoreFocus.current = null
           setFocusRequest((count) => count + 1)
@@ -211,6 +219,7 @@ function Form<Schema extends StandardSchemaV1>({
       pending,
       disabled,
       fields,
+      secrets,
       setRoot: (root) => {
         rootElement.current = root
       },
@@ -224,7 +233,7 @@ function Form<Schema extends StandardSchemaV1>({
       applyError: (error) => applyFormError(untyped, fields, error),
       requestFocus: () => setFocusRequest((count) => count + 1),
     }),
-    [untyped, messages, labelPlacement, requiredLabel, requires, pending, disabled, fields],
+    [untyped, messages, labelPlacement, requiredLabel, requires, pending, disabled, fields, secrets],
   )
 
   return (
@@ -235,7 +244,10 @@ function Form<Schema extends StandardSchemaV1>({
         noValidate
         named={Boolean(label || labelledBy)}
         confirm={confirm}
-        onResetRequest={() => form.reset()}
+        onResetRequest={() => {
+          form.reset()
+          clearSecrets(secrets)
+        }}
         aria-label={label}
         aria-labelledby={labelledBy}
         aria-busy={pending || undefined}
@@ -244,6 +256,7 @@ function Form<Schema extends StandardSchemaV1>({
         onReset={(event: FormEvent<HTMLFormElement>) => {
           event.preventDefault()
           form.reset()
+          clearSecrets(secrets)
         }}
         className={cn("flex min-w-0 flex-col gap-group", className)}
       >

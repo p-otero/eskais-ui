@@ -76,6 +76,7 @@ const itemNotes: Record<string, ItemNotes> = {
       "Each FormField wires label, description and error to its control with aria-describedby and aria-invalid.",
       "On a failed submit, focus moves to the first invalid field, or to the root error.",
       "Fields are disabled while submitting (configurable), and a second submit is ignored.",
+      "A sensitive field's value never reaches a DOM attribute; it's read on submit and emptied after a successful one.",
     ],
     agent: "With a label, the form exposes submit and reset. Agents fill each field through its own part.",
     related: ["form-dialog", "field", "input", "select"],
@@ -106,8 +107,13 @@ const itemNotes: Record<string, ItemNotes> = {
     related: ["input", "form", "label"],
   },
   input: {
-    a11y: ["InputClear clears the value and returns focus to the input.", "Named by the surrounding Field's label."],
-    agent: "Agents set its value with setValue; a containing Field validates on the agent's blur.",
+    a11y: [
+      "InputClear clears the value and returns focus to the input.",
+      "Named by the surrounding Field's label.",
+      "A sensitive input is a native password field; its Show toggle keeps one name and says whether the value shows with aria-pressed.",
+    ],
+    agent:
+      "Agents set its value with setValue; a containing Field validates on the agent's blur. A sensitive input reads as [redacted] to agents, shown or hidden, though they can still fill it.",
     related: ["field", "search-field", "textarea"],
   },
   textarea: {
@@ -711,6 +717,18 @@ const itemNotes: Record<string, ItemNotes> = {
     agent:
       "Agents follow a section's link or set the section picker by name, set each row's control by its label, and need a person's approval to confirm a danger action.",
     related: ["field", "description-list", "confirm-dialog", "select"],
+  },
+  "secret-list": {
+    usage:
+      "A settings page of stored secrets: rows with a mask and the server's fingerprint, never a value; Replace opens your FormDialog with a sensitive Input, and Delete asks first.",
+    a11y: [
+      "The mask is hidden from screen readers, which hear the fingerprint instead (Hidden value ending in a1b2, overridable).",
+      "Each row's Replace and Delete are named for the secret, and Delete opens an alert dialog before anything is removed.",
+      "The status is a pill with a dot and its word, so it doesn't rest on colour alone.",
+    ],
+    agent:
+      "Agents read the secrets as the list's items and call replace(id) and delete(id); delete opens the confirmation, whose button needs a person. An unknown id fails the step with why.",
+    related: ["input", "form-dialog", "invitation-panel", "states", "status-pill"],
   },
   "auth-page": {
     usage:
