@@ -69,7 +69,12 @@ afterEach(() => {
   vi.useRealTimers()
 })
 
-type HarnessProps = Partial<InvitationPanelProps> & { expiresIn?: number }
+type HarnessProps = Partial<
+  Pick<InvitationPanelProps, "onRevoke" | "invitations" | "status" | "error" | "onRetry" | "labels">
+> & {
+  onCreate?: (request: { role: string | undefined }) => InvitationLink | PromiseLike<InvitationLink>
+  expiresIn?: number
+}
 
 function Panel({ expiresIn = 7 * DAY, ...props }: HarnessProps) {
   const [invitations, setInvitations] = useState(pending)
@@ -78,7 +83,7 @@ function Panel({ expiresIn = 7 * DAY, ...props }: HarnessProps) {
       aria-label="Invitations"
       roles={roles}
       invitations={invitations}
-      onCreate={({ role }) =>
+      onCreate={({ role }: { role: string | undefined }) =>
         Promise.resolve<InvitationLink>({ id: `inv-${role ?? "none"}`, url: SECRET, expiresAt: Date.now() + expiresIn })
       }
       onRevoke={(id) => {
@@ -335,7 +340,7 @@ test("pending invitations show role, creator, expiry and a revoke named for the 
   expect(list.textContent).toContain("Member")
   expect(list.textContent).toContain("Created by Ana Ruiz")
   expect(list.textContent).toContain("Expires in 3 days")
-  expect(within(list).getByRole("button", { name: "Revoke Admin invitation from Leo Park" })).toBeTruthy()
+  expect(within(list).getByRole("button", { name: /^Revoke Admin invitation from Leo Park, expiring / })).toBeTruthy()
 })
 
 test("the pending list's type has no url field", () => {
@@ -372,8 +377,8 @@ test("every control is named, and agents see the panel's actions and its invitat
     { value: "inv-2", label: "Admin, Created by Leo Park" },
   ])
   const labels = components.map((entry) => entry.label)
-  for (const label of ["Role", "Create invitation", "Revoke Member invitation from Ana Ruiz"])
-    expect(labels).toContain(label)
+  for (const label of ["Role", "Create invitation"]) expect(labels).toContain(label)
+  expect(labels.some((name) => name?.startsWith("Revoke Member invitation from Ana Ruiz, expiring "))).toBe(true)
 })
 
 test("has no axe violations, with and without a new link", async () => {
@@ -381,4 +386,68 @@ test("has no axe violations, with and without a new link", async () => {
   expect(await axeViolations(container)).toEqual([])
   await createFromButton()
   expect(await axeViolations(container)).toEqual([])
+})
+
+test("two invitations from the same admin get unique revoke names: by invitee, else by expiry", () => {
+  const sameAdmin: Invitation[] = [
+    { id: "a", role: "member", createdBy: "Ana Ruiz", expiresAt: Date.UTC(2030, 0, 2, 9, 0) },
+    { id: "b", role: "member", createdBy: "Ana Ruiz", expiresAt: Date.UTC(2030, 0, 3, 9, 0) },
+    {
+      id: "c",
+      role: "member",
+      createdBy: "Ana Ruiz",
+      expiresAt: Date.UTC(2030, 0, 2, 9, 0),
+      invitee: "leo@example.com",
+    },
+    { id: "d", role: "member", createdBy: "Ana Ruiz", expiresAt: Date.UTC(2030, 0, 2, 9, 0), invitee: "Mia Chen" },
+  ]
+  render(<Panel invitations={sameAdmin} />)
+  const names = within(screen.getByRole("list", { name: "Pending invitations" }))
+    .getAllByRole("button")
+    .map((button) => button.getAttribute("aria-label"))
+  expect(new Set(names).size).toBe(4)
+  expect(names).toContain("Revoke invitation for leo@example.com")
+  expect(names).toContain("Revoke invitation for Mia Chen")
+})
+
+test("a row with an invitee shows it as the title, with the role and creator after it", () => {
+  render(
+    <Panel
+      invitations={[
+        { id: "x", role: "admin", createdBy: "Ana Ruiz", invitee: "leo@example.com", expiresAt: Date.now() + DAY },
+      ]}
+    />,
+  )
+  const row = screen.getByText("leo@example.com").closest('[data-slot="list-item"]')
+  expect(row?.textContent).toMatch(/^leo@example.comAdmin · Created by Ana Ruiz · Expires in /)
+})
+
+test("a failed create shows what onCreate threw when it's a string or a node, else text.createError", async () => {
+  const failures: unknown[] = ["An account with this email already exists.", <b key="b">You can't invite admins.</b>]
+  for (const failure of failures) {
+    const view = render(<Panel onCreate={() => Promise.reject(failure)} />)
+    fireEvent.click(screen.getByRole("button", { name: "Create invitation" }))
+    const alert = await screen.findByRole("alert")
+    expect(alert.textContent).toBe(typeof failure === "string" ? failure : "You can't invite admins.")
+    view.unmount()
+  }
+  render(<Panel onCreate={() => Promise.reject(new Error("500"))} />)
+  fireEvent.click(screen.getByRole("button", { name: "Create invitation" }))
+  expect((await screen.findByRole("alert")).textContent).toBe("The invitation couldn't be created.")
+})
+
+test("text.createError can pick a message per failure", async () => {
+  render(
+    <InvitationPanel
+      aria-label="Invitations"
+      onCreate={() => Promise.reject(new Error("forbidden"))}
+      onRevoke={() => undefined}
+      text={{
+        ...text,
+        createError: (error) => (error instanceof Error && error.message === "forbidden" ? "Not allowed." : "Failed."),
+      }}
+    />,
+  )
+  fireEvent.click(screen.getByRole("button", { name: "Create invitation" }))
+  expect((await screen.findByRole("alert")).textContent).toBe("Not allowed.")
 })

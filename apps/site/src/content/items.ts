@@ -761,7 +761,7 @@ const itemNotes: Record<string, ItemNotes> = {
     a11y: [
       "Creating announces that a link was created, and copying that it was copied, never the link itself.",
       "The new link is a region named by its heading; the expiry is a time element that counts down and reads Expired when it passes.",
-      "Each pending row's Revoke is named for its role and creator, and opens an alert dialog before anything is revoked.",
+      "Each pending row's Revoke is named for its invitee, or its role, creator and expiry, so no two share a name; it opens an alert dialog before anything is revoked.",
     ],
     agent:
       "Agents call create (with a role), copy and revoke(id) on the panel, and read the new link's id and expiry from its state, never its URL. revoke opens the confirmation, whose button needs a person; copy with no fresh link, an unknown id or a role the panel doesn't offer fails the step with why.",
