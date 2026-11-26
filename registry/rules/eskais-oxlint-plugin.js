@@ -121,12 +121,33 @@ const scrollArea = {
   },
 }
 
-export { iconButtonNeedsLabel, scrollArea }
+const noInlineIcons = {
+  meta: {
+    type: "problem",
+    docs: {
+      description:
+        "Icons come from lucide-react; any inline <svg>, whatever its function is called, is a drawing that isn't an icon.",
+    },
+    messages: {
+      svg: "Hand-drawn <svg>. Import the icon from lucide-react; for a drawing that is not an icon, disable this rule on the line before with the reason.",
+    },
+  },
+  create(context) {
+    return {
+      JSXOpeningElement(node) {
+        if (node.name.type === "JSXIdentifier" && node.name.name === "svg") context.report({ node, messageId: "svg" })
+      },
+    }
+  },
+}
+
+export { iconButtonNeedsLabel, noInlineIcons, scrollArea }
 
 export default {
   meta: { name: "eskais" },
   rules: {
     "icon-button-needs-label": iconButtonNeedsLabel,
+    "no-inline-icons": noInlineIcons,
     "scroll-area": scrollArea,
   },
 }
