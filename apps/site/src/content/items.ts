@@ -6,6 +6,7 @@ type ItemNotes = {
   agent?: string
   related?: string[]
   exampleAdapters?: string[]
+  inspiredBy?: { handle: string; href: string }
 }
 
 const itemNotes: Record<string, ItemNotes> = {
@@ -230,6 +231,7 @@ const itemNotes: Record<string, ItemNotes> = {
     agent:
       "Agents find it by its label and call setWavelength (380 to 700) or setHue (OKLCH degrees); a magenta or purple hue fails the step with why, since no single wavelength shows it.",
     related: ["color-picker", "slider"],
+    inspiredBy: { handle: "@ctatedev", href: "https://x.com/ctatedev" },
   },
   "sun-arc": {
     usage:

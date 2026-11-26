@@ -167,6 +167,17 @@ function Adapters({ item }: { item: RegistryItem }) {
   )
 }
 
+function InspiredBy({ handle, href }: { handle: string; href: string }) {
+  return (
+    <p className="text-caption text-muted-foreground">
+      Inspired by{" "}
+      <Link href={href} external newTab fast={false}>
+        {handle}
+      </Link>
+    </p>
+  )
+}
+
 function ItemPage({ item }: { item: RegistryItem }) {
   return (
     <>
@@ -197,6 +208,7 @@ function ItemBody({ item }: { item: RegistryItem }) {
   return (
     <>
       <Preview item={item} preview={preview} />
+      {notes?.inspiredBy && <InspiredBy {...notes.inspiredBy} />}
 
       <section className="flex flex-col gap-items" aria-labelledby="installation">
         <H2 id="installation">Installation</H2>
