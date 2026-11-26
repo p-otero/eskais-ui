@@ -7,24 +7,20 @@ import { useId, useState, type ReactNode } from "react"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import {
-  ApproveButton,
-  Countdown,
-  PermissionSection,
-  type DevicePermission,
-} from "@/components/ui/device-approval-parts"
+import { ApproveButton, PermissionSection, type DevicePermission } from "@/components/ui/device-approval-parts"
 import {
   deviceApproval,
   type DeviceApprovalState,
   type DeviceDecision,
 } from "@/components/ui/device-approval-primitive"
+import { ExpiryCountdown } from "@/components/ui/expiry-countdown"
 import {
   PairingCode,
   type PairingCodeConfirmText,
   type PairingCodeEnterText,
   type PairingCodeLabels,
 } from "@/components/ui/pairing-code"
-import { useDeviceApprovalExpiry } from "@/components/ui/use-device-approval-expiry"
+import { useExpiry } from "@/components/ui/use-expiry"
 import { rejectionContent, type RejectionFallback } from "@/lib/rejection-content"
 import { cn } from "@/lib/utils"
 
@@ -191,7 +187,7 @@ function DeviceApproval(props: DeviceApprovalProps) {
   })
   const { api } = handle
   const expiry = expiresAt instanceof Date ? expiresAt.getTime() : expiresAt
-  useDeviceApprovalExpiry(expiry, () => api.expire())
+  useExpiry(expiry, () => api.expire())
 
   const pairing = (() => {
     if (code === undefined) return null
@@ -295,7 +291,7 @@ function DeviceApproval(props: DeviceApprovalProps) {
               </p>
             ) : null}
             {!state.expired && expiry !== undefined && text.expiresIn && state.decided === null ? (
-              <Countdown expiresAt={expiry} expiresIn={text.expiresIn} />
+              <ExpiryCountdown data-slot="device-approval-countdown" expiresAt={expiry} expiresIn={text.expiresIn} />
             ) : null}
             {state.error === null ? null : (
               <Alert data-slot="device-approval-error" tone="destructive" live>

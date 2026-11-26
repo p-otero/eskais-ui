@@ -6,7 +6,6 @@ import { useId, type ReactNode } from "react"
 
 import { Button } from "@/components/ui/button"
 import { deviceApprovalApprove } from "@/components/ui/device-approval-primitive"
-import { useCountdownAnnouncements, useSecondsLeft } from "@/components/ui/use-device-approval-expiry"
 import { cn } from "@/lib/utils"
 
 type DevicePermission = {
@@ -23,13 +22,6 @@ const approveAttributes = (agentConfirm: string): Record<`data-${string}`, strin
 })
 
 const ignoreRefusal = () => undefined
-
-function formatRemaining(seconds: number) {
-  const hours = Math.floor(seconds / 3600)
-  const minutes = Math.floor((seconds % 3600) / 60)
-  const rest = String(seconds % 60).padStart(2, "0")
-  return hours > 0 ? `${String(hours)}:${String(minutes).padStart(2, "0")}:${rest}` : `${String(minutes)}:${rest}`
-}
 
 function hasContent(node: ReactNode) {
   return node !== undefined && node !== null && node !== false
@@ -97,26 +89,6 @@ function PermissionSection({
   )
 }
 
-function Countdown({
-  expiresAt,
-  expiresIn,
-}: {
-  expiresAt: number
-  expiresIn: (remainingMs: number, formatted: string) => string
-}) {
-  const seconds = useSecondsLeft(expiresAt)
-  useCountdownAnnouncements(seconds, (at) => expiresIn(at * 1000, formatRemaining(at)))
-  return (
-    <p
-      role="timer"
-      data-slot="device-approval-countdown"
-      className="flex items-center gap-inline text-body-sm text-muted-foreground tabular-nums"
-    >
-      {expiresIn(seconds * 1000, formatRemaining(seconds))}
-    </p>
-  )
-}
-
 function ApproveButton({
   approve,
   blocked,
@@ -165,5 +137,5 @@ function ApproveButton({
   )
 }
 
-export { ApproveButton, Countdown, PermissionSection }
+export { ApproveButton, PermissionSection }
 export type { DevicePermission }

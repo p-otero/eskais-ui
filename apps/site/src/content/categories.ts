@@ -127,6 +127,7 @@ const categories = [
       "image-scan",
       "quantity",
       "relative-time",
+      "expiry-countdown",
     ],
   },
   {
@@ -193,7 +194,16 @@ const categories = [
   },
   {
     name: "Accounts",
-    items: ["auth-page", "account-menu", "invitation-panel", "pairing-code", "device-approval", "secret-list"],
+    items: [
+      "auth-page",
+      "account-menu",
+      "invitation-panel",
+      "pairing-code",
+      "device-approval",
+      "device-code-prompt",
+      "connected-account",
+      "secret-list",
+    ],
   },
   {
     name: "3D",
