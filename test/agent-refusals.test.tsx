@@ -12,10 +12,12 @@ import { chalkboard } from "@/components/ui/chalkboard-primitive"
 import { codeBlock } from "@/components/ui/code-block-primitive"
 import { commitHistory, type CommitLookup } from "@/components/ui/commit-history-primitive"
 import { confirmButton } from "@/components/ui/confirm-button-primitive"
+import { connectedAccount } from "@/components/ui/connected-account-primitive"
 import { conversation } from "@/components/ui/conversation-primitive"
 import { dataTable } from "@/components/ui/data-table-primitive"
 import { descriptionValue } from "@/components/ui/description-list-primitive"
 import { deviceApproval, deviceApprovalApprove } from "@/components/ui/device-approval-primitive"
+import { deviceCodePrompt } from "@/components/ui/device-code-prompt-primitive"
 import { formRoot } from "@/components/ui/form-primitive"
 import { gitTree, type GitTreeLookup } from "@/components/ui/git-tree-primitive"
 import { inlineEdit } from "@/components/ui/inline-edit-primitive"
@@ -757,4 +759,47 @@ test("device approval: an approve the app blocks fails with the app's reason, an
   expect(step.error?.message).toContain(reason)
   expect(onApprove).not.toHaveBeenCalled()
   expect(view.state).toMatchObject({ pending: null, decided: null, error: null })
+test("connected account: an action its status doesn't offer, without its callback or while another runs fails the step", async () => {
+  const onConnect = vi.fn()
+  const onCancel = vi.fn(() => new Promise(() => undefined))
+  const linked = mounted(
+    mount(connectedAccount, { status: "connected", onConnect, onCancel }, `<root aria-label="Linked"></root>`),
+  )
+  await failsWith("Linked", "connect", "connect isn't available: the account is connected")
+  await failsWith("Linked", "cancel", "cancel isn't available: the account is connected")
+  await failsWith("Linked", "disconnect", "disconnect isn't available: the panel has no onDisconnect")
+  expect(linked.state.confirmingDisconnect).toBe(false)
+  const waiting = mounted(
+    mount(connectedAccount, { status: "pending", onCancel }, `<root aria-label="Waiting"></root>`),
+  )
+  await agent.act({ steps: [{ ref: "Waiting", action: "cancel" }] })
+  await failsWith("Waiting", "cancel", "cancel isn't available while cancel is running")
+  expect(onCancel).toHaveBeenCalledTimes(1)
+  expect(waiting.state.status).toBe("pending")
+  expect(onConnect).not.toHaveBeenCalled()
+})
+
+test("device code prompt: open and copyLink of a hidden or expired code fail the step", async () => {
+  const opened = vi.fn()
+  vi.stubGlobal("open", opened)
+  mounted(
+    mount(
+      deviceCodePrompt,
+      { verificationUri: "https://provider.example/device", agentHidden: true },
+      `<root aria-label="Hidden prompt"></root>`,
+    ),
+  )
+  await failsWith("Hidden prompt", "open", "open isn't available: the code and its link are hidden from agents")
+  await failsWith("Hidden prompt", "copyLink", "copyLink isn't available: the code and its link are hidden from agents")
+  const expired = mounted(
+    mount(
+      deviceCodePrompt,
+      { verificationUri: "https://provider.example/device" },
+      `<root aria-label="Old prompt"></root>`,
+    ),
+  )
+  expired.api.expire()
+  await failsWith("Old prompt", "open", "open isn't available: the code has expired")
+  expect(expired.state.expired).toBe(true)
+  expect(opened).not.toHaveBeenCalled()
 })

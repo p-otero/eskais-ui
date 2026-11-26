@@ -35,7 +35,7 @@ function subscribeUntil(expiresAt: number, nextDelay: (leftMs: number) => number
  * Whether `expiresAt` (epoch ms) has passed, with one timeout and none while the page is hidden; coming back checks
  * the clock. Runs `onExpire` once it passes, or on mount when it already has.
  */
-function useDeviceApprovalExpiry(expiresAt: number | undefined, onExpire: () => void) {
+function useExpiry(expiresAt: number | undefined, onExpire: () => void) {
   const subscribe = useCallback(
     (notify: () => void) =>
       expiresAt === undefined ? () => undefined : subscribeUntil(expiresAt, (left) => left)(notify),
@@ -94,4 +94,4 @@ function useCountdownAnnouncements(seconds: number, message: ((seconds: number) 
   }, [step])
 }
 
-export { announcementStep, useCountdownAnnouncements, useDeviceApprovalExpiry, useSecondsLeft }
+export { announcementStep, useCountdownAnnouncements, useExpiry, useSecondsLeft }

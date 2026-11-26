@@ -10,7 +10,7 @@ import {
   type DevicePermission,
 } from "@/components/ui/device-approval"
 import { deviceApproval } from "@/components/ui/device-approval-primitive"
-import { announcementStep } from "@/components/ui/use-device-approval-expiry"
+import { announcementStep } from "@/components/ui/use-expiry"
 import { readAnnouncements } from "@/lib/test-utils"
 
 import { axeViolations } from "./axe"

@@ -10285,15 +10285,12 @@
         "@eskais/alert",
         "@eskais/badge",
         "@eskais/button",
-        "@eskais/pairing-code"
+        "@eskais/pairing-code",
+        "@eskais/expiry-countdown"
       ],
       "files": [
         {
           "path": "registry/ui/device-approval-primitive.ts",
-          "type": "registry:ui"
-        },
-        {
-          "path": "registry/ui/use-device-approval-expiry.ts",
           "type": "registry:ui"
         },
         {
@@ -10306,6 +10303,95 @@
         }
       ],
       "docs": "`<DeviceApproval device={{ name: \"Studio laptop\", kind: \"Desktop\", detail: \"Asked 2 minutes ago\" }} code=\"BCDF-GHJK\" compare=\"enter\" compareText={{ label: \"Code on your device\", matches: \"Codes match\", mismatch: \"Codes don't match\" }} granted={[{ id: \"read\", label: \"Read projects\" }]} withheld={[{ id: \"admin\", label: \"Manage members\", reason: \"Your role can't grant this\" }]} warning=\"Only approve a device you're holding.\" expiresAt={request.expiresAt} onExpire={refresh} onApprove={() => api.approve(id)} onDeny={() => api.deny(id)} text={{ granted: \"It will be able to\", withheld: \"It asked for, but won't get\", approve: \"Approve\", deny: \"Deny\", approveAgentConfirm: \"Gives Studio laptop access to your workspace\", error: \"The decision couldn't be sent.\", expiresIn: (_ms, time) => `Expires in ${time}`, expired: \"This request has expired.\" }} />`.\n\n**Permissions.** `granted` and `withheld` are `{ id, label, description?, reason? }`: two lists named by their headings (`text.granted`, `text.withheld`), side by side on a wide container, a tick on success for what it gets and a ban sign on warning for what it won't. An empty list leaves its section out.\n\n**Decision.** `onApprove` and `onDeny` may return a Promise: the block is busy and the other button off until it settles; a rejection with a string or a React node shows it as it is in a live destructive Alert (\"This device is already paired with another account.\"), anything else shows `text.error`, which can also be a function of the error, and `text.approved`/`text.denied` show once it's accepted. Or pass `actions`, a node or `(state) => node` with `{ expired, codesMatch, approveBlocked }`, for your own; mark your approve control with `data-agent-confirm`.\n\n**Agents.** Approve carries `data-agent-confirm` (`text.approveAgentConfirm`), so an agent's `approve` waits for a person; the block's own `deny` doesn't. With `code` and `compare`, Approve stays off until the codes match, and an agent's approve fails the step with why.\n\n**Blocked by the app.** `approveBlocked` turns Approve off for a reason of your own, like an account that can't grant any requested permission, and wins over the comparison. `approveBlockedReason` is a string in the page's language: it shows beside the actions, describes Approve (`aria-describedby`) and is the message an agent's `approve` fails with, so the person and the agent read the same words; it's a string so an agent always gets text. Without it nothing shows and an agent hears an English reason. Deny stays available, and `actions` gets `approveBlocked` in its state. `agentHidden` is on by default here: agents never read the code, copy it, answer the comparison or type into its field; `agentHidden={false}` turns that off.\n\n**Expiry.** `expiresAt` (a Date or epoch ms) shows `text.expiresIn(remainingMs, \"m:ss\")` each second in a `role=\"timer\"` (not live), and announces it politely once a minute and at 30, 20 and 10 seconds. One timeout per second runs while the page is visible and none while it's hidden. When it passes, Approve and Deny turn off (an agent's step fails with \"the request has expired\"), `text.expired` shows and is announced, and `onExpire` runs once. Every visible word comes from `text`; `labels.code` names the code, in English by default (`text.code` wins over it), and `codeLabels` is the inner PairingCode's `labels` (its copy button, `copied`, `copiedAnnouncement` and `spell`), merged over PairingCode's English defaults. The comparison field takes its label from `compareText.label`, so it needs no labels of its own."
+    },
+    {
+      "name": "expiry-countdown",
+      "type": "registry:ui",
+      "title": "Expiry Countdown",
+      "description": "ExpiryCountdown and useExpiry: the time left until a code or request expires in a role=\"timer\", shown each second and announced politely once a minute and at 30, 20 and 10 seconds, with one timeout per second while the page is visible and none while it's hidden; useExpiry runs a callback once when the time passes.",
+      "dependencies": [
+        "@ui-sdk/core@0.1.0-beta.12"
+      ],
+      "registryDependencies": [
+        "@eskais/utils",
+        "@eskais/theme"
+      ],
+      "files": [
+        {
+          "path": "registry/ui/use-expiry.ts",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/expiry-countdown.tsx",
+          "type": "registry:ui"
+        }
+      ],
+      "docs": "`<ExpiryCountdown expiresAt={epochMs} expiresIn={(_ms, time) => `Expires in ${time}`} />` shows `expiresIn(remainingMs, \"m:ss\")` (`h:mm:ss` past an hour) each second in a `role=\"timer\"`, which isn't live, and announces it politely when it reaches a whole minute and at 30, 20 and 10 seconds, never on the first render. `useExpiry(expiresAt, onExpire)` returns whether the time has passed and runs `onExpire` once when it does, or on mount when it already has. Both keep one timeout at a time, none while the page is hidden, and check the clock when it shows again. `formatRemaining(seconds)` is the formatter. DeviceApproval and DeviceCodePrompt count down with it."
+    },
+    {
+      "name": "device-code-prompt",
+      "type": "registry:ui",
+      "title": "Device Code Prompt",
+      "description": "DeviceCodePrompt: the \"go to this address and enter this code\" step of a sign-in by device code (OAuth device authorization, RFC 8628) at a third-party provider. The code through PairingCode (grouped, monospaced, spelled out for screen readers, with copy), the verification page as an external link that opens in a new tab, an Open button that prefers the address with the code filled in, an optional copy of the link, and a countdown that announces itself sparingly and switches to expired. Agents never read the code or the link by default.",
+      "dependencies": [
+        "@ui-sdk/core@0.1.0-beta.12",
+        "@ui-sdk/react@0.1.0-beta.12",
+        "lucide-react"
+      ],
+      "registryDependencies": [
+        "@eskais/utils",
+        "@eskais/theme",
+        "@eskais/action-refusal",
+        "@eskais/button",
+        "@eskais/link",
+        "@eskais/pairing-code",
+        "@eskais/expiry-countdown"
+      ],
+      "files": [
+        {
+          "path": "registry/ui/device-code-prompt-primitive.ts",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/device-code-prompt.tsx",
+          "type": "registry:ui"
+        }
+      ],
+      "docs": "`<DeviceCodePrompt code=\"WDJB-MJHT\" verificationUri=\"https://provider.example/device\" verificationUriComplete=\"https://provider.example/device?user_code=WDJB-MJHT\" expiresAt={flow.expiresAt} onExpire={restart} copyLink text={{ instructions: (link) => <>Go to {link} and enter this code.</>, open: \"Open sign-in page\", expiresIn: (_ms, time) => `Code expires in ${time}`, expired: \"This code has expired.\" }} />`.\n\n**Code.** It renders PairingCode: `code` with or without separators, `groupSize` (4) and `separator` (\"-\") shape it and what its copy button writes, `size=\"lg\"` makes it bigger, and a screen reader spells it out. `labels.code` names it (\"Code\"), `labels.pairingCode` passes PairingCode's own labels, and `onCopy(code)` runs after a copy.\n\n**Link.** `text.instructions(link)` is the sentence around the verification page: a Link with `external`, `newTab` (`target=\"_blank\"`, `rel=\"noopener noreferrer\"`, `labels.newTab` read after it) and `fast={false}`, shown without its scheme. Open opens `verificationUriComplete` when given, since it fills the code in, and `verificationUri` otherwise, in a new tab without an opener, then calls `onOpen(uri)`. `copyLink` adds an icon button that copies `verificationUri` and announces `labels.linkCopiedAnnouncement`. `actions` adds controls after Open, like a Cancel.\n\n**Expiry.** `expiresAt` (a Date or epoch ms) shows `text.expiresIn(remainingMs, \"m:ss\")` each second in a `role=\"timer\"`, announced politely once a minute and at 30, 20 and 10 seconds. When it passes, the code, the link and Open go away (`actions` stay), `text.expired` shows and is announced, and `onExpire` runs once; an agent's `open` then fails with \"the code has expired\".\n\n**Agents.** The prompt is a `device-code-prompt` group (named by `labels.prompt`, \"Sign-in code\", or `aria-label`) with `expired` in its state and `open()` and `copyLink()` actions. `agentHidden` is on by default, because the code signs an account in at the provider: the code, the link, Open and both copy buttons sit under `data-agent-hidden`, `verificationUri` stays out of the state, and `open`, `copyLink` and the code's `copy` fail the step with why, while a person still uses them all. `agentHidden={false}` puts `verificationUri` in the state and lets agents open and copy. Every visible word comes from `text`; `labels` holds the accessible names and announcements, in English by default."
+    },
+    {
+      "name": "connected-account",
+      "type": "registry:block",
+      "title": "Connected Account",
+      "description": "ConnectedAccount: one account linked at a third-party provider, in a card with the provider's name and logo, a status (connected, pending, expired, disconnected) as a toned StatusPill, facts in a description list, and Connect, Reconnect, Disconnect and Cancel by status, each with pending and error states. While a sign-in waits for approval on the provider it shows your waiting content, like a DeviceCodePrompt, with a Cancel it can also call. Disconnect asks first, and its confirm waits for a person when an agent presses it.",
+      "dependencies": [
+        "@ui-sdk/core@0.1.0-beta.12",
+        "@ui-sdk/react@0.1.0-beta.12",
+        "lucide-react"
+      ],
+      "registryDependencies": [
+        "@eskais/utils",
+        "@eskais/theme",
+        "@eskais/tone",
+        "@eskais/action-refusal",
+        "@eskais/alert",
+        "@eskais/button",
+        "@eskais/card",
+        "@eskais/confirm-dialog",
+        "@eskais/description-list",
+        "@eskais/status-pill"
+      ],
+      "files": [
+        {
+          "path": "registry/ui/connected-account-primitive.ts",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/connected-account.tsx",
+          "type": "registry:ui"
+        }
+      ],
+      "docs": "`<ConnectedAccount provider={{ name: \"Provider\", logo: <CloudIcon /> }} status={account.status} facts={[{ id: \"email\", label: \"Account\", value: \"a•••@example.com\" }, { id: \"refreshed\", label: \"Last refresh\", value: <RelativeTime value={account.refreshedAt} /> }]} waiting={<DeviceCodePrompt {...flow} text={promptText} />} onConnect={startDeviceFlow} onReconnect={startDeviceFlow} onDisconnect={unlink} onCancel={abandonDeviceFlow} text={{ status: { connected: \"Connected\", pending: \"Waiting for approval\", expired: \"Sign-in expired\", disconnected: \"Not connected\" }, connect: \"Connect\", reconnect: \"Sign in again\", disconnect: \"Disconnect\", cancel: \"Cancel\", disconnectTitle: \"Disconnect this account?\", disconnectConfirm: \"Disconnect account\", disconnectAgentConfirm: \"Unlinks your account at the provider\", error: \"That didn't work. Try again.\" }} />`.\n\n**Status.** `connected` (success), `pending` (info: waiting for the person to approve at the provider; the dot pings three times), `expired` (warning: the sign-in has to be done again) and `disconnected` (neutral), each from `text.status`. `facts` (`{ id, label, value }`) render as an inline DescriptionList; format the values yourself, and pass a RelativeTime for a date.\n\n**Actions.** Connect shows while disconnected, Reconnect once expired (and while connected with `reconnectWhenConnected`), Disconnect while connected or expired, each only with its callback. A returned Promise keeps that button pending and the others off; a rejection shows in a live destructive Alert: a string or a React node as it is, anything else as `text.error`, which can be a function of the error and the action. Disconnect opens a ConfirmDialog (`text.disconnectTitle`, `disconnectDescription`, `disconnectConfirm`; `labels.keepConnected` names its cancel button), pending while `onDisconnect` runs, with its error inside it. `actions` replaces the buttons with a node, or with a function of `{ status, pending, buttons }` that can keep the panel's `buttons` beside yours.\n\n**Waiting.** While `pending`, `waiting` renders, as a node or as a function of `{ status, pending, cancel }`, and with `onCancel` and `text.cancel` a Cancel follows it, promise-aware like the others. Content inside it, like a button in a DeviceCodePrompt's `actions`, cancels with `cancel(event)` from that function or from `useConnectedAccount()`; leave `text.cancel` out to show only your own.\n\n**Agents.** The panel is a `connected-account` group, named by the provider's name or `aria-label`, with `status`, `pending` and `confirmingDisconnect` in its state and `connect`, `reconnect`, `disconnect` and `cancel` actions. A status that doesn't offer one, a missing callback or another action still running fails the step with why (\"cancel isn't available: the account is connected\"). `disconnect` only opens the confirmation; its confirm button carries `data-agent-confirm` (`text.disconnectAgentConfirm`), so the unlink waits for a person. Every visible word comes from `text`."
     },
     {
       "name": "eskais-mockup-skill",

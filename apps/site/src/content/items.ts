@@ -756,6 +756,39 @@ const itemNotes: Record<string, ItemNotes> = {
       "Approve carries data-agent-confirm, so an agent's approve waits for a person; deny is the block's own action. The code and its comparison are hidden from agents by default. Approving while the codes differ, while the app blocks it (with approveBlockedReason as the message), after expiry or twice fails the step with why.",
     related: ["pairing-code", "alert", "card", "secret-list"],
   },
+  "expiry-countdown": {
+    usage:
+      "The time left until a code, link or request expires: ExpiryCountdown shows it each second, and useExpiry tells you once it has passed. DeviceApproval and DeviceCodePrompt use both.",
+    a11y: [
+      "A timer that isn't live: the time left is announced politely once a minute and at 30, 20 and 10 seconds, never on the first render.",
+      "One timeout per second while the page is visible and none while it's hidden; showing the page again checks the clock.",
+    ],
+    related: ["relative-time", "device-approval", "device-code-prompt"],
+  },
+  "device-code-prompt": {
+    usage:
+      "The sign-in step of a device code flow (RFC 8628) at a third-party provider: go to this address and enter this code. Put it in ConnectedAccount's waiting slot, or anywhere a person links an account by code.",
+    a11y: [
+      "The code is PairingCode's: grouped for the eye and spelled out a character at a time for screen readers.",
+      "The verification page is an external link that says it opens in a new tab; Open opens it without an opener.",
+      "The countdown is a timer that isn't live, announced once a minute and at 30, 20 and 10 seconds, and the expiry once.",
+    ],
+    agent:
+      "The code and the link are hidden from agents by default, since the code signs an account in: they stay out of the snapshot and queries, and open, copyLink and the code's copy fail the step with why. agentHidden={false} lets agents read the link, open and copy it.",
+    related: ["pairing-code", "connected-account", "expiry-countdown", "link"],
+  },
+  "connected-account": {
+    usage:
+      "One account linked at a third-party provider, in a card: its status, facts like the masked email and the last refresh, and Connect, Reconnect, Disconnect or Cancel by status. While a sign-in waits for approval, put a DeviceCodePrompt in waiting.",
+    a11y: [
+      "The panel is a group named by the provider's heading; the status is a pill with a dot and its text, so it never rests on colour.",
+      "Each action's button is busy while its Promise runs, and a failure is a live destructive alert.",
+      "Disconnect opens an alert dialog before anything is unlinked.",
+    ],
+    agent:
+      "Agents call connect, reconnect, disconnect and cancel on the panel; a status that doesn't offer one fails the step with why. disconnect only opens the confirmation, whose confirm carries data-agent-confirm, so the unlink waits for a person.",
+    related: ["device-code-prompt", "description-list", "status-pill", "confirm-dialog"],
+  },
   "secret-list": {
     usage:
       "A settings page of stored secrets: rows with a mask and the server's fingerprint, never a value; Replace opens your FormDialog with a sensitive Input, and Delete asks first.",
