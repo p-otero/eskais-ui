@@ -1,6 +1,6 @@
 "use client"
 
-import { createContext, use, useId, useMemo, type ComponentProps, type CSSProperties, type ReactNode } from "react"
+import { createContext, use, useId, useMemo, type ComponentProps, type ReactNode } from "react"
 
 import { Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { ChartContainer, type ChartConfig } from "@/components/ui/chart"
@@ -11,7 +11,7 @@ import { LoadingState } from "@/components/ui/loading-state"
 import { Meter, MeterLabel, MeterRing, type MeterProps, type MeterRingSize } from "@/components/ui/meter"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Stat, StatGroup, StatHint, StatLabel, StatValue, type StatValueProps } from "@/components/ui/stat"
-import { cn } from "@/lib/utils"
+import { cn, cssVars, mergeStyleVars } from "@/lib/utils"
 
 type DashboardLabels = {
   /** Screen-reader text while a card loads. */
@@ -65,14 +65,14 @@ function DashboardGrid({
     <div
       data-slot="dashboard-grid"
       className={cn("@container/dashboard flex w-full min-w-0 flex-col gap-section", className)}
-      style={
-        {
+      style={{
+        ...cssVars({
           "--dashboard-row-height": "20rem",
           "--dashboard-rows": "minmax(var(--dashboard-row-height), auto)",
           "--dashboard-columns": `repeat(${String(columns)}, minmax(0, 1fr))`,
-          ...style,
-        } as CSSProperties
-      }
+        }),
+        ...style,
+      }}
       {...props}
     >
       {stats}
@@ -290,14 +290,11 @@ function DashboardCard<T>(props: DashboardCardProps<T>) {
         "col-span-1 row-span-(--dashboard-row-span) min-w-0 @2xl/dashboard:col-span-(--dashboard-span-md) @5xl/dashboard:col-span-(--dashboard-span)",
         className,
       )}
-      style={
-        {
-          ...style,
-          "--dashboard-span": wide,
-          "--dashboard-span-md": wide * 2 > grid.columns ? 2 : 1,
-          "--dashboard-row-span": rowSpan,
-        } as CSSProperties
-      }
+      style={mergeStyleVars(style, {
+        "--dashboard-span": wide,
+        "--dashboard-span-md": wide * 2 > grid.columns ? 2 : 1,
+        "--dashboard-row-span": rowSpan,
+      })}
       {...rest}
     >
       <CardHeader>

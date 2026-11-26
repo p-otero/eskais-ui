@@ -1,6 +1,6 @@
 "use client"
 
-import { createContext, use, type ComponentProps, type CSSProperties, type ReactNode } from "react"
+import { createContext, use, type ComponentProps, type ReactNode } from "react"
 
 import { Card, CardContent, CardDescription, CardEyebrow, CardHeader, CardTitle } from "@/components/ui/card"
 import { Link, type LinkProps } from "@/components/ui/link"
@@ -66,14 +66,7 @@ function BentoTile({
         "relative col-span-1 row-span-(--bento-row-span) min-w-0 transition duration-micro ease-standard @3xl:col-span-(--bento-span-md) @5xl:col-span-(--bento-span) data-linked:hover:-translate-y-px data-linked:hover:border-input-strong",
         className,
       )}
-      style={
-        {
-          ...style,
-          "--bento-span": wide,
-          "--bento-span-md": medium,
-          "--bento-row-span": rowSpan,
-        } as CSSProperties
-      }
+      style={{ ...style, ...cssVars({ "--bento-span": wide, "--bento-span-md": medium, "--bento-row-span": rowSpan }) }}
       {...props}
     >
       <CardHeader>

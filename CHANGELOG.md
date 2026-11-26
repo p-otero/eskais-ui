@@ -21,6 +21,7 @@ Versions follow [semver](https://semver.org). Before 1.0, a minor version can br
 ### Fixed
 
 - `filter-bar`, `filter-search`: inside a `Field`, `FilterBarSearch` and `FilterSearch` kept their `h-field-control` height. Their `sm:flex-1` became a block-axis `flex-basis: 0%` in the Field's column and shrank them to their content (22px in compact density, beside 32px controls); they now hold `min-h-field-control`.
+- `dashboard-grid`, `confirm-button`, `model-viewer`: a `style` given as a function of the part's state applies again. `DashboardCard` (its `--dashboard-*` spans), `ConfirmButton` (its `--confirm-hold-duration`) and `ModelViewer` (its `--model-viewer-ratio`) spread the style into an object, which drops a function. `mergeStyleVars(style, variables)` in `@/lib/utils` adds custom properties to an object or a function style, and the variables win. `typescript/no-misused-spread` (strings allowed) now runs on the registry in the type-aware lint.
 
 ## 0.2.14 (2026-11-26)
 
