@@ -727,7 +727,7 @@ const vinylScenario = {
 `,
   items: ["theme", "vinyl-scrubber"],
   main: vinylMain,
-  builtCss: ["--vinyl-amber"],
+  builtCss: ["--vinyl-played"],
   check: checkVinyl,
   literals: ["@"],
 }
