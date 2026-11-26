@@ -5,7 +5,13 @@ import { useState } from "react"
 import { expect, test, vi } from "vitest"
 
 import { Button } from "@/components/ui/button"
-import { FilterBar, FilterBarButton, FilterBarSearch, FilterBarSeparator } from "@/components/ui/filter-bar"
+import {
+  FilterBar,
+  FilterBarButton,
+  FilterBarField,
+  FilterBarSearch,
+  FilterBarSeparator,
+} from "@/components/ui/filter-bar"
 import { PageHeader } from "@/components/ui/page-header"
 import { Tabs, TabsList, TabsPanel, TabsTab } from "@/components/ui/tabs"
 
@@ -142,4 +148,23 @@ test("a page header shows an eyebrow above the title and a tabs slot under the t
   )
   expect(result.ok, result.error?.message).toBe(true)
   expect(screen.getByRole("tabpanel").textContent).toBe("Overview panel")
+})
+
+test("a labelled filter keeps its control height in a column and the bar aligns it with the buttons", async () => {
+  const { container } = render(
+    <FilterBar label="Repository filters">
+      <FilterBarField label="Search repositories">
+        <FilterBarSearch label="Search repositories" />
+      </FilterBarField>
+      <FilterBarButton>Clear filters</FilterBarButton>
+    </FilterBar>,
+  )
+  const bar = screen.getByRole("toolbar", { name: "Repository filters" })
+  expect(bar.className).toContain("has-[>[data-slot=field]]:items-end")
+  expect(screen.getByText("Search repositories", { selector: "label" })).toBeTruthy()
+  const search = container.querySelector("search")
+  expect(search?.className).toContain("min-h-field-control")
+  expect(search?.className).toContain("sm:flex-1")
+  expect(screen.getByRole("searchbox", { name: "Search repositories" })).toBeTruthy()
+  expect(await axeViolations(container)).toEqual([])
 })

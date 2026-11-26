@@ -41,7 +41,7 @@ function FilterSearch<S extends FilterSchema>({ label, placeholder, className, .
       render={<search />}
       aria-label={name}
       data-slot="filter-search"
-      className={cn("w-full sm:max-w-72 sm:flex-1", className)}
+      className={cn("w-full min-h-field-control sm:max-w-72 sm:flex-1", className)}
     >
       <SearchIcon />
       <Input

@@ -8,6 +8,7 @@ Versions follow [semver](https://semver.org). Before 1.0, a minor version can br
 
 - `invitation-panel`: `fields`, with `schema` and `defaultValues`, puts invitee FormFields (a name, an email, sensitive ones too) above the create button inside a Form. Create, from the button, Enter or an agent, validates them first, shows errors on each field and calls `onCreate({ role, values })` with the schema's parsed output, typed; the fields reset after each link, and the URL stays shown once and out of every agent surface. With fields, an agent's `create` submits the form and returns `true`.
 - `invitation-panel`: pending invitations take `invitee` (a name or an email, display only), which titles the row and names its revoke button.
+- `filter-bar`: `FilterBarField`, a filter with a visible label (a `Field` with its `FieldLabel`). A bar holding one aligns its children on their bottom edge, so buttons line up with the controls instead of centring on the label and control together. The docs example shows a labelled bar.
 
 ### Changed
 
@@ -15,6 +16,10 @@ Versions follow [semver](https://semver.org). Before 1.0, a minor version can br
 - `invitation-panel`: a pending row's revoke button is named by its invitee, or by its role, creator and expiry, so two invitations from one admin never share a name. `labels.revokeInvitation` also gets `invitee` and `expires`.
 - `secret-list`: Delete shows on configured secrets only, and an agent's `delete` of a missing one fails with why. `deleteTitle`, `deleteDescription`, `deleteConfirm` and `deleteAgentConfirm` take a function of the secret as well as a string. A missing secret's button (`text.set`) is named by `labels.setSecret`, "Set <name>", instead of "Replace <name>".
 - `input`: a sensitive input passes `id`, `className`, `style`, `data-*` and `aria-*` attributes, `tabIndex`, `maxLength`, `minLength`, `pattern`, `inputMode` and the focus, blur, click, pointer and mouse handlers through, `data-testid` included; nothing else, so no prop can put the value in an attribute.
+
+### Fixed
+
+- `filter-bar`, `filter-search`: inside a `Field`, `FilterBarSearch` and `FilterSearch` kept their `h-field-control` height. Their `sm:flex-1` became a block-axis `flex-basis: 0%` in the Field's column and shrank them to their content (22px in compact density, beside 32px controls); they now hold `min-h-field-control`.
 
 ## 0.2.14 (2026-11-26)
 

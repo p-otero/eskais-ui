@@ -7562,7 +7562,7 @@
       "name": "filter-bar",
       "type": "registry:ui",
       "title": "Filter Bar",
-      "description": "A UI SDK Toolbar of filters with one tab stop and arrow keys, a search field inside it, and a reset button that shows while filters apply.",
+      "description": "A UI SDK Toolbar of filters with one tab stop and arrow keys, a search field inside it, labelled fields aligned on their bottom edge, and a reset button that shows while filters apply.",
       "dependencies": [
         "@ui-sdk/core@0.1.0-beta.12",
         "@ui-sdk/react@0.1.0-beta.12",
@@ -7573,6 +7573,7 @@
         "@eskais/utils",
         "@eskais/theme",
         "@eskais/button",
+        "@eskais/field",
         "@eskais/input",
         "@eskais/tooltip"
       ],

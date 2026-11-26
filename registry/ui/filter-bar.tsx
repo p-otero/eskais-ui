@@ -11,6 +11,7 @@ import type { ComponentProps, ReactNode } from "react"
 import { SearchIcon } from "lucide-react"
 
 import { buttonVariants, type ButtonLookProps } from "@/components/ui/button"
+import { Field, FieldLabel } from "@/components/ui/field"
 import { Input, InputGroup } from "@/components/ui/input"
 import { ControlTooltip } from "@/components/ui/tooltip"
 import { cn, cnState } from "@/lib/utils"
@@ -35,7 +36,7 @@ function FilterBar({
   return (
     <Toolbar
       aria-label={label}
-      className={cnState("flex w-full flex-wrap items-center gap-items", className)}
+      className={cnState("flex w-full flex-wrap items-center gap-items has-[>[data-slot=field]]:items-end", className)}
       {...props}
     >
       {children}
@@ -72,7 +73,11 @@ type FilterBarSearchProps = Omit<ComponentProps<typeof Input>, "aria-label" | "t
 
 function FilterBarSearch({ label, className, ...props }: FilterBarSearchProps) {
   return (
-    <InputGroup render={<search />} aria-label={label} className={cn("w-full sm:max-w-64 sm:flex-1", className)}>
+    <InputGroup
+      render={<search />}
+      aria-label={label}
+      className={cn("w-full min-h-field-control sm:max-w-64 sm:flex-1", className)}
+    >
       <SearchIcon />
       <ToolbarInput
         render={
@@ -83,5 +88,21 @@ function FilterBarSearch({ label, className, ...props }: FilterBarSearchProps) {
   )
 }
 
-export { createToolbarController, FilterBar, FilterBarButton, FilterBarSearch, FilterBarSeparator }
-export type { FilterBarButtonProps, FilterBarProps, FilterBarSearchProps }
+type FilterBarFieldProps = Omit<ComponentProps<typeof Field>, "children"> & {
+  /** The visible label above the control. */
+  label: ReactNode
+  children: ReactNode
+}
+
+/** A filter with a visible label: the bar aligns labelled fields and its buttons on their bottom edge. */
+function FilterBarField({ label, className, children, ...props }: FilterBarFieldProps) {
+  return (
+    <Field className={cnState("min-w-0 sm:flex-1 sm:max-w-64", className)} {...props}>
+      <FieldLabel>{label}</FieldLabel>
+      {children}
+    </Field>
+  )
+}
+
+export { createToolbarController, FilterBar, FilterBarButton, FilterBarField, FilterBarSearch, FilterBarSeparator }
+export type { FilterBarButtonProps, FilterBarFieldProps, FilterBarProps, FilterBarSearchProps }
