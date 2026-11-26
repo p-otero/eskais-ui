@@ -109,6 +109,55 @@ test("a carousel pages with Next, Previous and the arrow keys", async () => {
   expect(onPageChange).toHaveBeenLastCalledWith(2, expect.objectContaining({ reason: "previous-press" }))
 })
 
+test("the carousel scrolls in a ScrollArea viewport that keeps its scroll snap, tab stop and paging", async () => {
+  const user = userEvent.setup()
+  render(<Featured />)
+  await settle()
+  const viewport = document.querySelector<HTMLElement>("[data-slot=carousel-viewport]")!
+  const area = viewport.parentElement!
+  expect(area.dataset.slot).toBe("scroll-area")
+  expect(viewport.hasAttribute("data-at-x-start")).toBe(true)
+  expect(viewport.style.overflowX).toBe("auto")
+  expect(viewport.style.overflowY).toBe("hidden")
+  expect(viewport.style.scrollSnapType).toBe("x mandatory")
+  expect(viewport.style.getPropertyValue("scrollbar-width")).toBe("none")
+  expect(viewport.getAttribute("tabindex")).toBe("0")
+  const scrollbar = area.querySelector<HTMLElement>("[data-slot=scroll-area-scrollbar]")!
+  expect(scrollbar.dataset.orientation).toBe("horizontal")
+  expect(scrollbar.hasAttribute("data-agent-hidden")).toBe(true)
+  expect(document.querySelector<HTMLElement>("[data-slot=carousel-item]")!.style.scrollSnapAlign).toBe("start")
+
+  await user.click(screen.getByRole("button", { name: "Next slide" }))
+  expect(screen.getByRole("tab", { name: "Slide 2" }).getAttribute("aria-selected")).toBe("true")
+  viewport.focus()
+  fireEvent.keyDown(viewport, { key: "End" })
+  expect(screen.getByRole("tab", { name: "Slide 3" }).getAttribute("aria-selected")).toBe("true")
+  expect(viewport.getAttribute("tabindex")).toBe("0")
+  expect(agent.snapshot().some((entry) => entry.component === "scroll-area")).toBe(false)
+})
+
+test("a vertical carousel snaps and shows its scrollbar on the vertical axis", async () => {
+  render(
+    <Carousel aria-label="Stories" orientation="vertical">
+      <CarouselViewport>
+        <CarouselContent>
+          {slides.map((slide) => (
+            <CarouselItem key={slide}>{slide}</CarouselItem>
+          ))}
+        </CarouselContent>
+      </CarouselViewport>
+    </Carousel>,
+  )
+  await settle()
+  const viewport = document.querySelector<HTMLElement>("[data-slot=carousel-viewport]")!
+  expect(viewport.style.overflowX).toBe("hidden")
+  expect(viewport.style.overflowY).toBe("auto")
+  expect(viewport.style.scrollSnapType).toBe("y mandatory")
+  expect(
+    viewport.parentElement!.querySelector("[data-slot=scroll-area-scrollbar]")!.getAttribute("data-orientation"),
+  ).toBe("vertical")
+})
+
 test("a carousel has no axe violations and an agent can page it", async () => {
   const { container } = render(<Featured />)
   await settle()

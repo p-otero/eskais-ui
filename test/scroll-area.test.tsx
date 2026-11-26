@@ -159,6 +159,16 @@ test("primitive: inert content holds no focus, and an authored tabindex is left 
   expect(own.getAttribute("tabindex")).toBe("-1")
 })
 
+test("primitive: a tabindex another behaviour writes after binding wins, so the two never take turns", async () => {
+  const { viewport } = mountArea(`<div><a href="#/a">A</a></div>`)
+  viewport.setAttribute("tabindex", "-1")
+  await tick()
+  layOut(viewport, { client: 100, scroll: 400 }).scrollTo(0)
+  viewport.querySelector("a")!.remove()
+  await tick()
+  expect(viewport.getAttribute("tabindex")).toBe("-1")
+})
+
 test("primitive: a hidden scrollbar lets presses through, and type always keeps it shown", async () => {
   const { view, viewport } = mountArea()
   layOut(viewport, { client: 100, scroll: 400 }).scrollTo(0)

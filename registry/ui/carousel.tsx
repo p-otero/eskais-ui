@@ -13,10 +13,12 @@ import {
   createCarouselController,
   type CarouselState,
 } from "@ui-sdk/react/carousel"
+import { mergeProps } from "@ui-sdk/react/primitive"
 import { createContext, useContext, useMemo, useState, type ComponentProps, type ReactNode } from "react"
 import { ChevronLeftIcon, ChevronRightIcon } from "lucide-react"
 
 import { buttonVariants } from "@/components/ui/button"
+import { ScrollArea, ScrollAreaScrollbar, ScrollAreaViewport } from "@/components/ui/scroll-area"
 import { ControlTooltip, type ControlTooltipOption } from "@/components/ui/tooltip"
 import { cn, cnState } from "@/lib/utils"
 
@@ -86,14 +88,26 @@ function CarouselStatus({ className, labels, ...props }: CarouselStatusProps) {
 }
 
 function CarouselViewport({ className, ...props }: ComponentProps<typeof CarouselViewportPrimitive>) {
+  const { orientation } = useCarouselState()
   return (
-    <CarouselViewportPrimitive
-      className={cnState(
-        "min-w-0 flex-1 rounded-surface outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background data-dragging:cursor-grabbing",
-        className,
-      )}
-      {...props}
-    />
+    <ScrollArea className="min-w-0 flex-1 overflow-visible">
+      <ScrollAreaViewport
+        render={(viewport) => (
+          <CarouselViewportPrimitive
+            {...mergeProps(viewport, props)}
+            className={cnState(
+              "h-full w-full rounded-surface outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background data-dragging:cursor-grabbing",
+              className,
+            )}
+          />
+        )}
+      />
+      <ScrollAreaScrollbar
+        orientation={orientation}
+        data-agent-hidden=""
+        className="pointer-events-none data-[orientation=horizontal]:px-(--surface-radius) data-[orientation=vertical]:py-(--surface-radius)"
+      />
+    </ScrollArea>
   )
 }
 
