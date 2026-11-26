@@ -226,8 +226,17 @@ createRoot(root).render(
         , which flags an icon-only <Code>Button</Code> or <Code>Toggle</Code> without <Code>size="icon"</Code> and an{" "}
         <Code>aria-label</Code>, and <Code>eskais/scroll-area</Code> as a warning, which flags a bare{" "}
         <Code>overflow-auto</Code>, <Code>overflow-y-auto</Code> or <Code>-scroll</Code> class so scrolling content goes
-        in a <Code>ScrollArea</Code> (both come as <Code>eskais-oxlint-plugin.js</Code> beside the config). Extend it
+        in a <Code>ScrollArea</Code>, and <Code>eskais/no-inline-icons</Code> as a warning, which flags a hand-drawn{" "}
+        <Code>{"<svg>"}</Code> (all three come as <Code>eskais-oxlint-plugin.js</Code> beside the config). Extend it
         from your <Code>.oxlintrc.json</Code>.
+      </P>
+      <P>
+        The components you install carry <Code>oxlint-disable</Code> comments for this config's rules, each with its
+        reason, so lint them with a config that extends <Code>eskais-ui.oxlintrc.json</Code>. Under another config,
+        those comments disable rules it doesn't run, and <Code>reportUnusedDisableDirectives</Code> reports each one. In
+        a monorepo whose root <Code>.oxlintrc.json</Code> doesn't extend it, either extend it from the root, or add{" "}
+        <Code>"**/components/ui/**"</Code> to the root's <Code>ignorePatterns</Code> and lint the app's components with
+        a config that extends it.
       </P>
       <P>
         It carries no type-aware rules, which need <Code>oxlint --type-aware</Code> and <Code>oxlint-tsgolint</Code>.

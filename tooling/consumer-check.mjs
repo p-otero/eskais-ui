@@ -184,6 +184,15 @@ const devDependencies = [
 ]
 const pick = (names) => Object.fromEntries(names.map((name) => [name, versions[name]]))
 
+const installedTypes = new Set(["registry:ui", "registry:lib", "registry:hook", "registry:component"])
+const itemsWithDisableDirectives = JSON.parse(readFileSync(join(repo, "registry.json"), "utf8"))
+  .items.filter((item) =>
+    (item.files ?? []).some(
+      (file) => installedTypes.has(file.type) && readFileSync(join(repo, file.path), "utf8").includes("oxlint-disable"),
+    ),
+  )
+  .map((item) => item.name)
+
 const server = createServer((request, response) => {
   const file = normalize(join(registryDir, decodeURIComponent(new URL(request.url, "http://x").pathname)))
   if (!file.startsWith(registryDir) || !existsSync(file)) {
@@ -1122,6 +1131,11 @@ const scenarios = {
     builtCss: ["@container", ".text-title{"],
     check: checkLayouts,
   },
+  "lint-directives": {
+    css: `@layer ui-sdk;\n@import "tailwindcss";\n`,
+    items: ["lint-rules", ...itemsWithDisableDirectives],
+    lintOnly: true,
+  },
   aliases: {
     css: `@layer ui-sdk;\n@import "tailwindcss";\n`,
     alias: "~",
@@ -1364,6 +1378,31 @@ function checkSkills(app, names) {
   }
 }
 
+function captured(app, command, args) {
+  return new Promise((done) => {
+    console.log(`$ ${command} ${args.join(" ")}`)
+    let output = ""
+    const child = spawn(command, args, { cwd: app, shell: process.platform === "win32" })
+    child.stdout.on("data", (chunk) => (output += chunk))
+    child.stderr.on("data", (chunk) => (output += chunk))
+    child.on("exit", (code) => done({ code, output }))
+  })
+}
+
+async function checkDisableDirectives(app) {
+  writeFileSync(
+    join(app, ".oxlintrc.json"),
+    JSON.stringify({ extends: ["./eskais-ui.oxlintrc.json"], options: { reportUnusedDisableDirectives: "error" } }),
+  )
+  const [command, ...prefix] = pm === "pnpm" ? ["pnpm", "exec"] : [pm === "npm" ? "npx" : "bunx"]
+  const { output } = await captured(app, command, [...prefix, "oxlint", "--format", "default", "src"])
+  const linted = /Finished in .* on (\d+) files/.exec(output)
+  if (!linted || Number(linted[1]) === 0) throw new Error(`oxlint didn't lint the installed files:\n${output}`)
+  const unused = output.split("Unused oxlint-disable directive").length - 1
+  if (unused > 0) throw new Error(`The installed files carry ${String(unused)} unused disable directives:\n${output}`)
+  console.log(`lint-directives: no unused disable directive in the ${linted[1]} installed files`)
+}
+
 async function checkMockupCli(app, run) {
   if (spawnSync("bun", ["--version"], { shell: process.platform === "win32" }).status !== 0) {
     console.log("mockup-cli: no Bun on this machine, so the CLI didn't run")
@@ -1516,6 +1555,11 @@ export default defineConfig({
 
   if (scenario.files) checkPlacement(app, scenario)
   if (scenario.skills) checkSkills(app, scenario.skills)
+  if (scenario.lintOnly) {
+    await checkDisableDirectives(app)
+    console.log(`Consumer check (${name}) passed with ${pm} in ${app}`)
+    return
+  }
   write(mainFile, scenario.rewrite?.(scenario.main) ?? scenario.main.replaceAll('from "@/', `from "${alias}/`))
   if (scenario.unsupported) {
     const { file, specifier } = scenario.unsupported

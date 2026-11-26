@@ -29,12 +29,19 @@
         ]
       }
     ],
-    "shadcn/no-raw-colors": "error",
-    "shadcn/no-arbitrary-values": "warn",
-    "shadcn/require-static-classes": "error",
-    "shadcn/no-restyle": ["error", { "allow": ["layout"] }],
+    "shadcn/no-raw-colors": ["error", { "mergeFunctions": ["cnState"] }],
+    "shadcn/no-arbitrary-values": [
+      "warn",
+      { "allow": ["max-h-[calc(100%-2rem)]", "w-[calc(100%-2rem)]"], "mergeFunctions": ["cnState"] }
+    ],
+    "shadcn/require-static-classes": ["error", { "mergeFunctions": ["cnState"] }],
+    "shadcn/no-restyle": ["error", { "allow": ["layout"], "mergeFunctions": ["cnState"] }],
     "eskais/icon-button-needs-label": "error",
     "eskais/scroll-area": "warn",
+    "eskais/no-inline-icons": "warn",
+    "p-otero/no-callback-prop-in-effect-deps": "warn",
+    "p-otero/no-latest-ref-effect": "warn",
+    "p-otero/prefer-sync-external-store": "warn",
     "no-restricted-imports": [
       "error",
       {
@@ -51,6 +58,14 @@
     {
       "files": ["components/ui/**", "src/components/ui/**"],
       "rules": { "shadcn/no-restyle": "off" }
+    },
+    {
+      "files": ["**/lib/diff-async.ts", "**/lib/diff-lines.ts", "**/lib/diff-sequence.ts", "**/lib/sky-photo.ts"],
+      "rules": {
+        "unicorn/consistent-function-scoping": "warn",
+        "unicorn/require-post-message-target-origin": "warn",
+        "no-await-in-loop": "warn"
+      }
     }
   ]
 }

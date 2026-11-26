@@ -8852,7 +8852,7 @@
       "name": "lint-rules",
       "type": "registry:file",
       "title": "Lint Rules (optional)",
-      "description": "Optional oxlint config for Eskais UI consumers: the React, React Compiler and spacing-token presets of @p-otero/oxlint-rules, the @shadcn/lint design-system rules, eskais/icon-button-needs-label (an icon-only Button or Toggle takes size=\"icon\" and an aria-label, so it shows a tooltip) and eskais/scroll-area as a warning (a bare overflow-auto or overflow-scroll class: scroll in a ScrollArea). Extend it from your .oxlintrc.json.",
+      "description": "Optional oxlint config for Eskais UI consumers: the React, React Compiler and spacing-token presets of @p-otero/oxlint-rules, the @shadcn/lint design-system rules, eskais/icon-button-needs-label (an icon-only Button or Toggle takes size=\"icon\" and an aria-label, so it shows a tooltip), and eskais/scroll-area (a bare overflow-auto or overflow-scroll class: scroll in a ScrollArea) and eskais/no-inline-icons (a hand-drawn <svg>) as warnings. Extend it from your .oxlintrc.json.",
       "devDependencies": [
         "oxlint@1.93.0",
         "@shadcn/lint@0.2.5",
