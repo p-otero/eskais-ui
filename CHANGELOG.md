@@ -2,7 +2,7 @@
 
 Versions follow [semver](https://semver.org). Before 1.0, a minor version can break compatibility. Release with `bun pm version <patch|minor|major>`, which bumps `package.json`, rebuilds `public/r` (the mockup CLI reports the version) and tags `vX.Y.Z`.
 
-## Unreleased
+## 0.2.14 (2026-11-26)
 
 ### Added
 
