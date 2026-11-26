@@ -1,7 +1,7 @@
 "use client"
 
 import { usePart, usePrimitive } from "@ui-sdk/react/primitive"
-import { CheckIcon, ClockAlertIcon, CopyIcon, ExternalLinkIcon } from "lucide-react"
+import { CheckIcon, ClockAlertIcon, ExternalLinkIcon, Link2Icon } from "lucide-react"
 import type { ReactNode } from "react"
 
 import { Button } from "@/components/ui/button"
@@ -203,7 +203,7 @@ function DeviceCodePrompt({
                       if (copied) copied.then(undefined, ignoreRefusal)
                     }}
                   >
-                    {state.linkCopied ? <CheckIcon /> : <CopyIcon />}
+                    {state.linkCopied ? <CheckIcon /> : <Link2Icon />}
                   </Button>
                 ) : null}
               </span>
