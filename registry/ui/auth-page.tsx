@@ -4,7 +4,7 @@ import type { ComponentProps, MouseEvent, ReactNode } from "react"
 
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
-import { cn } from "@/lib/utils"
+import { cn, cssVars } from "@/lib/utils"
 
 type AuthStatus = "idle" | "working" | "error" | "success"
 
@@ -72,6 +72,7 @@ function AuthPage({
   secondary,
   footer,
   className,
+  style,
   ...props
 }: AuthPageProps) {
   const working = status === "working"
@@ -82,10 +83,11 @@ function AuthPage({
       data-slot="auth-page"
       data-status={status}
       className={cn(
-        "flex min-h-(--auth-page-height,100dvh) w-full flex-col items-center justify-center gap-group bg-background text-foreground",
+        "flex min-h-(--auth-page-height) w-full flex-col items-center justify-center gap-group bg-background text-foreground",
         safeAreaPaddingWithRtlSwap,
         className,
       )}
+      style={{ ...cssVars({ "--auth-page-height": "100dvh" }), ...style }}
       {...props}
     >
       <main
