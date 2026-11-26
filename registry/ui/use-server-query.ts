@@ -5,7 +5,9 @@ import { useCallback } from "react"
 
 import { useDataClient, type DefaultServerError } from "@/components/ui/server-data"
 import { pausedRead } from "@/components/ui/server-data-cache"
+import { isPollFetch, type PollOptions } from "@/components/ui/server-data-poll"
 import { readOptionsOf, type ReadOptions, type ServerStatus } from "@/components/ui/use-server-data"
+import { useServerPoll } from "@/components/ui/use-server-poll"
 import { assumeType } from "@/lib/narrow"
 
 /** Data that one resource's answer writes into another's query, as `resource.seed(params, data)` builds it. */
@@ -16,32 +18,35 @@ type ResourceSeed = { key: readonly unknown[]; data: unknown }
  * says nothing about (IPC, localhost). `refetchOnWindowFocus`, `refetchOnReconnect`, `refetchOnMount`: when it reloads
  * on its own; otherwise the client's.
  */
-type ServerQueryOptions<T, TSelected = T> = ReadOptions & {
-  /** How long a result counts as fresh, in ms; otherwise the client's default (30 s with `createDataClient`). */
-  staleTime?: number
-  /** Keeps the previous key's data while the next loads, as the page hooks do. Default false: a detail never shows another's. */
-  keepPrevious?: boolean
-  /** Shown while the first load is pending, never cached. */
-  placeholder?: T
-  /**
-   * Picks what `data` holds from the cached answer, as TanStack's `select`: it runs again only when the answer or the
-   * function changes (define it outside the component or memoise it), and an equal result keeps its identity. The
-   * cache, `settle` and `seeds` still see the whole answer.
-   */
-  select?: (data: T) => TSelected
-  /**
-   * Other resources this answer fills: `(task) => [taskSummary.seed(task.id, summaryOf(task))]`. Written once the
-   * fetch resolves, whether or not those resources are mounted, unless the fetch was aborted; a resource whose data
-   * was written after this fetch started keeps it.
-   */
-  seeds?: (data: T) => readonly ResourceSeed[]
-}
+type ServerQueryOptions<T, TSelected = T, TError = DefaultServerError> = ReadOptions &
+  PollOptions<ServerQueryState<TSelected, TError>> & {
+    /** How long a result counts as fresh, in ms; otherwise the client's default (30 s with `createDataClient`). */
+    staleTime?: number
+    /** Keeps the previous key's data while the next loads, as the page hooks do. Default false: a detail never shows another's. */
+    keepPrevious?: boolean
+    /** Shown while the first load is pending, never cached. */
+    placeholder?: T
+    /**
+     * Picks what `data` holds from the cached answer, as TanStack's `select`: it runs again only when the answer or the
+     * function changes (define it outside the component or memoise it), and an equal result keeps its identity. The
+     * cache, `settle` and `seeds` still see the whole answer.
+     */
+    select?: (data: T) => TSelected
+    /**
+     * Other resources this answer fills: `(task) => [taskSummary.seed(task.id, summaryOf(task))]`. Written once the
+     * fetch resolves, whether or not those resources are mounted, unless the fetch was aborted; a resource whose data
+     * was written after this fetch started keeps it.
+     */
+    seeds?: (data: T) => readonly ResourceSeed[]
+  }
 
 type ServerQueryState<T, TError = DefaultServerError> = {
   data: T | undefined
   status: ServerStatus
   /** A request is in flight, the first one or a refetch. */
   fetching: boolean
+  /** The request in flight is a `refetchInterval` poll's, which a status shouldn't announce. */
+  polling: boolean
   /** `data` is the previous key's (`keepPrevious`) or the `placeholder` while this one loads. */
   previous: boolean
   error: TError | null
@@ -67,9 +72,10 @@ function writeSeeds(client: QueryClient, seeds: readonly ResourceSeed[], request
 function useServerQuery<T, TError = DefaultServerError, TSelected = T>(
   key: readonly unknown[],
   fetch: (context: { signal: AbortSignal }) => Promise<T>,
-  options: ServerQueryOptions<T, TSelected> = {},
+  options: ServerQueryOptions<T, TSelected, TError> = {},
 ): ServerQueryState<TSelected, TError> {
   const client = useDataClient()
+  const enabled = options.enabled !== false
   const { placeholder, keepPrevious, seeds, select } = options
   const query = useQuery<T, TError, TSelected, readonly unknown[]>(
     {
@@ -82,7 +88,7 @@ function useServerQuery<T, TError = DefaultServerError, TSelected = T>(
           if (seeds && !signal.aborted) writeSeeds(client, seeds(data), requestedAt)
           return data
         }),
-      enabled: options.enabled !== false,
+      enabled,
       meta: resourceMeta,
       ...readOptionsOf(options),
       ...(options.staleTime === undefined ? {} : { staleTime: options.staleTime }),
@@ -98,14 +104,17 @@ function useServerQuery<T, TError = DefaultServerError, TSelected = T>(
   const retry = useCallback(() => {
     void refetch()
   }, [refetch])
-  return {
+  const state: ServerQueryState<TSelected, TError> = {
     data: query.data,
     status: query.status,
     fetching: query.isFetching,
+    polling: query.isFetching && isPollFetch(client, key),
     previous: query.isPlaceholderData,
     error: query.error,
     retry,
   }
+  useServerPoll(client, [key], options, state)
+  return state
 }
 
 /**
@@ -161,7 +170,7 @@ function definedOptions(resource: DefinedOptions, options: DefinedOptions): Defi
 function useServerResource<P, T, TError = DefaultServerError, TSelected = T>(
   resource: Resource<P, T>,
   params: P,
-  options: Omit<ServerQueryOptions<T, TSelected>, "seeds"> = {},
+  options: Omit<ServerQueryOptions<T, TSelected, TError>, "seeds"> = {},
 ): ServerQueryState<TSelected, TError> {
   const { seeds } = resource
   return useServerQuery<T, TError, TSelected>(resource.key(params), (context) => resource.fetch(params, context), {

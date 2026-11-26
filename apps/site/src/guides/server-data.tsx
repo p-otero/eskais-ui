@@ -5,6 +5,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { A, Article, Code, DocTable, DocTitle, H2, P, Pre, Ul } from "../docs/prose"
 
 import { NetworkMode, PatchAndRefetch } from "./server-data/patch-refetch"
+import { Polling } from "./server-data/polling"
 import { retryCode, serialCode } from "./server-data/snippets"
 import { formats, navigation, styles } from "./server-data/tables"
 
@@ -340,6 +341,8 @@ export default function ServerData() {
 
       <NetworkMode />
 
+      <Polling />
+
       <H2 id="serial-mutations">Mutations one at a time</H2>
       <P>
         Mutations with the same <Code>scope: {"{ id }"}</Code>, from one <Code>useSourceMutation</Code> or several, run
@@ -372,7 +375,10 @@ export default function ServerData() {
 
       <H2 id="accessibility">Accessibility and agents</H2>
       <Ul>
-        <li>A polite status says what is shown after each load; focus stays on the control you pressed.</li>
+        <li>
+          A polite status says what is shown after each load, but not after a poll; focus stays on the control you
+          pressed.
+        </li>
         <li>Row navigation starts again at the first row without moving focus; new rows never take it.</li>
         <li>
           Agents sort and page through the table's own actions and filter by label through its filters group:{" "}

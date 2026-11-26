@@ -61,6 +61,13 @@ type ServerListProps<T, S extends FilterSchema> = Pick<
   pageSize?: number
   /** Loads the next page as the end of the list scrolls into view, beside the Load more button. Default true. */
   infinite?: boolean
+  /**
+   * Reloads the shown rows every so many ms while the document is visible, as the hooks' `refetchInterval`: the rows
+   * stay, unmarked, and the status announces nothing. Default false.
+   */
+  refetchInterval?: number | false
+  /** Keeps polling while the document is hidden, as the hooks' `refetchIntervalInBackground`. Default false. */
+  refetchIntervalInBackground?: boolean
   controller?: PageController<FilterValues<S>>
   labels: ServerListLabels
   /** Formats the counts; the page's `<html lang>` by default (`useLocale`). */
@@ -93,6 +100,8 @@ function ServerList<T, S extends FilterSchema = Record<never, never>>({
   sort,
   pageSize = 50,
   infinite = true,
+  refetchInterval = false,
+  refetchIntervalInBackground = false,
   controller: controllerProp,
   labels: labelOverrides,
   locale: localeProp,
@@ -112,9 +121,16 @@ function ServerList<T, S extends FilterSchema = Record<never, never>>({
   })
   const controller = controllerProp ?? own.controller
   const state = useSyncExternalStore(controller.subscribe, controller.getState, controller.getState)
-  const rows = useServerInfinite(source, { filter: state.filter, sort: state.sort, size: state.size })
+  const rows = useServerInfinite(
+    source,
+    { filter: state.filter, sort: state.sort, size: state.size },
+    { refetchInterval, refetchIntervalInBackground },
+  )
   const reachEnd = useReachEnd(rows.loadMore, infinite && rows.hasMore && !rows.fetching)
-  const slow = useDelayedFlag(rows.fetching, `${JSON.stringify(state.request)}:${String(rows.pages.length)}`)
+  const slow = useDelayedFlag(
+    rows.fetching && !rows.polling,
+    `${JSON.stringify(state.request)}:${String(rows.pages.length)}`,
+  )
   const range = pageRange(0, rows.items.length, rows.total)
   const statusText =
     rows.status === "error"
@@ -150,7 +166,10 @@ function ServerList<T, S extends FilterSchema = Record<never, never>>({
         loading={<ServerListLoading rows={Math.min(pageSize, 20)} label={labels.loading} />}
       >
         {(items) => (
-          <div aria-busy={(rows.fetching && !rows.loadingMore) || undefined} className="flex min-w-0 flex-col">
+          <div
+            aria-busy={(rows.fetching && !rows.polling && !rows.loadingMore) || undefined}
+            className="flex min-w-0 flex-col"
+          >
             <List<T>
               {...listProps}
               aria-label={label}

@@ -2,6 +2,13 @@
 
 Versions follow [semver](https://semver.org). Before 1.0, a minor version can break compatibility. Release with `bun pm version <patch|minor|major>`, which bumps `package.json`, rebuilds `public/r` (the mockup CLI reports the version) and tags `vX.Y.Z`.
 
+## Unreleased
+
+### Added
+
+- `server-data`: polling. `refetchInterval` on `useServerQuery`, `useServerResource`, `useServerPage` and `useServerInfinite` reloads the query every so many ms while it's shown: a number, `false`, or a function of the hook's state that stops it once a condition ends, `(state) => (state.data?.status === "pending" ? 2000 : false)`. The next poll counts from when the last read settled, so requests never stack, and any other read of the query (a mutation's refresh, a patch, `retry`) pushes it back; a hold pauses it like any read. It stops while the document is hidden (TanStack's `focusManager`, `visibilitychange`) and, visible again, reloads at once when an interval went by; `refetchIntervalInBackground` keeps it going. A poll is a background refresh: the data stays, `fetching` and the new `polling` are true and `status` stays `success`; a failed one follows the retry rules. Hooks that read the same key share one timer at the shortest interval asked for, which stops on unmount and on a key change; with polling off nothing is scheduled or listened to. A page polls its separate total beside it, and an infinite list reloads every loaded page. New files `server-data-poll.ts` and `use-server-poll.ts`.
+- `server-data-table`, `server-list`: `refetchInterval` (ms) and `refetchIntervalInBackground`. A poll keeps the rows, doesn't mark them `aria-busy` and never makes the status say "Loading…", so screen readers and agents hear nothing until the person acts.
+
 ## 0.2.16 (2026-11-26)
 
 ### Added

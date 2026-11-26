@@ -106,3 +106,16 @@ async function open(id: string) {
 
 // Outside React, on the app's client.
 const held = holdSource<Task, Task>(client, tasks)`
+
+export const pollingCode = `import { useServerQuery } from "@/components/ui/use-server-query"
+
+// Ask every 2 s while the login is pending; stop once it isn't.
+const login = useServerQuery([...auth.key, "login", attempt], ({ signal }) => api.loginStatus(attempt, { signal }), {
+  refetchInterval: (state) => (state.data?.status === "pending" ? 2000 : false),
+})
+
+// A table or list that follows the server, also while the tab is hidden.
+<ServerDataTable label="Jobs" source={jobs} columns={columns} labels={labels} refetchInterval={10_000} refetchIntervalInBackground />
+
+// With your own status: leave polls out of what it announces.
+<DataState status={page.status} data={page.items} fetching={page.fetching && !page.polling}>{renderRows}</DataState>`
