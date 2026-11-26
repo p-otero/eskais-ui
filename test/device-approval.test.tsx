@@ -145,6 +145,47 @@ test("Approve carries data-agent-confirm: an agent's approval is refused, then r
   expect(onApprove).toHaveBeenCalledTimes(1)
 })
 
+test.each([
+  ["no code", {}],
+  ["a code shown only for display", { code: "BCDF-GHJK" }],
+  ["a code shown to agents", { code: "BCDF-GHJK", agentHidden: false }],
+])(
+  "without compare, Approve is enabled at once with %s, and an agent's approve runs once a person confirms",
+  async (_case, extra) => {
+    const onApprove = vi.fn()
+    render(<Approval {...extra} onApprove={onApprove} />)
+    expect(approveButton().hasAttribute("aria-disabled")).toBe(false)
+    expect(approveButton().hasAttribute("disabled")).toBe(false)
+    expect(screen.queryByRole("textbox")).toBeNull()
+    const step = { steps: [{ ref: "Approve", action: "approve" }] }
+    const refused = await agent.act(step)
+    expect(refused.ok).toBe(false)
+    expect(refused.error?.message).not.toContain("isn't available")
+    expect(onApprove).not.toHaveBeenCalled()
+    approve = true
+    const done = await agent.act(step)
+    expect(done.ok, done.error?.message).toBe(true)
+    expect(onApprove).toHaveBeenCalledTimes(1)
+  },
+)
+
+test("without compare, a person's press approves at once", () => {
+  const onApprove = vi.fn()
+  render(<Approval code="BCDF-GHJK" onApprove={onApprove} />)
+  fireEvent.click(approveButton())
+  expect(onApprove).toHaveBeenCalledTimes(1)
+})
+
+test("without compare, only expiry turns Approve off", async () => {
+  vi.useFakeTimers({ now: new Date("2026-11-26T10:00:00Z") })
+  render(<Approval code="BCDF-GHJK" expiresAt={Date.now() + 2000} />)
+  expect(approveButton().hasAttribute("aria-disabled")).toBe(false)
+  await act(async () => {
+    await vi.advanceTimersByTimeAsync(2000)
+  })
+  expect(approveButton().getAttribute("aria-disabled")).toBe("true")
+})
+
 test("an agent denies through the block, with no person needed", async () => {
   const onDeny = vi.fn()
   render(<Approval onDeny={onDeny} />)
