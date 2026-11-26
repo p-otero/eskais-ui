@@ -88,9 +88,13 @@ test("Open opens the address with the code filled in when there is one, without 
   expect(onOpen).toHaveBeenLastCalledWith(completeUri)
 })
 
-test("copyLink adds a button that copies the verification page and announces it", async () => {
+test("copyLink adds an icon button beside Open, out of the sentence, that copies the verification page and announces it", async () => {
   const onCopyLink = vi.fn()
   render(<Prompt copyLink onCopyLink={onCopyLink} />)
+  const sentence = document.querySelector("[data-slot=device-code-prompt-instructions]")
+  expect(sentence?.querySelector("button")).toBeNull()
+  const row = document.querySelector("[data-slot=device-code-prompt-actions]")
+  expect(row?.contains(screen.getByRole("button", { name: "Copy link" }))).toBe(true)
   fireEvent.click(screen.getByRole("button", { name: "Copy link" }))
   await screen.findByRole("button", { name: "Copied" })
   expect(writeText).toHaveBeenCalledWith(uri)
