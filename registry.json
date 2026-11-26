@@ -7796,22 +7796,14 @@
       "name": "page-source",
       "type": "registry:lib",
       "title": "Page Source",
-      "description": "A backend-agnostic contract for paged data (PageSource, PageRequest, PageResult) with adapters for page/size, limit/offset, cursors and keysets, Relay connections, RFC 8288 Link headers, Spring Page and Slice, and an in-memory arraySource, plus createPageController, which derives the request, resets paging, debounces search, syncs the URL and writes the live region's status.",
-      "docs": "A `PageSource<T, F>` is `{ key, getId, capabilities, fetchPage(request, { signal }), fetchTotal? }`. `capabilities.position` is `\"page\"` or `\"cursor\"`; `total` says whether responses carry an exact count, an estimate or none, and navigation follows: page numbers with an exact total, previous and next with an estimate or only `hasMore`, load more for a cursor (`resolveNavigation`). Adapters build one from your `request` function and never fetch themselves: `pagedSource({ base: 0 | 1 })`, `offsetSource`, `cursorSource` (opaque, or `keyset` cursors built from the rows), `relaySource` (`edges`/`pageInfo`/`totalCount`), `linkHeaderSource` (parses `Link`, an estimate from `last`, exact on the last page), `springPageSource` (`Page<T>`, or the PagedModel of `VIA_DTO`, `sort=field,asc` repeated) and `springSliceSource`. Each takes `params: (filter) => …` for a serializer's output and `read` or `select` to map another response. Return `readJson(response)` from `request` so a failed status throws an `HttpError` with `status`. `arraySource(items, { filter, search, sort, delay, fail, count })` pages an array in memory for demos and tests, honouring abort. With Effect: `fetchPage: (request, { signal }) => Effect.runPromise(program, { signal })`. `createPageController(source, { filter, sort, sortMode, pageSize, pageSizes, search, url, labels })` holds the state outside React: a new filter, sort or size returns to page 1 (or a null cursor), `setSearch` commits after 250 ms, `url: { adapter, codec, history }` keeps it in the URL (`connect()` follows back and forward), and `statusText(result)` writes \"Showing 21–40 of 312\" (`labels.range` translates it). `formatCount(value, locale)` writes a number with a cached `Intl.NumberFormat`; `labels.range(range, locale)` and `statusText(result, counted, locale)` take the locale the components resolve.",
+      "description": "A backend-agnostic contract for paged data (PageSource, PageRequest, PageResult), the kit adapters are built with, an in-memory arraySource, and createPageController, which derives the request, resets paging, debounces search, syncs the URL and writes the live region's status. Backend adapters are items of their own: page-source-rest, page-source-spring, page-source-cursor, page-source-relay and page-source-link.",
+      "docs": "A `PageSource<T, F>` is `{ key, getId, capabilities, fetchPage(request, { signal }), fetchTotal? }`. `capabilities.position` is `\"page\"` or `\"cursor\"`; `total` says whether responses carry an exact count, an estimate or none, and navigation follows: page numbers with an exact total, previous and next with an estimate or only `hasMore`, load more for a cursor (`resolveNavigation`). Adapters build one from your `request` function and never fetch themselves. Each is an item of its own, named after what your backend speaks, so install only the one you call: `pagedSource({ base: 0 | 1 })` and `offsetSource` (`npx shadcn@latest add @eskais/page-source-rest`), `springPageSource` (`Page<T>`, or the PagedModel of `VIA_DTO`, `sort=field,asc` repeated) and `springSliceSource` (`npx shadcn@latest add @eskais/page-source-spring`), `cursorSource` (opaque, or `keyset` cursors built from the rows; `npx shadcn@latest add @eskais/page-source-cursor`), `relaySource` (`edges`/`pageInfo`/`totalCount`; `npx shadcn@latest add @eskais/page-source-relay`) and `linkHeaderSource` (parses `Link`, an estimate from `last`, exact on the last page; `npx shadcn@latest add @eskais/page-source-link`). For another protocol, write your own with the kit they share: `adapterSource(identity, capabilities, fetchPage)`, `pageNumberOf` or `cursorPositionOf(request)`, `appendParams`, `writeSort` and `restCallOf`, which builds the `RestCall` your `request` receives. Each adapter takes `params: (filter) => …` for a serializer's output and `read` or `select` to map another response. Return `readJson(response)` from `request` so a failed status throws an `HttpError` with `status`. `arraySource(items, { filter, search, sort, delay, fail, count })` pages an array in memory for demos and tests, honouring abort. With Effect: `fetchPage: (request, { signal }) => Effect.runPromise(program, { signal })`. `createPageController(source, { filter, sort, sortMode, pageSize, pageSizes, search, url, labels })` holds the state outside React: a new filter, sort or size returns to page 1 (or a null cursor), `setSearch` commits after 250 ms, `url: { adapter, codec, history }` keeps it in the URL (`connect()` follows back and forward), and `statusText(result)` writes \"Showing 21–40 of 312\" (`labels.range` translates it). `formatCount(value, locale)` writes a number with a cached `Intl.NumberFormat`; `labels.range(range, locale)` and `statusText(result, counted, locale)` take the locale the components resolve.",
       "registryDependencies": [
         "@eskais/narrow"
       ],
       "files": [
         {
           "path": "registry/lib/page-source.ts",
-          "type": "registry:lib"
-        },
-        {
-          "path": "registry/lib/page-source-rest.ts",
-          "type": "registry:lib"
-        },
-        {
-          "path": "registry/lib/page-source-cursor.ts",
           "type": "registry:lib"
         },
         {
@@ -7825,11 +7817,111 @@
       ]
     },
     {
+      "name": "page-source-rest",
+      "type": "registry:lib",
+      "title": "Page Source REST",
+      "description": "PageSource adapters for plain query-param paging: page and size (`?page=2&size=25`, 0- or 1-based) and limit and offset (`?offset=20&limit=20`).",
+      "docs": "`pagedSource({ key, getId, request, base, pageParam, sizeParam, read, total })` sends `?page=2&size=25` (1-based unless `base: 0`); `offsetSource({ offsetParam, limitParam })` turns the page into `?offset=20&limit=20`. `request(call)` receives `{ params, query, request, signal }`: fetch your endpoint with `call.query` and `call.signal`. By default the response is `{ items, total?, hasMore? }`; `read(raw, request)` maps another. `total: \"estimate\" | \"none\"` switches the table to previous and next. Each takes `params: (filter) => …` for a serializer's output, `sortStyle` and `maxPageSize`; return `readJson(response)` from `request` so a failed status throws an `HttpError`.",
+      "registryDependencies": [
+        "@eskais/narrow",
+        "@eskais/page-source"
+      ],
+      "files": [
+        {
+          "path": "registry/lib/page-source-rest.ts",
+          "type": "registry:lib"
+        }
+      ],
+      "meta": {
+        "adapterOf": "page-source"
+      }
+    },
+    {
+      "name": "page-source-spring",
+      "type": "registry:lib",
+      "title": "Page Source Spring",
+      "description": "PageSource adapters for Spring Data: `Page<T>` (or the PagedModel of `VIA_DTO`) with page numbers and a total, and `Slice<T>` with previous and next, `?page=0&size=25&sort=name,asc`.",
+      "docs": "`springPageSource({ key, getId, request, select })` sends Spring's `Pageable` params (0-based `page`, `size`, `sort=field,asc` repeated) and reads `content`, `totalElements` and `last` from `Page<T>` or the nested `page` of a PagedModel; `select(raw)` finds the page inside another envelope. `springSliceSource` reads a `Slice<T>` (`hasNext`, no count query), so the table shows previous and next. Pair it with `springFilter` from `filter-spring` for the filter. Each takes `params: (filter) => …` for a serializer's output and `maxPageSize`; return `readJson(response)` from `request` so a failed status throws an `HttpError`.",
+      "registryDependencies": [
+        "@eskais/narrow",
+        "@eskais/page-source"
+      ],
+      "files": [
+        {
+          "path": "registry/lib/page-source-spring.ts",
+          "type": "registry:lib"
+        }
+      ],
+      "meta": {
+        "adapterOf": "page-source"
+      }
+    },
+    {
+      "name": "page-source-cursor",
+      "type": "registry:lib",
+      "title": "Page Source Cursor",
+      "description": "A PageSource adapter for cursor paging: opaque cursors from the server (`nextCursor`, `prevCursor`) or keyset cursors built from the rows' sort key.",
+      "docs": "`cursorSource({ key, getId, request, afterParam, beforeParam, sizeParam, keyset, read })` sends `?cursor=…&limit=25` (and `before` going back) and reads `{ items, nextCursor?, prevCursor?, hasMore? }`. With `keyset: { cursor: (row) => … }` it builds the cursor from the last (or first) row and asks for one row more to know whether another page follows; the server returns a backward page in display order. The table loads more by default. Each takes `params: (filter) => …` for a serializer's output, `sortStyle` and `maxPageSize`; return `readJson(response)` from `request` so a failed status throws an `HttpError`.",
+      "registryDependencies": [
+        "@eskais/narrow",
+        "@eskais/page-source"
+      ],
+      "files": [
+        {
+          "path": "registry/lib/page-source-cursor.ts",
+          "type": "registry:lib"
+        }
+      ],
+      "meta": {
+        "adapterOf": "page-source"
+      }
+    },
+    {
+      "name": "page-source-relay",
+      "type": "registry:lib",
+      "title": "Page Source Relay",
+      "description": "A PageSource adapter for GraphQL connections as the Relay spec defines them: `first`/`after` and `last`/`before` over `edges` (or `nodes`) and `pageInfo`, with `totalCount` when the schema has one.",
+      "docs": "`relaySource({ key, getId, request, connection, total })`: `request({ variables, request, signal })` runs your query with `variables` (`first`/`after` forward, `last`/`before` backward) beside your filter and sort, and `connection(data)` finds the connection in the response (`(data) => data.repository.issues`). `total: \"exact\"` when it has `totalCount`. Pair it with `graphqlWhere` from `filter-graphql` for the filter. Return `readJson(response)` from `request` so a failed status throws an `HttpError`.",
+      "registryDependencies": [
+        "@eskais/narrow",
+        "@eskais/page-source"
+      ],
+      "files": [
+        {
+          "path": "registry/lib/page-source-relay.ts",
+          "type": "registry:lib"
+        }
+      ],
+      "meta": {
+        "adapterOf": "page-source"
+      }
+    },
+    {
+      "name": "page-source-link",
+      "type": "registry:lib",
+      "title": "Page Source Link",
+      "description": "A PageSource adapter for RFC 8288 `Link` headers, as GitHub and many REST APIs send them: page numbers with an estimate from `last` and an exact total on the last page, or cursors that follow `next` and `prev`.",
+      "docs": "`linkHeaderSource({ key, getId, request, read, position, pageParam, sizeParam, base })`: `request(call)` fetches `call.url` when set (cursor mode follows the links) or your endpoint with `call.query`, and returns the `Response` itself so the header can be read. `position: \"page\"` (default) sends `?page=2&per_page=25` and reads the total from the links; `\"cursor\"` follows them. `read(body)` finds the rows when the body isn't the array. `parseLinkHeader(header)` reads any `Link` header into its relations (quoted parameters, several relations per link, commas inside URIs).",
+      "registryDependencies": [
+        "@eskais/narrow",
+        "@eskais/page-source"
+      ],
+      "files": [
+        {
+          "path": "registry/lib/page-source-link.ts",
+          "type": "registry:lib"
+        }
+      ],
+      "meta": {
+        "adapterOf": "page-source"
+      }
+    },
+    {
       "name": "filter-schema",
       "type": "registry:lib",
       "title": "Filter Schema",
-      "description": "Typed filters declared once: defineFilters with text, options, boolean, number, date, dateRange and remoteOption fields, FilterValues inferred from it, a canonical AST, serializers for query params, JSON, RSQL, OData, Spring Filter, GraphQL where and q-only search, and a URL codec that round-trips readable params.",
-      "docs": "`defineFilters({ status: { kind: \"options\", label, options, multiple: true }, … })` is the whitelist: keys and wire `field` names must be identifiers, and nothing a person types becomes a field name. `FilterValues<typeof schema>` types the values. `toFilterAst(schema, values)` joins the active ones into a `FilterNode` (`and`, `or`, `not`, `{ field, op, value }`); text fields send `{ param: \"q\" }` by default (read with `searchTerms`) or match `{ fields, op: \"contains\" }`, joined by `or`. A date range's end is inclusive: `lte` the last day, or `end: \"next-day\"` for `lt` the day after when the backend stores date-times. `$where` adds an expression with groups, checked against `schemaFields(schema)`. Serializers, each its own module: `queryParams(ast, { style: \"suffix\" | \"dto\" | \"bracket\" })` (and only), `jsonAst` (POST body), `rsql`, `odata` (`$filter`), `springFilter` (turkraft), `graphqlWhere` (`dialect: \"hasura\" | \"prisma\"`) and `searchOnly`. Each escapes per its grammar and throws a `FilterSerializeError` for what it can't write safely, like a wildcard inside a text match. Dates are ISO 8601 by default (`dates: \"iso\" | \"iso-date\" | \"epoch-ms\" | fn`), from strings, `Date` or Temporal values. `matchesFilter(ast, item)` evaluates a filter in memory. `createUrlCodec(schema, { prefix, format, defaults })` keeps schema values, not the wire format, in readable params (`?status=open,closed&created=2026-01-01..2026-02-01&page=2&sort=name.asc`), one encoded `f` param when `$where` has groups, and drops anything a tampered URL puts there that doesn't fit. `parseFilterInput(field, input)` reads loose input (option labels, `\"yes\"`, `\">= 10\"`, `\"2026-01-01..2026-01-31\"`) into a field's value and `findFilterKey(schema, name)` finds a field by key or label, for agents and command palettes.",
+      "description": "Typed filters declared once: defineFilters with text, options, boolean, number, date, dateRange and remoteOption fields, FilterValues inferred from it, a canonical AST, serializers for query params, JSON and q-only search, and a URL codec that round-trips readable params. Backend query languages are items of their own: filter-rsql, filter-odata, filter-spring and filter-graphql.",
+      "docs": "`defineFilters({ status: { kind: \"options\", label, options, multiple: true }, … })` is the whitelist: keys and wire `field` names must be identifiers, and nothing a person types becomes a field name. `FilterValues<typeof schema>` types the values. `toFilterAst(schema, values)` joins the active ones into a `FilterNode` (`and`, `or`, `not`, `{ field, op, value }`); text fields send `{ param: \"q\" }` by default (read with `searchTerms`) or match `{ fields, op: \"contains\" }`, joined by `or`. A date range's end is inclusive: `lte` the last day, or `end: \"next-day\"` for `lt` the day after when the backend stores date-times. `$where` adds an expression with groups, checked against `schemaFields(schema)`. `filter-serializers` writes the formats no backend names: `queryParams(ast, { style: \"suffix\" | \"dto\" | \"bracket\" })` (and only), `jsonAst` (POST body) and `searchOnly`. A backend's query language is an item of its own, so install only the one your server reads: `rsql` (`npx shadcn@latest add @eskais/filter-rsql`), `odata` for `$filter` (`npx shadcn@latest add @eskais/filter-odata`), `springFilter` for turkraft's Spring Filter (`npx shadcn@latest add @eskais/filter-spring`) or `graphqlWhere` for a Hasura or Prisma `where` (`npx shadcn@latest add @eskais/filter-graphql`). Each escapes per its grammar and throws a `FilterSerializeError` for what it can't write safely, like a wildcard inside a text match. Dates are ISO 8601 by default (`dates: \"iso\" | \"iso-date\" | \"epoch-ms\" | fn`), from strings, `Date` or Temporal values. `matchesFilter(ast, item)` evaluates a filter in memory. `createUrlCodec(schema, { prefix, format, defaults })` keeps schema values, not the wire format, in readable params (`?status=open,closed&created=2026-01-01..2026-02-01&page=2&sort=name.asc`), one encoded `f` param when `$where` has groups, and drops anything a tampered URL puts there that doesn't fit. `parseFilterInput(field, input)` reads loose input (option labels, `\"yes\"`, `\">= 10\"`, `\"2026-01-01..2026-01-31\"`) into a field's value and `findFilterKey(schema, name)` finds a field by key or label, for agents and command palettes.",
       "registryDependencies": [
         "@eskais/narrow",
         "@eskais/page-source"
@@ -7848,22 +7940,6 @@
           "type": "registry:lib"
         },
         {
-          "path": "registry/lib/filter-rsql.ts",
-          "type": "registry:lib"
-        },
-        {
-          "path": "registry/lib/filter-odata.ts",
-          "type": "registry:lib"
-        },
-        {
-          "path": "registry/lib/filter-spring.ts",
-          "type": "registry:lib"
-        },
-        {
-          "path": "registry/lib/filter-graphql.ts",
-          "type": "registry:lib"
-        },
-        {
           "path": "registry/lib/filter-url.ts",
           "type": "registry:lib"
         },
@@ -7872,6 +7948,82 @@
           "type": "registry:lib"
         }
       ]
+    },
+    {
+      "name": "filter-rsql",
+      "type": "registry:lib",
+      "title": "Filter RSQL",
+      "description": "Writes a filter-schema AST as RSQL/FIQL for rsql-jpa-specification and other RSQL backends: `;` and, `,` or, parentheses, quoted and escaped arguments.",
+      "docs": "`rsql(toFilterAst(schema, values), { isNull })` returns the `filter` param: `status=in=(\"open\",\"closed\");amount=ge=100`. `not` is pushed down to the comparisons, a negated text match becomes `!=` with wildcards, and `isNull` picks `=isnull=` (default, as rsql-jpa-specification reads it) or `=null=`. Like every serializer it takes `fields` (a whitelist, `schemaFields(schema)`) and `dates`, and throws a `FilterSerializeError` for what it can't write safely. Pass it to a source as `params: (filter) => ({ filter: rsql(toFilterAst(schema, filter)) })`.",
+      "registryDependencies": [
+        "@eskais/filter-schema"
+      ],
+      "files": [
+        {
+          "path": "registry/lib/filter-rsql.ts",
+          "type": "registry:lib"
+        }
+      ],
+      "meta": {
+        "adapterOf": "filter-schema"
+      }
+    },
+    {
+      "name": "filter-odata",
+      "type": "registry:lib",
+      "title": "Filter OData",
+      "description": "Writes a filter-schema AST as an OData `$filter` expression: the full grammar, strings in single quotes with `''` escapes, dates unquoted, `in` for OData 4.01 or `or`ed `eq`s for 4.0.",
+      "docs": "`odata(toFilterAst(schema, values), { inOperator })` returns the `$filter` value: `status in ('open','closed') and amount ge 100 and contains(title,'bug')`. `inOperator: false` writes `or`ed `eq`s for OData 4.0 servers; navigation paths use `/`. It takes `fields` and `dates` like every serializer and throws a `FilterSerializeError` for what it can't write safely. Pass it as `params: (filter) => ({ $filter: odata(toFilterAst(schema, filter)) })`.",
+      "registryDependencies": [
+        "@eskais/filter-schema"
+      ],
+      "files": [
+        {
+          "path": "registry/lib/filter-odata.ts",
+          "type": "registry:lib"
+        }
+      ],
+      "meta": {
+        "adapterOf": "filter-schema"
+      }
+    },
+    {
+      "name": "filter-spring",
+      "type": "registry:lib",
+      "title": "Filter Spring",
+      "description": "Writes a filter-schema AST as the `filter` param of turkraft's Spring Filter: `status : 'open' and (amount >: 10 or owner is null)`, for JPA or MongoDB.",
+      "docs": "`springFilter(toFilterAst(schema, values), { module, like })` returns the `filter` param. Strings are single-quoted with backslash escapes; `module: \"jpa\"` (default) matches text with `%` and refuses `%`, `_` and `*` inside it, `\"mongo\"` uses `*`, and `like: \"~~\"` ignores case. It takes `fields` and `dates` like every serializer and throws a `FilterSerializeError` for what it can't write safely. Pair it with `springPageSource` from `page-source-spring` for the paging.",
+      "registryDependencies": [
+        "@eskais/filter-schema"
+      ],
+      "files": [
+        {
+          "path": "registry/lib/filter-spring.ts",
+          "type": "registry:lib"
+        }
+      ],
+      "meta": {
+        "adapterOf": "filter-schema"
+      }
+    },
+    {
+      "name": "filter-graphql",
+      "type": "registry:lib",
+      "title": "Filter GraphQL",
+      "description": "Turns a filter-schema AST into a typed GraphQL `where` input for Hasura (`_and`, `_eq`, `_ilike`) or Prisma (`AND`, `equals`, `contains`), sent as variables, never spliced into the query.",
+      "docs": "`graphqlWhere(toFilterAst(schema, values), { dialect, caseInsensitive })` returns an object for your query's variables; `{}` matches everything. `dialect` is `\"hasura\"` (default) or `\"prisma\"`, and `caseInsensitive` (default) uses Hasura `_ilike` or Prisma `mode: \"insensitive\"`. It takes `fields` and `dates` like every serializer. Pair it with `relaySource` from `page-source-relay` when the schema pages by connections.",
+      "registryDependencies": [
+        "@eskais/filter-schema"
+      ],
+      "files": [
+        {
+          "path": "registry/lib/filter-graphql.ts",
+          "type": "registry:lib"
+        }
+      ],
+      "meta": {
+        "adapterOf": "filter-schema"
+      }
     },
     {
       "name": "url-router",
@@ -9269,8 +9421,8 @@
       "name": "diff",
       "type": "registry:lib",
       "title": "Diff engine",
-      "description": "Line diffs with histogram (default, git's most readable for code) or linear-space Myers with a cost cut, git's slider placement, hunks with context and the enclosing-definition heading, whitespace options, binary and size guards; changed words or characters within a line; a unified-diff parser for multi-file git patches (renames, copies, modes, new, deleted, binary, quoted paths); and diffTextAsync, which runs in a Web Worker past 200k characters. No dependencies.",
-      "docs": "`diffText(old, new, { algorithm, context, ignoreWhitespace, maxLines, maxChars })` returns `{ status, hunks, additions, deletions }`; its output matches `git diff --histogram` (or `--minimal` with `algorithm: \"myers\"`). `formatHunks(hunks)` prints them back as a unified diff. `parsePatch(text)` reads `git diff`, `git show` or `diff -u` output into `FileDiff`s. `intraline(oldLine, newLine, { mode: \"word\" | \"char\" })` gives the changed ranges, or null for a rewritten line. `diffTextAsync(old, new, { signal })` diffs in a Web Worker past `workerThreshold` (200k characters), on the main thread below it, without workers, or when a Content Security Policy refuses `blob:` workers: the worker is built from the engine's own source in a Blob, so it works in every bundler without a worker file.",
+      "description": "Line diffs with histogram (default, git's most readable for code) or linear-space Myers with a cost cut, git's slider placement, hunks with context and the enclosing-definition heading, whitespace options, binary and size guards; changed words or characters within a line; and diffTextAsync, which runs in a Web Worker past 200k characters. The unified-diff parser and printer is the diff-patch item. No dependencies.",
+      "docs": "`diffText(old, new, { algorithm, context, ignoreWhitespace, maxLines, maxChars })` returns `{ status, hunks, additions, deletions }`; its output matches `git diff --histogram` (or `--minimal` with `algorithm: \"myers\"`). To read or print unified diffs, add `diff-patch` (`npx shadcn@latest add @eskais/diff-patch`): `parsePatch(text)` and `formatHunks(hunks)`. `intraline(oldLine, newLine, { mode: \"word\" | \"char\" })` gives the changed ranges, or null for a rewritten line. `diffTextAsync(old, new, { signal })` diffs in a Web Worker past `workerThreshold` (200k characters), on the main thread below it, without workers, or when a Content Security Policy refuses `blob:` workers: the worker is built from the engine's own source in a Blob, so it works in every bundler without a worker file.",
       "files": [
         {
           "path": "registry/lib/diff-types.ts",
@@ -9289,14 +9441,29 @@
           "type": "registry:lib"
         },
         {
-          "path": "registry/lib/diff-patch.ts",
-          "type": "registry:lib"
-        },
-        {
           "path": "registry/lib/diff-async.ts",
           "type": "registry:lib"
         }
       ]
+    },
+    {
+      "name": "diff-patch",
+      "type": "registry:lib",
+      "title": "Diff Patch",
+      "description": "Reads and writes unified diffs: parsePatch turns `git diff`, `git show` or `diff -u` output into FileDiffs (multi-file patches, renames, copies, modes, new, deleted, binary, quoted paths), and formatHunks prints the diff engine's hunks back as a unified diff.",
+      "docs": "`parsePatch(text)` reads `git diff`, `git show` or `diff -u` output into `FileDiff`s for `toViewFiles` and `DiffView` (`GitDiff` takes the text as `patch` and calls it for you). `formatHunks(hunks)` prints `diffText`'s hunks as a unified diff, for a `CodeBlock` in `diff` language or a file.",
+      "registryDependencies": [
+        "@eskais/diff"
+      ],
+      "files": [
+        {
+          "path": "registry/lib/diff-patch.ts",
+          "type": "registry:lib"
+        }
+      ],
+      "meta": {
+        "adapterOf": "diff"
+      }
     },
     {
       "name": "ansi",
@@ -9430,6 +9597,7 @@
       "registryDependencies": [
         "@eskais/utils",
         "@eskais/diff",
+        "@eskais/diff-patch",
         "@eskais/diff-view",
         "@eskais/segmented-control",
         "@eskais/toggle",

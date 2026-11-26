@@ -5,6 +5,7 @@ type ItemNotes = {
   /** What an agent sees and can do, beyond the live snapshot. */
   agent?: string
   related?: string[]
+  exampleAdapters?: string[]
 }
 
 const itemNotes: Record<string, ItemNotes> = {
@@ -934,10 +935,11 @@ const itemNotes: Record<string, ItemNotes> = {
   },
   diff: {
     usage:
-      "The diff engine on its own: diffText for line hunks (histogram or Myers, matching git's output), intraline for changed words, parsePatch for git patches, formatHunks to print them back, and diffTextAsync to diff off the main thread.",
+      "The diff engine on its own: diffText for line hunks (histogram or Myers, matching git's output), intraline for changed words and diffTextAsync to diff off the main thread. Add the diff-patch adapter for parsePatch, which reads git patches, and formatHunks, which prints hunks back.",
     a11y: ["No interface: render its output with DiffView, TextDiff or GitDiff, or a CodeBlock in diff language."],
     agent: "Not a component; agents act on the views that render it.",
     related: ["text-diff", "git-diff", "code-block"],
+    exampleAdapters: ["diff-patch"],
   },
   "code-block": {
     usage:
@@ -1425,15 +1427,16 @@ const itemNotes: Record<string, ItemNotes> = {
   },
   "page-source": {
     usage:
-      "Wrap your endpoint in the adapter that matches its paging, once per resource; components and hooks only see the PageSource.",
+      "Wrap your endpoint in the adapter that matches its paging, once per resource; components and hooks only see the PageSource. Each adapter is its own item: install only the one your backend speaks.",
     agent: "Nothing of its own: the table, list and combobox built on it expose paging, sorting and filtering by name.",
     related: ["filter-schema", "url-state", "data-table"],
   },
   "filter-schema": {
     usage:
-      "Declare the filters once; the same schema types the values, drives the filter UIs, writes the URL and serializes the request.",
+      "Declare the filters once; the same schema types the values, drives the filter UIs, writes the URL and serializes the request. A backend query language (RSQL, OData, Spring Filter, GraphQL) is an adapter item: install only the one your server reads.",
     a11y: ["Every field's label is required: it names the chip, the panel field and what agents set."],
     related: ["page-source", "url-state", "filter-bar"],
+    exampleAdapters: ["filter-rsql", "filter-odata", "filter-spring", "filter-graphql"],
   },
   "url-state": {
     usage: "Pick the adapter that matches your router once, and pass it to every screen that keeps state in the URL.",

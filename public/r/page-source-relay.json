@@ -1,0 +1,22 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "page-source-relay",
+  "title": "Page Source Relay",
+  "description": "A PageSource adapter for GraphQL connections as the Relay spec defines them: `first`/`after` and `last`/`before` over `edges` (or `nodes`) and `pageInfo`, with `totalCount` when the schema has one.",
+  "registryDependencies": [
+    "@eskais/narrow",
+    "@eskais/page-source"
+  ],
+  "files": [
+    {
+      "path": "registry/lib/page-source-relay.ts",
+      "content": "import {\n  adapterSource,\n  cursorPositionOf,\n  type PageRequest,\n  type PageSource,\n  type SourceContext,\n} from \"@/lib/page-source\"\nimport { assumeType } from \"@/lib/narrow\"\n\n/** A GraphQL connection as the Relay spec defines it. */\ntype RelayConnection<T> = {\n  edges?: readonly ({ node: T; cursor?: string } | null)[] | null\n  nodes?: readonly T[] | null\n  pageInfo: { hasNextPage: boolean; hasPreviousPage: boolean; startCursor?: string | null; endCursor?: string | null }\n  totalCount?: number | null\n}\n\ntype RelayVariables = { first?: number; after?: string; last?: number; before?: string }\n\ntype RelayCall<F> = { variables: RelayVariables; request: PageRequest<F>; signal: AbortSignal }\n\ntype RelaySourceOptions<T, F, Raw> = {\n  key: readonly unknown[]\n  getId: (item: T) => string\n  /** Runs the query with `variables` (`first`/`after` forward, `last`/`before` backward) and your filter and sort. */\n  request: (call: RelayCall<F>) => Promise<Raw>\n  /** Where the connection sits in the response: `(data) => data.repository.issues`. */\n  connection?: (raw: Raw) => RelayConnection<T>\n  maxPageSize?: number\n  /** `\"exact\"` when the connection has `totalCount`. Default `\"none\"`. */\n  total?: \"exact\" | \"none\"\n  fetchTotal?: (filter: F, context: SourceContext) => Promise<number>\n}\n\n/** `first`/`after` and `last`/`before` over `edges` and `pageInfo`, with `totalCount` when the schema has one. */\nfunction relaySource<T, F = unknown, Raw = RelayConnection<T>>(\n  options: RelaySourceOptions<T, F, Raw>,\n): PageSource<T, F> {\n  return adapterSource(\n    options,\n    { position: \"cursor\", total: options.total ?? \"none\", maxPageSize: options.maxPageSize },\n    async (request, context) => {\n      const position = cursorPositionOf(request)\n      const variables: RelayVariables =\n        position.direction === \"forward\"\n          ? { first: request.size, ...(position.cursor === null ? {} : { after: position.cursor }) }\n          : { last: request.size, ...(position.cursor === null ? {} : { before: position.cursor }) }\n      const raw = await options.request({ variables, request, signal: context.signal })\n      // Workaround: without `connection` the body is the connection: its `pageInfo` is checked below, its nodes typed by `T`.\n      const connection = options.connection ? options.connection(raw) : assumeType<RelayConnection<T>>(raw)\n      if (typeof connection !== \"object\" || connection === null || typeof connection.pageInfo !== \"object\")\n        throw new TypeError(\"relaySource expected a connection with `pageInfo`; pass `connection` to find it.\")\n      const items = connection.edges\n        ? connection.edges.flatMap((edge) => (edge ? [edge.node] : []))\n        : [...(connection.nodes ?? [])]\n      const { pageInfo } = connection\n      return {\n        items,\n        ...(typeof connection.totalCount === \"number\" ? { total: connection.totalCount } : {}),\n        hasMore: pageInfo.hasNextPage,\n        hasPrevious: pageInfo.hasPreviousPage,\n        nextCursor: pageInfo.hasNextPage ? (pageInfo.endCursor ?? null) : null,\n        prevCursor: pageInfo.hasPreviousPage ? (pageInfo.startCursor ?? null) : null,\n      }\n    },\n  )\n}\n\nexport { relaySource }\nexport type { RelayCall, RelayConnection, RelaySourceOptions, RelayVariables }\n",
+      "type": "registry:lib"
+    }
+  ],
+  "meta": {
+    "adapterOf": "page-source"
+  },
+  "docs": "`relaySource({ key, getId, request, connection, total })`: `request({ variables, request, signal })` runs your query with `variables` (`first`/`after` forward, `last`/`before` backward) beside your filter and sort, and `connection(data)` finds the connection in the response (`(data) => data.repository.issues`). `total: \"exact\"` when it has `totalCount`. Pair it with `graphqlWhere` from `filter-graphql` for the filter. Return `readJson(response)` from `request` so a failed status throws an `HttpError`.",
+  "type": "registry:lib"
+}

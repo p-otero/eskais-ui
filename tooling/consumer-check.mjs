@@ -1292,10 +1292,21 @@ const scenarios = {
     css: `@layer ui-sdk;
 @import "tailwindcss";
 `,
-    items: ["theme", "server-data-table", "server-list", "server-combobox"],
+    items: ["theme", "server-data-table", "server-list", "server-combobox", "filter-rsql"],
     main: serverDataMain,
     builtCss: ["--brand", ".text-title{"],
     check: checkServerData,
+    files: ["src/lib/filter-schema.ts", "src/lib/filter-rsql.ts", "src/lib/page-source.ts", "src/lib/array-source.ts"],
+    absent: [
+      "src/lib/filter-odata.ts",
+      "src/lib/filter-spring.ts",
+      "src/lib/filter-graphql.ts",
+      "src/lib/page-source-rest.ts",
+      "src/lib/page-source-spring.ts",
+      "src/lib/page-source-cursor.ts",
+      "src/lib/page-source-relay.ts",
+      "src/lib/page-source-link.ts",
+    ],
   },
   "release-age": {
     packageManagers: ["pnpm", "bun"],

@@ -6,15 +6,18 @@ import { A, Article, Code, DocTable, DocTitle, H2, P, Pre, Ul } from "../docs/pr
 
 import { NetworkMode, PatchAndRefetch } from "./server-data/patch-refetch"
 import { retryCode, serialCode } from "./server-data/snippets"
+import { formats, navigation, styles } from "./server-data/tables"
 
 const LatencyDemo = lazy(() => import("../examples/server-data-table"))
 const BackendSwitcher = lazy(() => import("./server-data/backend-switcher"))
+
+const installAdapters = `npx shadcn@latest add @eskais/server-data-table @eskais/page-source-spring @eskais/filter-rsql`
 
 const quickStart = `import { ServerDataTable } from "@/components/ui/server-data-table"
 import { defineFilters, searchTerms, toFilterAst } from "@/lib/filter-schema"
 import { rsql } from "@/lib/filter-rsql"
 import { readJson } from "@/lib/page-source"
-import { springPageSource } from "@/lib/page-source-rest"
+import { springPageSource } from "@/lib/page-source-spring"
 import { hashUrlState } from "@/lib/url-state"
 
 const taskFilters = defineFilters({
@@ -134,73 +137,6 @@ const tasks = arraySource(fixtures, { key: ["tasks"] })
 render(<DataProvider client={createDataClient({ retry: 0 })}><TaskScreen source={tasks} /></DataProvider>)
 expect(await screen.findByRole("row", { name: /Write the docs/ })).toBeVisible()`
 
-const styles = [
-  [
-    "Page and size, limit and offset",
-    "Page numbers, Showing 21–40 of 312",
-    "Jump to any page; easy to cache and share",
-    "Rows drift when others insert; a COUNT per query; deep pages are slow",
-    "pagedSource({ base }), offsetSource",
-  ],
-  [
-    "Cursor or keyset",
-    "Load more, or infinite",
-    "Stable and fast at any depth",
-    "No jump to page N; needs a unique, ordered key",
-    "cursorSource (opaque, or keyset)",
-  ],
-  [
-    "Relay",
-    "Load more, or previous and next",
-    "Cursors plus pageInfo and an optional totalCount",
-    "Same as cursors",
-    "relaySource",
-  ],
-  [
-    "Link header (RFC 8288)",
-    "Previous and next, about N from last",
-    "Navigation the server already wrote",
-    "A total only on the last page",
-    "linkHeaderSource",
-  ],
-  [
-    "Spring Page and Slice",
-    "Page numbers (Page), previous and next (Slice)",
-    "Pageable controllers as they are",
-    "Page runs a count query; Slice has no total",
-    "springPageSource, springSliceSource",
-  ],
-]
-
-const formats = [
-  [
-    "Flat params (DTO, suffix, bracket)",
-    "and only",
-    "A request DTO, json-server, Django filters",
-    "queryParams",
-    "URL-friendly; refuses or",
-  ],
-  [
-    "RSQL / FIQL",
-    "and, or, nesting",
-    "rsql-jpa-specification, many Java and .NET APIs",
-    "rsql",
-    "Compact; quoted, escaped arguments",
-  ],
-  ["OData $filter", "the full grammar", "ASP.NET OData, SAP, Dynamics", "odata", "Verbose; dates unquoted"],
-  ["Spring Filter", "and, or, not", "turkraft/springfilter", "springFilter", "Java only; refuses wildcards in text"],
-  ["JSON AST", "the full grammar", "A POST body for any backend", "jsonAst", "Safest: nothing to escape"],
-  ["GraphQL where", "typed, nested", "Hasura, Prisma", "graphqlWhere", "Goes in variables, never in the query"],
-  ["q only", "free text", "A search endpoint", "searchOnly", "Ignores every other field"],
-]
-
-const navigation = [
-  ["An exact total (or fetchTotal)", "Page numbers and Showing 21–40 of 312"],
-  ["totalEstimate", "Previous and next, Showing 21–40 of about 300"],
-  ["Only hasMore", "Previous and next, Showing 21–40"],
-  ["A cursor", 'Load more, or infinite with navigation="infinite"'],
-]
-
 export default function ServerData() {
   return (
     <Article>
@@ -234,18 +170,25 @@ export default function ServerData() {
           and <A to="/docs/components/filter-panel">FilterPanel</A>.
         </li>
       </Ul>
+      <P>
+        ServerDataTable brings the filter schema and the PageSource contract. The adapter for your backend's paging and
+        the serializer for its query language are items of their own, so add only the ones it speaks: here a Spring
+        controller that reads an RSQL filter. The tables below name the item for each.
+      </P>
+      <Pre code={installAdapters} language="bash" title="Terminal" />
       <Pre code={quickStart} title="tasks-page.tsx" />
 
       <H2 id="pagination">Pagination styles</H2>
       <DocTable
         label="Pagination styles"
-        head={["Style", "The table shows", "Good at", "Costs", "Adapter"]}
-        rows={styles.map(([style, shows, good, costs, adapter]) => [
+        head={["Style", "The table shows", "Good at", "Costs", "Adapter", "Item"]}
+        rows={styles.map(([style, shows, good, costs, adapter, item]) => [
           style,
           shows,
           good,
           costs,
           <Code key="a">{adapter}</Code>,
+          <Code key="i">{item}</Code>,
         ])}
       />
       <P>
@@ -262,13 +205,14 @@ export default function ServerData() {
       <H2 id="wire-formats">Wire formats</H2>
       <DocTable
         label="Wire formats"
-        head={["Format", "Grammar", "Spoken by", "Serializer", "Notes"]}
-        rows={formats.map(([format, grammar, who, serializer, notes]) => [
+        head={["Format", "Grammar", "Spoken by", "Serializer", "Notes", "Item"]}
+        rows={formats.map(([format, grammar, who, serializer, notes, item]) => [
           format,
           grammar,
           who,
           <Code key="s">{serializer}</Code>,
           notes,
+          <Code key="i">{item}</Code>,
         ])}
       />
       <Ul>

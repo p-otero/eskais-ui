@@ -166,6 +166,68 @@ function writeSort(params: URLSearchParams, sort: readonly SortSpec[], style: So
   else params.set(name, sort.map((spec) => (spec.direction === "desc" ? `-${spec.field}` : spec.field)).join(","))
 }
 
+type CursorPosition = Exclude<PagePosition, { page: number }>
+
+/** What an adapter hands your `request`: the query to send, and the request it came from. */
+type RestCall<F> = {
+  params: URLSearchParams
+  /** `params` as a query string, without the `?`. */
+  query: string
+  request: PageRequest<F>
+  signal: AbortSignal
+}
+
+type RestSourceOptions<T, F, Raw> = {
+  key: readonly unknown[]
+  getId: (item: T) => string
+  /** Sends the call: `fetch(\`/api/tasks?${call.query}\`, { signal: call.signal }).then(readJson)`. */
+  request: (call: RestCall<F>) => Promise<Raw>
+  /** The filter as query params, usually a serializer's output. */
+  params?: (filter: F) => ParamsInit
+  sortStyle?: SortStyle
+  sortParam?: string
+  maxPageSize?: number
+  /** Whether responses carry an exact total. Default `"exact"`. */
+  total?: SourceCapabilities["total"]
+  fetchTotal?: (filter: F, context: SourceContext) => Promise<number>
+}
+
+type AdapterIdentity<T, F> = {
+  key: readonly unknown[]
+  getId: (item: T) => string
+  fetchTotal?: (filter: F, context: SourceContext) => Promise<number>
+}
+
+function adapterSource<T, F>(
+  identity: AdapterIdentity<T, F>,
+  capabilities: SourceCapabilities,
+  fetchPage: PageSource<T, F>["fetchPage"],
+): PageSource<T, F> {
+  return {
+    key: identity.key,
+    getId: identity.getId,
+    capabilities,
+    fetchPage,
+    ...(identity.fetchTotal ? { fetchTotal: identity.fetchTotal } : {}),
+  }
+}
+
+function restCallOf<F>(request: PageRequest<F>, context: SourceContext, params: URLSearchParams): RestCall<F> {
+  return { params, query: params.toString(), request, signal: context.signal }
+}
+
+/** The 1-based page a request asks for; throws when it carries a cursor. */
+function pageNumberOf<F>(request: PageRequest<F>) {
+  if (!isPagePosition(request.position)) throw new TypeError("This source pages by number; it got a cursor.")
+  return Math.max(1, Math.trunc(request.position.page))
+}
+
+/** The cursor a request asks for; throws when it carries a page number. */
+function cursorPositionOf<F>(request: PageRequest<F>): CursorPosition {
+  if (isPagePosition(request.position)) throw new TypeError("This source pages by cursor; it got a page number.")
+  return request.position
+}
+
 /** A failed HTTP response. `status` is what DataProvider's retry reads: a 4xx is never retried. */
 class HttpError extends Error {
   readonly status: number
@@ -197,22 +259,28 @@ function isAbortError(error: unknown) {
 
 export {
   abortError,
+  adapterSource,
   appendParams,
   capPageSize,
   capPageSizes,
+  cursorPositionOf,
   formatCount,
   HttpError,
   isAbortError,
   isPagePosition,
   pageCountOf,
+  pageNumberOf,
   pageRange,
   pageStatusLabels,
   readJson,
   resolveNavigation,
+  restCallOf,
   totalOf,
   writeSort,
 }
 export type {
+  AdapterIdentity,
+  CursorPosition,
   Navigation,
   NavigationMode,
   PagePosition,
@@ -223,6 +291,8 @@ export type {
   PageStatusLabels,
   ParamsInit,
   ParamValue,
+  RestCall,
+  RestSourceOptions,
   SortDirection,
   SortSpec,
   SortStyle,
