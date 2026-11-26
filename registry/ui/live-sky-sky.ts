@@ -3,20 +3,19 @@ import type { SkyConditions } from "@/components/ui/live-sky-conditions"
 import { skyColourAt, type SkyLight } from "@/components/ui/live-sky-light"
 import { cssColour, type SkyPalette } from "@/components/ui/live-sky-palette"
 import { seededRandom } from "@/components/ui/live-sky-street"
+import { context2d, createSurface, type Surface2D } from "@/components/ui/live-sky-surface"
 
 const skyDownscale = 6
 const starCount = 520
 const moonPoints = 28
 
-type Context = CanvasRenderingContext2D
+type Context = Surface2D
 
 function paintGradient(context: Context, camera: SkyCamera, light: SkyLight) {
   const width = Math.max(2, Math.ceil(camera.width / skyDownscale))
   const height = Math.max(2, Math.ceil(camera.height / skyDownscale))
-  const small = document.createElement("canvas")
-  small.width = width
-  small.height = height
-  const smallContext = small.getContext("2d")
+  const small = createSurface(width, height)
+  const smallContext = context2d(small)
   if (!smallContext) return
   const pixels = smallContext.createImageData(width, height)
   const scaleX = camera.width / width

@@ -1,9 +1,7 @@
 import { isRecord } from "@/lib/narrow"
 
-/** Work split into short steps: each `yield` hands the main thread back before the next step. */
+/** Work split into short steps: each `yield` hands the thread back before the next step. */
 type IdleJob = Generator<void, void, void>
-
-const inputEvents = ["keydown", "pointerdown", "pointermove", "wheel", "touchstart"] as const
 
 function inputPending() {
   const scheduling: unknown = "scheduling" in navigator ? navigator.scheduling : undefined
@@ -13,7 +11,8 @@ function inputPending() {
 
 /**
  * Runs one job a step per frame, and only once input has been quiet for `quietMs` and none is waiting, so static
- * repaints happen between key presses and never in a frame one needs. A press pauses the job; `run` replaces it.
+ * repaints happen between key presses and never in a frame one needs. A press, reported with `noteInput`, pauses the
+ * job; `run` replaces it. It works on the page and in a worker, which has no input of its own to listen to.
  */
 function createIdleWork(quietMs: number) {
   let lastInputAt = Number.NEGATIVE_INFINITY
@@ -21,16 +20,11 @@ function createIdleWork(quietMs: number) {
   let startAt = 0
   let timer = 0
   let frame = 0
-  const noteInput = (event: Event) => {
-    if (event.type === "pointermove" && event instanceof PointerEvent && event.buttons === 0) return
-    lastInputAt = performance.now()
-  }
-  for (const type of inputEvents) addEventListener(type, noteInput, { capture: true, passive: true })
 
   const quietIn = () => Math.max(startAt, lastInputAt + quietMs) - performance.now()
 
   const cancel = () => {
-    clearTimeout(timer)
+    self.clearTimeout(timer)
     cancelAnimationFrame(frame)
     timer = 0
     frame = 0
@@ -41,7 +35,7 @@ function createIdleWork(quietMs: number) {
     if (!job) return
     const wait = quietIn()
     if (wait > 0 || inputPending()) {
-      timer = window.setTimeout(step, Math.max(wait, 16))
+      timer = self.setTimeout(step, Math.max(wait, 16))
       return
     }
     if (job.next().done) {
@@ -54,7 +48,7 @@ function createIdleWork(quietMs: number) {
   function afterNextFrame() {
     frame = requestAnimationFrame(() => {
       frame = 0
-      timer = window.setTimeout(step, 0)
+      timer = self.setTimeout(step, 0)
     })
   }
 
@@ -64,7 +58,7 @@ function createIdleWork(quietMs: number) {
       cancel()
       job = next
       startAt = performance.now() + delayMs
-      timer = window.setTimeout(step, delayMs)
+      timer = self.setTimeout(step, delayMs)
     },
     /** Runs a job to its end at once, dropping any job waiting. */
     finish(next: IdleJob) {
@@ -73,7 +67,11 @@ function createIdleWork(quietMs: number) {
       let result = next.next()
       while (!result.done) result = next.next()
     },
-    /** Milliseconds since the last key press, click, drag or wheel. */
+    /** Takes a key press, click, drag or wheel on the page, which holds static work for `quietMs`. */
+    noteInput() {
+      lastInputAt = performance.now()
+    },
+    /** Milliseconds since the last input noted. */
     sinceInput: () => performance.now() - lastInputAt,
     /** True when a key press or click is waiting for the main thread, where the browser can tell. */
     inputWaiting: inputPending,
@@ -82,11 +80,6 @@ function createIdleWork(quietMs: number) {
     stop() {
       cancel()
       job = null
-    },
-    dispose() {
-      cancel()
-      job = null
-      for (const type of inputEvents) removeEventListener(type, noteInput, { capture: true })
     },
   }
 }

@@ -5796,6 +5796,18 @@
           "type": "registry:ui"
         },
         {
+          "path": "registry/ui/live-sky-runner.ts",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/live-sky-surface.ts",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/live-sky-worker.ts",
+          "type": "registry:ui"
+        },
+        {
           "path": "registry/ui/live-sky-trace.ts",
           "type": "registry:ui"
         },

@@ -52,6 +52,7 @@ function useLoadedPhoto(photo: LiveSkyPhoto | undefined) {
     const release = () => {
       analysis?.dispose()
       layers?.image.close()
+      layers?.sky.close()
       layers?.windows?.close()
     }
     analyzeSkyPhoto(src, { skyMask, windows: true, signal: controller.signal })
