@@ -37,6 +37,54 @@ const seeded: StoredSecret[] = [
   { id: "github", name: "GitHub token", description: "Opens pull requests", configured: false },
 ]
 
+const local: StoredSecret[] = [
+  { id: "openai", name: "OpenAI API key", description: "From ~/.config/tools", configured: true, fingerprint: "x7Qa" },
+  {
+    id: "github",
+    name: "GitHub token",
+    description: "From the system keychain",
+    configured: true,
+    fingerprint: "9f2c",
+  },
+  {
+    id: "stripe",
+    name: "Stripe live key",
+    configured: true,
+    fingerprint: "41dd",
+    disabled: { reason: "Live payment keys stay on this device." },
+  },
+]
+
+function SecretChooser() {
+  const [selected, setSelected] = useState<string[]>(["openai"])
+  return (
+    <Card className="w-full">
+      <CardHeader>
+        <CardTitle>Keys on this device</CardTitle>
+        <CardDescription>
+          A chooser: selectable, with no Replace or Delete. Pick the keys to upload; only their last characters show.
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <SecretList
+          aria-label="Keys on this device"
+          secrets={local}
+          selectable
+          selected={selected}
+          onSelectedChange={setSelected}
+          text={{
+            configured: "Found",
+            missing: "Missing",
+            emptyTitle: "No keys found",
+            errorTitle: "Keys couldn't load",
+            selectAll: "Select all",
+          }}
+        />
+      </CardContent>
+    </Card>
+  )
+}
+
 const created = (time: ReactNode) => <>Created {time}</>
 const updated = (time: ReactNode) => <>Updated {time}</>
 const lastUsed = (time: ReactNode) => <>Last used {time}</>
@@ -64,57 +112,60 @@ export default function SecretListDemo() {
   }
 
   return (
-    <Card className="w-full max-w-2xl">
-      <CardHeader>
-        <CardTitle>API keys</CardTitle>
-        <CardDescription>Stored encrypted for your account. Values can be replaced, never read back.</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <SecretList
-          aria-label="API keys"
-          secrets={secrets}
-          onReplace={(id) => setReplacing(secrets.find((secret) => secret.id === id) ?? null)}
-          onDelete={async (id) => {
-            await wait(400)
-            setSecrets((current) => current.filter((secret) => secret.id !== id))
-          }}
-          text={{
-            configured: "Configured",
-            missing: "Missing",
-            replace: "Replace",
-            set: "Set",
-            delete: "Delete",
-            deleteTitle: (secret) => `Delete ${secret.name}?`,
-            deleteDescription: "Anything that uses it stops working until you set a new one.",
-            deleteConfirm: "Delete secret",
-            deleteAgentConfirm: (secret) => `Deletes ${secret.name}; anything using it stops working`,
-            created,
-            updated,
-            lastUsed,
-            neverUsed: "Never used",
-            emptyTitle: "No secrets yet",
-            errorTitle: "Secrets couldn't load",
-          }}
-        />
-        <FormDialog
-          open={replacing !== null}
-          onOpenChange={(open) => {
-            if (!open) setReplacing(null)
-          }}
-          schema={schema}
-          title={replacing?.configured ? `Replace ${replacing.name}` : `Set ${replacing?.name ?? ""}`}
-          description="The new value replaces the stored one at once. It isn't shown again."
-          submitLabel="Save"
-          cancelLabel="Cancel"
-          onSubmit={async ({ value }) => {
-            if (replacing) await store(replacing.id, value)
-          }}
-        >
-          <FormField name="value" label="Value">
-            <Input sensitive revealable placeholder="Paste the key" />
-          </FormField>
-        </FormDialog>
-      </CardContent>
-    </Card>
+    <div className="flex w-full max-w-2xl flex-col gap-section">
+      <Card className="w-full">
+        <CardHeader>
+          <CardTitle>API keys</CardTitle>
+          <CardDescription>Stored encrypted for your account. Values can be replaced, never read back.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <SecretList
+            aria-label="API keys"
+            secrets={secrets}
+            onReplace={(id) => setReplacing(secrets.find((secret) => secret.id === id) ?? null)}
+            onDelete={async (id) => {
+              await wait(400)
+              setSecrets((current) => current.filter((secret) => secret.id !== id))
+            }}
+            text={{
+              configured: "Configured",
+              missing: "Missing",
+              replace: "Replace",
+              set: "Set",
+              delete: "Delete",
+              deleteTitle: (secret) => `Delete ${secret.name}?`,
+              deleteDescription: "Anything that uses it stops working until you set a new one.",
+              deleteConfirm: "Delete secret",
+              deleteAgentConfirm: (secret) => `Deletes ${secret.name}; anything using it stops working`,
+              created,
+              updated,
+              lastUsed,
+              neverUsed: "Never used",
+              emptyTitle: "No secrets yet",
+              errorTitle: "Secrets couldn't load",
+            }}
+          />
+          <FormDialog
+            open={replacing !== null}
+            onOpenChange={(open) => {
+              if (!open) setReplacing(null)
+            }}
+            schema={schema}
+            title={replacing?.configured ? `Replace ${replacing.name}` : `Set ${replacing?.name ?? ""}`}
+            description="The new value replaces the stored one at once. It isn't shown again."
+            submitLabel="Save"
+            cancelLabel="Cancel"
+            onSubmit={async ({ value }) => {
+              if (replacing) await store(replacing.id, value)
+            }}
+          >
+            <FormField name="value" label="Value">
+              <Input sensitive revealable placeholder="Paste the key" />
+            </FormField>
+          </FormDialog>
+        </CardContent>
+      </Card>
+      <SecretChooser />
+    </div>
   )
 }

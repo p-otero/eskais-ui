@@ -2,7 +2,7 @@ import { act, fireEvent, render, screen, waitFor, within } from "@testing-librar
 import userEvent from "@testing-library/user-event"
 import { createAgent } from "@ui-sdk/react/agent"
 import { useState } from "react"
-import { beforeEach, expect, test, vi } from "vitest"
+import { beforeEach, expect, expectTypeOf, test, vi } from "vitest"
 
 import { SecretList, type SecretListProps, type SecretListText, type StoredSecret } from "@/components/ui/secret-list"
 
@@ -34,7 +34,7 @@ const secrets: StoredSecret[] = [
   { id: "github", name: "GitHub token", configured: true, fingerprint: "9f3c" },
 ]
 
-function Secrets(props: Partial<SecretListProps>) {
+function Secrets(props: Partial<SecretListProps> & { text?: SecretListText }) {
   return (
     <SecretList
       aria-label="Local keys"
@@ -242,4 +242,101 @@ test("agents reach the list by its name: one component is called API keys, and s
   const press = await agent.act({ steps: [{ ref: "Replace OpenAI key", action: "press" }] })
   expect(press.ok, press.error?.message).toBe(true)
   expect(onReplace).toHaveBeenLastCalledWith("openai")
+})
+
+const maybeReplace = (enabled: boolean) => (enabled ? () => undefined : undefined)
+
+const chooserText: SecretListText<never> = {
+  configured: "Found",
+  missing: "Missing",
+  emptyTitle: "No keys found",
+  errorTitle: "Keys couldn't load",
+  selectAll: "Select all",
+}
+
+function Chooser(props: { onSelectedChange?: SecretListProps["onSelectedChange"] }) {
+  return <SecretList aria-label="Local keys" secrets={secrets} selectable text={chooserText} {...props} />
+}
+
+test("a chooser needs no row actions or their text: no Replace, no Delete, and the checkboxes still select", async () => {
+  const user = userEvent.setup()
+  const onSelectedChange = vi.fn()
+  render(<Chooser onSelectedChange={onSelectedChange} />)
+  expect(screen.queryByRole("button")).toBeNull()
+  expect(document.querySelector("[data-slot=list-item-actions]")).toBeNull()
+  await user.click(checkbox("OpenAI key"))
+  expect(onSelectedChange).toHaveBeenLastCalledWith(["openai"], expect.objectContaining({ reason: "press" }))
+})
+
+test("a chooser's agent replace and delete fail with why, and its select still runs", async () => {
+  approve = true
+  render(<Chooser />)
+  const replaced = await agent.act({ steps: [{ ref: "Local keys", action: "replace", args: ["openai"] }] })
+  expect(replaced.ok).toBe(false)
+  expect(replaced.error?.message).toContain("replace isn't offered: the list has no onReplace")
+  const deleted = await agent.act({ steps: [{ ref: "Local keys", action: "delete", args: ["openai"] }] })
+  expect(deleted.ok).toBe(false)
+  expect(deleted.error?.message).toContain("delete isn't offered: the list has no onDelete")
+  expect(screen.queryByRole("alertdialog")).toBeNull()
+  const selected = await agent.act({ steps: [{ ref: "Local keys", action: "select", args: ["openai"] }] })
+  expect(selected.ok, selected.error?.message).toBe(true)
+  expect(listEntry()?.selected).toEqual(["OpenAI key"])
+})
+
+test("each row action shows only with its callback", async () => {
+  const user = userEvent.setup()
+  const onReplace = vi.fn()
+  const { unmount } = render(
+    <SecretList
+      aria-label="Local keys"
+      secrets={secrets}
+      selectable
+      onReplace={onReplace}
+      text={{ ...chooserText, replace: "Replace" }}
+    />,
+  )
+  expect(screen.queryByRole("button", { name: "Delete OpenAI key" })).toBeNull()
+  await user.click(screen.getByRole("button", { name: "Replace OpenAI key" }))
+  expect(onReplace).toHaveBeenCalledWith("openai")
+  unmount()
+  render(
+    <SecretList
+      aria-label="Local keys"
+      secrets={secrets}
+      onDelete={() => undefined}
+      text={{
+        ...chooserText,
+        delete: "Delete",
+        deleteTitle: "Delete this secret?",
+        deleteConfirm: "Delete secret",
+        deleteAgentConfirm: "Deletes the secret",
+      }}
+    />,
+  )
+  expect(screen.queryByRole("button", { name: "Replace OpenAI key" })).toBeNull()
+  fireEvent.click(screen.getByRole("button", { name: "Delete OpenAI key" }))
+  expect(await screen.findByRole("alertdialog", { name: "Delete this secret?" })).toBeTruthy()
+})
+
+test("a row action's text is required with its callback, and only then", () => {
+  const replaceText = { ...chooserText, replace: "Replace" }
+  expectTypeOf<SecretListText>().toMatchTypeOf<SecretListText<never>>()
+  const chooser = <SecretList aria-label="Keys" selectable text={chooserText} />
+  const replaceOnly = <SecretList aria-label="Keys" onReplace={() => undefined} text={replaceText} />
+  // @ts-expect-error onReplace needs text.replace
+  const replaceWithoutText = <SecretList aria-label="Keys" onReplace={() => undefined} text={chooserText} />
+  // @ts-expect-error onDelete needs the delete texts
+  const deleteWithoutText = <SecretList aria-label="Keys" onDelete={() => undefined} text={replaceText} />
+  const optional = <SecretList aria-label="Keys" onReplace={maybeReplace(true)} onDelete={undefined} text={text} />
+  expect([chooser, replaceOnly, replaceWithoutText, deleteWithoutText, optional]).toHaveLength(5)
+})
+
+test("a chooser has no axe violations", async () => {
+  const { container } = render(
+    <main>
+      <Chooser />
+    </main>,
+  )
+  await act(async () => {})
+  expect(await axeViolations(container)).toEqual([])
 })

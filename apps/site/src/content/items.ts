@@ -763,10 +763,11 @@ const itemNotes: Record<string, ItemNotes> = {
       "Approve stays focusable with aria-disabled while the codes don't match, the app blocks it or the request has expired; a decision being sent marks the block busy.",
       "approveBlockedReason shows beside the actions and describes Approve, so a screen reader hears why it's off.",
       "A failed decision is a live alert with the app's own message when it rejects with a string or a node.",
-      "Items are checkboxes named by their labels; a marked item's confirmation is a second checkbox described by the item, and why Approve waits shows beside the actions.",
+      "Items are checkboxes named by their labels; each confirmation of a marked item is its own checkbox described by the item, and why Approve waits shows beside the actions, naming what's missing.",
+      "A permission list shows its heading from text.granted or text.withheld, which TypeScript asks for only when the list is passed; a list without one renders no empty heading.",
     ],
     agent:
-      "Approve carries data-agent-confirm, so an agent's approve waits for a person; deny is the block's own action. The code and its comparison are hidden from agents by default. Approving while the codes differ, while the app blocks it (with approveBlockedReason as the message), after expiry or twice fails the step with why. Items take select(idOrLabel, checked) with no person; confirmMarker(idOrLabel) sits in a group marked data-agent-confirm, so it waits for one, and approve fails with why while nothing is selected or a replacement isn't confirmed.",
+      "Approve carries data-agent-confirm, so an agent's approve waits for a person; deny is the block's own action. The code and its comparison are hidden from agents by default. Approving while the codes differ, while the app blocks it (with approveBlockedReason as the message), after expiry or twice fails the step with why. Items take select(idOrLabel, checked) with no person; confirmMarker(idOrLabel, checked, confirmation) sits in a group marked data-agent-confirm, so each tick waits for one; confirmation is the index in marker.confirm or its text, and can be left out when the item has one. The group's missing lists what's still unticked, and approve fails with why while nothing is selected or a confirmation is missing, naming it.",
     related: ["pairing-code", "alert", "card", "secret-list"],
   },
   "expiry-countdown": {
@@ -805,14 +806,14 @@ const itemNotes: Record<string, ItemNotes> = {
   },
   "secret-list": {
     usage:
-      "A settings page of stored secrets: rows with a mask and the server's fingerprint, never a value; Replace opens your FormDialog with a sensitive Input, and Delete asks first.",
+      "A settings page of stored secrets: rows with a mask and the server's fingerprint, never a value; Replace opens your FormDialog with a sensitive Input, and Delete asks first. Each action shows only with its callback, so selectable with neither is a chooser, like keys to upload.",
     a11y: [
       "The mask is hidden from screen readers, which hear the fingerprint instead (Hidden value ending in a1b2, overridable).",
       "Each row's Replace and Delete are named for the secret, and Delete opens an alert dialog before anything is removed.",
       "The status is a pill with a dot and its word, so it doesn't rest on colour alone.",
     ],
     agent:
-      "Agents read the secrets as the list's items and call replace(id) and delete(id); delete opens the confirmation, whose button needs a person. With selectable, they call select(nameOrId, checked) and selectAll(checked) and read the selected names; an unknown name, a disabled secret or a list that isn't selectable fails the step with why. An unknown id fails replace and delete with why.",
+      "Agents read the secrets as the list's items and call replace(id) and delete(id); delete opens the confirmation, whose button needs a person. With selectable, they call select(nameOrId, checked) and selectAll(checked) and read the selected names; an unknown name, a disabled secret or a list that isn't selectable fails the step with why. An unknown id fails replace and delete with why, and so does a list without onReplace or onDelete.",
     related: [
       "input",
       "form-dialog",

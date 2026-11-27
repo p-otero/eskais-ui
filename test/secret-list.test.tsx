@@ -50,7 +50,7 @@ const secrets: StoredSecret[] = [
   { id: "github", name: "GitHub token", configured: false },
 ]
 
-function Secrets(props: Partial<SecretListProps>) {
+function Secrets(props: Partial<SecretListProps> & { text?: SecretListText }) {
   return (
     <SecretList
       aria-label="API keys"
