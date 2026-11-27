@@ -26,6 +26,7 @@ Each version lists `### Added`, `### Changed` and `### Fixed`, then `### Removed
 
 ### Fixed
 
+- `sidebar`: an item's badge sits on the label's baseline instead of centred below it, in tabular figures.
 - `theme-compact`: `--sidebar-rail-width` follows a nested density. It derives from `--control-height`, and a custom property with `var()` computes where it's declared, so a compact sidebar inside a default page kept the default rail width; every density rule now declares it again.
 
 ## 0.2.18 (2026-11-27)
