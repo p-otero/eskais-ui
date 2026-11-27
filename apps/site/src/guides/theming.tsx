@@ -102,6 +102,26 @@ appearance.radius.set("full")`}
         language="ts"
         title="src/appearance.ts"
       />
+      <P>
+        Both nest, so one region can differ from the page. A <Code>Sidebar</Code> takes <Code>density="compact"</Code>{" "}
+        (a <Code>Shell</Code>, <Code>sidebarDensity</Code>) to go compact in a default page, or <Code>"default"</Code>{" "}
+        to stay roomy in a compact one; the main content keeps the page's density. Two more knobs tighten its groups on
+        their own: <Code>groupGap</Code> (<Code>--sidebar-group-gap</Code>, the space between groups,{" "}
+        <Code>gap-group</Code> by default) and <Code>groupHeaderHeight</Code> (
+        <Code>--sidebar-group-header-height</Code>, the height of a group's label or collapsible trigger). Each takes{" "}
+        <Code>"compact"</Code> or a length, or set the property in CSS on the sidebar or any ancestor.
+      </P>
+      <Pre
+        code={`<Shell sidebarDensity="compact" sidebarGroupGap="compact" sidebarGroupHeaderHeight="compact" …>
+
+/* or in CSS, on the sidebar or an ancestor */
+.app-sidebar {
+  --sidebar-group-gap: var(--gap-items);
+  --sidebar-group-header-height: 1.5rem;
+}`}
+        language="tsx"
+        title="A compact sidebar in a default page"
+      />
 
       <H2 id="themes">Compact, glass and liquid glass</H2>
       <DocTable

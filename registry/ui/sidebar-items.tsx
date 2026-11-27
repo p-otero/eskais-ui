@@ -34,7 +34,10 @@ const groupClassName = "group/sidebar-group flex flex-col gap-inline"
 const listClassName = "flex flex-col gap-px"
 
 const groupTriggerClassName =
-  "h-control min-h-0 w-full min-w-0 pointer-coarse:h-(--control-height-touch) justify-start px-inset-item text-xs text-muted-foreground font-medium focus-visible:ring-offset-0 [&_[data-slot=sidebar-group-chevron]]:size-3.5"
+  "h-(--sidebar-group-header-height,var(--control-height)) group-data-[group-header=compact]/sidebar:h-(--sidebar-group-header-height,var(--control-height-sm)) min-h-0 w-full min-w-0 pointer-coarse:min-h-(--control-height-touch) justify-start px-inset-item text-caption text-muted-foreground font-medium focus-visible:ring-offset-0 [&_[data-slot=sidebar-group-chevron]]:size-3.5"
+
+const groupLabelClassName =
+  "h-(--sidebar-group-header-height,auto) content-center truncate px-inset-item text-caption font-medium text-muted-foreground group-data-collapsed/sidebar:sr-only group-data-[group-header=compact]/sidebar:leading-(--type-meta-leading)"
 
 function SidebarGroup({
   label,
@@ -82,11 +85,7 @@ function SidebarGroup({
   return (
     <div data-slot="sidebar-group" data-tone={tonal} className={cn(groupClassName, className)} {...props}>
       {label !== undefined && (
-        <div
-          id={labelId}
-          data-slot="sidebar-group-label"
-          className="truncate px-inset-item text-xs font-medium text-muted-foreground group-data-collapsed/sidebar:sr-only"
-        >
+        <div id={labelId} data-slot="sidebar-group-label" className={groupLabelClassName}>
           {label}
         </div>
       )}
@@ -105,7 +104,7 @@ type SidebarItemProps = Omit<LinkProps, "children" | "current" | "variant" | "re
   children: string
 }
 const itemClassName =
-  "flex h-control w-full min-w-0 pointer-coarse:h-(--control-height-touch) items-center gap-inline rounded-control px-inset-item text-sm font-normal text-foreground outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:ring-2 focus-visible:ring-ring aria-[current=page]:nav-current group-data-[tone=muted]/sidebar-group:not-aria-[current=page]:text-muted-foreground group-data-collapsed/sidebar:justify-center group-data-collapsed/sidebar:px-0 [&_svg]:size-4 [&_svg]:shrink-0"
+  "flex h-control w-full min-w-0 pointer-coarse:h-(--control-height-touch) items-center gap-inline rounded-control px-inset-item text-body font-normal text-foreground outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:ring-2 focus-visible:ring-ring aria-[current=page]:nav-current group-data-[tone=muted]/sidebar-group:not-aria-[current=page]:text-muted-foreground group-data-collapsed/sidebar:justify-center group-data-collapsed/sidebar:px-0 [&_svg]:size-4 [&_svg]:shrink-0"
 
 function SidebarItem({ icon, current = false, badge, render, className, children, ...props }: SidebarItemProps) {
   const rail = use(SidebarRailContext)
@@ -121,7 +120,7 @@ function SidebarItem({ icon, current = false, badge, render, className, children
     <>
       {icon}
       <span className="min-w-0 flex-1 truncate group-data-collapsed/sidebar:sr-only">{children}</span>
-      {badge !== undefined && <span className="ms-auto text-xs group-data-collapsed/sidebar:hidden">{badge}</span>}
+      {badge !== undefined && <span className="ms-auto text-caption group-data-collapsed/sidebar:hidden">{badge}</span>}
     </>
   )
   return (

@@ -38,13 +38,34 @@ import {
   ScrollAreaViewport,
 } from "@/components/ui/scroll-area"
 import { ControlTooltip } from "@/components/ui/tooltip"
-import { cn } from "@/lib/utils"
+import { cn, cssVars } from "@/lib/utils"
 import { useSidebarState, type SidebarState, type SidebarStateOptions } from "@/components/ui/use-sidebar-state"
 
 const { Root: SidebarRoot, Trigger: SidebarToggle } = createParts(sidebar, { root: "nav", trigger: "button" })
 
+type SidebarDensity = "default" | "compact"
+
+/** `"default"`, `"compact"`, or any CSS length or `var()`, like `"var(--gap-items)"` or `"0.25rem"`. */
+type SidebarGroupSpacing = SidebarDensity | (string & {})
+
 type SidebarProps = {
   label: string
+  /**
+   * The sidebar's own density, apart from the page's: `"compact"` tightens its items, spacing and type and narrows
+   * it, `"default"` keeps the default density inside a compact page. Follows the page when left out.
+   */
+  density?: SidebarDensity
+  /**
+   * The space between groups (`--sidebar-group-gap`). `"default"` is `gap-group`, `"compact"` is `gap-items`; a
+   * length or `var()` sets it exactly. Lists of collapsible groups keep 1px unless it's a length.
+   */
+  groupGap?: SidebarGroupSpacing
+  /**
+   * The height of the groups' headers (`--sidebar-group-header-height`). `"default"` keeps a label's line and a
+   * collapsible group's trigger at the control height; `"compact"` tightens the label's line and makes the trigger
+   * `control-height-sm`; a length or `var()` gives both that height.
+   */
+  groupHeaderHeight?: SidebarGroupSpacing
   collapsed?: boolean
   defaultCollapsed?: boolean
   onCollapsedChange?: (collapsed: boolean, details: ChangeDetails<SidebarCollapsedChangeReason>) => void
@@ -71,10 +92,33 @@ type SidebarProps = {
   children: ReactNode
 }
 
-const surfaceClassName = "flex min-h-0 flex-col gap-group text-foreground"
+const surfaceClassName = "group/sidebar flex min-h-0 flex-col gap-group text-foreground"
+
+function exactValue(spacing: SidebarGroupSpacing | undefined) {
+  return spacing === undefined || spacing === "default" || spacing === "compact" ? undefined : spacing
+}
+
+function sidebarScale(
+  density: SidebarDensity | undefined,
+  groupGap: SidebarGroupSpacing | undefined,
+  groupHeaderHeight: SidebarGroupSpacing | undefined,
+) {
+  return {
+    "data-density": density,
+    "data-group-gap": groupGap === "compact" ? groupGap : undefined,
+    "data-group-header": groupHeaderHeight === "compact" ? groupHeaderHeight : undefined,
+    style: cssVars({
+      "--sidebar-group-gap": exactValue(groupGap),
+      "--sidebar-group-header-height": exactValue(groupHeaderHeight),
+    }),
+  }
+}
 
 function Sidebar({
   label,
+  density,
+  groupGap,
+  groupHeaderHeight,
   collapsed: collapsedProp,
   defaultCollapsed = false,
   onCollapsedChange,
@@ -100,11 +144,12 @@ function Sidebar({
     controller ? setSidebarDrawerOpen(controller, open) : setOwnDrawerOpen(open)
   const collapsed = collapsible && !narrow && (collapsedProp ?? ownCollapsed)
   const rail = collapsed && collapse === "rail"
+  const scale = sidebarScale(density, groupGap, groupHeaderHeight)
 
   const body = (
     <ScrollArea className="flex min-h-0 flex-1 flex-col">
       <ScrollAreaViewport aria-label={label} className="h-auto min-h-0 flex-1">
-        <ScrollAreaContent className="flex flex-col gap-group not-has-[>:not([data-collapsible])]:gap-px">
+        <ScrollAreaContent className="flex flex-col gap-(--sidebar-group-gap,var(--gap-group)) not-has-[>:not([data-collapsible])]:gap-(--sidebar-group-gap,1px) group-data-[group-gap=compact]/sidebar:has-[>:not([data-collapsible])]:gap-(--sidebar-group-gap,var(--gap-items))">
           {children}
         </ScrollAreaContent>
       </ScrollAreaViewport>
@@ -124,6 +169,7 @@ function Sidebar({
         )}
         <DrawerBackdrop />
         <DrawerContent
+          data-density={density}
           className="gap-group p-items"
           onClickCapture={(event) => {
             if (event.target instanceof Element && event.target.closest("a[href]")) setDrawerOpen(false)
@@ -135,7 +181,7 @@ function Sidebar({
               <XIcon />
             </DrawerClose>
           </div>
-          <SidebarRoot aria-label={label} collapsed={false} className={cn(surfaceClassName, "flex-1")}>
+          <SidebarRoot aria-label={label} collapsed={false} {...scale} className={cn(surfaceClassName, "flex-1")}>
             {header}
             {body}
             {footer}
@@ -149,6 +195,7 @@ function Sidebar({
     <SidebarRoot
       aria-label={label}
       data-collapse={collapse}
+      {...scale}
       collapsed={collapsed}
       controller={controller}
       onCollapsedChange={(next, details) => {
@@ -158,7 +205,7 @@ function Sidebar({
       className={cn(
         surfaceClassName,
         // oxlint-disable-next-line shadcn/no-arbitrary-values -- transitions only the properties that move; transition-all also eased every colour and shadow change
-        "group/sidebar h-full w-(--sidebar-width) shrink-0 overflow-hidden border-e bg-muted/(--glass-opacity) p-items backdrop-surface transition-[width] duration-panel ease-standard data-collapsed:w-(--sidebar-rail-width) motion-reduce:transition-none",
+        "h-full w-(--sidebar-width) shrink-0 overflow-hidden border-e bg-muted/(--glass-opacity) p-items backdrop-surface transition-[width] duration-panel ease-standard data-collapsed:w-(--sidebar-rail-width) motion-reduce:transition-none",
         collapse === "hide" &&
           "data-collapsed:invisible data-collapsed:w-0 data-collapsed:border-e-0 data-collapsed:px-0",
         className,
@@ -189,6 +236,6 @@ function Sidebar({
 
 export { createSidebarController, Sidebar, SidebarGroup, SidebarItem, sidebarLabels, SidebarTrigger, useSidebarState }
 export type { SidebarState, SidebarStateOptions }
-export type { SidebarController, SidebarLabels, SidebarProps }
+export type { SidebarController, SidebarDensity, SidebarGroupSpacing, SidebarLabels, SidebarProps }
 export type { SidebarTriggerProps }
 export type { SidebarGroupProps, SidebarItemProps }

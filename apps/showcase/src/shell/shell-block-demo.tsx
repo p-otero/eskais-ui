@@ -26,6 +26,9 @@ import { toast, ToastStack } from "@/components/ui/toast"
 const params = new URLSearchParams(location.search)
 const hashMode = params.get("router") === "hash"
 const fillMode = params.get("main") === "fill"
+const sidebarDensity = (["default", "compact"] as const).find((density) => density === params.get("sidebarDensity"))
+const sidebarGroupGap = params.get("groupGap") ?? undefined
+const sidebarGroupHeaderHeight = params.get("groupHeaderHeight") ?? undefined
 
 const pages: ShellRoute[] = [
   { id: "inbox", label: "Inbox", href: "/inbox", icon: InboxIcon, group: "work", mobile: true, badge: 3 },
@@ -69,6 +72,9 @@ function ShellBlockDemo() {
         storageKey="showcase-shell"
         sidebarShortcut="mod+b"
         main={fillMode ? "fill" : "flow"}
+        sidebarDensity={sidebarDensity}
+        sidebarGroupGap={sidebarGroupGap}
+        sidebarGroupHeaderHeight={sidebarGroupHeaderHeight}
         searchFooter={
           <>
             <span className="inline-flex items-center gap-inline">

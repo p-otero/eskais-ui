@@ -24,6 +24,8 @@ import {
   Sidebar,
   SidebarTrigger,
   useSidebarState,
+  type SidebarDensity,
+  type SidebarGroupSpacing,
   type SidebarLabels,
   type SidebarState,
 } from "@/components/ui/sidebar"
@@ -126,6 +128,12 @@ type ShellProps<Route extends ShellRoute = ShellRoute> = Omit<ComponentProps<"di
   sidebarShortcut?: string
   /** `rail` keeps icons when collapsed; `hide` slides the sidebar away. Rail when every route has an icon. */
   collapse?: "rail" | "hide"
+  /** The sidebar's own density, apart from the page's, which `<main>` keeps. Follows the page when left out. */
+  sidebarDensity?: SidebarDensity
+  /** The space between the sidebar's groups: `"default"`, `"compact"`, or a length or `var()`. */
+  sidebarGroupGap?: SidebarGroupSpacing
+  /** The height of the sidebar's group labels: `"default"`, `"compact"`, or a length or `var()`. */
+  sidebarGroupHeaderHeight?: SidebarGroupSpacing
   /** Opens the palette from anywhere; `false` when the page already uses it. */
   searchShortcut?: string | false
   /** The palette's search text, to control it. Without it, every open starts empty (or from `defaultSearchQuery`). */
@@ -180,6 +188,9 @@ function Shell<Route extends ShellRoute>({
   sidebar: sidebarState,
   sidebarShortcut,
   collapse,
+  sidebarDensity,
+  sidebarGroupGap,
+  sidebarGroupHeaderHeight,
   searchShortcut = "mod+k",
   searchQuery,
   defaultSearchQuery,
@@ -291,6 +302,9 @@ function Shell<Route extends ShellRoute>({
               label={labels.sidebar}
               {...sidebar.sidebarProps}
               collapse={collapseMode}
+              density={sidebarDensity}
+              groupGap={sidebarGroupGap}
+              groupHeaderHeight={sidebarGroupHeaderHeight}
               trigger={false}
               narrowQuery={narrowQuery}
               labels={sidebarLabels}

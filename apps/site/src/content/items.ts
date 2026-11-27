@@ -648,6 +648,8 @@ const itemNotes: Record<string, ItemNotes> = {
     related: ["attachments", "dialog"],
   },
   sidebar: {
+    usage:
+      'density="compact" makes the sidebar compact (items, spacing, type, width, rail and drawer) without changing the page, and density="default" keeps it roomy inside a compact page. groupGap (--sidebar-group-gap) and groupHeaderHeight (--sidebar-group-header-height) tighten the space between groups and the height of their labels or triggers: "compact", or a length or var(); the properties also work in CSS on the sidebar or any ancestor.',
     a11y: [
       "A named navigation landmark; the current item has aria-current=page.",
       "Collapses to an icon rail with tooltips, and to a drawer on narrow screens.",

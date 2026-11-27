@@ -26,6 +26,7 @@
       "--board-column-max-width": "18rem",
       "--task-panel-width": "22rem",
       "--sidebar-width": "14rem",
+      "--sidebar-rail-width": "calc(var(--control-height) + 1rem)",
       "--type-caption-size": "0.71875rem",
       "--type-caption-leading": "0.9375rem",
       "--type-body-sm-size": "0.75rem",
@@ -60,6 +61,7 @@
       "--board-column-max-width": "18rem",
       "--task-panel-width": "22rem",
       "--sidebar-width": "14rem",
+      "--sidebar-rail-width": "calc(var(--control-height) + 1rem)",
       "--type-caption-size": "0.71875rem",
       "--type-caption-leading": "0.9375rem",
       "--type-body-sm-size": "0.75rem",
@@ -94,6 +96,7 @@
       "--board-column-max-width": "22rem",
       "--task-panel-width": "26rem",
       "--sidebar-width": "16rem",
+      "--sidebar-rail-width": "calc(var(--control-height) + 1rem)",
       "--type-caption-size": "0.75rem",
       "--type-caption-leading": "1rem",
       "--type-body-sm-size": "0.8125rem",
@@ -137,7 +140,8 @@
       "--board-column-min-width": "13rem",
       "--board-column-max-width": "15rem",
       "--task-panel-width": "22rem",
-      "--sidebar-width": "14rem"
+      "--sidebar-width": "14rem",
+      "--sidebar-rail-width": "calc(var(--control-height) + 1rem)"
     },
     "@container agent-task-board (width <= 75rem)": {
       "[data-board-density=\"auto\"]": {
@@ -158,7 +162,8 @@
         "--board-column-min-width": "13rem",
         "--board-column-max-width": "15rem",
         "--task-panel-width": "22rem",
-        "--sidebar-width": "14rem"
+        "--sidebar-width": "14rem",
+        "--sidebar-rail-width": "calc(var(--control-height) + 1rem)"
       }
     }
   },

@@ -46,3 +46,10 @@ test("board density uses compact spacing and controls with narrower columns, no 
   expect(tokens(compactCss, '[data-board-density="compact"]')).toEqual(board)
   expect(tokens(compactCss, '  [data-board-density="auto"]')).toEqual(board)
 })
+
+test("every density scope derives the rail width from its own control height, so a nested sidebar's rail follows it", () => {
+  const railWidth = root["--sidebar-rail-width"]
+  expect(railWidth).toContain("var(--control-height)")
+  expect(compact["--sidebar-rail-width"]).toBe(railWidth)
+  expect(tokens(compactCss, '[data-density="default"]')["--sidebar-rail-width"]).toBe(railWidth)
+})
