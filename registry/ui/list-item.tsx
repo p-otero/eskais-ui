@@ -101,6 +101,8 @@ function followWithoutSelectingAgain(primary: HTMLElement) {
 type ListItemProps = {
   id: string
   title: string
+  /** A control before the content, like a checkbox that selects the row; ignored in a selectable List. */
+  control?: ReactNode
   leading?: ReactNode
   subtitle?: ReactNode
   /** A StatusPill; on a narrow row it wraps below the title instead of squeezing it. */
@@ -129,6 +131,7 @@ type ListItemProps = {
 function ListItem({
   id,
   title,
+  control,
   leading,
   subtitle,
   status,
@@ -240,6 +243,7 @@ function ListItem({
       <div className="flex min-w-0 grow basis-60 items-start gap-items">
         {handle}
         {checkbox}
+        {control && !option && <span className="relative z-10 flex min-h-lh shrink-0 items-center">{control}</span>}
         {leading && (
           <span
             data-slot="list-item-leading"

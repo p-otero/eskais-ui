@@ -1,14 +1,22 @@
 "use client"
 
+import type { ChangeDetails } from "@ui-sdk/core"
 import { usePart, usePrimitive } from "@ui-sdk/react/primitive"
-import type { ReactNode } from "react"
+import { useId, type ReactNode } from "react"
 
 import { Button } from "@/components/ui/button"
+import { Checkbox, CheckboxIndicator, type CheckedState } from "@/components/ui/checkbox"
+import { CheckboxRow } from "@/components/ui/checkbox-row"
 import { ConfirmDialog } from "@/components/ui/confirm-dialog"
 import { DataState, type DataStatus } from "@/components/ui/data-state"
 import { List, ListItem } from "@/components/ui/list-item"
 import { RelativeTime } from "@/components/ui/relative-time"
-import { secretList, type SecretListState } from "@/components/ui/secret-list-primitive"
+import { SecretFingerprint } from "@/components/ui/secret-fingerprint"
+import {
+  secretList,
+  type SecretListSelectionChangeReason,
+  type SecretListState,
+} from "@/components/ui/secret-list-primitive"
 import { StatusPill } from "@/components/ui/status-pill"
 import type { Instant } from "@/lib/time"
 import { cn } from "@/lib/utils"
@@ -26,6 +34,8 @@ type StoredSecret = {
   updatedAt?: Instant
   /** `null` when it was never used. */
   lastUsedAt?: Instant | null
+  /** In a `selectable` list, turns its checkbox off; `{ reason }` shows why and describes the checkbox with it. */
+  disabled?: boolean | { reason: string }
 }
 
 /** Text that can name the secret it's about: a node, or a function of the secret. */
@@ -56,6 +66,8 @@ type SecretListText = {
   emptyDescription?: ReactNode
   errorTitle: ReactNode
   retry?: ReactNode
+  /** In a `selectable` list, a checkbox above the rows that selects every secret that can be selected. */
+  selectAll?: ReactNode
 }
 
 /** Names for screen readers and agents; English by default. */
@@ -91,6 +103,13 @@ type SecretListProps = {
   onReplace: (id: string) => unknown
   /** Deletes a secret after the confirmation; a returned Promise keeps it pending. */
   onDelete: (id: string) => unknown
+  /** Gives each secret a checkbox; agents `select(nameOrId, checked)` and `selectAll(checked)`. */
+  selectable?: boolean
+  /** The selected ids, to control the selection. */
+  selected?: readonly string[]
+  defaultSelected?: readonly string[]
+  /** The new selected ids; `details.cancel()` keeps the old ones, and an agent's step then fails with why. */
+  onSelectedChange?: (ids: string[], details: ChangeDetails<SecretListSelectionChangeReason>) => void
   text: SecretListText
   labels?: Partial<SecretListLabels>
   /** The locale of the relative dates; the page's by default. */
@@ -102,22 +121,20 @@ const noSecrets: readonly StoredSecret[] = []
 
 const rootAttributes: Record<`data-${string}`, string> = { "data-slot": "secret-list" }
 
-const MASK = "••••"
-
 function forSecret<Value extends ReactNode>(text: SecretText<Value>, secret: StoredSecret | undefined) {
   if (typeof text !== "function") return text
   return secret === undefined ? undefined : text(secret)
 }
 
-function MaskedValue({ secret, labels }: { secret: StoredSecret; labels: SecretListLabels }) {
-  if (!secret.configured) return null
-  const fingerprint = secret.fingerprint
-  return (
-    <span data-slot="secret-list-mask" className="font-mono text-foreground">
-      <span aria-hidden="true">{fingerprint === undefined ? `${MASK}${MASK}` : `${MASK} ${fingerprint}`}</span>
-      <span className="sr-only">{fingerprint === undefined ? labels.hidden : labels.fingerprint(fingerprint)}</span>
-    </span>
-  )
+const disabledReason = (secret: StoredSecret) => (typeof secret.disabled === "object" ? secret.disabled.reason : null)
+
+const isUnselectable = (secret: StoredSecret) => secret.disabled !== undefined && secret.disabled !== false
+
+function selectAllState(secrets: readonly StoredSecret[], selected: readonly string[]): CheckedState {
+  const selectable = secrets.filter((secret) => !isUnselectable(secret))
+  const count = selectable.filter((secret) => selected.includes(secret.id)).length
+  if (count === 0) return false
+  return count === selectable.length ? true : "indeterminate"
 }
 
 function SecretDates({ secret, text, locale }: { secret: StoredSecret; text: SecretListText; locale?: string }) {
@@ -138,6 +155,91 @@ function SecretDates({ secret, text, locale }: { secret: StoredSecret; text: Sec
   ))
 }
 
+type SecretRowProps = {
+  secret: StoredSecret
+  text: SecretListText
+  labels: SecretListLabels
+  locale?: string
+  selection?: { checked: boolean; onCheckedChange: (checked: CheckedState, event: Event | undefined) => void }
+  onReplace: (event: Event) => void
+  onDelete: (event: Event) => void
+}
+
+function SecretRow({ secret, text, labels, locale, selection, onReplace, onDelete }: SecretRowProps) {
+  const reasonId = useId()
+  const reason = selection ? disabledReason(secret) : null
+  return (
+    <ListItem
+      id={secret.id}
+      title={secret.name}
+      control={
+        selection ? (
+          <Checkbox
+            data-agent-hidden=""
+            aria-label={secret.name}
+            aria-describedby={reason === null ? undefined : reasonId}
+            checked={selection.checked}
+            disabled={isUnselectable(secret)}
+            onCheckedChange={(next, details) => selection.onCheckedChange(next, details.event)}
+          >
+            <CheckboxIndicator />
+          </Checkbox>
+        ) : undefined
+      }
+      status={
+        <StatusPill tone={secret.configured ? "success" : "warning"} dot>
+          {secret.configured ? text.configured : text.missing}
+        </StatusPill>
+      }
+      subtitle={
+        <span className="flex flex-col gap-inline">
+          {secret.description === undefined ? null : <span>{secret.description}</span>}
+          <span className="flex flex-wrap items-center gap-x-items">
+            {secret.configured ? (
+              <SecretFingerprint
+                fingerprint={secret.fingerprint ?? null}
+                labels={{ fingerprint: labels.fingerprint, none: labels.hidden }}
+              />
+            ) : null}
+            <span className="text-caption">
+              <SecretDates secret={secret} text={text} locale={locale} />
+            </span>
+          </span>
+        </span>
+      }
+      meta={
+        reason === null ? undefined : (
+          <span id={reasonId} data-slot="secret-list-disabled-reason">
+            {reason}
+          </span>
+        )
+      }
+      actions={
+        <>
+          <Button
+            size="sm"
+            variant="outline"
+            aria-label={secret.configured ? labels.replaceSecret(secret.name) : labels.setSecret(secret.name)}
+            onClick={(event) => onReplace(event.nativeEvent)}
+          >
+            {secret.configured ? text.replace : (text.set ?? text.replace)}
+          </Button>
+          {secret.configured ? (
+            <Button
+              size="sm"
+              variant="ghost"
+              aria-label={labels.deleteSecret(secret.name)}
+              onClick={(event) => onDelete(event.nativeEvent)}
+            >
+              {text.delete}
+            </Button>
+          ) : null}
+        </>
+      }
+    />
+  )
+}
+
 function SecretList({
   "aria-label": label,
   secrets = noSecrets,
@@ -146,6 +248,10 @@ function SecretList({
   onRetry,
   onReplace,
   onDelete,
+  selectable = false,
+  selected,
+  defaultSelected,
+  onSelectedChange,
   text,
   labels: overrides,
   locale,
@@ -157,6 +263,11 @@ function SecretList({
     onDelete,
     secrets: secrets.map((secret) => ({ value: secret.id, label: secret.name })),
     missing: secrets.filter((secret) => !secret.configured).map((secret) => secret.id),
+    selectable,
+    unselectable: secrets.filter(isUnselectable).map((secret) => ({ id: secret.id, reason: disabledReason(secret) })),
+    selectedIds: selected,
+    defaultSelectedIds: defaultSelected,
+    onSelectedIdsChange: onSelectedChange,
   })
   const { api } = handle
   const confirming = (state: SecretListState) => secrets.find((secret) => secret.id === state.confirming)
@@ -194,55 +305,42 @@ function SecretList({
                 })}
           >
             {(rows) => (
-              <List aria-label={label}>
-                {rows.map((secret) => (
-                  <ListItem
-                    key={secret.id}
-                    id={secret.id}
-                    title={secret.name}
-                    status={
-                      <StatusPill tone={secret.configured ? "success" : "warning"} dot>
-                        {secret.configured ? text.configured : text.missing}
-                      </StatusPill>
-                    }
-                    subtitle={
-                      <span className="flex flex-col gap-inline">
-                        {secret.description === undefined ? null : <span>{secret.description}</span>}
-                        <span className="flex flex-wrap items-center gap-x-items">
-                          <MaskedValue secret={secret} labels={labels} />
-                          <span className="text-caption">
-                            <SecretDates secret={secret} text={text} locale={locale} />
-                          </span>
-                        </span>
-                      </span>
-                    }
-                    actions={
-                      <>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          aria-label={
-                            secret.configured ? labels.replaceSecret(secret.name) : labels.setSecret(secret.name)
-                          }
-                          onClick={(event) => api.replace(secret.id, event.nativeEvent)}
-                        >
-                          {secret.configured ? text.replace : (text.set ?? text.replace)}
-                        </Button>
-                        {secret.configured ? (
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            aria-label={labels.deleteSecret(secret.name)}
-                            onClick={(event) => api.delete(secret.id, event.nativeEvent)}
-                          >
-                            {text.delete}
-                          </Button>
-                        ) : null}
-                      </>
+              <div className="flex min-w-0 flex-col gap-inline">
+                {selectable && text.selectAll !== undefined ? (
+                  <CheckboxRow
+                    data-agent-hidden=""
+                    className="px-inset-item"
+                    label={text.selectAll}
+                    checked={selectAllState(rows, state.selectedIds)}
+                    disabled={rows.every(isUnselectable)}
+                    onCheckedChange={(checked, details) =>
+                      api.selectAll(checked === true, { reason: "select-all", event: details.event })
                     }
                   />
-                ))}
-              </List>
+                ) : null}
+                <List aria-label={label}>
+                  {rows.map((secret) => (
+                    <SecretRow
+                      key={secret.id}
+                      secret={secret}
+                      text={text}
+                      labels={labels}
+                      locale={locale}
+                      selection={
+                        selectable
+                          ? {
+                              checked: state.selectedIds.includes(secret.id),
+                              onCheckedChange: (checked, event) =>
+                                api.select(secret.id, checked === true, { reason: "press", event }),
+                            }
+                          : undefined
+                      }
+                      onReplace={(event) => api.replace(secret.id, event)}
+                      onDelete={(event) => api.delete(secret.id, event)}
+                    />
+                  ))}
+                </List>
+              </div>
             )}
           </DataState>
           <ConfirmDialog

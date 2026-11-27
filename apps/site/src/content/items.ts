@@ -510,7 +510,17 @@ const itemNotes: Record<string, ItemNotes> = {
       "Grows to a 44px hit area on touch.",
     ],
     agent: "Agents call setChecked(true | false); other values are refused.",
-    related: ["switch", "radio-group", "field"],
+    related: ["checkbox-row", "switch", "radio-group", "field"],
+  },
+  "checkbox-row": {
+    usage:
+      "A checkbox with its label, a description and something at the end of the row, like a badge or a fingerprint. Use it for lists of choices that need a word of explanation, or a reason when they're off.",
+    a11y: [
+      "The label names the checkbox and toggles it; the description and a disabled row's reason describe it.",
+      "Rows grow to 44px on touch, and the checkbox keeps its 44px hit area.",
+    ],
+    agent: "The checkbox is a UI SDK part: agents call setChecked(true | false) on it by its label.",
+    related: ["checkbox", "field", "secret-list", "device-approval"],
   },
   "radio-group": {
     a11y: ["One tab stop; arrow keys move and select.", "Named by its Field label or aria-label."],
@@ -753,9 +763,10 @@ const itemNotes: Record<string, ItemNotes> = {
       "Approve stays focusable with aria-disabled while the codes don't match, the app blocks it or the request has expired; a decision being sent marks the block busy.",
       "approveBlockedReason shows beside the actions and describes Approve, so a screen reader hears why it's off.",
       "A failed decision is a live alert with the app's own message when it rejects with a string or a node.",
+      "Items are checkboxes named by their labels; a marked item's confirmation is a second checkbox described by the item, and why Approve waits shows beside the actions.",
     ],
     agent:
-      "Approve carries data-agent-confirm, so an agent's approve waits for a person; deny is the block's own action. The code and its comparison are hidden from agents by default. Approving while the codes differ, while the app blocks it (with approveBlockedReason as the message), after expiry or twice fails the step with why.",
+      "Approve carries data-agent-confirm, so an agent's approve waits for a person; deny is the block's own action. The code and its comparison are hidden from agents by default. Approving while the codes differ, while the app blocks it (with approveBlockedReason as the message), after expiry or twice fails the step with why. Items take select(idOrLabel, checked) with no person; confirmMarker(idOrLabel) sits in a group marked data-agent-confirm, so it waits for one, and approve fails with why while nothing is selected or a replacement isn't confirmed.",
     related: ["pairing-code", "alert", "card", "secret-list"],
   },
   "expiry-countdown": {
@@ -801,8 +812,23 @@ const itemNotes: Record<string, ItemNotes> = {
       "The status is a pill with a dot and its word, so it doesn't rest on colour alone.",
     ],
     agent:
-      "Agents read the secrets as the list's items and call replace(id) and delete(id); delete opens the confirmation, whose button needs a person. An unknown id fails the step with why.",
-    related: ["input", "form-dialog", "invitation-panel", "states", "status-pill"],
+      "Agents read the secrets as the list's items and call replace(id) and delete(id); delete opens the confirmation, whose button needs a person. With selectable, they call select(nameOrId, checked) and selectAll(checked) and read the selected names; an unknown name, a disabled secret or a list that isn't selectable fails the step with why. An unknown id fails replace and delete with why.",
+    related: [
+      "input",
+      "form-dialog",
+      "invitation-panel",
+      "states",
+      "status-pill",
+      "secret-fingerprint",
+      "checkbox-row",
+    ],
+  },
+  "secret-fingerprint": {
+    usage:
+      "Show which secret is stored without showing it: pass the last few characters your server derived. It never takes the value, so it can't leak one.",
+    a11y: ["The dots are hidden from screen readers, which hear Ending in 1a2b (or No fingerprint) instead."],
+    agent: "Plain text: agents read the fingerprint with the page, which is safe since it isn't secret.",
+    related: ["secret-list", "device-approval"],
   },
   "auth-page": {
     usage:

@@ -77,7 +77,7 @@ test("primitive: renders on the server as a named group", () => {
 test("a row shows the name, a mask with the fingerprint, its status and its dates", () => {
   render(<Secrets />)
   const openai = row("OpenAI key")
-  expect(openai.querySelector('[data-slot="secret-list-mask"]')?.textContent).toBe(
+  expect(openai.querySelector('[data-slot="secret-fingerprint"]')?.textContent).toBe(
     "•••• a1b2Hidden value ending in a1b2",
   )
   expect(within(openai).getByText("Configured").closest('[data-slot="status-pill"]')?.getAttribute("data-tone")).toBe(
@@ -95,7 +95,7 @@ test("a missing secret has a warning status, no mask, and Set in place of Replac
   expect(within(github).getByText("Missing").closest('[data-slot="status-pill"]')?.getAttribute("data-tone")).toBe(
     "warning",
   )
-  expect(github.querySelector('[data-slot="secret-list-mask"]')).toBeNull()
+  expect(github.querySelector('[data-slot="secret-fingerprint"]')).toBeNull()
   expect(within(github).getByRole("button", { name: "Set GitHub token" }).textContent).toBe("Set")
   expect(within(github).queryByRole("button", { name: /Delete/ })).toBeNull()
 })
@@ -180,7 +180,7 @@ test("agents see every control named, and the secrets as the list's items", () =
   for (const entry of components) expect(entry.label, `${entry.component} ${entry.ref} has no name`).toBeTruthy()
   const list = components.find((entry) => entry.component === "secret-list")
   expect(list?.label).toBe("API keys")
-  expect(list?.actions).toEqual(["replace", "delete"])
+  expect(list?.actions).toEqual(["replace", "delete", "select", "selectAll"])
   expect(list?.items).toEqual([
     { value: "openai", label: "OpenAI key" },
     { value: "stripe", label: "Stripe webhook secret" },

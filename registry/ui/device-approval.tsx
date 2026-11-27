@@ -1,5 +1,6 @@
 "use client"
 
+import type { ChangeDetails } from "@ui-sdk/core"
 import { usePart, usePrimitive } from "@ui-sdk/react/primitive"
 import { CircleSlashIcon, ClockAlertIcon, MonitorSmartphoneIcon, TriangleAlertIcon } from "lucide-react"
 import { useId, useState, type ReactNode } from "react"
@@ -7,6 +8,16 @@ import { useId, useState, type ReactNode } from "react"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import {
+  ConsentItems,
+  consentBlocked,
+  deviceConsentLabels,
+  useConsentItems,
+  type DeviceConsentItem,
+  type DeviceConsentLabels,
+  type DeviceConsentText,
+} from "@/components/ui/device-approval-items"
+import type { DeviceApprovalItemsChangeReason } from "@/components/ui/device-approval-items-primitive"
 import { ApproveButton, PermissionSection, type DevicePermission } from "@/components/ui/device-approval-parts"
 import {
   deviceApproval,
@@ -36,7 +47,7 @@ type DeviceInfo = {
 }
 
 /** The block's visible text. None has a default: pass it in the page's language. */
-type DeviceApprovalText = {
+type DeviceApprovalText = DeviceConsentText & {
   /** Under the device, like "This device asked to connect to your account." */
   description?: ReactNode
   /** Names the pairing code, when `code` is given; "Pairing code" by default. */
@@ -64,20 +75,27 @@ type DeviceApprovalText = {
 }
 
 /** Names for screen readers and agents; English by default. `codeLabels` holds the inner PairingCode's. */
-type DeviceApprovalLabels = {
+type DeviceApprovalLabels = DeviceConsentLabels & {
   /** Names the pairing code; `text.code` wins over it. */
   code: string
 }
 
-const deviceApprovalLabels: DeviceApprovalLabels = { code: "Pairing code" }
+const deviceApprovalLabels: DeviceApprovalLabels = { ...deviceConsentLabels, code: "Pairing code" }
+
+/** What `onApprove` receives: the selected item ids, and those of them whose marker confirmation is ticked. */
+type DeviceApprovalDecision = { selected: string[]; confirmed: string[] }
 
 /** What a consumer's own `actions` can render from. */
 type DeviceApprovalActionState = {
   expired: boolean
   /** Whether the codes match, with `code` and `compare`; `null` without a comparison or before an answer. */
   codesMatch: boolean | null
-  /** True while the app (`approveBlocked`), the comparison or the expiry stops an approval. */
+  /** True while the app (`approveBlocked`), the comparison, the items or the expiry stops an approval. */
   approveBlocked: boolean
+  /** The selected item ids, with `items`. */
+  selected: string[]
+  /** The selected marked items whose confirmation is ticked. */
+  confirmed: string[]
 }
 
 type DeviceApprovalBaseProps = {
@@ -90,6 +108,16 @@ type DeviceApprovalBaseProps = {
   agentHidden?: boolean
   granted?: readonly DevicePermission[]
   withheld?: readonly DevicePermission[]
+  /**
+   * Things the person ticks to include, like keys to upload, under `text.items`. Approve waits until one is selected
+   * and every selected item with a `marker` has its confirmation ticked.
+   */
+  items?: readonly DeviceConsentItem[]
+  /** The selected item ids, to control the selection. */
+  selected?: readonly string[]
+  defaultSelected?: readonly string[]
+  /** The new selected ids; `details.cancel()` keeps the old ones, and an agent's step then fails with why. */
+  onSelectedChange?: (ids: string[], details: ChangeDetails<DeviceApprovalItemsChangeReason>) => void
   /** A security warning, shown in a warning Alert. */
   warning?: ReactNode
   /** When the request expires; approving stops then. */
@@ -119,9 +147,9 @@ type DeviceApprovalActionProps =
   | {
       /**
        * Approves the device; a returned Promise keeps the block pending, and a rejection shows in the error alert: a
-       * string or a node as it is, anything else through `text.error`.
+       * string or a node as it is, anything else through `text.error`. With `items`, it gets what was selected.
        */
-      onApprove: () => unknown
+      onApprove: (decision: DeviceApprovalDecision) => unknown
       onDeny: () => unknown
       actions?: undefined
     }
@@ -152,6 +180,12 @@ function compareBlockedReason(compare: DeviceApprovalProps["compare"], codesMatc
   return null
 }
 
+function lockedReason(state: DeviceApprovalState): string | null {
+  if (state.decided !== null) return `the device was already ${state.decided === "approve" ? "approved" : "denied"}`
+  if (state.pending !== null) return "a decision is being sent"
+  return state.expired ? "the request has expired" : null
+}
+
 function DeviceApproval(props: DeviceApprovalProps) {
   const {
     device,
@@ -161,6 +195,7 @@ function DeviceApproval(props: DeviceApprovalProps) {
     agentHidden = true,
     granted = noPermissions,
     withheld = noPermissions,
+    items,
     warning,
     expiresAt,
     onExpire,
@@ -177,9 +212,20 @@ function DeviceApproval(props: DeviceApprovalProps) {
   const [codesMatch, setCodesMatch] = useState<boolean | null>(null)
   const comparing = code !== undefined && props.compare !== undefined
   const compareBlocked = comparing ? compareBlockedReason(props.compare, codesMatch) : null
-  const blocked = approveBlocked ? (approveBlockedReason ?? appBlockedFallback) : compareBlocked
+  const consent = useConsentItems(props)
+  const decision: DeviceApprovalDecision = { selected: [...consent.selectedIds], confirmed: [...consent.confirmedIds] }
+  const itemsBlocked = consentBlocked(items, consent.selectedIds, consent.confirmedIds, text)
+  const blocked = approveBlocked
+    ? (approveBlockedReason ?? appBlockedFallback)
+    : (compareBlocked ?? itemsBlocked?.reason ?? null)
+  const shownBlockedReason = approveBlocked
+    ? approveBlockedReason
+    : compareBlocked === null
+      ? itemsBlocked?.shown
+      : undefined
+  const { onApprove } = props
   const handle = usePrimitive(deviceApproval, {
-    onApprove: props.onApprove,
+    onApprove: onApprove && (() => onApprove(decision)),
     onDeny: props.onDeny,
     onExpire,
     approveBlocked: blocked,
@@ -236,13 +282,14 @@ function DeviceApproval(props: DeviceApprovalProps) {
       "aria-labelledby": nameId,
       className: cn("@container flex min-w-0 flex-col gap-group", className),
       children: (state: DeviceApprovalState) => {
-        const decision = decidedText(state.decided)
+        const decidedMessage = decidedText(state.decided)
         const undecided = !state.expired && state.decided === null
-        const showBlockedReason = approveBlocked && undecided && approveBlockedReason !== undefined
+        const showBlockedReason = undecided && blocked !== null && shownBlockedReason !== undefined
         const actionState: DeviceApprovalActionState = {
           expired: state.expired,
           codesMatch: comparing ? codesMatch : null,
           approveBlocked: state.expired || blocked !== null,
+          ...decision,
         }
         return (
           <>
@@ -275,6 +322,18 @@ function DeviceApproval(props: DeviceApprovalProps) {
                 <AlertDescription>{warning}</AlertDescription>
               </Alert>
             ) : null}
+            {items === undefined ? null : (
+              <ConsentItems
+                items={items}
+                selectedIds={consent.selectedIds}
+                confirmedIds={consent.confirmedIds}
+                onSelectedIdsChange={consent.select}
+                onConfirmedIdsChange={consent.confirm}
+                locked={lockedReason(state)}
+                heading={text.items}
+                labels={labels}
+              />
+            )}
             {granted.length > 0 || withheld.length > 0 ? (
               <div className="grid min-w-0 gap-group @xl:grid-cols-2">
                 <PermissionSection kind="granted" heading={text.granted} permissions={granted} />
@@ -300,13 +359,13 @@ function DeviceApproval(props: DeviceApprovalProps) {
                 </AlertDescription>
               </Alert>
             )}
-            {hasContent(decision) ? (
+            {hasContent(decidedMessage) ? (
               <Alert
                 data-slot="device-approval-decided"
                 tone={state.decided === "approve" ? "success" : "neutral"}
                 live
               >
-                <AlertDescription>{decision}</AlertDescription>
+                <AlertDescription>{decidedMessage}</AlertDescription>
               </Alert>
             ) : null}
             {showBlockedReason ? (
@@ -316,7 +375,7 @@ function DeviceApproval(props: DeviceApprovalProps) {
                 className="flex items-center justify-end gap-inline text-end text-body-sm text-muted-foreground narrow:justify-start narrow:text-start [&_svg]:size-4 [&_svg]:shrink-0"
               >
                 <CircleSlashIcon />
-                {approveBlockedReason}
+                {shownBlockedReason}
               </p>
             ) : null}
             <div
@@ -363,9 +422,11 @@ function DeviceApproval(props: DeviceApprovalProps) {
 export { DeviceApproval, deviceApprovalLabels }
 export type {
   DeviceApprovalActionState,
+  DeviceApprovalDecision,
   DeviceApprovalLabels,
   DeviceApprovalProps,
   DeviceApprovalText,
+  DeviceConsentItem,
   DeviceInfo,
   DevicePermission,
 }
