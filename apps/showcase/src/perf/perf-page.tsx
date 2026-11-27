@@ -64,6 +64,8 @@ const scenarios: Record<string, () => Promise<Render>> = {
     instruments().then(({ MixerScenario }) => () => <MixerScenario />),
   "safe-dial": () =>
     instruments().then(({ SafeDialScenario }) => () => <SafeDialScenario />),
+  "safe-vault": () =>
+    instruments().then(({ SafeVaultScenario }) => () => <SafeVaultScenario />),
   "vinyl-scrubber": () =>
     instruments().then(({ VinylScrubberScenario }) => () => <VinylScrubberScenario />),
   "live-sky": () =>

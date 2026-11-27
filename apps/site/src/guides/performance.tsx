@@ -124,6 +124,16 @@ export default function Performance() {
         </li>
       </Ul>
 
+      <H2 id="3d">3D scenes</H2>
+      <P>
+        VinylScrubber and SafeVault draw photographic three.js scenes through the <Code>three-stage</Code> item, which
+        they install. The scene loads in its own chunk once input has been quiet for a moment after the controls paint,
+        and draws in a module worker on an OffscreenCanvas, or on the page where a worker can&apos;t draw. It draws once
+        per change and every frame only while something moves on screen, so an idle page costs nothing; off screen,
+        under reduced motion and on a software renderer (fewer frames, fewer pixels) it draws less. Without WebGL, or
+        when its context is lost, the component&apos;s drawing stays.
+      </P>
+
       <H2 id="your-app">Measuring your own screens</H2>
       <Ul>
         <li>Measure a production build: a development build is several times slower and changes what is slow.</li>

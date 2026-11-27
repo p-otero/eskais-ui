@@ -739,6 +739,76 @@ const vinylScenario = {
   literals: ["@"],
 }
 
+const safeVaultMain = `import { useState } from "react"
+import { createRoot } from "react-dom/client"
+import { SafeVault } from "@/components/ui/safe-vault"
+import { cn } from "@/lib/utils"
+import "./index.css"
+${probes}
+function App() {
+  const [unlocked, setUnlocked] = useState(false)
+  const [denied, setDenied] = useState(false)
+  return (
+    <main className="flex flex-col gap-items p-inset-surface">
+      <SafeVault
+        label="Consumer vault"
+        status={unlocked ? "unlocked" : denied ? "denied" : "locked"}
+        onStatusChange={(next) => {
+          setUnlocked(next === "unlocked")
+          setDenied(next === "denied")
+        }}
+        onComplete={(code) => {
+          setUnlocked(code === "11223344")
+          setDenied(code !== "11223344")
+        }}
+      >
+        <p>esk_demo_consumer</p>
+      </SafeVault>
+      <Probes />
+    </main>
+  )
+}
+
+createRoot(document.querySelector("#root") ?? document.body).render(<App />)
+`
+
+async function checkSafeVault(page) {
+  await page.waitForFunction(
+    () => document.querySelector('[data-slot="safe-vault"]')?.dataset.vault === "3d",
+    undefined,
+    {
+      timeout: 30_000,
+    },
+  )
+  await page.getByRole("slider", { name: "Dial" }).focus()
+  await page.keyboard.type("11223344")
+  await page.waitForFunction(
+    () => document.querySelector('[data-slot="safe-vault-contents"]')?.hasAttribute("inert") === false,
+    undefined,
+    { timeout: 10_000 },
+  )
+  const vault = await page.evaluate(() => ({
+    workers: globalThis.workersStarted,
+    canvas: document.querySelectorAll('[data-slot="safe-vault-canvas"]').length,
+    contents: document.querySelector('[data-slot="safe-vault-contents"]')?.textContent,
+    plaque: document.querySelector('[data-slot="safe-vault-plaque"]')?.style.transform.startsWith("matrix3d("),
+  }))
+  console.log("SafeVault:", JSON.stringify(vault))
+  if (vault.workers < 1 || vault.canvas !== 1 || !vault.contents?.includes("esk_demo_consumer") || !vault.plaque)
+    throw new Error(`SafeVault didn't open onto its plaque, drawn in its worker: ${JSON.stringify(vault)}`)
+}
+
+const safeVaultScenario = {
+  css: `@layer ui-sdk;
+@import "tailwindcss";
+`,
+  items: ["theme", "safe-vault"],
+  main: safeVaultMain,
+  builtCss: ["--safe-vault-plaque"],
+  check: checkSafeVault,
+  literals: ["@"],
+}
+
 const themeOnlyMain = `import { createRoot } from "react-dom/client"
 import { cn } from "@/lib/utils"
 import "./index.css"
@@ -1127,6 +1197,30 @@ const scenarios = {
       "src/components/ui/vinyl-scrubber-worker.js",
     ],
     absent: ["src/components/ui/vinyl-scrubber.tsx", "src/components/ui/vinyl-scrubber-runner.ts"],
+  },
+  "safe-vault": {
+    ...safeVaultScenario,
+    files: [
+      "src/components/ui/safe-vault.tsx",
+      "src/components/ui/safe-vault-stage.ts",
+      "src/components/ui/safe-vault-runner.ts",
+      "src/components/ui/safe-vault-worker.js",
+      "src/lib/three-stage.ts",
+      "src/lib/three-stage-runner.ts",
+    ],
+  },
+  "safe-vault-js": {
+    ...safeVaultScenario,
+    tsx: false,
+    files: [
+      "src/components/ui/safe-vault.jsx",
+      "src/components/ui/safe-vault-stage.js",
+      "src/components/ui/safe-vault-runner.js",
+      "src/components/ui/safe-vault-worker.js",
+      "src/lib/three-stage.js",
+      "src/lib/three-stage-runner.js",
+    ],
+    absent: ["src/components/ui/safe-vault.tsx", "src/components/ui/safe-vault-runner.ts"],
   },
   fresh: {
     css: `@layer ui-sdk;\n@import "tailwindcss";\n`,

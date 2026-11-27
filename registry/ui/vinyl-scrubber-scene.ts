@@ -1,23 +1,18 @@
 import {
   ACESFilmicToneMapping,
-  BackSide,
   BoxGeometry,
   CanvasTexture,
   CatmullRomCurve3,
   CircleGeometry,
-  Color,
   CylinderGeometry,
   DirectionalLight,
-  DoubleSide,
   Group,
   Mesh,
-  MeshBasicMaterial,
   MeshPhysicalMaterial,
   MeshStandardMaterial,
   PCFShadowMap,
   PerspectiveCamera,
   PlaneGeometry,
-  PMREMGenerator,
   Scene,
   ShadowMaterial,
   SphereGeometry,
@@ -28,7 +23,6 @@ import {
   WebGLRenderer,
   type BufferGeometry,
   type Material,
-  type Object3D,
 } from "three"
 import { RoundedBoxGeometry } from "three/addons/geometries/RoundedBoxGeometry.js"
 
@@ -43,21 +37,18 @@ import {
   recordRadius,
   recordTurn,
 } from "@/components/ui/vinyl-scrubber-view"
+import { grilleHoles, grooves, tangents } from "@/components/ui/vinyl-scrubber-textures"
 import {
-  canvasTexture,
-  grilleHoles,
-  grooves,
-  isBitmap,
-  noise,
-  repeating,
-  tangents,
-  type Surface,
-} from "@/components/ui/vinyl-scrubber-textures"
+  disposeAll,
+  isSoftwareRenderer,
+  prepareScene,
+  stagePixelRatio,
+  studioEnvironment,
+  type StageSize,
+} from "@/lib/three-studio"
+import { canvasTexture, isBitmap, noise, repeating, type Surface } from "@/lib/three-textures"
 
 type LabelImage = Surface | ImageBitmap
-
-/** The stage's size in CSS pixels and the device pixels per CSS pixel. */
-type StageSize = { width: number; height: number; pixelRatio: number }
 
 type TurntableScene = {
   /** Whether WebGL runs on the CPU (SwiftShader, llvmpipe, WARP), where every frame is costly. */
@@ -71,64 +62,7 @@ type TurntableScene = {
   dispose: () => void
 }
 
-const maxPixelRatio = 2
-const softwarePixelRatio = 0.75
-const softwareRenderers = /swiftshader|llvmpipe|softpipe|basic render|warp/i
-
-function rendererName(gl: WebGLRenderingContext | WebGL2RenderingContext) {
-  const debug = gl.getExtension("WEBGL_debug_renderer_info")
-  return String(gl.getParameter(debug ? debug.UNMASKED_RENDERER_WEBGL : gl.RENDERER))
-}
 const shadowRedrawRadians = 0.004
-
-function softboxStudio() {
-  const room = new Scene()
-  room.add(new Mesh(new BoxGeometry(100, 100, 100), new MeshBasicMaterial({ color: 0x0a0a0c, side: BackSide })))
-  const softbox = (width: number, height: number, intensity: number, position: Vector3, tint = 0xffffff) => {
-    const material = new MeshBasicMaterial({ color: new Color(tint).multiplyScalar(intensity), side: DoubleSide })
-    const panel = new Mesh(new PlaneGeometry(width, height), material)
-    panel.position.copy(position)
-    panel.lookAt(0, 0, 0)
-    room.add(panel)
-  }
-  softbox(40, 14, 6, new Vector3(0, 45, 10))
-  softbox(10, 60, 4, new Vector3(-45, 10, 10), 0xfff1e0)
-  softbox(8, 50, 3, new Vector3(45, 15, -10), 0xdfe8ff)
-  softbox(60, 6, 1.2, new Vector3(0, 6, 46))
-  return room
-}
-
-function texturesOf(root: Object3D) {
-  const textures = new Set<Texture>()
-  root.traverse((object) => {
-    if (!(object instanceof Mesh)) return
-    const mesh: Mesh = object
-    for (const material of Array.isArray(mesh.material) ? mesh.material : [mesh.material]) {
-      for (const value of Object.values(material)) if (value instanceof Texture) textures.add(value)
-    }
-  })
-  return textures
-}
-
-const nextFrame = () =>
-  new Promise<void>((resolve) => {
-    if (typeof requestAnimationFrame === "function") requestAnimationFrame(() => resolve())
-    else setTimeout(resolve, 16)
-  })
-
-function disposeAll(root: Object3D) {
-  const used = new Set<Material>()
-  const geometries = new Set<BufferGeometry>()
-  for (const texture of texturesOf(root)) texture.dispose()
-  root.traverse((object) => {
-    if (!(object instanceof Mesh)) return
-    const mesh: Mesh = object
-    geometries.add(mesh.geometry)
-    for (const material of Array.isArray(mesh.material) ? mesh.material : [mesh.material]) used.add(material)
-  })
-  for (const geometry of geometries) geometry.dispose()
-  for (const material of used) material.dispose()
-}
 
 function materials() {
   const leatherBump = repeating(
@@ -151,10 +85,29 @@ function materials() {
       sheenColor: 0x50505a,
       sheenRoughness: 0.5,
     }),
-    fabric: new MeshStandardMaterial({ color: 0x0b0b0d, roughness: 0.95, bumpMap: leatherBump, bumpScale: 0.25 }),
-    chrome: new MeshStandardMaterial({ color: 0xe6e8ec, metalness: 1, roughness: 0.16 }),
-    brushed: new MeshPhysicalMaterial({ color: 0xb9bdc3, metalness: 1, roughness: 0.3, anisotropy: 0.7 }),
-    plastic: new MeshPhysicalMaterial({ color: 0x0c0c0e, roughness: 0.35, clearcoat: 0.4, clearcoatRoughness: 0.3 }),
+    fabric: new MeshStandardMaterial({
+      color: 0x0b0b0d,
+      roughness: 0.95,
+      bumpMap: leatherBump,
+      bumpScale: 0.25,
+    }),
+    chrome: new MeshStandardMaterial({
+      color: 0xe6e8ec,
+      metalness: 1,
+      roughness: 0.16,
+    }),
+    brushed: new MeshPhysicalMaterial({
+      color: 0xb9bdc3,
+      metalness: 1,
+      roughness: 0.3,
+      anisotropy: 0.7,
+    }),
+    plastic: new MeshPhysicalMaterial({
+      color: 0x0c0c0e,
+      roughness: 0.35,
+      clearcoat: 0.4,
+      clearcoatRoughness: 0.3,
+    }),
     rubber: new MeshStandardMaterial({ color: 0x0a0a0a, roughness: 0.9 }),
     grille: new MeshStandardMaterial({
       color: 0x3a3b40,
@@ -177,7 +130,11 @@ function materials() {
       iridescenceIOR: 1.6,
       iridescenceThicknessRange: [250, 900],
     }),
-    cartridge: new MeshPhysicalMaterial({ color: 0xd62a1c, roughness: 0.3, clearcoat: 0.6 }),
+    cartridge: new MeshPhysicalMaterial({
+      color: 0xd62a1c,
+      roughness: 0.3,
+      clearcoat: 0.6,
+    }),
     label: new MeshStandardMaterial({ color: 0xd91f10, roughness: 0.6 }),
   }
 }
@@ -308,7 +265,7 @@ function lights(scene: Scene) {
 /** The suitcase turntable in a dark studio, drawn into `canvas`; it throws when the canvas has no WebGL. */
 function createTurntableScene(canvas: Surface, size: StageSize): TurntableScene {
   const renderer = new WebGLRenderer({ canvas, antialias: true, alpha: true })
-  const software = softwareRenderers.test(rendererName(renderer.getContext()))
+  const software = isSoftwareRenderer(renderer)
   renderer.toneMapping = ACESFilmicToneMapping
   renderer.toneMappingExposure = 1.15
   renderer.shadowMap.enabled = true
@@ -316,11 +273,7 @@ function createTurntableScene(canvas: Surface, size: StageSize): TurntableScene 
   renderer.shadowMap.autoUpdate = false
 
   const scene = new Scene()
-  const pmrem = new PMREMGenerator(renderer)
-  const studio = softboxStudio()
-  const environment = pmrem.fromScene(studio, 0.02)
-  disposeAll(studio)
-  pmrem.dispose()
+  const environment = studioEnvironment(renderer)
   scene.environment = environment.texture
 
   const m = materials()
@@ -342,7 +295,7 @@ function createTurntableScene(canvas: Surface, size: StageSize): TurntableScene 
   let label: Texture | null = null
 
   const setSize = ({ width, height, pixelRatio }: StageSize) => {
-    renderer.setPixelRatio(software ? softwarePixelRatio : Math.min(maxPixelRatio, pixelRatio))
+    renderer.setPixelRatio(stagePixelRatio(software, pixelRatio))
     renderer.setSize(Math.max(1, width), Math.max(1, height), false)
     camera.aspect = width > 0 && height > 0 ? width / height : 1
     camera.updateProjectionMatrix()
@@ -352,14 +305,7 @@ function createTurntableScene(canvas: Surface, size: StageSize): TurntableScene 
 
   return {
     software,
-    async prepare() {
-      await renderer.compileAsync(scene, camera)
-      await [...texturesOf(scene)].reduce(
-        (uploaded, texture) => uploaded.then(nextFrame).then(() => renderer.initTexture(texture)),
-        Promise.resolve(),
-      )
-      await nextFrame()
-    },
+    prepare: () => prepareScene(renderer, scene, camera),
     setSize,
     setLabel(image) {
       const previous = label

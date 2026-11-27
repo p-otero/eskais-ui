@@ -1,73 +1,4 @@
-import { CanvasTexture, RepeatWrapping, SRGBColorSpace, type Texture } from "three"
-
-type Surface = HTMLCanvasElement | OffscreenCanvas
-type Context2D = CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D
-
-function surface(size: number): Surface {
-  if (typeof OffscreenCanvas === "function") return new OffscreenCanvas(size, size)
-  const canvas = document.createElement("canvas")
-  canvas.width = size
-  canvas.height = size
-  return canvas
-}
-
-function context2d(canvas: Surface): Context2D | null {
-  return typeof OffscreenCanvas === "function" && canvas instanceof OffscreenCanvas
-    ? canvas.getContext("2d")
-    : canvas.getContext("2d")
-}
-
-const isBitmap = (image: unknown): image is ImageBitmap =>
-  typeof ImageBitmap === "function" && image instanceof ImageBitmap
-
-function seededRandom(seed: number) {
-  let state = seed
-  return () => {
-    state = (state + 0x6d2b79f5) | 0
-    let mixed = Math.imul(state ^ (state >>> 15), 1 | state)
-    mixed = (mixed + Math.imul(mixed ^ (mixed >>> 7), 61 | mixed)) ^ mixed
-    return ((mixed ^ (mixed >>> 14)) >>> 0) / 4294967296
-  }
-}
-
-function canvasTexture(size: number, draw: (context: Context2D, size: number) => void, color: boolean) {
-  const canvas = surface(size)
-  const context = context2d(canvas)
-  if (context) draw(context, size)
-  const texture = new CanvasTexture(canvas)
-  if (color) texture.colorSpace = SRGBColorSpace
-  texture.anisotropy = 8
-  return texture
-}
-
-function repeating(texture: Texture, times: number) {
-  texture.wrapS = RepeatWrapping
-  texture.wrapT = RepeatWrapping
-  texture.repeat.set(times, times)
-  return texture
-}
-
-function noise(context: Context2D, size: number, base: number, spread: number, grain: boolean, seed: number) {
-  const random = seededRandom(seed)
-  const image = context.createImageData(size, size)
-  for (let index = 0; index < size * size; index++) {
-    const value = base + (random() - 0.5) * spread
-    image.data[index * 4] = value
-    image.data[index * 4 + 1] = value
-    image.data[index * 4 + 2] = value
-    image.data[index * 4 + 3] = 255
-  }
-  context.putImageData(image, 0, 0)
-  if (!grain) return
-  context.globalAlpha = 0.18
-  for (let index = 0; index < size * 3; index++) {
-    context.fillStyle = random() > 0.5 ? "#fff" : "#000"
-    context.beginPath()
-    context.arc(random() * size, random() * size, 0.6 + random() * 2.2, 0, Math.PI * 2)
-    context.fill()
-  }
-  context.globalAlpha = 1
-}
+import { seededRandom, type Context2D } from "@/lib/three-textures"
 
 function grilleHoles(context: Context2D, size: number) {
   context.fillStyle = "#fff"
@@ -116,5 +47,4 @@ function tangents(context: Context2D, size: number) {
   context.putImageData(image, 0, 0)
 }
 
-export { canvasTexture, grilleHoles, grooves, isBitmap, noise, repeating, tangents }
-export type { Surface }
+export { grilleHoles, grooves, tangents }

@@ -260,6 +260,14 @@ const keyScenarios = [
     held: "ArrowRight",
   },
   {
+    id: "safe-vault",
+    label: "SafeVault, 3D safe drawn in its worker (→, ←, Enter)",
+    settle: 3000,
+    focus: '[data-slot="safe-dial-dial"] input[type="range"]',
+    keys: [...repeat("ArrowRight", 12), ...repeat("ArrowLeft", 6), "Enter", ...repeat("ArrowRight", 4)],
+    held: "ArrowRight",
+  },
+  {
     id: "vinyl-scrubber",
     label: "VinylScrubber, 2,000 peaks (→, Page Up, ←)",
     focus: '[data-slot="vinyl-panel"] input[type="range"]',

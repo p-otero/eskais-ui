@@ -154,6 +154,7 @@ const pages: Record<string, Page> = {
   "sun-arc": () => import("./instruments/sun-arc-demo").then((module) => module.SunArcDemo),
   mixer: () => import("./instruments/mixer-demo").then((module) => module.MixerDemo),
   "safe-dial": () => import("./instruments/safe-dial-demo").then((module) => module.SafeDialDemo),
+  "safe-vault": () => import("./instruments/safe-vault-demo").then((module) => module.SafeVaultDemo),
   "liquid-glass": () => import("./liquid/liquid-glass-demo").then((module) => module.LiquidGlassDemo),
   "vinyl-scrubber": () => import("./instruments/vinyl-scrubber-demo").then((module) => module.VinylScrubberDemo),
   "live-sky": () => import("./sky/live-sky-demo").then((module) => module.LiveSkyDemo),

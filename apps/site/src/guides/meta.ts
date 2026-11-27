@@ -70,6 +70,7 @@ const guides: GuideMeta[] = [
     title: "Performance",
     description:
       "What a key press may cost, the budgets CI holds, the bun run perf harness and how to measure your own screens.",
+    covers: ["three-stage"],
   },
   {
     slug: "server-data",

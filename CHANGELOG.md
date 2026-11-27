@@ -4,6 +4,17 @@ Versions follow [semver](https://semver.org). Before 1.0, a minor version can br
 
 Each version lists `### Added`, `### Changed` and `### Fixed`, then `### Removed files` when an item stopped installing a file: shadcn never deletes files, so the section tells a project what to clean up. `node tooling/removed-files.mjs <previous tag>` writes it.
 
+## Unreleased
+
+### Added
+
+- `safe-vault`: `SafeVault`, a photographic safe that opens with a combination. `SafeDial` sits on its door; check the code from `onComplete` and set `status` (`"locked"`, `"denied"` or `"unlocked"`). `denied` shakes the dial, announces `labels.denied`, clears the code and then calls `onStatusChange("locked", { reason: "retry" })`. `unlocked` announces `labels.unlocked`, draws back five chrome bolts, swings the door to 100° with a slight overshoot and moves the camera in to a plaque on the back wall (2.8 s; at once under reduced motion). `children` aren't in the page until it's unlocked and stay inert until the door is open; they render as real DOM on the plaque, mapped onto the wall with a `matrix3d` computed from the camera, so they stay sharp, focusable, clickable and readable to agents. The plaque is laid out at its settled width, grows with its contents within the panel and scrolls past that, and its finish follows the theme: paper on a light page, dark anodised metal on a dark one (`--safe-vault-plaque`, `.dark` and the system fallback). With `onStatusChange`, an unlocked vault shows a Lock button (`labels.lock`); locking closes the door and clears the code. The three.js scene draws in a module worker (`safe-vault-worker.js`) or on the page, loads after the controls paint, and draws only while something moves; without WebGL the drawn door stays and the contents show under it. `?demo=safe-vault`.
+- `three-stage`: the runtime the photographic three.js items share. `createThreeStage` (the page side: a worker on an OffscreenCanvas or the page, started once input is quiet, paused off screen, dropped back to the drawing without WebGL or after a lost context), `createStageRunner` and `serveStageRunner` (the worker side: one frame per change, every frame only while animating, slower and smaller on a software renderer), `studioEnvironment` (a dark softbox studio through PMREM), `prepareScene` (shaders compiled off the main thread, textures uploaded one per frame), and seeded canvas textures.
+
+### Changed
+
+- `vinyl-scrubber`: its worker link, page fallback, quiet-input start, observers, pacing, studio and texture helpers now come from `three-stage`, which it installs. Its API, files and behaviour are unchanged.
+
 ## 0.2.19 (2026-11-27)
 
 ### Added

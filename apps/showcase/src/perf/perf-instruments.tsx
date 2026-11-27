@@ -1,11 +1,13 @@
 import { Mixer } from "@/components/ui/mixer"
 import { SafeDial } from "@/components/ui/safe-dial"
+import { SafeVault } from "@/components/ui/safe-vault"
 import { SunArc } from "@/components/ui/sun-arc"
 import { VinylScrubber } from "@/components/ui/vinyl-scrubber"
 
 import cebuSkyline from "../assets/cebu-skyline.jpg"
 import "../../../../registry/styles/mixer.css"
 import "../../../../registry/styles/safe-dial.css"
+import "../../../../registry/styles/safe-vault.css"
 import "../../../../registry/styles/sun-arc.css"
 import "../../../../registry/styles/vinyl-scrubber.css"
 
@@ -57,6 +59,14 @@ function SafeDialScenario() {
   )
 }
 
+function SafeVaultScenario() {
+  return (
+    <div className="w-full max-w-3xl">
+      <SafeVault label="Vault" status="locked" />
+    </div>
+  )
+}
+
 function VinylScrubberScenario() {
   return (
     <div className="w-full max-w-3xl">
@@ -65,4 +75,11 @@ function VinylScrubberScenario() {
   )
 }
 
-export { MixerScenario, SafeDialScenario, SunArcPhotoScenario, SunArcScenario, VinylScrubberScenario }
+export {
+  MixerScenario,
+  SafeDialScenario,
+  SafeVaultScenario,
+  SunArcPhotoScenario,
+  SunArcScenario,
+  VinylScrubberScenario,
+}

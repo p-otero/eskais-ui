@@ -281,6 +281,19 @@ const itemNotes: Record<string, ItemNotes> = {
       'Agents find it by its label and call enter("27-04-61-33"), with digits, numbers split by dashes or an array; a wrong count or a number off the dial fails the step with why.',
     related: ["otp-input", "slider"],
   },
+  "safe-vault": {
+    usage:
+      "Reach for it where revealing something is the moment: a secret, a reward, a recovery code or an invite behind a combination. Check the code yourself in onComplete and set status; the vault only plays the result.",
+    a11y: [
+      "The dial is SafeDial: a slider over its numbers and the code as UI SDK's OTP input, so keys, paste and autofill work as there.",
+      "The contents aren't in the page while it's locked; once unlocked they sit in a region named by labels.contents, inert until the door has opened, and a polite status says Unlocked (or Wrong combination when denied).",
+      "Under reduced motion the door and the camera jump to the end and a denied code clears at once.",
+      "The 3D safe is a picture hidden from assistive tech; the plaque on its back wall is the real DOM, mapped onto the wall with a CSS transform.",
+    ],
+    agent:
+      'Agents call enter("27-46-13-33") by the vault label, as on SafeDial, and press Lock; the contents become readable to them only once the app unlocks it.',
+    related: ["safe-dial", "otp-input", "scroll-area"],
+  },
   "vinyl-scrubber": {
     usage:
       "Reach for it as the timeline of a music or DJ-flavoured player. Pass media for an audio or video element, or value and duration to drive it yourself.",

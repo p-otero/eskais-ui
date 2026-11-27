@@ -136,7 +136,7 @@ item("theme-compact").css = oneSelectorPerRule(tree(read("theme-compact.css")))
 item("theme-glass").css = oneSelectorPerRule(tree(read("theme-glass.css")))
 item("theme-liquid").css = oneSelectorPerRule(tree(read("theme-liquid.css")))
 item("prism-picker").css = oneSelectorPerRule(tree(read("prism-picker.css")))
-for (const instrument of ["sun-arc", "mixer", "safe-dial", "vinyl-scrubber"]) {
+for (const instrument of ["sun-arc", "mixer", "safe-dial", "vinyl-scrubber", "safe-vault"]) {
   item(instrument).css = oneSelectorPerRule(tree(read(`${instrument}.css`)))
 }
 item("live-sky").css = oneSelectorPerRule(tree(read("live-sky.css")))
