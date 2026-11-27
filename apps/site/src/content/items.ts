@@ -286,7 +286,7 @@ const itemNotes: Record<string, ItemNotes> = {
       "Reach for it where revealing something is the moment: a secret, a reward, a recovery code or an invite behind a combination. Check the code yourself in onComplete and set status; the vault only plays the result.",
     a11y: [
       "The dial is SafeDial: a slider over its numbers and the code as UI SDK's OTP input, so keys, paste and autofill work as there.",
-      "The contents aren't in the page while it's locked; once unlocked they sit in a region named by labels.contents, inert until the door has opened, and a polite status says Unlocked (or Wrong combination when denied).",
+      "The contents aren't in the page while it's locked; once unlocked they sit in a region named by labels.contents, inert until the door has opened; once locked they are inert and aria-hidden at once and leave the page when the door has shut. A polite status says Unlocked (or Wrong combination when denied).",
       "Under reduced motion the door and the camera jump to the end and a denied code clears at once.",
       "The 3D safe is a picture hidden from assistive tech; the plaque on its back wall is the real DOM, mapped onto the wall with a CSS transform.",
     ],

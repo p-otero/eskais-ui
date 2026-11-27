@@ -1,5 +1,5 @@
 import { createVaultScene, type VaultState } from "@/components/ui/safe-vault-scene"
-import { motionDone } from "@/components/ui/safe-vault-timeline"
+import { motionDone, resting } from "@/components/ui/safe-vault-timeline"
 import { createStageRunner, serveStageRunner, type RunnerFactory } from "@/lib/three-stage-runner"
 
 const epochNow = () => performance.timeOrigin + performance.now()
@@ -22,7 +22,7 @@ const createSafeVaultRunner: RunnerFactory<VaultState> = (canvas, size, events) 
       }
     },
     {
-      motion: { kind: "locked", since: 0 },
+      motion: resting("locked", 0),
       dialDegrees: 0,
       numbers: 100,
       plaqueHeight: 18,

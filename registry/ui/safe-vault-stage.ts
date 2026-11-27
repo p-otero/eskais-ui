@@ -12,7 +12,7 @@ import {
   visibleOpening,
   type StagePoint,
 } from "@/components/ui/safe-vault-view"
-import { lockedPose, motionDone, poseAt, type SafeVaultMotion } from "@/components/ui/safe-vault-timeline"
+import { lockedPose, motionDone, poseAt, resting, type SafeVaultMotion } from "@/components/ui/safe-vault-timeline"
 import { createThreeStage, supportsThreeStage } from "@/lib/three-stage"
 import type { StageSize } from "@/lib/three-studio"
 
@@ -54,7 +54,7 @@ function turnOfDrawnRotor(rotor: Element | null) {
  */
 function createSafeVaultStage(host: HTMLElement, parts: SafeVaultStageParts): SafeVaultStage {
   let input: VaultInput = {
-    motion: { kind: "locked", since: 0 },
+    motion: resting("locked", 0),
     numbers: 100,
   }
   let size: StageSize | null = null
