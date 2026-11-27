@@ -125,6 +125,48 @@ test("on a narrow screen it opens in a drawer that closes when a link is followe
   expect(screen.queryByRole("dialog", { name: "Main" })).toBeNull()
 })
 
+test("density gives the sidebar its own data-density, and follows the page when left out", async () => {
+  const { rerender } = render(<Main />)
+  await settle()
+  expect(screen.getByRole("navigation").hasAttribute("data-density")).toBe(false)
+  rerender(<Main density="compact" />)
+  expect(screen.getByRole("navigation").getAttribute("data-density")).toBe("compact")
+  rerender(<Main density="default" />)
+  expect(screen.getByRole("navigation").getAttribute("data-density")).toBe("default")
+})
+
+test("on a narrow screen the drawer takes the sidebar's density, title and close button included", async () => {
+  mockNarrow(true)
+  const user = userEvent.setup()
+  render(<Main density="compact" />)
+  await settle()
+  await user.click(screen.getByRole("button", { name: "Open navigation" }))
+  await settle()
+  const drawer = screen.getByRole("dialog", { name: "Main" })
+  expect(drawer.closest("[data-density]")?.getAttribute("data-density")).toBe("compact")
+  expect(screen.getByRole("navigation", { name: "Main" }).getAttribute("data-density")).toBe("compact")
+})
+
+test("compact group knobs mark the root, and a length sets the token for every group", async () => {
+  const { rerender } = render(<Main groupGap="compact" groupHeaderHeight="compact" />)
+  await settle()
+  const nav = screen.getByRole("navigation")
+  expect(nav.getAttribute("data-group-gap")).toBe("compact")
+  expect(nav.getAttribute("data-group-header")).toBe("compact")
+  expect(nav.style.getPropertyValue("--sidebar-group-gap")).toBe("")
+
+  rerender(<Main groupGap="var(--gap-inline)" groupHeaderHeight="1.5rem" />)
+  expect(nav.hasAttribute("data-group-gap")).toBe(false)
+  expect(nav.hasAttribute("data-group-header")).toBe(false)
+  expect(nav.style.getPropertyValue("--sidebar-group-gap")).toBe("var(--gap-inline)")
+  expect(nav.style.getPropertyValue("--sidebar-group-header-height")).toBe("1.5rem")
+
+  rerender(<Main groupGap="default" groupHeaderHeight="default" />)
+  expect(nav.hasAttribute("data-group-gap")).toBe(false)
+  expect(nav.style.getPropertyValue("--sidebar-group-gap")).toBe("")
+  expect(nav.style.getPropertyValue("--sidebar-group-header-height")).toBe("")
+})
+
 test("an agent collapses and expands the sidebar by name", async () => {
   render(<Main />)
   await settle()

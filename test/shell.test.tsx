@@ -92,6 +92,16 @@ test("the routes become a grouped sidebar with the current page marked, a muted 
   expect(await axeViolations(container)).toEqual([])
 })
 
+test("sidebarDensity and the group knobs reach the sidebar while main keeps the page's density", async () => {
+  render(<TestShell sidebarDensity="compact" sidebarGroupGap="compact" sidebarGroupHeaderHeight="1.25rem" />)
+  await settle()
+  const sidebar = screen.getByRole("navigation", { name: "Main" })
+  expect(sidebar.getAttribute("data-density")).toBe("compact")
+  expect(sidebar.getAttribute("data-group-gap")).toBe("compact")
+  expect(sidebar.style.getPropertyValue("--sidebar-group-header-height")).toBe("1.25rem")
+  expect(screen.getByRole("main").closest("[data-density]")).toBeNull()
+})
+
 test("the bottom bar holds the first four mobile routes and More opens the rest, the current one marked", async () => {
   const user = userEvent.setup()
   render(<TestShell labels={{ more: "Más", mobileNav: "Barra inferior" }} currentHref="/settings" />)

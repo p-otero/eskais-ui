@@ -11,6 +11,7 @@ const shotsArg = process.argv.find((arg) => arg.startsWith("--screenshots="))
 const shots = shotsArg ? resolve(shotsArg.slice("--screenshots=".length)) : undefined
 if (shots) mkdirSync(shots, { recursive: true })
 const onlyLayout = process.argv.includes("--only=layout")
+const onlySidebarDensity = process.argv.includes("--only=sidebar-density")
 
 function check(label, ok, detail = "") {
   console.log(`${ok ? "ok  " : "FAIL"} ${label}${detail ? `: ${detail}` : ""}`)
@@ -631,12 +632,14 @@ async function shellBlock(page, width, scheme, query = "") {
   await page.setViewportSize({ width, height: 800 })
   await page.emulateMedia({ colorScheme: scheme })
   await page.goto(`${new URL(page.url()).origin}/?demo=shell-block${query}`)
-  await page.evaluate((dark) => {
-    localStorage.clear()
-    document.documentElement.classList.toggle("dark", dark)
-    document.documentElement.classList.toggle("light", !dark)
-  }, scheme === "dark")
   await page.getByRole("main").waitFor()
+  await page.evaluate((value) => {
+    localStorage.clear()
+    const html = document.documentElement
+    html.classList.toggle("dark", value === "dark")
+    html.classList.toggle("light", value === "light")
+    html.setAttribute("data-color-scheme", value)
+  }, scheme)
   await page.evaluate(() => document.fonts.ready)
   await page.waitForTimeout(300)
 }
@@ -844,6 +847,165 @@ async function checkPaletteReopen(page) {
   )
 }
 
+function sidebarMetrics(page) {
+  return page.evaluate(() => {
+    const nav = document.querySelector('nav[aria-label="Main"]')
+    const item = [...nav.querySelectorAll('[data-slot="sidebar-item-container"] > a')].find(
+      (link) => link.getBoundingClientRect().height > 0,
+    )
+    const labels = [...nav.querySelectorAll('[data-slot="sidebar-group-label"]')]
+    const groups = [...nav.querySelectorAll('[data-slot="sidebar-group"]')]
+    const probe = document.createElement("div")
+    probe.style.height = "var(--control-height)"
+    document.querySelector('[data-slot="shell-main"]').append(probe)
+    const mainControl = probe.getBoundingClientRect().height
+    probe.remove()
+    return {
+      width: Math.round(nav.getBoundingClientRect().width),
+      item: item.getBoundingClientRect().height,
+      label: labels[0]?.getBoundingClientRect().height ?? 0,
+      groupGap:
+        groups.length > 1 ? groups[1].getBoundingClientRect().top - groups[0].getBoundingClientRect().bottom : 0,
+      itemRadius: Number.parseFloat(getComputedStyle(item).borderTopLeftRadius),
+      mainControl,
+      overflow: document.documentElement.scrollWidth - innerWidth,
+    }
+  })
+}
+
+async function setPage(page, attributes) {
+  await page.evaluate((next) => {
+    const html = document.documentElement
+    for (const [name, value] of Object.entries(next)) {
+      if (value) html.setAttribute(name, value)
+      else html.removeAttribute(name)
+    }
+  }, attributes)
+  await page.waitForTimeout(250)
+}
+
+async function railWidth(page) {
+  await page.getByRole("main").click({ position: { x: 5, y: 5 } })
+  await page.keyboard.press("ControlOrMeta+b")
+  await page.waitForTimeout(400)
+  const width = await page
+    .getByRole("navigation", { name: "Main" })
+    .evaluate((nav) => Math.round(nav.getBoundingClientRect().width))
+  await page.keyboard.press("ControlOrMeta+b")
+  await page.waitForTimeout(400)
+  return width
+}
+
+async function checkSidebarDensity(page) {
+  let compactItem = 0
+  for (const scheme of ["light", "dark"]) {
+    await shellBlock(page, 1100, scheme)
+    const following = await sidebarMetrics(page)
+    await shellBlock(page, 1100, scheme, "&sidebarDensity=compact")
+    const compact = await sidebarMetrics(page)
+    await shot(page, `sidebar-compact-1100-${scheme}.png`)
+    check(
+      `Shell 1100px ${scheme}: a compact sidebar in a default page is narrower with shorter items, main keeps the default density`,
+      compact.width < following.width && compact.item < following.item && compact.mainControl === following.mainControl,
+      JSON.stringify({ following, compact }),
+    )
+    compactItem = compact.item
+    check(`Shell 1100px ${scheme}: a compact sidebar in a default page doesn't overflow`, compact.overflow <= 0)
+  }
+
+  await shellBlock(page, 1100, "light")
+  const defaultRail = await railWidth(page)
+  await shellBlock(page, 1100, "light", "&sidebarDensity=compact")
+  const compactRail = await railWidth(page)
+  check(
+    "Shell 1100px: a compact sidebar's rail follows its own control height",
+    compactRail < defaultRail,
+    `${defaultRail}→${compactRail}`,
+  )
+
+  await shellBlock(page, 1100, "light", "&sidebarDensity=default")
+  await setPage(page, { "data-density": "compact" })
+  const kept = await sidebarMetrics(page)
+  await setPage(page, { "data-density": undefined })
+  const reference = await sidebarMetrics(page)
+  check(
+    "Shell 1100px: a default sidebar in a compact page keeps its width and items while main goes compact",
+    kept.width === reference.width &&
+      kept.item === reference.item &&
+      kept.mainControl < reference.mainControl &&
+      kept.overflow <= 0,
+    JSON.stringify({ kept, reference }),
+  )
+  await setPage(page, { "data-density": "compact" })
+  const keptRail = await railWidth(page)
+  check(
+    "Shell 1100px: a default sidebar's rail in a compact page stays default",
+    keptRail === defaultRail,
+    `${keptRail} vs ${defaultRail}`,
+  )
+  await setPage(page, { "data-density": undefined })
+
+  await shellBlock(page, 1100, "light", "&sidebarDensity=compact")
+  for (const radius of ["none", "sm", "md", "lg", "full"]) {
+    for (const theme of [undefined, "glass", "liquid"]) {
+      await setPage(page, { "data-radius": radius, "data-theme": theme })
+      const result = await sidebarMetrics(page)
+      check(
+        `Shell 1100px compact sidebar ${theme ?? "default"}/${radius}: fits, items keep the compact height${radius === "none" ? " and square corners" : ""}`,
+        result.overflow <= 0 && result.item === compactItem && (radius !== "none" || result.itemRadius === 0),
+        JSON.stringify(result),
+      )
+    }
+  }
+  await setPage(page, { "data-radius": undefined, "data-theme": undefined })
+
+  for (const scheme of ["light", "dark"]) {
+    for (const width of [1100, 390]) {
+      const results = {}
+      for (const value of ["default", "compact"]) {
+        await shellBlock(page, width, scheme, `&groupGap=${value}&groupHeaderHeight=${value}`)
+        if (width === 390) {
+          await page.getByRole("banner").getByRole("button", { name: "Open navigation" }).click()
+          await onScreen(page.getByRole("dialog", { name: "Main" }))
+        }
+        results[value] = await sidebarMetrics(page)
+        await shot(page, `sidebar-knobs-${value}-${width}-${scheme}.png`)
+      }
+      const { default: normal, compact } = results
+      check(
+        `Shell ${width}px ${scheme}: groupGap and groupHeaderHeight compact shrink the group gap and the label`,
+        compact.groupGap < normal.groupGap && compact.label < normal.label && compact.overflow <= 0,
+        JSON.stringify({ normal, compact }),
+      )
+    }
+  }
+
+  await shellBlock(page, 1100, "light", "&groupGap=0px&groupHeaderHeight=1.5rem")
+  const exact = await sidebarMetrics(page)
+  check(
+    "Shell 1100px: a length sets the group gap and the label height exactly",
+    Math.round(exact.groupGap) === 0 && Math.round(exact.label) === 24,
+    JSON.stringify(exact),
+  )
+
+  for (const scheme of ["light", "dark"]) {
+    await shellBlock(page, 390, scheme, "&sidebarDensity=compact")
+    await page.getByRole("banner").getByRole("button", { name: "Open navigation" }).click()
+    const drawer = page.getByRole("dialog", { name: "Main" })
+    check(`Shell 390px ${scheme}: the compact sidebar's drawer opens on screen`, await onScreen(drawer))
+    const drawerResult = await sidebarMetrics(page)
+    const drawerDensity = await drawer.evaluate((dialog) =>
+      dialog.closest("[data-density]")?.getAttribute("data-density"),
+    )
+    check(
+      `Shell 390px ${scheme}: the drawer is compact without overflow, main keeps the page's density`,
+      drawerDensity === "compact" && drawerResult.overflow <= 0 && drawerResult.mainControl > drawerResult.item,
+      JSON.stringify({ drawerDensity, drawerResult }),
+    )
+    await shot(page, `sidebar-compact-390-${scheme}-drawer.png`)
+  }
+}
+
 async function checkShell(page) {
   const cases = ["light", "dark"].flatMap((scheme) => [1440, 768, 390].map((width) => ({ scheme, width })))
   await cases.reduce(
@@ -870,6 +1032,7 @@ async function checkShell(page) {
 
   await checkFill(page, 1440)
   await checkFill(page, 390)
+  await checkSidebarDensity(page)
 
   await shellBlock(page, 1440, "light", "&router=hash")
   const sidebar = page.getByRole("navigation", { name: "Main" })
@@ -899,6 +1062,7 @@ async function checkShell(page) {
 }
 
 await withShowcase(async (page) => {
+  if (onlySidebarDensity) return checkSidebarDensity(page)
   await checkLayoutBlocks(page, check, shot)
   if (onlyLayout) return
   await checkShell(page)

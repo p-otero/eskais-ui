@@ -86,6 +86,15 @@ Two independent axes, each an attribute on `<html>` or any element, nested freel
 1. `createAppearance({ density, radius, storage: { density, radius } })` and `<Appearance>` keep both on `<html>` (`appearance.density.set("compact")`, `appearance.radius.set("sm")`); `"default"` leaves the attribute off.
 2. `data-radius` wins over `data-theme="compact"` on the same element, and `data-density="default"` beside it keeps only its shape. `[data-density="default"]` restores the defaults inside a compact scope; a test keeps it equal to `:where(:root)`.
 3. `node tooling/shell-check.mjs` renders every density × radius pair at 1100px and 390px: nothing overflows, compact shortens controls at every radius, and `none` and `full` reach buttons, sidebar items and cards at both densities.
+4. A token derived from another with `var()` computes where it's declared, so one that follows the density (`--sidebar-rail-width`) is declared again in every density rule; `test/theme-density.test.ts` keeps the default rule equal to `:where(:root)`.
+5. A region takes its own density with `data-density` on its root. `Sidebar density` (Shell `sidebarDensity`) does that on the sidebar and its drawer; the page around it keeps its own, which shell-check measures both ways (a compact sidebar in a default page, a default one in a compact page) with the rail and every radius, glass and liquid.
+
+| Sidebar token                   | Prop                | Default                                           | `"compact"`                                             |
+| ------------------------------- | ------------------- | ------------------------------------------------- | ------------------------------------------------------- |
+| `--sidebar-group-gap`           | `groupGap`          | `gap-group` (1px between collapsible groups)      | `gap-items`                                             |
+| `--sidebar-group-header-height` | `groupHeaderHeight` | a label's line, a collapsible trigger's `control` | the label's line at `--type-meta-leading`, `control-sm` |
+
+The registry never declares these two: the parts read them with their default as the fallback, so a consumer sets them in CSS on the sidebar or any ancestor, or passes a length or `var()` to the prop. `"compact"` is a `data-group-gap` or `data-group-header` attribute on the sidebar's root, since one length can't serve a label and a trigger.
 
 ## Elevation
 
