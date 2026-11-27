@@ -4,7 +4,7 @@ Versions follow [semver](https://semver.org). Before 1.0, a minor version can br
 
 Each version lists `### Added`, `### Changed` and `### Fixed`, then `### Removed files` when an item stopped installing a file: shadcn never deletes files, so the section tells a project what to clean up. `node tooling/removed-files.mjs <previous tag>` writes it.
 
-## Unreleased
+## 0.2.19 (2026-11-27)
 
 ### Added
 
