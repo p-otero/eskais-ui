@@ -112,6 +112,11 @@
       "forcedLayouts": 0.05,
       "paintP95": 24
     },
+    "safe-vault": {
+      "renders": 27,
+      "forcedLayouts": 0.05,
+      "paintP95": 24
+    },
     "vinyl-scrubber": {
       "renders": 23,
       "forcedLayouts": 0.05,
@@ -311,6 +316,7 @@
     "retro-tv": 52.4,
     "row-navigation": 13.2,
     "safe-dial": 37.6,
+    "safe-vault": 84.5,
     "scroll-area": 29.9,
     "search-field": 56,
     "secret-fingerprint": 10.8,
@@ -355,6 +361,7 @@
     "teletext": 26.7,
     "text-diff": 107.5,
     "textarea": 26.4,
+    "three-stage": 79.7,
     "toast": 62.8,
     "toggle": 51.8,
     "toggle-group": 56.5,
@@ -376,6 +383,7 @@
   "lazyBundles": {
     "model-scan": 374.4,
     "model-viewer": 366.7,
+    "safe-vault": 151.4,
     "vinyl-scrubber": 150
   }
 }

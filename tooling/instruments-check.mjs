@@ -251,6 +251,98 @@ async function safeDial(page, client) {
   console.log("safe-dial: ok")
 }
 
+async function safeVault(page, client) {
+  await open(page, "safe-vault")
+  const vault = page.locator('[data-slot="safe-vault"]')
+  const code = page.getByRole("textbox", { name: "Combination" })
+  const contents = page.locator('[data-slot="safe-vault-contents"]')
+  await page.waitForFunction(
+    () => document.querySelector('[data-slot="safe-vault"]')?.dataset.vault === "3d",
+    undefined,
+    {
+      timeout: 20_000,
+    },
+  )
+  const loaded = await page.evaluate(() => performance.getEntriesByType("resource").map((entry) => entry.name))
+  const inWorker = loaded.some((name) => name.includes("safe-vault-worker"))
+  console.log(`safe-vault: the safe draws ${inWorker ? "in its worker" : "on the page"}`)
+  expect(inWorker && !loaded.some((name) => name.includes("safe-vault-runner")), "The safe should draw in its worker")
+
+  const dial = await page.locator('[data-slot="safe-dial-dial"]').boundingBox()
+  const centre = [dial.x + dial.width / 2, dial.y + dial.height / 2]
+  const radius = dial.width * 0.4
+  const point = (degrees) => [
+    centre[0] + Math.cos((degrees * Math.PI) / 180) * radius,
+    centre[1] + Math.sin((degrees * Math.PI) / 180) * radius,
+  ]
+  await latency(page)
+  await page.mouse.move(...point(-90))
+  await page.mouse.down()
+  for (let step = 1; step <= 30; step++) {
+    await page.mouse.move(...point(-90 + step * 3))
+    await nextFrame(page)
+  }
+  await page.mouse.up()
+  const moves = await latency(page)
+  console.log(`safe-vault drag on the 3D dial: move to frame ${summary(moves)}`)
+  expect(percentile(moves, 95) <= moveToFrameP95Ms, "A drag on the 3D dial takes over 16 ms to a frame")
+  expect(
+    (await code.inputValue()) === "25",
+    `A quarter turn of the 3D dial should enter 25, not ${await code.inputValue()}`,
+  )
+
+  const denied = await act(page, "Vault", "enter", ["11-22-33-44"])
+  expect(denied.ok, "An agent's wrong code should still enter")
+  expect((await vault.getAttribute("data-status")) === "denied", "A wrong code should be denied")
+  await page.waitForTimeout(800)
+  expect(
+    (await code.inputValue()) === "" && (await vault.getAttribute("data-status")) === "locked",
+    "A denied code should clear and lock again once the dial has shaken",
+  )
+
+  const started = Date.now()
+  const entered = await act(page, "Vault", "enter", ["27-46-13-33"])
+  expect(entered.ok, "An agent's enter should unlock the vault")
+  await page.waitForTimeout(1200)
+  expect((await contents.getAttribute("inert")) !== null, "The contents should stay inert while the door swings")
+  await page.waitForFunction(() => !document.querySelector('[data-slot="safe-vault-contents"]')?.hasAttribute("inert"))
+  console.log(`safe-vault: open in ${String(Date.now() - started)} ms`)
+  const copy = page.getByRole("button", { name: "Copy" })
+  const hit = await copy.evaluate((button) => {
+    const box = button.getBoundingClientRect()
+    return document.elementFromPoint(box.x + box.width / 2, box.y + box.height / 2)?.closest("button") === button
+  })
+  expect(hit, "The plaque's Copy button should be hit where it shows, through the plaque's transform")
+  await copy.click()
+  expect((await page.getByRole("button", { name: "Copied" }).count()) === 1, "A click on the plaque should press Copy")
+
+  await page.evaluate(() => {
+    window.vaultFrames = 0
+    const original = window.requestAnimationFrame.bind(window)
+    window.requestAnimationFrame = (callback) =>
+      original((time) => {
+        window.vaultFrames += 1
+        callback(time)
+      })
+  })
+  const idle = await styleWorkWhileIdle(page, client)
+  const frames = await page.evaluate(() => window.vaultFrames)
+  console.log(`safe-vault: open and idle for 2 s, ${String(frames)} frames, ${String(idle)} style recalcs and layouts`)
+  expect(frames === 0 && idle === 0, "The open vault works while idle")
+
+  await act(page, "Lock", "press")
+  await page.waitForTimeout(100)
+  expect((await page.getByText("esk_demo_").count()) === 0, "Locking should take the contents out of the page")
+  await page.waitForTimeout(2000)
+
+  await page.emulateMedia({ reducedMotion: "reduce" })
+  await act(page, "Vault", "enter", ["27-46-13-33"])
+  await page.waitForTimeout(150)
+  expect((await contents.getAttribute("inert")) === null, "Under reduced motion the vault should open at once")
+  await act(page, "Lock", "press")
+  console.log("safe-vault: ok")
+}
+
 async function vinyl(page) {
   await open(page, "vinyl-scrubber")
   const position = page.getByRole("slider", { name: "Position" })
@@ -337,6 +429,7 @@ await withShowcase(async (page) => {
   await sunArcPhoto(page, client)
   await mixer(page, client)
   await safeDial(page, client)
+  await safeVault(page, client)
   await vinyl(page)
   console.log("instruments-check: ok")
 })

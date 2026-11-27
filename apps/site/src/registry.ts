@@ -41,6 +41,7 @@ const guideItems = [
   "action-refusal",
   "rejection-content",
   "narrow",
+  "three-stage",
 ]
 
 const adapterItems = items.filter((item) => item.meta?.adapterOf !== undefined)

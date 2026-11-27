@@ -53,6 +53,7 @@ const categories = [
       "sky-photo",
       "mixer",
       "safe-dial",
+      "safe-vault",
       "vinyl-scrubber",
     ],
   },
