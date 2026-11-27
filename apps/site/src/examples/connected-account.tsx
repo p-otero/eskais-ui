@@ -2,11 +2,7 @@ import { CloudIcon } from "lucide-react"
 import { useState } from "react"
 
 import { Button } from "@/components/ui/button"
-import {
-  ConnectedAccount,
-  type ConnectedAccountStatus,
-  type ConnectedAccountText,
-} from "@/components/ui/connected-account"
+import { ConnectedAccount, ConnectedAccountStatus, type ConnectedAccountText } from "@/components/ui/connected-account"
 import { DeviceCodePrompt, type DeviceCodePromptText } from "@/components/ui/device-code-prompt"
 import { RelativeTime } from "@/components/ui/relative-time"
 
@@ -61,19 +57,21 @@ function LinkedAccount({ initial }: { initial: ConnectedAccountStatus }) {
   const startSignIn = async () => {
     await wait(600)
     setFlow((current) => newFlow(current.id + 1))
-    setStatus("pending")
+    setStatus(ConnectedAccountStatus.pending)
   }
 
   const facts =
-    status === "connected" || status === "expired"
+    status === ConnectedAccountStatus.connected || status === ConnectedAccountStatus.expired
       ? [
           { id: "account", label: "Account", value: "a•••@example.com" },
           { id: "plan", label: "Plan", value: "Team" },
           { id: "since", label: "Connected", value: <RelativeTime value={times.connectedAt} /> },
           {
             id: "refresh",
-            label: status === "expired" ? "Expired" : "Last refresh",
-            value: <RelativeTime value={status === "expired" ? times.expiredAt : times.refreshedAt} />,
+            label: status === ConnectedAccountStatus.expired ? "Expired" : "Last refresh",
+            value: (
+              <RelativeTime value={status === ConnectedAccountStatus.expired ? times.expiredAt : times.refreshedAt} />
+            ),
           },
         ]
       : []
@@ -82,7 +80,20 @@ function LinkedAccount({ initial }: { initial: ConnectedAccountStatus }) {
     <ConnectedAccount
       provider={{ name: "Cloud provider", logo: <CloudIcon /> }}
       status={status}
-      description={status === "disconnected" ? "Link your account to sync files from the provider." : undefined}
+      description={
+        status === ConnectedAccountStatus.disconnected
+          ? "Link your account to sync files from the provider."
+          : undefined
+      }
+      notice={
+        status === ConnectedAccountStatus.expired
+          ? {
+              tone: "warning",
+              title: "Syncing paused",
+              description: "New files stay on the provider until you sign in again.",
+            }
+          : undefined
+      }
       facts={facts}
       waiting={
         <DeviceCodePrompt
@@ -91,7 +102,7 @@ function LinkedAccount({ initial }: { initial: ConnectedAccountStatus }) {
           verificationUri={verificationUri}
           verificationUriComplete={`${verificationUri}?user_code=${flow.code}`}
           expiresAt={flow.expiresAt}
-          onExpire={() => setStatus("expired")}
+          onExpire={() => setStatus(ConnectedAccountStatus.expired)}
           copyLink
           actions={
             <Button
@@ -100,7 +111,7 @@ function LinkedAccount({ initial }: { initial: ConnectedAccountStatus }) {
               onClick={() => {
                 const now = Date.now()
                 setTimes((current) => ({ ...current, connectedAt: now, refreshedAt: now }))
-                setStatus("connected")
+                setStatus(ConnectedAccountStatus.connected)
               }}
             >
               Simulate approval
@@ -113,11 +124,11 @@ function LinkedAccount({ initial }: { initial: ConnectedAccountStatus }) {
       onReconnect={startSignIn}
       onCancel={async () => {
         await wait(400)
-        setStatus("disconnected")
+        setStatus(ConnectedAccountStatus.disconnected)
       }}
       onDisconnect={async () => {
         await wait(600)
-        setStatus("disconnected")
+        setStatus(ConnectedAccountStatus.disconnected)
       }}
       text={text}
     />
@@ -127,8 +138,8 @@ function LinkedAccount({ initial }: { initial: ConnectedAccountStatus }) {
 export default function ConnectedAccountDemo() {
   return (
     <div className="grid w-full max-w-4xl items-start gap-section md:grid-cols-2">
-      <LinkedAccount initial="pending" />
-      <LinkedAccount initial="expired" />
+      <LinkedAccount initial={ConnectedAccountStatus.pending} />
+      <LinkedAccount initial={ConnectedAccountStatus.expired} />
     </div>
   )
 }

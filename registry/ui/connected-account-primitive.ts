@@ -2,7 +2,17 @@ import { definePrimitive } from "@ui-sdk/core"
 
 import { unavailable } from "@/lib/action-refusal"
 
-type ConnectedAccountStatus = "connected" | "pending" | "expired" | "disconnected"
+const connectedAccountStatuses = ["connected", "pending", "expired", "disconnected"] as const
+
+type ConnectedAccountStatus = (typeof connectedAccountStatuses)[number]
+
+/** The statuses by name, for code that compares against them: `status === ConnectedAccountStatus.expired`. */
+const ConnectedAccountStatus = {
+  connected: "connected",
+  pending: "pending",
+  expired: "expired",
+  disconnected: "disconnected",
+} as const satisfies { [name in ConnectedAccountStatus]: name }
 
 type ConnectedAccountAction = "connect" | "reconnect" | "disconnect" | "cancel"
 
@@ -196,5 +206,5 @@ const connectedAccount = definePrimitive({
   agent: { actions: ["connect", "reconnect", "disconnect", "cancel"] },
 })
 
-export { connectedAccount }
-export type { ConnectedAccountAction, ConnectedAccountOptions, ConnectedAccountState, ConnectedAccountStatus }
+export { connectedAccount, ConnectedAccountStatus, connectedAccountStatuses }
+export type { ConnectedAccountAction, ConnectedAccountOptions, ConnectedAccountState }

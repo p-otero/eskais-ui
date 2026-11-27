@@ -2,11 +2,12 @@
 
 import { usePart, usePrimitive } from "@ui-sdk/react/primitive"
 import { CheckIcon, ClockAlertIcon, ExternalLinkIcon, Link2Icon } from "lucide-react"
-import type { ReactNode } from "react"
+import type { AriaAttributes, ReactNode } from "react"
 
 import { Button } from "@/components/ui/button"
 import { deviceCodePrompt, type DeviceCodePromptState } from "@/components/ui/device-code-prompt-primitive"
 import { ExpiryCountdown, type ExpiresInText } from "@/components/ui/expiry-countdown"
+import { namingAndMarkingAttributesOf } from "@/components/ui/input"
 import { Link } from "@/components/ui/link"
 import { PairingCode, type PairingCodeLabels, type PairingCodeSize } from "@/components/ui/pairing-code"
 import { useExpiry } from "@/components/ui/use-expiry"
@@ -46,44 +47,50 @@ const deviceCodePromptLabels: DeviceCodePromptLabels = {
   newTab: "(opens in a new tab)",
 }
 
-type DeviceCodePromptProps = {
-  /** The user code from the provider, with or without separators, in any case. */
-  code: string
-  /** The provider's page where the person enters the code. */
-  verificationUri: string
-  /** The same page with the code filled in; Open uses it when given. */
-  verificationUriComplete?: string
-  /** Characters per visual group; 4 by default. */
-  groupSize?: number
-  /** Shown between groups and copied with the code; "-" by default. */
-  separator?: string
-  size?: PairingCodeSize
-  /** Adds an icon button beside Open that copies the verification page's address. */
-  copyLink?: boolean
-  /** When the code expires, as a Date or epoch milliseconds. */
-  expiresAt?: Date | number
-  /** Runs once, when `expiresAt` passes. */
-  onExpire?: () => void
-  /** Runs after Open, with the address it opened. */
-  onOpen?: (uri: string) => void
-  /** Runs once the code, with separators, is on the clipboard. */
-  onCopy?: (code: string) => void
-  onCopyLink?: (uri: string) => void
-  /**
-   * Keeps the code and the link from agents: they stay out of the snapshot and queries, and `open`, `copyLink` and
-   * the code's `copy` fail an agent's step with why. On by default, since the code signs an account in.
-   */
-  agentHidden?: boolean
-  /** More controls after Open, like a Cancel that abandons the sign-in; they stay once the code expires. */
-  actions?: ReactNode
-  text: DeviceCodePromptText
-  labels?: Partial<DeviceCodePromptLabels>
-  /** Names the prompt for screen readers and agents; `labels.prompt` by default. */
-  "aria-label"?: string
-  className?: string
-}
+type DataAttributes = { [key: `data-${string}`]: string | number | boolean | undefined }
+
+type DeviceCodePromptProps = DataAttributes &
+  AriaAttributes & {
+    id?: string
+    /** The user code from the provider, with or without separators, in any case. */
+    code: string
+    /** The provider's page where the person enters the code. */
+    verificationUri: string
+    /** The same page with the code filled in; Open uses it when given. */
+    verificationUriComplete?: string
+    /** Characters per visual group; 4 by default. */
+    groupSize?: number
+    /** Shown between groups and copied with the code; "-" by default. */
+    separator?: string
+    size?: PairingCodeSize
+    /** Adds an icon button beside Open that copies the verification page's address. */
+    copyLink?: boolean
+    /** When the code expires, as a Date or epoch milliseconds. */
+    expiresAt?: Date | number
+    /** Runs once, when `expiresAt` passes. */
+    onExpire?: () => void
+    /** Runs after Open, with the address it opened. */
+    onOpen?: (uri: string) => void
+    /** Runs once the code, with separators, is on the clipboard. */
+    onCopy?: (code: string) => void
+    onCopyLink?: (uri: string) => void
+    /**
+     * Keeps the code and the link from agents: they stay out of the snapshot and queries, and `open`, `copyLink` and
+     * the code's `copy` fail an agent's step with why. On by default, since the code signs an account in.
+     */
+    agentHidden?: boolean
+    /** More controls after Open, like a Cancel that abandons the sign-in; they stay once the code expires. */
+    actions?: ReactNode
+    text: DeviceCodePromptText
+    labels?: Partial<DeviceCodePromptLabels>
+    /** Names the prompt for screen readers and agents; `labels.prompt` by default. */
+    "aria-label"?: string
+    className?: string
+  }
 
 const rootAttributes: Record<`data-${string}`, string> = { "data-slot": "device-code-prompt" }
+
+const managedRootAttributes = new Set(["data-expired", "data-link-copied"])
 
 const scheme = /^https?:\/\//i
 const trailingSlash = /\/$/
@@ -94,26 +101,28 @@ const actionsClassName = "flex flex-wrap items-center gap-items narrow:flex-col 
 
 const ignoreRefusal = () => undefined
 
-function DeviceCodePrompt({
-  code,
-  verificationUri,
-  verificationUriComplete,
-  groupSize,
-  separator,
-  size,
-  copyLink = false,
-  expiresAt,
-  onExpire,
-  onOpen,
-  onCopy,
-  onCopyLink,
-  agentHidden = true,
-  actions,
-  text,
-  labels: overrides,
-  "aria-label": label,
-  className,
-}: DeviceCodePromptProps) {
+function DeviceCodePrompt(props: DeviceCodePromptProps) {
+  const {
+    id,
+    code,
+    verificationUri,
+    verificationUriComplete,
+    groupSize,
+    separator,
+    size,
+    copyLink = false,
+    expiresAt,
+    onExpire,
+    onOpen,
+    onCopy,
+    onCopyLink,
+    agentHidden = true,
+    actions,
+    text,
+    labels: overrides,
+    "aria-label": label,
+    className,
+  } = props
   const labels = { ...deviceCodePromptLabels, ...overrides }
   const handle = usePrimitive(deviceCodePrompt, {
     verificationUri,
@@ -135,7 +144,9 @@ function DeviceCodePrompt({
     "root",
     {},
     {
+      ...namingAndMarkingAttributesOf(props, managedRootAttributes),
       ...rootAttributes,
+      id,
       "aria-label": label ?? labels.prompt,
       className: cn("flex min-w-0 flex-col gap-items", className),
       children: (state: DeviceCodePromptState) =>

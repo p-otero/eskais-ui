@@ -786,6 +786,7 @@ const itemNotes: Record<string, ItemNotes> = {
       "The panel is a group named by the provider's heading; the status is a pill with a dot and its text, so it never rests on colour.",
       "Each action's button is busy while its Promise runs, and a failure is a live destructive alert.",
       "Disconnect opens an alert dialog before anything is unlinked.",
+      "A notice is an Alert that isn't live: it describes the account, so a screen reader finds it in reading order instead of being interrupted.",
     ],
     agent:
       "Agents call connect, reconnect, disconnect and cancel on the panel; a status that doesn't offer one fails the step with why. disconnect only opens the confirmation, whose confirm carries data-agent-confirm, so the unlink waits for a person.",
