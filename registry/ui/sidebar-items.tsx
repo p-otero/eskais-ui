@@ -119,8 +119,17 @@ function SidebarItem({ icon, current = false, badge, render, className, children
   const content = (
     <>
       {icon}
-      <span className="min-w-0 flex-1 truncate group-data-collapsed/sidebar:sr-only">{children}</span>
-      {badge !== undefined && <span className="ms-auto text-caption group-data-collapsed/sidebar:hidden">{badge}</span>}
+      <span className="flex min-w-0 flex-1 items-baseline gap-inline group-data-collapsed/sidebar:sr-only">
+        <span className="min-w-0 flex-1 truncate">{children}</span>
+        {badge !== undefined && (
+          <span
+            data-slot="sidebar-item-badge"
+            className="ms-auto text-caption tabular-nums group-data-collapsed/sidebar:hidden"
+          >
+            {badge}
+          </span>
+        )}
+      </span>
     </>
   )
   return (

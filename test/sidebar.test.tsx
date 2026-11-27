@@ -283,3 +283,11 @@ test("an agent opens and closes a collapsible group by its label", async () => {
   expect(closed.ok, closed.error?.message).toBe(true)
   expect(screen.getByRole("button", { name: "Forms" }).getAttribute("aria-expanded")).toBe("false")
 })
+
+test("an item's badge shares the label's baseline", () => {
+  const { container } = render(<Main />)
+  const badge = container.querySelector("[data-slot=sidebar-item-badge]")
+  expect(badge?.textContent).toBe("3")
+  expect(badge?.parentElement?.className).toContain("items-baseline")
+  expect(badge?.className).toContain("tabular-nums")
+})
