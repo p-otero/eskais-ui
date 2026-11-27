@@ -25,6 +25,8 @@ Each version lists `### Added`, `### Changed` and `### Fixed`, then `### Removed
 ### Changed
 
 - `secret-list`: the mask is a `SecretFingerprint`, so its `data-slot` is `secret-fingerprint` (was `secret-list-mask`), and a configured secret without a fingerprint shows `••••` once instead of twice. `labels.fingerprint` and `labels.hidden` still set what it reads. The list's agent actions now include `select` and `selectAll`.
+- `secret-list`: the rows sit in a plain named list (`<ul role="list">`, "API keys, list" as before) instead of a `List`, so agents see one component by the list's name and a step like `select` in "API keys" resolves by name. The inner List's own `select` activated a row's primary action, which these rows don't have.
+- `lint-rules`: `jsx-a11y/no-redundant-roles` warns, so the `secret-list` directive that keeps Safari's list semantics counts as used in a consumer's lint.
 
 ## 0.2.17 (2026-11-27)
 

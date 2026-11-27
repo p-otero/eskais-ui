@@ -69,7 +69,6 @@ function ControlledSecrets() {
 const checkbox = (name: string) => screen.getByRole("checkbox", { name })
 const isChecked = (name: string) => checkbox(name).getAttribute("aria-checked")
 const listEntry = () => agent.snapshot().find((entry) => entry.component === "secret-list" && !entry.offPage)
-const ref = () => listEntry()?.ref ?? "no secret list"
 
 test("each row gets a checkbox named by the secret; a disabled one shows its reason and is described by it", () => {
   render(<Secrets />)
@@ -148,13 +147,13 @@ test("agents select by name in any case or by id, and the snapshot lists the sel
   const onSelectedChange = vi.fn()
   render(<Secrets onSelectedChange={onSelectedChange} />)
   expect(listEntry()).toMatchObject({ actions: ["replace", "delete", "select", "selectAll"], selected: [] })
-  const byName = await agent.act({ steps: [{ ref: ref(), action: "select", args: ["openai KEY"] }] })
+  const byName = await agent.act({ steps: [{ ref: "Local keys", action: "select", args: ["openai KEY"] }] })
   expect(byName.ok, byName.error?.message).toBe(true)
-  const byId = await agent.act({ steps: [{ ref: ref(), action: "select", args: ["github"] }] })
+  const byId = await agent.act({ steps: [{ ref: "Local keys", action: "select", args: ["github"] }] })
   expect(byId.ok, byId.error?.message).toBe(true)
   expect(onSelectedChange).toHaveBeenLastCalledWith(["openai", "github"], expect.objectContaining({ source: "agent" }))
   expect(listEntry()?.selected).toEqual(["OpenAI key", "GitHub token"])
-  const off = await agent.act({ steps: [{ ref: ref(), action: "select", args: ["OpenAI key", false] }] })
+  const off = await agent.act({ steps: [{ ref: "Local keys", action: "select", args: ["OpenAI key", false] }] })
   expect(off.ok, off.error?.message).toBe(true)
   expect(listEntry()?.selected).toEqual(["GitHub token"])
 })
@@ -163,8 +162,8 @@ test("two quick agent steps on a controlled list both count", async () => {
   render(<ControlledSecrets />)
   const result = await agent.act({
     steps: [
-      { ref: ref(), action: "select", args: ["openai"] },
-      { ref: ref(), action: "select", args: ["github"] },
+      { ref: "Local keys", action: "select", args: ["openai"] },
+      { ref: "Local keys", action: "select", args: ["github"] },
     ],
   })
   expect(result.ok, result.error?.message).toBe(true)
@@ -173,10 +172,10 @@ test("two quick agent steps on a controlled list both count", async () => {
 
 test("an agent's selectAll checks every selectable secret, and its select of a disabled one fails with the reason", async () => {
   render(<Secrets />)
-  const all = await agent.act({ steps: [{ ref: ref(), action: "selectAll", args: [true] }] })
+  const all = await agent.act({ steps: [{ ref: "Local keys", action: "selectAll", args: [true] }] })
   expect(all.ok, all.error?.message).toBe(true)
   expect(listEntry()?.selected).toEqual(["OpenAI key", "GitHub token"])
-  const refused = await agent.act({ steps: [{ ref: ref(), action: "select", args: ["Stripe key"] }] })
+  const refused = await agent.act({ steps: [{ ref: "Local keys", action: "select", args: ["Stripe key"] }] })
   expect(refused.ok).toBe(false)
   expect(refused.error?.message).toContain(
     "select isn't available: Stripe key can't be selected: Already on your account",
@@ -186,13 +185,13 @@ test("an agent's selectAll checks every selectable secret, and its select of a d
 
 test("an unknown name fails with why, and a list that isn't selectable refuses both actions", async () => {
   const { unmount } = render(<Secrets />)
-  const unknown = await agent.act({ steps: [{ ref: ref(), action: "select", args: ["AWS key"] }] })
+  const unknown = await agent.act({ steps: [{ ref: "Local keys", action: "select", args: ["AWS key"] }] })
   expect(unknown.error?.message).toContain(`select has no secret named "AWS key"`)
   unmount()
   render(<Secrets selectable={false} />)
   expect(screen.queryByRole("checkbox")).toBeNull()
   for (const action of ["select", "selectAll"]) {
-    const result = await agent.act({ steps: [{ ref: ref(), action, args: ["openai"] }] })
+    const result = await agent.act({ steps: [{ ref: "Local keys", action, args: ["openai"] }] })
     expect(result.ok).toBe(false)
     expect(result.error?.message).toContain(`${action} isn't available: the list isn't selectable`)
   }
@@ -213,4 +212,34 @@ test("has no axe violations with a selection and a disabled row", async () => {
   )
   await act(async () => {})
   expect(await axeViolations(container)).toEqual([])
+})
+
+test("agents reach the list by its name: one component is called API keys, and select, replace and delete all run", async () => {
+  approve = true
+  const onSelectedChange = vi.fn()
+  const onReplace = vi.fn()
+  const onDelete = vi.fn()
+  render(
+    <Secrets aria-label="API keys" onSelectedChange={onSelectedChange} onReplace={onReplace} onDelete={onDelete} />,
+  )
+  expect(screen.getByRole("list", { name: "API keys" })).toBeTruthy()
+  const named = agent.snapshot().filter((entry) => !entry.offPage && entry.label === "API keys")
+  expect(named.map((entry) => entry.component)).toEqual(["secret-list"])
+  const selected = await agent.act({ steps: [{ ref: "API keys", action: "select", args: ["GitHub token"] }] })
+  expect(selected.ok, selected.error?.message).toBe(true)
+  expect(onSelectedChange).toHaveBeenLastCalledWith(["github"], expect.anything())
+  const replaced = await agent.act({ steps: [{ ref: "API keys", action: "replace", args: ["github"] }] })
+  expect(replaced.ok, replaced.error?.message).toBe(true)
+  expect(onReplace).toHaveBeenCalledWith("github")
+  const deleting = await agent.act({ steps: [{ ref: "API keys", action: "delete", args: ["github"] }] })
+  expect(deleting.ok, deleting.error?.message).toBe(true)
+  await screen.findByRole("alertdialog", { name: "Delete this secret?" })
+  const confirmed = await agent.act({
+    steps: [{ ref: "Delete this secret?", action: "press", args: ["Delete secret"] }],
+  })
+  expect(confirmed.ok, confirmed.error?.message).toBe(true)
+  expect(onDelete).toHaveBeenCalledWith("github")
+  const press = await agent.act({ steps: [{ ref: "Replace OpenAI key", action: "press" }] })
+  expect(press.ok, press.error?.message).toBe(true)
+  expect(onReplace).toHaveBeenLastCalledWith("openai")
 })

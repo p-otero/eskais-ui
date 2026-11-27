@@ -307,3 +307,27 @@ test("every control is named, the item checkboxes are left to the actions, and t
   expect(components.some((component) => component.component === "checkbox")).toBe(false)
   expect(await axeViolations(container)).toEqual([])
 })
+
+test("an items list named like the block leaves select, deny and approve unambiguous by name", async () => {
+  approve = true
+  const onApprove = vi.fn()
+  const onDeny = vi.fn()
+  render(
+    <Approval
+      text={{ ...text, items: "Studio laptop" }}
+      defaultSelected={["github"]}
+      onApprove={onApprove}
+      onDeny={onDeny}
+    />,
+  )
+  const named = agent.snapshot().filter((candidate) => !candidate.offPage && candidate.label === "Studio laptop")
+  expect(named.map((candidate) => candidate.component).toSorted()).toEqual(["device-approval", "device-approval-items"])
+  const selected = await agent.act({ steps: [{ ref: "Studio laptop", action: "select", args: ["OpenAI key", false] }] })
+  expect(selected.ok, selected.error?.message).toBe(true)
+  const approved = await agent.act({ steps: [{ ref: "Approve", action: "approve" }] })
+  expect(approved.ok, approved.error?.message).toBe(true)
+  expect(onApprove).toHaveBeenCalledWith({ selected: ["github"], confirmed: [] })
+  const denied = await agent.act({ steps: [{ ref: "Studio laptop", action: "deny" }] })
+  expect(denied.error?.message).toContain("deny isn't available: the device was already approved")
+  expect(onDeny).not.toHaveBeenCalled()
+})

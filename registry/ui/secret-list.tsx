@@ -9,7 +9,7 @@ import { Checkbox, CheckboxIndicator, type CheckedState } from "@/components/ui/
 import { CheckboxRow } from "@/components/ui/checkbox-row"
 import { ConfirmDialog } from "@/components/ui/confirm-dialog"
 import { DataState, type DataStatus } from "@/components/ui/data-state"
-import { List, ListItem } from "@/components/ui/list-item"
+import { ListItem } from "@/components/ui/list-item"
 import { RelativeTime } from "@/components/ui/relative-time"
 import { SecretFingerprint } from "@/components/ui/secret-fingerprint"
 import {
@@ -318,7 +318,8 @@ function SecretList({
                     }
                   />
                 ) : null}
-                <List aria-label={label}>
+                {/* oxlint-disable-next-line jsx-a11y/no-redundant-roles -- Safari drops list semantics under Preflight's list-style: none */}
+                <ul role="list" aria-label={label} className="flex min-w-0 flex-col">
                   {rows.map((secret) => (
                     <SecretRow
                       key={secret.id}
@@ -339,7 +340,7 @@ function SecretList({
                       onDelete={(event) => api.delete(secret.id, event)}
                     />
                   ))}
-                </List>
+                </ul>
               </div>
             )}
           </DataState>
