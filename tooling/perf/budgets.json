@@ -316,7 +316,7 @@
     "retro-tv": 52.4,
     "row-navigation": 13.2,
     "safe-dial": 37.6,
-    "safe-vault": 84.7,
+    "safe-vault": 88.9,
     "scroll-area": 29.9,
     "search-field": 56,
     "secret-fingerprint": 10.8,
@@ -383,7 +383,7 @@
   "lazyBundles": {
     "model-scan": 374.4,
     "model-viewer": 366.7,
-    "safe-vault": 151.4,
+    "safe-vault": 159,
     "vinyl-scrubber": 150
   }
 }
