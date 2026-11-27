@@ -12,7 +12,10 @@ const items: DeviceConsentItem[] = [
     label: "OpenAI API key",
     description: "Your account already has one; this replaces it.",
     detail: <SecretFingerprint fingerprint="x7Qa" />,
-    marker: { label: "Replace", confirm: "Replace the existing key" },
+    marker: {
+      label: "Replace",
+      confirm: ["Replace the existing key", "Sign out the apps that use the old key"],
+    },
   },
   { id: "github", label: "GitHub token", description: "New", detail: <SecretFingerprint fingerprint="9f2c" /> },
   {
@@ -57,9 +60,10 @@ function DeviceApprovalItemsDemo() {
                 description: "The desktop app wants to upload keys it found on this computer.",
                 items: "Keys to upload",
                 nothingSelected: "Choose at least one key to upload.",
-                unconfirmed: (labels) => `Confirm that ${labels.join(" and ")} replaces the key you have.`,
-                granted: "It will be able to",
-                withheld: "It asked for, but won't get",
+                unconfirmed: (_labels, unconfirmed) =>
+                  unconfirmed.some((item) => item.unticked.length > 1)
+                    ? "Tick both confirmations to replace the key you have."
+                    : "Tick the last confirmation to replace the key you have.",
                 approve: "Upload",
                 deny: "Cancel",
                 approveAgentConfirm: "Uploads the chosen keys to your account",

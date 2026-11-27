@@ -42,16 +42,9 @@ function SecretListSelectionDemo() {
               selectable
               selected={selected}
               onSelectedChange={setSelected}
-              onReplace={() => undefined}
-              onDelete={() => undefined}
               text={{
                 configured: "Found",
                 missing: "Missing",
-                replace: "Replace",
-                delete: "Forget",
-                deleteTitle: (secret) => `Forget ${secret.name}?`,
-                deleteConfirm: "Forget key",
-                deleteAgentConfirm: (secret) => `Forgets ${secret.name} on this device`,
                 emptyTitle: "No keys found",
                 errorTitle: "Keys couldn't load",
                 selectAll: "Select all",

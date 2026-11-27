@@ -4,6 +4,21 @@ Versions follow [semver](https://semver.org). Before 1.0, a minor version can br
 
 Each version lists `### Added`, `### Changed` and `### Fixed`, then `### Removed files` when an item stopped installing a file: shadcn never deletes files, so the section tells a project what to clean up. `node tooling/removed-files.mjs <previous tag>` writes it.
 
+## Unreleased
+
+### Added
+
+- `device-approval`: several confirmations per marked item. `marker.confirm` also takes a list, `confirm: ["Replace the existing key", "Sign out the apps that use the old key"]`, and each entry is its own checkbox in the Confirmations group, behind its `data-agent-confirm`, described by the item. Approve waits for every confirmation of each selected marked item; `confirmed` in `onApprove({ selected, confirmed })` and in the `actions` state lists an item only once all of them are ticked, and deselecting the item clears them all. The entries are told apart by their index in the list: a person's state resets on deselection, so no id is needed to keep it. `text.unconfirmed` gets a second argument, `{ id, label, unticked }[]`, the indexes still unticked per item; without it, the reason an agent hears names what's missing (`OpenAI key needs 1 more confirmation ticked: "Sign out the apps that use the old key"`). Agents call `confirmMarker(idOrLabel, checked = true, confirmation)`, where `confirmation` is the index or the text (any case, for a string entry); it can be left out when the item has one, and an item with several fails the step asking which. Each tick waits for a person as before. The confirmations group's agent state adds `missing`, what the selected items still wait for. `?demo=device-approval-items` shows two.
+- `device-approval`: `DeviceApprovalText<Lists>` names the permission lists whose headings the text holds: `DeviceApprovalText` needs both as before, `DeviceApprovalText<never>` neither.
+- `secret-list`: `SecretListText<Actions>`, `SecretListReplaceText`, `SecretListDeleteText` and `SecretListAction`. `SecretListText` needs every text as before; `SecretListText<never>` types a chooser's.
+
+### Changed
+
+- `secret-list`: `onReplace` and `onDelete` are optional, and each row action shows only with its callback: Replace with `onReplace`, Delete (on configured rows) with `onDelete`, and the delete confirmation only with `onDelete`. Its text is required with it and only then: `text.replace` with `onReplace`, `text.delete`, `deleteTitle`, `deleteConfirm` and `deleteAgentConfirm` with `onDelete`. A `selectable` list with neither is a chooser, with no buttons in its rows; its agent `replace` and `delete` fail with why ("replace isn't offered: the list has no onReplace"). Existing lists keep compiling. A wrapper that spreads `Partial<SecretListProps>` over a list with callbacks types its override as `Partial<SecretListProps> & { text?: SecretListText }`, so the text stays complete. `?demo=secret-list-selection` and the site's example show a chooser.
+- `device-approval`: `text.granted` and `text.withheld` are needed only when `granted` or `withheld` is passed, so a block with `items` alone leaves them out. A permission list without a heading renders no empty heading.
+- `device-approval`: an array passed as `marker.confirm` is a list of confirmations. A label made of several nodes goes in a fragment.
+- `device-approval`: the `device-approval-markers` primitive takes `marked: { id, confirmations }[]` and the ticked confirmations as `ticked` (keys from `confirmationKey(id, index)`) with `onTickedChange`, in place of `marked: string[]`, `confirmedIds` and `onConfirmedIdsChange`; its state still has `confirmedIds` and `confirmed`, now the items with every confirmation ticked.
+
 ## 0.2.18 (2026-11-27)
 
 ### Added

@@ -854,6 +854,19 @@ test("secret list: select or selectAll on a list that isn't selectable, an unkno
   expect(locked.state.selectedIds).toEqual([])
 })
 
+test("secret list: replace and delete on a list without onReplace or onDelete fail the step with why", async () => {
+  const view = mounted(
+    mount(
+      secretList,
+      { secrets: [{ value: "openai", label: "OpenAI key" }], selectable: true },
+      `<root aria-label="Chooser"></root>`,
+    ),
+  )
+  await failsWith("Chooser", "replace", "replace isn't offered: the list has no onReplace.", ["openai"])
+  await failsWith("Chooser", "delete", "delete isn't offered: the list has no onDelete.", ["openai"])
+  expect(view.state.deleting).toBeNull()
+})
+
 test("device approval items: an unknown or disabled item, a locked block or a refused change fail select; confirmMarker needs a selected, marked item", async () => {
   const items = [
     { value: "openai", label: "OpenAI key" },
@@ -888,7 +901,7 @@ test("device approval items: an unknown or disabled item, a locked block or a re
   const markers = mounted(
     mount(
       deviceApprovalMarkers,
-      { items, marked: ["openai"], selectedIds: ["github"] },
+      { items, marked: [{ id: "openai", confirmations: ["Replace the existing key"] }], selectedIds: ["github"] },
       `<root aria-label="Confirmations"></root>`,
     ),
   )
@@ -903,4 +916,52 @@ test("device approval items: an unknown or disabled item, a locked block or a re
     "openai",
   ])
   expect(markers.state.confirmedIds).toEqual([])
+})
+
+test("device approval markers: an item with several confirmations needs which one, by an index in range or its text", async () => {
+  const items = [{ value: "openai", label: "OpenAI key" }]
+  const onTickedChange = vi.fn(refuseAgent)
+  const markers = mounted(
+    mount(
+      deviceApprovalMarkers,
+      {
+        items,
+        marked: [{ id: "openai", confirmations: ["Replace the existing key", null] }],
+        selectedIds: ["openai"],
+        onTickedChange,
+      },
+      `<root aria-label="Confirmations"></root>`,
+    ),
+  )
+  await failsWith(
+    "Confirmations",
+    "confirmMarker",
+    "confirmMarker needs which confirmation of OpenAI key: it has 2, by index from 0 to 1 or by its text",
+    ["openai"],
+  )
+  await failsWith(
+    "Confirmations",
+    "confirmMarker",
+    "confirmMarker has no confirmation 2 for OpenAI key: its indexes run from 0 to 1",
+    ["openai", true, 2],
+  )
+  await failsWith(
+    "Confirmations",
+    "confirmMarker",
+    `confirmMarker has no confirmation "Revoke the old key" for OpenAI key`,
+    ["openai", true, "Revoke the old key"],
+  )
+  await failsWith("Confirmations", "confirmMarker", "confirmMarker takes the confirmation's index or its text", [
+    "openai",
+    true,
+    { index: 1 },
+  ])
+  expect(onTickedChange).not.toHaveBeenCalled()
+  await failsWith("Confirmations", "confirmMarker", "confirmMarker was refused by the app.", [
+    "openai",
+    true,
+    "REPLACE THE EXISTING KEY",
+  ])
+  expect(markers.state.ticked).toEqual([])
+  expect(markers.state.missing).toEqual(["OpenAI key: Replace the existing key", "OpenAI key: confirmation 1"])
 })

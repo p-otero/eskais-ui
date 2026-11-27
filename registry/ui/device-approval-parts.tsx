@@ -44,22 +44,25 @@ function PermissionSection({
   permissions,
 }: {
   kind: "granted" | "withheld"
-  heading: ReactNode
+  heading?: ReactNode
   permissions: readonly DevicePermission[]
 }) {
   const headingId = useId()
   if (permissions.length === 0) return null
   const look = permissionLook[kind]
+  const labelledBy = hasContent(heading) ? headingId : undefined
   return (
     <section
       data-slot={`device-approval-${kind}`}
-      aria-labelledby={headingId}
+      aria-labelledby={labelledBy}
       className="flex min-w-0 flex-col gap-items"
     >
-      <h3 id={headingId} className="text-title-sm">
-        {heading}
-      </h3>
-      <ul aria-labelledby={headingId} className="flex flex-col gap-items">
+      {labelledBy === undefined ? null : (
+        <h3 id={headingId} className="text-title-sm">
+          {heading}
+        </h3>
+      )}
+      <ul aria-labelledby={labelledBy} className="flex flex-col gap-items">
         {permissions.map((permission) => (
           <li key={permission.id} data-slot="device-approval-permission" className="flex items-start gap-items">
             <span

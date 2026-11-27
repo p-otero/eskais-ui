@@ -41,14 +41,18 @@ type StoredSecret = {
 /** Text that can name the secret it's about: a node, or a function of the secret. */
 type SecretText<Value extends ReactNode = ReactNode> = Value | ((secret: StoredSecret) => Value)
 
-/** The list's visible text. None has a default: pass it in the page's language. */
-type SecretListText = {
-  configured: ReactNode
-  missing: ReactNode
+type SecretListAction = "replace" | "delete"
+
+/** The text of Replace, needed with `onReplace`. */
+type SecretListReplaceText = {
   /** The button of a configured secret, which overwrites its value. */
   replace: ReactNode
   /** The button of a missing secret, which stores its first value, like "Set"; `replace` until you pass it. */
   set?: ReactNode
+}
+
+/** The text of Delete and its confirmation, needed with `onDelete`. */
+type SecretListDeleteText = {
   /** Shown on configured secrets only: a missing one has nothing to delete. */
   delete: ReactNode
   deleteTitle: SecretText
@@ -57,6 +61,19 @@ type SecretListText = {
   deleteConfirm: SecretText
   /** What a person approves when an agent deletes, like "Deletes the OpenAI key; anything using it stops working". */
   deleteAgentConfirm: SecretText<string>
+}
+
+/**
+ * The list's visible text. None has a default: pass it in the page's language. `Actions` names the row actions the list
+ * offers, whose text it then needs: both by default, `never` for a chooser with no actions.
+ */
+type SecretListText<Actions extends SecretListAction = SecretListAction> = SecretListBaseText &
+  ("replace" extends Actions ? SecretListReplaceText : unknown) &
+  ("delete" extends Actions ? SecretListDeleteText : unknown)
+
+type SecretListBaseText = {
+  configured: ReactNode
+  missing: ReactNode
   /** Each date, around a live relative time: (time) => <>Updated {time}</>. */
   created?: (time: ReactNode) => ReactNode
   updated?: (time: ReactNode) => ReactNode
@@ -91,7 +108,9 @@ const secretListLabels: SecretListLabels = {
   deleteSecret: (name) => `Delete ${name}`,
 }
 
-type SecretListProps = {
+type ResolvedText = SecretListText<never> & Partial<SecretListReplaceText & SecretListDeleteText>
+
+type SecretListBaseProps = {
   /** Names the list for screen readers and agents, like "API keys". */
   "aria-label": string
   secrets?: readonly StoredSecret[]
@@ -99,10 +118,6 @@ type SecretListProps = {
   status?: DataStatus
   error?: unknown
   onRetry?: () => unknown
-  /** Asks to replace or set a secret's value, like opening a dialog with a sensitive Input. */
-  onReplace: (id: string) => unknown
-  /** Deletes a secret after the confirmation; a returned Promise keeps it pending. */
-  onDelete: (id: string) => unknown
   /** Gives each secret a checkbox; agents `select(nameOrId, checked)` and `selectAll(checked)`. */
   selectable?: boolean
   /** The selected ids, to control the selection. */
@@ -110,12 +125,30 @@ type SecretListProps = {
   defaultSelected?: readonly string[]
   /** The new selected ids; `details.cancel()` keeps the old ones, and an agent's step then fails with why. */
   onSelectedChange?: (ids: string[], details: ChangeDetails<SecretListSelectionChangeReason>) => void
-  text: SecretListText
+  text: SecretListText<never>
   labels?: Partial<SecretListLabels>
   /** The locale of the relative dates; the page's by default. */
   locale?: string
   className?: string
 }
+
+type SecretListReplaceProps =
+  | { onReplace?: undefined }
+  | {
+      /** Asks to replace or set a secret's value, like opening a dialog with a sensitive Input. */
+      onReplace?: (id: string) => unknown
+      text: SecretListReplaceText
+    }
+
+type SecretListDeleteProps =
+  | { onDelete?: undefined }
+  | {
+      /** Deletes a secret after the confirmation; a returned Promise keeps it pending. */
+      onDelete?: (id: string) => unknown
+      text: SecretListDeleteText
+    }
+
+type SecretListProps = SecretListBaseProps & SecretListReplaceProps & SecretListDeleteProps
 
 const noSecrets: readonly StoredSecret[] = []
 
@@ -137,7 +170,7 @@ function selectAllState(secrets: readonly StoredSecret[], selected: readonly str
   return count === selectable.length ? true : "indeterminate"
 }
 
-function SecretDates({ secret, text, locale }: { secret: StoredSecret; text: SecretListText; locale?: string }) {
+function SecretDates({ secret, text, locale }: { secret: StoredSecret; text: ResolvedText; locale?: string }) {
   const time = (value: Instant) => <RelativeTime value={value} locale={locale} formatStyle="short" />
   const parts: { key: string; node: ReactNode }[] = []
   if (secret.updatedAt !== undefined && text.updated)
@@ -157,12 +190,12 @@ function SecretDates({ secret, text, locale }: { secret: StoredSecret; text: Sec
 
 type SecretRowProps = {
   secret: StoredSecret
-  text: SecretListText
+  text: ResolvedText
   labels: SecretListLabels
   locale?: string
   selection?: { checked: boolean; onCheckedChange: (checked: CheckedState, event: Event | undefined) => void }
-  onReplace: (event: Event) => void
-  onDelete: (event: Event) => void
+  onReplace?: (event: Event) => void
+  onDelete?: (event: Event) => void
 }
 
 function SecretRow({ secret, text, labels, locale, selection, onReplace, onDelete }: SecretRowProps) {
@@ -215,48 +248,53 @@ function SecretRow({ secret, text, labels, locale, selection, onReplace, onDelet
         )
       }
       actions={
-        <>
-          <Button
-            size="sm"
-            variant="outline"
-            aria-label={secret.configured ? labels.replaceSecret(secret.name) : labels.setSecret(secret.name)}
-            onClick={(event) => onReplace(event.nativeEvent)}
-          >
-            {secret.configured ? text.replace : (text.set ?? text.replace)}
-          </Button>
-          {secret.configured ? (
-            <Button
-              size="sm"
-              variant="ghost"
-              aria-label={labels.deleteSecret(secret.name)}
-              onClick={(event) => onDelete(event.nativeEvent)}
-            >
-              {text.delete}
-            </Button>
-          ) : null}
-        </>
+        onReplace === undefined && (onDelete === undefined || !secret.configured) ? undefined : (
+          <>
+            {onReplace === undefined ? null : (
+              <Button
+                size="sm"
+                variant="outline"
+                aria-label={secret.configured ? labels.replaceSecret(secret.name) : labels.setSecret(secret.name)}
+                onClick={(event) => onReplace(event.nativeEvent)}
+              >
+                {secret.configured ? text.replace : (text.set ?? text.replace)}
+              </Button>
+            )}
+            {onDelete !== undefined && secret.configured ? (
+              <Button
+                size="sm"
+                variant="ghost"
+                aria-label={labels.deleteSecret(secret.name)}
+                onClick={(event) => onDelete(event.nativeEvent)}
+              >
+                {text.delete}
+              </Button>
+            ) : null}
+          </>
+        )
       }
     />
   )
 }
 
-function SecretList({
-  "aria-label": label,
-  secrets = noSecrets,
-  status = "success",
-  error,
-  onRetry,
-  onReplace,
-  onDelete,
-  selectable = false,
-  selected,
-  defaultSelected,
-  onSelectedChange,
-  text,
-  labels: overrides,
-  locale,
-  className,
-}: SecretListProps) {
+function SecretList(props: SecretListProps) {
+  const {
+    "aria-label": label,
+    secrets = noSecrets,
+    status = "success",
+    error,
+    onRetry,
+    onReplace,
+    onDelete,
+    selectable = false,
+    selected,
+    defaultSelected,
+    onSelectedChange,
+    labels: overrides,
+    locale,
+    className,
+  } = props
+  const text: ResolvedText = props.text
   const labels = { ...secretListLabels, ...overrides }
   const handle = usePrimitive(secretList, {
     onReplace,
@@ -336,27 +374,29 @@ function SecretList({
                             }
                           : undefined
                       }
-                      onReplace={(event) => api.replace(secret.id, event)}
-                      onDelete={(event) => api.delete(secret.id, event)}
+                      onReplace={onReplace && ((event) => api.replace(secret.id, event))}
+                      onDelete={onDelete && ((event) => api.delete(secret.id, event))}
                     />
                   ))}
                 </ul>
               </div>
             )}
           </DataState>
-          <ConfirmDialog
-            open={state.deleting !== null}
-            onOpenChange={(open) => {
-              if (!open) api.closeDelete()
-            }}
-            tone="destructive"
-            title={forSecret(text.deleteTitle, confirming(state))}
-            description={forSecret(text.deleteDescription, confirming(state))}
-            confirmLabel={forSecret(text.deleteConfirm, confirming(state))}
-            agentConfirm={forSecret(text.deleteAgentConfirm, confirming(state)) ?? ""}
-            labels={labels.cancel === undefined ? undefined : { cancel: labels.cancel }}
-            onConfirm={() => api.confirmDelete()}
-          />
+          {onDelete === undefined ? null : (
+            <ConfirmDialog
+              open={state.deleting !== null}
+              onOpenChange={(open) => {
+                if (!open) api.closeDelete()
+              }}
+              tone="destructive"
+              title={forSecret(text.deleteTitle, confirming(state))}
+              description={forSecret(text.deleteDescription, confirming(state))}
+              confirmLabel={forSecret(text.deleteConfirm, confirming(state))}
+              agentConfirm={(text.deleteAgentConfirm && forSecret(text.deleteAgentConfirm, confirming(state))) ?? ""}
+              labels={labels.cancel === undefined ? undefined : { cancel: labels.cancel }}
+              onConfirm={() => api.confirmDelete()}
+            />
+          )}
         </>
       ),
     },
@@ -364,4 +404,13 @@ function SecretList({
 }
 
 export { SecretList, secretListLabels }
-export type { SecretListLabels, SecretListProps, SecretListText, SecretText, StoredSecret }
+export type {
+  SecretListAction,
+  SecretListDeleteText,
+  SecretListLabels,
+  SecretListProps,
+  SecretListReplaceText,
+  SecretListText,
+  SecretText,
+  StoredSecret,
+}

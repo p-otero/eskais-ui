@@ -46,16 +46,27 @@ type DeviceInfo = {
   detail?: ReactNode
 }
 
-/** The block's visible text. None has a default: pass it in the page's language. */
-type DeviceApprovalText = DeviceConsentText & {
-  /** Under the device, like "This device asked to connect to your account." */
-  description?: ReactNode
-  /** Names the pairing code, when `code` is given; "Pairing code" by default. */
-  code?: string
+type DevicePermissionList = "granted" | "withheld"
+
+type DevicePermissionHeadings = {
   /** The heading over what the device gets. */
   granted: ReactNode
   /** The heading over what it asked for and won't get. */
   withheld: ReactNode
+}
+
+/**
+ * The block's visible text. None has a default: pass it in the page's language. `Lists` names the permission lists the
+ * block shows, whose headings it then needs: both by default, `never` for a block with `items` only.
+ */
+type DeviceApprovalText<Lists extends DevicePermissionList = DevicePermissionList> = DeviceApprovalBaseText &
+  Pick<DevicePermissionHeadings, Lists>
+
+type DeviceApprovalBaseText = DeviceConsentText & {
+  /** Under the device, like "This device asked to connect to your account." */
+  description?: ReactNode
+  /** Names the pairing code, when `code` is given; "Pairing code" by default. */
+  code?: string
   approve: ReactNode
   deny: ReactNode
   /** What a person approves when an agent approves, like "Gives Studio laptop access to your account". */
@@ -106,8 +117,6 @@ type DeviceApprovalBaseProps = {
   separator?: string
   /** Keeps the code and its comparison from agents; on by default, so an agent never reads or types the code. */
   agentHidden?: boolean
-  granted?: readonly DevicePermission[]
-  withheld?: readonly DevicePermission[]
   /**
    * Things the person ticks to include, like keys to upload, under `text.items`. Approve waits until one is selected
    * and every selected item with a `marker` has its confirmation ticked.
@@ -131,7 +140,7 @@ type DeviceApprovalBaseProps = {
    * message an agent's `approve` fails with. Without it, nothing shows and an agent reads an English reason.
    */
   approveBlockedReason?: string
-  text: DeviceApprovalText
+  text: DeviceApprovalText<never>
   labels?: Partial<DeviceApprovalLabels>
   /** The inner PairingCode's names (its copy button and the spelled-out code), merged over its English defaults. */
   codeLabels?: Partial<PairingCodeLabels>
@@ -160,7 +169,15 @@ type DeviceApprovalActionProps =
       onDeny?: undefined
     }
 
-type DeviceApprovalProps = DeviceApprovalBaseProps & DeviceApprovalCompareProps & DeviceApprovalActionProps
+type DeviceApprovalPermissionProps<List extends DevicePermissionList> =
+  | { [Key in List]?: undefined }
+  | ({ [Key in List]?: readonly DevicePermission[] } & { text: Pick<DevicePermissionHeadings, List> })
+
+type DeviceApprovalProps = DeviceApprovalBaseProps &
+  DeviceApprovalCompareProps &
+  DeviceApprovalActionProps &
+  DeviceApprovalPermissionProps<"granted"> &
+  DeviceApprovalPermissionProps<"withheld">
 
 const rootAttributes: Record<`data-${string}`, string> = { "data-slot": "device-approval" }
 
@@ -201,11 +218,11 @@ function DeviceApproval(props: DeviceApprovalProps) {
     onExpire,
     approveBlocked = false,
     approveBlockedReason,
-    text,
     labels: overrides,
     codeLabels,
     className,
   } = props
+  const text: DeviceApprovalText<never> & Partial<DevicePermissionHeadings> = props.text
   const labels = { ...deviceApprovalLabels, ...overrides }
   const nameId = useId()
   const blockedReasonId = useId()
@@ -214,7 +231,7 @@ function DeviceApproval(props: DeviceApprovalProps) {
   const compareBlocked = comparing ? compareBlockedReason(props.compare, codesMatch) : null
   const consent = useConsentItems(props)
   const decision: DeviceApprovalDecision = { selected: [...consent.selectedIds], confirmed: [...consent.confirmedIds] }
-  const itemsBlocked = consentBlocked(items, consent.selectedIds, consent.confirmedIds, text)
+  const itemsBlocked = consentBlocked(items, consent.selectedIds, consent.ticked, text)
   const blocked = approveBlocked
     ? (approveBlockedReason ?? appBlockedFallback)
     : (compareBlocked ?? itemsBlocked?.reason ?? null)
@@ -326,9 +343,9 @@ function DeviceApproval(props: DeviceApprovalProps) {
               <ConsentItems
                 items={items}
                 selectedIds={consent.selectedIds}
-                confirmedIds={consent.confirmedIds}
+                ticked={consent.ticked}
                 onSelectedIdsChange={consent.select}
-                onConfirmedIdsChange={consent.confirm}
+                onTickedChange={consent.tick}
                 locked={lockedReason(state)}
                 heading={text.items}
                 labels={labels}
