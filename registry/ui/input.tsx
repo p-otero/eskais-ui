@@ -52,10 +52,13 @@ const isPassThroughKey = (key: string): key is keyof PassThrough => key.startsWi
 const isAttributeValue = (value: unknown): value is AttributeValue =>
   value === undefined || typeof value === "string" || typeof value === "number" || typeof value === "boolean"
 
-function namingAndMarkingAttributesOf(props: object): PassThrough {
+const noManagedAttributes: ReadonlySet<string> = new Set()
+
+/** The `data-*` and `aria-*` props, without the ones in `managed`, which the receiving element sets itself. */
+function namingAndMarkingAttributesOf(props: object, managed = noManagedAttributes): PassThrough {
   const attributes: PassThrough = {}
   for (const [key, value] of Object.entries(props)) {
-    if (isPassThroughKey(key) && isAttributeValue(value)) attributes[key] = value
+    if (isPassThroughKey(key) && isAttributeValue(value) && !managed.has(key)) attributes[key] = value
   }
   return attributes
 }

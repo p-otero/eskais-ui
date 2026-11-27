@@ -193,6 +193,29 @@ test("a code that has already expired calls onExpire once on mount, and a Date w
   expect(screen.getByRole("group", { name: "Sign-in code" }).hasAttribute("data-expired")).toBe(true)
 })
 
+test("id, data-* and aria-* reach the prompt without replacing its own state attributes", () => {
+  render(
+    <>
+      <p id="hint">Use the account you sign in with at work</p>
+      <Prompt
+        id="sign-in"
+        data-testid="prompt"
+        data-expired=""
+        data-link-copied=""
+        data-slot="spoofed"
+        aria-describedby="hint"
+      />
+    </>,
+  )
+  const root = screen.getByRole("group", { name: "Sign-in code" })
+  expect(root.id).toBe("sign-in")
+  expect(root.getAttribute("data-testid")).toBe("prompt")
+  expect(root.getAttribute("data-slot")).toBe("device-code-prompt")
+  expect(root.hasAttribute("data-expired")).toBe(false)
+  expect(root.hasAttribute("data-link-copied")).toBe(false)
+  expect(root.getAttribute("aria-describedby")).toBe("hint")
+})
+
 test("actions stay once the code expires, for a new code or a cancel", () => {
   render(<Prompt expiresAt={Date.now() - 1000} actions={<Button variant="outline">New code</Button>} />)
   expect(screen.getByRole("button", { name: "New code" })).toBeTruthy()

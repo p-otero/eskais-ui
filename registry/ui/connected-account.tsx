@@ -2,19 +2,21 @@
 
 import { usePart, usePrimitive } from "@ui-sdk/react/primitive"
 import { LinkIcon, PlugZapIcon, RefreshCwIcon, UnlinkIcon } from "lucide-react"
-import { createContext, isValidElement, use, useId, useMemo, type ReactNode } from "react"
+import { createContext, isValidElement, use, useId, useMemo, type AriaAttributes, type ReactNode } from "react"
 
-import { Alert, AlertDescription } from "@/components/ui/alert"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
 import { cardVariants } from "@/components/ui/card"
 import { ConfirmDialog } from "@/components/ui/confirm-dialog"
 import {
   connectedAccount,
+  ConnectedAccountStatus,
+  connectedAccountStatuses,
   type ConnectedAccountAction,
   type ConnectedAccountState,
-  type ConnectedAccountStatus,
 } from "@/components/ui/connected-account-primitive"
 import { DescriptionDetails, DescriptionItem, DescriptionList, DescriptionTerm } from "@/components/ui/description-list"
+import { namingAndMarkingAttributesOf } from "@/components/ui/input"
 import { StatusPill } from "@/components/ui/status-pill"
 import type { Tone } from "@/lib/tone"
 import { cn } from "@/lib/utils"
@@ -62,6 +64,16 @@ type ConnectedAccountLabels = {
   keepConnected?: ReactNode
 }
 
+/** A lasting message inside the panel, like an account that lost a permission or a provider outage. */
+type ConnectedAccountNotice = {
+  /** `info` by default. */
+  tone?: Tone
+  title: ReactNode
+  description?: ReactNode
+  /** Announces it when it appears after the page loads; off by default, since a notice is a state, not an event. */
+  live?: boolean
+}
+
 /** What custom waiting content and `useConnectedAccount` get. */
 type ConnectedAccountControls = {
   status: ConnectedAccountStatus
@@ -77,33 +89,39 @@ type ConnectedAccountActionState = Omit<ConnectedAccountControls, "cancel"> & {
   buttons: ReactNode
 }
 
-type ConnectedAccountProps = {
-  provider: ConnectedAccountProvider
-  status: ConnectedAccountStatus
-  /** A line under the provider's name. */
-  description?: ReactNode
-  facts?: readonly ConnectedAccountFact[]
-  /** Shown while pending, like a DeviceCodePrompt; a function gets `cancel` for a button of its own. */
-  waiting?: ReactNode | ((controls: ConnectedAccountControls) => ReactNode)
-  /** Shown while disconnected. A returned Promise keeps Connect pending; a rejection shows `text.error`. */
-  onConnect?: () => unknown
-  /** Shown once the sign-in has expired, and while connected with `reconnectWhenConnected`. */
-  onReconnect?: () => unknown
-  reconnectWhenConnected?: boolean
-  /** Shown while connected or expired, behind a confirmation whose confirm needs a person for an agent. */
-  onDisconnect?: () => unknown
-  /** Abandons a pending sign-in, like one the person gave up on at the provider. */
-  onCancel?: () => unknown
-  /** Your own controls: a node replaces the panel's buttons, a function gets them in `buttons` to add to. */
-  actions?: ReactNode | ((state: ConnectedAccountActionState) => ReactNode)
-  text: ConnectedAccountText
-  labels?: ConnectedAccountLabels
-  /** The provider name's heading level; 3 by default. */
-  headingLevel?: 2 | 3 | 4 | 5 | 6
-  /** Names the panel for screen readers and agents; the provider's name by default. */
-  "aria-label"?: string
-  className?: string
-}
+type DataAttributes = { [key: `data-${string}`]: string | number | boolean | undefined }
+
+type ConnectedAccountProps = DataAttributes &
+  AriaAttributes & {
+    id?: string
+    provider: ConnectedAccountProvider
+    status: ConnectedAccountStatus
+    /** A line under the provider's name. */
+    description?: ReactNode
+    /** Shown below the header and above the facts, in an Alert that isn't live unless `notice.live`. */
+    notice?: ConnectedAccountNotice
+    facts?: readonly ConnectedAccountFact[]
+    /** Shown while pending, like a DeviceCodePrompt; a function gets `cancel` for a button of its own. */
+    waiting?: ReactNode | ((controls: ConnectedAccountControls) => ReactNode)
+    /** Shown while disconnected. A returned Promise keeps Connect pending; a rejection shows `text.error`. */
+    onConnect?: () => unknown
+    /** Shown once the sign-in has expired, and while connected with `reconnectWhenConnected`. */
+    onReconnect?: () => unknown
+    reconnectWhenConnected?: boolean
+    /** Shown while connected or expired, behind a confirmation whose confirm needs a person for an agent. */
+    onDisconnect?: () => unknown
+    /** Abandons a pending sign-in, like one the person gave up on at the provider. */
+    onCancel?: () => unknown
+    /** Your own controls: a node replaces the panel's buttons, a function gets them in `buttons` to add to. */
+    actions?: ReactNode | ((state: ConnectedAccountActionState) => ReactNode)
+    text: ConnectedAccountText
+    labels?: ConnectedAccountLabels
+    /** The provider name's heading level; 3 by default. */
+    headingLevel?: 2 | 3 | 4 | 5 | 6
+    /** Names the panel for screen readers and agents; the provider's name by default. */
+    "aria-label"?: string
+    className?: string
+  }
 
 const statusTone: Record<ConnectedAccountStatus, Tone> = {
   connected: "success",
@@ -113,6 +131,12 @@ const statusTone: Record<ConnectedAccountStatus, Tone> = {
 }
 
 const rootAttributes: Record<`data-${string}`, string> = { "data-slot": "connected-account" }
+
+const managedRootAttributes = new Set(["data-status", "data-pending", "aria-busy", "aria-labelledby"])
+
+function joinIds(...ids: (string | undefined)[]) {
+  return ids.filter(Boolean).join(" ") || undefined
+}
 
 const headingTag = { 2: "h2", 3: "h3", 4: "h4", 5: "h5", 6: "h6" } as const
 
@@ -148,25 +172,30 @@ function nativeEventOf(event: Event | { nativeEvent: Event } | undefined) {
   return event.nativeEvent
 }
 
-function ConnectedAccount({
-  provider,
-  status,
-  description,
-  facts = noFacts,
-  waiting,
-  onConnect,
-  onReconnect,
-  reconnectWhenConnected = false,
-  onDisconnect,
-  onCancel,
-  actions,
-  text,
-  labels,
-  headingLevel = 3,
-  "aria-label": label,
-  className,
-}: ConnectedAccountProps) {
+function ConnectedAccount(props: ConnectedAccountProps) {
+  const {
+    id,
+    provider,
+    status,
+    description,
+    notice,
+    facts = noFacts,
+    waiting,
+    onConnect,
+    onReconnect,
+    reconnectWhenConnected = false,
+    onDisconnect,
+    onCancel,
+    actions,
+    text,
+    labels,
+    headingLevel = 3,
+    "aria-label": label,
+    "aria-describedby": describedBy,
+    className,
+  } = props
   const nameId = useId()
+  const descriptionId = useId()
   const handle = usePrimitive(connectedAccount, {
     status,
     onConnect,
@@ -189,9 +218,12 @@ function ConnectedAccount({
     "root",
     {},
     {
+      ...namingAndMarkingAttributesOf(props, managedRootAttributes),
       ...rootAttributes,
+      id,
       "aria-label": label,
       "aria-labelledby": label === undefined ? nameId : undefined,
+      "aria-describedby": joinIds(hasContent(description) ? descriptionId : undefined, describedBy),
       className: cn(cardVariants({ surface: "card" }), "@container min-w-0", className),
       children: (state: ConnectedAccountState) => {
         const busy = state.pending !== null
@@ -264,9 +296,21 @@ function ConnectedAccount({
                     {text.status[status]}
                   </StatusPill>
                 </div>
-                {hasContent(description) ? <p className="text-body-sm text-muted-foreground">{description}</p> : null}
+                {hasContent(description) ? (
+                  <p id={descriptionId} className="text-body-sm text-muted-foreground">
+                    {description}
+                  </p>
+                ) : null}
               </div>
             </div>
+            {notice ? (
+              <div className="px-inset-surface">
+                <Alert data-slot="connected-account-notice" tone={notice.tone} live={notice.live}>
+                  <AlertTitle>{notice.title}</AlertTitle>
+                  {hasContent(notice.description) ? <AlertDescription>{notice.description}</AlertDescription> : null}
+                </Alert>
+              </div>
+            ) : null}
             {facts.length > 0 ? (
               <div data-slot="connected-account-facts" className="px-inset-surface">
                 <DescriptionList layout="inline">
@@ -337,15 +381,15 @@ function ConnectedAccount({
   return <ConnectedAccountContext value={controls}>{panel}</ConnectedAccountContext>
 }
 
-export { ConnectedAccount, useConnectedAccount }
+export { ConnectedAccount, ConnectedAccountStatus, connectedAccountStatuses, useConnectedAccount }
 export type {
   ConnectedAccountAction,
   ConnectedAccountActionState,
   ConnectedAccountControls,
   ConnectedAccountFact,
   ConnectedAccountLabels,
+  ConnectedAccountNotice,
   ConnectedAccountProps,
   ConnectedAccountProvider,
-  ConnectedAccountStatus,
   ConnectedAccountText,
 }

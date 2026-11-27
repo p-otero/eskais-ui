@@ -283,6 +283,14 @@ shadcn installs an item's npm `dependencies` before it writes any file. A consum
 
 The `lint-rules` item ships consumers the `react` and `ui-tailwind` presets with `@shadcn/lint`, the component-shape rules off, spacing tokens, `eskais/scroll-area`, `eskais/no-inline-icons` and the React rules of `react-agents` that the registry suppresses as warnings, and `eskais/icon-button-needs-label` (the `eskais` rules come from `registry/rules/eskais-oxlint-plugin.js`, which the repo's plugin also loads).
 
+## Releases
+
+`bun pm version <patch|minor|major>` bumps `package.json`, rebuilds `public/r` and tags `vX.Y.Z`. Entries collect under `## Unreleased` in `CHANGELOG.md` until then, which becomes the version's heading and its GitHub release.
+
+1. A version's sections are `### Added`, `### Changed` and `### Fixed`, then `### Removed files`.
+2. shadcn never deletes files, so an item that stops installing one (a rename, a split into its own item, a removal) leaves it in every project that added the item before. `node tooling/removed-files.mjs <previous tag>` compares the paths each item installs, itself and through its dependencies, between the tag and `HEAD`, and writes the `### Removed files` section: each file is either deleted from the registry or moved to the item that ships it now ("add @eskais/page-source-rest if you use it, otherwise delete it"). Paste it into the version and its release; it prints "No removed files." when there are none.
+3. It tracks files, not exports: a function that moved between files that both still ship goes under `### Changed`, with the new import.
+
 ## Commands
 
 | Task           | Command                                                                                |
@@ -296,6 +304,7 @@ The `lint-rules` item ships consumers the `react` and `ui-tailwind` presets with
 | Showcase       | `bun run dev`                                                                          |
 | Clean consumer | `node tooling/consumer-check.mjs npm` (or `pnpm`, `bun`)                               |
 | Dependency age | `node tooling/check-dependency-age.mjs`: 7 days or older                               |
+| Removed files  | `node tooling/removed-files.mjs <previous tag>`: the CHANGELOG's `### Removed files`   |
 | Contrast (CI)  | `bun run test:browser`: axe and pixel contrast in Chrome                               |
 | Contrast glass | `bun run test:browser:glass`: by hand, not in CI                                       |
 | React Compiler | `bun run test:compiler`: compiler build, then the browser checks                       |

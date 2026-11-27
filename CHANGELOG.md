@@ -2,6 +2,18 @@
 
 Versions follow [semver](https://semver.org). Before 1.0, a minor version can break compatibility. Release with `bun pm version <patch|minor|major>`, which bumps `package.json`, rebuilds `public/r` (the mockup CLI reports the version) and tags `vX.Y.Z`.
 
+Each version lists `### Added`, `### Changed` and `### Fixed`, then `### Removed files` when an item stopped installing a file: shadcn never deletes files, so the section tells a project what to clean up. `node tooling/removed-files.mjs <previous tag>` writes it.
+
+## Unreleased
+
+### Added
+
+- `connected-account`: `notice={{ tone, title, description }}`, a lasting message inside the panel, like a permission the account lost or an outage at the provider. It renders an Alert (tone `info` by default, with its title and description parts) below the header and above the facts. It isn't a live region, since it describes the account rather than something that just happened; `notice.live` announces one that appears after the page loads.
+- `connected-account`: `ConnectedAccountStatus` is now also an object of the statuses by name (`ConnectedAccountStatus.expired`), like `Tone`, and `connectedAccountStatuses` lists them, to check a server's value with `isOneOf`. The type export stays.
+- `connected-account`, `device-code-prompt`: `id`, `data-*` and `aria-*` go on the root, as on `Input sensitive` and `PairingCode`. They never replace what the root sets itself: its `data-slot`, its name, ConnectedAccount's `data-status`, `data-pending` and `aria-busy`, DeviceCodePrompt's `data-expired` and `data-link-copied`. A passed `aria-describedby` on ConnectedAccount joins its `description`, which now describes the panel. `data-status` on ConnectedAccount and `data-expired` on DeviceCodePrompt are documented, to style or select by them.
+- `input`: `namingAndMarkingAttributesOf(props, managed)` takes the names the receiving element sets itself, and leaves them out.
+- `node tooling/removed-files.mjs <fromTag> [toTag]` lists, per item, the files it installed at the first tag and no longer installs, itself or through its dependencies, as a `### Removed files` section: each one either deleted from the registry or moved to the item that ships it now.
+
 ## 0.2.17 (2026-11-27)
 
 ### Added
@@ -22,6 +34,30 @@ Versions follow [semver](https://semver.org). Before 1.0, a minor version can br
 - `invitation-panel`: `text.createError` comes from `rejectionContent`, shared with DeviceApproval; it behaves as before.
 - `device-approval`: the countdown and expiry come from `expiry-countdown`, which the item now depends on. `use-device-approval-expiry.ts` is now `use-expiry.ts`, and `useDeviceApprovalExpiry` is `useExpiry`. The block looks and behaves as before.
 - `filter-schema`, `page-source`, `diff`: optional backends are items of their own, so a project installs only the dialect and adapter it uses. `server-data-table` now brings 90 files instead of 96, `filter-schema` 9 instead of 15. The filter dialects moved to `filter-rsql` (`rsql`), `filter-odata` (`odata`), `filter-spring` (`springFilter`) and `filter-graphql` (`graphqlWhere`); `queryParams`, `jsonAst` and `searchOnly` stay in `filter-schema`. The paging adapters moved to `page-source-rest` (`pagedSource`, `offsetSource`), `page-source-spring` (`springPageSource`, `springSliceSource`, out of `page-source-rest`), `page-source-cursor` (`cursorSource`), `page-source-relay` (`relaySource`) and `page-source-link` (`linkHeaderSource`, `parseLinkHeader`), the last two out of `page-source-cursor`; `RestCall` and the kit the adapters share (`adapterSource`, `pageNumberOf`, `cursorPositionOf`, `restCallOf`, `RestSourceOptions`) are in `page-source`. `parsePatch` and `formatHunks` moved to `diff-patch`, which `git-diff` brings. shadcn never deletes files, so an existing project keeps its adapter files and nothing changes until it adds an item again. In a fresh project, or after adding `filter-schema`, `page-source` or `diff` again, add the items you import from too (`npx shadcn@latest add @eskais/filter-spring @eskais/page-source-spring`) and import Spring sources from `@/lib/page-source-spring`, Relay from `@/lib/page-source-relay`, Link headers from `@/lib/page-source-link` and `RestCall` from `@/lib/page-source`.
+
+### Removed files
+
+shadcn never deletes files, so adding these items again leaves the files below behind: the items no longer install them, or their dependencies. Paths are under the default aliases (`components/ui`, `lib`, `hooks`).
+
+`device-approval`:
+
+- `components/ui/use-device-approval-expiry.ts`: no item ships it any more; delete it.
+
+`diff`:
+
+- `lib/diff-patch.ts`: moved to `diff-patch`. Add `@eskais/diff-patch` if you use it, otherwise delete it.
+
+`filter-schema`:
+
+- `lib/filter-graphql.ts`: moved to `filter-graphql`. Add `@eskais/filter-graphql` if you use it, otherwise delete it.
+- `lib/filter-odata.ts`: moved to `filter-odata`. Add `@eskais/filter-odata` if you use it, otherwise delete it.
+- `lib/filter-rsql.ts`: moved to `filter-rsql`. Add `@eskais/filter-rsql` if you use it, otherwise delete it.
+- `lib/filter-spring.ts`: moved to `filter-spring`. Add `@eskais/filter-spring` if you use it, otherwise delete it.
+
+`page-source`:
+
+- `lib/page-source-cursor.ts`: moved to `page-source-cursor`. Add `@eskais/page-source-cursor` if you use it, otherwise delete it.
+- `lib/page-source-rest.ts`: moved to `page-source-rest`. Add `@eskais/page-source-rest` if you use it, otherwise delete it.
 
 ## 0.2.16 (2026-11-26)
 

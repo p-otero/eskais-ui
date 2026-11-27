@@ -6,6 +6,8 @@ import { afterEach, beforeEach, expect, test, vi } from "vitest"
 import { Button } from "@/components/ui/button"
 import {
   ConnectedAccount,
+  ConnectedAccountStatus,
+  connectedAccountStatuses,
   useConnectedAccount,
   type ConnectedAccountProps,
   type ConnectedAccountText,
@@ -117,6 +119,72 @@ test.each([
     .getAllByRole("button")
     .map((button) => button.textContent)
   expect(buttons).toEqual(names)
+})
+
+test("id, data-* and aria-* reach the panel without replacing its own status, name or busy state", () => {
+  render(
+    <>
+      <p id="help">Used for backups</p>
+      <Account
+        id="backup-account"
+        description="Syncs your files"
+        data-testid="account"
+        data-status="spoofed"
+        data-pending="connect"
+        aria-busy
+        aria-labelledby="help"
+        aria-describedby="help"
+        aria-roledescription="account"
+      />
+    </>,
+  )
+  const root = panel()
+  expect(root.id).toBe("backup-account")
+  expect(root.getAttribute("data-testid")).toBe("account")
+  expect(root.getAttribute("data-slot")).toBe("connected-account")
+  expect(root.getAttribute("data-status")).toBe("connected")
+  expect(root.hasAttribute("data-pending")).toBe(false)
+  expect(root.hasAttribute("aria-busy")).toBe(false)
+  expect(root.getAttribute("aria-roledescription")).toBe("account")
+  const describedBy = root.getAttribute("aria-describedby")?.split(" ") ?? []
+  expect(describedBy).toHaveLength(2)
+  expect(describedBy).toContain("help")
+  expect(document.getElementById(describedBy[0]!)?.textContent).toBe("Syncs your files")
+})
+
+test("data-status follows the status prop", () => {
+  const { rerender } = render(<Account status={ConnectedAccountStatus.pending} />)
+  expect(panel().getAttribute("data-status")).toBe("pending")
+  rerender(<Account status={ConnectedAccountStatus.expired} />)
+  expect(panel().getAttribute("data-status")).toBe("expired")
+})
+
+test("ConnectedAccountStatus names every status, and connectedAccountStatuses lists them", () => {
+  expect(Object.values(ConnectedAccountStatus)).toEqual([...connectedAccountStatuses])
+  expect(connectedAccountStatuses).toEqual(["connected", "pending", "expired", "disconnected"])
+})
+
+test("a notice shows as a toned Alert between the header and the facts, not live by default", () => {
+  const { rerender } = render(
+    <Account
+      notice={{ tone: "warning", title: "Calendar access was removed", description: "Events no longer sync." }}
+    />,
+  )
+  const notice = panel().querySelector("[data-slot=connected-account-notice]")
+  expect(notice?.getAttribute("data-tone")).toBe("warning")
+  expect(notice?.hasAttribute("role")).toBe(false)
+  expect(notice?.querySelector("[data-slot=alert-title]")?.textContent).toBe("Calendar access was removed")
+  expect(notice?.querySelector("[data-slot=alert-description]")?.textContent).toBe("Events no longer sync.")
+  const header = panel().querySelector("[data-slot=connected-account-header]")!
+  const factList = panel().querySelector("[data-slot=connected-account-facts]")!
+  expect(header.compareDocumentPosition(notice!) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+  expect(notice!.compareDocumentPosition(factList) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+  rerender(<Account notice={{ title: "Maintenance tonight", live: true }} />)
+  const live = screen.getByRole("status")
+  expect(live.getAttribute("data-tone")).toBe("info")
+  expect(live.querySelector("[data-slot=alert-description]")).toBeNull()
+  rerender(<Account />)
+  expect(panel().querySelector("[data-slot=connected-account-notice]")).toBeNull()
 })
 
 test("reconnectWhenConnected offers Reconnect while connected too", () => {
@@ -343,6 +411,7 @@ test("the pending sign-in with a DeviceCodePrompt keeps the code from agents, an
     <main>
       <Account
         status="pending"
+        notice={{ tone: "info", title: "Approve on your phone" }}
         waiting={
           <DeviceCodePrompt
             code="WDJBMJHT"
