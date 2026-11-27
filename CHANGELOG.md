@@ -2,11 +2,8 @@
 
 Versions follow [semver](https://semver.org). Before 1.0, a minor version can break compatibility. Release with `bun pm version <patch|minor|major>`, which bumps `package.json`, rebuilds `public/r` (the mockup CLI reports the version) and tags `vX.Y.Z`.
 
-<<<<<<< HEAD
 Each version lists `### Added`, `### Changed` and `### Fixed`, then `### Removed files` when an item stopped installing a file: shadcn never deletes files, so the section tells a project what to clean up. `node tooling/removed-files.mjs <previous tag>` writes it.
 
-=======
->>>>>>> 0fc25e37 (Selection and per-item consent: CheckboxRow, SecretFingerprint, SecretList selection, DeviceApproval items)
 ## Unreleased
 
 ### Added
