@@ -452,7 +452,13 @@ test("actions replaces Approve and Deny, and gets the expiry and match state", (
   )
   expect(screen.queryByRole("button", { name: "Approve" })).toBeNull()
   expect(screen.getByTestId("own").textContent).toBe("blocked")
-  expect(actions).toHaveBeenLastCalledWith({ expired: false, codesMatch: null, approveBlocked: true })
+  expect(actions).toHaveBeenLastCalledWith({
+    expired: false,
+    codesMatch: null,
+    approveBlocked: true,
+    selected: [],
+    confirmed: [],
+  })
   typeCode("BCDFGHJK")
   expect(screen.getByTestId("own").textContent).toBe("open")
 })

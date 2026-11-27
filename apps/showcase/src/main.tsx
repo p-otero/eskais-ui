@@ -94,10 +94,14 @@ const pages: Record<string, Page> = {
   "invitation-panel": () => import("./sections/auth/invitation-panel").then((module) => module.InvitationPanelDemo),
   "pairing-code": () => import("./sections/auth/pairing-code").then((module) => module.PairingCodeDemo),
   "device-approval": () => import("./sections/auth/device-approval").then((module) => module.DeviceApprovalDemo),
+  "device-approval-items": () =>
+    import("./sections/auth/device-approval-items").then((module) => module.DeviceApprovalItemsDemo),
   "device-code-prompt": () =>
     import("./sections/auth/device-code-prompt").then((module) => module.DeviceCodePromptDemo),
   "connected-account": () => import("./sections/auth/connected-account").then((module) => module.ConnectedAccountDemo),
   "secret-list": () => import("./sections/auth/secret-list").then((module) => module.SecretListDemo),
+  "secret-list-selection": () =>
+    import("./sections/auth/secret-list-selection").then((module) => module.SecretListSelectionDemo),
   "document-workspace": () => import("./sections/document-workspace").then((module) => module.DocumentWorkspacePage),
   "server-data-check": () => import("./checks/server-data-check").then((module) => module.ServerDataCheck),
   "agent-workspace": () =>

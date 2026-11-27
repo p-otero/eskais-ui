@@ -35,6 +35,7 @@ const categories = [
       "combobox",
       "autocomplete",
       "checkbox",
+      "checkbox-row",
       "radio-group",
       "switch",
       "slider",
@@ -203,6 +204,7 @@ const categories = [
       "device-code-prompt",
       "connected-account",
       "secret-list",
+      "secret-fingerprint",
     ],
   },
   {

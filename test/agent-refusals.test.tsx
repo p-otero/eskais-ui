@@ -16,6 +16,7 @@ import { connectedAccount } from "@/components/ui/connected-account-primitive"
 import { conversation } from "@/components/ui/conversation-primitive"
 import { dataTable } from "@/components/ui/data-table-primitive"
 import { descriptionValue } from "@/components/ui/description-list-primitive"
+import { deviceApprovalItems, deviceApprovalMarkers } from "@/components/ui/device-approval-items-primitive"
 import { deviceApproval, deviceApprovalApprove } from "@/components/ui/device-approval-primitive"
 import { deviceCodePrompt } from "@/components/ui/device-code-prompt-primitive"
 import { formRoot } from "@/components/ui/form-primitive"
@@ -40,6 +41,7 @@ import { sunArc } from "@/components/ui/sun-arc-primitive"
 import { vinylScrubber } from "@/components/ui/vinyl-scrubber-primitive"
 import { retroTv } from "@/components/ui/retro-tv-primitive"
 import { searchField } from "@/components/ui/search-field-primitive"
+import { secretList } from "@/components/ui/secret-list-primitive"
 import { serverFilters } from "@/components/ui/server-filters-primitive"
 import { sidebar } from "@/components/ui/sidebar-primitive"
 import { sortable } from "@/components/ui/sortable-primitive"
@@ -804,4 +806,101 @@ test("device code prompt: open and copyLink of a hidden or expired code fail the
   await failsWith("Old prompt", "open", "open isn't available: the code has expired")
   expect(expired.state.expired).toBe(true)
   expect(opened).not.toHaveBeenCalled()
+})
+
+test("secret list: select or selectAll on a list that isn't selectable, an unknown or disabled secret, or a refused change fail the step", async () => {
+  const secrets = [
+    { value: "openai", label: "OpenAI key" },
+    { value: "stripe", label: "Stripe key" },
+  ]
+  mounted(mount(secretList, { secrets }, `<root aria-label="Plain keys"></root>`))
+  await failsWith("Plain keys", "select", "select isn't available: the list isn't selectable", ["openai"])
+  await failsWith("Plain keys", "selectAll", "selectAll isn't available: the list isn't selectable", [true])
+  const onSelectedIdsChange = vi.fn(refuseAgent)
+  const view = mounted(
+    mount(
+      secretList,
+      {
+        secrets,
+        selectable: true,
+        unselectable: [{ id: "stripe", reason: "Already on your account" }],
+        onSelectedIdsChange,
+      },
+      `<root aria-label="Local keys"></root>`,
+    ),
+  )
+  await failsWith("Local keys", "select", `select has no secret named "AWS key"`, ["AWS key"])
+  await failsWith(
+    "Local keys",
+    "select",
+    "select isn't available: Stripe key can't be selected: Already on your account",
+    ["stripe"],
+  )
+  await failsWith("Local keys", "select", "select takes true to select and false to deselect", ["openai", "yes"])
+  await failsWith("Local keys", "select", "select was refused by the app.", ["openai key"])
+  await failsWith("Local keys", "selectAll", "selectAll was refused by the app.", [true])
+  expect(view.state.selectedIds).toEqual([])
+  expect(view.state.selected).toEqual([])
+  expect(onSelectedIdsChange).toHaveBeenCalledTimes(2)
+  const locked = mounted(
+    mount(
+      secretList,
+      { secrets: [secrets[1]!], selectable: true, unselectable: [{ id: "stripe", reason: null }] },
+      `<root aria-label="Locked keys"></root>`,
+    ),
+  )
+  await failsWith("Locked keys", "select", "select isn't available: Stripe key can't be selected.", ["stripe"])
+  await failsWith("Locked keys", "selectAll", "selectAll isn't available: no secret can be selected", [true])
+  expect(locked.state.selectedIds).toEqual([])
+})
+
+test("device approval items: an unknown or disabled item, a locked block or a refused change fail select; confirmMarker needs a selected, marked item", async () => {
+  const items = [
+    { value: "openai", label: "OpenAI key" },
+    { value: "github", label: "GitHub token" },
+    { value: "stripe", label: "Stripe key" },
+  ]
+  const onSelectedIdsChange = vi.fn(refuseAgent)
+  const view = mounted(
+    mount(
+      deviceApprovalItems,
+      { items, unselectable: [{ id: "stripe", reason: "Your role can't upload payment keys" }], onSelectedIdsChange },
+      `<root aria-label="Keys to upload"></root>`,
+    ),
+  )
+  await failsWith("Keys to upload", "select", `select has no item named "AWS key"`, ["AWS key"])
+  await failsWith(
+    "Keys to upload",
+    "select",
+    "select isn't available: Stripe key can't be selected: Your role can't upload payment keys",
+    ["stripe"],
+  )
+  await failsWith("Keys to upload", "select", "select was refused by the app.", ["OPENAI KEY"])
+  expect(view.state.selectedIds).toEqual([])
+  mounted(
+    mount(
+      deviceApprovalItems,
+      { items, locked: "the device was already approved" },
+      `<root aria-label="Sent keys"></root>`,
+    ),
+  )
+  await failsWith("Sent keys", "select", "select isn't available: the device was already approved", ["openai"])
+  const markers = mounted(
+    mount(
+      deviceApprovalMarkers,
+      { items, marked: ["openai"], selectedIds: ["github"] },
+      `<root aria-label="Confirmations"></root>`,
+    ),
+  )
+  await failsWith("Confirmations", "confirmMarker", `confirmMarker has no item named "AWS key"`, ["AWS key"])
+  await failsWith(
+    "Confirmations",
+    "confirmMarker",
+    "confirmMarker isn't available: GitHub token has nothing to confirm",
+    ["github"],
+  )
+  await failsWith("Confirmations", "confirmMarker", "confirmMarker isn't available: OpenAI key isn't selected", [
+    "openai",
+  ])
+  expect(markers.state.confirmedIds).toEqual([])
 })
