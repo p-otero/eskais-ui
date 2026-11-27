@@ -224,8 +224,8 @@ test("labels are overridable", async () => {
   expect(screen.getByRole("status").textContent).toBe("Offen")
 })
 
-test("the timeline rests locked and unlocked, plays out, and turns back from where it is", () => {
-  const unlocking = { kind: "unlocking" as const, since: 1000 }
+test("the timeline rests locked and unlocked and plays out", () => {
+  const unlocking = motionTowards("unlocking", lockedPose, 1000)
   expect(poseAt(unlocking, 1000)).toEqual(lockedPose)
   expect(poseAt(unlocking, 1000 + unlockMs)).toEqual(unlockedPose)
   expect(Math.max(...[1300, 1600, 1900, 2100].map((at) => poseAt(unlocking, 1000 + at).doorDegrees))).toBeGreaterThan(
@@ -233,16 +233,36 @@ test("the timeline rests locked and unlocked, plays out, and turns back from whe
   )
   expect(motionDone(unlocking, 1000 + unlockMs - 1)).toBe(false)
   expect(motionDone(unlocking, 1000 + unlockMs)).toBe(true)
-  const locking = { kind: "locking" as const, since: 0 }
+  const locking = motionTowards("locking", unlockedPose, 0)
+  expect(poseAt(locking, 0)).toEqual(unlockedPose)
   expect(poseAt(locking, lockMs)).toEqual(lockedPose)
-  const halfOpen = poseAt(unlocking, 1000 + 1200)
-  const back = motionTowards("locking", halfOpen, 5000)
-  expect(Math.abs(poseAt(back, 5000).doorDegrees - halfOpen.doorDegrees)).toBeLessThan(20)
+  expect(motionDone(locking, lockMs)).toBe(true)
+})
+
+test("a lock or an unlock that interrupts another continues from the exact pose, camera included", () => {
+  const aspect = 1100 / 750
+  const unlocking = motionTowards("unlocking", lockedPose, 0)
+  for (const at of [200, 600, 900, 1400, 1700, 2000, 2500]) {
+    const here = poseAt(unlocking, at)
+    const back = motionTowards("locking", here, at)
+    expect(poseAt(back, at)).toEqual({ ...here, wobbleDegrees: 0 })
+    expect(framingFor(poseAt(back, at), aspect, 1100)).toEqual(framingFor(here, aspect, 1100))
+    const next = poseAt(back, at + 16)
+    expect(Math.abs(next.doorDegrees - here.doorDegrees)).toBeLessThan(3)
+    expect(Math.abs(next.zoom - here.zoom)).toBeLessThan(0.05)
+    expect(Math.abs(next.bolts - here.bolts)).toBeLessThan(0.1)
+    expect(motionDone(back, at + lockMs)).toBe(true)
+    expect(poseAt(back, at + lockMs)).toEqual(lockedPose)
+
+    const again = motionTowards("unlocking", poseAt(back, at + 300), at + 300)
+    expect(poseAt(again, at + 300)).toEqual({ ...poseAt(back, at + 300), wobbleDegrees: 0 })
+    expect(poseAt(again, at + 300 + unlockMs)).toEqual(unlockedPose)
+  }
 })
 
 test("the page's projection matches three.js's camera", () => {
   const aspect = 1100 / 750
-  for (const pose of [lockedPose, poseAt({ kind: "unlocking", since: 0 }, 1500), unlockedPose]) {
+  for (const pose of [lockedPose, poseAt(motionTowards("unlocking", lockedPose, 0), 1500), unlockedPose]) {
     const framing = framingFor(pose, aspect, 1100)
     const camera = new PerspectiveCamera(cameraFovDegrees, aspect, 5, 2000)
     const position = cameraPosition(framing)
@@ -262,7 +282,7 @@ test("the page's projection matches three.js's camera", () => {
 test("the plaque's matrix3d maps its box's corners onto the projected corners", () => {
   const stage = { width: 1100, height: 750 }
   const aspect = stage.width / stage.height
-  for (const pose of [poseAt({ kind: "unlocking", since: 0 }, 2300), unlockedPose]) {
+  for (const pose of [poseAt(motionTowards("unlocking", lockedPose, 0), 2300), unlockedPose]) {
     const project = projection(framingFor(pose, aspect, stage.width), aspect)
     const corners = plaqueCorners(20).map((corner) => {
       const projected = project(corner)

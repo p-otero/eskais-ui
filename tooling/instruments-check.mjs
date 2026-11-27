@@ -331,9 +331,19 @@ async function safeVault(page, client) {
   expect(frames === 0 && idle === 0, "The open vault works while idle")
 
   await act(page, "Lock", "press")
-  await page.waitForTimeout(100)
-  expect((await page.getByText("esk_demo_").count()) === 0, "Locking should take the contents out of the page")
-  await page.waitForTimeout(2000)
+  const closing = await contents.evaluate((region) => ({
+    shown: !region.hidden && (region.textContent ?? "").includes("esk_demo_"),
+    reachable: !region.hasAttribute("inert") || region.getAttribute("aria-hidden") !== "true",
+  }))
+  const agentSeesCopy = await page.evaluate(() =>
+    window.instrumentProbe.agent.snapshot().some((entry) => !entry.offPage && /^Cop(y|ied)$/.test(entry.label ?? "")),
+  )
+  expect(
+    closing.shown && !closing.reachable && !agentSeesCopy,
+    `Locking should leave the contents on the plaque, out of reach of people and agents: ${JSON.stringify(closing)}`,
+  )
+  await page.waitForTimeout(2100)
+  expect((await page.getByText("esk_demo_").count()) === 0, "The contents should leave the page once the door shuts")
 
   await page.emulateMedia({ reducedMotion: "reduce" })
   await act(page, "Vault", "enter", ["27-46-13-33"])

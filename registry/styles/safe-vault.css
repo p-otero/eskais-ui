@@ -98,6 +98,10 @@
   visibility: hidden;
 }
 
+[data-slot="safe-vault"][data-closing] [data-slot="safe-dial-dial"] {
+  visibility: hidden;
+}
+
 [data-vault="3d"][data-open] [data-slot="safe-dial-stage"] > * {
   visibility: hidden;
   opacity: 0;

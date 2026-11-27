@@ -64,7 +64,10 @@ type SafeVaultProps = {
   mask?: boolean
   disabled?: boolean
   name?: string
-  /** What the vault holds. It isn't in the page until `status` is `unlocked`, and can't be used until the door is open. */
+  /**
+   * What the vault holds. It isn't in the page until `status` is `unlocked`, and can't be used until the door is open.
+   * Once locked it can't be used or read at once, and leaves the page when the door has shut over it.
+   */
   children?: ReactNode
   labels?: Partial<SafeVaultLabels>
   /** Classes for the root; a function gets the vault's state. */
@@ -122,7 +125,7 @@ function SafeVault({
     onValueChange?.("", { reason: "reset", event: undefined, cancel: noChange })
   }
 
-  const { motion, open, setRenderer } = useSafeVaultMotion(status, {
+  const { motion, open, closing, setRenderer } = useSafeVaultMotion(status, {
     denialPlayed: () => {
       clearCode()
       onStatusChange?.("locked", { reason: "retry", event: undefined })
@@ -140,6 +143,7 @@ function SafeVault({
   })
 
   const unlocked = status === "unlocked"
+  const shown = unlocked || closing
   const state: SafeVaultState = { status, open, disabled }
   const announcement = unlocked ? labels.unlocked : status === "denied" ? labels.denied : ""
 
@@ -148,6 +152,7 @@ function SafeVault({
       data-slot="safe-vault"
       data-status={status}
       data-open={open ? "" : undefined}
+      data-closing={closing ? "" : undefined}
       data-vault={webgl ? "3d" : "drawn"}
       className={cn(
         "relative flex w-full flex-col overflow-hidden rounded-surface border bg-card text-card-foreground shadow-surface",
@@ -188,10 +193,12 @@ function SafeVault({
         ref={layer}
         data-slot="safe-vault-contents"
         aria-label={labels.contents}
-        hidden={!unlocked}
+        hidden={!shown}
         inert={!open}
+        aria-hidden={closing ? true : undefined}
+        data-agent-hidden={closing ? "" : undefined}
       >
-        <Plaque>{unlocked ? children : null}</Plaque>
+        <Plaque>{shown ? children : null}</Plaque>
       </section>
       <output className="sr-only">{announcement}</output>
     </div>

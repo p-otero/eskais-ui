@@ -1,11 +1,21 @@
 import { useEffectEvent, useLayoutEffect, useState, useSyncExternalStore } from "react"
 
-import { denyMs, motionTowards, poseAt, unlockMs, type SafeVaultMotion } from "@/components/ui/safe-vault-timeline"
+import {
+  denyMs,
+  motionLength,
+  motionTowards,
+  poseAt,
+  resting,
+  type SafeVaultMotion,
+} from "@/components/ui/safe-vault-timeline"
 
 type SafeVaultStatus = "locked" | "denied" | "unlocked"
 
-/** The vault's motion, and whether its contents are open: unlocked, and done moving when the 3D safe shows it. */
-type VaultMotionSnapshot = { motion: SafeVaultMotion; open: boolean }
+/**
+ * The vault's motion; whether its contents are open (unlocked, and done moving when the 3D safe shows it); and whether
+ * they are closing: locked, but still on the plaque while the 3D door shuts over them.
+ */
+type VaultMotionSnapshot = { motion: SafeVaultMotion; open: boolean; closing: boolean }
 
 const ignore = () => {}
 
@@ -15,13 +25,10 @@ const reducedMotion = () => typeof matchMedia === "function" && matchMedia("(pre
 function createVaultMotion(initial: SafeVaultStatus) {
   let status = initial
   let webgl = false
-  let motion: SafeVaultMotion = {
-    kind: initial === "unlocked" ? "unlocked" : "locked",
-    since: 0,
-  }
+  let motion = resting(initial === "unlocked" ? "unlocked" : "locked", 0)
   let played: SafeVaultMotion | null = null
-  let snapshot: VaultMotionSnapshot = { motion, open: initial === "unlocked" }
-  let unlockTimer: ReturnType<typeof setTimeout> | undefined
+  let snapshot: VaultMotionSnapshot = { motion, open: initial === "unlocked", closing: false }
+  let motionTimer: ReturnType<typeof setTimeout> | undefined
   let denialTimer: ReturnType<typeof setTimeout> | undefined
   let onDenialPlayed = ignore
   let onRelocked = ignore
@@ -29,21 +36,22 @@ function createVaultMotion(initial: SafeVaultStatus) {
 
   const publish = () => {
     const open = status === "unlocked" && (!webgl || motion.kind === "unlocked" || played === motion)
-    if (snapshot.motion === motion && snapshot.open === open) return
-    snapshot = { motion, open }
+    const closing = status !== "unlocked" && webgl && motion.kind === "locking" && played !== motion
+    if (snapshot.motion === motion && snapshot.open === open && snapshot.closing === closing) return
+    snapshot = { motion, open, closing }
     for (const listener of listeners) listener()
   }
 
   const move = (next: SafeVaultMotion, now: number) => {
     motion = next
-    clearTimeout(unlockTimer)
-    if (next.kind === "unlocking") {
-      unlockTimer = setTimeout(
+    clearTimeout(motionTimer)
+    if (next.kind === "unlocking" || next.kind === "locking") {
+      motionTimer = setTimeout(
         () => {
           played = next
           publish()
         },
-        Math.max(0, next.since + unlockMs - now),
+        Math.max(0, next.since + motionLength(next) - now),
       )
     }
   }
@@ -61,12 +69,11 @@ function createVaultMotion(initial: SafeVaultStatus) {
       const now = epochNow()
       const reduce = reducedMotion()
       const current = poseAt(motion, now)
-      if (next === "unlocked")
-        move(reduce ? { kind: "unlocked", since: now } : motionTowards("unlocking", current, now), now)
+      if (next === "unlocked") move(reduce ? resting("unlocked", now) : motionTowards("unlocking", current, now), now)
       else if (from === "unlocked") {
-        move(reduce ? { kind: "locked", since: now } : motionTowards("locking", current, now), now)
+        move(reduce ? resting("locked", now) : motionTowards("locking", current, now), now)
         onRelocked()
-      } else if (next === "denied") move({ kind: reduce ? "locked" : "denied", since: now }, now)
+      } else if (next === "denied") move(reduce ? resting("locked", now) : motionTowards("denied", current, now), now)
       clearTimeout(denialTimer)
       if (next === "denied") denialTimer = setTimeout(() => onDenialPlayed(), reduce ? 0 : denyMs)
       publish()
@@ -80,7 +87,7 @@ function createVaultMotion(initial: SafeVaultStatus) {
       onRelocked = handlers.relocked
     },
     dispose() {
-      clearTimeout(unlockTimer)
+      clearTimeout(motionTimer)
       clearTimeout(denialTimer)
     },
   }
