@@ -39,6 +39,7 @@
     "eskais/icon-button-needs-label": "error",
     "eskais/scroll-area": "warn",
     "eskais/no-inline-icons": "warn",
+    "jsx-a11y/no-redundant-roles": "warn",
     "p-otero/no-callback-prop-in-effect-deps": "warn",
     "p-otero/no-latest-ref-effect": "warn",
     "p-otero/prefer-sync-external-store": "warn",
