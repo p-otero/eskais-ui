@@ -84,7 +84,7 @@
     },
     {
       "path": "packages/mockup/src/version.ts",
-      "content": "export const version = \"0.2.19\"\n",
+      "content": "export const version = \"0.2.20\"\n",
       "type": "registry:file",
       "target": "~/.agents/tools/eskais-mockup/version.ts"
     },
